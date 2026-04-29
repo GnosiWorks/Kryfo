@@ -1,0 +1,18 @@
+#!/bin/bash
+adb kill-server 2>/dev/null || true
+
+WIN_HOST=$(ip route show | grep -i default | awk '{print $3}')
+ADB_WIN="/mnt/c/Users/mario/AppData/Local/Android/Sdk/platform-tools/adb.exe"
+
+# Kill any zombie adb on Windows holding port 5037
+powershell.exe -Command "Get-Process adb -ErrorAction SilentlyContinue | Stop-Process -Force" 2>/dev/null
+sleep 1
+
+# Start fresh adb server on Windows
+"$ADB_WIN" start-server
+
+export ADB_SERVER_SOCKET="tcp:${WIN_HOST}:5037"
+
+echo ""
+echo "WSL → Windows ADB: tcp:${WIN_HOST}:5037"
+adb devices
