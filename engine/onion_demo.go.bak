@@ -1,0 +1,52 @@
+// halo engine — phase 0 hello onion
+// boots an embedded tor instance and prints the onion address.
+
+package main
+
+import (
+"context"
+"fmt"
+"log"
+"net/http"
+"time"
+
+libtor "github.com/alexballas/go-libtor"
+"github.com/cretz/bine/tor"
+)
+
+func main() {
+log.Println("starting embedded tor...")
+
+t, err := tor.Start(nil, &tor.StartConf{
+ProcessCreator: libtor.Creator,
+DataDir:        "/tmp/halo-tor",
+})
+if err != nil {
+log.Fatalf("tor start: %v", err)
+}
+defer t.Close()
+
+ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+defer cancel()
+
+log.Println("publishing onion service on port 80...")
+onion, err := t.Listen(ctx, &tor.ListenConf{
+Version3:    true,
+RemotePorts: []int{80},
+})
+if err != nil {
+log.Fatalf("listen: %v", err)
+}
+defer onion.Close()
+
+addr := fmt.Sprintf("http://%v.onion", onion.ID)
+log.Printf("onion ready: %s", addr)
+
+server := &http.Server{Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+fmt.Fprintln(w, "hello from halo engine")
+})}
+go server.Serve(onion)
+
+log.Println("running. press ctrl-c to stop.")
+select {}
+}
