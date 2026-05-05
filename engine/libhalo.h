@@ -84,16 +84,15 @@ extern "C" {
 
 extern char* HaloPing(void);
 extern char* HaloVersion(void);
+
+// generates ed25519 (identity) + X25519 (ECDH) keypairs.
 extern char* HaloGenerateIdentity(void);
 extern char* HaloMyId(void);
-extern char* HaloMyPubkey(void);
+extern char* HaloMyEdPubkey(void);
+extern char* HaloMyXPubkey(void);
 extern char* HaloIdFromPubkey(char* cHex);
-
-// AES-256-GCM encrypt. returns base64(nonce || ciphertext) or "error: ..."
-extern char* HaloEncrypt(char* cPlain);
-
-// AES-256-GCM decrypt. takes base64(nonce || ciphertext). returns plaintext or "error: ..."
-extern char* HaloDecrypt(char* cB64);
+extern char* HaloEncryptFor(char* cPeerPub, char* cPlain);
+extern char* HaloDecryptFrom(char* cPeerPub, char* cB64);
 extern char* HaloStartListener(void);
 extern char* HaloLastReceived(void);
 extern char* HaloSendTo(char* cAddr, char* cMsg);

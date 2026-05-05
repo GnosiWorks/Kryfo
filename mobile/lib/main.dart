@@ -1,4 +1,4 @@
-// halo mobile — phase 1 stage A: identity + AES-GCM over tor
+// halo mobile — phase 1 stage B: per-peer ECDH encryption over tor
 
 import 'dart:async';
 import 'dart:ffi';
@@ -21,8 +21,9 @@ class HaloEngine {
   late final CStrFnDart _version;
   late final CStrFnDart _genIdentity;
   late final CStrFnDart _myId;
-  late final OneArgFnDart _encrypt;
-  late final OneArgFnDart _decrypt;
+  late final CStrFnDart _myXPub;
+  late final TwoArgFnDart _encryptFor;
+  late final TwoArgFnDart _decryptFrom;
   late final CStrFnDart _start;
   late final CStrFnDart _lastRecv;
   late final TwoArgFnDart _send;
@@ -34,8 +35,9 @@ class HaloEngine {
     _version = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloVersion');
     _genIdentity = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloGenerateIdentity');
     _myId = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMyId');
-    _encrypt = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloEncrypt');
-    _decrypt = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloDecrypt');
+    _myXPub = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMyXPubkey');
+    _encryptFor = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloEncryptFor');
+    _decryptFrom = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloDecryptFrom');
     _start = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloStartListener');
     _lastRecv = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloLastReceived');
     _send = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloSendTo');
@@ -44,24 +46,29 @@ class HaloEngine {
   String version() => _version().toDartString();
   String generateIdentity() => _genIdentity().toDartString();
   String myId() => _myId().toDartString();
+  String myXPubkey() => _myXPub().toDartString();
   String startListener() => _start().toDartString();
   String lastReceived() => _lastRecv().toDartString();
 
-  String encrypt(String plain) {
-    final c = plain.toNativeUtf8();
+  String encryptFor(String peerPub, String plain) {
+    final cPub = peerPub.toNativeUtf8();
+    final cPlain = plain.toNativeUtf8();
     try {
-      return _encrypt(c).toDartString();
+      return _encryptFor(cPub, cPlain).toDartString();
     } finally {
-      calloc.free(c);
+      calloc.free(cPub);
+      calloc.free(cPlain);
     }
   }
 
-  String decrypt(String b64) {
-    final c = b64.toNativeUtf8();
+  String decryptFrom(String peerPub, String b64) {
+    final cPub = peerPub.toNativeUtf8();
+    final cB64 = b64.toNativeUtf8();
     try {
-      return _decrypt(c).toDartString();
+      return _decryptFrom(cPub, cB64).toDartString();
     } finally {
-      calloc.free(c);
+      calloc.free(cPub);
+      calloc.free(cB64);
     }
   }
 
@@ -106,9 +113,11 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final _engine = HaloEngine();
-  final _peerCtrl = TextEditingController();
+  final _peerAddrCtrl = TextEditingController();
+  final _peerPubCtrl = TextEditingController();
   final _msgCtrl = TextEditingController(text: 'hello from the other side');
   String _myId = '';
+  String _myXPub = '';
   String _myAddr = '';
   String _status = 'idle';
   String _receivedCipher = '';
@@ -119,6 +128,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _myId = _engine.generateIdentity();
+    _myXPub = _engine.myXPubkey();
   }
 
   Future<void> _startListener() async {
@@ -135,7 +145,9 @@ class _HomePageState extends State<HomePage> {
     _pollTimer ??= Timer.periodic(const Duration(seconds: 1), (_) {
       final r = _engine.lastReceived();
       if (r.isNotEmpty && r != _receivedCipher) {
-        final plain = _engine.decrypt(r);
+        final peerPub = _peerPubCtrl.text.trim();
+        if (peerPub.isEmpty) return;
+        final plain = _engine.decryptFrom(peerPub, r);
         setState(() {
           _receivedCipher = r;
           _receivedPlain = plain;
@@ -145,12 +157,26 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _send() async {
-    final addr = _peerCtrl.text.trim();
-    if (addr.isEmpty) return;
+    final addr = _peerAddrCtrl.text.trim();
+    final peerPub = _peerPubCtrl.text.trim();
+    if (addr.isEmpty || peerPub.isEmpty) {
+      setState(() => _status = 'need peer onion + pubkey');
+      return;
+    }
     setState(() => _status = 'encrypting + sending (~30s)...');
-    final cipher = _engine.encrypt(_msgCtrl.text);
+    final cipher = _engine.encryptFor(peerPub, _msgCtrl.text);
+    if (cipher.startsWith('error')) {
+      setState(() => _status = cipher);
+      return;
+    }
     final result = await Future(() => _engine.sendTo(addr, cipher));
     setState(() => _status = result);
+  }
+
+  void _copyMyPub() {
+    Clipboard.setData(ClipboardData(text: _myXPub));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('pubkey copied')));
   }
 
   @override
@@ -168,7 +194,7 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               const Text(
                 'halo',
                 style: TextStyle(
@@ -178,17 +204,16 @@ class _HomePageState extends State<HomePage> {
                   fontStyle: FontStyle.italic,
                 ),
               ),
-              const SizedBox(height: 4),
               Text(_engine.version(),
                   style: const TextStyle(color: Colors.white38, fontSize: 11)),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               const Text('your halo:',
                   style: TextStyle(color: Colors.white54, fontSize: 11)),
               GestureDetector(
                 onLongPress: () {
                   Clipboard.setData(ClipboardData(text: _myId));
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('copied')),
+                    const SnackBar(content: Text('id copied')),
                   );
                 },
                 child: Container(
@@ -210,7 +235,32 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: _copyMyPub,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF201C17),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('your X25519 pubkey (tap to copy):',
+                          style: TextStyle(color: Colors.white38, fontSize: 9)),
+                      const SizedBox(height: 2),
+                      Text(_myXPub,
+                          style: const TextStyle(
+                            fontFamily: 'monospace',
+                            color: Color(0xFFA78BFA),
+                            fontSize: 9,
+                          )),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _myAddr.isEmpty ? _startListener : null,
                 style: ElevatedButton.styleFrom(
@@ -243,10 +293,20 @@ class _HomePageState extends State<HomePage> {
               ],
               const SizedBox(height: 20),
               TextField(
-                controller: _peerCtrl,
-                style: const TextStyle(color: Colors.white, fontSize: 12, fontFamily: 'monospace'),
+                controller: _peerAddrCtrl,
+                style: const TextStyle(color: Colors.white, fontSize: 11, fontFamily: 'monospace'),
                 decoration: const InputDecoration(
                   labelText: 'peer .onion address',
+                  labelStyle: TextStyle(color: Colors.white54),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _peerPubCtrl,
+                style: const TextStyle(color: Colors.white, fontSize: 10, fontFamily: 'monospace'),
+                decoration: const InputDecoration(
+                  labelText: 'peer X25519 pubkey (hex)',
                   labelStyle: TextStyle(color: Colors.white54),
                   border: OutlineInputBorder(),
                 ),
@@ -286,16 +346,6 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(height: 4),
                       Text(_receivedPlain,
                           style: const TextStyle(color: Colors.white, fontSize: 14)),
-                      const SizedBox(height: 8),
-                      const Text('ciphertext (b64):',
-                          style: TextStyle(color: Colors.white38, fontSize: 9)),
-                      const SizedBox(height: 2),
-                      Text(_receivedCipher,
-                          style: const TextStyle(
-                            fontFamily: 'monospace',
-                            color: Colors.white38,
-                            fontSize: 9,
-                          )),
                     ],
                   ),
                 ),
