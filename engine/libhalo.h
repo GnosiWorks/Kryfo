@@ -84,16 +84,8 @@ extern "C" {
 
 extern char* HaloPing(void);
 extern char* HaloVersion(void);
-
-// boots tor and publishes an onion service. blocks for up to 2 min.
-// returns the .onion address or "error: ..." on failure.
 extern char* HaloStartListener(void);
-
-// returns last received message, or empty string.
 extern char* HaloLastReceived(void);
-
-// dials another onion address and sends a plaintext line.
-// returns "ok" or "error: ..."
 extern char* HaloSendTo(char* cAddr, char* cMsg);
 
 #ifdef __cplusplus
