@@ -84,6 +84,16 @@ extern "C" {
 
 extern char* HaloPing(void);
 extern char* HaloVersion(void);
+extern char* HaloGenerateIdentity(void);
+extern char* HaloMyId(void);
+extern char* HaloMyPubkey(void);
+extern char* HaloIdFromPubkey(char* cHex);
+
+// AES-256-GCM encrypt. returns base64(nonce || ciphertext) or "error: ..."
+extern char* HaloEncrypt(char* cPlain);
+
+// AES-256-GCM decrypt. takes base64(nonce || ciphertext). returns plaintext or "error: ..."
+extern char* HaloDecrypt(char* cB64);
 extern char* HaloStartListener(void);
 extern char* HaloLastReceived(void);
 extern char* HaloSendTo(char* cAddr, char* cMsg);
