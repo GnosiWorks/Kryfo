@@ -1,5 +1,5 @@
 // halo engine — ffi bridge for flutter
-// phase 1: identity + tor onion + AES-GCM encryption (stage A).
+// phase 1 stage B: identity + tor onion + X25519 ECDH per-peer encryption.
 
 package main
 
@@ -27,10 +27,8 @@ import (
 libtor "github.com/alexballas/go-libtor"
 "github.com/cretz/bine/tor"
 "github.com/tyler-smith/go-bip39"
+"golang.org/x/crypto/curve25519"
 )
-
-// stage A: hard-coded test key. stage B replaces this with ECDH-derived per-peer keys.
-var testKey = sha256.Sum256([]byte("halo-stage-a-do-not-ship"))
 
 var (
 mu       sync.Mutex
@@ -39,9 +37,11 @@ listener net.Listener
 myAddr   string
 lastRecv string
 
-myPriv ed25519.PrivateKey
-myPub  ed25519.PublicKey
-myId   string
+myEdPriv ed25519.PrivateKey
+myEdPub  ed25519.PublicKey
+myXPriv  [32]byte // X25519 private key
+myXPub   [32]byte // X25519 public key
+myId     string
 )
 
 //export HaloPing
@@ -51,9 +51,10 @@ return C.CString("pong from go engine")
 
 //export HaloVersion
 func HaloVersion() *C.char {
-return C.CString("halo-engine v0.1.1")
+return C.CString("halo-engine v0.1.2")
 }
 
+// generates ed25519 (identity) + X25519 (ECDH) keypairs.
 //export HaloGenerateIdentity
 func HaloGenerateIdentity() *C.char {
 mu.Lock()
@@ -61,12 +62,17 @@ defer mu.Unlock()
 
 pub, priv, err := ed25519.GenerateKey(rand.Reader)
 if err != nil {
-return C.CString(fmt.Sprintf("error: keygen: %v", err))
+return C.CString(fmt.Sprintf("error: ed keygen: %v", err))
 }
-myPub = pub
-myPriv = priv
-myId = idFromPubkey(pub)
+myEdPub = pub
+myEdPriv = priv
 
+if _, err := rand.Read(myXPriv[:]); err != nil {
+return C.CString(fmt.Sprintf("error: x keygen: %v", err))
+}
+curve25519.ScalarBaseMult(&myXPub, &myXPriv)
+
+myId = idFromPubkey(pub)
 log.Printf("halo: identity generated: %s", myId)
 return C.CString(myId)
 }
@@ -78,14 +84,21 @@ defer mu.Unlock()
 return C.CString(myId)
 }
 
-//export HaloMyPubkey
-func HaloMyPubkey() *C.char {
+//export HaloMyEdPubkey
+func HaloMyEdPubkey() *C.char {
 mu.Lock()
 defer mu.Unlock()
-if myPub == nil {
+if myEdPub == nil {
 return C.CString("")
 }
-return C.CString(hex.EncodeToString(myPub))
+return C.CString(hex.EncodeToString(myEdPub))
+}
+
+//export HaloMyXPubkey
+func HaloMyXPubkey() *C.char {
+mu.Lock()
+defer mu.Unlock()
+return C.CString(hex.EncodeToString(myXPub[:]))
 }
 
 //export HaloIdFromPubkey
@@ -108,11 +121,35 @@ w3 := wordlist[bits&0x7FF]
 return fmt.Sprintf("%s-%s-%s", w1, w2, w3)
 }
 
-// AES-256-GCM encrypt. returns base64(nonce || ciphertext) or "error: ..."
-//export HaloEncrypt
-func HaloEncrypt(cPlain *C.char) *C.char {
+// derive AES key from ECDH shared secret with peer's X25519 pubkey.
+func deriveSharedKey(peerXPubHex string) ([32]byte, error) {
+var key [32]byte
+peerPub, err := hex.DecodeString(peerXPubHex)
+if err != nil || len(peerPub) != 32 {
+return key, fmt.Errorf("bad peer pubkey")
+}
+var peer [32]byte
+copy(peer[:], peerPub)
+
+shared, err := curve25519.X25519(myXPriv[:], peer[:])
+if err != nil {
+return key, err
+}
+key = sha256.Sum256(shared)
+return key, nil
+}
+
+//export HaloEncryptFor
+func HaloEncryptFor(cPeerPub *C.char, cPlain *C.char) *C.char {
+peerPub := C.GoString(cPeerPub)
 plain := C.GoString(cPlain)
-block, err := aes.NewCipher(testKey[:])
+
+key, err := deriveSharedKey(peerPub)
+if err != nil {
+return C.CString(fmt.Sprintf("error: derive: %v", err))
+}
+
+block, err := aes.NewCipher(key[:])
 if err != nil {
 return C.CString(fmt.Sprintf("error: cipher: %v", err))
 }
@@ -124,20 +161,26 @@ nonce := make([]byte, gcm.NonceSize())
 if _, err := rand.Read(nonce); err != nil {
 return C.CString(fmt.Sprintf("error: nonce: %v", err))
 }
-ciphertext := gcm.Seal(nil, nonce, []byte(plain), nil)
-out := append(nonce, ciphertext...)
+ct := gcm.Seal(nil, nonce, []byte(plain), nil)
+out := append(nonce, ct...)
 return C.CString(base64.StdEncoding.EncodeToString(out))
 }
 
-// AES-256-GCM decrypt. takes base64(nonce || ciphertext). returns plaintext or "error: ..."
-//export HaloDecrypt
-func HaloDecrypt(cB64 *C.char) *C.char {
+//export HaloDecryptFrom
+func HaloDecryptFrom(cPeerPub *C.char, cB64 *C.char) *C.char {
+peerPub := C.GoString(cPeerPub)
 b64 := C.GoString(cB64)
+
+key, err := deriveSharedKey(peerPub)
+if err != nil {
+return C.CString(fmt.Sprintf("error: derive: %v", err))
+}
+
 raw, err := base64.StdEncoding.DecodeString(b64)
 if err != nil {
 return C.CString(fmt.Sprintf("error: b64: %v", err))
 }
-block, err := aes.NewCipher(testKey[:])
+block, err := aes.NewCipher(key[:])
 if err != nil {
 return C.CString(fmt.Sprintf("error: cipher: %v", err))
 }
