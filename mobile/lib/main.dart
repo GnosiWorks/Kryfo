@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'theme.dart';
 import 'screens/home_screen.dart';
 import 'screens/chat_screen.dart';
+import 'signal_session.dart';
 
 typedef CStrFn = Pointer<Utf8> Function();
 typedef CStrFnDart = Pointer<Utf8> Function();
@@ -148,7 +150,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 1,
+      version: 2,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -177,6 +179,10 @@ class HaloDb {
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
         ''');
+        await _signalTables(db);
+      },
+      onUpgrade: (db, oldV, newV) async {
+        if (oldV < 2) await _signalTables(db);
       },
     );
     return _db!;
@@ -252,6 +258,14 @@ class HaloDb {
   }
 }
 
+Future<void> _signalTables(Database db) async {
+  await db.execute('CREATE TABLE IF NOT EXISTS prekeys (id INTEGER PRIMARY KEY, record BLOB NOT NULL)');
+  await db.execute('CREATE TABLE IF NOT EXISTS signed_prekeys (id INTEGER PRIMARY KEY, record BLOB NOT NULL, created_at INTEGER NOT NULL)');
+  await db.execute('CREATE TABLE IF NOT EXISTS sessions (address TEXT NOT NULL, device_id INTEGER NOT NULL, record BLOB NOT NULL, PRIMARY KEY (address, device_id))');
+  await db.execute('CREATE TABLE IF NOT EXISTS peer_identities (address TEXT PRIMARY KEY, identity_key BLOB NOT NULL)');
+  await db.execute('CREATE TABLE IF NOT EXISTS signal_meta (k TEXT PRIMARY KEY, v TEXT NOT NULL)');
+}
+
 String buildHaloUri(String id, String onion, String xpub) {
   return 'halo://share?id=$id&onion=$onion&xpub=$xpub';
 }
@@ -293,9 +307,31 @@ class AppState extends ChangeNotifier {
       await db.saveIdentity(myId, engine.myEdPrivkey(), engine.myXPrivkey());
     }
     myXPub = engine.myXPubkey();
+    await _bootSignal();
     await refreshContacts();
     ready = true;
     notifyListeners();
+  }
+
+  Future<void> _bootSignal() async {
+    try {
+      final database = await db.open();
+      await signalSession.bootstrap(
+        database: database,
+        xPubBytes: _hexDecode(engine.myXPubkey()),
+        xPrivBytes: _hexDecode(engine.myXPrivkey()),
+      );
+    } catch (e, st) {
+      debugPrint('signal bootstrap failed: $e\n$st');
+    }
+  }
+
+  Uint8List _hexDecode(String s) {
+    final bytes = Uint8List(s.length ~/ 2);
+    for (var i = 0; i < bytes.length; i++) {
+      bytes[i] = int.parse(s.substring(i * 2, i * 2 + 2), radix: 16);
+    }
+    return bytes;
   }
 
   Future<void> refreshContacts() async {
