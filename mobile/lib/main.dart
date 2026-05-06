@@ -18,6 +18,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'theme.dart';
 import 'screens/home_screen.dart';
 import 'screens/chat_screen.dart';
+import 'screens/modes_screen.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'signal_session.dart';
 
