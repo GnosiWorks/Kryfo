@@ -1,12 +1,13 @@
 // halo mobile — phase 1: identity persistence + ECDH + editorial UI
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart' as p;
@@ -17,6 +18,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'theme.dart';
 import 'screens/home_screen.dart';
 import 'screens/chat_screen.dart';
+import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'signal_session.dart';
 
 typedef CStrFn = Pointer<Utf8> Function();
@@ -266,8 +268,96 @@ Future<void> _signalTables(Database db) async {
   await db.execute('CREATE TABLE IF NOT EXISTS signal_meta (k TEXT PRIMARY KEY, v TEXT NOT NULL)');
 }
 
+Future<String> makePreKeyBundleB64() async {
+  final spk = await signalSession.signedPreKeyStore.loadSignedPreKey(1);
+  final database = await db.open();
+  final pkRows = await database.query('prekeys', limit: 1, orderBy: 'id ASC');
+  if (pkRows.isEmpty) throw 'no prekeys';
+  final pk = await signalSession.preKeyStore.loadPreKey(pkRows.first['id'] as int);
+  final bundle = {
+    'registrationId': signalSession.registrationId,
+    'deviceId': 1,
+    'preKeyId': pk.id,
+    'preKeyPublic': base64Encode(pk.getKeyPair().publicKey.serialize()),
+    'signedPreKeyId': spk.id,
+    'signedPreKeyPublic': base64Encode(spk.getKeyPair().publicKey.serialize()),
+    'signedPreKeySignature': base64Encode(spk.signature),
+    'identityKey': base64Encode(signalSession.identityKeyPair.getPublicKey().serialize()),
+  };
+  return base64Encode(utf8.encode(jsonEncode(bundle)));
+}
+
+Future<void> processPeerBundle(String haloId, String bundleB64) async {
+  final j = jsonDecode(utf8.decode(base64Decode(bundleB64))) as Map<String, dynamic>;
+  final preKeyBundle = PreKeyBundle(
+    j['registrationId'] as int,
+    j['deviceId'] as int,
+    j['preKeyId'] as int,
+    Curve.decodePoint(base64Decode(j['preKeyPublic'] as String), 0),
+    j['signedPreKeyId'] as int,
+    Curve.decodePoint(base64Decode(j['signedPreKeyPublic'] as String), 0),
+    base64Decode(j['signedPreKeySignature'] as String),
+    IdentityKey(Curve.decodePoint(base64Decode(j['identityKey'] as String), 0)),
+  );
+  final addr = SignalProtocolAddress(haloId, 1);
+  final builder = SessionBuilder(
+    signalSession.sessionStore,
+    signalSession.preKeyStore,
+    signalSession.signedPreKeyStore,
+    signalSession.identityStore,
+    addr,
+  );
+  await builder.processPreKeyBundle(preKeyBundle);
+}
+
+Future<String> signalEncrypt(String peerId, String plaintext) async {
+  final addr = SignalProtocolAddress(peerId, 1);
+  final cipher = SessionCipher(
+    signalSession.sessionStore,
+    signalSession.preKeyStore,
+    signalSession.signedPreKeyStore,
+    signalSession.identityStore,
+    addr,
+  );
+  final msg = await cipher.encrypt(Uint8List.fromList(utf8.encode(plaintext)));
+  final wire = Uint8List.fromList([msg.getType(), ...msg.serialize()]);
+  return base64Encode(wire);
+}
+
+Future<String?> signalDecrypt(String peerId, String wireB64) async {
+  try {
+    final wire = base64Decode(wireB64);
+    if (wire.isEmpty) return null;
+    final type = wire[0];
+    final body = Uint8List.fromList(wire.sublist(1));
+    final addr = SignalProtocolAddress(peerId, 1);
+    final cipher = SessionCipher(
+      signalSession.sessionStore,
+      signalSession.preKeyStore,
+      signalSession.signedPreKeyStore,
+      signalSession.identityStore,
+      addr,
+    );
+    Uint8List plain;
+    if (type == CiphertextMessage.prekeyType) {
+      plain = await cipher.decrypt(PreKeySignalMessage(body));
+    } else {
+      plain = await cipher.decryptFromSignal(SignalMessage.fromSerialized(body));
+    }
+    return utf8.decode(plain);
+  } catch (e) {
+    debugPrint('signalDecrypt: $e');
+    return null;
+  }
+}
+
 String buildHaloUri(String id, String onion, String xpub) {
   return 'halo://share?id=$id&onion=$onion&xpub=$xpub';
+}
+
+Future<String> buildHaloUriV2(String id, String onion) async {
+  final bundle = await makePreKeyBundleB64();
+  return 'halo://share?id=$id&onion=$onion&v=2&bundle=$bundle';
 }
 
 Map<String, String>? parseHaloUri(String raw) {
@@ -277,9 +367,16 @@ Map<String, String>? parseHaloUri(String raw) {
     final uri = Uri.parse(raw);
     final id = uri.queryParameters['id'];
     final onion = uri.queryParameters['onion'];
+    if (id == null || onion == null) return null;
+    final v = uri.queryParameters['v'] ?? '1';
+    if (v == '2') {
+      final bundle = uri.queryParameters['bundle'];
+      if (bundle == null) return null;
+      return {'id': id, 'onion': onion, 'bundle': bundle, 'v': '2'};
+    }
     final xpub = uri.queryParameters['xpub'];
-    if (id == null || onion == null || xpub == null) return null;
-    return {'id': id, 'onion': onion, 'xpub': xpub};
+    if (xpub == null) return null;
+    return {'id': id, 'onion': onion, 'xpub': xpub, 'v': '1'};
   } catch (_) {
     return null;
   }
@@ -507,7 +604,7 @@ class _DevScreenState extends State<DevScreen> {
       setState(() => _status = 'tap start listening first');
       return;
     }
-    final uri = buildHaloUri(appState.myId, _myAddr, appState.myXPub);
+    final uri = await buildHaloUriV2(appState.myId, _myAddr);
     showDialog(
       context: context,
       builder: (_) => Dialog(
@@ -590,14 +687,31 @@ class _DevScreenState extends State<DevScreen> {
       setState(() => _status = 'invalid halo:// uri');
       return;
     }
-    await db.upsertContact(parsed['id']!, parsed['onion']!, parsed['xpub']!);
-    await appState.refreshContacts();
-    setState(() {
-      _peerId = parsed['id']!;
-      _peerOnion = parsed['onion']!;
-      _peerXPub = parsed['xpub']!;
-      _status = 'peer imported: $_peerId';
-    });
+    if (parsed['v'] == '2') {
+      try {
+        await processPeerBundle(parsed['id']!, parsed['bundle']!);
+      } catch (e) {
+        setState(() => _status = 'bundle error: $e');
+        return;
+      }
+      await db.upsertContact(parsed['id']!, parsed['onion']!, '');
+      await appState.refreshContacts();
+      setState(() {
+        _peerId = parsed['id']!;
+        _peerOnion = parsed['onion']!;
+        _peerXPub = '';
+        _status = 'signal session built: $_peerId';
+      });
+    } else {
+      await db.upsertContact(parsed['id']!, parsed['onion']!, parsed['xpub']!);
+      await appState.refreshContacts();
+      setState(() {
+        _peerId = parsed['id']!;
+        _peerOnion = parsed['onion']!;
+        _peerXPub = parsed['xpub']!;
+        _status = 'peer imported (v1): $_peerId';
+      });
+    }
   }
 
   @override

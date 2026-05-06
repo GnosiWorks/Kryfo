@@ -24,9 +24,14 @@ class SignalSession {
   }) async {
     if (_ready) return;
 
+    // clamp priv per RFC 7748 — libsignal expects already-clamped scalar
+    final clamped = Uint8List.fromList(xPrivBytes);
+    clamped[0] &= 0xF8;
+    clamped[31] &= 0x7F;
+    clamped[31] |= 0x40;
     final pub = Curve.decodePoint(
         Uint8List.fromList([0x05, ...xPubBytes]), 0);
-    final priv = Curve.decodePrivatePoint(xPrivBytes);
+    final priv = Curve.decodePrivatePoint(clamped);
     identityKeyPair = IdentityKeyPair(IdentityKey(pub), priv);
 
     registrationId = await _loadOrGenRegId(database);
