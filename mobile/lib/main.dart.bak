@@ -1,10 +1,9 @@
-// halo mobile — phase 1: identity persistence + ECDH + editorial UI
+// halo mobile — phase 1: identity persistence (SQLCipher) + ECDH over tor
 
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
 import 'package:ffi/ffi.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -12,10 +11,6 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
-
-import 'theme.dart';
-import 'screens/home_screen.dart';
-import 'screens/chat_screen.dart';
 
 typedef CStrFn = Pointer<Utf8> Function();
 typedef CStrFnDart = Pointer<Utf8> Function();
@@ -114,6 +109,7 @@ class HaloEngine {
   }
 }
 
+// thin wrapper around SQLCipher. handles identity + contacts + messages.
 class HaloDb {
   static const _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
@@ -271,49 +267,6 @@ Map<String, String>? parseHaloUri(String raw) {
   }
 }
 
-// shared singletons + state
-
-final engine = HaloEngine();
-final db = HaloDb();
-
-class AppState extends ChangeNotifier {
-  String myId = '';
-  String myXPub = '';
-  bool restored = false;
-  bool ready = false;
-  List<ContactPreview> contacts = [];
-
-  Future<void> boot() async {
-    final saved = await db.loadIdentity();
-    if (saved != null) {
-      myId = engine.restoreIdentity(saved['ed_priv']!, saved['x_priv']!);
-      restored = true;
-    } else {
-      myId = engine.generateIdentity();
-      await db.saveIdentity(myId, engine.myEdPrivkey(), engine.myXPrivkey());
-    }
-    myXPub = engine.myXPubkey();
-    await refreshContacts();
-    ready = true;
-    notifyListeners();
-  }
-
-  Future<void> refreshContacts() async {
-    final rows = await db.contacts();
-    contacts = rows.map((r) {
-      final ts = r['last_seen'] as int;
-      return ContactPreview(
-        haloId: r['halo_id'] as String,
-        avatarSeed: r['halo_id'] as String,
-        when: DateTime.fromMillisecondsSinceEpoch(ts),
-      );
-    }).toList();
-    notifyListeners();
-  }
-}
-
-final appState = AppState();
-
 void main() => runApp(const HaloApp());
 
 class HaloApp extends StatelessWidget {
@@ -322,107 +275,78 @@ class HaloApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Halo',
-      theme: buildHaloTheme(),
-      home: const RootShell(),
-    );
-  }
-}
-
-class RootShell extends StatefulWidget {
-  const RootShell({super.key});
-  @override
-  State<RootShell> createState() => _RootShellState();
-}
-
-class _RootShellState extends State<RootShell> {
-  @override
-  void initState() {
-    super.initState();
-    appState.addListener(_onChange);
-    appState.boot();
-  }
-
-  void _onChange() => setState(() {});
-
-  @override
-  void dispose() {
-    appState.removeListener(_onChange);
-    super.dispose();
-  }
-
-  void _open(Widget w) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => w));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!appState.ready) {
-      return Scaffold(
-        backgroundColor: HaloColors.surface,
-        body: Center(
-          child: Text('booting...',
-              style: HaloType.mono(size: 11, color: HaloColors.text2)),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFF59E0B),
+          brightness: Brightness.dark,
         ),
-      );
-    }
-    return HomeScreen(
-      haloId: appState.myId,
-      contacts: appState.contacts,
-      onAddContact: () => _open(const DevScreen()),
-      onOpenDev: () => _open(const DevScreen()),
-      onOpenChat: (id) async {
-        final rows = await db.contacts();
-        final matches = rows.where((r) => r['halo_id'] == id).toList();
-        if (matches.isEmpty || !mounted) return;
-        final row = matches.first;
-        Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(
-          peerHaloId: id,
-          peerOnion: row['onion'] as String,
-          peerXPub: row['xpub'] as String,
-          avatarSeed: id,
-        )));
-      },
+        scaffoldBackgroundColor: const Color(0xFF0D0B09),
+        useMaterial3: true,
+      ),
+      home: const HomePage(),
     );
   }
 }
 
-class DevScreen extends StatefulWidget {
-  const DevScreen({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
   @override
-  State<DevScreen> createState() => _DevScreenState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _DevScreenState extends State<DevScreen> {
+class _HomePageState extends State<HomePage> {
+  final _engine = HaloEngine();
+  final _db = HaloDb();
   final _msgCtrl = TextEditingController(text: 'hello from the other side');
+  String _myId = '';
+  String _myXPub = '';
   String _myAddr = '';
-  String _status = '';
+  String _status = 'loading...';
   String _peerId = '';
   String _peerOnion = '';
   String _peerXPub = '';
   String _receivedCipher = '';
   String _receivedPlain = '';
+  bool _restored = false;
   Timer? _pollTimer;
 
   @override
   void initState() {
     super.initState();
-    _status = appState.restored ? 'identity restored' : 'identity created';
-    _loadLastPeer();
+    _bootIdentity();
   }
 
-  Future<void> _loadLastPeer() async {
-    final rows = await db.contacts();
-    if (rows.isEmpty) return;
+  Future<void> _bootIdentity() async {
+    final saved = await _db.loadIdentity();
+    String id;
+    if (saved != null) {
+      id = _engine.restoreIdentity(saved['ed_priv']!, saved['x_priv']!);
+      _restored = true;
+    } else {
+      id = _engine.generateIdentity();
+      await _db.saveIdentity(
+        id,
+        _engine.myEdPrivkey(),
+        _engine.myXPrivkey(),
+      );
+    }
+    final contacts = await _db.contacts();
     setState(() {
-      _peerId = rows.first['halo_id'] as String;
-      _peerOnion = rows.first['onion'] as String;
-      _peerXPub = rows.first['xpub'] as String;
+      _myId = id;
+      _myXPub = _engine.myXPubkey();
+      _status = _restored ? 'identity restored' : 'identity created';
+      if (contacts.isNotEmpty) {
+        final last = contacts.first;
+        _peerId = last['halo_id'] as String;
+        _peerOnion = last['onion'] as String;
+        _peerXPub = last['xpub'] as String;
+      }
     });
   }
 
   Future<void> _startListener() async {
     setState(() => _status = 'starting tor (~30s)...');
-    final addr = await Future(() => engine.startListener());
+    final addr = await Future(() => _engine.startListener());
     setState(() {
       if (addr.startsWith('error')) {
         _status = addr;
@@ -432,12 +356,12 @@ class _DevScreenState extends State<DevScreen> {
       }
     });
     _pollTimer ??= Timer.periodic(const Duration(seconds: 1), (_) {
-      final r = engine.lastReceived();
+      final r = _engine.lastReceived();
       if (r.isNotEmpty && r != _receivedCipher) {
         if (_peerXPub.isEmpty) return;
-        final plain = engine.decryptFrom(_peerXPub, r);
+        final plain = _engine.decryptFrom(_peerXPub, r);
         if (!plain.startsWith('error')) {
-          db.saveMessage(_peerId, 'in', plain);
+          _db.saveMessage(_peerId, 'in', plain);
         }
         setState(() {
           _receivedCipher = r;
@@ -454,14 +378,14 @@ class _DevScreenState extends State<DevScreen> {
     }
     setState(() => _status = 'encrypting + sending (~30s)...');
     final plain = _msgCtrl.text;
-    final cipher = engine.encryptFor(_peerXPub, plain);
+    final cipher = _engine.encryptFor(_peerXPub, plain);
     if (cipher.startsWith('error')) {
       setState(() => _status = cipher);
       return;
     }
-    final result = await Future(() => engine.sendTo(_peerOnion, cipher));
+    final result = await Future(() => _engine.sendTo(_peerOnion, cipher));
     if (result == 'ok') {
-      await db.saveMessage(_peerId, 'out', plain);
+      await _db.saveMessage(_peerId, 'out', plain);
     }
     setState(() => _status = result);
   }
@@ -471,23 +395,29 @@ class _DevScreenState extends State<DevScreen> {
       setState(() => _status = 'tap start listening first');
       return;
     }
-    final uri = buildHaloUri(appState.myId, _myAddr, appState.myXPub);
+    final uri = buildHaloUri(_myId, _myAddr, _myXPub);
     showDialog(
       context: context,
       builder: (_) => Dialog(
-        backgroundColor: HaloColors.onAmber,
+        backgroundColor: const Color(0xFF1A0F04),
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('your halo',
-                  style: HaloType.serif(
-                    size: 14, italic: true, color: HaloColors.amber,
+              const Text('your halo',
+                  style: TextStyle(
+                    color: Color(0xFFF59E0B),
+                    fontSize: 14,
+                    fontStyle: FontStyle.italic,
                   )),
               const SizedBox(height: 4),
-              Text(appState.myId,
-                  style: HaloType.mono(size: 18, color: HaloColors.amber)),
+              Text(_myId,
+                  style: const TextStyle(
+                    color: Color(0xFFF59E0B),
+                    fontSize: 18,
+                    fontFamily: 'monospace',
+                  )),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(14),
@@ -507,8 +437,8 @@ class _DevScreenState extends State<DevScreen> {
                     const SnackBar(content: Text('uri copied')),
                   );
                 },
-                child: Text('copy uri',
-                    style: HaloType.sans(color: HaloColors.amber)),
+                child: const Text('copy uri',
+                    style: TextStyle(color: Color(0xFFF59E0B))),
               ),
             ],
           ),
@@ -522,17 +452,21 @@ class _DevScreenState extends State<DevScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: HaloColors.surface2,
-        title: Text('paste halo:// uri',
-            style: HaloType.sans(color: HaloColors.amber)),
+        backgroundColor: const Color(0xFF201C17),
+        title: const Text('paste halo:// uri',
+            style: TextStyle(color: Color(0xFFF59E0B))),
         content: TextField(
           controller: ctrl,
           maxLines: 4,
           autofocus: true,
-          style: HaloType.mono(size: 11, color: HaloColors.text),
-          decoration: InputDecoration(
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 11,
+            fontFamily: 'monospace',
+          ),
+          decoration: const InputDecoration(
             hintText: 'halo://share?id=...&onion=...&xpub=...',
-            hintStyle: HaloType.mono(size: 11, color: HaloColors.text3),
+            hintStyle: TextStyle(color: Colors.white38),
           ),
         ),
         actions: [
@@ -542,8 +476,8 @@ class _DevScreenState extends State<DevScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('import',
-                style: HaloType.sans(color: HaloColors.amber)),
+            child: const Text('import',
+                style: TextStyle(color: Color(0xFFF59E0B))),
           ),
         ],
       ),
@@ -554,8 +488,7 @@ class _DevScreenState extends State<DevScreen> {
       setState(() => _status = 'invalid halo:// uri');
       return;
     }
-    await db.upsertContact(parsed['id']!, parsed['onion']!, parsed['xpub']!);
-    await appState.refreshContacts();
+    await _db.upsertContact(parsed['id']!, parsed['onion']!, parsed['xpub']!);
     setState(() {
       _peerId = parsed['id']!;
       _peerOnion = parsed['onion']!;
@@ -573,58 +506,57 @@ class _DevScreenState extends State<DevScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: HaloColors.surface,
-      appBar: AppBar(
-        backgroundColor: HaloColors.surface,
-        elevation: 0,
-        title: Text('dev',
-            style: HaloType.serif(size: 18, italic: true, color: HaloColors.text)),
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 8),
-              Text('halo',
-                  style: HaloType.serif(
-                    size: 56, weight: FontWeight.w300,
-                    italic: true, color: HaloColors.amber, height: 1,
-                  )),
-              const SizedBox(height: 4),
-              Text(engine.version(),
-                  style: HaloType.sans(size: 11, color: HaloColors.text3)),
               const SizedBox(height: 16),
-              Text('your halo:',
-                  style: HaloType.sans(size: 11, color: HaloColors.text2)),
+              const Text(
+                'halo',
+                style: TextStyle(
+                  fontSize: 56,
+                  color: Color(0xFFF59E0B),
+                  fontWeight: FontWeight.w300,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+              Text(_engine.version(),
+                  style: const TextStyle(color: Colors.white38, fontSize: 11)),
+              const SizedBox(height: 16),
+              const Text('your halo:',
+                  style: TextStyle(color: Colors.white54, fontSize: 11)),
               Container(
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(top: 6),
                 decoration: BoxDecoration(
-                  color: HaloColors.onAmber,
-                  border: Border.all(color: HaloColors.amber, width: 0.5),
+                  color: const Color(0xFF1A0F04),
+                  border: Border.all(color: const Color(0xFFF59E0B), width: 0.5),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  appState.myId.isEmpty ? '...' : appState.myId,
-                  style: HaloType.mono(
-                    size: 18, color: HaloColors.amber, letter: 0.04,
+                  _myId.isEmpty ? '...' : _myId,
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    color: Color(0xFFF59E0B),
+                    fontSize: 18,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ),
-              if (appState.restored)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
+              if (_restored)
+                const Padding(
+                  padding: EdgeInsets.only(top: 4),
                   child: Text('restored from disk',
-                      style: HaloType.mono(size: 9, color: HaloColors.green)),
+                      style: TextStyle(color: Color(0xFF34D399), fontSize: 9)),
                 ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _myAddr.isEmpty ? _startListener : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: HaloColors.amber,
-                  foregroundColor: HaloColors.onAmber,
+                  backgroundColor: const Color(0xFFF59E0B),
+                  foregroundColor: const Color(0xFF1A0F04),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 child: Text(_myAddr.isEmpty ? 'start listening' : 'listening'),
@@ -634,7 +566,7 @@ class _DevScreenState extends State<DevScreen> {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      icon: const Icon(Icons.qr_code, color: HaloColors.amber),
+                      icon: const Icon(Icons.qr_code, color: Color(0xFFF59E0B)),
                       label: const Text('show my qr'),
                       onPressed: _showMyQr,
                     ),
@@ -642,7 +574,7 @@ class _DevScreenState extends State<DevScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: OutlinedButton.icon(
-                      icon: const Icon(Icons.content_paste, color: HaloColors.violet),
+                      icon: const Icon(Icons.content_paste, color: Color(0xFFA78BFA)),
                       label: const Text('import peer'),
                       onPressed: _importPeer,
                     ),
@@ -651,62 +583,66 @@ class _DevScreenState extends State<DevScreen> {
               ),
               const SizedBox(height: 16),
               if (_peerId.isNotEmpty) ...[
-                Text('peer:',
-                    style: HaloType.sans(size: 11, color: HaloColors.text2)),
+                const Text('peer:',
+                    style: TextStyle(color: Colors.white54, fontSize: 11)),
                 Container(
                   padding: const EdgeInsets.all(10),
                   margin: const EdgeInsets.only(top: 4),
                   decoration: BoxDecoration(
-                    color: HaloColors.surface3,
-                    border: Border.all(color: HaloColors.green, width: 0.5),
+                    color: const Color(0xFF1F2A1F),
+                    border: Border.all(color: const Color(0xFF34D399), width: 0.5),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     _peerId,
-                    style: HaloType.mono(size: 14, color: HaloColors.green),
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      color: Color(0xFF34D399),
+                      fontSize: 14,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
               ],
               TextField(
                 controller: _msgCtrl,
-                style: HaloType.sans(color: HaloColors.text),
-                decoration: InputDecoration(
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
                   labelText: 'message (will be encrypted)',
-                  labelStyle: HaloType.sans(color: HaloColors.text2),
-                  border: const OutlineInputBorder(),
+                  labelStyle: TextStyle(color: Colors.white54),
+                  border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 8),
               ElevatedButton(
                 onPressed: (_myAddr.isEmpty || _peerOnion.isEmpty) ? null : _send,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: HaloColors.amber,
-                  foregroundColor: HaloColors.onAmber,
+                  backgroundColor: const Color(0xFFF59E0B),
+                  foregroundColor: const Color(0xFF1A0F04),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 child: const Text('encrypt + send'),
               ),
               const SizedBox(height: 16),
               Text('status: $_status',
-                  style: HaloType.sans(size: 12, color: HaloColors.text2)),
+                  style: const TextStyle(color: Colors.white70, fontSize: 12)),
               if (_receivedPlain.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: HaloColors.surface3,
-                    border: Border.all(color: HaloColors.green),
+                    color: const Color(0xFF1F2A1F),
+                    border: Border.all(color: const Color(0xFF34D399)),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('decrypted:',
-                          style: HaloType.mono(size: 10, color: HaloColors.green)),
+                      const Text('decrypted:',
+                          style: TextStyle(color: Color(0xFF34D399), fontSize: 10)),
                       const SizedBox(height: 4),
                       Text(_receivedPlain,
-                          style: HaloType.sans(size: 14, color: HaloColors.text)),
+                          style: const TextStyle(color: Colors.white, fontSize: 14)),
                     ],
                   ),
                 ),
