@@ -1,5 +1,5 @@
 // halo engine — ffi bridge for flutter
-// phase 1 stage B: identity + tor onion + X25519 ECDH per-peer encryption.
+// phase 1 stage C-prep: identity + tor onion + ECDH + key export/restore for persistence.
 
 package main
 
@@ -39,8 +39,8 @@ lastRecv string
 
 myEdPriv ed25519.PrivateKey
 myEdPub  ed25519.PublicKey
-myXPriv  [32]byte // X25519 private key
-myXPub   [32]byte // X25519 public key
+myXPriv  [32]byte
+myXPub   [32]byte
 myId     string
 )
 
@@ -51,10 +51,9 @@ return C.CString("pong from go engine")
 
 //export HaloVersion
 func HaloVersion() *C.char {
-return C.CString("halo-engine v0.1.2")
+return C.CString("halo-engine v0.1.3")
 }
 
-// generates ed25519 (identity) + X25519 (ECDH) keypairs.
 //export HaloGenerateIdentity
 func HaloGenerateIdentity() *C.char {
 mu.Lock()
@@ -74,6 +73,36 @@ curve25519.ScalarBaseMult(&myXPub, &myXPriv)
 
 myId = idFromPubkey(pub)
 log.Printf("halo: identity generated: %s", myId)
+return C.CString(myId)
+}
+
+// restores identity from hex-encoded ed25519 priv (64 bytes hex = 128 chars) +
+// X25519 priv (32 bytes hex = 64 chars). recomputes pubkeys + halo_id.
+//export HaloRestoreIdentity
+func HaloRestoreIdentity(cEdPriv *C.char, cXPriv *C.char) *C.char {
+mu.Lock()
+defer mu.Unlock()
+
+edPrivHex := C.GoString(cEdPriv)
+xPrivHex := C.GoString(cXPriv)
+
+edPrivBytes, err := hex.DecodeString(edPrivHex)
+if err != nil || len(edPrivBytes) != ed25519.PrivateKeySize {
+return C.CString("error: bad ed priv hex")
+}
+xPrivBytes, err := hex.DecodeString(xPrivHex)
+if err != nil || len(xPrivBytes) != 32 {
+return C.CString("error: bad x priv hex")
+}
+
+myEdPriv = ed25519.PrivateKey(edPrivBytes)
+myEdPub = myEdPriv.Public().(ed25519.PublicKey)
+
+copy(myXPriv[:], xPrivBytes)
+curve25519.ScalarBaseMult(&myXPub, &myXPriv)
+
+myId = idFromPubkey(myEdPub)
+log.Printf("halo: identity restored: %s", myId)
 return C.CString(myId)
 }
 
@@ -101,6 +130,25 @@ defer mu.Unlock()
 return C.CString(hex.EncodeToString(myXPub[:]))
 }
 
+// exports private keys so the dart side can persist them encrypted.
+// only call this once after generation; do NOT log or transmit.
+//export HaloMyEdPrivkey
+func HaloMyEdPrivkey() *C.char {
+mu.Lock()
+defer mu.Unlock()
+if myEdPriv == nil {
+return C.CString("")
+}
+return C.CString(hex.EncodeToString(myEdPriv))
+}
+
+//export HaloMyXPrivkey
+func HaloMyXPrivkey() *C.char {
+mu.Lock()
+defer mu.Unlock()
+return C.CString(hex.EncodeToString(myXPriv[:]))
+}
+
 //export HaloIdFromPubkey
 func HaloIdFromPubkey(cHex *C.char) *C.char {
 pubHex := C.GoString(cHex)
@@ -121,7 +169,6 @@ w3 := wordlist[bits&0x7FF]
 return fmt.Sprintf("%s-%s-%s", w1, w2, w3)
 }
 
-// derive AES key from ECDH shared secret with peer's X25519 pubkey.
 func deriveSharedKey(peerXPubHex string) ([32]byte, error) {
 var key [32]byte
 peerPub, err := hex.DecodeString(peerXPubHex)

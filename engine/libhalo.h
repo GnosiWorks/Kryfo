@@ -84,12 +84,19 @@ extern "C" {
 
 extern char* HaloPing(void);
 extern char* HaloVersion(void);
-
-// generates ed25519 (identity) + X25519 (ECDH) keypairs.
 extern char* HaloGenerateIdentity(void);
+
+// restores identity from hex-encoded ed25519 priv (64 bytes hex = 128 chars) +
+// X25519 priv (32 bytes hex = 64 chars). recomputes pubkeys + halo_id.
+extern char* HaloRestoreIdentity(char* cEdPriv, char* cXPriv);
 extern char* HaloMyId(void);
 extern char* HaloMyEdPubkey(void);
 extern char* HaloMyXPubkey(void);
+
+// exports private keys so the dart side can persist them encrypted.
+// only call this once after generation; do NOT log or transmit.
+extern char* HaloMyEdPrivkey(void);
+extern char* HaloMyXPrivkey(void);
 extern char* HaloIdFromPubkey(char* cHex);
 extern char* HaloEncryptFor(char* cPeerPub, char* cPlain);
 extern char* HaloDecryptFrom(char* cPeerPub, char* cB64);

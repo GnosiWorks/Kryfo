@@ -1,4 +1,4 @@
-// halo mobile — phase 1: QR identity exchange + ECDH encryption over tor
+// halo mobile — phase 1: identity persistence (SQLCipher) + ECDH over tor
 
 import 'dart:async';
 import 'dart:ffi';
@@ -6,7 +6,11 @@ import 'dart:io';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
 
 typedef CStrFn = Pointer<Utf8> Function();
 typedef CStrFnDart = Pointer<Utf8> Function();
@@ -19,8 +23,12 @@ class HaloEngine {
   late final DynamicLibrary _lib;
   late final CStrFnDart _version;
   late final CStrFnDart _genIdentity;
+  late final TwoArgFnDart _restoreIdentity;
   late final CStrFnDart _myId;
+  late final CStrFnDart _myEdPub;
   late final CStrFnDart _myXPub;
+  late final CStrFnDart _myEdPriv;
+  late final CStrFnDart _myXPriv;
   late final TwoArgFnDart _encryptFor;
   late final TwoArgFnDart _decryptFrom;
   late final CStrFnDart _start;
@@ -33,8 +41,12 @@ class HaloEngine {
         : DynamicLibrary.process();
     _version = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloVersion');
     _genIdentity = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloGenerateIdentity');
+    _restoreIdentity = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloRestoreIdentity');
     _myId = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMyId');
+    _myEdPub = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMyEdPubkey');
     _myXPub = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMyXPubkey');
+    _myEdPriv = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMyEdPrivkey');
+    _myXPriv = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMyXPrivkey');
     _encryptFor = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloEncryptFor');
     _decryptFrom = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloDecryptFrom');
     _start = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloStartListener');
@@ -45,9 +57,23 @@ class HaloEngine {
   String version() => _version().toDartString();
   String generateIdentity() => _genIdentity().toDartString();
   String myId() => _myId().toDartString();
+  String myEdPubkey() => _myEdPub().toDartString();
   String myXPubkey() => _myXPub().toDartString();
+  String myEdPrivkey() => _myEdPriv().toDartString();
+  String myXPrivkey() => _myXPriv().toDartString();
   String startListener() => _start().toDartString();
   String lastReceived() => _lastRecv().toDartString();
+
+  String restoreIdentity(String edPriv, String xPriv) {
+    final c1 = edPriv.toNativeUtf8();
+    final c2 = xPriv.toNativeUtf8();
+    try {
+      return _restoreIdentity(c1, c2).toDartString();
+    } finally {
+      calloc.free(c1);
+      calloc.free(c2);
+    }
+  }
 
   String encryptFor(String peerPub, String plain) {
     final cPub = peerPub.toNativeUtf8();
@@ -83,7 +109,145 @@ class HaloEngine {
   }
 }
 
-// halo://share?id=...&onion=...&xpub=...
+// thin wrapper around SQLCipher. handles identity + contacts + messages.
+class HaloDb {
+  static const _storage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
+  static const _passphraseKey = 'halo.db.passphrase';
+
+  Database? _db;
+
+  Future<String> _passphrase() async {
+    var pw = await _storage.read(key: _passphraseKey);
+    if (pw != null) return pw;
+    pw = _randomPassphrase();
+    await _storage.write(key: _passphraseKey, value: pw);
+    return pw;
+  }
+
+  String _randomPassphrase() {
+    final r = DateTime.now().microsecondsSinceEpoch.toString();
+    final chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    var out = StringBuffer(r);
+    for (var i = 0; i < 32; i++) {
+      out.write(chars[(r.codeUnitAt(i % r.length) + i) % chars.length]);
+    }
+    return out.toString();
+  }
+
+  Future<Database> open() async {
+    if (_db != null) return _db!;
+    final dir = await getApplicationDocumentsDirectory();
+    final path = p.join(dir.path, 'halo.db');
+    final pw = await _passphrase();
+    _db = await openDatabase(
+      path,
+      password: pw,
+      version: 1,
+      onCreate: (db, _) async {
+        await db.execute('''
+          CREATE TABLE identity (
+            id TEXT PRIMARY KEY,
+            ed_priv TEXT NOT NULL,
+            x_priv TEXT NOT NULL,
+            created_at INTEGER NOT NULL
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE contacts (
+            halo_id TEXT PRIMARY KEY,
+            onion TEXT NOT NULL,
+            xpub TEXT NOT NULL,
+            first_seen INTEGER NOT NULL,
+            last_seen INTEGER NOT NULL
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            peer_id TEXT NOT NULL,
+            direction TEXT NOT NULL,
+            plaintext TEXT NOT NULL,
+            sent_at INTEGER NOT NULL,
+            FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
+          )
+        ''');
+      },
+    );
+    return _db!;
+  }
+
+  Future<Map<String, String>?> loadIdentity() async {
+    final db = await open();
+    final rows = await db.query('identity', limit: 1);
+    if (rows.isEmpty) return null;
+    return {
+      'id': rows.first['id'] as String,
+      'ed_priv': rows.first['ed_priv'] as String,
+      'x_priv': rows.first['x_priv'] as String,
+    };
+  }
+
+  Future<void> saveIdentity(String id, String edPriv, String xPriv) async {
+    final db = await open();
+    await db.delete('identity');
+    await db.insert('identity', {
+      'id': id,
+      'ed_priv': edPriv,
+      'x_priv': xPriv,
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+    });
+  }
+
+  Future<List<Map<String, Object?>>> contacts() async {
+    final db = await open();
+    return db.query('contacts', orderBy: 'last_seen DESC');
+  }
+
+  Future<void> upsertContact(String haloId, String onion, String xpub) async {
+    final db = await open();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final existing = await db.query('contacts', where: 'halo_id = ?', whereArgs: [haloId], limit: 1);
+    if (existing.isEmpty) {
+      await db.insert('contacts', {
+        'halo_id': haloId,
+        'onion': onion,
+        'xpub': xpub,
+        'first_seen': now,
+        'last_seen': now,
+      });
+    } else {
+      await db.update(
+        'contacts',
+        {'onion': onion, 'xpub': xpub, 'last_seen': now},
+        where: 'halo_id = ?',
+        whereArgs: [haloId],
+      );
+    }
+  }
+
+  Future<void> saveMessage(String peerId, String direction, String plaintext) async {
+    final db = await open();
+    await db.insert('messages', {
+      'peer_id': peerId,
+      'direction': direction,
+      'plaintext': plaintext,
+      'sent_at': DateTime.now().millisecondsSinceEpoch,
+    });
+  }
+
+  Future<List<Map<String, Object?>>> messagesFor(String peerId) async {
+    final db = await open();
+    return db.query(
+      'messages',
+      where: 'peer_id = ?',
+      whereArgs: [peerId],
+      orderBy: 'sent_at ASC',
+    );
+  }
+}
+
 String buildHaloUri(String id, String onion, String xpub) {
   return 'halo://share?id=$id&onion=$onion&xpub=$xpub';
 }
@@ -132,23 +296,52 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final _engine = HaloEngine();
+  final _db = HaloDb();
   final _msgCtrl = TextEditingController(text: 'hello from the other side');
   String _myId = '';
   String _myXPub = '';
   String _myAddr = '';
-  String _status = 'idle';
+  String _status = 'loading...';
   String _peerId = '';
   String _peerOnion = '';
   String _peerXPub = '';
   String _receivedCipher = '';
   String _receivedPlain = '';
+  bool _restored = false;
   Timer? _pollTimer;
 
   @override
   void initState() {
     super.initState();
-    _myId = _engine.generateIdentity();
-    _myXPub = _engine.myXPubkey();
+    _bootIdentity();
+  }
+
+  Future<void> _bootIdentity() async {
+    final saved = await _db.loadIdentity();
+    String id;
+    if (saved != null) {
+      id = _engine.restoreIdentity(saved['ed_priv']!, saved['x_priv']!);
+      _restored = true;
+    } else {
+      id = _engine.generateIdentity();
+      await _db.saveIdentity(
+        id,
+        _engine.myEdPrivkey(),
+        _engine.myXPrivkey(),
+      );
+    }
+    final contacts = await _db.contacts();
+    setState(() {
+      _myId = id;
+      _myXPub = _engine.myXPubkey();
+      _status = _restored ? 'identity restored' : 'identity created';
+      if (contacts.isNotEmpty) {
+        final last = contacts.first;
+        _peerId = last['halo_id'] as String;
+        _peerOnion = last['onion'] as String;
+        _peerXPub = last['xpub'] as String;
+      }
+    });
   }
 
   Future<void> _startListener() async {
@@ -167,6 +360,9 @@ class _HomePageState extends State<HomePage> {
       if (r.isNotEmpty && r != _receivedCipher) {
         if (_peerXPub.isEmpty) return;
         final plain = _engine.decryptFrom(_peerXPub, r);
+        if (!plain.startsWith('error')) {
+          _db.saveMessage(_peerId, 'in', plain);
+        }
         setState(() {
           _receivedCipher = r;
           _receivedPlain = plain;
@@ -181,12 +377,16 @@ class _HomePageState extends State<HomePage> {
       return;
     }
     setState(() => _status = 'encrypting + sending (~30s)...');
-    final cipher = _engine.encryptFor(_peerXPub, _msgCtrl.text);
+    final plain = _msgCtrl.text;
+    final cipher = _engine.encryptFor(_peerXPub, plain);
     if (cipher.startsWith('error')) {
       setState(() => _status = cipher);
       return;
     }
     final result = await Future(() => _engine.sendTo(_peerOnion, cipher));
+    if (result == 'ok') {
+      await _db.saveMessage(_peerId, 'out', plain);
+    }
     setState(() => _status = result);
   }
 
@@ -288,6 +488,7 @@ class _HomePageState extends State<HomePage> {
       setState(() => _status = 'invalid halo:// uri');
       return;
     }
+    await _db.upsertContact(parsed['id']!, parsed['onion']!, parsed['xpub']!);
     setState(() {
       _peerId = parsed['id']!;
       _peerOnion = parsed['onion']!;
@@ -335,7 +536,7 @@ class _HomePageState extends State<HomePage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  _myId,
+                  _myId.isEmpty ? '...' : _myId,
                   style: const TextStyle(
                     fontFamily: 'monospace',
                     color: Color(0xFFF59E0B),
@@ -344,6 +545,12 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
+              if (_restored)
+                const Padding(
+                  padding: EdgeInsets.only(top: 4),
+                  child: Text('restored from disk',
+                      style: TextStyle(color: Color(0xFF34D399), fontSize: 9)),
+                ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _myAddr.isEmpty ? _startListener : null,
