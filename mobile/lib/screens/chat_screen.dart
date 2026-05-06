@@ -4,7 +4,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../theme.dart';
-import '../main.dart' show engine, db;
+import '../main.dart' show engine, db, signalEncrypt, signalDecrypt;
 
 class ChatScreen extends StatefulWidget {
   final String peerHaloId;
@@ -78,13 +78,14 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  void _checkInbox() {
+  Future<void> _checkInbox() async {
     final r = engine.lastReceived();
     if (r.isEmpty || r == _lastCipher) return;
-    final plain = engine.decryptFrom(widget.peerXPub, r);
-    if (plain.startsWith('error')) return;
+    final plain = await signalDecrypt(widget.peerHaloId, r);
+    if (plain == null) return;
     _lastCipher = r;
-    db.saveMessage(widget.peerHaloId, 'in', plain);
+    if (!mounted) return;
+    await db.saveMessage(widget.peerHaloId, 'in', plain);
     setState(() {
       _messages.add(_Msg('in', plain, DateTime.now()));
     });
@@ -98,10 +99,12 @@ class _ChatScreenState extends State<ChatScreen> {
       _sending = true;
       _status = 'sending...';
     });
-    final cipher = engine.encryptFor(widget.peerXPub, text);
-    if (cipher.startsWith('error')) {
+    final String cipher;
+    try {
+      cipher = await signalEncrypt(widget.peerHaloId, text);
+    } catch (e) {
       if (!mounted) return;
-      setState(() { _sending = false; _status = cipher; });
+      setState(() { _sending = false; _status = 'no signal session — re-pair'; });
       return;
     }
     final result = await Future(() => engine.sendTo(widget.peerOnion, cipher));
