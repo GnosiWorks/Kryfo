@@ -18,8 +18,10 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'theme.dart';
 import 'screens/home_screen.dart';
 import 'screens/chat_screen.dart';
+import 'screens/scan_screen.dart';
 import 'screens/modes_screen.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
 
 typedef CStrFn = Pointer<Utf8> Function();
@@ -352,6 +354,24 @@ Future<String?> signalDecrypt(String peerId, String wireB64) async {
   }
 }
 
+
+Future<String> handleHaloUri(String raw) async {
+  final parsed = parseHaloUri(raw);
+  if (parsed == null) return 'invalid uri';
+  if (parsed['v'] == '2') {
+    try {
+      await processPeerBundle(parsed['id']!, parsed['bundle']!);
+    } catch (e) {
+      return 'bundle error: $e';
+    }
+    await db.upsertContact(parsed['id']!, parsed['onion']!, '');
+    return 'signal session built: ${parsed['id']}';
+  } else {
+    await db.upsertContact(parsed['id']!, parsed['onion']!, parsed['xpub']!);
+    return 'peer imported (v1): ${parsed['id']}';
+  }
+}
+
 String buildHaloUri(String id, String onion, String xpub) {
   return 'halo://share?id=$id&onion=$onion&xpub=$xpub';
 }
@@ -389,6 +409,7 @@ final engine = HaloEngine();
 final db = HaloDb();
 
 class AppState extends ChangeNotifier {
+  late AppLinks _appLinks;
   String myId = '';
   String myXPub = '';
   bool restored = false;
@@ -406,6 +427,16 @@ class AppState extends ChangeNotifier {
     }
     myXPub = engine.myXPubkey();
     await _bootSignal();
+    _appLinks = AppLinks();
+    _appLinks.uriLinkStream.listen((uri) async {
+      if (uri.scheme == 'halo') {
+        final result = await handleHaloUri(uri.toString());
+        debugPrint('deep link: $result');
+        await refreshContacts();
+        notifyListeners();
+      }
+    });
+
     await refreshContacts();
     ready = true;
     notifyListeners();
@@ -562,7 +593,7 @@ class _DevScreenState extends State<DevScreen> {
         _status = addr;
       } else {
         _myAddr = addr;
-        _status = 'listening';
+        _status = 'listening \u00b7 first publish can take 2-3 min';
       }
     });
     _pollTimer ??= Timer.periodic(const Duration(seconds: 1), (_) {
@@ -633,6 +664,19 @@ class _DevScreenState extends State<DevScreen> {
                   backgroundColor: Colors.white,
                 ),
               ),
+              const SizedBox(height: 10),
+              Container(
+                constraints: const BoxConstraints(maxWidth: 280),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: HaloColors.amber.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: SelectableText(
+                  uri,
+                  style: HaloType.mono(size: 9, color: HaloColors.amber),
+                ),
+              ),
               const SizedBox(height: 12),
               TextButton(
                 onPressed: () {
@@ -653,66 +697,80 @@ class _DevScreenState extends State<DevScreen> {
 
   Future<void> _importPeer() async {
     final ctrl = TextEditingController();
-    final ok = await showDialog<bool>(
+    final action = await showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: HaloColors.surface2,
-        title: Text('paste halo:// uri',
+        title: Text('add a halo',
             style: HaloType.sans(color: HaloColors.amber)),
-        content: TextField(
-          controller: ctrl,
-          maxLines: 4,
-          autofocus: true,
-          style: HaloType.mono(size: 11, color: HaloColors.text),
-          decoration: InputDecoration(
-            hintText: 'halo://share?id=...&onion=...&xpub=...',
-            hintStyle: HaloType.mono(size: 11, color: HaloColors.text3),
-          ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: double.maxFinite,
+              child: ElevatedButton.icon(
+                onPressed: () => Navigator.pop(context, 'scan'),
+                icon: const Icon(Icons.qr_code_scanner),
+                label: const Text('scan qr'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: HaloColors.amber,
+                  foregroundColor: HaloColors.onAmber,
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text('— or paste —',
+                style: HaloType.sans(size: 11, color: HaloColors.text3)),
+            const SizedBox(height: 10),
+            TextField(
+              controller: ctrl,
+              maxLines: 4,
+              style: HaloType.mono(size: 11, color: HaloColors.text),
+              decoration: InputDecoration(
+                hintText: 'halo://share?...',
+                hintStyle: HaloType.mono(size: 11, color: HaloColors.text3),
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(context, null),
             child: const Text('cancel'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(context, 'paste'),
             child: Text('import',
                 style: HaloType.sans(color: HaloColors.amber)),
           ),
         ],
       ),
     );
-    if (ok != true) return;
-    final parsed = parseHaloUri(ctrl.text);
-    if (parsed == null) {
-      setState(() => _status = 'invalid halo:// uri');
-      return;
-    }
-    if (parsed['v'] == '2') {
-      try {
-        await processPeerBundle(parsed['id']!, parsed['bundle']!);
-      } catch (e) {
-        setState(() => _status = 'bundle error: $e');
-        return;
-      }
-      await db.upsertContact(parsed['id']!, parsed['onion']!, '');
-      await appState.refreshContacts();
-      setState(() {
-        _peerId = parsed['id']!;
-        _peerOnion = parsed['onion']!;
-        _peerXPub = '';
-        _status = 'signal session built: $_peerId';
-      });
+    if (action == null) return;
+
+    String uri;
+    if (action == 'scan') {
+      final result = await Navigator.of(context).push<String>(
+        MaterialPageRoute(builder: (_) => const ScanScreen()),
+      );
+      if (result == null) return;
+      uri = result;
     } else {
-      await db.upsertContact(parsed['id']!, parsed['onion']!, parsed['xpub']!);
-      await appState.refreshContacts();
-      setState(() {
-        _peerId = parsed['id']!;
-        _peerOnion = parsed['onion']!;
-        _peerXPub = parsed['xpub']!;
-        _status = 'peer imported (v1): $_peerId';
-      });
+      uri = ctrl.text;
     }
+
+    final status = await handleHaloUri(uri);
+    await appState.refreshContacts();
+    final parsed = parseHaloUri(uri);
+    if (!mounted) return;
+    setState(() {
+      if (parsed != null) {
+        _peerId = parsed['id'] ?? '';
+        _peerOnion = parsed['onion'] ?? '';
+        _peerXPub = parsed['xpub'] ?? '';
+      }
+      _status = status;
+    });
   }
 
   @override
@@ -841,6 +899,15 @@ class _DevScreenState extends State<DevScreen> {
               const SizedBox(height: 16),
               Text('status: $_status',
                   style: HaloType.sans(size: 12, color: HaloColors.text2)),
+              const SizedBox(height: 24),
+              GestureDetector(
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ModesScreen()),
+                ),
+                child: Text('speed & privacy →',
+                    style: HaloType.mono(
+                        size: 11, color: HaloColors.amber)),
+              ),
               if (_receivedPlain.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Container(
