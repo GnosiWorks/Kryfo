@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../main.dart' show engine, db, signalEncrypt, signalDecrypt;
 
+// persists last-seen cipher per peer across ChatScreen instances
+final Map<String, String> _seenCipherPerPeer = {};
+
 class ChatScreen extends StatefulWidget {
   final String peerHaloId;
   final String peerOnion;
@@ -43,6 +46,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    _lastCipher = _seenCipherPerPeer[widget.peerHaloId] ?? '';
     _loadMessages();
     _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
