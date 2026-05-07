@@ -1,0 +1,34 @@
+# flutter
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/build/
+**/.fvm/
+**/*.iml
+**/local.properties
+
+# ios
+**/Pods/
+**/.symlinks/
+**/Flutter.framework
+
+# go engine artifacts
+engine/libhalo.so
+engine/libhalo.h
+**/jniLibs/**/*.so
+
+# os
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# editors
+.vscode/
+.idea/
+
+# secrets
+.env
+*.key
+*.pem
