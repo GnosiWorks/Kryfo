@@ -44,7 +44,7 @@ class HaloEngine {
   late final TwoArgFnDart _encryptFor;
   late final TwoArgFnDart _decryptFrom;
   late final Pointer<Utf8> Function(Pointer<Utf8>) _start;
-  late final CStrFnDart _lastRecv;
+  late final CStrFnDart _drainInbox;
   late final TwoArgFnDart _send;
 
   HaloEngine() {
@@ -62,7 +62,7 @@ class HaloEngine {
     _encryptFor = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloEncryptFor');
     _decryptFrom = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloDecryptFrom');
     _start = _lib.lookupFunction<Pointer<Utf8> Function(Pointer<Utf8>), Pointer<Utf8> Function(Pointer<Utf8>)>('HaloStartListener');
-    _lastRecv = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloLastReceived');
+    _drainInbox = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloDrainInbox');
     _send = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloSendTo');
   }
 
@@ -81,7 +81,11 @@ class HaloEngine {
       malloc.free(ptr);
     }
   }
-  String lastReceived() => _lastRecv().toDartString();
+  List<String> drainInbox() {
+    final raw = _drainInbox().toDartString();
+    if (raw.isEmpty) return const [];
+    return raw.split('\n');
+  }
 
   String restoreIdentity(String edPriv, String xPriv) {
     final c1 = edPriv.toNativeUtf8();
@@ -605,18 +609,18 @@ class _DevScreenState extends State<DevScreen> {
       }
     });
     _pollTimer ??= Timer.periodic(const Duration(seconds: 1), (_) {
-      final r = engine.lastReceived();
-      if (r.isNotEmpty && r != _receivedCipher) {
-        if (_peerXPub.isEmpty) return;
-        final plain = engine.decryptFrom(_peerXPub, r);
-        if (!plain.startsWith('error')) {
-          db.saveMessage(_peerId, 'in', plain);
+      final msgs = engine.drainInbox();
+        if (msgs.isEmpty || _peerXPub.isEmpty) return;
+        for (final r in msgs) {
+          final plain = engine.decryptFrom(_peerXPub, r);
+          if (!plain.startsWith('error')) {
+            db.saveMessage(_peerId, 'in', plain);
+          }
+          setState(() {
+            _receivedCipher = r;
+            _receivedPlain = plain;
+          });
         }
-        setState(() {
-          _receivedCipher = r;
-          _receivedPlain = plain;
-        });
-      }
     });
   }
 
