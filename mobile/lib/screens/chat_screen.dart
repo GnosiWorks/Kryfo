@@ -83,17 +83,19 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _checkInbox() async {
-    final r = engine.lastReceived();
-    if (r.isEmpty || r == _lastCipher) return;
-    final plain = await signalDecrypt(widget.peerHaloId, r);
-    if (plain == null) return;
-    _lastCipher = r;
-    if (!mounted) return;
-    await db.saveMessage(widget.peerHaloId, 'in', plain);
-    setState(() {
-      _messages.add(_Msg('in', plain, DateTime.now()));
-    });
-    _scrollToEnd();
+    final msgs = engine.drainInbox();
+    if (msgs.isEmpty) return;
+    for (final r in msgs) {
+      final plain = await signalDecrypt(widget.peerHaloId, r);
+      if (plain == null) continue;
+      _lastCipher = r;
+      if (!mounted) return;
+      await db.saveMessage(widget.peerHaloId, 'in', plain);
+      setState(() {
+        _messages.add(_Msg('in', plain, DateTime.now()));
+      });
+      _scrollToEnd();
+    }
   }
 
   Future<void> _send() async {

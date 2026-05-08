@@ -35,7 +35,7 @@ mu       sync.Mutex
 torNode  *tor.Tor
 listener net.Listener
 myAddr   string
-lastRecv string
+inbox    []string
 
 myEdPriv ed25519.PrivateKey
 myEdPub  ed25519.PublicKey
@@ -335,17 +335,22 @@ return
 }
 line = strings.TrimSpace(line)
 mu.Lock()
-lastRecv = line
+inbox = append(inbox, line)
 mu.Unlock()
 conn.Write([]byte("ack\n"))
 log.Printf("halo: received %d bytes", len(line))
 }
 
-//export HaloLastReceived
-func HaloLastReceived() *C.char {
-mu.Lock()
-defer mu.Unlock()
-return C.CString(lastRecv)
+//export HaloDrainInbox
+func HaloDrainInbox() *C.char {
+	mu.Lock()
+	defer mu.Unlock()
+	if len(inbox) == 0 {
+		return C.CString("")
+	}
+	out := strings.Join(inbox, "\n")
+	inbox = inbox[:0]
+	return C.CString(out)
 }
 
 //export HaloSendTo
