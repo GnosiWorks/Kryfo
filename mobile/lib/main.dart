@@ -45,6 +45,7 @@ class HaloEngine {
   late final TwoArgFnDart _decryptFrom;
   late final Pointer<Utf8> Function(Pointer<Utf8>) _start;
   late final CStrFnDart _drainInbox;
+  late final CStrFnDart _getStatus;
   late final TwoArgFnDart _send;
 
   HaloEngine() {
@@ -63,6 +64,7 @@ class HaloEngine {
     _decryptFrom = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloDecryptFrom');
     _start = _lib.lookupFunction<Pointer<Utf8> Function(Pointer<Utf8>), Pointer<Utf8> Function(Pointer<Utf8>)>('HaloStartListener');
     _drainInbox = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloDrainInbox');
+    _getStatus = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloGetStatus');
     _send = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloSendTo');
   }
 
@@ -86,6 +88,8 @@ class HaloEngine {
     if (raw.isEmpty) return const [];
     return raw.split('\n');
   }
+
+  String getStatus() => _getStatus().toDartString();
 
   String restoreIdentity(String edPriv, String xPriv) {
     final c1 = edPriv.toNativeUtf8();
@@ -609,6 +613,22 @@ class _DevScreenState extends State<DevScreen> {
       }
     });
     _pollTimer ??= Timer.periodic(const Duration(seconds: 1), (_) {
+      final raw = engine.getStatus();
+      final parts = raw.split('|');
+      if (parts.isNotEmpty) {
+        String label;
+        switch (parts[0]) {
+          case 'off': label = ''; break;
+          case 'starting': label = 'starting tor...'; break;
+          case 'bootstrapped': label = 'tor ready, opening onion...'; break;
+          case 'publishing': label = 'publishing to network (~30-60s)...'; break;
+          case 'reachable': label = 'listening · reachable'; break;
+          default: label = parts[0];
+        }
+        if (label != _status && mounted) {
+          setState(() => _status = label);
+        }
+      }
       final msgs = engine.drainInbox();
         if (msgs.isEmpty || _peerXPub.isEmpty) return;
         for (final r in msgs) {

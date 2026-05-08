@@ -44,6 +44,23 @@ myXPub   [32]byte
 myId     string
 )
 
+var (
+	statusMu     sync.RWMutex
+	torStatus    = "off"
+	bootstrapPct = 0
+	hsdirUploads = 0
+)
+
+func setStatus(s string) {
+	statusMu.Lock()
+	defer statusMu.Unlock()
+	if torStatus != s {
+		log.Printf("halo: status %s -> %s", torStatus, s)
+		torStatus = s
+	}
+}
+
+
 //export HaloPing
 func HaloPing() *C.char {
 return C.CString("pong from go engine")
@@ -265,6 +282,7 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 		return C.CString(fmt.Sprintf("error: mkdir tor: %v", err))
 	}
 
+	setStatus("starting")
 	log.Println("halo: starting embedded tor...")
 	t, err := tor.Start(nil, &tor.StartConf{
 		ProcessCreator: libtor.Creator,
@@ -275,6 +293,8 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 		return C.CString(fmt.Sprintf("error: tor start: %v", err))
 	}
 	torNode = t
+	setStatus("bootstrapped")
+
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
@@ -296,6 +316,7 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 		}
 	}
 
+	setStatus("publishing")
 	onion, err := t.Listen(ctx, &tor.ListenConf{
 		Version3:    true,
 		RemotePorts: []int{80},
@@ -306,6 +327,16 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 	}
 	listener = onion
 	myAddr = fmt.Sprintf("%s.onion", onion.ID)
+
+	go func() {
+		time.Sleep(60 * time.Second)
+		statusMu.Lock()
+		if torStatus == "publishing" {
+			log.Println("halo: status publishing -> reachable (60s timeout)")
+			torStatus = "reachable"
+		}
+		statusMu.Unlock()
+	}()
 
 	go acceptLoop(onion)
 
@@ -339,6 +370,13 @@ inbox = append(inbox, line)
 mu.Unlock()
 conn.Write([]byte("ack\n"))
 log.Printf("halo: received %d bytes", len(line))
+}
+
+//export HaloGetStatus
+func HaloGetStatus() *C.char {
+	statusMu.RLock()
+	defer statusMu.RUnlock()
+	return C.CString(fmt.Sprintf("%s|%d|%d", torStatus, bootstrapPct, hsdirUploads))
 }
 
 //export HaloDrainInbox
