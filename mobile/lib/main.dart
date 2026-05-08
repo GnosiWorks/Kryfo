@@ -43,7 +43,7 @@ class HaloEngine {
   late final CStrFnDart _myXPriv;
   late final TwoArgFnDart _encryptFor;
   late final TwoArgFnDart _decryptFrom;
-  late final CStrFnDart _start;
+  late final Pointer<Utf8> Function(Pointer<Utf8>) _start;
   late final CStrFnDart _lastRecv;
   late final TwoArgFnDart _send;
 
@@ -61,7 +61,7 @@ class HaloEngine {
     _myXPriv = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMyXPrivkey');
     _encryptFor = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloEncryptFor');
     _decryptFrom = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloDecryptFrom');
-    _start = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloStartListener');
+    _start = _lib.lookupFunction<Pointer<Utf8> Function(Pointer<Utf8>), Pointer<Utf8> Function(Pointer<Utf8>)>('HaloStartListener');
     _lastRecv = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloLastReceived');
     _send = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloSendTo');
   }
@@ -73,7 +73,14 @@ class HaloEngine {
   String myXPubkey() => _myXPub().toDartString();
   String myEdPrivkey() => _myEdPriv().toDartString();
   String myXPrivkey() => _myXPriv().toDartString();
-  String startListener() => _start().toDartString();
+  String startListener(String dataDir) {
+    final ptr = dataDir.toNativeUtf8();
+    try {
+      return _start(ptr).toDartString();
+    } finally {
+      malloc.free(ptr);
+    }
+  }
   String lastReceived() => _lastRecv().toDartString();
 
   String restoreIdentity(String edPriv, String xPriv) {
@@ -587,7 +594,8 @@ class _DevScreenState extends State<DevScreen> {
 
   Future<void> _startListener() async {
     setState(() => _status = 'starting tor (~30s)...');
-    final addr = await Future(() => engine.startListener());
+    final docsDir = await getApplicationDocumentsDirectory();
+    final addr = await Future(() => engine.startListener(docsDir.path));
     setState(() {
       if (addr.startsWith('error')) {
         _status = addr;
