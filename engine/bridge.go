@@ -248,42 +248,69 @@ return C.CString(string(plain))
 }
 
 //export HaloStartListener
-func HaloStartListener() *C.char {
-mu.Lock()
-defer mu.Unlock()
+func HaloStartListener(cDataDir *C.char) *C.char {
+	mu.Lock()
+	defer mu.Unlock()
 
-if myAddr != "" {
-return C.CString(myAddr)
-}
+	if myAddr != "" {
+		return C.CString(myAddr)
+	}
 
-log.Println("halo: starting embedded tor...")
-t, err := tor.Start(nil, &tor.StartConf{
-ProcessCreator: libtor.Creator,
-DataDir:        "/data/data/com.halo.halo_app/files/tor",
-DebugWriter:    os.Stderr,
-})
-if err != nil {
-return C.CString(fmt.Sprintf("error: tor start: %v", err))
-}
-torNode = t
+	dataDir := C.GoString(cDataDir)
+	if dataDir == "" {
+		return C.CString("error: empty data dir")
+	}
+	torDataDir := dataDir + "/tor"
+	if err := os.MkdirAll(torDataDir, 0700); err != nil {
+		return C.CString(fmt.Sprintf("error: mkdir tor: %v", err))
+	}
 
-ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-defer cancel()
+	log.Println("halo: starting embedded tor...")
+	t, err := tor.Start(nil, &tor.StartConf{
+		ProcessCreator: libtor.Creator,
+		DataDir:        torDataDir,
+		DebugWriter:    os.Stderr,
+	})
+	if err != nil {
+		return C.CString(fmt.Sprintf("error: tor start: %v", err))
+	}
+	torNode = t
 
-onion, err := t.Listen(ctx, &tor.ListenConf{
-Version3:    true,
-RemotePorts: []int{80},
-})
-if err != nil {
-return C.CString(fmt.Sprintf("error: listen: %v", err))
-}
-listener = onion
-myAddr = fmt.Sprintf("%s.onion", onion.ID)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
 
-go acceptLoop(onion)
+	keyPath := dataDir + "/onion.key"
+	var key ed25519.PrivateKey
+	if data, rerr := os.ReadFile(keyPath); rerr == nil && len(data) == ed25519.PrivateKeySize {
+		key = ed25519.PrivateKey(data)
+		log.Println("halo: loaded onion key from disk")
+	} else {
+		_, key, err = ed25519.GenerateKey(rand.Reader)
+		if err != nil {
+			return C.CString(fmt.Sprintf("error: gen onion key: %v", err))
+		}
+		if werr := os.WriteFile(keyPath, key, 0600); werr != nil {
+			log.Printf("halo: WARN onion key save failed: %v", werr)
+		} else {
+			log.Println("halo: generated and saved new onion key")
+		}
+	}
 
-log.Printf("halo: listening on %s", myAddr)
-return C.CString(myAddr)
+	onion, err := t.Listen(ctx, &tor.ListenConf{
+		Version3:    true,
+		RemotePorts: []int{80},
+		Key:         key,
+	})
+	if err != nil {
+		return C.CString(fmt.Sprintf("error: listen: %v", err))
+	}
+	listener = onion
+	myAddr = fmt.Sprintf("%s.onion", onion.ID)
+
+	go acceptLoop(onion)
+
+	log.Printf("halo: listening on %s", myAddr)
+	return C.CString(myAddr)
 }
 
 func acceptLoop(l net.Listener) {
