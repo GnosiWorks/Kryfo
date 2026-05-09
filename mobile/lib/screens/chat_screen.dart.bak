@@ -5,7 +5,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../main.dart' show engine, db, signalEncrypt, signalDecrypt;
-import '../widgets/motion.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
 final Map<String, String> _seenCipherPerPeer = {};
@@ -32,24 +31,7 @@ class _Msg {
   final String direction;
   final String text;
   final DateTime when;
-  bool sending;
-  bool failed;
-  _Msg(this.direction, this.text, this.when, {this.sending = false, this.failed = false});
-}
-
-String _friendlyStatus(String raw) {
-  if (raw.isEmpty) return '';
-  if (raw.startsWith('error: dial:') || raw.contains('host unreachable')) {
-    return "couldn't reach peer · they may be offline";
-  }
-  if (raw.startsWith('error:')) return 'something went wrong';
-  return raw;
-}
-
-String _fmtTime(DateTime d) {
-  final h = d.hour.toString().padLeft(2, '0');
-  final m = d.minute.toString().padLeft(2, '0');
-  return '$h:$m';
+  _Msg(this.direction, this.text, this.when);
 }
 
 class _ChatScreenState extends State<ChatScreen> {
@@ -116,71 +98,34 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Future<void> _retry(_Msg msg) async {
-    if (_sending) return;
-    setState(() {
-      msg.failed = false;
-      msg.sending = true;
-      _status = '';
-    });
-    final String cipher;
-    try {
-      cipher = await signalEncrypt(widget.peerHaloId, msg.text);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() { msg.sending = false; msg.failed = true; });
-      return;
-    }
-    final result = await Future(() => engine.sendTo(widget.peerOnion, cipher));
-    if (!mounted) return;
-    if (result == 'ok') {
-      await db.saveMessage(widget.peerHaloId, 'out', msg.text);
-      setState(() { msg.sending = false; });
-    } else {
-      setState(() { msg.sending = false; msg.failed = true; _status = result; });
-    }
-  }
-
   Future<void> _send() async {
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || _sending) return;
-    final msg = _Msg('out', text, DateTime.now(), sending: true);
     setState(() {
-      _messages.add(msg);
       _sending = true;
-      _status = '';
+      _status = 'sending...';
     });
-    _msgCtrl.clear();
-    _scrollToEnd();
     final String cipher;
     try {
       cipher = await signalEncrypt(widget.peerHaloId, text);
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        msg.sending = false;
-        msg.failed = true;
-        _sending = false;
-        _status = 'no signal session — re-pair';
-      });
+      setState(() { _sending = false; _status = 'no signal session — re-pair'; });
       return;
     }
     final result = await Future(() => engine.sendTo(widget.peerOnion, cipher));
     if (!mounted) return;
     if (result == 'ok') {
       await db.saveMessage(widget.peerHaloId, 'out', text);
+      _msgCtrl.clear();
       setState(() {
-        msg.sending = false;
+        _messages.add(_Msg('out', text, DateTime.now()));
         _sending = false;
         _status = '';
       });
+      _scrollToEnd();
     } else {
-      setState(() {
-        msg.sending = false;
-        msg.failed = true;
-        _sending = false;
-        _status = result;
-      });
+      setState(() { _sending = false; _status = result; });
     }
   }
 
@@ -211,13 +156,13 @@ class _ChatScreenState extends State<ChatScreen> {
                       controller: _scrollCtrl,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       itemCount: _messages.length,
-                      itemBuilder: (c, i) => _Bubble(msg: _messages[i], onRetry: _retry),
+                      itemBuilder: (c, i) => _Bubble(msg: _messages[i]),
                     ),
             ),
             if (_status.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
-                child: Text(_friendlyStatus(_status),
+                child: Text(_status,
                     style: HaloType.mono(size: 10, color: HaloColors.text3)),
               ),
             _Composer(
@@ -295,98 +240,43 @@ class _Avatar extends StatelessWidget {
 
 class _Bubble extends StatelessWidget {
   final _Msg msg;
-  final void Function(_Msg)? onRetry;
-  const _Bubble({required this.msg, this.onRetry});
+  const _Bubble({required this.msg});
   @override
   Widget build(BuildContext context) {
     final isOut = msg.direction == 'out';
-    final showMeta = isOut && !msg.sending && !msg.failed;
-    final showPill = isOut && msg.sending;
-    final metaColor = isOut
-        ? HaloColors.onAmber.withValues(alpha: 0.55)
-        : HaloColors.text3;
-    return GestureDetector(
-      onTap: msg.failed && onRetry != null ? () => onRetry!(msg) : null,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Column(
-          crossAxisAlignment: isOut ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-          children: [
-            Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.78,
-              ),
-              padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
-              decoration: BoxDecoration(
-                color: isOut ? null : HaloColors.surface3,
-                gradient: isOut
-                    ? const LinearGradient(
-                        begin: Alignment.topLeft, end: Alignment.bottomRight,
-                        colors: [HaloColors.amber, HaloColors.amberDeep],
-                      )
-                    : null,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(14),
-                  topRight: const Radius.circular(14),
-                  bottomLeft: Radius.circular(isOut ? 14 : 4),
-                  bottomRight: Radius.circular(isOut ? 4 : 14),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(msg.text,
-                      style: HaloType.sans(
-                        size: 14,
-                        color: isOut ? HaloColors.onAmber : HaloColors.text,
-                        height: 1.4,
-                      )),
-                  if (showMeta) ...[
-                    const SizedBox(height: 4),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_fmtTime(msg.when),
-                            style: TextStyle(
-                              fontFamily: 'JetBrains Mono',
-                              fontSize: 9,
-                              color: metaColor,
-                              letterSpacing: 0.4,
-                            )),
-                        const SizedBox(width: 3),
-                        Text('✓',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: metaColor,
-                              fontWeight: FontWeight.w700,
-                              height: 1,
-                            )),
-                      ],
-                    ),
-                  ],
-                  if (msg.failed) ...[
-                    const SizedBox(height: 4),
-                    Text('failed · tap to retry',
-                        style: TextStyle(
-                          fontFamily: 'JetBrains Mono',
-                          fontSize: 9,
-                          color: HaloColors.onAmber.withValues(alpha: 0.75),
-                          letterSpacing: 0.4,
-                        )),
-                  ],
-                ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: isOut ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          Container(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.78,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: isOut ? null : HaloColors.surface3,
+              gradient: isOut
+                  ? const LinearGradient(
+                      begin: Alignment.topLeft, end: Alignment.bottomRight,
+                      colors: [HaloColors.amber, HaloColors.amberDeep],
+                    )
+                  : null,
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(14),
+                topRight: const Radius.circular(14),
+                bottomLeft: Radius.circular(isOut ? 14 : 4),
+                bottomRight: Radius.circular(isOut ? 4 : 14),
               ),
             ),
-            if (showPill) ...[
-              const SizedBox(height: 4),
-              const Padding(
-                padding: EdgeInsets.only(right: 4),
-                child: SendPill(mode: PrivacyMode.normal),
-              ),
-            ],
-          ],
-        ),
+            child: Text(msg.text,
+                style: HaloType.sans(
+                  size: 14,
+                  color: isOut ? HaloColors.onAmber : HaloColors.text,
+                  height: 1.4,
+                )),
+          ),
+        ],
       ),
     );
   }
