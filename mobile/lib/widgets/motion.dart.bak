@@ -1,0 +1,692 @@
+// halo motion library — relay graph + send pills
+// matches motion-spec mockup. one vocabulary, used throughout.
+
+import 'dart:math' as math;
+import 'package:flutter/material.dart';
+
+const kInk        = Color(0xFF0D0B09);
+const kSurface    = Color(0xFF161310);
+const kSurface2   = Color(0xFF201C17);
+const kSurface3   = Color(0xFF2A251F);
+const kLine       = Color(0xFF2F2922);
+const kLine2      = Color(0xFF3D3629);
+const kText       = Color(0xFFF5F1EA);
+const kText2      = Color(0xFFC8BFB2);
+const kText3      = Color(0xFF948A7E);
+const kAmber      = Color(0xFFF59E0B);
+const kAmberSoft  = Color(0x24F59E0B);
+const kGreen      = Color(0xFF34D399);
+const kGreenSoft  = Color(0x2434D399);
+
+enum TorStatus { off, starting, bootstrapped, publishing, reachable }
+enum PrivacyMode { fast, normal, private }
+
+TorStatus parseTorStatus(String raw) {
+  final parts = raw.split('|');
+  if (parts.isEmpty) return TorStatus.off;
+  switch (parts[0]) {
+    case 'starting': return TorStatus.starting;
+    case 'bootstrapped': return TorStatus.bootstrapped;
+    case 'publishing': return TorStatus.publishing;
+    case 'reachable': return TorStatus.reachable;
+    default: return TorStatus.off;
+  }
+}
+
+int parseBootstrapPct(String raw) {
+  final parts = raw.split('|');
+  if (parts.length < 2) return 0;
+  return int.tryParse(parts[1]) ?? 0;
+}
+
+// === TOR WARMUP GRAPH ===
+
+class TorWarmupGraph extends StatefulWidget {
+  final TorStatus status;
+  final int bootstrapPct;
+
+  const TorWarmupGraph({
+    super.key,
+    required this.status,
+    this.bootstrapPct = 0,
+  });
+
+  @override
+  State<TorWarmupGraph> createState() => _TorWarmupGraphState();
+}
+
+class _TorWarmupGraphState extends State<TorWarmupGraph>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 4000),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctl.dispose();
+    super.dispose();
+  }
+
+  String get _label {
+    switch (widget.status) {
+      case TorStatus.off: return 'OFF';
+      case TorStatus.starting: return 'STARTING';
+      case TorStatus.bootstrapped: return 'CONNECTING';
+      case TorStatus.publishing: return 'PUBLISHING';
+      case TorStatus.reachable: return 'READY';
+    }
+  }
+
+  String get _phrase {
+    switch (widget.status) {
+      case TorStatus.off: return '';
+      case TorStatus.starting: return 'warming the circuit';
+      case TorStatus.bootstrapped: return 'carving the path';
+      case TorStatus.publishing: return 'announcing your onion';
+      case TorStatus.reachable: return "you're reachable";
+    }
+  }
+
+  String get _hint {
+    if (widget.status == TorStatus.reachable) {
+      return 'circuit is live. messages flow now.';
+    }
+    return 'first publish takes 2-3 minutes through a fresh circuit. after that, messages are steady.';
+  }
+
+  Color get _labelColor =>
+      widget.status == TorStatus.reachable ? kGreen : kAmber;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 28),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 56,
+            child: AnimatedBuilder(
+              animation: _ctl,
+              builder: (context, _) => CustomPaint(
+                painter: _CurveGraphPainter(
+                  status: widget.status,
+                  t: _ctl.value,
+                ),
+                size: Size.infinite,
+              ),
+            ),
+          ),
+          const SizedBox(height: 28),
+          Text(
+            _label,
+            style: TextStyle(
+              fontFamily: 'JetBrains Mono',
+              fontSize: 10,
+              letterSpacing: 1.4,
+              fontWeight: FontWeight.w500,
+              color: _labelColor,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            _phrase,
+            style: const TextStyle(
+              fontFamily: 'Fraunces',
+              fontStyle: FontStyle.italic,
+              fontSize: 22,
+              fontWeight: FontWeight.w300,
+              color: kText,
+              letterSpacing: -0.3,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Container(width: 80, height: 0.5, color: kLine),
+          const SizedBox(height: 14),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              _hint,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontFamily: 'Instrument Sans',
+                fontSize: 11,
+                color: kText3,
+                height: 1.5,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CurveGraphPainter extends CustomPainter {
+  final TorStatus status;
+  final double t;
+  _CurveGraphPainter({required this.status, required this.t});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cy = size.height / 2;
+    final positions = [
+      Offset(60.0, cy + 6),
+      Offset(size.width / 2, cy - 14),
+      Offset(size.width - 60.0, cy + 6),
+    ];
+
+    final path = Path()..moveTo(positions[0].dx, positions[0].dy);
+    for (int i = 1; i < 3; i++) {
+      final p0 = positions[i - 1];
+      final p1 = positions[i];
+      final cx = (p0.dx + p1.dx) / 2;
+      final cyc = p1.dy - 4;
+      path.quadraticBezierTo(cx, cyc, p1.dx, p1.dy);
+    }
+
+    canvas.drawPath(
+        path,
+        Paint()
+          ..color = kAmber.withOpacity(0.55)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5));
+    canvas.drawPath(
+        path,
+        Paint()
+          ..color = kAmber.withOpacity(0.85)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.8);
+
+    if (status == TorStatus.publishing) {
+      final metrics = path.computeMetrics().toList();
+      double total = 0;
+      for (final m in metrics) {
+        total += m.length;
+      }
+      double target = (t % 1.0) * total;
+      for (final m in metrics) {
+        if (target <= m.length) {
+          final tg = m.getTangentForOffset(target);
+          if (tg != null) {
+            canvas.drawCircle(
+                tg.position,
+                5,
+                Paint()
+                  ..color = kAmber.withOpacity(0.6)
+                  ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4));
+            canvas.drawCircle(tg.position, 2, Paint()..color = kAmber);
+          }
+          break;
+        }
+        target -= m.length;
+      }
+    }
+
+    for (int i = 0; i < 3; i++) {
+      _drawNode(canvas, positions[i], i);
+    }
+  }
+
+  void _drawNode(Canvas canvas, Offset c, int i) {
+    final visible = status != TorStatus.off &&
+        !(status == TorStatus.starting && i > 0);
+    if (!visible) {
+      canvas.drawCircle(
+          c,
+          4,
+          Paint()
+            ..color = kLine2
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 0.7);
+      return;
+    }
+
+    final phase = (t + i * 0.2) * 2 * math.pi;
+    final breath = 0.55 + 0.45 * (math.sin(phase) * 0.5 + 0.5);
+    final op = breath;
+
+    canvas.drawCircle(
+        c,
+        14,
+        Paint()
+          ..color = kAmber.withOpacity(0.18 * op)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10));
+    canvas.drawCircle(
+        c,
+        9,
+        Paint()
+          ..color = kAmber.withOpacity(0.45 * op)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5));
+    canvas.drawCircle(c, 4.5, Paint()..color = kAmber.withOpacity(op));
+    canvas.drawCircle(c, 2.0,
+        Paint()..color = const Color(0xFFFFFAEC).withOpacity(op * 0.85));
+  }
+
+  @override
+  bool shouldRepaint(_CurveGraphPainter old) =>
+      old.status != status || old.t != t;
+}
+
+// === SEND PILL ===
+
+class SendPill extends StatefulWidget {
+  final PrivacyMode mode;
+  final bool delivered;
+
+  const SendPill({super.key, required this.mode, this.delivered = false});
+
+  @override
+  State<SendPill> createState() => _SendPillState();
+}
+
+class _SendPillState extends State<SendPill>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctl;
+
+  Duration _durFor(PrivacyMode m) => switch (m) {
+        PrivacyMode.fast => const Duration(milliseconds: 1100),
+        PrivacyMode.normal => const Duration(milliseconds: 2000),
+        PrivacyMode.private => const Duration(milliseconds: 3400),
+      };
+
+  @override
+  void initState() {
+    super.initState();
+    _ctl = AnimationController(vsync: this, duration: _durFor(widget.mode))
+      ..repeat();
+  }
+
+  @override
+  void didUpdateWidget(SendPill old) {
+    super.didUpdateWidget(old);
+    if (old.mode != widget.mode) {
+      _ctl.duration = _durFor(widget.mode);
+      _ctl
+        ..stop()
+        ..repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctl.dispose();
+    super.dispose();
+  }
+
+  String get _label {
+    if (widget.delivered) return 'delivered';
+    return switch (widget.mode) {
+      PrivacyMode.fast => 'direct',
+      PrivacyMode.normal => '1 hop',
+      PrivacyMode.private => '3 hops',
+    };
+  }
+
+  Color get _color =>
+      (widget.delivered || widget.mode == PrivacyMode.fast) ? kGreen : kAmber;
+
+  double get _journeyW => switch (widget.mode) {
+        PrivacyMode.fast => 18.0,
+        PrivacyMode.normal => 18.0,
+        PrivacyMode.private => 42.0,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+      decoration: BoxDecoration(
+        color: _color.withOpacity(0.14),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(_label,
+              style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 9,
+                letterSpacing: 0.45,
+                fontWeight: FontWeight.w500,
+                color: _color,
+              )),
+          const SizedBox(width: 7),
+          if (widget.delivered)
+            Text('✓',
+                style: TextStyle(
+                    fontSize: 11, color: _color, height: 1, fontWeight: FontWeight.w600))
+          else
+            SizedBox(
+              width: _journeyW,
+              height: 10,
+              child: AnimatedBuilder(
+                animation: _ctl,
+                builder: (context, _) => CustomPaint(
+                  painter: _JourneyPainter(
+                    mode: widget.mode,
+                    color: _color,
+                    t: _ctl.value,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _JourneyPainter extends CustomPainter {
+  final PrivacyMode mode;
+  final Color color;
+  final double t;
+
+  _JourneyPainter({required this.mode, required this.color, required this.t});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cy = size.height / 2;
+
+    _drawDottedLine(canvas, Offset(1.5, cy),
+        Offset(size.width - 1.5, cy), color.withOpacity(0.35));
+
+    final List<double> onionXs = switch (mode) {
+      PrivacyMode.fast => const [],
+      PrivacyMode.normal => [size.width / 2],
+      PrivacyMode.private => [
+          5.0,
+          size.width / 2,
+          size.width - 5.0,
+        ],
+    };
+
+    for (int i = 0; i < onionXs.length; i++) {
+      _drawOnion(canvas, Offset(onionXs[i], cy), i);
+    }
+
+    double tx;
+    double op = 1.0;
+    switch (mode) {
+      case PrivacyMode.fast:
+        tx = t * (size.width - 4);
+        if (t < 0.1) op = t * 10;
+        if (t > 0.9) op = (1 - t) * 10;
+        break;
+      case PrivacyMode.normal:
+        final mid = size.width / 2;
+        if (t < 0.35) {
+          tx = (t / 0.35) * mid;
+        } else if (t < 0.55) {
+          tx = mid;
+        } else if (t < 0.95) {
+          tx = mid + ((t - 0.55) / 0.4) * (size.width - 4 - mid);
+        } else {
+          tx = size.width - 4;
+          op = (1 - t) * 20;
+        }
+        if (t < 0.08) op = t * 12;
+        break;
+      case PrivacyMode.private:
+        final stops = [5.0, size.width / 2, size.width - 5.0];
+        if (t < 0.22) {
+          tx = (t / 0.22) * stops[0];
+        } else if (t < 0.32) {
+          tx = stops[0];
+        } else if (t < 0.46) {
+          tx = stops[0] + ((t - 0.32) / 0.14) * (stops[1] - stops[0]);
+        } else if (t < 0.56) {
+          tx = stops[1];
+        } else if (t < 0.78) {
+          tx = stops[1] + ((t - 0.56) / 0.22) * (stops[2] - stops[1]);
+        } else {
+          tx = stops[2];
+        }
+        if (t < 0.06) op = t * 16;
+        if (t > 0.94) op = (1 - t) * 16;
+        break;
+    }
+    op = op.clamp(0.0, 1.0);
+
+    canvas.drawCircle(Offset(tx, cy), 4,
+        Paint()
+          ..color = color.withOpacity(0.55 * op)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
+    canvas.drawCircle(Offset(tx, cy), 1.8,
+        Paint()..color = color.withOpacity(op));
+  }
+
+  void _drawDottedLine(Canvas canvas, Offset s, Offset e, Color c) {
+    final paint = Paint()
+      ..color = c
+      ..strokeWidth = 0.75;
+    const seg = 1.0, gap = 1.5;
+    final dx = e.dx - s.dx;
+    final n = (dx / (seg + gap)).floor();
+    for (int i = 0; i < n; i++) {
+      final x = s.dx + i * (seg + gap);
+      canvas.drawLine(Offset(x, s.dy), Offset(x + seg, s.dy), paint);
+    }
+  }
+
+  void _drawOnion(Canvas canvas, Offset c, int i) {
+    bool active = false;
+    double amt = 0;
+    switch (mode) {
+      case PrivacyMode.fast:
+        break;
+      case PrivacyMode.normal:
+        if (t >= 0.30 && t <= 0.60) {
+          active = true;
+          final p = (t - 0.30) / 0.30;
+          amt = 1 - (p - 0.5).abs() * 2;
+        }
+        break;
+      case PrivacyMode.private:
+        final peaks = [0.27, 0.51, 0.73];
+        final dist = (t - peaks[i]).abs();
+        if (dist < 0.13) {
+          active = true;
+          amt = 1 - dist / 0.13;
+        }
+        break;
+    }
+
+    final restPulse = mode == PrivacyMode.normal
+        ? 0.25 * (math.sin(t * 2 * math.pi) * 0.5 + 0.5)
+        : 0.0;
+    final op = (0.45 + restPulse + amt * 0.55).clamp(0.0, 1.0);
+
+    if (active && amt > 0.5) {
+      final r = (amt - 0.5) * 2;
+      canvas.drawCircle(c, 4 + r * 4,
+          Paint()
+            ..color = color.withOpacity(0.6 * (1 - r))
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 0.7);
+    }
+
+    canvas.drawCircle(c, 4,
+        Paint()
+          ..color = color.withOpacity(op)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.7);
+    canvas.drawCircle(c, 2.5,
+        Paint()
+          ..color = color.withOpacity(op)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.7);
+    canvas.drawCircle(c, 1.2, Paint()..color = color.withOpacity(op));
+  }
+
+  @override
+  bool shouldRepaint(_JourneyPainter old) =>
+      old.mode != mode || old.color != color || old.t != t;
+}
+
+// === TYPING DOTS ===
+
+class TypingDots extends StatefulWidget {
+  const TypingDots({super.key});
+  @override
+  State<TypingDots> createState() => _TypingDotsState();
+}
+
+class _TypingDotsState extends State<TypingDots>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: kSurface3,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(14),
+          topRight: Radius.circular(14),
+          bottomRight: Radius.circular(14),
+          bottomLeft: Radius.circular(4),
+        ),
+      ),
+      child: AnimatedBuilder(
+        animation: _ctl,
+        builder: (context, _) => Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _dot(0),
+            const SizedBox(width: 3),
+            _dot(0.18),
+            const SizedBox(width: 3),
+            _dot(0.36),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _dot(double phase) {
+    final ph = (_ctl.value + phase) % 1.0;
+    final dy = ph < 0.3 ? -3.0 * (math.sin(ph / 0.3 * math.pi)) : 0.0;
+    final op = 0.4 + (ph < 0.3 ? 0.6 * math.sin(ph / 0.3 * math.pi) : 0.0);
+    return Transform.translate(
+      offset: Offset(0, dy),
+      child: Container(
+        width: 5, height: 5,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: kText2.withOpacity(op),
+        ),
+      ),
+    );
+  }
+}
+
+// === BREATH STATUS DOT ===
+
+class BreathDot extends StatefulWidget {
+  final Color color;
+  final double size;
+  const BreathDot({super.key, this.color = kGreen, this.size = 5});
+  @override
+  State<BreathDot> createState() => _BreathDotState();
+}
+
+class _BreathDotState extends State<BreathDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctl;
+  @override
+  void initState() {
+    super.initState();
+    _ctl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2400),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+        animation: _ctl,
+        builder: (context, _) {
+          final op = 0.5 + 0.5 * math.sin(_ctl.value * 2 * math.pi);
+          return Container(
+            width: widget.size,
+            height: widget.size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: widget.color.withOpacity(op),
+            ),
+          );
+        },
+      );
+}
+
+// === BLINKING CURSOR ===
+
+class BlinkCursor extends StatefulWidget {
+  final Color color;
+  final double height;
+  const BlinkCursor({super.key, this.color = kAmber, this.height = 11});
+  @override
+  State<BlinkCursor> createState() => _BlinkCursorState();
+}
+
+class _BlinkCursorState extends State<BlinkCursor>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctl;
+  @override
+  void initState() {
+    super.initState();
+    _ctl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+        animation: _ctl,
+        builder: (context, _) {
+          final visible = _ctl.value < 0.5;
+          return Container(
+            width: 1.5,
+            height: widget.height,
+            color: visible ? widget.color : Colors.transparent,
+          );
+        },
+      );
+}

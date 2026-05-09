@@ -20,6 +20,8 @@ import 'screens/home_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/scan_screen.dart';
 import 'screens/modes_screen.dart';
+import 'screens/onboarding_screen.dart';
+import 'widgets/motion.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
@@ -424,6 +426,7 @@ final engine = HaloEngine();
 final db = HaloDb();
 
 class AppState extends ChangeNotifier {
+  bool onboardingComplete = false;
   late AppLinks _appLinks;
   String myId = '';
   String myXPub = '';
@@ -432,6 +435,7 @@ class AppState extends ChangeNotifier {
   List<ContactPreview> contacts = [];
 
   Future<void> boot() async {
+    if (ready) return;
     final saved = await db.loadIdentity();
     if (saved != null) {
       myId = engine.restoreIdentity(saved['ed_priv']!, saved['x_priv']!);
@@ -453,6 +457,8 @@ class AppState extends ChangeNotifier {
     });
 
     await refreshContacts();
+    final _stored = await const FlutterSecureStorage().read(key: 'onboarding_done');
+    onboardingComplete = _stored == 'true';
     ready = true;
     notifyListeners();
   }
@@ -490,6 +496,20 @@ class AppState extends ChangeNotifier {
     }).toList();
     notifyListeners();
   }
+
+  Future<void> regenerateIdentity() async {
+    myId = engine.generateIdentity();
+    await db.saveIdentity(myId, engine.myEdPrivkey(), engine.myXPrivkey());
+    myXPub = engine.myXPubkey();
+    restored = false;
+    notifyListeners();
+  }
+
+  Future<void> markOnboardingComplete() async {
+    onboardingComplete = true;
+    await const FlutterSecureStorage().write(key: 'onboarding_done', value: 'true');
+    notifyListeners();
+  }
 }
 
 final appState = AppState();
@@ -503,7 +523,7 @@ class HaloApp extends StatelessWidget {
     return MaterialApp(
       title: 'Halo',
       theme: buildHaloTheme(),
-      home: const RootShell(),
+      home: const _OnboardingGate(child: RootShell()),
     );
   }
 }
@@ -576,6 +596,8 @@ class _DevScreenState extends State<DevScreen> {
   final _msgCtrl = TextEditingController(text: 'hello from the other side');
   String _myAddr = '';
   String _status = '';
+  TorStatus _torStatus = TorStatus.off;
+  int _bootstrapPct = 0;
   String _peerId = '';
   String _peerOnion = '';
   String _peerXPub = '';
@@ -609,25 +631,18 @@ class _DevScreenState extends State<DevScreen> {
         _status = addr;
       } else {
         _myAddr = addr;
-        _status = 'listening \u00b7 first publish can take 2-3 min';
+        _status = '';
       }
     });
     _pollTimer ??= Timer.periodic(const Duration(seconds: 1), (_) {
       final raw = engine.getStatus();
-      final parts = raw.split('|');
-      if (parts.isNotEmpty) {
-        String label;
-        switch (parts[0]) {
-          case 'off': label = ''; break;
-          case 'starting': label = 'starting tor...'; break;
-          case 'bootstrapped': label = 'tor ready, opening onion...'; break;
-          case 'publishing': label = 'publishing to network (~30-60s)...'; break;
-          case 'reachable': label = 'listening · reachable'; break;
-          default: label = parts[0];
-        }
-        if (label != _status && mounted) {
-          setState(() => _status = label);
-        }
+      final newStatus = parseTorStatus(raw);
+      final newPct = parseBootstrapPct(raw);
+      if ((newStatus != _torStatus || newPct != _bootstrapPct) && mounted) {
+        setState(() {
+          _torStatus = newStatus;
+          _bootstrapPct = newPct;
+        });
       }
       final msgs = engine.drainInbox();
         if (msgs.isEmpty || _peerXPub.isEmpty) return;
@@ -929,8 +944,13 @@ class _DevScreenState extends State<DevScreen> {
                 child: const Text('encrypt + send'),
               ),
               const SizedBox(height: 16),
-              Text('status: $_status',
-                  style: HaloType.sans(size: 12, color: HaloColors.text2)),
+              if (_torStatus != TorStatus.off) ...[
+                TorWarmupGraph(status: _torStatus, bootstrapPct: _bootstrapPct),
+                const SizedBox(height: 12),
+              ],
+              if (_status.isNotEmpty)
+                Text('status: $_status',
+                    style: HaloType.sans(size: 12, color: HaloColors.text2)),
               const SizedBox(height: 24),
               GestureDetector(
                 onTap: () => Navigator.of(context).push(
@@ -966,6 +986,53 @@ class _DevScreenState extends State<DevScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _OnboardingGate extends StatefulWidget {
+  final Widget child;
+  const _OnboardingGate({required this.child});
+  @override
+  State<_OnboardingGate> createState() => _OnboardingGateState();
+}
+
+class _OnboardingGateState extends State<_OnboardingGate> {
+  @override
+  void initState() {
+    super.initState();
+    if (!appState.ready) {
+      appState.boot();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: appState,
+      builder: (context, _) {
+        if (!appState.ready) {
+          return Scaffold(
+            backgroundColor: HaloColors.ink,
+            body: Center(
+              child: Container(
+                width: 24, height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: HaloColors.amber.withValues(alpha: 0.6),
+                ),
+              ),
+            ),
+          );
+        }
+        if (!appState.onboardingComplete) {
+          return OnboardingScreen(
+            appState: appState,
+            onComplete: () => appState.markOnboardingComplete(),
+          );
+        }
+        return widget.child;
+      },
     );
   }
 }
