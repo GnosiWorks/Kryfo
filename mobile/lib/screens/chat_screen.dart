@@ -3,6 +3,7 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../signal_session.dart';
 import '../theme.dart';
 import '../main.dart' show engine, db, signalEncrypt, signalDecrypt;
 import '../widgets/motion.dart';
@@ -60,10 +61,14 @@ class _ChatScreenState extends State<ChatScreen> {
   String _lastCipher = '';
   Timer? _pollTimer;
   bool _sending = false;
+  String? _peerXPub;
 
   @override
   void initState() {
     super.initState();
+    signalSession.peerXPubHex(widget.peerHaloId).then((v) {
+      if (mounted) setState(() => _peerXPub = v);
+    });
     _lastCipher = _seenCipherPerPeer[widget.peerHaloId] ?? '';
     _loadMessages();
     _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -131,7 +136,9 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() { msg.sending = false; msg.failed = true; });
       return;
     }
-    final result = await Future(() => engine.sendTo(widget.peerOnion, cipher));
+    final result = _peerXPub == null
+        ? await Future(() => engine.sendTo(widget.peerOnion, cipher))
+        : await Future(() => engine.nostrSend(_peerXPub!, cipher));
     if (!mounted) return;
     if (result == 'ok') {
       await db.saveMessage(widget.peerHaloId, 'out', msg.text);
@@ -165,7 +172,9 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       return;
     }
-    final result = await Future(() => engine.sendTo(widget.peerOnion, cipher));
+    final result = _peerXPub == null
+        ? await Future(() => engine.sendTo(widget.peerOnion, cipher))
+        : await Future(() => engine.nostrSend(_peerXPub!, cipher));
     if (!mounted) return;
     if (result == 'ok') {
       await db.saveMessage(widget.peerHaloId, 'out', text);

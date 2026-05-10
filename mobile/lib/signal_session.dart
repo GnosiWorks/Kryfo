@@ -70,6 +70,20 @@ class SignalSession {
     await d.insert('signal_meta', {'k': 'regId', 'v': id.toString()});
     return id;
   }
+
+  Future<String?> peerXPubHex(String peerHaloId) async {
+    try {
+      final addr = SignalProtocolAddress(peerHaloId, 1);
+      final identity = await identityStore.getIdentity(addr);
+      if (identity == null) return null;
+      final raw = identity.publicKey.serialize();
+      final pub = raw.length == 33 ? raw.sublist(1) : raw;
+      return pub.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    } catch (e) {
+      debugPrint('peerXPubHex error: \$e');
+      return null;
+    }
+  }
 }
 
 final signalSession = SignalSession();

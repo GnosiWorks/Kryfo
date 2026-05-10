@@ -23,6 +23,7 @@ extern const char *_GoStringPtr(_GoString_ s);
 
 
 
+
 /* End of preamble from import "C" comments.  */
 
 
@@ -104,6 +105,10 @@ extern char* HaloStartListener(char* cDataDir);
 extern char* HaloGetStatus(void);
 extern char* HaloDrainInbox(void);
 extern char* HaloSendTo(char* cAddr, char* cMsg);
+extern char* HaloNostrInit(char* cRelaysCSV);
+extern char* HaloNostrSend(char* cPeerXPubHex, char* cMsg);
+extern char* HaloNostrSubscribe(char* cPeerXPubHex);
+extern char* HaloNostrPoll(void);
 
 #ifdef __cplusplus
 }

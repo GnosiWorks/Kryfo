@@ -49,6 +49,10 @@ class HaloEngine {
   late final CStrFnDart _drainInbox;
   late final CStrFnDart _getStatus;
   late final TwoArgFnDart _send;
+  late final OneArgFnDart _nostrInit;
+  late final TwoArgFnDart _nostrSend;
+  late final OneArgFnDart _nostrSubscribe;
+  late final CStrFnDart _nostrPoll;
 
   HaloEngine() {
     _lib = Platform.isAndroid
@@ -68,6 +72,10 @@ class HaloEngine {
     _drainInbox = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloDrainInbox');
     _getStatus = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloGetStatus');
     _send = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloSendTo');
+    _nostrInit = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrInit');
+    _nostrSend = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloNostrSend');
+    _nostrSubscribe = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrSubscribe');
+    _nostrPoll = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloNostrPoll');
   }
 
   String version() => _version().toDartString();
@@ -92,6 +100,35 @@ class HaloEngine {
   }
 
   String getStatus() => _getStatus().toDartString();
+
+  String nostrInit(String relaysCSV) {
+    final ptr = relaysCSV.toNativeUtf8();
+    try { return _nostrInit(ptr).toDartString(); }
+    finally { malloc.free(ptr); }
+  }
+
+  String nostrSend(String peerXPubHex, String b64Cipher) {
+    final p1 = peerXPubHex.toNativeUtf8();
+    final p2 = b64Cipher.toNativeUtf8();
+    try { return _nostrSend(p1, p2).toDartString(); }
+    finally { malloc.free(p1); malloc.free(p2); }
+  }
+
+  String nostrSubscribe(String peerXPubHex) {
+    final ptr = peerXPubHex.toNativeUtf8();
+    try { return _nostrSubscribe(ptr).toDartString(); }
+    finally { malloc.free(ptr); }
+  }
+
+  List<({String peer, String cipher})> nostrPoll() {
+    final raw = _nostrPoll().toDartString();
+    if (raw.isEmpty) return const [];
+    return raw.split('\n').map((line) {
+      final idx = line.indexOf('|');
+      if (idx < 0) return (peer: '', cipher: line);
+      return (peer: line.substring(0, idx), cipher: line.substring(idx + 1));
+    }).toList();
+  }
 
   String restoreIdentity(String edPriv, String xPriv) {
     final c1 = edPriv.toNativeUtf8();
@@ -433,6 +470,7 @@ class AppState extends ChangeNotifier {
   bool restored = false;
   bool ready = false;
   List<ContactPreview> contacts = [];
+  final Map<String, String> _xPubToHaloId = {};
 
   Future<void> boot() async {
     if (ready) return;
@@ -457,6 +495,27 @@ class AppState extends ChangeNotifier {
     });
 
     await refreshContacts();
+    engine.nostrInit('wss://relay.damus.io,wss://nos.lol,wss://relay.snort.social');
+    for (final c in contacts) {
+      final xPub = await signalSession.peerXPubHex(c.haloId);
+      if (xPub != null) {
+        _xPubToHaloId[xPub] = c.haloId;
+        engine.nostrSubscribe(xPub);
+      }
+    }
+    Timer.periodic(const Duration(seconds: 1), (_) {
+      final msgs = engine.nostrPoll();
+      if (msgs.isEmpty) return;
+      for (final m in msgs) {
+        final haloId = _xPubToHaloId[m.peer];
+        if (haloId == null) continue;
+        final plain = engine.decryptFrom(m.peer, m.cipher);
+        if (!plain.startsWith('error')) {
+          db.saveMessage(haloId, 'in', plain);
+          notifyListeners();
+        }
+      }
+    });
     final _stored = await const FlutterSecureStorage().read(key: 'onboarding_done');
     onboardingComplete = _stored == 'true';
     ready = true;
