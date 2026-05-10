@@ -235,7 +235,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
         vsync: this, duration: const Duration(milliseconds: 4000))
       ..repeat();
     _reveal = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 2400));
+        vsync: this, duration: const Duration(milliseconds: 3000));
     _reveal.forward();
   }
 
@@ -474,7 +474,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
     return AnimatedBuilder(
       animation: _reveal,
       builder: (c, _) {
-        final t = (_reveal.value * 2400 - delayMs) / 700;
+        final t = (_reveal.value * 3000 - delayMs) / 700;
         final v = t.clamp(0.0, 1.0);
         final blur = (1 - v) * 6;
         final dy = (1 - v) * 10;
@@ -512,7 +512,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
     return AnimatedBuilder(
       animation: _reveal,
       builder: (c, _) {
-        final t = (_reveal.value * 2400 - delayMs) / 700;
+        final t = (_reveal.value * 3000 - delayMs) / 700;
         final v = t.clamp(0.0, 1.0);
         return Opacity(
           opacity: v,
@@ -720,19 +720,25 @@ class _FirstContactScreen extends StatelessWidget {
                   size: 16,
                   weight: FontWeight.w300,
                   italic: true,
-                  color: HaloColors.text3),
+                  color: HaloColors.text2),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
           Center(
             child: GestureDetector(
               onTap: onComplete,
-              child: Padding(
-                padding: const EdgeInsets.all(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                decoration: BoxDecoration(
+                  color: HaloColors.amber,
+                  borderRadius: BorderRadius.circular(999),
+                ),
                 child: Text(
-                  'SKIP \u00b7 FIND PEOPLE LATER',
-                  style: HaloType.mono(size: 10, color: HaloColors.text3)
-                      .copyWith(letterSpacing: 2.5),
+                  'skip \u00b7 find people later',
+                  style: HaloType.sans(
+                      size: 12,
+                      color: HaloColors.onAmber,
+                      weight: FontWeight.w500),
                 ),
               ),
             ),
