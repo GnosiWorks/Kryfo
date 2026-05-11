@@ -5,7 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../signal_session.dart';
 import '../theme.dart';
-import '../main.dart' show engine, db, signalEncrypt, signalDecrypt;
+import '../main.dart' show engine, db, signalEncrypt, signalDecrypt, appState;
 import '../widgets/motion.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
@@ -66,6 +66,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    appState.addListener(_onAppStateChanged);
     signalSession.peerXPubHex(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _peerXPub = v);
     });
@@ -75,6 +76,11 @@ class _ChatScreenState extends State<ChatScreen> {
       if (!mounted) return;
       _checkInbox();
     });
+  }
+
+  void _onAppStateChanged() {
+    if (!mounted) return;
+    _loadMessages();
   }
 
   Future<void> _loadMessages() async {
@@ -196,6 +202,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _pollTimer?.cancel();
+    appState.removeListener(_onAppStateChanged);
     _msgCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
