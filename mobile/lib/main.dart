@@ -419,9 +419,11 @@ Future<String> handleHaloUri(String raw) async {
       return 'bundle error: $e';
     }
     await db.upsertContact(parsed['id']!, parsed['onion']!, '');
+    await appState.subscribePeer(parsed['id']!);
     return 'signal session built: ${parsed['id']}';
   } else {
     await db.upsertContact(parsed['id']!, parsed['onion']!, parsed['xpub']!);
+    await appState.subscribePeer(parsed['id']!);
     return 'peer imported (v1): ${parsed['id']}';
   }
 }
@@ -503,16 +505,21 @@ class AppState extends ChangeNotifier {
         engine.nostrSubscribe(xPub);
       }
     }
-    Timer.periodic(const Duration(seconds: 1), (_) {
+    Timer.periodic(const Duration(seconds: 1), (_) async {
       final msgs = engine.nostrPoll();
       if (msgs.isEmpty) return;
+      debugPrint('nostr poll: \${msgs.length} messages');
       for (final m in msgs) {
         final haloId = _xPubToHaloId[m.peer];
+        debugPrint('  peer xpub=\${m.peer.substring(0,12)}... haloId=\$haloId cipher=\${m.cipher.length}b');
         if (haloId == null) continue;
-        final plain = engine.decryptFrom(m.peer, m.cipher);
-        if (!plain.startsWith('error')) {
-          db.saveMessage(haloId, 'in', plain);
+        final plain = await signalDecrypt(haloId, m.cipher);
+        if (plain != null) {
+          debugPrint('  decrypted: \$plain');
+          await db.saveMessage(haloId, 'in', plain);
           notifyListeners();
+        } else {
+          debugPrint('  signalDecrypt returned null');
         }
       }
     });
@@ -562,6 +569,14 @@ class AppState extends ChangeNotifier {
     myXPub = engine.myXPubkey();
     restored = false;
     notifyListeners();
+  }
+
+  Future<void> subscribePeer(String haloId) async {
+    final xPub = await signalSession.peerXPubHex(haloId);
+    if (xPub != null) {
+      _xPubToHaloId[xPub] = haloId;
+      engine.nostrSubscribe(xPub);
+    }
   }
 
   Future<void> markOnboardingComplete() async {
