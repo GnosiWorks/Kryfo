@@ -25,6 +25,7 @@ import "C"
 
 import (
 	"context"
+	"net/http"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -84,37 +85,84 @@ func nostrDeriveKeys(peerXPub [32]byte) (sk nostr.SecretKey, pk nostr.PubKey, er
 }
 
 // ---------- relay pool ----------
+// torNostrClient builds an http.Client whose dials route through the engine's
+// running tor SOCKS proxy. returns error if tor isn't ready.
+var (
+	cachedNostrClient *http.Client
+	cachedNostrClientMu sync.Mutex
+)
+
+func torNostrClient() (*http.Client, error) {
+	cachedNostrClientMu.Lock()
+	defer cachedNostrClientMu.Unlock()
+	if cachedNostrClient != nil {
+		return cachedNostrClient, nil
+	}
+	mu.Lock()
+	t := torNode
+	mu.Unlock()
+	if t == nil {
+		return nil, fmt.Errorf("tor not started")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	log.Printf("nostr: building cached http.Client via t.Dialer (once)")
+	dialer, err := t.Dialer(ctx, nil)
+	log.Printf("nostr: t.Dialer returned err=%v", err)
+	if err != nil {
+		return nil, fmt.Errorf("tor dialer: %v", err)
+	}
+	cachedNostrClient = &http.Client{
+		Transport: &http.Transport{
+			DialContext:           dialer.DialContext,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ResponseHeaderTimeout: 10 * time.Second,
+		},
+		Timeout: 60 * time.Second,
+	}
+	log.Printf("nostr: cached http.Client built")
+	return cachedNostrClient, nil
+}
+
 
 func nostrPublishMulti(ctx context.Context, ev nostr.Event) (ok int) {
 	nostrMu.Lock()
 	urls := append([]string(nil), nostrRelays...)
 	nostrMu.Unlock()
 
-	var wg sync.WaitGroup
-	var mu sync.Mutex
-	for _, url := range urls {
-		wg.Add(1)
-		go func(u string) {
-			defer wg.Done()
-			rctx, cancel := context.WithTimeout(ctx, 15*time.Second)
-			defer cancel()
-			r, err := nostr.RelayConnect(rctx, u, nostr.RelayOptions{})
-			if err != nil {
-				log.Printf("nostr: connect %s: %v", u, err)
-				return
-			}
-			defer r.Close()
-			if err := r.Publish(rctx, ev); err != nil {
-				log.Printf("nostr: publish %s: %v", u, err)
-				return
-			}
-			mu.Lock()
-			ok++
-			mu.Unlock()
-		}(url)
-	}
-	wg.Wait()
-	return
+	result := make(chan bool, len(urls))
+for _, url := range urls {
+go func(u string) {
+rctx, cancel := context.WithTimeout(ctx, 8*time.Second)
+defer cancel()
+client, err := torNostrClient()
+if err != nil {
+log.Printf("nostr: tor not ready, skipping publish to %s: %v", u, err)
+result <- false
+return
+}
+r := nostr.NewRelay(rctx, u, nostr.RelayOptions{})
+if err := r.ConnectWithClient(rctx, client); err != nil {
+log.Printf("nostr: connect %s: %v", u, err)
+result <- false
+return
+}
+defer r.Close()
+if err := r.Publish(rctx, ev); err != nil {
+log.Printf("nostr: publish %s: %v", u, err)
+result <- false
+return
+}
+log.Printf("nostr: published to %s ok", u)
+result <- true
+}(url)
+}
+for i := 0; i < len(urls); i++ {
+if <-result {
+return 1
+}
+}
+return 0
 }
 
 // run a long-lived subscription against all configured relays for events from `pk`.
@@ -150,8 +198,14 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, pk nostr.PubK
 					return
 				default:
 				}
-				r, err := nostr.RelayConnect(ctx, u, nostr.RelayOptions{})
+				client, err := torNostrClient()
 				if err != nil {
+					log.Printf("nostr: tor not ready, retry subscribe to %s in 10s: %v", u, err)
+					time.Sleep(10 * time.Second)
+					continue
+				}
+				r := nostr.NewRelay(ctx, u, nostr.RelayOptions{})
+				if err := r.ConnectWithClient(ctx, client); err != nil {
 					log.Printf("nostr: subscribe-connect %s: %v", u, err)
 					time.Sleep(10 * time.Second)
 					continue
@@ -218,6 +272,7 @@ func HaloNostrInit(cRelaysCSV *C.char) *C.char {
 
 //export HaloNostrSend
 func HaloNostrSend(cPeerXPubHex, cMsg *C.char) *C.char {
+	log.Printf("nostr: HaloNostrSend ENTRY")
 	peerHex := C.GoString(cPeerXPubHex)
 	msg := C.GoString(cMsg)
 
