@@ -1,6 +1,9 @@
 package com.halo.halo_app
 
 import android.Manifest
+import android.app.job.JobInfo
+import android.app.job.JobScheduler
+import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -11,17 +14,35 @@ import io.flutter.embedding.android.FlutterActivity
 class MainActivity : FlutterActivity() {
     companion object {
         private const val NOTIF_PERM_REQUEST = 1001
+        private const val PERIODIC_JOB_ID = 2001
     }
 
     override fun onResume() {
         super.onResume()
         requestNotificationPermissionIfNeeded()
+        startListenerService()
+        schedulePeriodicJob()
+    }
+
+    private fun startListenerService() {
         val intent = Intent(this, HaloListenerService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent)
         } else {
             startService(intent)
         }
+    }
+
+    private fun schedulePeriodicJob() {
+        val scheduler = getSystemService(JobScheduler::class.java)
+        if (scheduler.getPendingJob(PERIODIC_JOB_ID) != null) return
+        val component = ComponentName(this, HaloPeriodicJobService::class.java)
+        val jobInfo = JobInfo.Builder(PERIODIC_JOB_ID, component)
+            .setPeriodic(15 * 60 * 1000L)
+            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+            .setPersisted(true)
+            .build()
+        scheduler.schedule(jobInfo)
     }
 
     private fun requestNotificationPermissionIfNeeded() {
