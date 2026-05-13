@@ -142,16 +142,19 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() { msg.sending = false; msg.failed = true; });
       return;
     }
-    final result = _peerXPub == null
-        ? await Future(() => engine.sendTo(widget.peerOnion, cipher))
-        : await Future(() => engine.nostrSend(_peerXPub!, cipher));
-    if (!mounted) return;
-    if (result == 'ok') {
-      await db.saveMessage(widget.peerHaloId, 'out', msg.text);
-      setState(() { msg.sending = false; });
-    } else {
-      setState(() { msg.sending = false; msg.failed = true; _status = result; });
-    }
+    // sprint 7.5: fire-and-forget. optimistic ✓ now; failure marks tap-to-retry
+    setState(() { msg.sending = false; });
+    final sendFuture = _peerXPub == null
+        ? Future(() => engine.sendTo(widget.peerOnion, cipher))
+        : Future(() => engine.nostrSend(_peerXPub!, cipher));
+    sendFuture.then((result) async {
+      if (!mounted) return;
+      if (result == 'ok') {
+        await db.saveMessage(widget.peerHaloId, 'out', msg.text);
+      } else {
+        setState(() { msg.failed = true; _status = result; });
+      }
+    });
   }
 
   Future<void> _send() async {
@@ -178,25 +181,19 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       return;
     }
-    final result = _peerXPub == null
-        ? await Future(() => engine.sendTo(widget.peerOnion, cipher))
-        : await Future(() => engine.nostrSend(_peerXPub!, cipher));
-    if (!mounted) return;
-    if (result == 'ok') {
-      await db.saveMessage(widget.peerHaloId, 'out', text);
-      setState(() {
-        msg.sending = false;
-        _sending = false;
-        _status = '';
-      });
-    } else {
-      setState(() {
-        msg.sending = false;
-        msg.failed = true;
-        _sending = false;
-        _status = result;
-      });
-    }
+    // sprint 7.5: fire-and-forget. optimistic ✓ now; failure marks tap-to-retry
+    setState(() { msg.sending = false; _sending = false; _status = ''; });
+    final sendFuture = _peerXPub == null
+        ? Future(() => engine.sendTo(widget.peerOnion, cipher))
+        : Future(() => engine.nostrSend(_peerXPub!, cipher));
+    sendFuture.then((result) async {
+      if (!mounted) return;
+      if (result == 'ok') {
+        await db.saveMessage(widget.peerHaloId, 'out', text);
+      } else {
+        setState(() { msg.failed = true; _status = result; });
+      }
+    });
   }
 
   @override
