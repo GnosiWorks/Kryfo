@@ -497,7 +497,10 @@ class AppState extends ChangeNotifier {
     });
 
     await refreshContacts();
-    engine.nostrInit('wss://relay.damus.io,wss://nos.lol,wss://relay.snort.social');
+    // sprint 7.5: auto-start tor; nostr subs retry every 10s until ready
+    final docsDir = await getApplicationDocumentsDirectory();
+    Future(() => engine.startListener(docsDir.path));
+    engine.nostrInit('wss://relay.damus.io,wss://nos.lol');
     for (final c in contacts) {
       final xPub = await signalSession.peerXPubHex(c.haloId);
       if (xPub != null) {
