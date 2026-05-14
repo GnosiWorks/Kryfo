@@ -1,7 +1,6 @@
 // push_settings_screen.dart — three-tier notification wake-up picker.
-// tier 1 (tor only) is live. tier 2 (fcm) and tier 3 (unifiedPush) are
-// stubbed; tapping saves the preference but does nothing functionally
-// until sprints 11/12 wire the actual push pipes.
+// tier 1 (tor only) is live. tier 3 (ntfy push) is wired in sprint 11.
+// tier 2 (fcm) is deferred until a play-store variant ships.
 
 import 'package:flutter/material.dart';
 import '../push_mode.dart';
@@ -16,20 +15,29 @@ class PushSettingsScreen extends StatefulWidget {
 
 class _PushSettingsScreenState extends State<PushSettingsScreen> {
   PushMode _mode = PushMode.tor;
+  String _ntfyServer = defaultNtfyServer;
   bool _loaded = false;
 
   @override
   void initState() {
     super.initState();
-    loadPushMode().then((m) => setState(() {
-          _mode = m;
-          _loaded = true;
-        }));
+    Future.wait([loadPushMode(), loadNtfyServer()]).then((vals) {
+      setState(() {
+        _mode = vals[0] as PushMode;
+        _ntfyServer = vals[1] as String;
+        _loaded = true;
+      });
+    });
   }
 
   void _pick(PushMode m) {
     setState(() => _mode = m);
     savePushMode(m);
+  }
+
+  void _updateServer(String url) {
+    setState(() => _ntfyServer = url);
+    saveNtfyServer(url);
   }
 
   @override
@@ -39,7 +47,8 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
       body: SafeArea(
         child: !_loaded
             ? const SizedBox.shrink()
-            : Column(
+            : SingleChildScrollView(
+                child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _BackBar(onBack: () => Navigator.pop(context)),
@@ -49,32 +58,41 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
                     name: 'Tor only',
                     accent: 'recommended',
                     active: _mode == PushMode.tor,
-                    desc: 'Halo polls Tor in the background. Nothing leaves your phone via Google or any third party. Battery cost is small.',
+                    desc:
+                        'Halo polls Tor in the background. Nothing leaves your phone via any third party. Battery cost is small.',
                     badges: const ['no metadata', '~30s latency'],
                     onTap: () => _pick(PushMode.tor),
+                  ),
+                  _PushCard(
+                    name: 'ntfy push',
+                    active: _mode == PushMode.ntfy,
+                    desc:
+                        'A wake-up ping is sent via a public ntfy server. The ping carries no message content, only a signal to fetch. Faster than Tor-only.',
+                    badges: const ['some metadata', '~2s latency', 'self-hostable'],
+                    onTap: () => _pick(PushMode.ntfy),
+                    extra: _mode == PushMode.ntfy
+                        ? _ServerField(
+                            initial: _ntfyServer,
+                            onChanged: _updateServer,
+                          )
+                        : null,
                   ),
                   _PushCard(
                     name: 'Faster via Google',
                     active: _mode == PushMode.fcm,
                     soon: true,
-                    desc: 'Google sends a wake-up ping. Message content is never seen by Google, but timing and the fact that you got a message are.',
-                    badges: const ['some metadata', 'instant', 'needs Google Play'],
+                    desc:
+                        'Google sends a wake-up ping. Message content is never seen by Google, but timing metadata is. Available in a future Play Store build.',
+                    badges: const ['more metadata', 'instant', 'needs Google Play'],
                     onTap: () => _pick(PushMode.fcm),
                   ),
-                  _PushCard(
-                    name: 'UnifiedPush',
-                    active: _mode == PushMode.unifiedPush,
-                    soon: true,
-                    desc: 'Open-source push via a relay you pick (or self-host). Less metadata than Google, faster than Tor-only.',
-                    badges: const ['less metadata', 'fast', 'pick your relay'],
-                    onTap: () => _pick(PushMode.unifiedPush),
-                  ),
-                  const Spacer(),
+                  const SizedBox(height: 32),
                   const Padding(
                     padding: EdgeInsets.fromLTRB(20, 0, 20, 24),
                     child: _Footnote(),
                   ),
                 ],
+              ),
               ),
       ),
     );
@@ -138,6 +156,7 @@ class _PushCard extends StatelessWidget {
   final String desc;
   final List<String> badges;
   final VoidCallback onTap;
+  final Widget? extra;
 
   const _PushCard({
     required this.name,
@@ -147,6 +166,7 @@ class _PushCard extends StatelessWidget {
     required this.desc,
     required this.badges,
     required this.onTap,
+    this.extra,
   });
 
   @override
@@ -215,10 +235,74 @@ class _PushCard extends StatelessWidget {
                         ))
                     .toList(),
               ),
+              if (extra != null) ...[
+                const SizedBox(height: 12),
+                extra!,
+              ],
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ServerField extends StatefulWidget {
+  final String initial;
+  final ValueChanged<String> onChanged;
+  const _ServerField({required this.initial, required this.onChanged});
+
+  @override
+  State<_ServerField> createState() => _ServerFieldState();
+}
+
+class _ServerFieldState extends State<_ServerField> {
+  late final TextEditingController _ctl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctl = TextEditingController(text: widget.initial);
+  }
+
+  @override
+  void dispose() {
+    _ctl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('server',
+            style: HaloType.mono(size: 10, color: HaloColors.text3, letter: 0.1)),
+        const SizedBox(height: 4),
+        TextField(
+          controller: _ctl,
+          style: HaloType.mono(size: 12, color: HaloColors.text),
+          decoration: InputDecoration(
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            filled: true,
+            fillColor: HaloColors.surface2,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: HaloColors.line, width: 0.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: HaloColors.amber, width: 1),
+            ),
+          ),
+          onSubmitted: widget.onChanged,
+          onEditingComplete: () => widget.onChanged(_ctl.text),
+        ),
+        const SizedBox(height: 4),
+        Text('use https://ntfy.sh (default) or your own self-hosted instance',
+            style: HaloType.sans(size: 10, color: HaloColors.text3, height: 1.4)),
+      ],
     );
   }
 }
