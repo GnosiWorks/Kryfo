@@ -3,6 +3,7 @@
 // tier 2 (fcm) is deferred until a play-store variant ships.
 
 import 'package:flutter/material.dart';
+import '../main.dart' show appState;
 import '../push_mode.dart';
 import '../theme.dart';
 
@@ -34,12 +35,12 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
 
   void _pick(PushMode m) {
     setState(() => _mode = m);
-    savePushMode(m);
+    appState.applyPushMode(m);
   }
 
   void _updateServer(String url) {
     setState(() => _ntfyServer = url);
-    saveNtfyServer(url);
+    appState.applyNtfyServerChange(url);
   }
 
   @override

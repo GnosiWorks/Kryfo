@@ -479,6 +479,32 @@ final db = HaloDb();
 
 class AppState extends ChangeNotifier {
   NtfyListener? _ntfyListener;
+
+  Future<void> applyPushMode(PushMode m) async {
+    await savePushMode(m);
+    if (m == PushMode.ntfy) {
+      _ntfyListener ??= NtfyListener(
+        onPing: () => debugPrint('ntfy: wake-up received'),
+        log: (msg) => debugPrint(msg),
+      );
+      await _ntfyListener!.start();
+    } else {
+      await _ntfyListener?.stop();
+      _ntfyListener = null;
+    }
+  }
+
+  Future<void> applyNtfyServerChange(String url) async {
+    await saveNtfyServer(url);
+    if (_ntfyListener != null) {
+      await _ntfyListener!.stop();
+      _ntfyListener = NtfyListener(
+        onPing: () => debugPrint('ntfy: wake-up received'),
+        log: (msg) => debugPrint(msg),
+      );
+      await _ntfyListener!.start();
+    }
+  }
   bool onboardingComplete = false;
   late AppLinks _appLinks;
   String myId = '';
