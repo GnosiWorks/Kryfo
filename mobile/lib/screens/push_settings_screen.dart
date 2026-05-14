@@ -16,15 +16,17 @@ class PushSettingsScreen extends StatefulWidget {
 class _PushSettingsScreenState extends State<PushSettingsScreen> {
   PushMode _mode = PushMode.tor;
   String _ntfyServer = defaultNtfyServer;
+  String _ntfyTopic = '';
   bool _loaded = false;
 
   @override
   void initState() {
     super.initState();
-    Future.wait([loadPushMode(), loadNtfyServer()]).then((vals) {
+    Future.wait([loadPushMode(), loadNtfyServer(), loadNtfyTopic()]).then((vals) {
       setState(() {
         _mode = vals[0] as PushMode;
         _ntfyServer = vals[1] as String;
+        _ntfyTopic = vals[2] as String;
         _loaded = true;
       });
     });
@@ -73,6 +75,7 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
                     extra: _mode == PushMode.ntfy
                         ? _ServerField(
                             initial: _ntfyServer,
+                            topic: _ntfyTopic,
                             onChanged: _updateServer,
                           )
                         : null,
@@ -249,8 +252,9 @@ class _PushCard extends StatelessWidget {
 
 class _ServerField extends StatefulWidget {
   final String initial;
+  final String topic;
   final ValueChanged<String> onChanged;
-  const _ServerField({required this.initial, required this.onChanged});
+  const _ServerField({required this.initial, required this.topic, required this.onChanged});
 
   @override
   State<_ServerField> createState() => _ServerFieldState();
@@ -302,6 +306,23 @@ class _ServerFieldState extends State<_ServerField> {
         const SizedBox(height: 4),
         Text('use https://ntfy.sh (default) or your own self-hosted instance',
             style: HaloType.sans(size: 10, color: HaloColors.text3, height: 1.4)),
+        if (widget.topic.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Text('your endpoint',
+              style: HaloType.mono(size: 10, color: HaloColors.text3, letter: 0.1)),
+          const SizedBox(height: 4),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: HaloColors.surface3,
+              border: Border.all(color: HaloColors.line, width: 0.5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(composeNtfyEndpoint(_ctl.text, widget.topic),
+                style: HaloType.mono(size: 11, color: HaloColors.text2)),
+          ),
+        ],
       ],
     );
   }
