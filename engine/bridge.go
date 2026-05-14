@@ -334,6 +334,13 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 		if torStatus == "publishing" {
 			log.Println("halo: status publishing -> reachable (60s timeout)")
 			torStatus = "reachable"
+			go func() {
+				if _, err := torNostrClient(); err != nil {
+					log.Printf("halo: nostr client pre-warm failed: %v", err)
+				} else {
+					log.Println("halo: nostr client pre-warmed")
+				}
+			}()
 		}
 		statusMu.Unlock()
 	}()
