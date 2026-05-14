@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Halo — Complete Visual Spec</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Instrument+Sans:wght@400..600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0D0B09; --surface: #161310; --surface-2: #201C17; --surface-3: #2A251F;
+    --line: #2F2922; --line-2: #3D3629;
+    --text: #F5F1EA; --text-2: #A39A8F; --text-3: #6B625A;
+    --amber: #F59E0B; --amber-deep: #D97706; --amber-soft: rgba(245, 158, 11, 0.14);
+    --green: #34D399; --green-soft: rgba(52, 211, 153, 0.14);
+    --violet: #A78BFA; --violet-soft: rgba(167, 139, 250, 0.14);
+    --rose: #F472B6;
+    --serif: 'Fraunces', serif; --sans: 'Instrument Sans', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--ink); color: var(--text);
+    font-family: var(--sans); line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    padding: 60px 32px 80px;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 20% 0%, rgba(245, 158, 11, 0.06), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 90% 60%, rgba(167, 139, 250, 0.04), transparent 60%);
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; }
+
+  @keyframes breathe { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+  @keyframes draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes hop1 { 0%, 100% { opacity: 0.3; } 33% { opacity: 1; } }
+  @keyframes hop2 { 0%, 100% { opacity: 0.3; } 66% { opacity: 1; } }
+  @keyframes hop3 { 0%, 100% { opacity: 0.3; } 99% { opacity: 1; } }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); } 50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); } }
+
+  /* HERO */
+  .hero { margin-bottom: 56px; padding-bottom: 34px; border-bottom: 0.5px solid var(--line); }
+  .mark { display: inline-flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 12px; color: var(--amber); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 22px; font-weight: 500; }
+  .mark::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--amber); animation: breathe 2.4s ease-in-out infinite; }
+  h1 { font-family: var(--serif); font-size: clamp(48px, 6.5vw, 92px); font-weight: 300; font-variation-settings: 'opsz' 144; line-height: 0.95; letter-spacing: -0.03em; margin-bottom: 18px; }
+  h1 em { color: var(--amber); font-style: italic; }
+  .hero > p { font-size: 15px; color: var(--text-2); max-width: 640px; line-height: 1.65; }
+
+  /* SECTIONS */
+  .sec { margin-bottom: 88px; }
+  .sec-label { display: flex; align-items: baseline; gap: 14px; margin-bottom: 36px; }
+  .sec-label .num { font-family: var(--mono); font-size: 11px; color: var(--amber); letter-spacing: 0.14em; font-weight: 500; }
+  .sec-label h2 { font-family: var(--serif); font-size: 32px; font-weight: 300; font-variation-settings: 'opsz' 144; letter-spacing: -0.02em; }
+  .sec-label h2 em { color: var(--amber); font-style: italic; }
+  .sec-label .hairline { flex: 1; height: 0.5px; background: var(--line); }
+  .sec-intro { font-size: 14px; color: var(--text-2); max-width: 620px; line-height: 1.65; margin-bottom: 32px; }
+
+  /* PHONES */
+  .phones { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  @media (max-width: 1100px) { .phones { grid-template-columns: repeat(2, 1fr); gap: 36px; } }
+  @media (max-width: 700px) { .phones { grid-template-columns: 1fr; } }
+
+  .phone-frame { border: 0.5px solid var(--line-2); border-radius: 36px; padding: 6px; background: var(--surface-2); box-shadow: 0 40px 80px -40px rgba(0,0,0,0.6); }
+  .phone-screen { background: var(--surface); border-radius: 30px; height: 660px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+  .status-bar { display: flex; justify-content: space-between; padding: 12px 20px 4px; font-size: 11px; color: var(--text-2); font-weight: 500; }
+  .status-bar .dots { letter-spacing: 2px; opacity: 0.6; }
+
+  .phone-caption { text-align: center; margin-top: 16px; }
+  .phone-caption .pn { font-family: var(--mono); font-size: 10px; color: var(--amber); letter-spacing: 0.14em; font-weight: 500; margin-bottom: 6px; }
+  .phone-caption .pt { font-family: var(--serif); font-size: 16px; font-weight: 400; font-style: italic; }
+  .phone-caption .ps { font-size: 11px; color: var(--text-2); margin-top: 4px; line-height: 1.5; max-width: 260px; margin-left: auto; margin-right: auto; }
+
+  /* COMMON */
+  .nav-tabs { display: flex; padding: 10px 0 14px; border-top: 0.5px solid var(--line); justify-content: space-around; margin-top: auto; }
+  .nav-tabs .nt { font-size: 11px; color: var(--text-2); }
+  .nav-tabs .nt.on { color: var(--text); font-weight: 500; }
+
+  .av { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; overflow: hidden; background: var(--surface-2); display: flex; align-items: center; justify-content: center; }
+  .av.lg { width: 42px; height: 42px; }
+  .av.sm { width: 28px; height: 28px; }
+  .av.tiny { width: 20px; height: 20px; }
+
+  .cursor { display: inline-block; width: 1.5px; height: 11px; background: var(--amber); animation: blink 1.2s steps(2) infinite; vertical-align: -2px; margin-left: 2px; }
+
+  /* === SCREEN 1: HOME === */
+  .home-head { padding: 22px 20px 8px; }
+  .home-head .d1 { font-family: var(--serif); font-size: 26px; font-weight: 400; font-variation-settings: 'opsz' 144; line-height: 1.05; letter-spacing: -0.015em; }
+  .home-head .d2 { font-family: var(--serif); font-size: 26px; font-weight: 300; font-variation-settings: 'opsz' 144; line-height: 1.05; color: var(--amber); font-style: italic; letter-spacing: -0.015em; }
+  .home-head .ds { font-size: 11px; color: var(--text-2); margin-top: 8px; }
+
+  .hero-card { margin: 10px 16px 20px; padding: 14px; background: linear-gradient(135deg, var(--amber) 0%, var(--amber-deep) 100%); border-radius: 16px; color: #1A0F04; position: relative; overflow: hidden; box-shadow: 0 12px 28px -10px rgba(245, 158, 11, 0.4); }
+  .hero-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1.5px; background: #1A0F04; opacity: 0.3; animation: draw 1.6s cubic-bezier(.7,.2,.2,1); }
+  .hc-head { display: flex; align-items: center; gap: 11px; margin-bottom: 10px; }
+  .hc-head .name { font-size: 14px; font-weight: 500; }
+  .hc-head .when { font-size: 11px; opacity: 0.7; font-family: var(--mono); }
+  .hc-msg { font-size: 13px; line-height: 1.5; margin-bottom: 12px; }
+  .hc-actions { display: flex; gap: 6px; }
+  .hc-btn { padding: 8px; border-radius: 8px; text-align: center; font-size: 12px; font-weight: 500; flex: 1; }
+  .hc-btn.primary { background: #1A0F04; color: var(--amber); }
+  .hc-btn.ghost { border: 0.5px solid rgba(26,15,4,0.4); color: #1A0F04; flex: 0 0 auto; padding: 8px 14px; }
+
+  .section-label { font-size: 10px; color: var(--text-3); letter-spacing: 0.14em; margin: 0 20px 4px; font-weight: 500; }
+
+  .row { border-top: 0.5px solid var(--line); padding: 13px 20px; display: flex; align-items: center; gap: 12px; }
+  .row .info { flex: 1; min-width: 0; }
+  .row .info .line1 { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
+  .row .info .name { font-size: 13px; font-weight: 500; }
+  .row .info .meta { color: var(--text-3); font-size: 11px; font-family: var(--mono); }
+  .row .info .preview { font-size: 11px; color: var(--text-2); line-height: 1.45; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .sending-pill { display: inline-flex; align-items: center; gap: 5px; padding: 1px 8px; background: var(--amber-soft); border-radius: 999px; color: var(--amber); font-size: 10px; font-weight: 500; }
+  .hops { display: inline-flex; gap: 2px; }
+  .hops i { width: 3px; height: 3px; border-radius: 50%; background: var(--amber); opacity: 0.3; }
+  .hops i:nth-child(1) { animation: hop1 1.5s infinite; }
+  .hops i:nth-child(2) { animation: hop2 1.5s infinite; }
+  .hops i:nth-child(3) { animation: hop3 1.5s infinite; }
+
+  /* === SCREEN 2: CHAT === */
+  .chat-head { padding: 10px 14px; display: flex; align-items: center; gap: 10px; border-bottom: 0.5px solid var(--line); }
+  .chat-head .back { font-size: 20px; color: var(--text-2); line-height: 1; }
+  .chat-head .name { font-size: 13px; font-weight: 500; }
+  .chat-head .status { font-size: 10px; color: var(--text-2); display: flex; align-items: center; gap: 5px; margin-top: 1px; }
+  .chat-head .status::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: breathe 2.4s ease-in-out infinite; }
+  .ai-on { display: inline-flex; gap: 4px; padding: 3px 8px; background: var(--amber-soft); border-radius: 999px; align-items: center; color: var(--amber); font-size: 10px; font-weight: 500; margin-left: auto; }
+  .vouched { display: inline-flex; padding: 3px 7px; background: var(--green-soft); border-radius: 999px; color: var(--green); font-size: 9px; font-weight: 500; gap: 3px; align-items: center; margin-left: auto; }
+
+  .chat-body { flex: 1; padding: 12px 12px 0; display: flex; flex-direction: column; gap: 7px; overflow: hidden; }
+  .bubble { max-width: 82%; padding: 9px 12px; border-radius: 16px; font-size: 12px; line-height: 1.5; }
+  .bubble.in { align-self: flex-start; background: var(--surface-3); border-radius: 16px 16px 16px 4px; }
+  .bubble.out { align-self: flex-end; background: var(--amber); color: #1A0F04; border-radius: 16px 16px 4px 16px; }
+  .bubble .translated { margin-top: 6px; padding-top: 6px; border-top: 0.5px dashed rgba(245, 158, 11, 0.35); font-size: 11px; color: var(--amber); font-style: italic; }
+  .bubble .translated .tag { font-family: var(--mono); font-size: 9px; color: var(--amber); opacity: 0.7; font-style: normal; letter-spacing: 0.08em; margin-bottom: 2px; display: block; }
+
+  .composer { padding: 10px 12px 14px; display: flex; gap: 7px; align-items: center; border-top: 0.5px solid var(--line); }
+  .composer .plus { width: 28px; height: 28px; border-radius: 50%; background: var(--amber-soft); color: var(--amber); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 500; }
+  .composer .input { flex: 1; padding: 7px 13px; background: var(--surface-2); border-radius: 999px; font-size: 11px; color: var(--text-3); }
+  .composer .send { width: 28px; height: 28px; border-radius: 50%; background: var(--amber); color: #1A0F04; display: flex; align-items: center; justify-content: center; }
+
+  /* === SCREEN 3: PRIVACY MODES === */
+  .screen-head { padding: 22px 20px 8px; }
+  .screen-head .d1 { font-family: var(--serif); font-size: 26px; font-weight: 400; font-variation-settings: 'opsz' 144; line-height: 1.05; letter-spacing: -0.015em; }
+  .screen-head .d2 { font-family: var(--serif); font-size: 26px; font-weight: 300; font-variation-settings: 'opsz' 144; line-height: 1.05; color: var(--amber); font-style: italic; letter-spacing: -0.015em; }
+  .screen-head .ds { font-size: 11px; color: var(--text-2); margin-top: 8px; }
+
+  .mode-card { margin: 10px 14px; padding: 14px; border-radius: 14px; border: 0.5px solid var(--line); background: var(--surface); }
+  .mode-card.active { background: var(--amber-soft); border: 1px solid var(--amber); }
+  .mc-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
+  .mc-name { font-family: var(--serif); font-size: 18px; font-weight: 400; font-variation-settings: 'opsz' 144; letter-spacing: -0.01em; }
+  .mode-card.active .mc-name em { color: var(--amber); font-style: italic; }
+  .mc-badge { padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 500; background: var(--amber); color: #1A0F04; font-family: var(--mono); letter-spacing: 0.04em; }
+  .mc-desc { font-size: 11px; color: var(--text-2); line-height: 1.5; margin-bottom: 10px; }
+  .mc-meta { display: flex; gap: 14px; font-size: 10px; }
+  .mc-meta .k { color: var(--text-3); font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
+  .mc-meta .v { color: var(--text); font-weight: 500; margin-left: 4px; }
+  .mc-warn { margin-top: 10px; padding: 7px 10px; background: rgba(244, 114, 182, 0.1); border: 0.5px solid rgba(244, 114, 182, 0.3); border-radius: 8px; font-size: 10px; color: var(--rose); line-height: 1.4; }
+
+  /* === SCREEN 4: DROP === */
+  .drop-zone { margin: 16px 16px 14px; padding: 22px; border: 1.5px dashed var(--line-2); border-radius: 14px; text-align: center; background: rgba(245, 158, 11, 0.04); }
+  .drop-zone .icon { width: 42px; height: 42px; border-radius: 10px; background: var(--amber-soft); color: var(--amber); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
+  .drop-zone .label { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+  .drop-zone .sublabel { font-size: 10px; color: var(--text-2); }
+  .drop-zone .types { margin-top: 12px; display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+  .drop-zone .chip { padding: 2px 9px; border: 0.5px solid var(--line-2); border-radius: 999px; font-size: 9px; color: var(--text-2); font-family: var(--mono); letter-spacing: 0.05em; }
+
+  .storage { margin: 0 16px 14px; padding: 12px; border: 0.5px solid var(--line); border-radius: 12px; }
+  .storage-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .storage-head .label { font-size: 11px; font-weight: 500; }
+  .storage-head .nums { font-family: var(--mono); font-size: 10px; color: var(--text-2); }
+  .storage-head .nums .used { color: var(--amber); font-weight: 500; }
+  .bar { height: 5px; background: var(--surface-3); border-radius: 999px; overflow: hidden; margin-bottom: 10px; }
+  .bar .fill { height: 100%; background: linear-gradient(90deg, var(--amber), var(--amber-deep)); width: 85%; border-radius: 999px; }
+  .pro-row { padding: 8px 10px; background: var(--surface-2); border-radius: 8px; display: flex; align-items: center; gap: 10px; }
+  .pro-badge { font-family: var(--mono); font-size: 9px; padding: 2px 6px; background: var(--amber); color: #1A0F04; border-radius: 4px; font-weight: 500; letter-spacing: 0.05em; }
+  .pro-price { padding: 5px 10px; background: var(--amber); color: #1A0F04; border-radius: 6px; font-size: 10px; font-weight: 500; }
+
+  .rd-label { font-size: 10px; color: var(--text-3); letter-spacing: 0.14em; font-weight: 500; margin: 0 20px 8px; }
+  .rd-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; border-top: 0.5px solid var(--line); }
+  .rd-thumb { width: 30px; height: 30px; border-radius: 7px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 9px; font-weight: 500; color: #FFF; }
+  .rd-info .name { font-size: 12px; font-weight: 500; margin-bottom: 1px; }
+  .rd-info .sub { font-size: 10px; color: var(--text-2); font-family: var(--mono); }
+  .rd-info .expires { color: var(--amber); }
+
+  /* === SCREEN 5: MARKETPLACE === */
+  .mk-head { padding: 22px 20px 12px; }
+  .mk-head h2 { font-family: var(--serif); font-size: 26px; font-weight: 300; font-variation-settings: 'opsz' 144; line-height: 1.05; letter-spacing: -0.015em; }
+  .mk-head h2 em { color: var(--amber); font-style: italic; }
+  .mk-head p { font-size: 11px; color: var(--text-2); margin-top: 8px; }
+
+  .mk-tabs { padding: 2px 14px 10px; display: flex; gap: 6px; overflow: hidden; }
+  .mk-tabs .t { padding: 4px 11px; border-radius: 999px; font-size: 11px; border: 0.5px solid var(--line-2); color: var(--text-2); white-space: nowrap; }
+  .mk-tabs .t.on { background: var(--amber); color: #1A0F04; border-color: var(--amber); font-weight: 500; }
+
+  .mk-feat { margin: 4px 14px 14px; padding: 14px; background: linear-gradient(135deg, rgba(167, 139, 250, 0.15), rgba(245, 158, 11, 0.1)); border: 0.5px solid var(--line-2); border-radius: 14px; display: flex; gap: 12px; align-items: center; }
+  .mk-feat .art { width: 54px; height: 54px; border-radius: 12px; background: linear-gradient(135deg, #A78BFA, #EC4899, #F59E0B); flex-shrink: 0; }
+  .mk-feat .title { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .mk-feat .by { font-size: 10px; color: var(--text-2); margin-bottom: 6px; }
+  .mk-feat .by .dot { color: var(--amber); }
+  .mk-feat .price { display: inline-flex; padding: 3px 10px; background: var(--amber); color: #1A0F04; border-radius: 999px; font-size: 11px; font-family: var(--mono); font-weight: 600; }
+
+  .mk-shelf { padding: 0 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: 1; overflow: hidden; align-content: start; }
+  .mk-card { border: 0.5px solid var(--line); border-radius: 12px; padding: 10px; background: var(--surface-2); }
+  .mk-card .cover { aspect-ratio: 1.3; border-radius: 8px; margin-bottom: 8px; }
+  .mk-card .title { font-size: 11px; font-weight: 500; margin-bottom: 2px; }
+  .mk-card .meta { display: flex; justify-content: space-between; align-items: center; }
+  .mk-card .by { font-size: 9px; color: var(--text-2); }
+  .mk-card .price { font-family: var(--mono); font-size: 11px; color: var(--amber); font-weight: 600; }
+
+  .mk-note { padding: 10px 20px 14px; display: flex; justify-content: space-between; font-size: 10px; color: var(--text-2); border-top: 0.5px solid var(--line); }
+  .mk-note .pct { color: var(--amber); font-weight: 500; }
+
+  /* === SCREEN 6: PRODUCT DETAIL === */
+  .pd-head { padding: 10px 14px 0; display: flex; align-items: center; gap: 10px; }
+  .pd-head .back { font-size: 22px; color: var(--text-2); line-height: 1; }
+  .pd-head .title { font-size: 13px; font-weight: 500; }
+
+  .pd-cover { margin: 12px 14px; aspect-ratio: 1.5; border-radius: 14px; background: radial-gradient(circle at 25% 30%, #A78BFA, transparent 50%), radial-gradient(circle at 75% 70%, #F472B6, transparent 55%), #1F1B2E; display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 40px; font-weight: 300; font-style: italic; color: rgba(255,255,255,0.9); }
+
+  .pd-info { padding: 0 16px; }
+  .pd-info h3 { font-family: var(--serif); font-size: 22px; font-weight: 300; font-variation-settings: 'opsz' 144; letter-spacing: -0.015em; line-height: 1.1; margin-bottom: 4px; }
+  .pd-info h3 em { color: var(--amber); font-style: italic; }
+  .pd-info .by-row { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-2); margin-bottom: 14px; }
+  .pd-info .creator { color: var(--amber); font-weight: 500; }
+  .pd-info .check { color: var(--green); display: inline-flex; align-items: center; gap: 3px; }
+  .pd-info .rating { margin-left: auto; color: var(--text); font-family: var(--mono); font-size: 11px; }
+  .pd-info .desc { font-size: 11px; color: var(--text-2); line-height: 1.55; margin-bottom: 14px; }
+  .pd-verify { margin-bottom: 12px; padding: 10px; background: var(--surface-2); border-radius: 10px; border-left: 2px solid var(--green); font-size: 10px; line-height: 1.5; color: var(--text-2); }
+  .pd-verify .lbl { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; color: var(--green); margin-bottom: 4px; font-weight: 500; }
+
+  .pd-price { margin: 0 16px 14px; padding: 14px; background: var(--surface-2); border-radius: 12px; border: 0.5px solid var(--line); }
+  .pd-price .primary { font-family: var(--serif); font-size: 32px; font-weight: 300; font-variation-settings: 'opsz' 144; color: var(--amber); letter-spacing: -0.02em; line-height: 1; }
+  .pd-price .alts { margin-top: 6px; display: flex; gap: 10px; font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+  .pd-price .credits { color: var(--violet); }
+
+  .pd-cta { padding: 0 16px; }
+  .pd-cta .btn { width: 100%; padding: 12px; background: var(--amber); color: #1A0F04; border-radius: 10px; text-align: center; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .pd-cta .btn-alt { width: 100%; padding: 10px; border: 0.5px solid var(--line-2); color: var(--text-2); border-radius: 10px; text-align: center; font-size: 11px; }
+  .pd-note { padding: 12px 16px 0; font-size: 10px; color: var(--text-3); line-height: 1.5; text-align: center; }
+
+  /* === SCREEN 7: DEAL CARD === */
+  .deal-card { align-self: stretch; margin: 2px 0; background: var(--surface-2); border: 1px solid var(--amber); border-radius: 14px; overflow: hidden; animation: pulse 2.8s ease-in-out infinite; }
+  .deal-head { padding: 10px 13px 8px; display: flex; align-items: center; gap: 7px; border-bottom: 0.5px solid var(--line); background: linear-gradient(90deg, var(--amber-soft), transparent 70%); }
+  .deal-head .label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; color: var(--amber); font-weight: 500; }
+  .deal-head .state { margin-left: auto; padding: 2px 7px; background: var(--amber-soft); color: var(--amber); border-radius: 999px; font-size: 9px; font-weight: 500; font-family: var(--mono); letter-spacing: 0.04em; }
+  .deal-body { padding: 10px 13px; }
+  .deal-what { font-size: 12px; color: var(--text); line-height: 1.4; margin-bottom: 10px; }
+  .deal-amount { font-family: var(--serif); font-size: 28px; font-weight: 300; font-variation-settings: 'opsz' 144; color: var(--amber); line-height: 1; margin-bottom: 3px; letter-spacing: -0.02em; }
+  .deal-pay { display: flex; gap: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-3); margin-bottom: 10px; }
+  .deal-pay .m { padding: 2px 6px; background: var(--surface-3); border-radius: 4px; }
+  .deal-meta { display: flex; justify-content: space-between; padding: 8px 0; border-top: 0.5px dashed var(--line-2); font-size: 10px; }
+  .deal-meta > div { display: flex; flex-direction: column; gap: 2px; }
+  .deal-meta .k { font-family: var(--mono); color: var(--text-3); font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .deal-meta .v { color: var(--text); font-weight: 500; }
+  .deal-actions { padding: 10px 13px; display: flex; gap: 6px; background: var(--surface-3); border-top: 0.5px solid var(--line); }
+  .deal-actions .btn { flex: 1; padding: 8px; border-radius: 8px; text-align: center; font-size: 11px; font-weight: 500; }
+  .deal-actions .btn.yes { background: var(--amber); color: #1A0F04; }
+  .deal-actions .btn.counter { border: 0.5px solid var(--line-2); color: var(--text); }
+
+  /* === SCREEN 8: ESCROW === */
+  .esc-head { padding: 24px 20px 10px; }
+  .esc-head h2 { font-family: var(--serif); font-size: 22px; font-weight: 300; font-variation-settings: 'opsz' 144; letter-spacing: -0.015em; line-height: 1.1; }
+  .esc-head h2 em { color: var(--amber); font-style: italic; }
+  .esc-head p { font-size: 11px; color: var(--text-2); margin-top: 6px; }
+
+  .esc-sum { margin: 14px 16px; padding: 14px; background: var(--surface-2); border-radius: 12px; }
+  .esc-sum .row-sum { display: flex; justify-content: space-between; padding: 4px 0; font-size: 11px; }
+  .esc-sum .k { color: var(--text-2); }
+  .esc-sum .v { color: var(--text); font-family: var(--mono); }
+  .esc-sum .total { border-top: 0.5px solid var(--line); margin-top: 6px; padding-top: 10px; }
+  .esc-sum .total .k { color: var(--text); font-weight: 500; font-size: 12px; }
+  .esc-sum .total .v { font-family: var(--serif); font-size: 22px; font-weight: 400; font-variation-settings: 'opsz' 144; color: var(--amber); line-height: 1; }
+
+  .esc-steps { padding: 4px 20px 14px; }
+  .esc-step { display: grid; grid-template-columns: 24px 1fr; gap: 12px; padding: 12px 0; border-top: 0.5px solid var(--line); }
+  .esc-step:first-child { border-top: none; }
+  .esc-step .dot { width: 20px; height: 20px; border-radius: 50%; background: var(--surface-2); border: 1.5px solid var(--line-2); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 10px; color: var(--text-3); font-weight: 500; margin-top: 2px; }
+  .esc-step.done .dot { background: var(--green); border-color: var(--green); color: var(--ink); }
+  .esc-step.active .dot { background: var(--amber); border-color: var(--amber); color: var(--ink); animation: pulse 2.4s ease-in-out infinite; }
+  .esc-step .stitle { font-size: 12px; font-weight: 500; margin-bottom: 2px; }
+  .esc-step.active .stitle { color: var(--amber); }
+  .esc-step .sdesc { font-size: 10px; color: var(--text-2); line-height: 1.5; }
+
+  .esc-cta { margin: 0 16px; padding: 12px; background: var(--amber); color: #1A0F04; border-radius: 10px; text-align: center; font-size: 13px; font-weight: 600; }
+
+  /* === SCREEN 9: ONBOARDING === */
+  .onb-body { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 32px; }
+  .onb-body .pct { font-family: var(--mono); font-size: 10px; color: var(--amber); letter-spacing: 0.14em; margin-bottom: 24px; font-weight: 500; }
+  .onb-body h2 { font-family: var(--serif); font-size: 34px; font-weight: 300; font-variation-settings: 'opsz' 144; letter-spacing: -0.025em; line-height: 1; margin-bottom: 14px; }
+  .onb-body h2 em { color: var(--amber); font-style: italic; }
+  .onb-body > p { font-size: 13px; color: var(--text-2); line-height: 1.6; max-width: 260px; margin-bottom: 26px; }
+  .id-display { padding: 14px 18px; border: 0.5px solid var(--amber); background: var(--amber-soft); border-radius: 14px; font-family: var(--mono); font-size: 15px; color: var(--amber); letter-spacing: 0.05em; font-weight: 500; margin-bottom: 18px; }
+  .id-display .sep { color: var(--text-3); margin: 0 4px; }
+  .onb-hint { font-size: 10px; color: var(--text-3); margin-bottom: 32px; }
+  .onb-cta { padding: 10px 16px 14px; }
+  .onb-btn { width: 100%; padding: 13px; background: var(--amber); color: #1A0F04; border-radius: 10px; text-align: center; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .onb-btn-alt { width: 100%; padding: 11px; border: 0.5px solid var(--line-2); color: var(--text-2); border-radius: 10px; text-align: center; font-size: 11px; }
+  .prog { position: absolute; top: 38px; left: 50%; transform: translateX(-50%); width: 60%; height: 2px; background: var(--line); border-radius: 999px; overflow: hidden; }
+  .prog .fill { height: 100%; width: 40%; background: var(--amber); border-radius: 999px; }
+
+  /* === SCREEN 10: AVATARS === */
+  .pick-head { padding: 28px 24px 0; }
+  .pick-head h2 { font-family: var(--serif); font-size: 24px; font-weight: 300; font-variation-settings: 'opsz' 144; letter-spacing: -0.015em; line-height: 1.1; margin-bottom: 4px; }
+  .pick-head h2 em { color: var(--amber); font-style: italic; }
+  .pick-head p { font-size: 11px; color: var(--text-2); line-height: 1.5; margin-top: 10px; }
+  .pick-cats { padding: 14px 18px 8px; display: flex; gap: 5px; overflow-x: auto; flex-wrap: wrap; }
+  .pick-cats .c { padding: 3px 10px; border-radius: 999px; font-size: 10px; border: 0.5px solid var(--line-2); color: var(--text-2); white-space: nowrap; }
+  .pick-cats .c.on { background: var(--amber); color: #1A0F04; border-color: var(--amber); font-weight: 500; }
+  .pick-grid { padding: 4px 18px 10px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .pick-grid .opt { aspect-ratio: 1; border-radius: 50%; overflow: hidden; border: 1px solid var(--line-2); position: relative; display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-style: italic; font-size: 18px; color: var(--amber); }
+  .pick-grid .opt.sel { border: 2px solid var(--amber); box-shadow: 0 0 0 3px var(--amber-soft); }
+
+  .pick-actions { padding: 14px 18px; border-top: 0.5px solid var(--line); display: flex; gap: 8px; margin-top: auto; }
+  .pick-actions .btn { flex: 1; padding: 10px; border-radius: 10px; text-align: center; font-size: 12px; font-weight: 500; }
+  .pick-actions .btn.primary { background: var(--amber); color: #1A0F04; }
+  .pick-actions .btn.ghost { border: 0.5px solid var(--line-2); color: var(--text); }
+
+  /* === SCREEN 11: SPACE === */
+  .sp-head { padding: 10px 14px; display: flex; align-items: center; gap: 10px; border-bottom: 0.5px solid var(--line); }
+  .sp-head .back { font-size: 20px; color: var(--text-2); line-height: 1; }
+  .sp-icon { width: 28px; height: 28px; border-radius: 8px; background: var(--violet-soft); color: var(--violet); display: flex; align-items: center; justify-content: center; font-weight: 500; font-size: 11px; font-family: var(--mono); }
+  .sp-name { font-size: 12px; font-weight: 500; }
+  .sp-sub { font-size: 10px; color: var(--violet); margin-top: 1px; }
+
+  .sp-banner { margin: 10px 14px; padding: 10px 12px; background: var(--violet-soft); border-radius: 10px; display: flex; align-items: center; gap: 10px; }
+  .sp-banner .txt { flex: 1; font-size: 10px; color: var(--violet); line-height: 1.5; }
+
+  .sp-body { flex: 1; padding: 10px 12px 0; overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
+  .conf-post { padding: 11px 13px; background: var(--surface-3); border-radius: 12px; }
+  .conf-post .ph { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .anon-av { width: 20px; height: 20px; border-radius: 50%; background: var(--violet-soft); display: flex; align-items: center; justify-content: center; color: var(--violet); font-size: 11px; }
+  .conf-post .label { font-size: 10px; color: var(--violet); font-family: var(--mono); font-weight: 500; letter-spacing: 0.04em; }
+  .conf-post .time { font-size: 10px; color: var(--text-3); font-family: var(--mono); margin-left: auto; }
+  .conf-post .msg { font-size: 12px; color: var(--text); line-height: 1.55; margin-bottom: 8px; }
+  .conf-post .foot { display: flex; gap: 8px; font-size: 10px; color: var(--text-3); }
+  .conf-post .r { display: inline-flex; gap: 3px; align-items: center; padding: 2px 7px; background: var(--surface-2); border-radius: 999px; }
+
+  .sp-composer { padding: 10px 12px 14px; border-top: 0.5px solid var(--line); }
+  .sp-composer .toggle { display: flex; gap: 5px; margin-bottom: 8px; }
+  .sp-composer .m { padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 500; border: 0.5px solid var(--line-2); color: var(--text-2); }
+  .sp-composer .m.on { background: var(--violet-soft); color: var(--violet); border-color: var(--violet); }
+  .sp-composer .ir { padding: 8px 13px; background: var(--surface-2); border-radius: 999px; font-size: 11px; color: var(--text-3); }
+
+  /* === SCREEN 12: DONATE === */
+  .donate-head { padding: 28px 24px 0; text-align: center; }
+  .donate-head .icon { width: 40px; height: 40px; border-radius: 50%; background: var(--amber-soft); color: var(--amber); display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
+  .donate-head h2 { font-family: var(--serif); font-size: 22px; font-weight: 300; font-variation-settings: 'opsz' 144; letter-spacing: -0.015em; line-height: 1.15; margin-bottom: 10px; }
+  .donate-head h2 em { color: var(--amber); font-style: italic; }
+  .donate-head p { font-size: 12px; color: var(--text-2); line-height: 1.6; max-width: 260px; margin: 0 auto 22px; }
+
+  .donate-stat { margin: 0 20px 20px; padding: 12px; background: var(--surface-2); border-radius: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: center; }
+  .donate-stat .cell { border-right: 0.5px solid var(--line); padding: 2px; }
+  .donate-stat .cell:last-child { border-right: none; }
+  .donate-stat .num { font-family: var(--serif); font-size: 22px; font-weight: 400; font-variation-settings: 'opsz' 144; color: var(--amber); line-height: 1; }
+  .donate-stat .lbl { font-size: 9px; color: var(--text-2); margin-top: 4px; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  .donate-amounts { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; padding: 0 18px 10px; }
+  .donate-amounts .amt { padding: 11px 4px; border: 0.5px solid var(--line-2); border-radius: 10px; text-align: center; }
+  .donate-amounts .amt.active { border: 1px solid var(--amber); background: var(--amber-soft); }
+  .donate-amounts .amt .v { font-family: var(--serif); font-size: 18px; font-weight: 400; font-variation-settings: 'opsz' 144; color: var(--amber); line-height: 1; }
+  .donate-amounts .amt .k { font-size: 9px; color: var(--text-2); margin-top: 4px; letter-spacing: 0.04em; }
+
+  .donate-cta { padding: 6px 18px 10px; }
+  .donate-cta .btn { width: 100%; padding: 11px; background: var(--amber); color: #1A0F04; border-radius: 10px; text-align: center; font-size: 13px; font-weight: 500; }
+  .donate-cta .note { font-size: 10px; color: var(--text-3); text-align: center; margin-top: 10px; line-height: 1.5; }
+
+  /* FOOTER */
+  .footer { margin-top: 100px; padding-top: 40px; border-top: 0.5px solid var(--line); display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--text-3); font-family: var(--mono); letter-spacing: 0.05em; flex-wrap: wrap; gap: 20px; }
+  .footer em { color: var(--amber); font-family: var(--serif); font-style: italic; font-weight: 300; letter-spacing: 0; font-size: 15px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="mark">complete visual spec · twelve screens · one scroll</div>
+    <h1>twelve <em>screens.</em><br>one <em>product.</em></h1>
+    <p>Every major surface in the app rendered as a real phone screen on a single page. Home, chat, privacy modes, Drop, marketplace, product detail, in-chat deal, escrow flow, onboarding, avatars, anonymous Space post, donate.</p>
+  </div>
+
+  <!-- ============ SECTION 1: EVERYDAY ============ -->
+  <section class="sec">
+    <div class="sec-label">
+      <span class="num">01</span>
+      <h2>the <em>everyday</em></h2>
+      <div class="hairline"></div>
+    </div>
+    <p class="sec-intro">What 95% of users see 95% of the time. Home, chat with live AI translation, the speed/privacy tradeoff screen.</p>
+
+    <div class="phones">
+
+      <!-- HOME -->
+      <div>
+        <div class="phone-frame"><div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span class="dots">•••</span></div>
+          <div class="home-head">
+            <div class="d1">Tuesday,</div>
+            <div class="d2">April 21</div>
+            <div class="ds">four threads · one waiting · one sending</div>
+          </div>
+          <div class="hero-card">
+            <div class="hc-head">
+              <div class="av lg" style="background:#F472B6">
+                <svg viewBox="0 0 100 100" width="100%" height="100%"><rect width="100" height="100" fill="#F472B6"/><circle cx="50" cy="42" r="18" fill="#FEF3E4"/><rect x="32" y="60" width="36" height="40" fill="#FEF3E4"/></svg>
+              </div>
+              <div style="flex:1">
+                <div class="name">Marina</div>
+                <div class="when">8:41 pm · 2m ago</div>
+              </div>
+            </div>
+            <div class="hc-msg">see you at 8 tonight? the ramen place on third</div>
+            <div class="hc-actions">
+              <div class="hc-btn primary">reply</div>
+              <div class="hc-btn ghost">snooze</div>
+              <div class="hc-btn ghost">···</div>
+            </div>
+          </div>
+          <div class="section-label">more</div>
+          <div class="row">
+            <div class="av" style="background:#0F172A;font-family:var(--serif);font-style:italic;color:var(--amber)">DC</div>
+            <div class="info">
+              <div class="line1">
+                <div class="name">dev crew <span style="color:var(--text-3);font-weight:400;font-size:11px">· 5</span></div>
+                <div class="sending-pill">
+                  sending
+                  <span class="hops"><i></i><i></i><i></i></span>
+                </div>
+              </div>
+              <div class="preview" style="color:var(--text-2)">private · onion · 2 of 3 hops</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="av" style="background:#1A0F04;color:var(--amber);font-family:var(--serif);font-style:italic;font-size:18px">P</div>
+            <div class="info">
+              <div class="line1">
+                <div class="name">Papa</div>
+                <div class="meta">1h</div>
+              </div>
+              <div class="preview">voice · 0:32</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="av" style="background:linear-gradient(135deg,#F472B6,#F59E0B)"></div>
+            <div class="info">
+              <div class="line1">
+                <div class="name">35mm club <span style="color:var(--text-3);font-weight:400;font-size:11px">· 12</span></div>
+                <div class="meta">2h</div>
+              </div>
+              <div class="preview"><span style="font-weight:500;color:var(--text)">nika</span> shared 3 photos</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="av" style="color:var(--text-3)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            </div>
+            <div class="info">
+              <div class="line1">
+                <div class="name" style="font-style:italic;color:var(--text-2)">hidden</div>
+                <div class="meta">2d</div>
+              </div>
+              <div class="preview" style="color:var(--text-3)">ghost · burns in 18h</div>
+            </div>
+          </div>
+          <div class="nav-tabs">
+            <div class="nt on">Chats</div><div class="nt">Drop</div><div class="nt">Market</div><div class="nt">Me</div>
+          </div>
+        </div></div>
+        <div class="phone-caption">
+          <div class="pn">home</div>
+          <div class="pt">the everyday</div>
+          <div class="ps">hero card · live sending state · ghost threads marked quietly</div>
+        </div>
+      </div>
+
+      <!-- CHAT WITH AI -->
+      <div>
+        <div class="phone-frame"><div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span class="dots">•••</span></div>
+          <div class="chat-head">
+            <div class="back">‹</div>
+            <div class="av" style="background:#F472B6">
+              <svg viewBox="0 0 100 100" width="100%" height="100%"><rect width="100" height="100" fill="#F472B6"/><circle cx="50" cy="42" r="18" fill="#FEF3E4"/><rect x="32" y="60" width="36" height="40" fill="#FEF3E4"/></svg>
+            </div>
+            <div style="flex:1">
+              <div class="name">Marina</div>
+              <div class="status">online · onion</div>
+            </div>
+            <div class="ai-on">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 12l10 10 10-10z"/></svg>
+              translate
+            </div>
+          </div>
+          <div class="chat-body">
+            <div class="bubble in">
+              こんばんは!今夜、一緒に晩ごはん食べない?
+              <div class="translated">
+                <span class="tag">→ EN · on-device</span>
+                hey! want to grab dinner tonight?
+              </div>
+            </div>
+            <div class="bubble out">
+              yes!! where?
+              <div class="translated" style="color:rgba(26,15,4,0.6);border-top-color:rgba(26,15,4,0.2)">
+                <span class="tag" style="color:rgba(26,15,4,0.5)">→ JA · she'll see</span>
+                はい!!どこ?
+              </div>
+            </div>
+            <div class="bubble in">
+              ラーメン屋、第三通り
+              <div class="translated">
+                <span class="tag">→ EN · on-device</span>
+                ramen place on third
+              </div>
+            </div>
+            <div class="bubble in" style="padding:10px 12px;display:flex;align-items:center;gap:9px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span style="font-size:11px;color:var(--text-2);line-height:1.4">scam check · looks safe · no suspicious links</span>
+            </div>
+          </div>
+          <div class="composer">
+            <div class="plus">+</div>
+            <div class="input">message<span class="cursor"></span></div>
+            <div class="send">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </div>
+          </div>
+        </div></div>
+        <div class="phone-caption">
+          <div class="pn">chat</div>
+          <div class="pt">speaks her language</div>
+          <div class="ps">live translation · scam check · on-device, zero cost</div>
+        </div>
+      </div>
+
+      <!-- PRIVACY MODES -->
+      <div>
+        <div class="phone-frame"><div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span class="dots">•••</span></div>
+          <div class="screen-head">
+            <div class="d1">Speed</div>
+            <div class="d2">& privacy</div>
+            <div class="ds">change globally, or per chat</div>
+          </div>
+          <div class="mode-card">
+            <div class="mc-head"><div class="mc-name">Normal</div></div>
+            <div class="mc-desc">Balanced. Fast enough, private enough. Default for new chats.</div>
+            <div class="mc-meta">
+              <span><span class="k">speed</span><span class="v">fast</span></span>
+              <span><span class="k">hops</span><span class="v">1</span></span>
+              <span><span class="k">ip</span><span class="v">hidden</span></span>
+            </div>
+          </div>
+          <div class="mode-card active">
+            <div class="mc-head">
+              <div class="mc-name">Private <em>·</em></div>
+              <div class="mc-badge">active</div>
+            </div>
+            <div class="mc-desc">Full onion routing, 3 hops. A message takes 2–5 seconds. Nobody sees who you talk to.</div>
+            <div class="mc-meta">
+              <span><span class="k">speed</span><span class="v">slower</span></span>
+              <span><span class="k">hops</span><span class="v">3</span></span>
+              <span><span class="k">ip</span><span class="v">hidden</span></span>
+            </div>
+          </div>
+          <div class="mode-card">
+            <div class="mc-head"><div class="mc-name">Fast</div></div>
+            <div class="mc-desc">Direct connection. Near-instant. Use for low-stakes chats.</div>
+            <div class="mc-meta">
+              <span><span class="k">speed</span><span class="v">instant</span></span>
+              <span><span class="k">hops</span><span class="v">0</span></span>
+              <span><span class="k">ip</span><span class="v" style="color:var(--rose)">visible</span></span>
+            </div>
+            <div class="mc-warn">
+              <strong>heads up:</strong> your ip will be visible to the recipient's server.
+            </div>
+          </div>
+          <div class="nav-tabs">
+            <div class="nt">Chats</div><div class="nt">Drop</div><div class="nt">Market</div><div class="nt on">Me</div>
+          </div>
+        </div></div>
+        <div class="phone-caption">
+          <div class="pn">speed</div>
+          <div class="pt">your tradeoff, your call</div>
+          <div class="ps">three modes · honest IP disclosure · per-chat overrides</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ SECTION 2: UTILITY ============ -->
+  <section class="sec">
+    <div class="sec-label">
+      <span class="num">02</span>
+      <h2>the <em>utility</em></h2>
+      <div class="hairline"></div>
+    </div>
+    <p class="sec-intro">Drop for files, marketplace browse, product detail with verified credentials. Real prices in dollars.</p>
+
+    <div class="phones">
+
+      <!-- DROP -->
+      <div>
+        <div class="phone-frame"><div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span class="dots">•••</span></div>
+          <div class="screen-head">
+            <div class="d1">Drop</div>
+            <div class="d2">it.</div>
+            <div class="ds">files, gifs, sounds · onion-linked · auto-expire</div>
+          </div>
+          <div class="drop-zone">
+            <div class="icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <div class="label">tap to upload</div>
+            <div class="sublabel">up to 200 MB · expires in 7 days</div>
+            <div class="types">
+              <span class="chip">FILE</span><span class="chip">GIF</span><span class="chip">SOUND</span><span class="chip">PACK</span>
+            </div>
+          </div>
+          <div class="storage">
+            <div class="storage-head">
+              <div class="label">your storage</div>
+              <div class="nums"><span class="used">850</span> / 1,000 mb</div>
+            </div>
+            <div class="bar"><div class="fill"></div></div>
+            <div class="pro-row">
+              <div class="pro-badge">PRO</div>
+              <div style="flex:1;font-size:11px">10 gb · 2 gb per file</div>
+              <div class="pro-price">$5/mo</div>
+            </div>
+          </div>
+          <div class="rd-label">recent drops</div>
+          <div class="rd-item">
+            <div class="rd-thumb" style="background:linear-gradient(135deg,#F472B6,#A78BFA)">GIF</div>
+            <div class="rd-info">
+              <div class="name">reaction-pack-oct.gif</div>
+              <div class="sub">8.2 mb · <span class="expires">expires in 6d</span></div>
+            </div>
+          </div>
+          <div class="rd-item">
+            <div class="rd-thumb" style="background:linear-gradient(135deg,#34D399,#0EA5E9)">WAV</div>
+            <div class="rd-info">
+              <div class="name">ringtone-calm.wav</div>
+              <div class="sub">1.4 mb · <span class="expires">expires in 3d</span></div>
+            </div>
+          </div>
+          <div class="rd-item">
+            <div class="rd-thumb" style="background:linear-gradient(135deg,#F59E0B,#7C2D12)">ZIP</div>
+            <div class="rd-info">
+              <div class="name">studio-session.zip</div>
+              <div class="sub">184 mb · <span style="color:var(--rose)">expires in 4h</span></div>
+            </div>
+          </div>
+          <div class="nav-tabs">
+            <div class="nt">Chats</div><div class="nt on">Drop</div><div class="nt">Market</div><div class="nt">Me</div>
+          </div>
+        </div></div>
+        <div class="phone-caption">
+          <div class="pn">drop</div>
+          <div class="pt">wetransfer, but private</div>
+          <div class="ps">files, gifs, sounds via onion link · paid storage tier</div>
+        </div>
+      </div>
+
+      <!-- MARKETPLACE -->
+      <div>
+        <div class="phone-frame"><div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span class="dots">•••</span></div>
+          <div class="mk-head">
+            <h2>the <em>Market</em></h2>
+            <p>art · stickers · courses · consults</p>
+          </div>
+          <div class="mk-tabs">
+            <div class="t on">featured</div><div class="t">art</div><div class="t">stickers</div><div class="t">courses</div>
+          </div>
+          <div class="mk-feat">
+            <div class="art"></div>
+            <div style="flex:1">
+              <div class="title">Dream Static · 12 stickers</div>
+              <div class="by">by <span class="dot">iris_draws</span> · 847 owned</div>
+              <div class="price">$4</div>
+            </div>
+          </div>
+          <div class="mk-shelf">
+            <div class="mk-card">
+              <div class="cover" style="background:linear-gradient(135deg,#F59E0B,#EA580C,#7C2D12);"></div>
+              <div class="title">Amber Noir · theme</div>
+              <div class="meta">
+                <div class="by">by halo</div>
+                <div class="price">$6</div>
+              </div>
+            </div>
+            <div class="mk-card">
+              <div class="cover" style="background:radial-gradient(circle at 30% 30%,#A78BFA,transparent 50%),radial-gradient(circle at 70% 70%,#F472B6,transparent 50%),#1F1B2E;"></div>
+              <div class="title">Nebula · art pack</div>
+              <div class="meta">
+                <div class="by">sora.xyz</div>
+                <div class="price">$9</div>
+              </div>
+            </div>
+            <div class="mk-card">
+              <div class="cover" style="background:linear-gradient(135deg,#1F2937,#374151);display:flex;align-items:center;justify-content:center;">
+                <span style="font-family:var(--serif);font-style:italic;font-size:24px;color:#F59E0B">A</span>
+              </div>
+              <div class="title">Serif · font pack</div>
+              <div class="meta">
+                <div class="by">mono.studio</div>
+                <div class="price">$5</div>
+              </div>
+            </div>
+            <div class="mk-card">
+              <div class="cover" style="background:linear-gradient(135deg,#065F46,#059669);"></div>
+              <div class="title">OPSEC · ebook</div>
+              <div class="meta">
+                <div class="by">b.mori</div>
+                <div class="price">$18</div>
+              </div>
+            </div>
+          </div>
+          <div class="mk-note">
+            <span>85% to creator</span>
+            <span class="pct">15% platform · no ads</span>
+          </div>
+          <div class="nav-tabs">
+            <div class="nt">Chats</div><div class="nt">Drop</div><div class="nt on">Market</div><div class="nt">Me</div>
+          </div>
+        </div></div>
+        <div class="phone-caption">
+          <div class="pn">market</div>
+          <div class="pt">artists keep 85%</div>
+          <div class="ps">stickers · themes · ebooks · real prices in dollars</div>
+        </div>
+      </div>
+
+      <!-- PRODUCT DETAIL -->
+      <div>
+        <div class="phone-frame"><div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span class="dots">•••</span></div>
+          <div class="pd-head">
+            <div class="back">‹</div>
+            <div class="title">Consultation</div>
+          </div>
+          <div class="pd-cover">30 min</div>
+          <div class="pd-info">
+            <h3>Private <em>therapy</em> consultation</h3>
+            <div class="by-row">
+              <span class="creator">Dr. aurora_fen</span>
+              <span class="check">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                verified
+              </span>
+              <span class="rating">4.9 ★ · 214</span>
+            </div>
+            <div class="desc">Licensed psychotherapist, 8 years of practice. One-time consults. Auto-delete on completion. No medical record created.</div>
+            <div class="pd-verify">
+              <div class="lbl">VERIFIED CREDENTIALS</div>
+              Licensed Clinical Psychologist · CA · issued 2018<br>
+              <span style="color:var(--text-3)">Tap to view cryptographic proof</span>
+            </div>
+          </div>
+          <div class="pd-price">
+            <div class="primary">$30</div>
+            <div class="alts">
+              <span>≈ 0.00029 BTC</span>
+              <span style="color:var(--text-3);opacity:0.4">·</span>
+              <span class="credits">or 600 credits</span>
+            </div>
+          </div>
+          <div class="pd-cta">
+            <div class="btn">Book · $30</div>
+            <div class="btn-alt">Ask a question first</div>
+          </div>
+          <div class="pd-note">held in escrow · released after session · full refund if no-show</div>
+        </div></div>
+        <div class="phone-caption">
+          <div class="pn">consult</div>
+          <div class="pt">verified, not doxxed</div>
+          <div class="ps">cryptographic credentials · pseudonym preserved</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ SECTION 3: MONEY MOVES ============ -->
+  <section class="sec">
+    <div class="sec-label">
+      <span class="num">03</span>
+      <h2>money <em>moves</em></h2>
+      <div class="hairline"></div>
+    </div>
+    <p class="sec-intro">Deals embedded in chat, escrow flow step-by-step, donation. Money changing hands should feel clear.</p>
+
+    <div class="phones">
+
+      <!-- IN-CHAT DEAL -->
+      <div>
+        <div class="phone-frame"><div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span class="dots">•••</span></div>
+          <div class="chat-head">
+            <div class="back">‹</div>
+            <div class="av" style="background:#1A0F04;color:var(--amber);font-family:var(--serif);font-style:italic;font-size:18px">K</div>
+            <div style="flex:1">
+              <div class="name">kai · designer</div>
+              <div class="status">online</div>
+            </div>
+            <div class="vouched">
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+              vouched
+            </div>
+          </div>
+          <div class="chat-body">
+            <div class="bubble in">yeah i can do the logo. when do you need it?</div>
+            <div class="bubble out">by the 30th. what's the rate?</div>
+            <div class="bubble in">let's say $180 for 3 concepts, 2 revisions</div>
+            <div class="deal-card">
+              <div class="deal-head">
+                <div class="label">DEAL · PROPOSED</div>
+                <div class="state">awaiting</div>
+              </div>
+              <div class="deal-body">
+                <div class="deal-what">Logo design · 3 concepts, 2 revisions, by Apr 30</div>
+                <div class="deal-amount">$180</div>
+                <div class="deal-pay">
+                  <div class="m">CARD</div><div class="m">SEPA</div><div class="m">BTC</div><div class="m">XMR</div>
+                </div>
+                <div class="deal-meta">
+                  <div><span class="k">deliver by</span><span class="v">Apr 30</span></div>
+                  <div><span class="k">escrow</span><span class="v">auto-release</span></div>
+                  <div><span class="k">survives</span><span class="v">7 days</span></div>
+                </div>
+              </div>
+              <div class="deal-actions">
+                <div class="btn counter">counter</div>
+                <div class="btn yes">accept · $180</div>
+              </div>
+            </div>
+          </div>
+          <div class="composer">
+            <div class="plus">+</div>
+            <div class="input">message<span class="cursor"></span></div>
+          </div>
+        </div></div>
+        <div class="phone-caption">
+          <div class="pn">deal</div>
+          <div class="pt">money in the conversation</div>
+          <div class="ps">structured card · four payment rails · survives auto-delete</div>
+        </div>
+      </div>
+
+      <!-- ESCROW FLOW -->
+      <div>
+        <div class="phone-frame"><div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span class="dots">•••</span></div>
+          <div class="esc-head">
+            <h2>deal <em>in progress</em></h2>
+            <p>with kai · logo design · $180</p>
+          </div>
+          <div class="esc-sum">
+            <div class="row-sum"><span class="k">amount</span><span class="v">$180.00</span></div>
+            <div class="row-sum"><span class="k">platform (15%)</span><span class="v">$27.00</span></div>
+            <div class="row-sum"><span class="k">to kai (85%)</span><span class="v" style="color:var(--green)">$153.00</span></div>
+            <div class="row-sum total"><span class="k">you pay</span><span class="v">$180</span></div>
+          </div>
+          <div class="esc-steps">
+            <div class="esc-step done">
+              <div class="dot">✓</div>
+              <div>
+                <div class="stitle">deal accepted</div>
+                <div class="sdesc">Apr 20, 8:42pm · both signed</div>
+              </div>
+            </div>
+            <div class="esc-step done">
+              <div class="dot">✓</div>
+              <div>
+                <div class="stitle">funds locked in escrow</div>
+                <div class="sdesc">$180 via card · held until delivery</div>
+              </div>
+            </div>
+            <div class="esc-step active">
+              <div class="dot">3</div>
+              <div>
+                <div class="stitle">awaiting delivery</div>
+                <div class="sdesc">kai has 8 days · deadline Apr 30</div>
+              </div>
+            </div>
+            <div class="esc-step">
+              <div class="dot">4</div>
+              <div>
+                <div class="stitle">you confirm or dispute</div>
+                <div class="sdesc">48h window after delivery</div>
+              </div>
+            </div>
+            <div class="esc-step">
+              <div class="dot">5</div>
+              <div>
+                <div class="stitle">funds released</div>
+                <div class="sdesc">kai receives $153 · deal closes</div>
+              </div>
+            </div>
+          </div>
+          <div class="esc-cta">message kai</div>
+        </div></div>
+        <div class="phone-caption">
+          <div class="pn">escrow</div>
+          <div class="pt">every step visible</div>
+          <div class="ps">85/15 split shown honestly · non-custodial · dispute available</div>
+        </div>
+      </div>
+
+      <!-- DONATE -->
+      <div>
+        <div class="phone-frame"><div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span class="dots">•••</span></div>
+          <div class="donate-head">
+            <div class="icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l7.78 7.78 7.78-7.78a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </div>
+            <h2>keep halo <em>alive.</em></h2>
+            <p>no ads, no data sales, no investors. running costs are real. if this app matters to you, help.</p>
+          </div>
+          <div class="donate-stat">
+            <div class="cell">
+              <div class="num">$42k</div>
+              <div class="lbl">monthly cost</div>
+            </div>
+            <div class="cell">
+              <div class="num">81%</div>
+              <div class="lbl">covered</div>
+            </div>
+          </div>
+          <div class="donate-amounts">
+            <div class="amt"><div class="v">$5</div><div class="k">coffee</div></div>
+            <div class="amt active"><div class="v">$20</div><div class="k">monthly</div></div>
+            <div class="amt"><div class="v">$50</div><div class="k">supporter</div></div>
+          </div>
+          <div class="donate-cta">
+            <div class="btn">donate · $20</div>
+            <div class="note">pay with card, btc, monero, or credits<br>anonymous by default · badge after $20+</div>
+          </div>
+          <div style="margin:0 18px 12px;padding:10px 12px;border-radius:10px;background:rgba(52,211,153,0.08);border:0.5px solid rgba(52,211,153,0.2);display:flex;align-items:center;gap:10px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <p style="font-size:11px;color:var(--text-2);line-height:1.5"><strong style="color:var(--green);font-weight:500">3,284 people</strong> donated this month.</p>
+          </div>
+          <div class="nav-tabs">
+            <div class="nt">Chats</div><div class="nt">Drop</div><div class="nt">Market</div><div class="nt on">Me</div>
+          </div>
+        </div></div>
+        <div class="phone-caption">
+          <div class="pn">donate</div>
+          <div class="pt">honest, not guilty</div>
+          <div class="ps">transparent cost dashboard · pay in any currency</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ SECTION 4: SETUP ============ -->
+  <section class="sec">
+    <div class="sec-label">
+      <span class="num">04</span>
+      <h2>the <em>setup</em></h2>
+      <div class="hairline"></div>
+    </div>
+    <p class="sec-intro">Onboarding and identity. No phone, no email, no name. Just three words that belong to you. Pick a face from 1,200+ AI-generated options.</p>
+
+    <div class="phones">
+
+      <!-- ONBOARDING -->
+      <div>
+        <div class="phone-frame"><div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span class="dots">•••</span></div>
+          <div class="prog"><div class="fill"></div></div>
+          <div class="onb-body">
+            <div class="pct">STEP 2 OF 5</div>
+            <h2>your <em>name</em><br>on halo.</h2>
+            <p>Generated from your private key. Memorable, unique, yours alone. No one else has this.</p>
+            <div class="id-display">
+              neon<span class="sep">·</span>tiger<span class="sep">·</span>saturn
+            </div>
+            <div class="onb-hint">tap to regenerate · ∞ available</div>
+          </div>
+          <div class="onb-cta">
+            <div class="onb-btn">use this name</div>
+            <div class="onb-btn-alt">try another</div>
+          </div>
+        </div></div>
+        <div class="phone-caption">
+          <div class="pn">setup</div>
+          <div class="pt">three words, yours</div>
+          <div class="ps">BIP-39 human-readable · no phone, no email, no real name</div>
+        </div>
+      </div>
+
+      <!-- AVATAR PICKER -->
+      <div>
+        <div class="phone-frame"><div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span class="dots">•••</span></div>
+          <div class="pick-head">
+            <h2>pick a <em>face</em></h2>
+            <p>1,200+ AI-generated avatars. Creative, not cute. Deterministic from your ID.</p>
+          </div>
+          <div class="pick-cats">
+            <div class="c on">all</div><div class="c">glitch</div><div class="c">bauhaus</div><div class="c">topographic</div>
+          </div>
+          <div class="pick-grid">
+            <div class="opt sel" style="background:linear-gradient(135deg,#F472B6,#F59E0B)">M</div>
+            <div class="opt" style="background:#0F172A;color:var(--amber)">N</div>
+            <div class="opt" style="background:linear-gradient(135deg,#A78BFA,#EC4899)">K</div>
+            <div class="opt" style="background:linear-gradient(135deg,#34D399,#0EA5E9)">S</div>
+            <div class="opt" style="background:#1A0F04;color:var(--amber)">T</div>
+            <div class="opt" style="background:linear-gradient(135deg,#F59E0B,#7C2D12)">R</div>
+            <div class="opt" style="background:linear-gradient(135deg,#065F46,#34D399)">V</div>
+            <div class="opt" style="background:linear-gradient(135deg,#7C2D12,#F472B6)">Y</div>
+            <div class="opt" style="background:linear-gradient(135deg,#1F2937,#374151);color:#60A5FA">E</div>
+            <div class="opt" style="background:#F472B6;color:#1A0F04">L</div>
+            <div class="opt" style="background:linear-gradient(135deg,#60A5FA,#A78BFA)">O</div>
+            <div class="opt" style="background:#F59E0B;color:#1A0F04">Z</div>
+          </div>
+          <div class="pick-actions">
+            <div class="btn ghost">upload</div>
+            <div class="btn primary">use this</div>
+          </div>
+        </div></div>
+        <div class="phone-caption">
+          <div class="pn">face</div>
+          <div class="pt">creative, not cute</div>
+          <div class="ps">12 preview styles · 1,200+ variants · editorial aesthetic</div>
+        </div>
+      </div>
+
+      <!-- SPACE CONFESSION -->
+      <div>
+        <div class="phone-frame"><div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span class="dots">•••</span></div>
+          <div class="sp-head">
+            <div class="back">‹</div>
+            <div class="sp-icon">DC</div>
+            <div style="flex:1">
+              <div class="sp-name">dev crew</div>
+              <div class="sp-sub">#confessions · 428 members</div>
+            </div>
+          </div>
+          <div class="sp-banner">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--violet)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <div class="txt">ring signatures · even mods can't see who posted</div>
+          </div>
+          <div class="sp-body">
+            <div class="conf-post">
+              <div class="ph">
+                <div class="anon-av">?</div>
+                <div class="label">anon · verified member</div>
+                <div class="time">2h</div>
+              </div>
+              <div class="msg">i'm three months from quitting my job to work on a project nobody in my life knows about. terrified. also the most alive i've felt in years.</div>
+              <div class="foot">
+                <div class="r">❤ 34</div>
+                <div class="r">🫂 12</div>
+                <div class="r">💬 8</div>
+              </div>
+            </div>
+            <div class="conf-post">
+              <div class="ph">
+                <div class="anon-av">?</div>
+                <div class="label">anon · verified member</div>
+                <div class="time">5h</div>
+              </div>
+              <div class="msg">got sober 90 days ago. first time saying it out loud anywhere.</div>
+              <div class="foot">
+                <div class="r">❤ 89</div>
+                <div class="r">🫂 41</div>
+                <div class="r">💬 22</div>
+              </div>
+            </div>
+            <div class="conf-post">
+              <div class="ph">
+                <div class="anon-av">?</div>
+                <div class="label">anon · verified member</div>
+                <div class="time">1d</div>
+              </div>
+              <div class="msg">the person i've been dreading running into at work today? i've been them.</div>
+              <div class="foot">
+                <div class="r">❤ 17</div>
+                <div class="r">💭 6</div>
+              </div>
+            </div>
+          </div>
+          <div class="sp-composer">
+            <div class="toggle">
+              <div class="m">as me</div>
+              <div class="m on">anonymous</div>
+            </div>
+            <div class="ir">share something · nobody sees it's you</div>
+          </div>
+        </div></div>
+        <div class="phone-caption">
+          <div class="pn">space</div>
+          <div class="pt">anonymous, cryptographically</div>
+          <div class="ps">ring signatures prove membership · not identity · world-first for a messenger</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="footer">
+    <span>complete visual spec · april 23, 2026</span>
+    <em>twelve screens, one product.</em>
+    <span>home · chat · modes · drop · market · detail · deal · escrow · donate · setup · face · space</span>
+  </div>
+
+</div>
+</body>
+</html>
