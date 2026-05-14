@@ -3,6 +3,9 @@
 
 import 'package:flutter/material.dart';
 import '../theme.dart';
+import '../miui_autostart.dart';
+
+bool _miuiPromptChecked = false;
 
 class HomeScreen extends StatelessWidget {
   final String haloId;            // "neon-tiger-saturn"
@@ -23,6 +26,12 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
+    if (!_miuiPromptChecked) {
+      _miuiPromptChecked = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        maybeShowMiuiPrompt(context);
+      });
+    }
     return Scaffold(
       backgroundColor: HaloColors.surface,
       body: SafeArea(
