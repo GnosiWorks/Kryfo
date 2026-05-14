@@ -157,6 +157,11 @@ class _ChatScreenState extends State<ChatScreen> {
     sendFuture.then((result) async {
       if (!mounted) return;
       if (result == 'ok') {
+        loadPeerEndpoint(widget.peerHaloId).then((endpoint) {
+          if (endpoint != null && endpoint.isNotEmpty) {
+            Future(() => engine.ntfyPing(endpoint));
+          }
+        });
         await db.saveMessage(widget.peerHaloId, 'out', msg.text);
       } else {
         setState(() { msg.failed = true; _status = result; });
@@ -197,6 +202,11 @@ class _ChatScreenState extends State<ChatScreen> {
     sendFuture.then((result) async {
       if (!mounted) return;
       if (result == 'ok') {
+        loadPeerEndpoint(widget.peerHaloId).then((endpoint) {
+          if (endpoint != null && endpoint.isNotEmpty) {
+            Future(() => engine.ntfyPing(endpoint));
+          }
+        });
         await db.saveMessage(widget.peerHaloId, 'out', text);
       } else {
         setState(() { msg.failed = true; _status = result; });

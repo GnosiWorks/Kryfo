@@ -110,6 +110,11 @@ extern char* HaloNostrSend(char* cPeerXPubHex, char* cMsg);
 extern char* HaloNostrSubscribe(char* cPeerXPubHex);
 extern char* HaloNostrPoll(void);
 
+// posts a wake-up trigger to the peer's ntfy endpoint via tor. fire-and-
+// forget from dart's perspective. message body is a fixed string; ntfy
+// only cares that *something* arrived to wake subscribers.
+extern char* HaloNtfyPing(char* cEndpoint);
+
 #ifdef __cplusplus
 }
 #endif
