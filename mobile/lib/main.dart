@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'notifications.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
@@ -501,6 +502,7 @@ class AppState extends ChangeNotifier {
     final docsDir = await getApplicationDocumentsDirectory();
     Future(() => engine.startListener(docsDir.path));
     engine.nostrInit('wss://relay.damus.io,wss://nos.lol');
+    await initNotifications();
     for (final c in contacts) {
       final xPub = await signalSession.peerXPubHex(c.haloId);
       if (xPub != null) {
@@ -520,6 +522,7 @@ class AppState extends ChangeNotifier {
         if (plain != null) {
           debugPrint('  decrypted: \$plain');
           await db.saveMessage(haloId, 'in', plain);
+          await showMessageNotification(title: haloId, body: plain);
           notifyListeners();
         } else {
           debugPrint('  signalDecrypt returned null');
