@@ -21,6 +21,7 @@ import 'screens/home_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/scan_screen.dart';
 import 'screens/modes_screen.dart';
+import 'screens/push_settings_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'widgets/motion.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -1037,6 +1038,15 @@ class _DevScreenState extends State<DevScreen> {
                   MaterialPageRoute(builder: (_) => const ModesScreen()),
                 ),
                 child: Text('speed & privacy →',
+                    style: HaloType.mono(
+                        size: 11, color: HaloColors.amber)),
+              ),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PushSettingsScreen()),
+                ),
+                child: Text('notifications →',
                     style: HaloType.mono(
                         size: 11, color: HaloColors.amber)),
               ),
