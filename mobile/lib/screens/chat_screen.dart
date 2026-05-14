@@ -4,6 +4,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../signal_session.dart';
+import '../message_envelope.dart';
 import '../theme.dart';
 import '../main.dart' show engine, db, signalEncrypt, signalDecrypt, appState;
 import '../widgets/motion.dart';
@@ -115,8 +116,13 @@ class _ChatScreenState extends State<ChatScreen> {
     final msgs = engine.drainInbox();
     if (msgs.isEmpty) return;
     for (final r in msgs) {
-      final plain = await signalDecrypt(widget.peerHaloId, r);
-      if (plain == null) continue;
+      final wrapped = await signalDecrypt(widget.peerHaloId, r);
+      if (wrapped == null) continue;
+      final env = unwrapMessage(wrapped);
+      if (env.endpoint != null) {
+        await savePeerEndpoint(widget.peerHaloId, env.endpoint!);
+      }
+      final plain = env.message;
       _lastCipher = r;
       if (!mounted) return;
       await db.saveMessage(widget.peerHaloId, 'in', plain);
@@ -136,7 +142,8 @@ class _ChatScreenState extends State<ChatScreen> {
     });
     final String cipher;
     try {
-      cipher = await signalEncrypt(widget.peerHaloId, msg.text);
+      final wrapped = await wrapMessage(msg.text);
+      cipher = await signalEncrypt(widget.peerHaloId, wrapped);
     } catch (e) {
       if (!mounted) return;
       setState(() { msg.sending = false; msg.failed = true; });
@@ -170,7 +177,8 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToEnd();
     final String cipher;
     try {
-      cipher = await signalEncrypt(widget.peerHaloId, text);
+      final wrapped = await wrapMessage(text);
+      cipher = await signalEncrypt(widget.peerHaloId, wrapped);
     } catch (e) {
       if (!mounted) return;
       setState(() {
