@@ -23,6 +23,9 @@ import 'screens/scan_screen.dart';
 import 'screens/modes_screen.dart';
 import 'screens/push_settings_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'push_mode.dart';
+import 'ntfy_listener.dart';
+import 'message_envelope.dart';
 import 'widgets/motion.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:app_links/app_links.dart';
@@ -475,6 +478,7 @@ final engine = HaloEngine();
 final db = HaloDb();
 
 class AppState extends ChangeNotifier {
+  NtfyListener? _ntfyListener;
   bool onboardingComplete = false;
   late AppLinks _appLinks;
   String myId = '';
@@ -519,6 +523,17 @@ class AppState extends ChangeNotifier {
         engine.nostrSubscribe(xPub);
       }
     }
+    // sprint 11d: open ntfy websocket when push mode is ntfy. on incoming
+    // ping, the existing 1s drain loop catches up — we just log for now.
+    final mode = await loadPushMode();
+    if (mode == PushMode.ntfy) {
+      _ntfyListener = NtfyListener(
+        onPing: () => debugPrint('ntfy: wake-up received'),
+        log: (m) => debugPrint(m),
+      );
+      _ntfyListener!.start();
+    }
+
     Timer.periodic(const Duration(seconds: 1), (_) async {
       final msgs = engine.nostrPoll();
       if (msgs.isEmpty) return;
@@ -527,8 +542,13 @@ class AppState extends ChangeNotifier {
         final haloId = _xPubToHaloId[m.peer];
         debugPrint('  peer xpub=\${m.peer.substring(0,12)}... haloId=\$haloId cipher=\${m.cipher.length}b');
         if (haloId == null) continue;
-        final plain = await signalDecrypt(haloId, m.cipher);
-        if (plain != null) {
+        final wrapped = await signalDecrypt(haloId, m.cipher);
+        if (wrapped != null) {
+          final env = unwrapMessage(wrapped);
+          if (env.endpoint != null) {
+            await savePeerEndpoint(haloId, env.endpoint!);
+          }
+          final plain = env.message;
           debugPrint('  decrypted: \$plain');
           await db.saveMessage(haloId, 'in', plain);
           await showMessageNotification(title: haloId, body: plain);
