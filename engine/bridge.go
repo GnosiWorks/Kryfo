@@ -404,7 +404,7 @@ return C.CString("error: tor not started")
 }
 
 log.Printf("halo: dialing %s...", addr)
-ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 defer cancel()
 
 dialer, err := t.Dialer(ctx, nil)
@@ -418,6 +418,7 @@ return C.CString(fmt.Sprintf("error: dial: %v", err))
 }
 defer conn.Close()
 
+conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 _, err = conn.Write([]byte(msg + "\n"))
 if err != nil {
 return C.CString(fmt.Sprintf("error: write: %v", err))
