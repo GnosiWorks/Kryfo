@@ -55,6 +55,7 @@ class HaloEngine {
   late final TwoArgFnDart _nostrSend;
   late final OneArgFnDart _nostrSubscribe;
   late final CStrFnDart _nostrPoll;
+  late final OneArgFnDart _ntfyPing;
 
   HaloEngine() {
     _lib = Platform.isAndroid
@@ -78,6 +79,7 @@ class HaloEngine {
     _nostrSend = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloNostrSend');
     _nostrSubscribe = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrSubscribe');
     _nostrPoll = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloNostrPoll');
+    _ntfyPing = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNtfyPing');
   }
 
   String version() => _version().toDartString();
@@ -107,6 +109,12 @@ class HaloEngine {
     final ptr = relaysCSV.toNativeUtf8();
     try { return _nostrInit(ptr).toDartString(); }
     finally { malloc.free(ptr); }
+  }
+
+  String ntfyPing(String endpoint) {
+    final ptr = endpoint.toNativeUtf8();
+    try { return _ntfyPing(ptr).toDartString(); }
+    finally { calloc.free(ptr); }
   }
 
   String nostrSend(String peerXPubHex, String b64Cipher) {
