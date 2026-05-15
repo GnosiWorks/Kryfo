@@ -12,11 +12,11 @@ import androidx.core.content.ContextCompat
 import android.content.ActivityNotFoundException
 import android.net.Uri
 import android.provider.Settings
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
-class MainActivity : FlutterActivity() {
+class MainActivity : FlutterFragmentActivity() {
     companion object {
         private const val NOTIF_PERM_REQUEST = 1001
         private const val PERIODIC_JOB_ID = 2001
