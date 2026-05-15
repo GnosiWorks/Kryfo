@@ -59,6 +59,7 @@ class HaloEngine {
   late final OneArgFnDart _nostrSubscribe;
   late final CStrFnDart _nostrPoll;
   late final OneArgFnDart _ntfyPing;
+  late final OneArgFnDart _idFromEdPub;
 
   HaloEngine() {
     _lib = Platform.isAndroid
@@ -83,6 +84,7 @@ class HaloEngine {
     _nostrSubscribe = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrSubscribe');
     _nostrPoll = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloNostrPoll');
     _ntfyPing = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNtfyPing');
+    _idFromEdPub = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloIdFromEdPub');
   }
 
   String version() => _version().toDartString();
@@ -117,6 +119,12 @@ class HaloEngine {
   String ntfyPing(String endpoint) {
     final ptr = endpoint.toNativeUtf8();
     try { return _ntfyPing(ptr).toDartString(); }
+    finally { calloc.free(ptr); }
+  }
+
+  String idFromEdPub(String hexPub) {
+    final ptr = hexPub.toNativeUtf8();
+    try { return _idFromEdPub(ptr).toDartString(); }
     finally { calloc.free(ptr); }
   }
 
@@ -508,11 +516,69 @@ class AppState extends ChangeNotifier {
   bool onboardingComplete = false;
   late AppLinks _appLinks;
   String myId = '';
+  String myOnion = '';
   String myXPub = '';
   bool restored = false;
   bool ready = false;
   List<ContactPreview> contacts = [];
   final Map<String, String> _xPubToHaloId = {};
+
+  // sprint 6.13: when an unknown sender's PreKey message arrives via
+  // direct onion, decrypt under a placeholder peerId, then verify the
+  // sender's claimed identity (via envelope) and move the libsignal
+  // session to the real HaloID.
+  Future<String?> backPairFromCipher(String cipher) async {
+    const tempPeer = '_pending_back_pair_';
+    final tempAddr = SignalProtocolAddress(tempPeer, 1);
+    try {
+      if (await signalSession.sessionStore.containsSession(tempAddr)) {
+        await signalSession.sessionStore.deleteSession(tempAddr);
+      }
+      final plain = await signalDecrypt(tempPeer, cipher);
+      if (plain == null) {
+        await signalSession.sessionStore.deleteSession(tempAddr);
+        return null;
+      }
+      final env = unwrapMessage(plain);
+      final h = env.senderHaloId;
+      final e = env.senderEdPub;
+      if (h == null || e == null) {
+        await signalSession.sessionStore.deleteSession(tempAddr);
+        debugPrint('back-pair: envelope missing identity fields');
+        return null;
+      }
+      final derived = engine.idFromEdPub(e);
+      if (derived != h) {
+        await signalSession.sessionStore.deleteSession(tempAddr);
+        debugPrint('back-pair: HaloID mismatch ($derived vs $h)');
+        return null;
+      }
+      // move session from temp to real HaloID
+      final record = await signalSession.sessionStore.loadSession(tempAddr);
+      final realAddr = SignalProtocolAddress(h, 1);
+      await signalSession.sessionStore.storeSession(realAddr, record);
+      await signalSession.sessionStore.deleteSession(tempAddr);
+      // persist contact + nostr sub
+      await db.upsertContact(h, env.senderOnion ?? '', env.senderXPub ?? '');
+      if (env.senderXPub != null && env.senderXPub!.isNotEmpty) {
+        _xPubToHaloId[env.senderXPub!] = h;
+        engine.nostrSubscribe(env.senderXPub!);
+      }
+      if (env.endpoint != null) {
+        await savePeerEndpoint(h, env.endpoint!);
+      }
+      await db.saveMessage(h, 'in', env.message);
+      await refreshContacts();
+      await showMessageNotification(title: h, body: env.message);
+      notifyListeners();
+      debugPrint('back-pair: created contact $h via direct onion');
+      return h;
+    } catch (e) {
+      debugPrint('back-pair error: $e');
+      try { await signalSession.sessionStore.deleteSession(tempAddr); } catch (_) {}
+      return null;
+    }
+  }
 
   Future<void> boot() async {
     if (ready) return;
@@ -539,7 +605,12 @@ class AppState extends ChangeNotifier {
     await refreshContacts();
     // sprint 7.5: auto-start tor; nostr subs retry every 10s until ready
     final docsDir = await getApplicationDocumentsDirectory();
-    Future(() => engine.startListener(docsDir.path));
+    Future(() => engine.startListener(docsDir.path)).then((addr) {
+      if (addr.isNotEmpty && !addr.startsWith('error')) {
+        myOnion = addr;
+        notifyListeners();
+      }
+    });
     engine.nostrInit('wss://relay.damus.io,wss://nos.lol');
     await initNotifications();
     for (final c in contacts) {
@@ -559,6 +630,32 @@ class AppState extends ChangeNotifier {
       );
       _ntfyListener!.start();
     }
+
+    // sprint 6.13: continuous drain of direct-onion inbox. handles back-
+    // pair from strangers + falls back to trial-decrypt against known
+    // contacts for in-session direct-onion messages.
+    Timer.periodic(const Duration(seconds: 1), (_) async {
+      final ciphers = engine.drainInbox();
+      if (ciphers.isEmpty) return;
+      for (final cipher in ciphers) {
+        var handled = false;
+        for (final c in contacts) {
+          final plain = await signalDecrypt(c.haloId, cipher);
+          if (plain != null) {
+            final env = unwrapMessage(plain);
+            if (env.endpoint != null) {
+              await savePeerEndpoint(c.haloId, env.endpoint!);
+            }
+            await db.saveMessage(c.haloId, 'in', env.message);
+            await showMessageNotification(title: c.haloId, body: env.message);
+            notifyListeners();
+            handled = true;
+            break;
+          }
+        }
+        if (!handled) await backPairFromCipher(cipher);
+      }
+    });
 
     Timer.periodic(const Duration(seconds: 1), (_) async {
       final msgs = engine.nostrPoll();
