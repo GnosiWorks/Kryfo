@@ -23,6 +23,9 @@ import 'screens/scan_screen.dart';
 import 'screens/modes_screen.dart';
 import 'screens/push_settings_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'lock_state.dart';
+import 'screens/lock_screen.dart';
+import 'screens/lock_setup_screen.dart';
 import 'push_mode.dart';
 import 'ntfy_listener.dart';
 import 'message_envelope.dart';
@@ -755,7 +758,7 @@ class HaloApp extends StatelessWidget {
     return MaterialApp(
       title: 'Halo',
       theme: buildHaloTheme(),
-      home: const _OnboardingGate(child: RootShell()),
+      home: const _LockGate(child: _OnboardingGate(child: RootShell())),
     );
   }
 }
@@ -1199,6 +1202,54 @@ class _DevScreenState extends State<DevScreen> {
                     style: HaloType.mono(
                         size: 11, color: HaloColors.amber)),
               ),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () async {
+                  if (lockState.enabled) {
+                    final ok = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        backgroundColor: HaloColors.surface3,
+                        title: Text('disable app lock?',
+                            style: HaloType.serif(
+                                size: 18, color: HaloColors.text)),
+                        content: Text(
+                          'the pin will be removed. anyone with your phone will see halo when they open it.',
+                          style: HaloType.sans(
+                              size: 13, color: HaloColors.text2),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(false),
+                            child: Text('cancel',
+                                style: HaloType.sans(
+                                    size: 13, color: HaloColors.text2)),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(true),
+                            child: Text('disable',
+                                style: HaloType.sans(
+                                    size: 13, color: HaloColors.rose)),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (ok == true) await lockState.disable();
+                  } else {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => const LockSetupScreen()));
+                  }
+                },
+                child: AnimatedBuilder(
+                  animation: lockState,
+                  builder: (_, __) => Text(
+                      lockState.enabled
+                          ? 'app lock · on →'
+                          : 'app lock · off →',
+                      style: HaloType.mono(
+                          size: 11, color: HaloColors.amber)),
+                ),
+              ),
               if (_receivedPlain.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Container(
@@ -1270,6 +1321,49 @@ class _OnboardingGateState extends State<_OnboardingGate> {
             onComplete: () => appState.markOnboardingComplete(),
           );
         }
+        return widget.child;
+      },
+    );
+  }
+}
+
+
+class _LockGate extends StatefulWidget {
+  final Widget child;
+  const _LockGate({required this.child});
+  @override
+  State<_LockGate> createState() => _LockGateState();
+}
+
+class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    lockState.load();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.inactive) {
+      lockState.lock();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: lockState,
+      builder: (_, __) {
+        if (lockState.locked) return const LockScreen();
         return widget.child;
       },
     );
