@@ -1176,10 +1176,8 @@ class _DevScreenState extends State<DevScreen> {
                 child: const Text('encrypt + send'),
               ),
               const SizedBox(height: 16),
-              if (_torStatus != TorStatus.off) ...[
-                TorWarmupGraph(status: _torStatus, bootstrapPct: _bootstrapPct),
-                const SizedBox(height: 12),
-              ],
+              TorWarmupGraph(status: _torStatus, bootstrapPct: _bootstrapPct),
+              const SizedBox(height: 12),
               if (_status.isNotEmpty)
                 Text('status: $_status',
                     style: HaloType.sans(size: 12, color: HaloColors.text2)),

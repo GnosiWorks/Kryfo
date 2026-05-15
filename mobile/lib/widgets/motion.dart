@@ -132,13 +132,14 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   }
 
   List<int> get _lit {
+    if (_phase == 0) return const [];
     if (_phase == 4) return const [0, 1, 2, 3];
     return List.generate(_phase - 1, (i) => i);
   }
 
   String get _label {
     switch (widget.status) {
-      case TorStatus.off: return 'OFFLINE';
+      case TorStatus.off: return 'STANDBY';
       case TorStatus.starting: return 'CONNECTING';
       case TorStatus.bootstrapped: return 'BUILDING';
       case TorStatus.publishing: return 'PUBLISHING';
@@ -148,7 +149,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
 
   String get _italic {
     switch (widget.status) {
-      case TorStatus.off: return '';
+      case TorStatus.off: return 'preparing to connect';
       case TorStatus.starting: return 'finding a private path';
       case TorStatus.bootstrapped: return 'carving the path';
       case TorStatus.publishing: return 'announcing your arrival';
@@ -158,7 +159,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
 
   String get _help {
     switch (widget.status) {
-      case TorStatus.off: return '';
+      case TorStatus.off: return 'tor is starting in the background. this graph lights up as the connection forms.';
       case TorStatus.starting:
         return 'making a fresh route through anonymous relays.';
       case TorStatus.bootstrapped:
@@ -193,7 +194,9 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   }
 
   bool get _green => widget.status == TorStatus.reachable;
-  Color get _accent => _green ? kGreen : kAmber;
+  bool get _standby => _phase == 0;
+  Color get _accent =>
+      _standby ? const Color(0xFFE5E5E5) : (_green ? kGreen : kAmber);
 
   @override
   Widget build(BuildContext context) {
@@ -205,8 +208,12 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
             height: 110,
             child: AnimatedBuilder(
               animation: _ctl,
-              builder: (ctx, _) => CustomPaint(
-                painter: _ZigZagWarmupPainter(
+              builder: (ctx, _) => ColorFiltered(
+                colorFilter: _standby
+                    ? const ColorFilter.mode(Color(0xFFE5E5E5), BlendMode.srcIn)
+                    : const ColorFilter.mode(Colors.transparent, BlendMode.dst),
+                child: CustomPaint(
+                  painter: _ZigZagWarmupPainter(
                   activeIdx: _activeIdx,
                   lit: _lit,
                   progress: _progress,
@@ -214,6 +221,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
                   t: _ctl.value,
                 ),
                 size: Size.infinite,
+              ),
               ),
             ),
           ),
