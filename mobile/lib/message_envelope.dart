@@ -1,7 +1,7 @@
 // message_envelope.dart — wrap outgoing plain text with optional metadata
-// (currently: ntfy endpoint advertisement) so the peer learns our push
-// endpoint over the existing encrypted channel. wrapped messages use the
-// sentinel prefix "halo/1:" followed by a JSON object so legacy plain
+// (ntfy endpoint + sender identity for back-pair) so the peer learns our
+// push endpoint and identity over the existing encrypted channel. wrapped
+// messages use the sentinel prefix "halo/1:" + JSON object so legacy plain
 // messages pass through unchanged.
 
 import 'dart:convert';
@@ -14,37 +14,70 @@ const _peerEndpointPrefix = 'ntfy_peer_endpoint_';
 class UnwrappedMessage {
   final String message;
   final String? endpoint;
-  UnwrappedMessage(this.message, this.endpoint);
+  final String? senderHaloId; // 'h' field
+  final String? senderEdPub;  // 'e' field, hex
+  final String? senderOnion;  // 'o' field
+  final String? senderXPub;   // 'x' field, hex
+  UnwrappedMessage(
+    this.message, {
+    this.endpoint,
+    this.senderHaloId,
+    this.senderEdPub,
+    this.senderOnion,
+    this.senderXPub,
+  });
 }
 
-// wrap: only advertise endpoint when our push mode is ntfy. otherwise
-// return plain so we don't leak metadata to peers we haven't opted in to
-// being woken by.
-Future<String> wrapMessage(String plain) async {
+class SenderInfo {
+  final String haloId;
+  final String edPub;
+  final String onion;
+  final String xPub;
+  const SenderInfo({
+    required this.haloId,
+    required this.edPub,
+    required this.onion,
+    required this.xPub,
+  });
+}
+
+// wrap: always includes sender identity now (cheap, enables back-pair).
+// endpoint is added only when push mode is ntfy.
+Future<String> wrapMessage(String plain, {SenderInfo? sender}) async {
   final mode = await loadPushMode();
-  if (mode != PushMode.ntfy) return plain;
+  final body = <String, dynamic>{'m': plain};
 
-  final topic = await loadNtfyTopic();
-  final server = await loadNtfyServer();
-  final endpoint = composeNtfyEndpoint(server, topic);
-
-  final body = jsonEncode({'m': plain, 'p': endpoint});
-  return '$_envelopePrefix$body';
+  if (mode == PushMode.ntfy) {
+    final topic = await loadNtfyTopic();
+    final server = await loadNtfyServer();
+    body['p'] = composeNtfyEndpoint(server, topic);
+  }
+  if (sender != null) {
+    body['h'] = sender.haloId;
+    body['e'] = sender.edPub;
+    body['o'] = sender.onion;
+    body['x'] = sender.xPub;
+  }
+  return '$_envelopePrefix${jsonEncode(body)}';
 }
 
 UnwrappedMessage unwrapMessage(String wrapped) {
   if (!wrapped.startsWith(_envelopePrefix)) {
-    return UnwrappedMessage(wrapped, null);
+    return UnwrappedMessage(wrapped);
   }
   try {
     final json = jsonDecode(wrapped.substring(_envelopePrefix.length))
         as Map<String, dynamic>;
-    final m = (json['m'] as String?) ?? '';
-    final p = json['p'] as String?;
-    return UnwrappedMessage(m, p);
+    return UnwrappedMessage(
+      (json['m'] as String?) ?? '',
+      endpoint: json['p'] as String?,
+      senderHaloId: json['h'] as String?,
+      senderEdPub: json['e'] as String?,
+      senderOnion: json['o'] as String?,
+      senderXPub: json['x'] as String?,
+    );
   } catch (_) {
-    // malformed — treat as plain
-    return UnwrappedMessage(wrapped, null);
+    return UnwrappedMessage(wrapped);
   }
 }
 

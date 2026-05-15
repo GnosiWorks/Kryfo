@@ -105,6 +105,11 @@ extern char* HaloStartListener(char* cDataDir);
 extern char* HaloGetStatus(void);
 extern char* HaloDrainInbox(void);
 extern char* HaloSendTo(char* cAddr, char* cMsg);
+
+// derives the 3-word BIP-39 halo id from an ed25519 public key hex string.
+// used during back-pair when a stranger's first message arrives and we need
+// to compute their halo id from the identity key in the libsignal envelope.
+extern char* HaloIdFromEdPub(char* cHexPub);
 extern char* HaloNostrInit(char* cRelaysCSV);
 extern char* HaloNostrSend(char* cPeerXPubHex, char* cMsg);
 extern char* HaloNostrSubscribe(char* cPeerXPubHex);

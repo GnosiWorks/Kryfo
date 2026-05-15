@@ -142,7 +142,12 @@ class _ChatScreenState extends State<ChatScreen> {
     });
     final String cipher;
     try {
-      final wrapped = await wrapMessage(msg.text);
+      final wrapped = await wrapMessage(msg.text, sender: SenderInfo(
+        haloId: appState.myId,
+        edPub: engine.myEdPubkey(),
+        onion: appState.myOnion,
+        xPub: engine.myXPubkey(),
+      ));
       cipher = await signalEncrypt(widget.peerHaloId, wrapped);
     } catch (e) {
       if (!mounted) return;
@@ -182,7 +187,12 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToEnd();
     final String cipher;
     try {
-      final wrapped = await wrapMessage(text);
+      final wrapped = await wrapMessage(text, sender: SenderInfo(
+        haloId: appState.myId,
+        edPub: engine.myEdPubkey(),
+        onion: appState.myOnion,
+        xPub: engine.myXPubkey(),
+      ));
       cipher = await signalEncrypt(widget.peerHaloId, wrapped);
     } catch (e) {
       if (!mounted) return;

@@ -436,3 +436,16 @@ return C.CString("ok")
 }
 
 func main() {}
+
+//export HaloIdFromEdPub
+// derives the 3-word BIP-39 halo id from an ed25519 public key hex string.
+// used during back-pair when a stranger's first message arrives and we need
+// to compute their halo id from the identity key in the libsignal envelope.
+func HaloIdFromEdPub(cHexPub *C.char) *C.char {
+hexPub := C.GoString(cHexPub)
+pub, err := hex.DecodeString(hexPub)
+if err != nil || len(pub) != 32 {
+return C.CString("")
+}
+return C.CString(idFromPubkey(pub))
+}
