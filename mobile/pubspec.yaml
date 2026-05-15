@@ -59,6 +59,7 @@ dependencies:
   package_info_plus: ^9.0.1
   connectivity_plus: ^7.1.1
   app_links: ^7.0.0
+  crypto: ^3.0.7
 
 dev_dependencies:
   flutter_test:
