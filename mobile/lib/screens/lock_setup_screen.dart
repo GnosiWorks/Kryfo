@@ -36,6 +36,37 @@ class _LockSetupScreenState extends State<LockSetupScreen> {
       } else {
         if (_pin == _first) {
           await lockState.setupPin(_pin);
+          if (mounted && lockState.bioSupported) {
+            final useBio = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                backgroundColor: HaloColors.surface3,
+                title: Text('unlock with fingerprint?',
+                    style: HaloType.serif(
+                        size: 18, color: HaloColors.text)),
+                content: Text(
+                  "you can still use your pin anytime — fingerprint is just faster.",
+                  style: HaloType.sans(
+                      size: 13, color: HaloColors.text2),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    child: Text('not now',
+                        style: HaloType.sans(
+                            size: 13, color: HaloColors.text2)),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(true),
+                    child: Text('enable',
+                        style: HaloType.sans(
+                            size: 13, color: HaloColors.amber)),
+                  ),
+                ],
+              ),
+            );
+            if (useBio == true) await lockState.setBiometric(true);
+          }
           if (mounted) Navigator.of(context).pop();
         } else {
           HapticFeedback.heavyImpact();
