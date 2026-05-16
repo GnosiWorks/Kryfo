@@ -4,6 +4,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../theme.dart';
+import 'restore_screen.dart';
+import '../main.dart' show appState;
 import '../main.dart';
 import 'scan_screen.dart';
 
@@ -160,6 +162,21 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
                       size: 14,
                       color: HaloColors.onAmber,
                       weight: FontWeight.w500)),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Center(
+            child: GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const RestoreScreen(),
+                ));
+              },
+              child: Text(
+                'have a backup? restore →',
+                style: HaloType.sans(
+                    size: 12, color: HaloColors.text2),
+              ),
             ),
           ),
           const SizedBox(height: 14),
