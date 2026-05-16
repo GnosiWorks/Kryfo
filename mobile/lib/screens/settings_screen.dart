@@ -10,6 +10,8 @@ import '../theme.dart';
 import 'modes_screen.dart';
 import 'push_settings_screen.dart';
 import 'lock_setup_screen.dart';
+import 'backup_screen.dart';
+import 'restore_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -110,6 +112,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onTap: () => lockState.setBiometric(!lockState.biometric),
                   ),
               ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          _Section('backup'),
+          _Row(
+            label: 'back up identity',
+            value: 'encrypted file',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const BackupScreen()),
+            ),
+          ),
+          _Row(
+            label: 'restore from backup',
+            value: 'replace current',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const RestoreScreen()),
             ),
           ),
           const SizedBox(height: 24),
