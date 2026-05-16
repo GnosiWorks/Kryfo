@@ -12,6 +12,7 @@ class HomeScreen extends StatelessWidget {
   final List<ContactPreview> contacts;
   final VoidCallback onAddContact;
   final VoidCallback onOpenDev;
+  final VoidCallback onOpenSettings;
   final void Function(String halo) onOpenChat;
 
   const HomeScreen({
@@ -20,6 +21,7 @@ class HomeScreen extends StatelessWidget {
     this.contacts = const [],
     required this.onAddContact,
     required this.onOpenDev,
+    required this.onOpenSettings,
     required this.onOpenChat,
   });
 
@@ -44,7 +46,7 @@ class HomeScreen extends StatelessWidget {
                   ? _EmptyState(onAdd: onAddContact)
                   : _ContactList(contacts: contacts, onTap: onOpenChat),
             ),
-            _NavTabs(active: 'chats', onDevLongPress: onOpenDev),
+            _NavTabs(active: 'chats', onDevLongPress: onOpenDev, onMeTap: onOpenSettings),
           ],
         ),
       ),
@@ -328,7 +330,8 @@ String _relTime(DateTime? t) {
 class _NavTabs extends StatelessWidget {
   final String active;
   final VoidCallback onDevLongPress;
-  const _NavTabs({required this.active, required this.onDevLongPress});
+  final VoidCallback onMeTap;
+  const _NavTabs({required this.active, required this.onDevLongPress, required this.onMeTap});
 
   @override
   Widget build(BuildContext context) {
@@ -345,6 +348,8 @@ class _NavTabs extends StatelessWidget {
           _Tab(label: 'Market', active: active == 'market'),
           GestureDetector(
             onLongPress: onDevLongPress,
+            onTap: onMeTap,
+            behavior: HitTestBehavior.opaque,
             child: _Tab(label: 'Me', active: active == 'me'),
           ),
         ],
