@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import '../theme.dart';
+import 'notes_screen.dart';
 import '../miui_autostart.dart';
 
 bool _miuiPromptChecked = false;
@@ -41,6 +42,11 @@ class HomeScreen extends StatelessWidget {
           children: [
             const _StatusBar(),
             _HomeHead(now: now, haloId: haloId),
+            _NotesPin(
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotesScreen()),
+              ),
+            ),
             Expanded(
               child: contacts.isEmpty
                   ? _EmptyState(onAdd: onAddContact)
@@ -372,3 +378,60 @@ class _Tab extends StatelessWidget {
         ));
   }
 }
+
+class _NotesPin extends StatelessWidget {
+  final VoidCallback onTap;
+  const _NotesPin({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: HaloColors.surface2,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: HaloColors.line, width: 0.5),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: HaloColors.amberSoft,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              alignment: Alignment.center,
+              child: const Icon(Icons.bookmark_outline,
+                  color: HaloColors.amber, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('note to self',
+                      style: HaloType.serif(
+                          size: 14,
+                          color: HaloColors.text,
+                          italic: true)),
+                  const SizedBox(height: 2),
+                  Text('a private space, only on this phone',
+                      style: HaloType.sans(
+                          size: 11.5, color: HaloColors.text3)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right,
+                color: Color(0xFF6B625A), size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
