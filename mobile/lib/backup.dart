@@ -76,6 +76,11 @@ Future<String> createBackupBlob(String passphrase) async {
       if (v != null) prefsMap[k] = v;
     }
 
+    // onboarding_done lives in default FlutterSecureStorage, not the
+    // halo.db one. read it separately.
+    final defaultStorage = const FlutterSecureStorage();
+    final onboardingDone = await defaultStorage.read(key: 'onboarding_done');
+
     final payload = {
       'v': 1,
       'ts': DateTime.now().millisecondsSinceEpoch,
@@ -85,6 +90,7 @@ Future<String> createBackupBlob(String passphrase) async {
       'dbPassphrase': dbPassphrase,
       'db': dbB64,
       'prefs': prefsMap,
+      'onboardingDone': onboardingDone,
     };
     final json = jsonEncode(payload);
 
@@ -153,6 +159,13 @@ Future<void> restoreBackupBlob(String blob, String passphrase) async {
     } else if (v is double) {
       await prefs.setDouble(entry.key, v);
     }
+  }
+
+  // restore the onboarding_done flag to default secure storage
+  final defaultStorage = const FlutterSecureStorage();
+  final onboardingDone = payload['onboardingDone'] as String?;
+  if (onboardingDone != null) {
+    await defaultStorage.write(key: 'onboarding_done', value: onboardingDone);
   }
 
   // restore identity in engine (this also rehydrates myId)

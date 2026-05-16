@@ -10,7 +10,11 @@ import '../backup.dart';
 import '../theme.dart';
 
 class RestoreScreen extends StatefulWidget {
-  const RestoreScreen({super.key});
+  // when non-null, called after a successful restore instead of the
+  // 'force-close halo' dialog. used from onboarding to skip restart
+  // and go straight to the home shell.
+  final VoidCallback? onRestored;
+  const RestoreScreen({super.key, this.onRestored});
   @override
   State<RestoreScreen> createState() => _RestoreScreenState();
 }
@@ -52,6 +56,10 @@ class _RestoreScreenState extends State<RestoreScreen> {
     try {
       await restoreBackupBlob(_blob!, pw);
       if (!mounted) return;
+      if (widget.onRestored != null) {
+        widget.onRestored!();
+        return;
+      }
       await showDialog<void>(
         context: context,
         barrierDismissible: false,
@@ -60,13 +68,17 @@ class _RestoreScreenState extends State<RestoreScreen> {
           title: Text('restored',
               style: HaloType.serif(size: 18, color: HaloColors.text)),
           content: Text(
-            "force-close halo from your recents and reopen it so the new identity loads cleanly.",
+            "halo will close now. tap the icon to reopen with your restored identity.",
             style: HaloType.sans(size: 13, color: HaloColors.text2),
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text('ok',
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                // exit so the next launch boots fresh from restored db
+                Future.delayed(const Duration(milliseconds: 200), () => exit(0));
+              },
+              child: Text('reopen halo',
                   style: HaloType.sans(
                       size: 13, color: HaloColors.amber)),
             ),
