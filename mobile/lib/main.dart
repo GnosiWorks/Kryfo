@@ -64,6 +64,8 @@ class HaloEngine {
   late final CStrFnDart _nostrPoll;
   late final OneArgFnDart _ntfyPing;
   late final OneArgFnDart _idFromEdPub;
+  late final TwoArgFnDart _encryptBackup;
+  late final TwoArgFnDart _decryptBackup;
 
   HaloEngine() {
     _lib = Platform.isAndroid
@@ -89,6 +91,8 @@ class HaloEngine {
     _nostrPoll = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloNostrPoll');
     _ntfyPing = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNtfyPing');
     _idFromEdPub = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloIdFromEdPub');
+    _encryptBackup = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloEncryptBackup');
+    _decryptBackup = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloDecryptBackup');
   }
 
   String version() => _version().toDartString();
@@ -130,6 +134,20 @@ class HaloEngine {
     final ptr = hexPub.toNativeUtf8();
     try { return _idFromEdPub(ptr).toDartString(); }
     finally { calloc.free(ptr); }
+  }
+
+  String encryptBackup(String plain, String passphrase) {
+    final p1 = plain.toNativeUtf8();
+    final p2 = passphrase.toNativeUtf8();
+    try { return _encryptBackup(p1, p2).toDartString(); }
+    finally { calloc.free(p1); calloc.free(p2); }
+  }
+
+  String decryptBackup(String blob, String passphrase) {
+    final p1 = blob.toNativeUtf8();
+    final p2 = passphrase.toNativeUtf8();
+    try { return _decryptBackup(p1, p2).toDartString(); }
+    finally { calloc.free(p1); calloc.free(p2); }
   }
 
   String nostrSend(String peerXPubHex, String b64Cipher) {

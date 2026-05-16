@@ -110,6 +110,16 @@ extern char* HaloSendTo(char* cAddr, char* cMsg);
 // used during back-pair when a stranger's first message arrives and we need
 // to compute their halo id from the identity key in the libsignal envelope.
 extern char* HaloIdFromEdPub(char* cHexPub);
+
+// encrypts a UTF-8 plaintext payload (typically a JSON blob containing
+// the user's identity keys + db + prefs) with a passphrase using scrypt
+// (32768 / 8 / 1) + AES-256-GCM. returns "halo-backup:v1:" + base64
+// (salt || nonce || ciphertext+tag). returns "error: ..." on failure.
+extern char* HaloEncryptBackup(char* cPlain, char* cPassphrase);
+
+// inverse of HaloEncryptBackup. returns plaintext on success or
+// "error: wrong passphrase or corrupt" on auth failure.
+extern char* HaloDecryptBackup(char* cBlob, char* cPassphrase);
 extern char* HaloNostrInit(char* cRelaysCSV);
 extern char* HaloNostrSend(char* cPeerXPubHex, char* cMsg);
 extern char* HaloNostrSubscribe(char* cPeerXPubHex);

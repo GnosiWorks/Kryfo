@@ -6,6 +6,7 @@ package main
 import "C"
 
 import (
+	"golang.org/x/crypto/scrypt"
 "bufio"
 "context"
 "crypto/aes"
@@ -448,4 +449,79 @@ if err != nil || len(pub) != 32 {
 return C.CString("")
 }
 return C.CString(idFromPubkey(pub))
+}
+
+//export HaloEncryptBackup
+// encrypts a UTF-8 plaintext payload (typically a JSON blob containing
+// the user's identity keys + db + prefs) with a passphrase using scrypt
+// (32768 / 8 / 1) + AES-256-GCM. returns "halo-backup:v1:" + base64
+// (salt || nonce || ciphertext+tag). returns "error: ..." on failure.
+func HaloEncryptBackup(cPlain, cPassphrase *C.char) *C.char {
+plain := []byte(C.GoString(cPlain))
+passphrase := C.GoString(cPassphrase)
+
+salt := make([]byte, 16)
+if _, err := io.ReadFull(rand.Reader, salt); err != nil {
+return C.CString("error: rand: " + err.Error())
+}
+key, err := scrypt.Key([]byte(passphrase), salt, 32768, 8, 1, 32)
+if err != nil {
+return C.CString("error: scrypt: " + err.Error())
+}
+block, err := aes.NewCipher(key)
+if err != nil {
+return C.CString("error: aes: " + err.Error())
+}
+gcm, err := cipher.NewGCM(block)
+if err != nil {
+return C.CString("error: gcm: " + err.Error())
+}
+nonce := make([]byte, gcm.NonceSize())
+if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+return C.CString("error: nonce: " + err.Error())
+}
+ct := gcm.Seal(nil, nonce, plain, nil)
+blob := append(append(salt, nonce...), ct...)
+return C.CString("halo-backup:v1:" + base64.StdEncoding.EncodeToString(blob))
+}
+
+//export HaloDecryptBackup
+// inverse of HaloEncryptBackup. returns plaintext on success or
+// "error: wrong passphrase or corrupt" on auth failure.
+func HaloDecryptBackup(cBlob, cPassphrase *C.char) *C.char {
+blob := C.GoString(cBlob)
+passphrase := C.GoString(cPassphrase)
+prefix := "halo-backup:v1:"
+if !strings.HasPrefix(blob, prefix) {
+return C.CString("error: not a halo backup")
+}
+raw, err := base64.StdEncoding.DecodeString(blob[len(prefix):])
+if err != nil {
+return C.CString("error: bad base64")
+}
+if len(raw) < 16+12+16 {
+return C.CString("error: blob too short")
+}
+salt := raw[:16]
+rest := raw[16:]
+key, err := scrypt.Key([]byte(passphrase), salt, 32768, 8, 1, 32)
+if err != nil {
+return C.CString("error: scrypt: " + err.Error())
+}
+block, err := aes.NewCipher(key)
+if err != nil {
+return C.CString("error: aes: " + err.Error())
+}
+gcm, err := cipher.NewGCM(block)
+if err != nil {
+return C.CString("error: gcm: " + err.Error())
+}
+nonceSize := gcm.NonceSize()
+nonce := rest[:nonceSize]
+ct := rest[nonceSize:]
+plain, err := gcm.Open(nil, nonce, ct, nil)
+if err != nil {
+return C.CString("error: wrong passphrase or corrupt")
+}
+return C.CString(string(plain))
 }
