@@ -22,6 +22,7 @@ import 'screens/chat_screen.dart';
 import 'screens/scan_screen.dart';
 import 'screens/modes_screen.dart';
 import 'screens/push_settings_screen.dart';
+import 'screens/settings_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'lock_state.dart';
 import 'screens/lock_screen.dart';
@@ -805,6 +806,7 @@ class _RootShellState extends State<RootShell> {
       contacts: appState.contacts,
       onAddContact: () => _open(const DevScreen()),
       onOpenDev: () => _open(const DevScreen()),
+      onOpenSettings: () => _open(SettingsScreen()),
       onOpenChat: (id) async {
         final rows = await db.contacts();
         final matches = rows.where((r) => r['halo_id'] == id).toList();
