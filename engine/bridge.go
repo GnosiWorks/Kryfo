@@ -26,7 +26,8 @@ import (
 "time"
 
 libtor "github.com/alexballas/go-libtor"
-"github.com/cretz/bine/tor"
+"github.com/cretz/bine/control"
+	"github.com/cretz/bine/tor"
 "github.com/tyler-smith/go-bip39"
 "golang.org/x/crypto/curve25519"
 )
@@ -330,10 +331,10 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 	myAddr = fmt.Sprintf("%s.onion", onion.ID)
 
 	go func() {
-		time.Sleep(60 * time.Second)
+		watchHSDirUpload(t, onion.ID)
 		statusMu.Lock()
 		if torStatus == "publishing" {
-			log.Println("halo: status publishing -> reachable (60s timeout)")
+			log.Println("halo: status publishing -> reachable (HSDir uploaded)")
 			torStatus = "reachable"
 			go func() {
 				if _, err := torNostrClient(); err != nil {
@@ -524,4 +525,40 @@ if err != nil {
 return C.CString("error: wrong passphrase or corrupt")
 }
 return C.CString(string(plain))
+}
+
+// watchHSDirUpload subscribes to tor's HS_DESC events and returns as
+// soon as an UPLOADED action is reported for our onion id, or after
+// 60s as a fallback. without this we'd just wait the full 60s
+// heuristic — most networks UPLOAD within 5-15 seconds.
+func watchHSDirUpload(t *tor.Tor, onionID string) {
+if t == nil || t.Control == nil {
+time.Sleep(60 * time.Second)
+return
+}
+ch := make(chan control.Event, 16)
+if err := t.Control.AddEventListener(ch, control.EventCodeHSDesc); err != nil {
+log.Printf("halo: HSDesc subscribe failed: %v — falling back to 60s wait", err)
+time.Sleep(60 * time.Second)
+return
+}
+defer t.Control.RemoveEventListener(ch, control.EventCodeHSDesc)
+
+timeout := time.After(60 * time.Second)
+for {
+select {
+case ev := <-ch:
+hs, ok := ev.(*control.HSDescEvent)
+if !ok {
+continue
+}
+if hs.Action == "UPLOADED" && (hs.Address == onionID || hs.Address == onionID+".onion") {
+log.Printf("halo: HS_DESC UPLOADED received for %s", onionID)
+return
+}
+case <-timeout:
+log.Printf("halo: HSDesc event timed out, falling back")
+return
+}
+}
 }
