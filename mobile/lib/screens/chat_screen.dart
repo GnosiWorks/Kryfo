@@ -71,7 +71,8 @@ String _fmtBurn(int burnAtMs) {
 
 class _ChatScreenState extends State<ChatScreen> {
   final _msgCtrl = TextEditingController();
-  bool _ghost = false; // per-chat session toggle. burns sent messages after 5 min.
+  bool _ghost = false; // per-chat session toggle.
+  int _burnSeconds = 300; // default 5m. long-press the fire button to change.
   Timer? _burnTick;
   final _scrollCtrl = ScrollController();
   final List<_Msg> _messages = [];
@@ -207,12 +208,78 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  void _pickBurnDuration() {
+    final options = <int, String>{
+      30: '30 seconds',
+      60: '1 minute',
+      300: '5 minutes',
+      3600: '1 hour',
+      86400: '24 hours',
+    };
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: HaloColors.surface2,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                const Icon(Icons.local_fire_department_outlined,
+                    size: 14, color: HaloColors.amber),
+                const SizedBox(width: 8),
+                Text('ghost timer',
+                    style: HaloType.serif(
+                        size: 16, color: HaloColors.text, italic: true)),
+              ]),
+              const SizedBox(height: 4),
+              Text('how long before sent messages burn?',
+                  style: HaloType.mono(size: 11, color: HaloColors.text3)),
+              const SizedBox(height: 12),
+              ...options.entries.map((e) {
+                final isSelected = _burnSeconds == e.key;
+                return InkWell(
+                  onTap: () {
+                    setState(() {
+                      _burnSeconds = e.key;
+                      _ghost = true;
+                    });
+                    Navigator.of(ctx).pop();
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Row(children: [
+                      Expanded(child: Text(e.value,
+                          style: HaloType.sans(
+                              size: 14,
+                              color: isSelected
+                                  ? HaloColors.amber
+                                  : HaloColors.text))),
+                      if (isSelected)
+                        const Icon(Icons.check_rounded,
+                            size: 16, color: HaloColors.amber),
+                    ]),
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _send() async {
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || _sending) return;
     final msg = _Msg('out', text, DateTime.now(), sending: true,
         burnAt: _ghost
-            ? DateTime.now().millisecondsSinceEpoch + 300 * 1000
+            ? DateTime.now().millisecondsSinceEpoch + _burnSeconds * 1000
             : null);
     setState(() {
       _messages.add(msg);
@@ -223,7 +290,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToEnd();
     final String cipher;
     try {
-      final wrapped = await wrapMessage(text, burnSeconds: _ghost ? 300 : null, sender: SenderInfo(
+      final wrapped = await wrapMessage(text, burnSeconds: _ghost ? _burnSeconds : null, sender: SenderInfo(
         haloId: appState.myId,
         edPub: engine.myEdPubkey(),
         onion: appState.myOnion,
@@ -253,7 +320,10 @@ class _ChatScreenState extends State<ChatScreen> {
             Future(() => engine.ntfyPing(endpoint));
           }
         });
-        await db.saveMessage(widget.peerHaloId, 'out', text);
+        await db.saveMessage(widget.peerHaloId, 'out', text,
+            burnAt: _ghost
+                ? DateTime.now().millisecondsSinceEpoch + _burnSeconds * 1000
+                : null);
       } else {
         setState(() { msg.failed = true; _status = result; });
       }
@@ -301,6 +371,7 @@ class _ChatScreenState extends State<ChatScreen> {
             _Composer(
               ghost: _ghost,
               onToggleGhost: () => setState(() => _ghost = !_ghost),
+              onPickBurn: _pickBurnDuration,
               controller: _msgCtrl,
               sending: _sending,
               onSend: _send,
@@ -516,12 +587,14 @@ class _Composer extends StatelessWidget {
   final VoidCallback onSend;
   final bool ghost;
   final VoidCallback onToggleGhost;
+  final VoidCallback onPickBurn;
   const _Composer({
     required this.controller,
     required this.sending,
     required this.onSend,
     required this.ghost,
     required this.onToggleGhost,
+    required this.onPickBurn,
   });
 
   @override
@@ -577,6 +650,7 @@ class _Composer extends StatelessWidget {
         children: [
           GestureDetector(
             onTap: onToggleGhost,
+            onLongPress: onPickBurn,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 220),
               width: 32, height: 32,
