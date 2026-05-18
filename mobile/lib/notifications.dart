@@ -4,10 +4,17 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 final FlutterLocalNotificationsPlugin notifPlugin =
     FlutterLocalNotificationsPlugin();
 
-Future<void> initNotifications() async {
+Future<void> initNotifications({
+  void Function(String? payload)? onTap,
+}) async {
   const androidInit = AndroidInitializationSettings('ic_halo_notification');
   const initSettings = InitializationSettings(android: androidInit);
-  await notifPlugin.initialize(settings: initSettings);
+  await notifPlugin.initialize(
+    settings: initSettings,
+    onDidReceiveNotificationResponse: (resp) {
+      if (onTap != null) onTap(resp.payload);
+    },
+  );
 
   const channel = AndroidNotificationChannel(
     'halo_messages',
@@ -15,15 +22,15 @@ Future<void> initNotifications() async {
     description: 'new encrypted messages from your contacts',
     importance: Importance.high,
   );
-  await notifPlugin
-      .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
-      ?.createNotificationChannel(channel);
+  final android = notifPlugin
+      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+  await android?.createNotificationChannel(channel);
 }
 
 Future<void> showMessageNotification({
   required String title,
   required String body,
+  String? payload,
 }) async {
   const details = AndroidNotificationDetails(
     'halo_messages',
@@ -39,5 +46,6 @@ Future<void> showMessageNotification({
     title: title,
     body: body,
     notificationDetails: const NotificationDetails(android: details),
+    payload: payload,
   );
 }
