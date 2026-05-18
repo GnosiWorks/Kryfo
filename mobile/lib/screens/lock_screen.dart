@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../lock_state.dart';
+import '../wipe.dart';
 import '../theme.dart';
 
 class LockScreen extends StatefulWidget {
@@ -47,8 +48,14 @@ class _LockScreenState extends State<LockScreen>
     HapticFeedback.selectionClick();
     if (_pin.length == 4) {
       setState(() => _busy = true);
-      final ok = await lockState.verifyPin(_pin);
-      if (!ok && mounted) {
+      final result = await lockState.verifyPin(_pin);
+      if (result == PinResult.panic) {
+        // silent wipe — the screen stays as if processing, then halo
+        // exits. to the coercer it looks like the app crashed.
+        await wipeHalo();
+        return;
+      }
+      if (result == PinResult.invalid && mounted) {
         setState(() {
           _wrong = true;
           _pin = '';
