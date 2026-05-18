@@ -10,6 +10,7 @@ import '../theme.dart';
 import 'modes_screen.dart';
 import 'push_settings_screen.dart';
 import 'lock_setup_screen.dart';
+import 'panic_setup_screen.dart';
 import 'backup_screen.dart';
 import '../wipe.dart';
 import 'restore_screen.dart';
@@ -178,6 +179,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     label: 'unlock with fingerprint',
                     value: lockState.biometric ? 'on' : 'off',
                     onTap: () => lockState.setBiometric(!lockState.biometric),
+                  ),
+                if (lockState.enabled)
+                  _Row(
+                    label: 'panic pin',
+                    value: lockState.panicEnabled ? 'set' : 'off',
+                    onTap: () async {
+                      if (lockState.panicEnabled) {
+                        final disable = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            backgroundColor: HaloColors.surface3,
+                            title: Text('panic pin is set',
+                                style: HaloType.serif(
+                                    size: 18, color: HaloColors.text)),
+                            content: Text('remove the panic pin?',
+                                style: HaloType.sans(
+                                    size: 13, color: HaloColors.text2)),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(ctx).pop(false),
+                                child: Text('cancel',
+                                    style: HaloType.sans(
+                                        size: 13, color: HaloColors.text2)),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.of(ctx).pop(true),
+                                child: Text('remove',
+                                    style: HaloType.sans(
+                                        size: 13, color: HaloColors.rose)),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (disable == true) {
+                          await lockState.disablePanicPin();
+                        }
+                      } else {
+                        await Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => PanicSetupScreen(),
+                        ));
+                      }
+                    },
                   ),
               ],
             ),
