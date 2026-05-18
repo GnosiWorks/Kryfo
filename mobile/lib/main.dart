@@ -507,6 +507,31 @@ Map<String, String>? parseHaloUri(String raw) {
 final engine = HaloEngine();
 final db = HaloDb();
 
+
+// open ChatScreen for a given halo id. used by notification taps
+// (both warm — onDidReceiveNotificationResponse — and cold starts
+// via getNotificationAppLaunchDetails). reads contact details from
+// the db and pushes the route on the root navigator.
+Future<void> openChatForHalo(String? haloId) async {
+  if (haloId == null || haloId.isEmpty) return;
+  final nav = rootNavKey.currentState;
+  if (nav == null) return;
+  final rows = await db.contacts();
+  final matches = rows.where((r) => r['halo_id'] == haloId).toList();
+  if (matches.isEmpty) return;
+  final row = matches.first;
+  nav.push(MaterialPageRoute(
+    builder: (_) => ChatScreen(
+      peerHaloId: haloId,
+      peerOnion: row['onion'] as String,
+      peerXPub: row['xpub'] as String,
+      avatarSeed: haloId,
+    ),
+  ));
+}
+
+final GlobalKey<NavigatorState> rootNavKey = GlobalKey<NavigatorState>();
+
 class AppState extends ChangeNotifier {
   NtfyListener? _ntfyListener;
 
@@ -591,7 +616,7 @@ class AppState extends ChangeNotifier {
       }
       await db.saveMessage(h, 'in', env.message);
       await refreshContacts();
-      await showMessageNotification(title: h, body: env.message);
+      await showMessageNotification(title: h, body: env.message, payload: h);
       notifyListeners();
       debugPrint('back-pair: created contact $h via direct onion');
       return h;
@@ -634,7 +659,7 @@ class AppState extends ChangeNotifier {
       }
     });
     engine.nostrInit('wss://relay.damus.io,wss://nos.lol');
-    await initNotifications();
+    await initNotifications(onTap: openChatForHalo);
     for (final c in contacts) {
       final xPub = await signalSession.peerXPubHex(c.haloId);
       if (xPub != null) {
@@ -669,7 +694,7 @@ class AppState extends ChangeNotifier {
               await savePeerEndpoint(c.haloId, env.endpoint!);
             }
             await db.saveMessage(c.haloId, 'in', env.message);
-            await showMessageNotification(title: c.haloId, body: env.message);
+            await showMessageNotification(title: c.haloId, body: env.message, payload: c.haloId);
             notifyListeners();
             handled = true;
             break;
@@ -696,7 +721,7 @@ class AppState extends ChangeNotifier {
           final plain = env.message;
           debugPrint('  decrypted: \$plain');
           await db.saveMessage(haloId, 'in', plain);
-          await showMessageNotification(title: haloId, body: plain);
+          await showMessageNotification(title: haloId, body: plain, payload: haloId);
           notifyListeners();
         } else {
           debugPrint('  signalDecrypt returned null');
@@ -768,13 +793,27 @@ class AppState extends ChangeNotifier {
 
 final appState = AppState();
 
-void main() => runApp(const HaloApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const HaloApp());
+  // cold-start: if launched from a notification tap, open the chat
+  // after the first frame so rootNavKey has a navigator.
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    final details = await notifPlugin.getNotificationAppLaunchDetails();
+    if (details?.didNotificationLaunchApp ?? false) {
+      final payload = details?.notificationResponse?.payload;
+      Future.delayed(const Duration(milliseconds: 500),
+          () => openChatForHalo(payload));
+    }
+  });
+}
 
 class HaloApp extends StatelessWidget {
   const HaloApp({super.key});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: rootNavKey,
       title: 'Halo',
       theme: buildHaloTheme(),
       home: const _LockGate(child: _OnboardingGate(child: RootShell())),
