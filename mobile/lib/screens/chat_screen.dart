@@ -34,9 +34,11 @@ class _Msg {
   final String direction;
   final String text;
   final DateTime when;
+  final int? burnAt; // ms-since-epoch when this message expires, or null
   bool sending;
   bool failed;
-  _Msg(this.direction, this.text, this.when, {this.sending = false, this.failed = false});
+  _Msg(this.direction, this.text, this.when,
+      {this.burnAt, this.sending = false, this.failed = false});
 }
 
 String _friendlyStatus(String raw) {
@@ -54,8 +56,23 @@ String _fmtTime(DateTime d) {
   return '$h:$m';
 }
 
+// remaining time on a burning message, formatted compactly:
+// 4m 23s / 38s / 1h 02m. clamps at 0.
+String _fmtBurn(int burnAtMs) {
+  final now = DateTime.now().millisecondsSinceEpoch;
+  var s = ((burnAtMs - now) / 1000).round();
+  if (s <= 0) return '0s';
+  final h = s ~/ 3600; s -= h * 3600;
+  final m = s ~/ 60; s -= m * 60;
+  if (h > 0) return '${h}h ${m.toString().padLeft(2, '0')}m';
+  if (m > 0) return '${m}m ${s.toString().padLeft(2, '0')}s';
+  return '${s}s';
+}
+
 class _ChatScreenState extends State<ChatScreen> {
   final _msgCtrl = TextEditingController();
+  bool _ghost = false; // per-chat session toggle. burns sent messages after 5 min.
+  Timer? _burnTick;
   final _scrollCtrl = ScrollController();
   final List<_Msg> _messages = [];
   String _status = '';
@@ -82,6 +99,18 @@ class _ChatScreenState extends State<ChatScreen> {
   void _onAppStateChanged() {
     if (!mounted) return;
     _loadMessages();
+    _burnTick = Timer.periodic(const Duration(seconds: 1), (_) {
+      // rebuild so any ghost bubbles update their countdown / disappear
+      // when they expire. cheap — only burns redraw bubbles.
+      final hasBurning = _messages.any((m) => m.burnAt != null);
+      if (hasBurning && mounted) {
+        // also remove locally-expired messages so they vanish in real time
+        // (the background db sweep handles persistence).
+        final now = DateTime.now().millisecondsSinceEpoch;
+        _messages.removeWhere((m) => m.burnAt != null && m.burnAt! <= now);
+        setState(() {});
+      }
+    });
   }
 
   Future<void> _loadMessages() async {
@@ -94,6 +123,7 @@ class _ChatScreenState extends State<ChatScreen> {
           r['direction'] as String,
           r['plaintext'] as String,
           DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+          burnAt: r['burn_at'] as int?,
         ));
       }
     });
@@ -127,7 +157,10 @@ class _ChatScreenState extends State<ChatScreen> {
       if (!mounted) return;
       await db.saveMessage(widget.peerHaloId, 'in', plain);
       setState(() {
-        _messages.add(_Msg('in', plain, DateTime.now()));
+        _messages.add(_Msg('in', plain, DateTime.now(),
+            burnAt: env.burnSeconds != null && env.burnSeconds! > 0
+                ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
+                : null));
       });
       _scrollToEnd();
     }
@@ -177,7 +210,10 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _send() async {
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || _sending) return;
-    final msg = _Msg('out', text, DateTime.now(), sending: true);
+    final msg = _Msg('out', text, DateTime.now(), sending: true,
+        burnAt: _ghost
+            ? DateTime.now().millisecondsSinceEpoch + 300 * 1000
+            : null);
     setState(() {
       _messages.add(msg);
       _sending = true;
@@ -187,7 +223,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToEnd();
     final String cipher;
     try {
-      final wrapped = await wrapMessage(text, sender: SenderInfo(
+      final wrapped = await wrapMessage(text, burnSeconds: _ghost ? 300 : null, sender: SenderInfo(
         haloId: appState.myId,
         edPub: engine.myEdPubkey(),
         onion: appState.myOnion,
@@ -227,6 +263,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _burnTick?.cancel();
     appState.removeListener(_onAppStateChanged);
     _msgCtrl.dispose();
     _scrollCtrl.dispose();
@@ -262,6 +299,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     style: HaloType.mono(size: 10, color: HaloColors.text3)),
               ),
             _Composer(
+              ghost: _ghost,
+              onToggleGhost: () => setState(() => _ghost = !_ghost),
               controller: _msgCtrl,
               sending: _sending,
               onSend: _send,
@@ -406,7 +445,27 @@ class _Bubble extends StatelessWidget {
                       ],
                     ),
                   ],
-                  if (msg.failed) ...[
+                  if (msg.burnAt != null) ...[
+                const SizedBox(height: 4),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.local_fire_department_outlined,
+                          size: 11,
+                          color: HaloColors.amber.withOpacity(0.75)),
+                      const SizedBox(width: 4),
+                      Text('burns in ${_fmtBurn(msg.burnAt!)}',
+                          style: HaloType.mono(
+                              size: 9.5,
+                              color: HaloColors.amber.withOpacity(0.75))
+                              .copyWith(letterSpacing: 0.3)),
+                    ],
+                  ),
+                ),
+              ],
+              if (msg.failed) ...[
                     const SizedBox(height: 4),
                     Text('failed · tap to retry',
                         style: TextStyle(
@@ -455,26 +514,88 @@ class _Composer extends StatelessWidget {
   final TextEditingController controller;
   final bool sending;
   final VoidCallback onSend;
-  const _Composer({required this.controller, required this.sending, required this.onSend});
+  final bool ghost;
+  final VoidCallback onToggleGhost;
+  const _Composer({
+    required this.controller,
+    required this.sending,
+    required this.onSend,
+    required this.ghost,
+    required this.onToggleGhost,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            color: ghost ? HaloColors.amber.withOpacity(0.6) : HaloColors.line,
+            width: ghost ? 0.8 : 0.5,
+          ),
+        ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 32, height: 32,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: HaloColors.surface3,
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            transitionBuilder: (child, anim) => SizeTransition(
+              sizeFactor: anim,
+              axisAlignment: -1,
+              child: FadeTransition(opacity: anim, child: child),
             ),
-            alignment: Alignment.center,
-            child: Text('+',
-                style: HaloType.sans(size: 18, color: HaloColors.text2)),
+            child: ghost
+                ? Padding(
+                    key: const ValueKey('ghost-banner'),
+                    padding: const EdgeInsets.only(left: 4, right: 4, bottom: 8),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.local_fire_department_outlined,
+                            size: 13, color: HaloColors.amber),
+                        const SizedBox(width: 6),
+                        Text('ghost mode',
+                            style: HaloType.serif(
+                                size: 12,
+                                color: HaloColors.amber,
+                                italic: true)),
+                        const SizedBox(width: 8),
+                        Text('messages burn after 5 minutes',
+                            style: HaloType.mono(
+                                size: 10.5, color: HaloColors.text3)),
+                      ],
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+          Row(
+        children: [
+          GestureDetector(
+            onTap: onToggleGhost,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              width: 32, height: 32,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: ghost ? HaloColors.amber : HaloColors.surface3,
+                boxShadow: ghost
+                    ? [BoxShadow(
+                        color: HaloColors.amber.withOpacity(0.45),
+                        blurRadius: 12, spreadRadius: 1)]
+                    : null,
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.local_fire_department_outlined,
+                size: 18,
+                color: ghost ? HaloColors.onAmber : HaloColors.text2,
+              ),
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -522,6 +643,8 @@ class _Composer extends StatelessWidget {
                 color: sending ? HaloColors.text3 : HaloColors.onAmber,
               ),
             ),
+          ),
+            ],
           ),
         ],
       ),

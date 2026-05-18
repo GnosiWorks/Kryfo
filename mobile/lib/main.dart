@@ -252,7 +252,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 2,
+      version: 3,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -278,6 +278,7 @@ class HaloDb {
             direction TEXT NOT NULL,
             plaintext TEXT NOT NULL,
             sent_at INTEGER NOT NULL,
+            burn_at INTEGER,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
         ''');
@@ -285,6 +286,9 @@ class HaloDb {
       },
       onUpgrade: (db, oldV, newV) async {
         if (oldV < 2) await _signalTables(db);
+        if (oldV < 3) {
+          await db.execute('ALTER TABLE messages ADD COLUMN burn_at INTEGER');
+        }
       },
     );
     return _db!;
@@ -339,14 +343,31 @@ class HaloDb {
     }
   }
 
-  Future<void> saveMessage(String peerId, String direction, String plaintext) async {
+  Future<void> saveMessage(
+    String peerId,
+    String direction,
+    String plaintext, {
+    int? burnAt,
+  }) async {
     final db = await open();
     await db.insert('messages', {
       'peer_id': peerId,
       'direction': direction,
       'plaintext': plaintext,
       'sent_at': DateTime.now().millisecondsSinceEpoch,
+      'burn_at': burnAt,
     });
+  }
+
+  // delete messages whose burn_at is past. called by the periodic
+  // sweep started in boot().
+  Future<int> purgeExpired() async {
+    final db = await open();
+    return db.delete(
+      'messages',
+      where: 'burn_at IS NOT NULL AND burn_at < ?',
+      whereArgs: [DateTime.now().millisecondsSinceEpoch],
+    );
   }
 
   Future<List<Map<String, Object?>>> messagesFor(String peerId) async {
@@ -614,7 +635,10 @@ class AppState extends ChangeNotifier {
       if (env.endpoint != null) {
         await savePeerEndpoint(h, env.endpoint!);
       }
-      await db.saveMessage(h, 'in', env.message);
+      await db.saveMessage(h, 'in', env.message,
+          burnAt: env.burnSeconds != null && env.burnSeconds! > 0
+              ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
+              : null);
       await refreshContacts();
       await showMessageNotification(title: h, body: env.message, payload: h);
       notifyListeners();
@@ -660,6 +684,13 @@ class AppState extends ChangeNotifier {
     });
     engine.nostrInit('wss://relay.damus.io,wss://nos.lol');
     await initNotifications(onTap: openChatForHalo);
+
+    // periodic sweep: delete messages whose burn_at has passed.
+    Timer.periodic(const Duration(seconds: 5), (_) async {
+      try {
+        await db.purgeExpired();
+      } catch (_) {}
+    });
     for (final c in contacts) {
       final xPub = await signalSession.peerXPubHex(c.haloId);
       if (xPub != null) {
@@ -693,7 +724,10 @@ class AppState extends ChangeNotifier {
             if (env.endpoint != null) {
               await savePeerEndpoint(c.haloId, env.endpoint!);
             }
-            await db.saveMessage(c.haloId, 'in', env.message);
+            await db.saveMessage(c.haloId, 'in', env.message,
+              burnAt: env.burnSeconds != null && env.burnSeconds! > 0
+                  ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
+                  : null);
             await showMessageNotification(title: c.haloId, body: env.message, payload: c.haloId);
             notifyListeners();
             handled = true;
@@ -720,7 +754,10 @@ class AppState extends ChangeNotifier {
           }
           final plain = env.message;
           debugPrint('  decrypted: \$plain');
-          await db.saveMessage(haloId, 'in', plain);
+          await db.saveMessage(haloId, 'in', plain,
+            burnAt: env.burnSeconds != null && env.burnSeconds! > 0
+                ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
+                : null);
           await showMessageNotification(title: haloId, body: plain, payload: haloId);
           notifyListeners();
         } else {

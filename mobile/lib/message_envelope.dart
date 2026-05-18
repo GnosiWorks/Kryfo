@@ -18,6 +18,7 @@ class UnwrappedMessage {
   final String? senderEdPub;  // 'e' field, hex
   final String? senderOnion;  // 'o' field
   final String? senderXPub;   // 'x' field, hex
+  final int? burnSeconds;     // 'b' field — seconds-from-receive
   UnwrappedMessage(
     this.message, {
     this.endpoint,
@@ -25,6 +26,7 @@ class UnwrappedMessage {
     this.senderEdPub,
     this.senderOnion,
     this.senderXPub,
+    this.burnSeconds,
   });
 }
 
@@ -43,7 +45,7 @@ class SenderInfo {
 
 // wrap: always includes sender identity now (cheap, enables back-pair).
 // endpoint is added only when push mode is ntfy.
-Future<String> wrapMessage(String plain, {SenderInfo? sender}) async {
+Future<String> wrapMessage(String plain, {SenderInfo? sender, int? burnSeconds}) async {
   final mode = await loadPushMode();
   final body = <String, dynamic>{'m': plain};
 
@@ -57,6 +59,9 @@ Future<String> wrapMessage(String plain, {SenderInfo? sender}) async {
     body['e'] = sender.edPub;
     body['o'] = sender.onion;
     body['x'] = sender.xPub;
+  }
+  if (burnSeconds != null && burnSeconds > 0) {
+    body['b'] = burnSeconds;
   }
   return '$_envelopePrefix${jsonEncode(body)}';
 }
@@ -75,6 +80,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       senderEdPub: json['e'] as String?,
       senderOnion: json['o'] as String?,
       senderXPub: json['x'] as String?,
+      burnSeconds: (json['b'] as num?)?.toInt(),
     );
   } catch (_) {
     return UnwrappedMessage(wrapped);
