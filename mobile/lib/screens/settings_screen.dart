@@ -11,6 +11,7 @@ import 'modes_screen.dart';
 import 'push_settings_screen.dart';
 import 'lock_setup_screen.dart';
 import 'backup_screen.dart';
+import '../wipe.dart';
 import 'restore_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -20,6 +21,73 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  Future<void> _confirmWipe() async {
+    // step 1: explain what's about to happen
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: HaloColors.surface3,
+        title: Text('wipe halo?',
+            style: HaloType.serif(size: 18, color: HaloColors.rose)),
+        content: Text(
+          "this deletes your identity, all messages, all contacts, and every setting on this phone. unrecoverable unless you have a backup.",
+          style: HaloType.sans(size: 13, color: HaloColors.text2, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text('cancel',
+                style: HaloType.sans(size: 13, color: HaloColors.text2)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text('continue',
+                style: HaloType.sans(size: 13, color: HaloColors.rose)),
+          ),
+        ],
+      ),
+    );
+    if (go != true || !mounted) return;
+
+    // step 2: type the word
+    final confirmCtrl = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: HaloColors.surface3,
+        title: Text("type 'wipe' to confirm",
+            style: HaloType.serif(size: 18, color: HaloColors.text)),
+        content: TextField(
+          controller: confirmCtrl,
+          autofocus: true,
+          style: HaloType.mono(size: 14, color: HaloColors.text),
+          decoration: const InputDecoration(
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: HaloColors.line, width: 0.5),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: HaloColors.rose, width: 0.8),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text('cancel',
+                style: HaloType.sans(size: 13, color: HaloColors.text2)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(
+                confirmCtrl.text.trim().toLowerCase() == 'wipe'),
+            child: Text('wipe halo',
+                style: HaloType.sans(size: 13, color: HaloColors.rose)),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) await wipeHalo();
+  }
+
   Future<void> _confirmDisableLock() async {
     final ok = await showDialog<bool>(
       context: context,
@@ -136,6 +204,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _Section('about'),
           _Row(label: 'version', value: '0.1 · alpha'),
           _Row(label: 'open source', value: 'github.com/halo'),
+          const SizedBox(height: 24),
+
+          _Section('danger zone'),
+          InkWell(
+            onTap: _confirmWipe,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text('wipe halo from this phone',
+                        style: HaloType.sans(
+                            size: 14, color: HaloColors.rose)),
+                  ),
+                  const Icon(Icons.chevron_right,
+                      color: HaloColors.rose, size: 18),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 32),
         ],
       ),
