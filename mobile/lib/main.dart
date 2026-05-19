@@ -581,6 +581,11 @@ Future<void> openChatForHalo(String? haloId) async {
   ));
 }
 
+// halo id of the peer whose chat is currently on screen. set by
+// ChatScreen.initState, cleared on dispose. used to suppress
+// notifications for the conversation the user is already in.
+String? currentChatPeer;
+
 final GlobalKey<NavigatorState> rootNavKey = GlobalKey<NavigatorState>();
 
 class AppState extends ChangeNotifier {
@@ -670,7 +675,9 @@ class AppState extends ChangeNotifier {
               ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
               : null);
       await refreshContacts();
-      await showMessageNotification(title: h, body: env.message, payload: h);
+      if (currentChatPeer != h) {
+        await showMessageNotification(title: h, body: env.message, payload: h);
+      }
       notifyListeners();
       debugPrint('back-pair: created contact $h via direct onion');
       return h;
@@ -758,7 +765,9 @@ class AppState extends ChangeNotifier {
               burnAt: env.burnSeconds != null && env.burnSeconds! > 0
                   ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
                   : null);
-            await showMessageNotification(title: c.haloId, body: env.message, payload: c.haloId);
+            if (currentChatPeer != c.haloId) {
+              await showMessageNotification(title: c.haloId, body: env.message, payload: c.haloId);
+            }
             notifyListeners();
             handled = true;
             break;
@@ -771,10 +780,10 @@ class AppState extends ChangeNotifier {
     Timer.periodic(const Duration(seconds: 1), (_) async {
       final msgs = engine.nostrPoll();
       if (msgs.isEmpty) return;
-      debugPrint('nostr poll: \${msgs.length} messages');
+      debugPrint('nostr poll: ${msgs.length} messages');
       for (final m in msgs) {
         final haloId = _xPubToHaloId[m.peer];
-        debugPrint('  peer xpub=\${m.peer.substring(0,12)}... haloId=\$haloId cipher=\${m.cipher.length}b');
+        debugPrint('  peer xpub=${m.peer.substring(0,12)}... haloId=$haloId cipher=${m.cipher.length}b');
         if (haloId == null) continue;
         final wrapped = await signalDecrypt(haloId, m.cipher);
         if (wrapped != null) {
@@ -783,12 +792,14 @@ class AppState extends ChangeNotifier {
             await savePeerEndpoint(haloId, env.endpoint!);
           }
           final plain = env.message;
-          debugPrint('  decrypted: \$plain');
+          debugPrint('  decrypted: $plain');
           await db.saveMessage(haloId, 'in', plain,
             burnAt: env.burnSeconds != null && env.burnSeconds! > 0
                 ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
                 : null);
-          await showMessageNotification(title: haloId, body: plain, payload: haloId);
+          if (currentChatPeer != haloId) {
+            await showMessageNotification(title: haloId, body: plain, payload: haloId);
+          }
           notifyListeners();
         } else {
           debugPrint('  signalDecrypt returned null');
