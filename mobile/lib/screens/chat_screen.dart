@@ -81,6 +81,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Timer? _pollTimer;
   bool _sending = false;
   String? _peerXPub;
+  bool _backPaired = false;
 
   @override
   void initState() {
@@ -88,6 +89,9 @@ class _ChatScreenState extends State<ChatScreen> {
     appState.addListener(_onAppStateChanged);
     signalSession.peerXPubHex(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _peerXPub = v);
+    });
+    db.isBackPaired(widget.peerHaloId).then((v) {
+      if (mounted) setState(() => _backPaired = v);
     });
     _lastCipher = _seenCipherPerPeer[widget.peerHaloId] ?? '';
     _loadMessages();
@@ -115,6 +119,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _loadMessages() async {
+    db.isBackPaired(widget.peerHaloId).then((v) {
+      if (mounted) setState(() => _backPaired = v);
+    });
     final rows = await db.messagesFor(widget.peerHaloId);
     if (!mounted) return;
     setState(() {
@@ -190,7 +197,12 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     // sprint 7.5: fire-and-forget. optimistic ✓ now; failure marks tap-to-retry
     setState(() { msg.sending = false; });
-    final sendFuture = _peerXPub == null
+    // before the peer back-pairs with us, force direct-onion so their
+    // drain triggers the back-pair flow. nostr would dead-end because
+    // they aren't subscribed to our xpub yet. once we receive anything
+    // from them, _backPaired flips and we can use nostr.
+    final useDirectOnion = !_backPaired || _peerXPub == null;
+    final sendFuture = useDirectOnion
         ? Future(() => engine.sendTo(widget.peerOnion, cipher))
         : Future(() => engine.nostrSend(_peerXPub!, cipher));
     sendFuture.then((result) async {
@@ -309,7 +321,12 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     // sprint 7.5: fire-and-forget. optimistic ✓ now; failure marks tap-to-retry
     setState(() { msg.sending = false; _sending = false; _status = ''; });
-    final sendFuture = _peerXPub == null
+    // before the peer back-pairs with us, force direct-onion so their
+    // drain triggers the back-pair flow. nostr would dead-end because
+    // they aren't subscribed to our xpub yet. once we receive anything
+    // from them, _backPaired flips and we can use nostr.
+    final useDirectOnion = !_backPaired || _peerXPub == null;
+    final sendFuture = useDirectOnion
         ? Future(() => engine.sendTo(widget.peerOnion, cipher))
         : Future(() => engine.nostrSend(_peerXPub!, cipher));
     sendFuture.then((result) async {
