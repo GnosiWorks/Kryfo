@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import '../signal_session.dart';
 import '../message_envelope.dart';
 import '../theme.dart';
-import '../main.dart' show engine, db, signalEncrypt, signalDecrypt, appState;
+import '../main.dart' show engine, db, signalEncrypt, signalDecrypt, appState, currentChatPeer;
 import '../widgets/motion.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
@@ -58,6 +58,14 @@ String _fmtTime(DateTime d) {
 
 // remaining time on a burning message, formatted compactly:
 // 4m 23s / 38s / 1h 02m. clamps at 0.
+// human-friendly label for a burn duration in seconds.
+String _humanBurn(int seconds) {
+  if (seconds < 60) return '${seconds}s';
+  if (seconds < 3600) return '${seconds ~/ 60}m';
+  if (seconds < 86400) return '${seconds ~/ 3600}h';
+  return '${seconds ~/ 86400}d';
+}
+
 String _fmtBurn(int burnAtMs) {
   final now = DateTime.now().millisecondsSinceEpoch;
   var s = ((burnAtMs - now) / 1000).round();
@@ -87,6 +95,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     appState.addListener(_onAppStateChanged);
+    currentChatPeer = widget.peerHaloId;
     signalSession.peerXPubHex(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _peerXPub = v);
     });
@@ -95,6 +104,21 @@ class _ChatScreenState extends State<ChatScreen> {
     });
     _lastCipher = _seenCipherPerPeer[widget.peerHaloId] ?? '';
     _loadMessages();
+    _burnTick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final before = _messages.length;
+      _messages.removeWhere((m) => m.burnAt != null && m.burnAt! + 500 <= now);
+      final removed = before - _messages.length;
+      final stillBurning =
+          _messages.where((m) => m.burnAt != null).toList();
+      if (stillBurning.isNotEmpty || removed > 0) {
+        debugPrint('burnTick: removed=$removed burning=${stillBurning.length}');
+      }
+      if (removed > 0 || stillBurning.isNotEmpty) {
+        setState(() {});
+      }
+    });
     _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       _checkInbox();
@@ -104,18 +128,6 @@ class _ChatScreenState extends State<ChatScreen> {
   void _onAppStateChanged() {
     if (!mounted) return;
     _loadMessages();
-    _burnTick = Timer.periodic(const Duration(seconds: 1), (_) {
-      // rebuild so any ghost bubbles update their countdown / disappear
-      // when they expire. cheap — only burns redraw bubbles.
-      final hasBurning = _messages.any((m) => m.burnAt != null);
-      if (hasBurning && mounted) {
-        // also remove locally-expired messages so they vanish in real time
-        // (the background db sweep handles persistence).
-        final now = DateTime.now().millisecondsSinceEpoch;
-        _messages.removeWhere((m) => m.burnAt != null && m.burnAt! <= now);
-        setState(() {});
-      }
-    });
   }
 
   Future<void> _loadMessages() async {
@@ -351,6 +363,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void dispose() {
     _pollTimer?.cancel();
     _burnTick?.cancel();
+    if (currentChatPeer == widget.peerHaloId) currentChatPeer = null;
     appState.removeListener(_onAppStateChanged);
     _msgCtrl.dispose();
     _scrollCtrl.dispose();
@@ -389,6 +402,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ghost: _ghost,
               onToggleGhost: () => setState(() => _ghost = !_ghost),
               onPickBurn: _pickBurnDuration,
+              burnSeconds: _burnSeconds,
               controller: _msgCtrl,
               sending: _sending,
               onSend: _send,
@@ -473,7 +487,19 @@ class _Bubble extends StatelessWidget {
     final metaColor = isOut
         ? HaloColors.onAmber.withValues(alpha: 0.55)
         : HaloColors.text3;
-    return GestureDetector(
+    final remainingMs = msg.burnAt != null
+        ? msg.burnAt! - DateTime.now().millisecondsSinceEpoch
+        : 9999999;
+    final isExpiring = msg.burnAt != null && remainingMs < 600;
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOut,
+      opacity: isExpiring ? 0.0 : 1.0,
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeOut,
+        scale: isExpiring ? 0.88 : 1.0,
+        child: GestureDetector(
       onTap: msg.failed && onRetry != null ? () => onRetry!(msg) : null,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
@@ -542,12 +568,17 @@ class _Bubble extends StatelessWidget {
                     children: [
                       Icon(Icons.local_fire_department_outlined,
                           size: 11,
-                          color: HaloColors.amber.withOpacity(0.75)),
+                          color: isOut
+                              ? HaloColors.onAmber
+                              : HaloColors.amber.withOpacity(0.75)),
                       const SizedBox(width: 4),
                       Text('burns in ${_fmtBurn(msg.burnAt!)}',
                           style: HaloType.mono(
                               size: 9.5,
-                              color: HaloColors.amber.withOpacity(0.75))
+                              color: isOut
+                                  ? HaloColors.onAmber
+                                  : HaloColors.amber.withOpacity(0.75),
+                              weight: FontWeight.w600)
                               .copyWith(letterSpacing: 0.3)),
                     ],
                   ),
@@ -576,6 +607,8 @@ class _Bubble extends StatelessWidget {
           ],
         ),
       ),
+    ),
+    ),
     );
   }
 }
@@ -605,6 +638,7 @@ class _Composer extends StatelessWidget {
   final bool ghost;
   final VoidCallback onToggleGhost;
   final VoidCallback onPickBurn;
+  final int burnSeconds;
   const _Composer({
     required this.controller,
     required this.sending,
@@ -612,6 +646,7 @@ class _Composer extends StatelessWidget {
     required this.ghost,
     required this.onToggleGhost,
     required this.onPickBurn,
+    required this.burnSeconds,
   });
 
   @override
@@ -655,7 +690,7 @@ class _Composer extends StatelessWidget {
                                 color: HaloColors.amber,
                                 italic: true)),
                         const SizedBox(width: 8),
-                        Text('messages burn after 5 minutes',
+                        Text('messages burn after ${_humanBurn(burnSeconds)}',
                             style: HaloType.mono(
                                 size: 10.5, color: HaloColors.text3)),
                       ],

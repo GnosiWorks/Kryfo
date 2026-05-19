@@ -32,20 +32,27 @@ Future<void> showMessageNotification({
   required String body,
   String? payload,
 }) async {
-  const details = AndroidNotificationDetails(
+  final details = AndroidNotificationDetails(
     'halo_messages',
     'halo messages',
     channelDescription: 'new encrypted messages from your contacts',
     importance: Importance.high,
     priority: Priority.high,
     icon: 'ic_halo_notification',
-    color: Color(0xFFF59E0B),
+    color: const Color(0xFFF59E0B),
+    // bundle all halo notifications visually
+    groupKey: 'com.halo.halo_app.messages',
+    // show the full message body when expanded instead of truncating
+    styleInformation: BigTextStyleInformation(body),
   );
+  // stable per-sender id: new messages from the same peer REPLACE the
+  // existing notification instead of stacking. positive 31-bit int.
+  final id = (payload ?? title).hashCode & 0x7fffffff;
   await notifPlugin.show(
-    id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+    id: id,
     title: title,
     body: body,
-    notificationDetails: const NotificationDetails(android: details),
+    notificationDetails: NotificationDetails(android: details),
     payload: payload,
   );
 }
