@@ -252,7 +252,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 3,
+      version: 4,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -268,7 +268,8 @@ class HaloDb {
             onion TEXT NOT NULL,
             xpub TEXT NOT NULL,
             first_seen INTEGER NOT NULL,
-            last_seen INTEGER NOT NULL
+            last_seen INTEGER NOT NULL,
+            back_paired INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute('''
@@ -288,6 +289,9 @@ class HaloDb {
         if (oldV < 2) await _signalTables(db);
         if (oldV < 3) {
           await db.execute('ALTER TABLE messages ADD COLUMN burn_at INTEGER');
+        }
+        if (oldV < 4) {
+          await db.execute('ALTER TABLE contacts ADD COLUMN back_paired INTEGER NOT NULL DEFAULT 0');
         }
       },
     );
@@ -357,6 +361,32 @@ class HaloDb {
       'sent_at': DateTime.now().millisecondsSinceEpoch,
       'burn_at': burnAt,
     });
+    // any inbound message proves the peer knows us, so flip back_paired.
+    // subsequent sends to them can use nostr safely.
+    if (direction == 'in') {
+      await db.update(
+        'contacts',
+        {'back_paired': 1},
+        where: 'halo_id = ?',
+        whereArgs: [peerId],
+      );
+    }
+  }
+
+  // load back_paired for a contact. true = peer has confirmed they know us
+  // (via a received message). false = we should still use direct-onion to
+  // give them a chance to back-pair.
+  Future<bool> isBackPaired(String peerId) async {
+    final db = await open();
+    final rows = await db.query(
+      'contacts',
+      columns: ['back_paired'],
+      where: 'halo_id = ?',
+      whereArgs: [peerId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return false;
+    return (rows.first['back_paired'] as int? ?? 0) == 1;
   }
 
   // delete messages whose burn_at is past. called by the periodic
