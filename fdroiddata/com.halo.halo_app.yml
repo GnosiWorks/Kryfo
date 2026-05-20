@@ -1,0 +1,40 @@
+# F-Droid build metadata for halo.
+# This file lives in the fdroiddata repository at metadata/com.halo.halo_app.yml
+# once the GitHub repo is public and the first release tag is cut.
+
+Categories:
+  - Internet
+License: AGPL-3.0-only
+SourceCode: https://github.com/<PLACEHOLDER_USER>/halo
+IssueTracker: https://github.com/<PLACEHOLDER_USER>/halo/issues
+Changelog: https://github.com/<PLACEHOLDER_USER>/halo/blob/main/CHANGELOG.md
+
+AutoName: halo
+
+RepoType: git
+Repo: https://github.com/<PLACEHOLDER_USER>/halo.git
+
+Builds:
+  - versionName: 0.1.0-alpha
+    versionCode: 1
+    commit: v0.1.0-alpha
+    subdir: mobile
+    sudo:
+      - apt-get update
+      - apt-get install -y golang-go
+    srclibs:
+      - flutter@3.x
+    rm:
+      - mobile/android/app/build
+    prebuild:
+      - cd ../engine && bash build_android.sh
+      - $$flutter$$/bin/flutter config --no-analytics
+      - $$flutter$$/bin/flutter pub get
+    build: |
+      $$flutter$$/bin/flutter build apk --release --target-platform android-arm64,android-x64
+    output: build/app/outputs/flutter-apk/app-release.apk
+
+AutoUpdateMode: Version v%v
+UpdateCheckMode: Tags
+CurrentVersion: 0.1.0-alpha
+CurrentVersionCode: 1
