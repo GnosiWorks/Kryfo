@@ -35,15 +35,17 @@ class _Msg {
   final String direction;
   final String text;
   final DateTime when;
-  final int? burnAt; // ms-since-epoch when this message expires, or null
-  String? msgUid;    // stable cross-device id, used as the reaction key
+  final int? burnAt;
+  String? msgUid;
+  // msg_uid of the message this one replies to, or null.
+  final String? replyTo;
   bool sending;
   bool failed;
-  // reactor halo id -> emoji. '' for self.
   Map<String, String> reactions;
   _Msg(this.direction, this.text, this.when,
       {this.burnAt,
       this.msgUid,
+      this.replyTo,
       this.sending = false,
       this.failed = false,
       Map<String, String>? reactions})
@@ -99,6 +101,10 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _sending = false;
   String? _peerXPub;
   bool _backPaired = false;
+  // the message we're currently replying to, or null. set by tapping
+  // 'reply' on the long-press picker, cleared after send or by the X
+  // in the composer's quote bar.
+  _Msg? _replyTo;
 
   @override
   void initState() {
@@ -195,6 +201,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 dismiss();
                 _toggleReaction(target, e);
               },
+              onReply: () {
+                dismiss();
+                setState(() => _replyTo = target);
+              },
             ),
           ),
         ],
@@ -276,6 +286,7 @@ class _ChatScreenState extends State<ChatScreen> {
         DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
         burnAt: r['burn_at'] as int?,
         msgUid: uid,
+        replyTo: r['reply_to'] as String?,
       ));
       if (uid != null) uids.add(uid);
     }
@@ -449,8 +460,10 @@ class _ChatScreenState extends State<ChatScreen> {
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || _sending) return;
     final msgUid = _newMsgUid();
+    final replyToUid = _replyTo?.msgUid;
     final msg = _Msg('out', text, DateTime.now(), sending: true,
         msgUid: msgUid,
+        replyTo: replyToUid,
         burnAt: _ghost
             ? DateTime.now().millisecondsSinceEpoch + _burnSeconds * 1000
             : null);
@@ -458,12 +471,13 @@ class _ChatScreenState extends State<ChatScreen> {
       _messages.add(msg);
       _sending = true;
       _status = '';
+      _replyTo = null;
     });
     _msgCtrl.clear();
     _scrollToEnd();
     final String cipher;
     try {
-      final wrapped = await wrapMessage(text, burnSeconds: _ghost ? _burnSeconds : null, msgUid: msgUid, sender: SenderInfo(
+      final wrapped = await wrapMessage(text, burnSeconds: _ghost ? _burnSeconds : null, msgUid: msgUid, replyTo: replyToUid, sender: SenderInfo(
         haloId: appState.myId,
         edPub: engine.myEdPubkey(),
         onion: appState.myOnion,
@@ -502,7 +516,8 @@ class _ChatScreenState extends State<ChatScreen> {
             burnAt: _ghost
                 ? DateTime.now().millisecondsSinceEpoch + _burnSeconds * 1000
                 : null,
-            msgUid: msgUid);
+            msgUid: msgUid,
+            replyTo: replyToUid);
       } else {
         setState(() { msg.failed = true; _status = result; });
       }
@@ -539,11 +554,32 @@ class _ChatScreenState extends State<ChatScreen> {
                       controller: _scrollCtrl,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       itemCount: _messages.length,
-                      itemBuilder: (c, i) => _Bubble(
-                        msg: _messages[i],
-                        onRetry: _retry,
-                        onLongPress: (ctx) => _showEmojiPickerAt(ctx, _messages[i]),
-                      ),
+                      itemBuilder: (c, i) {
+                        final m = _messages[i];
+                        String? quoted;
+                        String? quotedAuthor;
+                        if (m.replyTo != null) {
+                          final original = _messages.firstWhere(
+                            (x) => x.msgUid == m.replyTo,
+                            orElse: () => _Msg('', '', DateTime.now()),
+                          );
+                          if (original.text.isNotEmpty) {
+                            quoted = original.text;
+                            quotedAuthor =
+                                original.direction == 'out' ? 'you' : 'them';
+                          } else {
+                            quoted = 'message unavailable';
+                          }
+                        }
+                        return _Bubble(
+                          msg: m,
+                          onRetry: _retry,
+                          onLongPress: (ctx) =>
+                              _showEmojiPickerAt(ctx, m),
+                          quotedText: quoted,
+                          quotedAuthor: quotedAuthor,
+                        );
+                      },
                     ),
             ),
             if (_status.isNotEmpty)
@@ -552,6 +588,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 child: Text(_friendlyStatus(_status),
                     style: HaloType.mono(size: 10, color: HaloColors.text3)),
               ),
+            if (_replyTo != null) _ReplyQuoteBar(
+              target: _replyTo!,
+              onCancel: () => setState(() => _replyTo = null),
+            ),
             _Composer(
               ghost: _ghost,
               onToggleGhost: () => setState(() => _ghost = !_ghost),
@@ -610,7 +650,15 @@ class _Bubble extends StatelessWidget {
   final _Msg msg;
   final void Function(_Msg)? onRetry;
   final void Function(BuildContext)? onLongPress;
-  const _Bubble({required this.msg, this.onRetry, this.onLongPress});
+  final String? quotedText;
+  final String? quotedAuthor;
+  const _Bubble({
+    required this.msg,
+    this.onRetry,
+    this.onLongPress,
+    this.quotedText,
+    this.quotedAuthor,
+  });
   @override
   Widget build(BuildContext context) {
     final isOut = msg.direction == 'out';
@@ -664,6 +712,56 @@ class _Bubble extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  if (quotedText != null) ...[
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 6),
+                      padding: const EdgeInsets.fromLTRB(10, 6, 10, 7),
+                      decoration: BoxDecoration(
+                        color: isOut
+                            ? Colors.black.withOpacity(0.12)
+                            : HaloColors.surface2,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border(
+                          left: BorderSide(
+                            color: isOut
+                                ? HaloColors.onAmber.withValues(alpha: 0.55)
+                                : HaloColors.amber,
+                            width: 2.5,
+                          ),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (quotedAuthor != null)
+                            Text(
+                              quotedAuthor!,
+                              style: HaloType.mono(
+                                size: 9.5,
+                                color: isOut
+                                    ? HaloColors.onAmber.withValues(alpha: 0.7)
+                                    : HaloColors.amber,
+                                letter: 0.6,
+                              ),
+                            ),
+                          if (quotedAuthor != null) const SizedBox(height: 2),
+                          Text(
+                            quotedText!,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: HaloType.sans(
+                              size: 12.5,
+                              color: isOut
+                                  ? HaloColors.onAmber.withValues(alpha: 0.8)
+                                  : HaloColors.text2,
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   Text(msg.text,
                       style: HaloType.sans(
                         size: 14,
@@ -691,17 +789,6 @@ class _Bubble extends StatelessWidget {
                               height: 1,
                             )),
                       ],
-                    ),
-                  ],
-                  if (msg.reactions.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      child: Wrap(
-                        spacing: 4,
-                        runSpacing: 4,
-                        children: _buildReactionChips(msg),
-                      ),
                     ),
                   ],
                   if (msg.reactions.isNotEmpty) ...[
@@ -857,6 +944,71 @@ class _EmojiTapState extends State<_EmojiTap> {
   }
 }
 
+// thin bar shown above the composer when the user is in the middle of
+// composing a reply. shows a snippet of the target message + an X to
+// cancel. tap the bar itself to keep editing.
+class _ReplyQuoteBar extends StatelessWidget {
+  final _Msg target;
+  final VoidCallback onCancel;
+  const _ReplyQuoteBar({required this.target, required this.onCancel});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
+      decoration: const BoxDecoration(
+        color: HaloColors.surface2,
+        border: Border(
+          top: BorderSide(color: HaloColors.line, width: 0.5),
+        ),
+      ),
+      child: Row(
+        children: [
+          // amber accent stripe to mark this as a quote
+          Container(
+            width: 2.5,
+            height: 32,
+            margin: const EdgeInsets.only(right: 10),
+            decoration: BoxDecoration(
+              color: HaloColors.amber,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'replying to ${target.direction == 'out' ? 'yourself' : 'them'}',
+                  style: HaloType.mono(
+                      size: 9.5, color: HaloColors.amber, letter: 0.6),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  target.text,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: HaloType.sans(
+                      size: 13, color: HaloColors.text2, height: 1.3),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            iconSize: 18,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            color: HaloColors.text3,
+            icon: const Icon(Icons.close),
+            onPressed: onCancel,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // floating reaction bar shown above the long-pressed bubble. soft shadow,
 // rounded pill, scale + fade entrance. matches halo's surface3 + line
 // design language.
@@ -864,10 +1016,12 @@ class _EmojiPickerBubble extends StatefulWidget {
   final List<String> emojis;
   final String? selected;
   final void Function(String) onPick;
+  final VoidCallback onReply;
   const _EmojiPickerBubble({
     required this.emojis,
     required this.selected,
     required this.onPick,
+    required this.onReply,
   });
 
   @override
@@ -919,16 +1073,69 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
-              children: widget.emojis.map((e) {
-                final isSelected = e == widget.selected;
-                return _EmojiTap(
-                  emoji: e,
-                  selected: isSelected,
-                  onTap: () => widget.onPick(e),
-                );
-              }).toList(),
+              children: [
+                ...widget.emojis.map((e) {
+                  final isSelected = e == widget.selected;
+                  return _EmojiTap(
+                    emoji: e,
+                    selected: isSelected,
+                    onTap: () => widget.onPick(e),
+                  );
+                }),
+                Container(
+                  width: 0.5,
+                  height: 28,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  color: HaloColors.line2,
+                ),
+                _ActionTap(
+                  icon: Icons.reply_rounded,
+                  onTap: widget.onReply,
+                ),
+              ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// icon-based tappable button used in the reaction picker for "reply" etc.
+// shares the visual language of _EmojiTap but renders an icon.
+class _ActionTap extends StatefulWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  const _ActionTap({required this.icon, required this.onTap});
+  @override
+  State<_ActionTap> createState() => _ActionTapState();
+}
+
+class _ActionTapState extends State<_ActionTap> {
+  double _scale = 1.0;
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _scale = 0.85),
+      onTapUp: (_) {
+        setState(() => _scale = 1.0);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _scale = 1.0),
+      child: AnimatedScale(
+        scale: _scale,
+        duration: const Duration(milliseconds: 90),
+        curve: Curves.easeOut,
+        child: Container(
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+            color: HaloColors.surface3,
+            border: Border.all(color: HaloColors.line, width: 0.5),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          alignment: Alignment.center,
+          child: Icon(widget.icon, size: 20, color: HaloColors.amber),
         ),
       ),
     );

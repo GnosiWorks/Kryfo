@@ -21,6 +21,7 @@ class UnwrappedMessage {
   final int? burnSeconds;     // 'b' field — seconds-from-receive
   final String? msgUid;       // 'u' field — stable cross-device message id
   final ReactionFrame? reaction; // 'r' field — present on reaction control msgs
+  final String? replyTo;      // 'q' field — msg_uid this message replies to
   UnwrappedMessage(
     this.message, {
     this.endpoint,
@@ -31,6 +32,7 @@ class UnwrappedMessage {
     this.burnSeconds,
     this.msgUid,
     this.reaction,
+    this.replyTo,
   });
 }
 
@@ -63,6 +65,7 @@ Future<String> wrapMessage(
   int? burnSeconds,
   String? msgUid,
   ReactionFrame? reaction,
+  String? replyTo,
 }) async {
   final mode = await loadPushMode();
   final body = <String, dynamic>{'m': plain};
@@ -70,6 +73,7 @@ Future<String> wrapMessage(
   if (reaction != null) {
     body['r'] = {'u': reaction.targetUid, 'e': reaction.emoji};
   }
+  if (replyTo != null) body['q'] = replyTo;
 
   if (mode == PushMode.ntfy) {
     final topic = await loadNtfyTopic();
@@ -113,6 +117,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       burnSeconds: (json['b'] as num?)?.toInt(),
       msgUid: json['u'] as String?,
       reaction: reaction,
+      replyTo: json['q'] as String?,
     );
   } catch (_) {
     return UnwrappedMessage(wrapped);
