@@ -252,7 +252,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 4,
+      version: 5,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -280,9 +280,20 @@ class HaloDb {
             plaintext TEXT NOT NULL,
             sent_at INTEGER NOT NULL,
             burn_at INTEGER,
+            msg_uid TEXT,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
         ''');
+        await db.execute('''
+          CREATE TABLE reactions (
+            msg_uid TEXT NOT NULL,
+            reactor TEXT NOT NULL,
+            emoji TEXT NOT NULL,
+            reacted_at INTEGER NOT NULL,
+            PRIMARY KEY (msg_uid, reactor)
+          )
+        ''');
+        await db.execute('CREATE INDEX idx_messages_msg_uid ON messages(msg_uid)');
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
@@ -292,6 +303,19 @@ class HaloDb {
         }
         if (oldV < 4) {
           await db.execute('ALTER TABLE contacts ADD COLUMN back_paired INTEGER NOT NULL DEFAULT 0');
+        }
+        if (oldV < 5) {
+          await db.execute('ALTER TABLE messages ADD COLUMN msg_uid TEXT');
+          await db.execute('CREATE INDEX IF NOT EXISTS idx_messages_msg_uid ON messages(msg_uid)');
+          await db.execute('''
+            CREATE TABLE reactions (
+              msg_uid TEXT NOT NULL,
+              reactor TEXT NOT NULL,
+              emoji TEXT NOT NULL,
+              reacted_at INTEGER NOT NULL,
+              PRIMARY KEY (msg_uid, reactor)
+            )
+          ''');
         }
       },
     );
@@ -352,6 +376,7 @@ class HaloDb {
     String direction,
     String plaintext, {
     int? burnAt,
+    String? msgUid,
   }) async {
     final db = await open();
     await db.insert('messages', {
@@ -360,6 +385,7 @@ class HaloDb {
       'plaintext': plaintext,
       'sent_at': DateTime.now().millisecondsSinceEpoch,
       'burn_at': burnAt,
+      'msg_uid': msgUid,
     });
     // any inbound message proves the peer knows us, so flip back_paired.
     // subsequent sends to them can use nostr safely.
@@ -376,6 +402,20 @@ class HaloDb {
   // load back_paired for a contact. true = peer has confirmed they know us
   // (via a received message). false = we should still use direct-onion to
   // give them a chance to back-pair.
+  // assign a msg_uid to an existing row that lacks one (used to enable
+  // reactions on messages that predate the v5 migration). returns the
+  // uid. matches by (peer_id, sent_at) which is unique enough in practice.
+  Future<void> assignUidIfMissing(
+      String peerId, int sentAtMs, String uid) async {
+    final db = await open();
+    await db.update(
+      'messages',
+      {'msg_uid': uid},
+      where: 'peer_id = ? AND sent_at = ? AND msg_uid IS NULL',
+      whereArgs: [peerId, sentAtMs],
+    );
+  }
+
   Future<bool> isBackPaired(String peerId) async {
     final db = await open();
     final rows = await db.query(
@@ -387,6 +427,54 @@ class HaloDb {
     );
     if (rows.isEmpty) return false;
     return (rows.first['back_paired'] as int? ?? 0) == 1;
+  }
+
+  // add or replace a reaction. reactor is '' for self, peer's halo id
+  // for theirs. one reaction per (msgUid, reactor) — re-reacting replaces.
+  Future<void> addReaction(String msgUid, String reactor, String emoji) async {
+    final db = await open();
+    await db.insert(
+      'reactions',
+      {
+        'msg_uid': msgUid,
+        'reactor': reactor,
+        'emoji': emoji,
+        'reacted_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> removeReaction(String msgUid, String reactor) async {
+    final db = await open();
+    await db.delete(
+      'reactions',
+      where: 'msg_uid = ? AND reactor = ?',
+      whereArgs: [msgUid, reactor],
+    );
+  }
+
+  // load reactions for a batch of messages. returns
+  // { msgUid: [ (reactor, emoji), ... ] }.
+  Future<Map<String, List<MapEntry<String, String>>>> loadReactionsFor(
+      List<String> msgUids) async {
+    if (msgUids.isEmpty) return {};
+    final db = await open();
+    final placeholders = List.filled(msgUids.length, '?').join(',');
+    final rows = await db.query(
+      'reactions',
+      columns: ['msg_uid', 'reactor', 'emoji'],
+      where: 'msg_uid IN ($placeholders)',
+      whereArgs: msgUids,
+    );
+    final out = <String, List<MapEntry<String, String>>>{};
+    for (final r in rows) {
+      final uid = r['msg_uid'] as String;
+      final reactor = r['reactor'] as String;
+      final emoji = r['emoji'] as String;
+      out.putIfAbsent(uid, () => []).add(MapEntry(reactor, emoji));
+    }
+    return out;
   }
 
   // delete messages whose burn_at is past. called by the periodic
@@ -670,13 +758,23 @@ class AppState extends ChangeNotifier {
       if (env.endpoint != null) {
         await savePeerEndpoint(h, env.endpoint!);
       }
-      await db.saveMessage(h, 'in', env.message,
-          burnAt: env.burnSeconds != null && env.burnSeconds! > 0
-              ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
-              : null);
-      await refreshContacts();
-      if (currentChatPeer != h) {
-        await showMessageNotification(title: h, body: env.message, payload: h);
+      if (env.reaction != null) {
+        final r = env.reaction!;
+        if (r.emoji.isEmpty) {
+          await db.removeReaction(r.targetUid, h);
+        } else {
+          await db.addReaction(r.targetUid, h, r.emoji);
+        }
+      } else {
+        await db.saveMessage(h, 'in', env.message,
+            burnAt: env.burnSeconds != null && env.burnSeconds! > 0
+                ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
+                : null,
+            msgUid: env.msgUid);
+        await refreshContacts();
+        if (currentChatPeer != h) {
+          await showMessageNotification(title: h, body: env.message, payload: h);
+        }
       }
       notifyListeners();
       debugPrint('back-pair: created contact $h via direct onion');
@@ -761,12 +859,22 @@ class AppState extends ChangeNotifier {
             if (env.endpoint != null) {
               await savePeerEndpoint(c.haloId, env.endpoint!);
             }
-            await db.saveMessage(c.haloId, 'in', env.message,
-              burnAt: env.burnSeconds != null && env.burnSeconds! > 0
-                  ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
-                  : null);
-            if (currentChatPeer != c.haloId) {
-              await showMessageNotification(title: c.haloId, body: env.message, payload: c.haloId);
+            if (env.reaction != null) {
+              final r = env.reaction!;
+              if (r.emoji.isEmpty) {
+                await db.removeReaction(r.targetUid, c.haloId);
+              } else {
+                await db.addReaction(r.targetUid, c.haloId, r.emoji);
+              }
+            } else {
+              await db.saveMessage(c.haloId, 'in', env.message,
+                burnAt: env.burnSeconds != null && env.burnSeconds! > 0
+                    ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
+                    : null,
+                msgUid: env.msgUid);
+              if (currentChatPeer != c.haloId) {
+                await showMessageNotification(title: c.haloId, body: env.message, payload: c.haloId);
+              }
             }
             notifyListeners();
             handled = true;
@@ -793,12 +901,22 @@ class AppState extends ChangeNotifier {
           }
           final plain = env.message;
           debugPrint('  decrypted: $plain');
-          await db.saveMessage(haloId, 'in', plain,
-            burnAt: env.burnSeconds != null && env.burnSeconds! > 0
-                ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
-                : null);
-          if (currentChatPeer != haloId) {
-            await showMessageNotification(title: haloId, body: plain, payload: haloId);
+          if (env.reaction != null) {
+            final r = env.reaction!;
+            if (r.emoji.isEmpty) {
+              await db.removeReaction(r.targetUid, haloId);
+            } else {
+              await db.addReaction(r.targetUid, haloId, r.emoji);
+            }
+          } else {
+            await db.saveMessage(haloId, 'in', plain,
+              burnAt: env.burnSeconds != null && env.burnSeconds! > 0
+                  ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
+                  : null,
+              msgUid: env.msgUid);
+            if (currentChatPeer != haloId) {
+              await showMessageNotification(title: haloId, body: plain, payload: haloId);
+            }
           }
           notifyListeners();
         } else {
