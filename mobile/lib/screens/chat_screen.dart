@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../signal_session.dart';
 import '../message_envelope.dart';
 import '../theme.dart';
+import '../widgets/halo_avatar.dart';
 import '../main.dart' show engine, db, signalEncrypt, signalDecrypt, appState, currentChatPeer;
 import '../widgets/motion.dart';
 
@@ -433,7 +434,7 @@ class _ChatHead extends StatelessWidget {
             icon: const Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
             onPressed: onBack,
           ),
-          _Avatar(seed: avatarSeed, size: 36),
+          HaloAvatar(seed: avatarSeed, size: 36),
           const SizedBox(width: 11),
           Expanded(
             child: Column(
@@ -448,29 +449,6 @@ class _ChatHead extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _Avatar extends StatelessWidget {
-  final String seed;
-  final double size;
-  const _Avatar({required this.seed, required this.size});
-  @override
-  Widget build(BuildContext context) {
-    final h = seed.hashCode.abs();
-    final colors = [HaloColors.rose, HaloColors.violet, HaloColors.amber, HaloColors.green];
-    final bg = colors[h % colors.length];
-    final letter = seed.isEmpty ? '?' : seed[0].toUpperCase();
-    return Container(
-      width: size, height: size,
-      decoration: BoxDecoration(shape: BoxShape.circle, color: bg.withOpacity(0.85)),
-      alignment: Alignment.center,
-      child: Text(letter,
-          style: HaloType.serif(
-            size: size * 0.42, weight: FontWeight.w400,
-            italic: true, color: HaloColors.text,
-          )),
     );
   }
 }

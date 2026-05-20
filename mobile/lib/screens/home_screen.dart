@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import '../theme.dart';
+import '../widgets/halo_avatar.dart';
 import 'notes_screen.dart';
 import '../miui_autostart.dart';
 
@@ -235,7 +236,7 @@ class _HeroCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(children: [
-              _Avatar(seed: c.avatarSeed, size: 42),
+              HaloAvatar(seed: c.avatarSeed, size: 42),
               const SizedBox(width: 11),
               Expanded(
                 child: Column(
@@ -270,7 +271,7 @@ class _Row extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(children: [
-          _Avatar(seed: c.avatarSeed, size: 36),
+          HaloAvatar(seed: c.avatarSeed, size: 36),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -294,30 +295,6 @@ class _Row extends StatelessWidget {
           ),
         ]),
       ),
-    );
-  }
-}
-
-class _Avatar extends StatelessWidget {
-  final String seed;
-  final double size;
-  const _Avatar({required this.seed, required this.size});
-  @override
-  Widget build(BuildContext context) {
-    // deterministic-ish color from seed. real avatars come later.
-    final h = seed.hashCode.abs();
-    final colors = [HaloColors.rose, HaloColors.violet, HaloColors.amber, HaloColors.green];
-    final bg = colors[h % colors.length];
-    final letter = seed.isEmpty ? '?' : seed[0].toUpperCase();
-    return Container(
-      width: size, height: size,
-      decoration: BoxDecoration(shape: BoxShape.circle, color: bg.withOpacity(0.85)),
-      alignment: Alignment.center,
-      child: Text(letter,
-          style: HaloType.serif(
-            size: size * 0.42, weight: FontWeight.w400,
-            italic: true, color: HaloColors.text,
-          )),
     );
   }
 }
