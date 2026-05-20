@@ -252,7 +252,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 5,
+      version: 6,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -281,6 +281,7 @@ class HaloDb {
             sent_at INTEGER NOT NULL,
             burn_at INTEGER,
             msg_uid TEXT,
+            reply_to TEXT,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
         ''');
@@ -316,6 +317,9 @@ class HaloDb {
               PRIMARY KEY (msg_uid, reactor)
             )
           ''');
+        }
+        if (oldV < 6) {
+          await db.execute('ALTER TABLE messages ADD COLUMN reply_to TEXT');
         }
       },
     );
@@ -377,6 +381,7 @@ class HaloDb {
     String plaintext, {
     int? burnAt,
     String? msgUid,
+    String? replyTo,
   }) async {
     final db = await open();
     await db.insert('messages', {
@@ -386,6 +391,7 @@ class HaloDb {
       'sent_at': DateTime.now().millisecondsSinceEpoch,
       'burn_at': burnAt,
       'msg_uid': msgUid,
+      'reply_to': replyTo,
     });
     // any inbound message proves the peer knows us, so flip back_paired.
     // subsequent sends to them can use nostr safely.
@@ -770,7 +776,8 @@ class AppState extends ChangeNotifier {
             burnAt: env.burnSeconds != null && env.burnSeconds! > 0
                 ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
                 : null,
-            msgUid: env.msgUid);
+            msgUid: env.msgUid,
+            replyTo: env.replyTo);
         await refreshContacts();
         if (currentChatPeer != h) {
           await showMessageNotification(title: h, body: env.message, payload: h);
@@ -871,7 +878,8 @@ class AppState extends ChangeNotifier {
                 burnAt: env.burnSeconds != null && env.burnSeconds! > 0
                     ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
                     : null,
-                msgUid: env.msgUid);
+                msgUid: env.msgUid,
+                replyTo: env.replyTo);
               if (currentChatPeer != c.haloId) {
                 await showMessageNotification(title: c.haloId, body: env.message, payload: c.haloId);
               }
@@ -913,7 +921,8 @@ class AppState extends ChangeNotifier {
               burnAt: env.burnSeconds != null && env.burnSeconds! > 0
                   ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
                   : null,
-              msgUid: env.msgUid);
+              msgUid: env.msgUid,
+              replyTo: env.replyTo);
             if (currentChatPeer != haloId) {
               await showMessageNotification(title: haloId, body: plain, payload: haloId);
             }
