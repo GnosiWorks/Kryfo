@@ -4,7 +4,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../signal_session.dart';
-import '../message_envelope.dart';
+import '../message_envelope.dart' show wrapMessage, unwrapMessage, SenderInfo, ReactionFrame, savePeerEndpoint, loadPeerEndpoint;
 import '../theme.dart';
 import '../widgets/halo_avatar.dart';
 import '../main.dart' show engine, db, signalEncrypt, signalDecrypt, appState, currentChatPeer;
@@ -36,10 +36,18 @@ class _Msg {
   final String text;
   final DateTime when;
   final int? burnAt; // ms-since-epoch when this message expires, or null
+  String? msgUid;    // stable cross-device id, used as the reaction key
   bool sending;
   bool failed;
+  // reactor halo id -> emoji. '' for self.
+  Map<String, String> reactions;
   _Msg(this.direction, this.text, this.when,
-      {this.burnAt, this.sending = false, this.failed = false});
+      {this.burnAt,
+      this.msgUid,
+      this.sending = false,
+      this.failed = false,
+      Map<String, String>? reactions})
+      : reactions = reactions ?? <String, String>{};
 }
 
 String _friendlyStatus(String raw) {
@@ -131,22 +139,160 @@ class _ChatScreenState extends State<ChatScreen> {
     _loadMessages();
   }
 
+  // floating reaction picker — WhatsApp-style pill above the long-pressed
+  // bubble. uses an OverlayEntry so it can sit outside the chat list and
+  // avoid clipping. tap outside to dismiss.
+  Future<void> _showEmojiPickerAt(
+      BuildContext bubbleContext, _Msg target) async {
+    // legacy messages (predating v5 migration) get a local uid assigned
+    // on first reaction. peers won't know this uid so the reaction stays
+    // local-only, but the UX works.
+    if (target.msgUid == null) {
+      final uid = _newMsgUid();
+      target.msgUid = uid;
+      await db.assignUidIfMissing(
+          widget.peerHaloId, target.when.millisecondsSinceEpoch, uid);
+    }
+    if (!mounted) return;
+    final box = bubbleContext.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    final offset = box.localToGlobal(Offset.zero);
+    final bubbleSize = box.size;
+    final screen = MediaQuery.of(context).size;
+
+    const pickerW = 296.0;
+    const pickerH = 54.0;
+    // prefer above the bubble. fall back to below if too close to the top.
+    double top = offset.dy - pickerH - 10;
+    if (top < MediaQuery.of(context).padding.top + 8) {
+      top = offset.dy + bubbleSize.height + 10;
+    }
+    double left = offset.dx + bubbleSize.width / 2 - pickerW / 2;
+    left = left.clamp(12.0, screen.width - pickerW - 12);
+
+    late OverlayEntry entry;
+    void dismiss() {
+      if (entry.mounted) entry.remove();
+    }
+
+    entry = OverlayEntry(builder: (_) {
+      return Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: dismiss,
+              child: Container(color: Colors.black.withOpacity(0.32)),
+            ),
+          ),
+          Positioned(
+            left: left,
+            top: top,
+            child: _EmojiPickerBubble(
+              emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
+              selected: target.reactions[''],
+              onPick: (e) {
+                dismiss();
+                _toggleReaction(target, e);
+              },
+            ),
+          ),
+        ],
+      );
+    });
+    Overlay.of(context).insert(entry);
+  }
+
+  // 12-char base36 id from a high-precision timestamp + random salt.
+  // collision-resistant enough for our scale.
+  String _newMsgUid() {
+    final t = DateTime.now().microsecondsSinceEpoch.toRadixString(36);
+    final r = (DateTime.now().microsecondsSinceEpoch ^
+            identityHashCode(this) ^
+            _msgUidCounter++)
+        .abs()
+        .toRadixString(36);
+    return '${t.padLeft(8, '0').substring(0, 8)}${r.substring(0, 4).padLeft(4, '0')}';
+  }
+
+  int _msgUidCounter = 0;
+
+  // toggle a reaction on a message. tap same emoji again to remove.
+  // tap a different emoji to replace.
+  Future<void> _toggleReaction(_Msg m, String emoji) async {
+    if (m.msgUid == null) {
+      final uid = _newMsgUid();
+      m.msgUid = uid;
+      await db.assignUidIfMissing(
+          widget.peerHaloId, m.when.millisecondsSinceEpoch, uid);
+    }
+    final current = m.reactions[''];
+    final remove = current == emoji; // tapping same emoji = unreact
+    final newEmoji = remove ? '' : emoji;
+    setState(() {
+      if (remove) {
+        m.reactions.remove('');
+      } else {
+        m.reactions[''] = emoji;
+      }
+    });
+    // persist locally
+    if (remove) {
+      await db.removeReaction(m.msgUid!, '');
+    } else {
+      await db.addReaction(m.msgUid!, '', emoji);
+    }
+    // send to peer as a reaction control envelope (empty body).
+    try {
+      final wrapped = await wrapMessage(
+        '',
+        reaction: ReactionFrame(targetUid: m.msgUid!, emoji: newEmoji),
+      );
+      final cipher = await signalEncrypt(widget.peerHaloId, wrapped);
+      final useDirectOnion = !_backPaired || _peerXPub == null;
+      final f = useDirectOnion
+          ? Future(() => engine.sendTo(widget.peerOnion, cipher))
+          : Future(() => engine.nostrSend(_peerXPub!, cipher));
+      await f;
+    } catch (e) {
+      debugPrint('reaction send failed: $e');
+    }
+  }
+
   Future<void> _loadMessages() async {
     db.isBackPaired(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _backPaired = v);
     });
     final rows = await db.messagesFor(widget.peerHaloId);
     if (!mounted) return;
-    setState(() {
-      _messages.clear();
-      for (final r in rows) {
-        _messages.add(_Msg(
-          r['direction'] as String,
-          r['plaintext'] as String,
-          DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
-          burnAt: r['burn_at'] as int?,
-        ));
+    // collect msg_uids first, batch-load reactions, then setState.
+    final loaded = <_Msg>[];
+    final uids = <String>[];
+    for (final r in rows) {
+      final uid = r['msg_uid'] as String?;
+      loaded.add(_Msg(
+        r['direction'] as String,
+        r['plaintext'] as String,
+        DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+        burnAt: r['burn_at'] as int?,
+        msgUid: uid,
+      ));
+      if (uid != null) uids.add(uid);
+    }
+    final reactionMap = await db.loadReactionsFor(uids);
+    for (final m in loaded) {
+      if (m.msgUid == null) continue;
+      final entries = reactionMap[m.msgUid!];
+      if (entries == null) continue;
+      for (final e in entries) {
+        m.reactions[e.key] = e.value;
       }
+    }
+    if (!mounted) return;
+    setState(() {
+      _messages
+        ..clear()
+        ..addAll(loaded);
     });
     _scrollToEnd();
   }
@@ -302,7 +448,9 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _send() async {
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || _sending) return;
+    final msgUid = _newMsgUid();
     final msg = _Msg('out', text, DateTime.now(), sending: true,
+        msgUid: msgUid,
         burnAt: _ghost
             ? DateTime.now().millisecondsSinceEpoch + _burnSeconds * 1000
             : null);
@@ -315,7 +463,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToEnd();
     final String cipher;
     try {
-      final wrapped = await wrapMessage(text, burnSeconds: _ghost ? _burnSeconds : null, sender: SenderInfo(
+      final wrapped = await wrapMessage(text, burnSeconds: _ghost ? _burnSeconds : null, msgUid: msgUid, sender: SenderInfo(
         haloId: appState.myId,
         edPub: engine.myEdPubkey(),
         onion: appState.myOnion,
@@ -353,7 +501,8 @@ class _ChatScreenState extends State<ChatScreen> {
         await db.saveMessage(widget.peerHaloId, 'out', text,
             burnAt: _ghost
                 ? DateTime.now().millisecondsSinceEpoch + _burnSeconds * 1000
-                : null);
+                : null,
+            msgUid: msgUid);
       } else {
         setState(() { msg.failed = true; _status = result; });
       }
@@ -390,7 +539,11 @@ class _ChatScreenState extends State<ChatScreen> {
                       controller: _scrollCtrl,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       itemCount: _messages.length,
-                      itemBuilder: (c, i) => _Bubble(msg: _messages[i], onRetry: _retry),
+                      itemBuilder: (c, i) => _Bubble(
+                        msg: _messages[i],
+                        onRetry: _retry,
+                        onLongPress: (ctx) => _showEmojiPickerAt(ctx, _messages[i]),
+                      ),
                     ),
             ),
             if (_status.isNotEmpty)
@@ -456,7 +609,8 @@ class _ChatHead extends StatelessWidget {
 class _Bubble extends StatelessWidget {
   final _Msg msg;
   final void Function(_Msg)? onRetry;
-  const _Bubble({required this.msg, this.onRetry});
+  final void Function(BuildContext)? onLongPress;
+  const _Bubble({required this.msg, this.onRetry, this.onLongPress});
   @override
   Widget build(BuildContext context) {
     final isOut = msg.direction == 'out';
@@ -478,7 +632,9 @@ class _Bubble extends StatelessWidget {
         curve: Curves.easeOut,
         scale: isExpiring ? 0.88 : 1.0,
         child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: msg.failed && onRetry != null ? () => onRetry!(msg) : null,
+      onLongPress: onLongPress == null ? null : () => onLongPress!(context),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Column(
@@ -537,6 +693,28 @@ class _Bubble extends StatelessWidget {
                       ],
                     ),
                   ],
+                  if (msg.reactions.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: Wrap(
+                        spacing: 4,
+                        runSpacing: 4,
+                        children: _buildReactionChips(msg),
+                      ),
+                    ),
+                  ],
+                  if (msg.reactions.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: Wrap(
+                        spacing: 4,
+                        runSpacing: 4,
+                        children: _buildReactionChips(msg),
+                      ),
+                    ),
+                  ],
                   if (msg.burnAt != null) ...[
                 const SizedBox(height: 4),
                 Padding(
@@ -587,6 +765,172 @@ class _Bubble extends StatelessWidget {
       ),
     ),
     ),
+    );
+  }
+
+  // group reactions by emoji: each chip shows the emoji + count if >1.
+  // emoji used by the local user gets the amberSoft fill.
+  List<Widget> _buildReactionChips(_Msg m) {
+    final counts = <String, int>{};
+    for (final emoji in m.reactions.values) {
+      counts[emoji] = (counts[emoji] ?? 0) + 1;
+    }
+    final mine = m.reactions[''];
+    return counts.entries.map<Widget>((e) {
+      final emoji = e.key;
+      final count = e.value;
+      final isMine = emoji == mine;
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: isMine ? HaloColors.amberSoft : HaloColors.surface3,
+          border: Border.all(
+            color: isMine ? HaloColors.amber : HaloColors.line,
+            width: 0.5,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 13)),
+            if (count > 1) ...[
+              const SizedBox(width: 4),
+              Text('$count',
+                  style: HaloType.mono(
+                      size: 10, color: HaloColors.text2)),
+            ],
+          ],
+        ),
+      );
+    }).toList();
+  }
+}
+
+// big tappable emoji button used in the bottom-sheet reaction picker.
+class _EmojiTap extends StatefulWidget {
+  final String emoji;
+  final bool selected;
+  final VoidCallback onTap;
+  const _EmojiTap({
+    required this.emoji,
+    required this.selected,
+    required this.onTap,
+  });
+  @override
+  State<_EmojiTap> createState() => _EmojiTapState();
+}
+
+class _EmojiTapState extends State<_EmojiTap> {
+  double _scale = 1.0;
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _scale = 0.85),
+      onTapUp: (_) {
+        setState(() => _scale = 1.0);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _scale = 1.0),
+      child: AnimatedScale(
+        scale: _scale,
+        duration: const Duration(milliseconds: 90),
+        curve: Curves.easeOut,
+        child: Container(
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+            color: widget.selected
+                ? HaloColors.amberSoft
+                : HaloColors.surface3,
+            border: Border.all(
+              color: widget.selected ? HaloColors.amber : HaloColors.line,
+              width: 0.5,
+            ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          alignment: Alignment.center,
+          child: Text(widget.emoji, style: const TextStyle(fontSize: 24)),
+        ),
+      ),
+    );
+  }
+}
+
+// floating reaction bar shown above the long-pressed bubble. soft shadow,
+// rounded pill, scale + fade entrance. matches halo's surface3 + line
+// design language.
+class _EmojiPickerBubble extends StatefulWidget {
+  final List<String> emojis;
+  final String? selected;
+  final void Function(String) onPick;
+  const _EmojiPickerBubble({
+    required this.emojis,
+    required this.selected,
+    required this.onPick,
+  });
+
+  @override
+  State<_EmojiPickerBubble> createState() => _EmojiPickerBubbleState();
+}
+
+class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 220),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = CurvedAnimation(parent: _ctrl, curve: Curves.easeOutBack);
+    return Material(
+      color: Colors.transparent,
+      child: ScaleTransition(
+        scale: scale,
+        alignment: Alignment.bottomCenter,
+        child: FadeTransition(
+          opacity: _ctrl,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+            decoration: BoxDecoration(
+              color: HaloColors.surface3,
+              border: Border.all(color: HaloColors.line, width: 0.5),
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.5),
+                  blurRadius: 28,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: widget.emojis.map((e) {
+                final isSelected = e == widget.selected;
+                return _EmojiTap(
+                  emoji: e,
+                  selected: isSelected,
+                  onTap: () => widget.onPick(e),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

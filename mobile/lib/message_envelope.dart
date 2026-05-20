@@ -19,6 +19,8 @@ class UnwrappedMessage {
   final String? senderOnion;  // 'o' field
   final String? senderXPub;   // 'x' field, hex
   final int? burnSeconds;     // 'b' field — seconds-from-receive
+  final String? msgUid;       // 'u' field — stable cross-device message id
+  final ReactionFrame? reaction; // 'r' field — present on reaction control msgs
   UnwrappedMessage(
     this.message, {
     this.endpoint,
@@ -27,7 +29,17 @@ class UnwrappedMessage {
     this.senderOnion,
     this.senderXPub,
     this.burnSeconds,
+    this.msgUid,
+    this.reaction,
   });
+}
+
+/// A reaction "control message" — when present in an envelope, the payload
+/// is not a message body but a reaction (add or remove) on a previous one.
+class ReactionFrame {
+  final String targetUid; // the msg_uid this reaction applies to
+  final String emoji;     // '' means remove the reactor's reaction
+  const ReactionFrame({required this.targetUid, required this.emoji});
 }
 
 class SenderInfo {
@@ -45,9 +57,19 @@ class SenderInfo {
 
 // wrap: always includes sender identity now (cheap, enables back-pair).
 // endpoint is added only when push mode is ntfy.
-Future<String> wrapMessage(String plain, {SenderInfo? sender, int? burnSeconds}) async {
+Future<String> wrapMessage(
+  String plain, {
+  SenderInfo? sender,
+  int? burnSeconds,
+  String? msgUid,
+  ReactionFrame? reaction,
+}) async {
   final mode = await loadPushMode();
   final body = <String, dynamic>{'m': plain};
+  if (msgUid != null) body['u'] = msgUid;
+  if (reaction != null) {
+    body['r'] = {'u': reaction.targetUid, 'e': reaction.emoji};
+  }
 
   if (mode == PushMode.ntfy) {
     final topic = await loadNtfyTopic();
@@ -73,6 +95,14 @@ UnwrappedMessage unwrapMessage(String wrapped) {
   try {
     final json = jsonDecode(wrapped.substring(_envelopePrefix.length))
         as Map<String, dynamic>;
+    ReactionFrame? reaction;
+    final rRaw = json['r'];
+    if (rRaw is Map) {
+      reaction = ReactionFrame(
+        targetUid: (rRaw['u'] as String?) ?? '',
+        emoji: (rRaw['e'] as String?) ?? '',
+      );
+    }
     return UnwrappedMessage(
       (json['m'] as String?) ?? '',
       endpoint: json['p'] as String?,
@@ -81,6 +111,8 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       senderOnion: json['o'] as String?,
       senderXPub: json['x'] as String?,
       burnSeconds: (json['b'] as num?)?.toInt(),
+      msgUid: json['u'] as String?,
+      reaction: reaction,
     );
   } catch (_) {
     return UnwrappedMessage(wrapped);
