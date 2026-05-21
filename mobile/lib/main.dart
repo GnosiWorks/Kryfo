@@ -18,6 +18,8 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'theme.dart';
 import 'screens/home_screen.dart';
+import 'screens/new_group_screen.dart';
+import 'screens/group_chat_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/scan_screen.dart';
 import 'screens/modes_screen.dart';
@@ -252,7 +254,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 6,
+      version: 7,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -282,6 +284,7 @@ class HaloDb {
             burn_at INTEGER,
             msg_uid TEXT,
             reply_to TEXT,
+            group_id TEXT,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
         ''');
@@ -295,6 +298,24 @@ class HaloDb {
           )
         ''');
         await db.execute('CREATE INDEX idx_messages_msg_uid ON messages(msg_uid)');
+        await db.execute('CREATE INDEX idx_messages_group_id ON messages(group_id)');
+        await db.execute('''
+          CREATE TABLE groups (
+            group_id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            created_at INTEGER NOT NULL,
+            is_admin INTEGER NOT NULL DEFAULT 0
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE group_members (
+            group_id TEXT NOT NULL,
+            halo_id TEXT NOT NULL,
+            joined_at INTEGER NOT NULL,
+            PRIMARY KEY (group_id, halo_id),
+            FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
+          )
+        ''');
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
@@ -321,6 +342,28 @@ class HaloDb {
         if (oldV < 6) {
           await db.execute('ALTER TABLE messages ADD COLUMN reply_to TEXT');
         }
+        if (oldV < 7) {
+          await db.execute('ALTER TABLE messages ADD COLUMN group_id TEXT');
+          await db.execute(
+              'CREATE INDEX IF NOT EXISTS idx_messages_group_id ON messages(group_id)');
+          await db.execute('''
+            CREATE TABLE groups (
+              group_id TEXT PRIMARY KEY,
+              name TEXT NOT NULL,
+              created_at INTEGER NOT NULL,
+              is_admin INTEGER NOT NULL DEFAULT 0
+            )
+          ''');
+          await db.execute('''
+            CREATE TABLE group_members (
+              group_id TEXT NOT NULL,
+              halo_id TEXT NOT NULL,
+              joined_at INTEGER NOT NULL,
+              PRIMARY KEY (group_id, halo_id),
+              FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
+            )
+          ''');
+        }
       },
     );
     return _db!;
@@ -346,6 +389,32 @@ class HaloDb {
       'x_priv': xPriv,
       'created_at': DateTime.now().millisecondsSinceEpoch,
     });
+  }
+
+  Future<Map<String, Object?>?> getContact(String haloId) async {
+    final db = await open();
+    final rows = await db.query('contacts',
+        where: 'halo_id = ?', whereArgs: [haloId], limit: 1);
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  // upsert a contact stub from group invite info. preserves existing rows
+  // (won't overwrite onion/xpub if we already know this peer).
+  Future<void> upsertContactStub(
+      String haloId, String onion, String xpub) async {
+    final db = await open();
+    final existing = await db.query('contacts',
+        where: 'halo_id = ?', whereArgs: [haloId], limit: 1);
+    if (existing.isNotEmpty) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.insert('contacts', {
+      'halo_id': haloId,
+      'onion': onion,
+      'xpub': xpub,
+      'first_seen': now,
+      'last_seen': now,
+      'back_paired': 0,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   Future<List<Map<String, Object?>>> contacts() async {
@@ -382,6 +451,7 @@ class HaloDb {
     int? burnAt,
     String? msgUid,
     String? replyTo,
+    String? groupId,
   }) async {
     final db = await open();
     await db.insert('messages', {
@@ -392,6 +462,7 @@ class HaloDb {
       'burn_at': burnAt,
       'msg_uid': msgUid,
       'reply_to': replyTo,
+      'group_id': groupId,
     });
     // any inbound message proves the peer knows us, so flip back_paired.
     // subsequent sends to them can use nostr safely.
@@ -433,6 +504,105 @@ class HaloDb {
     );
     if (rows.isEmpty) return false;
     return (rows.first['back_paired'] as int? ?? 0) == 1;
+  }
+
+  // ---- groups ----
+
+  // create a group locally. members is the full set INCLUDING the creator
+  // (caller must include their own halo id if they want to appear in member
+  // list). isAdmin = true for groups we created; false for groups we joined.
+  Future<void> createGroup(
+    String groupId,
+    String name,
+    List<String> members, {
+    required bool isAdmin,
+  }) async {
+    final db = await open();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.insert('groups', {
+      'group_id': groupId,
+      'name': name,
+      'created_at': now,
+      'is_admin': isAdmin ? 1 : 0,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    final batch = db.batch();
+    for (final m in members) {
+      batch.insert('group_members', {
+        'group_id': groupId,
+        'halo_id': m,
+        'joined_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    }
+    await batch.commit(noResult: true);
+  }
+
+  Future<bool> groupExists(String groupId) async {
+    final db = await open();
+    final rows = await db.query('groups',
+        columns: ['group_id'], where: 'group_id = ?', whereArgs: [groupId], limit: 1);
+    return rows.isNotEmpty;
+  }
+
+  Future<List<Map<String, Object?>>> loadGroups() async {
+    final db = await open();
+    return db.query('groups', orderBy: 'created_at DESC');
+  }
+
+  Future<Map<String, Object?>?> getGroup(String groupId) async {
+    final db = await open();
+    final rows = await db.query('groups',
+        where: 'group_id = ?', whereArgs: [groupId], limit: 1);
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  Future<List<String>> getGroupMembers(String groupId) async {
+    final db = await open();
+    final rows = await db.query('group_members',
+        columns: ['halo_id'],
+        where: 'group_id = ?',
+        whereArgs: [groupId],
+        orderBy: 'joined_at ASC');
+    return rows.map((r) => r['halo_id'] as String).toList();
+  }
+
+  Future<void> addGroupMember(String groupId, String haloId) async {
+    final db = await open();
+    await db.insert('group_members', {
+      'group_id': groupId,
+      'halo_id': haloId,
+      'joined_at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  Future<void> removeGroupMember(String groupId, String haloId) async {
+    final db = await open();
+    await db.delete('group_members',
+        where: 'group_id = ? AND halo_id = ?',
+        whereArgs: [groupId, haloId]);
+  }
+
+  Future<void> renameGroup(String groupId, String name) async {
+    final db = await open();
+    await db.update('groups', {'name': name},
+        where: 'group_id = ?', whereArgs: [groupId]);
+  }
+
+  Future<void> deleteGroup(String groupId) async {
+    final db = await open();
+    await db.delete('group_members',
+        where: 'group_id = ?', whereArgs: [groupId]);
+    await db.delete('groups',
+        where: 'group_id = ?', whereArgs: [groupId]);
+  }
+
+  // load all messages for a group, oldest-first. peer_id on each row is the
+  // SENDER's halo id (for our own messages this is our halo id).
+  Future<List<Map<String, Object?>>> loadGroupMessages(String groupId) async {
+    final db = await open();
+    return db.query('messages',
+        where: 'group_id = ?',
+        whereArgs: [groupId],
+        orderBy: 'sent_at ASC');
   }
 
   // add or replace a reaction. reactor is '' for self, peer's halo id
@@ -682,6 +852,32 @@ String? currentChatPeer;
 
 final GlobalKey<NavigatorState> rootNavKey = GlobalKey<NavigatorState>();
 
+int _msgUidCounter = 0;
+// stable cross-device message id. used by reactions + replies + group
+// fan-out so every recipient sees the same uid. base36 timestamp + random.
+String newMsgUid() {
+  final t = DateTime.now().microsecondsSinceEpoch.toRadixString(36);
+  final r = (DateTime.now().microsecondsSinceEpoch ^ _msgUidCounter++)
+      .abs()
+      .toRadixString(36);
+  return '${t.padLeft(8, '0').substring(0, 8)}${r.substring(0, 4).padLeft(4, '0')}';
+}
+
+class GroupPreview {
+  final String groupId;
+  final String name;
+  final int memberCount;
+  final bool isAdmin;
+  final DateTime createdAt;
+  const GroupPreview({
+    required this.groupId,
+    required this.name,
+    required this.memberCount,
+    required this.isAdmin,
+    required this.createdAt,
+  });
+}
+
 class AppState extends ChangeNotifier {
   NtfyListener? _ntfyListener;
 
@@ -696,6 +892,139 @@ class AppState extends ChangeNotifier {
     } else {
       await _ntfyListener?.stop();
       _ntfyListener = null;
+    }
+  }
+
+  // unified incoming routing. handles three payload variants:
+  //   1) group control msg (no chat row, no notif)
+  //   2) reaction       (add/remove on a target uid, no chat row, no notif)
+  //   3) data message   (1:1 or group — save + maybe notify)
+  // called from all three receive paths (back-pair-from-cipher, tor drain,
+  // nostr poll) so the routing rules live in exactly one place.
+  Future<void> _applyIncomingPayload(
+      String senderHaloId, UnwrappedMessage env) async {
+    // 1) group control
+    if (env.groupControl != null) {
+      await _applyGroupControl(senderHaloId, env);
+      return;
+    }
+    // 2) reaction
+    if (env.reaction != null) {
+      final r = env.reaction!;
+      if (r.emoji.isEmpty) {
+        await db.removeReaction(r.targetUid, senderHaloId);
+      } else {
+        await db.addReaction(r.targetUid, senderHaloId, r.emoji);
+      }
+      return;
+    }
+    // 3) data message — could be 1:1 or group
+    final isGroup = env.groupId != null;
+    if (isGroup && !await db.groupExists(env.groupId!)) {
+      // unknown group — drop. prevents random senders from injecting rows
+      // into groups we never joined.
+      debugPrint('dropping group msg for unknown group ${env.groupId}');
+      return;
+    }
+    await db.saveMessage(
+      senderHaloId,
+      'in',
+      env.message,
+      burnAt: env.burnSeconds != null && env.burnSeconds! > 0
+          ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
+          : null,
+      msgUid: env.msgUid,
+      replyTo: env.replyTo,
+      groupId: env.groupId,
+    );
+    // notification context — for groups, title = group name and body
+    // prefixes the sender. payload uses "group:<id>" so tap-to-open can
+    // route to the right screen.
+    final String notifTitle;
+    final String notifBody;
+    final String notifPayload;
+    final bool suppress;
+    if (isGroup) {
+      final g = await db.getGroup(env.groupId!);
+      notifTitle = (g?['name'] as String?) ?? 'group';
+      notifBody = '$senderHaloId: ${env.message}';
+      notifPayload = 'group:${env.groupId}';
+      suppress = currentChatPeer == notifPayload;
+    } else {
+      notifTitle = senderHaloId;
+      notifBody = env.message;
+      notifPayload = senderHaloId;
+      suppress = currentChatPeer == senderHaloId;
+    }
+    if (!suppress) {
+      await showMessageNotification(
+          title: notifTitle, body: notifBody, payload: notifPayload);
+    }
+  }
+
+  // apply a group control message. sender is the halo id that sent the
+  // control; env.groupId is the target group; env.groupControl carries the
+  // action and payload.
+  Future<void> _applyGroupControl(
+      String senderHaloId, UnwrappedMessage env) async {
+    final gc = env.groupControl!;
+    final groupId = env.groupId;
+    if (groupId == null) return;
+    switch (gc.type) {
+      case 'create':
+        // someone added us to a new group. they are the admin; we are
+        // a regular member. group.is_admin stays 0.
+        if (gc.members == null || gc.name == null) return;
+        if (!await db.groupExists(groupId)) {
+          await db.createGroup(groupId, gc.name!, gc.members!,
+              isAdmin: false);
+        }
+        // auto-create contact stubs for unknown participants so we can
+        // immediately send to them.
+        if (gc.participants != null) {
+          for (final p in gc.participants!) {
+            final h = p['h'];
+            final o = p['o'];
+            final x = p['x'];
+            if (h != null && o != null && x != null && h != myId) {
+              await db.upsertContactStub(h, o, x);
+            }
+          }
+        }
+        await refreshContacts();
+        await refreshGroups();
+        break;
+      case 'add':
+        if (gc.members == null) return;
+        for (final h in gc.members!) {
+          await db.addGroupMember(groupId, h);
+        }
+        if (gc.participants != null) {
+          for (final p in gc.participants!) {
+            final h = p['h'];
+            final o = p['o'];
+            final x = p['x'];
+            if (h != null && o != null && x != null && h != myId) {
+              await db.upsertContactStub(h, o, x);
+            }
+          }
+        }
+        await refreshContacts();
+        await refreshGroups();
+        break;
+      case 'remove':
+        if (gc.members == null) return;
+        for (final h in gc.members!) {
+          await db.removeGroupMember(groupId, h);
+        }
+        break;
+      case 'rename':
+        if (gc.name == null) return;
+        await db.renameGroup(groupId, gc.name!);
+        break;
+      case 'leave':
+        await db.removeGroupMember(groupId, senderHaloId);
+        break;
     }
   }
 
@@ -714,6 +1043,7 @@ class AppState extends ChangeNotifier {
   late AppLinks _appLinks;
   String myId = '';
   String myOnion = '';
+  List<GroupPreview> groups = [];
   String myXPub = '';
   bool restored = false;
   bool ready = false;
@@ -764,25 +1094,8 @@ class AppState extends ChangeNotifier {
       if (env.endpoint != null) {
         await savePeerEndpoint(h, env.endpoint!);
       }
-      if (env.reaction != null) {
-        final r = env.reaction!;
-        if (r.emoji.isEmpty) {
-          await db.removeReaction(r.targetUid, h);
-        } else {
-          await db.addReaction(r.targetUid, h, r.emoji);
-        }
-      } else {
-        await db.saveMessage(h, 'in', env.message,
-            burnAt: env.burnSeconds != null && env.burnSeconds! > 0
-                ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
-                : null,
-            msgUid: env.msgUid,
-            replyTo: env.replyTo);
-        await refreshContacts();
-        if (currentChatPeer != h) {
-          await showMessageNotification(title: h, body: env.message, payload: h);
-        }
-      }
+      await _applyIncomingPayload(h, env);
+      await refreshContacts();
       notifyListeners();
       debugPrint('back-pair: created contact $h via direct onion');
       return h;
@@ -816,6 +1129,7 @@ class AppState extends ChangeNotifier {
     });
 
     await refreshContacts();
+    await refreshGroups();
     // sprint 7.5: auto-start tor; nostr subs retry every 10s until ready
     final docsDir = await getApplicationDocumentsDirectory();
     Future(() => engine.startListener(docsDir.path)).then((addr) {
@@ -866,24 +1180,7 @@ class AppState extends ChangeNotifier {
             if (env.endpoint != null) {
               await savePeerEndpoint(c.haloId, env.endpoint!);
             }
-            if (env.reaction != null) {
-              final r = env.reaction!;
-              if (r.emoji.isEmpty) {
-                await db.removeReaction(r.targetUid, c.haloId);
-              } else {
-                await db.addReaction(r.targetUid, c.haloId, r.emoji);
-              }
-            } else {
-              await db.saveMessage(c.haloId, 'in', env.message,
-                burnAt: env.burnSeconds != null && env.burnSeconds! > 0
-                    ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
-                    : null,
-                msgUid: env.msgUid,
-                replyTo: env.replyTo);
-              if (currentChatPeer != c.haloId) {
-                await showMessageNotification(title: c.haloId, body: env.message, payload: c.haloId);
-              }
-            }
+            await _applyIncomingPayload(c.haloId, env);
             notifyListeners();
             handled = true;
             break;
@@ -909,24 +1206,7 @@ class AppState extends ChangeNotifier {
           }
           final plain = env.message;
           debugPrint('  decrypted: $plain');
-          if (env.reaction != null) {
-            final r = env.reaction!;
-            if (r.emoji.isEmpty) {
-              await db.removeReaction(r.targetUid, haloId);
-            } else {
-              await db.addReaction(r.targetUid, haloId, r.emoji);
-            }
-          } else {
-            await db.saveMessage(haloId, 'in', plain,
-              burnAt: env.burnSeconds != null && env.burnSeconds! > 0
-                  ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
-                  : null,
-              msgUid: env.msgUid,
-              replyTo: env.replyTo);
-            if (currentChatPeer != haloId) {
-              await showMessageNotification(title: haloId, body: plain, payload: haloId);
-            }
-          }
+          await _applyIncomingPayload(haloId, env);
           notifyListeners();
         } else {
           debugPrint('  signalDecrypt returned null');
@@ -971,6 +1251,242 @@ class AppState extends ChangeNotifier {
       );
     }).toList();
     notifyListeners();
+  }
+
+  // ---- groups ----
+
+  Future<void> refreshGroups() async {
+    final rows = await db.loadGroups();
+    final list = <GroupPreview>[];
+    for (final r in rows) {
+      final gid = r['group_id'] as String;
+      final members = await db.getGroupMembers(gid);
+      list.add(GroupPreview(
+        groupId: gid,
+        name: r['name'] as String,
+        memberCount: members.length,
+        isAdmin: (r['is_admin'] as int? ?? 0) == 1,
+        createdAt: DateTime.fromMillisecondsSinceEpoch(r['created_at'] as int),
+      ));
+    }
+    groups = list;
+    notifyListeners();
+  }
+
+  SenderInfo _mySender() => SenderInfo(
+        haloId: myId,
+        edPub: engine.myEdPubkey(),
+        onion: myOnion,
+        xPub: engine.myXPubkey(),
+      );
+
+  // pairwise envelope send. wraps libsignal encrypt + transport choice
+  // (direct-onion if peer hasn't back-paired yet, nostr otherwise).
+  Future<bool> _sendOneEnvelope(String memberId, String wrapped) async {
+    try {
+      final contact = await db.getContact(memberId);
+      if (contact == null) {
+        debugPrint('group send: no contact for \$memberId');
+        return false;
+      }
+      final cipher = await signalEncrypt(memberId, wrapped);
+      final backPaired = await db.isBackPaired(memberId);
+      final useDirectOnion = !backPaired;
+      final result = useDirectOnion
+          ? await Future(() => engine.sendTo(contact['onion'] as String, cipher))
+          : await Future(() => engine.nostrSend(contact['xpub'] as String, cipher));
+      return result == 'ok';
+    } catch (e) {
+      debugPrint('group send to \$memberId failed: \$e');
+      return false;
+    }
+  }
+
+  Future<void> _sendControlToGroup(String groupId, GroupControl gc) async {
+    final wrapped = await wrapMessage('',
+        groupId: groupId, groupControl: gc, sender: _mySender());
+    final members = await db.getGroupMembers(groupId);
+    for (final memberId in members) {
+      if (memberId == myId) continue;
+      await _sendOneEnvelope(memberId, wrapped);
+    }
+  }
+
+  // send a normal text message into a group. saves the local row, then
+  // multicasts pairwise to every other member. returns true if at least
+  // one recipient acknowledged.
+  Future<bool> sendToGroup(
+    String groupId,
+    String plain, {
+    String? msgUid,
+    String? replyTo,
+    int? burnSeconds,
+  }) async {
+    msgUid ??= newMsgUid();
+    final burnAt = (burnSeconds != null && burnSeconds > 0)
+        ? DateTime.now().millisecondsSinceEpoch + burnSeconds * 1000
+        : null;
+    // save the local row up-front so the chat list shows it immediately.
+    // peer_id = self so we render it as outgoing.
+    await db.saveMessage(myId, 'out', plain,
+        groupId: groupId, msgUid: msgUid, replyTo: replyTo, burnAt: burnAt);
+    final wrapped = await wrapMessage(plain,
+        msgUid: msgUid,
+        replyTo: replyTo,
+        burnSeconds: burnSeconds,
+        groupId: groupId,
+        sender: _mySender());
+    final members = await db.getGroupMembers(groupId);
+    bool anyOk = false;
+    for (final memberId in members) {
+      if (memberId == myId) continue;
+      if (await _sendOneEnvelope(memberId, wrapped)) anyOk = true;
+    }
+    notifyListeners();
+    return anyOk;
+  }
+
+  // pairwise reaction multicast for group messages.
+  Future<void> reactInGroup(
+      String groupId, String targetMsgUid, String emoji) async {
+    if (emoji.isEmpty) {
+      await db.removeReaction(targetMsgUid, '');
+    } else {
+      await db.addReaction(targetMsgUid, '', emoji);
+    }
+    final wrapped = await wrapMessage('',
+        groupId: groupId,
+        reaction: ReactionFrame(targetUid: targetMsgUid, emoji: emoji),
+        sender: _mySender());
+    final members = await db.getGroupMembers(groupId);
+    for (final memberId in members) {
+      if (memberId == myId) continue;
+      await _sendOneEnvelope(memberId, wrapped);
+    }
+    notifyListeners();
+  }
+
+  // build participant info {h,o,x} for each halo_id we have as a contact
+  // (or for our own halo). used to give group invites enough info that
+  // recipients can fan-out to members they don't yet know.
+  Future<List<Map<String, String>>> _buildParticipants(
+      List<String> haloIds) async {
+    final out = <Map<String, String>>[];
+    for (final h in haloIds) {
+      if (h == myId) {
+        out.add({'h': myId, 'o': myOnion, 'x': engine.myXPubkey()});
+      } else {
+        final c = await db.getContact(h);
+        if (c != null) {
+          out.add({
+            'h': h,
+            'o': c['onion'] as String,
+            'x': c['xpub'] as String,
+          });
+        }
+      }
+    }
+    return out;
+  }
+
+  // create a group locally and announce it to invited members. memberHaloIds
+  // is the set of OTHER members (caller's halo id is added automatically).
+  // returns the new group id.
+  Future<String> createGroupAndAnnounce(
+      String name, List<String> memberHaloIds) async {
+    final groupId = newMsgUid();
+    final full = [myId, ...memberHaloIds];
+    await db.createGroup(groupId, name, full, isAdmin: true);
+    final participants = await _buildParticipants(full);
+    final gc = GroupControl(
+      type: 'create',
+      name: name,
+      members: full,
+      participants: participants,
+    );
+    await _sendControlToGroup(groupId, gc);
+    await refreshGroups();
+    return groupId;
+  }
+
+  // admin-only. adds members locally, sends 'add' to existing members
+  // (with participants for the new ones), and sends a full 'create' to
+  // each new member so they bootstrap the group.
+  Future<void> addMembersToGroup(
+      String groupId, List<String> newHaloIds) async {
+    final group = await db.getGroup(groupId);
+    if (group == null) return;
+    if ((group['is_admin'] as int? ?? 0) != 1) return;
+    final existingMembers = await db.getGroupMembers(groupId);
+    for (final h in newHaloIds) {
+      await db.addGroupMember(groupId, h);
+    }
+    final newParticipants = await _buildParticipants(newHaloIds);
+    final addGc = GroupControl(
+      type: 'add',
+      members: newHaloIds,
+      participants: newParticipants,
+    );
+    for (final memberId in existingMembers) {
+      if (memberId == myId) continue;
+      final wrapped = await wrapMessage('',
+          groupId: groupId, groupControl: addGc, sender: _mySender());
+      await _sendOneEnvelope(memberId, wrapped);
+    }
+    final allMembers = await db.getGroupMembers(groupId);
+    final allParticipants = await _buildParticipants(allMembers);
+    final createGc = GroupControl(
+      type: 'create',
+      name: group['name'] as String,
+      members: allMembers,
+      participants: allParticipants,
+    );
+    for (final newMember in newHaloIds) {
+      final wrapped = await wrapMessage('',
+          groupId: groupId, groupControl: createGc, sender: _mySender());
+      await _sendOneEnvelope(newMember, wrapped);
+    }
+    await refreshGroups();
+  }
+
+  // admin-only. removes locally and tells everyone (including removed) so
+  // both sides converge on the new member list.
+  Future<void> removeMembersFromGroup(
+      String groupId, List<String> removedHaloIds) async {
+    final group = await db.getGroup(groupId);
+    if (group == null) return;
+    if ((group['is_admin'] as int? ?? 0) != 1) return;
+    final allMembers = await db.getGroupMembers(groupId);
+    for (final h in removedHaloIds) {
+      await db.removeGroupMember(groupId, h);
+    }
+    final gc = GroupControl(type: 'remove', members: removedHaloIds);
+    for (final memberId in allMembers) {
+      if (memberId == myId) continue;
+      final wrapped = await wrapMessage('',
+          groupId: groupId, groupControl: gc, sender: _mySender());
+      await _sendOneEnvelope(memberId, wrapped);
+    }
+    await refreshGroups();
+  }
+
+  Future<void> renameGroupAndAnnounce(String groupId, String newName) async {
+    final group = await db.getGroup(groupId);
+    if (group == null) return;
+    if ((group['is_admin'] as int? ?? 0) != 1) return;
+    await db.renameGroup(groupId, newName);
+    final gc = GroupControl(type: 'rename', name: newName);
+    await _sendControlToGroup(groupId, gc);
+    await refreshGroups();
+  }
+
+  // anyone can leave. tells the remaining members so they can drop us from
+  // their copies. caller deletes the group locally.
+  Future<void> leaveGroupAndAnnounce(String groupId) async {
+    final gc = GroupControl(type: 'leave');
+    await _sendControlToGroup(groupId, gc);
+    await db.deleteGroup(groupId);
+    await refreshGroups();
   }
 
   Future<void> regenerateIdentity() async {
@@ -1066,7 +1582,15 @@ class _RootShellState extends State<RootShell> {
     return HomeScreen(
       haloId: appState.myId,
       contacts: appState.contacts,
+      groups: appState.groups
+          .map((g) => GroupSummary(
+                groupId: g.groupId,
+                name: g.name,
+                memberCount: g.memberCount,
+              ))
+          .toList(),
       onAddContact: () => _open(const DevScreen()),
+      onNewGroup: () => _open(const NewGroupScreen()),
       onOpenDev: () => _open(const DevScreen()),
       onOpenSettings: () => _open(SettingsScreen()),
       onOpenChat: (id) async {
@@ -1080,6 +1604,15 @@ class _RootShellState extends State<RootShell> {
           peerXPub: row['xpub'] as String,
           avatarSeed: id,
         )));
+      },
+      onOpenGroup: (groupId) async {
+        if (!mounted) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => GroupChatScreen(groupId: groupId),
+          ),
+        );
       },
     );
   }
