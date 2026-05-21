@@ -12,19 +12,25 @@ bool _miuiPromptChecked = false;
 class HomeScreen extends StatelessWidget {
   final String haloId;            // "neon-tiger-saturn"
   final List<ContactPreview> contacts;
+  final List<GroupSummary> groups;
   final VoidCallback onAddContact;
+  final VoidCallback onNewGroup;
   final VoidCallback onOpenDev;
   final VoidCallback onOpenSettings;
   final void Function(String halo) onOpenChat;
+  final void Function(String groupId) onOpenGroup;
 
   const HomeScreen({
     super.key,
     required this.haloId,
     this.contacts = const [],
+    this.groups = const [],
     required this.onAddContact,
+    required this.onNewGroup,
     required this.onOpenDev,
     required this.onOpenSettings,
     required this.onOpenChat,
+    required this.onOpenGroup,
   });
 
   @override
@@ -51,7 +57,13 @@ class HomeScreen extends StatelessWidget {
             Expanded(
               child: contacts.isEmpty
                   ? _EmptyState(onAdd: onAddContact)
-                  : _ContactList(contacts: contacts, onTap: onOpenChat),
+                  : _ContactList(
+                      contacts: contacts,
+                      groups: groups,
+                      onTap: onOpenChat,
+                      onOpenGroup: onOpenGroup,
+                      onNewGroup: onNewGroup,
+                    ),
             ),
             _NavTabs(active: 'chats', onDevLongPress: onOpenDev, onMeTap: onOpenSettings),
           ],
@@ -71,6 +83,19 @@ class ContactPreview {
     this.preview,
     this.when,
     required this.avatarSeed,
+  });
+}
+
+// minimal shape needed by home for rendering a group row. main.dart
+// builds these from appState.groups.
+class GroupSummary {
+  final String groupId;
+  final String name;
+  final int memberCount;
+  const GroupSummary({
+    required this.groupId,
+    required this.name,
+    required this.memberCount,
   });
 }
 
@@ -189,8 +214,17 @@ class _EmptyState extends StatelessWidget {
 
 class _ContactList extends StatelessWidget {
   final List<ContactPreview> contacts;
+  final List<GroupSummary> groups;
   final void Function(String halo) onTap;
-  const _ContactList({required this.contacts, required this.onTap});
+  final void Function(String groupId) onOpenGroup;
+  final VoidCallback onNewGroup;
+  const _ContactList({
+    required this.contacts,
+    required this.groups,
+    required this.onTap,
+    required this.onOpenGroup,
+    required this.onNewGroup,
+  });
   @override
   Widget build(BuildContext context) {
     final hero = contacts.first;
@@ -199,9 +233,40 @@ class _ContactList extends StatelessWidget {
       padding: EdgeInsets.zero,
       children: [
         _HeroCard(c: hero, onTap: () => onTap(hero.haloId)),
+        // groups section (header + rows + new-group tile). always show the
+        // tile so user can create a group even with no existing groups.
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
+          child: Row(
+            children: [
+              Text('groups',
+                  style: HaloType.mono(
+                    size: 10, color: HaloColors.text3, letter: 0.14,
+                  )),
+              const Spacer(),
+              GestureDetector(
+                onTap: onNewGroup,
+                behavior: HitTestBehavior.opaque,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.add_rounded,
+                        size: 14, color: HaloColors.amber),
+                    const SizedBox(width: 3),
+                    Text('new',
+                        style: HaloType.mono(
+                          size: 10, color: HaloColors.amber, letter: 0.14,
+                        )),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        ...groups.map((g) => _GroupRow(g: g, onTap: () => onOpenGroup(g.groupId))),
         if (rest.isNotEmpty) ...[
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 6, 20, 8),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
             child: Text('more',
                 style: HaloType.mono(
                   size: 10, color: HaloColors.text3, letter: 0.14,
@@ -210,6 +275,56 @@ class _ContactList extends StatelessWidget {
           ...rest.map((c) => _Row(c: c, onTap: () => onTap(c.haloId))),
         ],
       ],
+    );
+  }
+}
+
+class _GroupRow extends StatelessWidget {
+  final GroupSummary g;
+  final VoidCallback onTap;
+  const _GroupRow({required this.g, required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(children: [
+          // group avatar: square tile in amberSoft with the first letter
+          // of the group name in italic serif. distinct from contact
+          // avatars (circular) so groups feel different at a glance.
+          Container(
+            width: 36, height: 36,
+            decoration: BoxDecoration(
+              color: HaloColors.amberSoft,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: HaloColors.amber.withOpacity(0.35), width: 0.6),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              g.name.isEmpty ? '·' : g.name.characters.first.toUpperCase(),
+              style: HaloType.serif(
+                size: 18, italic: true, color: HaloColors.amber,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(g.name,
+                    style: HaloType.sans(
+                        size: 14, weight: FontWeight.w500, color: HaloColors.text)),
+                const SizedBox(height: 2),
+                Text('${g.memberCount} members',
+                    style: HaloType.mono(size: 10, color: HaloColors.text3)),
+              ],
+            ),
+          ),
+        ]),
+      ),
     );
   }
 }

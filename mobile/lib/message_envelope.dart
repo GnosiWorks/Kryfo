@@ -22,6 +22,8 @@ class UnwrappedMessage {
   final String? msgUid;       // 'u' field — stable cross-device message id
   final ReactionFrame? reaction; // 'r' field — present on reaction control msgs
   final String? replyTo;      // 'q' field — msg_uid this message replies to
+  final String? groupId;      // 'g' field — present for group messages
+  final GroupControl? groupControl; // 'gc' field — present on group control msgs
   UnwrappedMessage(
     this.message, {
     this.endpoint,
@@ -33,7 +35,25 @@ class UnwrappedMessage {
     this.msgUid,
     this.reaction,
     this.replyTo,
+    this.groupId,
+    this.groupControl,
   });
+}
+
+/// A group "control message" — when present in an envelope, the payload
+/// is not a message body but a group state update (create, member add/remove,
+/// rename, leave). The 'm' body should be ignored when this is present.
+class GroupControl {
+  final String type;            // 'create' | 'add' | 'remove' | 'rename' | 'leave'
+  final String? name;           // present on 'create' and 'rename'
+  final List<String>? members;  // full member list on 'create'; the target halo id list on 'add'/'remove'
+  // participants carries full SenderInfo (halo_id + onion + xpub) for each
+  // member the receiver might not already have as a contact. populated on
+  // 'create' (every member) and 'add' (each newly added member). receivers
+  // auto-create contact stubs from this so subsequent group sends work.
+  final List<Map<String, String>>? participants;
+  const GroupControl(
+      {required this.type, this.name, this.members, this.participants});
 }
 
 /// A reaction "control message" — when present in an envelope, the payload
@@ -66,6 +86,8 @@ Future<String> wrapMessage(
   String? msgUid,
   ReactionFrame? reaction,
   String? replyTo,
+  String? groupId,
+  GroupControl? groupControl,
 }) async {
   final mode = await loadPushMode();
   final body = <String, dynamic>{'m': plain};
@@ -89,6 +111,14 @@ Future<String> wrapMessage(
   if (burnSeconds != null && burnSeconds > 0) {
     body['b'] = burnSeconds;
   }
+  if (groupId != null) body['g'] = groupId;
+  if (groupControl != null) {
+    final gc = <String, dynamic>{'t': groupControl.type};
+    if (groupControl.name != null) gc['n'] = groupControl.name;
+    if (groupControl.members != null) gc['m'] = groupControl.members;
+    if (groupControl.participants != null) gc['p'] = groupControl.participants;
+    body['gc'] = gc;
+  }
   return '$_envelopePrefix${jsonEncode(body)}';
 }
 
@@ -107,6 +137,29 @@ UnwrappedMessage unwrapMessage(String wrapped) {
         emoji: (rRaw['e'] as String?) ?? '',
       );
     }
+    GroupControl? gc;
+    final gcRaw = json['gc'];
+    if (gcRaw is Map) {
+      final membersRaw = gcRaw['m'];
+      final partsRaw = gcRaw['p'];
+      List<Map<String, String>>? parts;
+      if (partsRaw is List) {
+        parts = [];
+        for (final e in partsRaw) {
+          if (e is Map) {
+            parts.add(e.map((k, v) => MapEntry(k.toString(), v.toString())));
+          }
+        }
+      }
+      gc = GroupControl(
+        type: (gcRaw['t'] as String?) ?? '',
+        name: gcRaw['n'] as String?,
+        members: membersRaw is List
+            ? membersRaw.map((e) => e.toString()).toList()
+            : null,
+        participants: parts,
+      );
+    }
     return UnwrappedMessage(
       (json['m'] as String?) ?? '',
       endpoint: json['p'] as String?,
@@ -118,6 +171,8 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       msgUid: json['u'] as String?,
       reaction: reaction,
       replyTo: json['q'] as String?,
+      groupId: json['g'] as String?,
+      groupControl: gc,
     );
   } catch (_) {
     return UnwrappedMessage(wrapped);
