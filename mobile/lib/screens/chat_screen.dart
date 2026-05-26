@@ -371,10 +371,20 @@ class _ChatScreenState extends State<ChatScreen> {
     // drain triggers the back-pair flow. nostr would dead-end because
     // they aren't subscribed to our xpub yet. once we receive anything
     // from them, _backPaired flips and we can use nostr.
-    final useDirectOnion = !_backPaired || _peerXPub == null;
-    final sendFuture = useDirectOnion
-        ? Future(() => engine.sendTo(widget.peerOnion, cipher))
-        : Future(() => engine.nostrSend(_peerXPub!, cipher));
+    // try direct tor first if peer hasn't back-paired and we have their onion.
+    // on tor failure / timeout, fall back to nostr store-and-forward.
+    final sendFuture = Future<String>(() async {
+      String? tor;
+      if (!_backPaired && widget.peerOnion.isNotEmpty) {
+        tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
+        if (tor == 'ok') return 'ok';
+        debugPrint('chat send: tor direct failed (\$tor), trying nostr');
+      }
+      if (_peerXPub != null) {
+        return await Future(() => engine.nostrSend(_peerXPub!, cipher));
+      }
+      return tor ?? 'error: no transport';
+    });
     sendFuture.then((result) async {
       if (!mounted) return;
       if (result == 'ok') {
@@ -500,10 +510,20 @@ class _ChatScreenState extends State<ChatScreen> {
     // drain triggers the back-pair flow. nostr would dead-end because
     // they aren't subscribed to our xpub yet. once we receive anything
     // from them, _backPaired flips and we can use nostr.
-    final useDirectOnion = !_backPaired || _peerXPub == null;
-    final sendFuture = useDirectOnion
-        ? Future(() => engine.sendTo(widget.peerOnion, cipher))
-        : Future(() => engine.nostrSend(_peerXPub!, cipher));
+    // try direct tor first if peer hasn't back-paired and we have their onion.
+    // on tor failure / timeout, fall back to nostr store-and-forward.
+    final sendFuture = Future<String>(() async {
+      String? tor;
+      if (!_backPaired && widget.peerOnion.isNotEmpty) {
+        tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
+        if (tor == 'ok') return 'ok';
+        debugPrint('chat send: tor direct failed (\$tor), trying nostr');
+      }
+      if (_peerXPub != null) {
+        return await Future(() => engine.nostrSend(_peerXPub!, cipher));
+      }
+      return tor ?? 'error: no transport';
+    });
     sendFuture.then((result) async {
       if (!mounted) return;
       if (result == 'ok') {

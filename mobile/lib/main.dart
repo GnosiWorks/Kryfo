@@ -1286,18 +1286,26 @@ class AppState extends ChangeNotifier {
     try {
       final contact = await db.getContact(memberId);
       if (contact == null) {
-        debugPrint('group send: no contact for \$memberId');
+        debugPrint('send: no contact for \$memberId');
         return false;
       }
       final cipher = await signalEncrypt(memberId, wrapped);
       final backPaired = await db.isBackPaired(memberId);
-      final useDirectOnion = !backPaired;
-      final result = useDirectOnion
-          ? await Future(() => engine.sendTo(contact['onion'] as String, cipher))
-          : await Future(() => engine.nostrSend(contact['xpub'] as String, cipher));
-      return result == 'ok';
+      final xpub = contact['xpub'] as String;
+      final onion = contact['onion'] as String;
+      // try direct tor first only when peer hasn't back-paired and we have
+      // their onion. on timeout / failure, fall back to nostr store-and-forward.
+      if (!backPaired && onion.isNotEmpty) {
+        final tor = await Future(() => engine.sendTo(onion, cipher));
+        if (tor == 'ok') return true;
+        debugPrint('send: tor direct failed (\$tor), trying nostr');
+      }
+      final n = await Future(() => engine.nostrSend(xpub, cipher));
+      if (n == 'ok') return true;
+      debugPrint('send: nostr also failed (\$n)');
+      return false;
     } catch (e) {
-      debugPrint('group send to \$memberId failed: \$e');
+      debugPrint('send to \$memberId failed: \$e');
       return false;
     }
   }

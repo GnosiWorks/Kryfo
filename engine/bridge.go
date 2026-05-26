@@ -413,7 +413,7 @@ return C.CString("error: tor not started")
 }
 
 log.Printf("halo: dialing %s...", addr)
-ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 defer cancel()
 
 dialer, err := t.Dialer(ctx, nil)
