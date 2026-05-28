@@ -117,12 +117,16 @@ class _ChatScreenState extends State<ChatScreen> {
   List<int> _matches = [];
   int _matchPos = 0;
   final Map<int, GlobalKey> _matchKeys = {};
+  String? _nickname;
 
   @override
   void initState() {
     super.initState();
     appState.addListener(_onAppStateChanged);
     currentChatPeer = widget.peerHaloId;
+    db.getContact(widget.peerHaloId).then((c) {
+      if (mounted) setState(() => _nickname = c?['nickname'] as String?);
+    });
     signalSession.peerXPubHex(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _peerXPub = v);
     });
@@ -649,6 +653,74 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
+  Future<void> _renameContact() async {
+    final ctrl = TextEditingController(text: _nickname ?? '');
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: HaloColors.surface2,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 20, right: 20, top: 20,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('name this contact',
+                style: HaloType.serif(size: 20, italic: true, color: HaloColors.amber)),
+            const SizedBox(height: 4),
+            Text(widget.peerHaloId,
+                style: HaloType.mono(size: 11, color: HaloColors.text3)),
+            const SizedBox(height: 16),
+            TextField(
+              controller: ctrl,
+              autofocus: true,
+              cursorColor: HaloColors.amber,
+              style: HaloType.sans(size: 15),
+              decoration: InputDecoration(
+                hintText: 'what should i call them?',
+                hintStyle: HaloType.serif(size: 15, italic: true, color: HaloColors.text3),
+                enabledBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: HaloColors.line2),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: HaloColors.amber),
+                ),
+              ),
+              onSubmitted: (v) => Navigator.pop(ctx, v),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                if ((_nickname ?? '').isNotEmpty)
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, ''),
+                    child: Text('remove',
+                        style: HaloType.sans(size: 13, color: HaloColors.text2)),
+                  ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, ctrl.text),
+                  child: Text('save',
+                      style: HaloType.sans(size: 14, weight: FontWeight.w500, color: HaloColors.amber)),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+    if (result == null) return;
+    final t = result.trim();
+    await db.setNickname(widget.peerHaloId, t.isEmpty ? null : t);
+    if (mounted) setState(() => _nickname = t.isEmpty ? null : t);
+  }
+
   @override
   Widget build(BuildContext context) {
     final searchActive = _searching && _query.isNotEmpty;
@@ -669,9 +741,11 @@ class _ChatScreenState extends State<ChatScreen> {
                   )
                 : _ChatHead(
                     haloId: widget.peerHaloId,
+                    nickname: _nickname,
                     avatarSeed: widget.avatarSeed,
                     onBack: () => Navigator.pop(context),
                     onSearch: _openSearch,
+                    onRename: _renameContact,
                   ),
             Expanded(
               child: _messages.isEmpty
@@ -745,14 +819,18 @@ class _ChatScreenState extends State<ChatScreen> {
 
 class _ChatHead extends StatelessWidget {
   final String haloId;
+  final String? nickname;
   final String avatarSeed;
   final VoidCallback onBack;
   final VoidCallback onSearch;
+  final VoidCallback onRename;
   const _ChatHead({
     required this.haloId,
+    this.nickname,
     required this.avatarSeed,
     required this.onBack,
     required this.onSearch,
+    required this.onRename,
   });
 
   @override
@@ -771,14 +849,29 @@ class _ChatHead extends StatelessWidget {
           HaloAvatar(seed: avatarSeed, size: 36),
           const SizedBox(width: 11),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(haloId,
-                    style: HaloType.sans(size: 14, weight: FontWeight.w500)),
-                Text('onion',
-                    style: HaloType.mono(size: 10, color: HaloColors.text2)),
-              ],
+            child: GestureDetector(
+              onTap: onRename,
+              behavior: HitTestBehavior.opaque,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    transitionBuilder: (child, anim) => FadeTransition(
+                      opacity: anim,
+                      child: ScaleTransition(
+                        scale: Tween<double>(begin: 0.98, end: 1.0).animate(anim),
+                        child: child,
+                      ),
+                    ),
+                    child: Text(nickname ?? haloId,
+                        key: ValueKey<String>(nickname ?? haloId),
+                        style: HaloType.sans(size: 14, weight: FontWeight.w500)),
+                  ),
+                  Text(nickname != null ? haloId : 'onion',
+                      style: HaloType.mono(size: 10, color: HaloColors.text2)),
+                ],
+              ),
             ),
           ),
           IconButton(
