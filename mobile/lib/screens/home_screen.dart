@@ -75,11 +75,13 @@ class HomeScreen extends StatelessWidget {
 
 class ContactPreview {
   final String haloId;
+  final String? nickname;
   final String? preview;
   final DateTime? when;
   final String avatarSeed;
   ContactPreview({
     required this.haloId,
+    this.nickname,
     this.preview,
     this.when,
     required this.avatarSeed,
@@ -357,7 +359,7 @@ class _HeroCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(c.haloId,
+                    Text(c.nickname ?? c.haloId,
                         style: HaloType.sans(size: 14, weight: FontWeight.w500, color: HaloColors.onAmber)),
                     Text(_relTime(c.when),
                         style: HaloType.mono(size: 11, color: HaloColors.onAmber.withOpacity(0.7))),
@@ -395,7 +397,7 @@ class _Row extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(c.haloId,
+                    Text(c.nickname ?? c.haloId,
                         style: HaloType.sans(size: 14, weight: FontWeight.w500, color: HaloColors.text)),
                     Text(_relTime(c.when),
                         style: HaloType.mono(size: 10, color: HaloColors.text3)),

@@ -254,7 +254,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 7,
+      version: 8,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -271,7 +271,8 @@ class HaloDb {
             xpub TEXT NOT NULL,
             first_seen INTEGER NOT NULL,
             last_seen INTEGER NOT NULL,
-            back_paired INTEGER NOT NULL DEFAULT 0
+            back_paired INTEGER NOT NULL DEFAULT 0,
+            nickname TEXT
           )
         ''');
         await db.execute('''
@@ -341,6 +342,9 @@ class HaloDb {
         }
         if (oldV < 6) {
           await db.execute('ALTER TABLE messages ADD COLUMN reply_to TEXT');
+        }
+        if (oldV < 8) {
+          await db.execute('ALTER TABLE contacts ADD COLUMN nickname TEXT');
         }
         if (oldV < 7) {
           await db.execute('ALTER TABLE messages ADD COLUMN group_id TEXT');
@@ -420,6 +424,13 @@ class HaloDb {
   Future<List<Map<String, Object?>>> contacts() async {
     final db = await open();
     return db.query('contacts', orderBy: 'last_seen DESC');
+  }
+
+  Future<void> setNickname(String haloId, String? name) async {
+    final db = await open();
+    final v = (name == null || name.trim().isEmpty) ? null : name.trim();
+    await db.update('contacts', {'nickname': v},
+        where: 'halo_id = ?', whereArgs: [haloId]);
   }
 
   Future<void> upsertContact(String haloId, String onion, String xpub) async {
@@ -1246,6 +1257,7 @@ class AppState extends ChangeNotifier {
       final ts = r['last_seen'] as int;
       return ContactPreview(
         haloId: r['halo_id'] as String,
+        nickname: r['nickname'] as String?,
         avatarSeed: r['halo_id'] as String,
         when: DateTime.fromMillisecondsSinceEpoch(ts),
       );
