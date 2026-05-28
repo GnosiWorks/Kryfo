@@ -106,6 +106,18 @@ class _ChatScreenState extends State<ChatScreen> {
   // in the composer's quote bar.
   _Msg? _replyTo;
 
+  // search-in-chat. _searching swaps the header for the search bar.
+  // _query is the live trimmed term; _matches holds indices into
+  // _messages that contain it; _matchPos is which hit is "current".
+  // _matchKeys gives each matched bubble a GlobalKey so we can scroll
+  // it into view.
+  bool _searching = false;
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+  List<int> _matches = [];
+  int _matchPos = 0;
+  final Map<int, GlobalKey> _matchKeys = {};
+
   @override
   void initState() {
     super.initState();
@@ -143,6 +155,82 @@ class _ChatScreenState extends State<ChatScreen> {
   void _onAppStateChanged() {
     if (!mounted) return;
     _loadMessages();
+  }
+
+  // ---- search ----------------------------------------------------------
+
+  void _openSearch() {
+    setState(() => _searching = true);
+  }
+
+  void _closeSearch() {
+    setState(() {
+      _searching = false;
+      _query = '';
+      _searchCtrl.clear();
+      _matches = [];
+      _matchPos = 0;
+      _matchKeys.clear();
+    });
+  }
+
+  // recompute matches whenever the query changes. jumps to the most
+  // recent hit (bottom of the list) by default, then scrolls it in.
+  void _onQueryChanged(String q) {
+    final query = q.trim();
+    final matches = <int>[];
+    if (query.isNotEmpty) {
+      final lower = query.toLowerCase();
+      for (var i = 0; i < _messages.length; i++) {
+        if (_messages[i].text.toLowerCase().contains(lower)) {
+          matches.add(i);
+        }
+      }
+    }
+    setState(() {
+      _query = query;
+      _matches = matches;
+      _matchPos = matches.isEmpty ? 0 : matches.length - 1;
+      _matchKeys
+        ..clear()
+        ..addEntries(matches.map((i) => MapEntry(i, GlobalKey())));
+    });
+    _scrollToCurrentMatch();
+  }
+
+  // chevrons: delta -1 = previous (older) hit, +1 = next (newer). wraps.
+  void _gotoMatch(int delta) {
+    if (_matches.isEmpty) return;
+    setState(() {
+      _matchPos = (_matchPos + delta) % _matches.length;
+      if (_matchPos < 0) _matchPos += _matches.length;
+    });
+    _scrollToCurrentMatch();
+  }
+
+  // rough-jump to the match's approximate position (so it gets built),
+  // then ensureVisible to center it precisely. avoids a scroll-to-index
+  // package dependency while still landing reliably for normal chats.
+  void _scrollToCurrentMatch() {
+    if (_matches.isEmpty || !_scrollCtrl.hasClients) return;
+    final idx = _matches[_matchPos];
+    if (_messages.isNotEmpty) {
+      final approx = (idx / _messages.length) *
+          _scrollCtrl.position.maxScrollExtent;
+      _scrollCtrl.jumpTo(
+          approx.clamp(0.0, _scrollCtrl.position.maxScrollExtent));
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _matchKeys[idx]?.currentContext;
+      if (ctx != null) {
+        Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOut,
+          alignment: 0.4,
+        );
+      }
+    });
   }
 
   // floating reaction picker — WhatsApp-style pill above the long-pressed
@@ -305,7 +393,12 @@ class _ChatScreenState extends State<ChatScreen> {
         ..clear()
         ..addAll(loaded);
     });
-    _scrollToEnd();
+    // if a search is active, recompute matches against the fresh list.
+    if (_searching && _query.isNotEmpty) {
+      _onQueryChanged(_query);
+    } else {
+      _scrollToEnd();
+    }
   }
 
   void _scrollToEnd() {
@@ -551,22 +644,35 @@ class _ChatScreenState extends State<ChatScreen> {
     if (currentChatPeer == widget.peerHaloId) currentChatPeer = null;
     appState.removeListener(_onAppStateChanged);
     _msgCtrl.dispose();
+    _searchCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final searchActive = _searching && _query.isNotEmpty;
     return Scaffold(
       backgroundColor: HaloColors.surface,
       body: SafeArea(
         child: Column(
           children: [
-            _ChatHead(
-              haloId: widget.peerHaloId,
-              avatarSeed: widget.avatarSeed,
-              onBack: () => Navigator.pop(context),
-            ),
+            _searching
+                ? _SearchHead(
+                    controller: _searchCtrl,
+                    matchCount: _matches.length,
+                    matchPos: _matches.isEmpty ? 0 : _matchPos + 1,
+                    onChanged: _onQueryChanged,
+                    onPrev: () => _gotoMatch(-1),
+                    onNext: () => _gotoMatch(1),
+                    onClose: _closeSearch,
+                  )
+                : _ChatHead(
+                    haloId: widget.peerHaloId,
+                    avatarSeed: widget.avatarSeed,
+                    onBack: () => Navigator.pop(context),
+                    onSearch: _openSearch,
+                  ),
             Expanded(
               child: _messages.isEmpty
                   ? const _EmptyConversation()
@@ -591,13 +697,22 @@ class _ChatScreenState extends State<ChatScreen> {
                             quoted = 'message unavailable';
                           }
                         }
+                        final isMatch = searchActive && _matches.contains(i);
+                        final isCurrent = searchActive &&
+                            _matches.isNotEmpty &&
+                            _matches[_matchPos] == i;
+                        final dimmed = searchActive && !isMatch;
                         return _Bubble(
+                          key: isMatch ? _matchKeys[i] : null,
                           msg: m,
                           onRetry: _retry,
                           onLongPress: (ctx) =>
                               _showEmojiPickerAt(ctx, m),
                           quotedText: quoted,
                           quotedAuthor: quotedAuthor,
+                          query: searchActive ? _query : '',
+                          isCurrentMatch: isCurrent,
+                          dimmed: dimmed,
                         );
                       },
                     ),
@@ -632,12 +747,18 @@ class _ChatHead extends StatelessWidget {
   final String haloId;
   final String avatarSeed;
   final VoidCallback onBack;
-  const _ChatHead({required this.haloId, required this.avatarSeed, required this.onBack});
+  final VoidCallback onSearch;
+  const _ChatHead({
+    required this.haloId,
+    required this.avatarSeed,
+    required this.onBack,
+    required this.onSearch,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(4, 4, 16, 12),
+      padding: const EdgeInsets.fromLTRB(4, 4, 8, 12),
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: HaloColors.line, width: 0.5)),
       ),
@@ -660,7 +781,222 @@ class _ChatHead extends StatelessWidget {
               ],
             ),
           ),
+          IconButton(
+            icon: const Icon(Icons.search_rounded,
+                color: HaloColors.text2, size: 21),
+            onPressed: onSearch,
+          ),
         ],
+      ),
+    );
+  }
+}
+
+// search bar that replaces the chat header when search is active. slides
+// + fades in. magnifier glyph, italic-serif hint, mono match counter, and
+// up/down chevrons to jump between hits. matches the search_mockup spec.
+class _SearchHead extends StatefulWidget {
+  final TextEditingController controller;
+  final int matchCount;
+  final int matchPos; // 1-based; 0 when no matches
+  final ValueChanged<String> onChanged;
+  final VoidCallback onPrev;
+  final VoidCallback onNext;
+  final VoidCallback onClose;
+  const _SearchHead({
+    required this.controller,
+    required this.matchCount,
+    required this.matchPos,
+    required this.onChanged,
+    required this.onPrev,
+    required this.onNext,
+    required this.onClose,
+  });
+
+  @override
+  State<_SearchHead> createState() => _SearchHeadState();
+}
+
+class _SearchHeadState extends State<_SearchHead> {
+  final _focus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focus.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasQuery = widget.controller.text.trim().isNotEmpty;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeOut,
+      builder: (context, t, child) => Opacity(
+        opacity: t,
+        child: Transform.translate(
+          offset: Offset(0, -10 * (1 - t)),
+          child: child,
+        ),
+      ),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(8, 6, 12, 11),
+        decoration: const BoxDecoration(
+          border: Border(
+              bottom: BorderSide(color: HaloColors.line, width: 0.5)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.close_rounded,
+                      color: HaloColors.text2, size: 20),
+                  onPressed: widget.onClose,
+                ),
+                Expanded(
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: HaloColors.surface2,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: HaloColors.line2, width: 0.5),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.search_rounded,
+                            size: 15, color: HaloColors.amber),
+                        const SizedBox(width: 9),
+                        Expanded(
+                          child: TextField(
+                            controller: widget.controller,
+                            focusNode: _focus,
+                            onChanged: widget.onChanged,
+                            cursorColor: HaloColors.amber,
+                            cursorWidth: 1.5,
+                            style: HaloType.sans(
+                                size: 13, color: HaloColors.text),
+                            decoration: InputDecoration(
+                              isDense: true,
+                              border: InputBorder.none,
+                              hintText: 'find in conversation',
+                              hintStyle: HaloType.serif(
+                                  size: 13,
+                                  italic: true,
+                                  color: HaloColors.text3),
+                              contentPadding:
+                                  const EdgeInsets.symmetric(vertical: 10),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 180),
+              transitionBuilder: (child, anim) => SizeTransition(
+                sizeFactor: anim,
+                axisAlignment: -1,
+                child: FadeTransition(opacity: anim, child: child),
+              ),
+              child: hasQuery
+                  ? Padding(
+                      key: const ValueKey('search-meta'),
+                      padding: const EdgeInsets.fromLTRB(6, 9, 6, 0),
+                      child: Row(
+                        children: [
+                          Text.rich(
+                            TextSpan(
+                              style: HaloType.mono(
+                                  size: 10, color: HaloColors.text2),
+                              children: [
+                                TextSpan(
+                                  text: widget.matchCount == 0
+                                      ? 'no matches'
+                                      : '${widget.matchPos}',
+                                  style: HaloType.mono(
+                                      size: 10,
+                                      color: widget.matchCount == 0
+                                          ? HaloColors.text3
+                                          : HaloColors.amber,
+                                      weight: FontWeight.w500),
+                                ),
+                                if (widget.matchCount > 0)
+                                  TextSpan(
+                                      text:
+                                          ' of ${widget.matchCount} ${widget.matchCount == 1 ? 'match' : 'matches'}'),
+                              ],
+                            ),
+                          ),
+                          const Spacer(),
+                          _NavBtn(
+                            icon: Icons.keyboard_arrow_up_rounded,
+                            enabled: widget.matchCount > 0,
+                            onTap: widget.onPrev,
+                          ),
+                          const SizedBox(width: 5),
+                          _NavBtn(
+                            icon: Icons.keyboard_arrow_down_rounded,
+                            enabled: widget.matchCount > 0,
+                            onTap: widget.onNext,
+                          ),
+                        ],
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// small up/down chevron button for the search match navigator.
+class _NavBtn extends StatelessWidget {
+  final IconData icon;
+  final bool enabled;
+  final VoidCallback onTap;
+  const _NavBtn({
+    required this.icon,
+    required this.enabled,
+    required this.onTap,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      child: Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: enabled ? HaloColors.amberSoft : HaloColors.surface2,
+          borderRadius: BorderRadius.circular(7),
+          border: Border.all(
+            color: enabled
+                ? HaloColors.amber.withOpacity(0.45)
+                : HaloColors.line2,
+            width: 0.5,
+          ),
+        ),
+        alignment: Alignment.center,
+        child: Icon(icon,
+            size: 16,
+            color: enabled ? HaloColors.amber : HaloColors.text3),
       ),
     );
   }
@@ -672,13 +1008,64 @@ class _Bubble extends StatelessWidget {
   final void Function(BuildContext)? onLongPress;
   final String? quotedText;
   final String? quotedAuthor;
+  // search context: the live query (empty when not searching), whether
+  // this bubble is the current hit (gets a soft amber halo), and whether
+  // it should dim (search active but this isn't a match).
+  final String query;
+  final bool isCurrentMatch;
+  final bool dimmed;
   const _Bubble({
+    super.key,
     required this.msg,
     this.onRetry,
     this.onLongPress,
     this.quotedText,
     this.quotedAuthor,
+    this.query = '',
+    this.isCurrentMatch = false,
+    this.dimmed = false,
   });
+
+  // builds the message body, underlining query matches in amber. plain
+  // Text when there's no active query.
+  Widget _body(bool isOut) {
+    final base = HaloType.sans(
+      size: 14,
+      color: isOut ? HaloColors.onAmber : HaloColors.text,
+      height: 1.4,
+    );
+    if (query.isEmpty) {
+      return Text(msg.text, style: base);
+    }
+    final text = msg.text;
+    final lower = text.toLowerCase();
+    final q = query.toLowerCase();
+    final spans = <TextSpan>[];
+    var start = 0;
+    while (true) {
+      final hit = lower.indexOf(q, start);
+      if (hit < 0) {
+        spans.add(TextSpan(text: text.substring(start)));
+        break;
+      }
+      if (hit > start) {
+        spans.add(TextSpan(text: text.substring(start, hit)));
+      }
+      spans.add(TextSpan(
+        text: text.substring(hit, hit + q.length),
+        style: TextStyle(
+          color: isOut ? HaloColors.onAmber : HaloColors.amber,
+          fontWeight: FontWeight.w600,
+          decoration: TextDecoration.underline,
+          decorationColor: isOut ? HaloColors.onAmber : HaloColors.amber,
+          decorationThickness: 1.5,
+        ),
+      ));
+      start = hit + q.length;
+    }
+    return Text.rich(TextSpan(style: base, children: spans));
+  }
+
   @override
   Widget build(BuildContext context) {
     final isOut = msg.direction == 'out';
@@ -692,9 +1079,9 @@ class _Bubble extends StatelessWidget {
         : 9999999;
     final isExpiring = msg.burnAt != null && remainingMs < 600;
     return AnimatedOpacity(
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 250),
       curve: Curves.easeOut,
-      opacity: isExpiring ? 0.0 : 1.0,
+      opacity: isExpiring ? 0.0 : (dimmed ? 0.28 : 1.0),
       child: AnimatedScale(
         duration: const Duration(milliseconds: 500),
         curve: Curves.easeOut,
@@ -727,6 +1114,19 @@ class _Bubble extends StatelessWidget {
                   bottomLeft: Radius.circular(isOut ? 14 : 4),
                   bottomRight: Radius.circular(isOut ? 4 : 14),
                 ),
+                border: isCurrentMatch
+                    ? Border.all(color: HaloColors.amber, width: 1)
+                    : null,
+                boxShadow: isCurrentMatch
+                    ? [
+                        BoxShadow(
+                          color: HaloColors.amber.withOpacity(0.28),
+                          blurRadius: 22,
+                          spreadRadius: -4,
+                          offset: const Offset(0, 6),
+                        ),
+                      ]
+                    : null,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -782,12 +1182,7 @@ class _Bubble extends StatelessWidget {
                       ),
                     ),
                   ],
-                  Text(msg.text,
-                      style: HaloType.sans(
-                        size: 14,
-                        color: isOut ? HaloColors.onAmber : HaloColors.text,
-                        height: 1.4,
-                      )),
+                  _body(isOut),
                   if (showMeta) ...[
                     const SizedBox(height: 4),
                     Row(
