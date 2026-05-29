@@ -1248,22 +1248,33 @@ class AppState extends ChangeNotifier {
       if (msgs.isEmpty) return;
       debugPrint('nostr poll: ${msgs.length} messages');
       for (final m in msgs) {
-        final haloId = _xPubToHaloId[m.peer];
-        debugPrint('  peer xpub=${m.peer.substring(0,12)}... haloId=$haloId cipher=${m.cipher.length}b');
-        if (haloId == null) continue;
-        final wrapped = await signalDecrypt(haloId, m.cipher);
-        if (wrapped != null) {
-          final env = unwrapMessage(wrapped);
-          if (env.endpoint != null) {
-            await savePeerEndpoint(haloId, env.endpoint!);
+        var haloId = _xPubToHaloId[m.peer];
+        String? wrapped =
+            haloId == null ? null : await signalDecrypt(haloId, m.cipher);
+        // fallback: xpub not mapped yet (or it decrypted wrong) — trial
+        // against known contacts like the direct path, then remember it.
+        if (wrapped == null) {
+          for (final c in contacts) {
+            if (c.haloId == haloId) continue;
+            final p = await signalDecrypt(c.haloId, m.cipher);
+            if (p != null) {
+              wrapped = p;
+              haloId = c.haloId;
+              _xPubToHaloId[m.peer] = c.haloId;
+              break;
+            }
           }
-          final plain = env.message;
-          debugPrint('  decrypted: $plain');
-          await _applyIncomingPayload(haloId, env);
-          notifyListeners();
-        } else {
-          debugPrint('  signalDecrypt returned null');
         }
+        if (wrapped == null) {
+          debugPrint('  nostr: no known contact could decrypt');
+          continue;
+        }
+        final env = unwrapMessage(wrapped);
+        if (env.endpoint != null) {
+          await savePeerEndpoint(haloId!, env.endpoint!);
+        }
+        await _applyIncomingPayload(haloId!, env);
+        notifyListeners();
       }
     });
     final _stored = await const FlutterSecureStorage().read(key: 'onboarding_done');
