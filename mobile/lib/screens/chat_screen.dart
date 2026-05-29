@@ -4,7 +4,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../signal_session.dart';
-import '../message_envelope.dart' show wrapMessage, unwrapMessage, SenderInfo, ReactionFrame, savePeerEndpoint, loadPeerEndpoint;
+import '../message_envelope.dart' show wrapMessage, unwrapMessage, SenderInfo, ReactionFrame, EditFrame, savePeerEndpoint, loadPeerEndpoint;
 import '../theme.dart';
 import '../widgets/halo_avatar.dart';
 import '../main.dart' show engine, db, signalEncrypt, signalDecrypt, appState, currentChatPeer;
@@ -33,7 +33,7 @@ class ChatScreen extends StatefulWidget {
 
 class _Msg {
   final String direction;
-  final String text;
+  String text;
   final DateTime when;
   final int? burnAt;
   String? msgUid;
@@ -41,6 +41,7 @@ class _Msg {
   final String? replyTo;
   bool sending;
   bool failed;
+  bool edited;
   Map<String, String> reactions;
   _Msg(this.direction, this.text, this.when,
       {this.burnAt,
@@ -48,6 +49,7 @@ class _Msg {
       this.replyTo,
       this.sending = false,
       this.failed = false,
+      this.edited = false,
       Map<String, String>? reactions})
       : reactions = reactions ?? <String, String>{};
 }
@@ -123,6 +125,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     appState.addListener(_onAppStateChanged);
+    appState.loadSendMode();
     currentChatPeer = widget.peerHaloId;
     db.getContact(widget.peerHaloId).then((c) {
       if (mounted) setState(() => _nickname = c?['nickname'] as String?);
@@ -256,17 +259,15 @@ class _ChatScreenState extends State<ChatScreen> {
     if (box == null) return;
     final offset = box.localToGlobal(Offset.zero);
     final bubbleSize = box.size;
-    final screen = MediaQuery.of(context).size;
-
-    const pickerW = 296.0;
     const pickerH = 54.0;
     // prefer above the bubble. fall back to below if too close to the top.
     double top = offset.dy - pickerH - 10;
     if (top < MediaQuery.of(context).padding.top + 8) {
       top = offset.dy + bubbleSize.height + 10;
     }
-    double left = offset.dx + bubbleSize.width / 2 - pickerW / 2;
-    left = left.clamp(12.0, screen.width - pickerW - 12);
+    // pin the bar to the message's side so reply + edit never
+    // run off the right edge. 12px margin from screen edge.
+    final alignRight = target.direction == 'out';
 
     late OverlayEntry entry;
     void dismiss() {
@@ -284,19 +285,71 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           Positioned(
-            left: left,
             top: top,
-            child: _EmojiPickerBubble(
-              emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
-              selected: target.reactions[''],
-              onPick: (e) {
-                dismiss();
-                _toggleReaction(target, e);
-              },
-              onReply: () {
-                dismiss();
-                setState(() => _replyTo = target);
-              },
+            left: alignRight ? null : 12,
+            right: alignRight ? 12 : null,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: target.direction == 'out'
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
+              children: [
+                _EmojiPickerBubble(
+                  emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
+                  selected: target.reactions[''],
+                  onPick: (e) {
+                    dismiss();
+                    _toggleReaction(target, e);
+                  },
+                  onReply: () {
+                    dismiss();
+                    setState(() => _replyTo = target);
+                  },
+                ),
+                if (target.direction == 'out') ...[
+                  const SizedBox(height: 6),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(999),
+                      onTap: () {
+                        dismiss();
+                        _editMessage(target);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: HaloColors.surface3,
+                          border: Border.all(
+                              color: HaloColors.line, width: 0.5),
+                          borderRadius: BorderRadius.circular(999),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.5),
+                              blurRadius: 20,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.edit_outlined,
+                                size: 14, color: HaloColors.amber),
+                            const SizedBox(width: 6),
+                            Text('edit',
+                                style: HaloType.sans(
+                                    size: 12,
+                                    weight: FontWeight.w500,
+                                    color: HaloColors.amber)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],
@@ -318,6 +371,93 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   int _msgUidCounter = 0;
+
+  // open an edit sheet for own message m. saves locally + tells the peer.
+  Future<void> _editMessage(_Msg m) async {
+    if (m.msgUid == null) {
+      final uid = _newMsgUid();
+      m.msgUid = uid;
+      await db.assignUidIfMissing(
+          widget.peerHaloId, m.when.millisecondsSinceEpoch, uid);
+    }
+    final ctrl = TextEditingController(text: m.text);
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: HaloColors.surface2,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 20, right: 20, top: 20,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('edit message',
+                style: HaloType.serif(size: 20, italic: true, color: HaloColors.amber)),
+            const SizedBox(height: 14),
+            TextField(
+              controller: ctrl,
+              autofocus: true,
+              maxLines: null,
+              cursorColor: HaloColors.amber,
+              style: HaloType.sans(size: 15),
+              decoration: const InputDecoration(
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: HaloColors.line2),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: HaloColors.amber),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text('cancel',
+                      style: HaloType.sans(size: 13, color: HaloColors.text2)),
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, ctrl.text),
+                  child: Text('save',
+                      style: HaloType.sans(size: 14, weight: FontWeight.w500, color: HaloColors.amber)),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+    if (result == null) return;
+    final newText = result.trim();
+    if (newText.isEmpty || newText == m.text) return;
+    setState(() {
+      m.text = newText;
+      m.edited = true;
+    });
+    await db.editMessage(m.msgUid!, newText);
+    try {
+      final wrapped = await wrapMessage(
+        '',
+        edit: EditFrame(targetUid: m.msgUid!, newText: newText),
+      );
+      final cipher = await signalEncrypt(widget.peerHaloId, wrapped);
+      final useDirectOnion = !_backPaired || _peerXPub == null;
+      final f = useDirectOnion
+          ? Future(() => engine.sendTo(widget.peerOnion, cipher))
+          : Future(() => engine.nostrSend(_peerXPub!, cipher));
+      await f;
+    } catch (e) {
+      debugPrint('edit send failed: $e');
+    }
+  }
 
   // toggle a reaction on a message. tap same emoji again to remove.
   // tap a different emoji to replace.
@@ -379,6 +519,7 @@ class _ChatScreenState extends State<ChatScreen> {
         burnAt: r['burn_at'] as int?,
         msgUid: uid,
         replyTo: r['reply_to'] as String?,
+        edited: (r['edited'] as int? ?? 0) == 1,
       ));
       if (uid != null) uids.add(uid);
     }
@@ -463,7 +604,7 @@ class _ChatScreenState extends State<ChatScreen> {
       return;
     }
     // sprint 7.5: fire-and-forget. optimistic ✓ now; failure marks tap-to-retry
-    setState(() { msg.sending = false; });
+    // stays in 'sending' until the transport replies below.
     // before the peer back-pairs with us, force direct-onion so their
     // drain triggers the back-pair flow. nostr would dead-end because
     // they aren't subscribed to our xpub yet. once we receive anything
@@ -485,6 +626,7 @@ class _ChatScreenState extends State<ChatScreen> {
     sendFuture.then((result) async {
       if (!mounted) return;
       if (result == 'ok') {
+        setState(() => msg.sending = false);
         loadPeerEndpoint(widget.peerHaloId).then((endpoint) {
           if (endpoint != null && endpoint.isNotEmpty) {
             Future(() => engine.ntfyPing(endpoint));
@@ -492,7 +634,7 @@ class _ChatScreenState extends State<ChatScreen> {
         });
         await db.saveMessage(widget.peerHaloId, 'out', msg.text);
       } else {
-        setState(() { msg.failed = true; _status = result; });
+        setState(() { msg.sending = false; msg.failed = true; _status = result; });
       }
     });
   }
@@ -602,7 +744,7 @@ class _ChatScreenState extends State<ChatScreen> {
       return;
     }
     // sprint 7.5: fire-and-forget. optimistic ✓ now; failure marks tap-to-retry
-    setState(() { msg.sending = false; _sending = false; _status = ''; });
+    setState(() { _sending = false; _status = ''; });
     // before the peer back-pairs with us, force direct-onion so their
     // drain triggers the back-pair flow. nostr would dead-end because
     // they aren't subscribed to our xpub yet. once we receive anything
@@ -624,6 +766,7 @@ class _ChatScreenState extends State<ChatScreen> {
     sendFuture.then((result) async {
       if (!mounted) return;
       if (result == 'ok') {
+        setState(() => msg.sending = false);
         loadPeerEndpoint(widget.peerHaloId).then((endpoint) {
           if (endpoint != null && endpoint.isNotEmpty) {
             Future(() => engine.ntfyPing(endpoint));
@@ -636,7 +779,7 @@ class _ChatScreenState extends State<ChatScreen> {
             msgUid: msgUid,
             replyTo: replyToUid);
       } else {
-        setState(() { msg.failed = true; _status = result; });
+        setState(() { msg.sending = false; msg.failed = true; _status = result; });
       }
     });
   }
@@ -1288,14 +1431,19 @@ class _Bubble extends StatelessWidget {
                               color: metaColor,
                               letterSpacing: 0.4,
                             )),
+                        if (msg.edited) ...[
+                          const SizedBox(width: 5),
+                          Text('edited',
+                              style: TextStyle(
+                                fontFamily: 'JetBrains Mono',
+                                fontSize: 9,
+                                color: metaColor,
+                                fontStyle: FontStyle.italic,
+                                letterSpacing: 0.4,
+                              )),
+                        ],
                         const SizedBox(width: 3),
-                        Text('✓',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: metaColor,
-                              fontWeight: FontWeight.w700,
-                              height: 1,
-                            )),
+                        Text('✓', style: TextStyle(fontSize: 11, color: metaColor, fontWeight: FontWeight.w700, height: 1)),
                       ],
                     ),
                   ],
@@ -1350,10 +1498,10 @@ class _Bubble extends StatelessWidget {
             ),
             if (showPill) ...[
               const SizedBox(height: 4),
-              const Padding(
-                padding: EdgeInsets.only(right: 4),
-                child: SendPill(mode: PrivacyMode.normal),
-              ),
+              Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: SendPill(mode: _pmFrom(appState.sendMode)),
+                ),
             ],
           ],
         ),
@@ -1814,3 +1962,11 @@ class _Composer extends StatelessWidget {
     );
   }
 }
+
+// map the saved mode string to the pill's enum. private = full tor (3 hops),
+// the real route for every message today.
+PrivacyMode _pmFrom(String m) => m == 'fast'
+    ? PrivacyMode.fast
+    : m == 'normal'
+        ? PrivacyMode.normal
+        : PrivacyMode.private;

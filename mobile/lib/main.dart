@@ -36,6 +36,7 @@ import 'widgets/motion.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
+import 'dart:isolate';
 
 typedef CStrFn = Pointer<Utf8> Function();
 typedef CStrFnDart = Pointer<Utf8> Function();
@@ -152,12 +153,9 @@ class HaloEngine {
     finally { calloc.free(p1); calloc.free(p2); }
   }
 
-  String nostrSend(String peerXPubHex, String b64Cipher) {
-    final p1 = peerXPubHex.toNativeUtf8();
-    final p2 = b64Cipher.toNativeUtf8();
-    try { return _nostrSend(p1, p2).toDartString(); }
-    finally { malloc.free(p1); malloc.free(p2); }
-  }
+  // offloaded to a background isolate so a slow relay never freezes the ui.
+  Future<String> nostrSend(String peerXPubHex, String b64Cipher) =>
+      _sendOnIsolate((nostr: true, a: peerXPubHex, b: b64Cipher));
 
   String nostrSubscribe(String peerXPubHex) {
     final ptr = peerXPubHex.toNativeUtf8();
@@ -208,16 +206,30 @@ class HaloEngine {
     }
   }
 
-  String sendTo(String addr, String msg) {
-    final cAddr = addr.toNativeUtf8();
-    final cMsg = msg.toNativeUtf8();
+  // offloaded to a background isolate so a slow tor dial never freezes the ui.
+  Future<String> sendTo(String addr, String msg) =>
+      _sendOnIsolate((nostr: false, a: addr, b: msg));
+}
+
+// run a blocking native send on a throwaway background isolate so the ui
+// thread never stalls on a tor dial. opens its own handle to libhalo —
+// same process image, so it shares the running tor — and frees its strings.
+Future<String> _sendOnIsolate(({bool nostr, String a, String b}) args) {
+  return Isolate.run(() {
+    final lib = Platform.isAndroid
+        ? DynamicLibrary.open('libhalo.so')
+        : DynamicLibrary.process();
+    final fn = lib.lookupFunction<TwoArgFn, TwoArgFnDart>(
+        args.nostr ? 'HaloNostrSend' : 'HaloSendTo');
+    final p1 = args.a.toNativeUtf8();
+    final p2 = args.b.toNativeUtf8();
     try {
-      return _send(cAddr, cMsg).toDartString();
+      return fn(p1, p2).toDartString();
     } finally {
-      calloc.free(cAddr);
-      calloc.free(cMsg);
+      malloc.free(p1);
+      malloc.free(p2);
     }
-  }
+  });
 }
 
 class HaloDb {
@@ -254,7 +266,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 8,
+      version: 9,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -286,6 +298,7 @@ class HaloDb {
             msg_uid TEXT,
             reply_to TEXT,
             group_id TEXT,
+            edited INTEGER NOT NULL DEFAULT 0,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
         ''');
@@ -345,6 +358,9 @@ class HaloDb {
         }
         if (oldV < 8) {
           await db.execute('ALTER TABLE contacts ADD COLUMN nickname TEXT');
+        }
+        if (oldV < 9) {
+          await db.execute('ALTER TABLE messages ADD COLUMN edited INTEGER NOT NULL DEFAULT 0');
         }
         if (oldV < 7) {
           await db.execute('ALTER TABLE messages ADD COLUMN group_id TEXT');
@@ -618,6 +634,12 @@ class HaloDb {
 
   // add or replace a reaction. reactor is '' for self, peer's halo id
   // for theirs. one reaction per (msgUid, reactor) — re-reacting replaces.
+  Future<void> editMessage(String msgUid, String newText) async {
+    final db = await open();
+    await db.update('messages', {'plaintext': newText, 'edited': 1},
+        where: 'msg_uid = ?', whereArgs: [msgUid]);
+  }
+
   Future<void> addReaction(String msgUid, String reactor, String emoji) async {
     final db = await open();
     await db.insert(
@@ -890,6 +912,21 @@ class GroupPreview {
 }
 
 class AppState extends ChangeNotifier {
+  // global send-privacy mode: 'fast' | 'normal' | 'private'. cosmetic for now —
+  // every message routes over full tor until fast/hop modes wire up (phase 2).
+  String _sendMode = 'private';
+  String get sendMode => _sendMode;
+  Future<void> loadSendMode() async {
+    _sendMode =
+        await const FlutterSecureStorage().read(key: 'send_mode') ?? 'private';
+    notifyListeners();
+  }
+  Future<void> setSendMode(String m) async {
+    _sendMode = m;
+    notifyListeners();
+    await const FlutterSecureStorage().write(key: 'send_mode', value: m);
+  }
+
   NtfyListener? _ntfyListener;
 
   Future<void> applyPushMode(PushMode m) async {
@@ -927,6 +964,11 @@ class AppState extends ChangeNotifier {
       } else {
         await db.addReaction(r.targetUid, senderHaloId, r.emoji);
       }
+      return;
+    }
+    // 2.5) edit — swap the text of an existing message
+    if (env.edit != null) {
+      await db.editMessage(env.edit!.targetUid, env.edit!.newText);
       return;
     }
     // 3) data message — could be 1:1 or group
@@ -1326,10 +1368,10 @@ class AppState extends ChangeNotifier {
     final wrapped = await wrapMessage('',
         groupId: groupId, groupControl: gc, sender: _mySender());
     final members = await db.getGroupMembers(groupId);
-    for (final memberId in members) {
-      if (memberId == myId) continue;
-      await _sendOneEnvelope(memberId, wrapped);
-    }
+    await Future.wait([
+      for (final memberId in members)
+        if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
+    ]);
   }
 
   // send a normal text message into a group. saves the local row, then
@@ -1357,11 +1399,11 @@ class AppState extends ChangeNotifier {
         groupId: groupId,
         sender: _mySender());
     final members = await db.getGroupMembers(groupId);
-    bool anyOk = false;
-    for (final memberId in members) {
-      if (memberId == myId) continue;
-      if (await _sendOneEnvelope(memberId, wrapped)) anyOk = true;
-    }
+    final results = await Future.wait([
+      for (final memberId in members)
+        if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
+    ]);
+    final anyOk = results.any((ok) => ok);
     notifyListeners();
     return anyOk;
   }
@@ -1379,10 +1421,10 @@ class AppState extends ChangeNotifier {
         reaction: ReactionFrame(targetUid: targetMsgUid, emoji: emoji),
         sender: _mySender());
     final members = await db.getGroupMembers(groupId);
-    for (final memberId in members) {
-      if (memberId == myId) continue;
-      await _sendOneEnvelope(memberId, wrapped);
-    }
+    await Future.wait([
+      for (final memberId in members)
+        if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
+    ]);
     notifyListeners();
   }
 
