@@ -1,8 +1,8 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 
-// big animated onion for the tor send / loading state. our own mark, not the
-// tor logo. inner layers pulse outward; bulb and sprouts hold still.
+// self-drawing onion for the tor boot screen. realistic bulb with fanned
+// shoots and a root tuft; the outline sketches itself first, then the inner
+// layers fill in, over a faint guide. our own mark, not the tor logo.
 class OnionLoader extends StatefulWidget {
   final double size;
   final Color color;
@@ -14,7 +14,7 @@ class OnionLoader extends StatefulWidget {
 
 class _OnionLoaderState extends State<OnionLoader> with SingleTickerProviderStateMixin {
   late final AnimationController _c =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 2400))..repeat();
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 3200))..repeat();
 
   @override
   void dispose() {
@@ -26,7 +26,7 @@ class _OnionLoaderState extends State<OnionLoader> with SingleTickerProviderStat
   Widget build(BuildContext context) => AnimatedBuilder(
         animation: _c,
         builder: (_, __) => CustomPaint(
-          size: Size(widget.size, widget.size * 150 / 120),
+          size: Size(widget.size, widget.size * 162 / 120),
           painter: _OnionPainter(_c.value, widget.color),
         ),
       );
@@ -37,64 +37,75 @@ class _OnionPainter extends CustomPainter {
   final Color color;
   _OnionPainter(this.t, this.color);
 
-  double _pulse(double phase) => 0.25 + ((sin((t - phase) * 2 * pi) + 1) / 2) * 0.75;
-
-  Paint _stroke(double w, double a) => Paint()
-    ..style = PaintingStyle.stroke
-    ..strokeCap = StrokeCap.round
-    ..strokeJoin = StrokeJoin.round
-    ..strokeWidth = w
-    ..color = color.withOpacity(a);
-
-  Path _p(void Function(Path) build) {
+  Path _structure() {
     final p = Path();
-    build(p);
+    p.moveTo(60, 50);
+    p.cubicTo(40, 52, 26, 70, 26, 96);
+    p.cubicTo(26, 120, 42, 134, 60, 134);
+    p.cubicTo(78, 134, 94, 120, 94, 96);
+    p.cubicTo(94, 70, 80, 52, 60, 50);
+    p.close();
+    p.moveTo(57, 50); p.cubicTo(51, 38, 48, 28, 50, 16);
+    p.moveTo(59, 49); p.cubicTo(58, 34, 59, 24, 63, 13);
+    p.moveTo(60, 49); p.cubicTo(62, 33, 66, 22, 72, 12);
+    p.moveTo(61, 50); p.cubicTo(67, 37, 75, 28, 83, 21);
+    p.moveTo(62, 51); p.cubicTo(70, 42, 78, 36, 86, 33);
+    p.moveTo(54, 134); p.cubicTo(52, 141, 50, 146, 48, 151);
+    p.moveTo(58, 134); p.cubicTo(57, 142, 56, 148, 55, 155);
+    p.moveTo(60, 134); p.cubicTo(60, 143, 60, 150, 60, 157);
+    p.moveTo(62, 134); p.cubicTo(63, 142, 64, 148, 65, 155);
+    p.moveTo(66, 134); p.cubicTo(68, 141, 70, 146, 72, 151);
     return p;
   }
 
+  Path _layers() {
+    final p = Path();
+    p.moveTo(52, 58); p.cubicTo(38, 70, 34, 94, 42, 122);
+    p.moveTo(68, 58); p.cubicTo(82, 70, 86, 94, 78, 122);
+    p.moveTo(57, 60); p.cubicTo(49, 72, 48, 96, 53, 120);
+    p.moveTo(63, 60); p.cubicTo(71, 72, 72, 96, 67, 120);
+    p.moveTo(60, 60); p.cubicTo(59, 86, 59, 108, 60, 128);
+    return p;
+  }
+
+  void _drawPartial(Canvas c, Path path, double frac, Paint paint) {
+    if (frac <= 0) return;
+    if (frac >= 1) {
+      c.drawPath(path, paint);
+      return;
+    }
+    final metrics = path.computeMetrics().toList();
+    final total = metrics.fold<double>(0, (s, m) => s + m.length);
+    var budget = total * frac;
+    for (final m in metrics) {
+      if (budget <= 0) break;
+      final take = budget >= m.length ? m.length : budget;
+      c.drawPath(m.extractPath(0, take), paint);
+      budget -= take;
+    }
+  }
+
+  Paint _p(double w, Color col) => Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = w
+    ..strokeCap = StrokeCap.round
+    ..strokeJoin = StrokeJoin.round
+    ..color = col;
+
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.scale(size.width / 120, size.height / 150);
+    canvas.scale(size.width / 120, size.height / 162);
+    final st = _structure();
+    final ly = _layers();
 
-    canvas.drawPath(
-        _p((p) => p
-          ..moveTo(58, 56)
-          ..cubicTo(38, 58, 24, 76, 24, 100)
-          ..cubicTo(24, 126, 40, 140, 58, 140)
-          ..cubicTo(76, 140, 92, 126, 92, 100)
-          ..cubicTo(92, 76, 78, 58, 58, 56)
-          ..close()),
-        _stroke(2.6, 1));
+    final guide = color.withValues(alpha: 0.18);
+    canvas.drawPath(st, _p(1.5, guide));
+    canvas.drawPath(ly, _p(1.3, guide));
 
-    canvas.drawPath(
-        _p((p) => p
-          ..moveTo(50, 60)
-          ..cubicTo(54, 56, 62, 56, 67, 61)),
-        _stroke(1.8, 1));
-
-    final List<List<double>> blades = [
-      [56, 56, 52, 42, 50, 32, 53, 20],
-      [58, 55, 57, 38, 59, 26, 64, 15],
-      [59, 55, 63, 37, 70, 24, 79, 13],
-      [60, 56, 67, 41, 78, 32, 89, 26],
-    ];
-    for (final b in blades) {
-      canvas.drawPath(
-          _p((p) => p
-            ..moveTo(b[0], b[1])
-            ..cubicTo(b[2], b[3], b[4], b[5], b[6], b[7])),
-          _stroke(2.2, 1));
-    }
-
-    final outer = _pulse(0.4);
-    canvas.drawPath(_p((p) => p..moveTo(49, 70)..cubicTo(37, 84, 35, 104, 41, 124)), _stroke(1.6, outer));
-    canvas.drawPath(_p((p) => p..moveTo(67, 70)..cubicTo(79, 84, 81, 104, 75, 124)), _stroke(1.6, outer));
-
-    final mid = _pulse(0.2);
-    canvas.drawPath(_p((p) => p..moveTo(58, 64)..cubicTo(50, 82, 49, 108, 55, 130)), _stroke(1.6, mid));
-    canvas.drawPath(_p((p) => p..moveTo(58, 64)..cubicTo(66, 82, 67, 108, 61, 130)), _stroke(1.6, mid));
-
-    canvas.drawPath(_p((p) => p..moveTo(58, 62)..lineTo(58, 132)), _stroke(1.6, _pulse(0)));
+    final fStruct = (t / 0.55).clamp(0.0, 1.0);
+    final fLayer = ((t - 0.45) / 0.55).clamp(0.0, 1.0);
+    _drawPartial(canvas, st, fStruct, _p(2.2, const Color(0xFFFFD27A)));
+    _drawPartial(canvas, ly, fLayer, _p(1.5, const Color(0xFFFBBF4D)));
   }
 
   @override
