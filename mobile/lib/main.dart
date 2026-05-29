@@ -1,6 +1,7 @@
 // halo mobile — phase 1: identity persistence + ECDH + editorial UI
 
 import 'dart:async';
+import 'widgets/tor_boot_splash.dart';
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
@@ -214,6 +215,22 @@ class HaloEngine {
 // run a blocking native send on a throwaway background isolate so the ui
 // thread never stalls on a tor dial. opens its own handle to libhalo —
 // same process image, so it shares the running tor — and frees its strings.
+Future<String> _startListenerOnIsolate(String dataDir) {
+  return Isolate.run(() {
+    final lib = Platform.isAndroid
+        ? DynamicLibrary.open('libhalo.so')
+        : DynamicLibrary.process();
+    final fn = lib.lookupFunction<Pointer<Utf8> Function(Pointer<Utf8>),
+        Pointer<Utf8> Function(Pointer<Utf8>)>('HaloStartListener');
+    final p = dataDir.toNativeUtf8();
+    try {
+      return fn(p).toDartString();
+    } finally {
+      malloc.free(p);
+    }
+  });
+}
+
 Future<String> _sendOnIsolate(({bool nostr, String a, String b}) args) {
   return Isolate.run(() {
     final lib = Platform.isAndroid
@@ -1185,7 +1202,7 @@ class AppState extends ChangeNotifier {
     await refreshGroups();
     // sprint 7.5: auto-start tor; nostr subs retry every 10s until ready
     final docsDir = await getApplicationDocumentsDirectory();
-    Future(() => engine.startListener(docsDir.path)).then((addr) {
+    _startListenerOnIsolate(docsDir.path).then((addr) {
       if (addr.isNotEmpty && !addr.startsWith('error')) {
         myOnion = addr;
         notifyListeners();
@@ -2172,18 +2189,7 @@ class _OnboardingGateState extends State<_OnboardingGate> {
       listenable: appState,
       builder: (context, _) {
         if (!appState.ready) {
-          return Scaffold(
-            backgroundColor: HaloColors.ink,
-            body: Center(
-              child: Container(
-                width: 24, height: 24,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: HaloColors.amber.withValues(alpha: 0.6),
-                ),
-              ),
-            ),
-          );
+          return const TorBootSplash();
         }
         if (!appState.onboardingComplete) {
           return OnboardingScreen(
