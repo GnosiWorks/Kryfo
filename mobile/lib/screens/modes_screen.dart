@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import '../theme.dart';
+import '../main.dart';
 
 class ModesScreen extends StatefulWidget {
   const ModesScreen({super.key});
@@ -12,6 +13,23 @@ class ModesScreen extends StatefulWidget {
 
 class _ModesScreenState extends State<ModesScreen> {
   String _mode = 'private';
+
+  @override
+  void initState() {
+    super.initState();
+    _sync();
+  }
+
+  Future<void> _sync() async {
+    await appState.loadSendMode();
+    if (appState.sendMode == 'normal') await appState.setSendMode('private');
+    if (mounted) setState(() => _mode = appState.sendMode);
+  }
+
+  void _pick(String m) {
+    setState(() => _mode = m);
+    appState.setSendMode(m);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,27 +43,20 @@ class _ModesScreenState extends State<ModesScreen> {
             const _Head(),
             const SizedBox(height: 6),
             _ModeCard(
-              name: 'Normal',
-              active: _mode == 'normal',
-              desc: 'Balanced. Fast enough, private enough. Default for new chats.',
-              speed: 'fast', hops: '1', ipVisible: false,
-              onTap: () => setState(() => _mode = 'normal'),
-            ),
-            _ModeCard(
               name: 'Private',
               accent: '·',
               active: _mode == 'private',
               desc: 'Full onion routing, 3 hops. A message takes 2–5 seconds. Nobody sees who you talk to.',
               speed: 'slower', hops: '3', ipVisible: false,
-              onTap: () => setState(() => _mode = 'private'),
+              onTap: () => _pick('private'),
             ),
             _ModeCard(
               name: 'Fast',
               active: _mode == 'fast',
               desc: 'Direct connection. Near-instant. Use for low-stakes chats.',
               speed: 'instant', hops: '0', ipVisible: true,
-              warning: 'your ip will be visible to the recipient\'s server.',
-              onTap: () => setState(() => _mode = 'fast'),
+              warning: 'not active yet · every message still uses full Tor.',
+              onTap: () => _pick('fast'),
             ),
             const Spacer(),
             const Padding(
@@ -187,7 +198,7 @@ class _ModeCard extends StatelessWidget {
                 const SizedBox(width: 14),
                 _Meta(k: 'ip', v: ipVisible ? 'visible' : 'hidden', red: ipVisible),
               ]),
-              if (warning != null) ...[
+              if (warning != null && active) ...[
                 const SizedBox(height: 10),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),

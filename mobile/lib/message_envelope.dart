@@ -21,6 +21,7 @@ class UnwrappedMessage {
   final int? burnSeconds;     // 'b' field — seconds-from-receive
   final String? msgUid;       // 'u' field — stable cross-device message id
   final ReactionFrame? reaction; // 'r' field — present on reaction control msgs
+  final EditFrame? edit;       // 'ed' field — present on edit control msgs
   final String? replyTo;      // 'q' field — msg_uid this message replies to
   final String? groupId;      // 'g' field — present for group messages
   final GroupControl? groupControl; // 'gc' field — present on group control msgs
@@ -34,6 +35,7 @@ class UnwrappedMessage {
     this.burnSeconds,
     this.msgUid,
     this.reaction,
+    this.edit,
     this.replyTo,
     this.groupId,
     this.groupControl,
@@ -79,12 +81,19 @@ class SenderInfo {
 
 // wrap: always includes sender identity now (cheap, enables back-pair).
 // endpoint is added only when push mode is ntfy.
+class EditFrame {
+  final String targetUid;
+  final String newText;
+  const EditFrame({required this.targetUid, required this.newText});
+}
+
 Future<String> wrapMessage(
   String plain, {
   SenderInfo? sender,
   int? burnSeconds,
   String? msgUid,
   ReactionFrame? reaction,
+  EditFrame? edit,
   String? replyTo,
   String? groupId,
   GroupControl? groupControl,
@@ -94,6 +103,9 @@ Future<String> wrapMessage(
   if (msgUid != null) body['u'] = msgUid;
   if (reaction != null) {
     body['r'] = {'u': reaction.targetUid, 'e': reaction.emoji};
+  }
+  if (edit != null) {
+    body['ed'] = {'u': edit.targetUid, 'm': edit.newText};
   }
   if (replyTo != null) body['q'] = replyTo;
 
@@ -137,6 +149,14 @@ UnwrappedMessage unwrapMessage(String wrapped) {
         emoji: (rRaw['e'] as String?) ?? '',
       );
     }
+    EditFrame? edit;
+    final edRaw = json['ed'];
+    if (edRaw is Map) {
+      edit = EditFrame(
+        targetUid: (edRaw['u'] as String?) ?? '',
+        newText: (edRaw['m'] as String?) ?? '',
+      );
+    }
     GroupControl? gc;
     final gcRaw = json['gc'];
     if (gcRaw is Map) {
@@ -170,6 +190,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       burnSeconds: (json['b'] as num?)?.toInt(),
       msgUid: json['u'] as String?,
       reaction: reaction,
+      edit: edit,
       replyTo: json['q'] as String?,
       groupId: json['g'] as String?,
       groupControl: gc,
