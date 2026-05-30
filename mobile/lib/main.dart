@@ -283,7 +283,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 11,
+      version: 12,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -303,7 +303,8 @@ class HaloDb {
             back_paired INTEGER NOT NULL DEFAULT 0,
             nickname TEXT,
             blocked INTEGER NOT NULL DEFAULT 0,
-            muted INTEGER NOT NULL DEFAULT 0
+            muted INTEGER NOT NULL DEFAULT 0,
+            archived INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute('''
@@ -387,6 +388,9 @@ class HaloDb {
         if (oldV < 11) {
           await db.execute('ALTER TABLE contacts ADD COLUMN muted INTEGER NOT NULL DEFAULT 0');
         }
+        if (oldV < 12) {
+          await db.execute('ALTER TABLE contacts ADD COLUMN archived INTEGER NOT NULL DEFAULT 0');
+        }
         if (oldV < 7) {
           await db.execute('ALTER TABLE messages ADD COLUMN group_id TEXT');
           await db.execute(
@@ -465,6 +469,12 @@ class HaloDb {
   Future<List<Map<String, Object?>>> contacts() async {
     final db = await open();
     return db.query('contacts', orderBy: 'last_seen DESC');
+  }
+
+  Future<void> setArchived(String haloId, bool archived) async {
+    final db = await open();
+    await db.update('contacts', {'archived': archived ? 1 : 0},
+        where: 'halo_id = ?', whereArgs: [haloId]);
   }
 
   Future<void> setMuted(String haloId, bool muted) async {
@@ -1358,6 +1368,16 @@ class AppState extends ChangeNotifier {
     return bytes;
   }
 
+  Future<void> archive(String haloId) async {
+    await db.setArchived(haloId, true);
+    await refreshContacts();
+  }
+
+  Future<void> unarchive(String haloId) async {
+    await db.setArchived(haloId, false);
+    await refreshContacts();
+  }
+
   Future<void> mute(String haloId) async {
     await db.setMuted(haloId, true);
     await refreshContacts();
@@ -1397,6 +1417,7 @@ class AppState extends ChangeNotifier {
         avatarSeed: r['halo_id'] as String,
         when: DateTime.fromMillisecondsSinceEpoch(ts),
         blocked: (r['blocked'] as int? ?? 0) == 1,
+        archived: (r['archived'] as int? ?? 0) == 1,
       );
     }).toList();
     notifyListeners();

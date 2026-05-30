@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../widgets/halo_avatar.dart';
 import 'notes_screen.dart';
+import 'archived_screen.dart';
 import '../miui_autostart.dart';
 
 bool _miuiPromptChecked = false;
@@ -36,6 +37,8 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
+    final visible = contacts.where((c) => !c.archived).toList();
+    final hasArchived = contacts.any((c) => c.archived);
     if (!_miuiPromptChecked) {
       _miuiPromptChecked = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -54,11 +57,17 @@ class HomeScreen extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => const NotesScreen()),
               ),
             ),
+            if (hasArchived)
+              _ArchivedPin(
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ArchivedScreen()),
+                ),
+              ),
             Expanded(
-              child: contacts.isEmpty
+              child: visible.isEmpty
                   ? _EmptyState(onAdd: onAddContact)
                   : _ContactList(
-                      contacts: contacts,
+                      contacts: visible,
                       groups: groups,
                       onTap: onOpenChat,
                       onOpenGroup: onOpenGroup,
@@ -80,6 +89,7 @@ class ContactPreview {
   final DateTime? when;
   final String avatarSeed;
   final bool blocked;
+  final bool archived;
   ContactPreview({
     required this.haloId,
     this.nickname,
@@ -87,6 +97,7 @@ class ContactPreview {
     this.when,
     required this.avatarSeed,
     this.blocked = false,
+    this.archived = false,
   });
 }
 
@@ -215,6 +226,28 @@ class _EmptyState extends StatelessWidget {
 }
 
 // ───────── contact list (used once contacts exist) ─────────
+
+class _ArchivedPin extends StatelessWidget {
+  final VoidCallback onTap;
+  const _ArchivedPin({required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        child: Row(children: [
+          const Icon(Icons.archive_outlined, size: 16, color: HaloColors.text3),
+          const SizedBox(width: 12),
+          Text('archived',
+              style: HaloType.sans(size: 13, color: HaloColors.text2)),
+          const Spacer(),
+          const Icon(Icons.chevron_right, color: Color(0xFF6B625A), size: 18),
+        ]),
+      ),
+    );
+  }
+}
 
 class _ContactList extends StatelessWidget {
   final List<ContactPreview> contacts;
