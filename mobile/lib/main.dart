@@ -1361,13 +1361,14 @@ class AppState extends ChangeNotifier {
 
   Future<void> refreshContacts() async {
     final rows = await db.contacts();
-    contacts = rows.where((r) => (r['blocked'] as int? ?? 0) == 0).map((r) {
+    contacts = rows.map((r) {
       final ts = r['last_seen'] as int;
       return ContactPreview(
         haloId: r['halo_id'] as String,
         nickname: r['nickname'] as String?,
         avatarSeed: r['halo_id'] as String,
         when: DateTime.fromMillisecondsSinceEpoch(ts),
+        blocked: (r['blocked'] as int? ?? 0) == 1,
       );
     }).toList();
     notifyListeners();

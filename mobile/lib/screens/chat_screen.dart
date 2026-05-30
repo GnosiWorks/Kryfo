@@ -120,6 +120,7 @@ class _ChatScreenState extends State<ChatScreen> {
   int _matchPos = 0;
   final Map<int, GlobalKey> _matchKeys = {};
   String? _nickname;
+  bool _blocked = false;
 
   @override
   void initState() {
@@ -135,6 +136,9 @@ class _ChatScreenState extends State<ChatScreen> {
     });
     db.isBackPaired(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _backPaired = v);
+    });
+    db.isBlocked(widget.peerHaloId).then((v) {
+      if (mounted) setState(() => _blocked = v);
     });
     _lastCipher = _seenCipherPerPeer[widget.peerHaloId] ?? '';
     _loadMessages();
@@ -505,6 +509,9 @@ class _ChatScreenState extends State<ChatScreen> {
     db.isBackPaired(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _backPaired = v);
     });
+    db.isBlocked(widget.peerHaloId).then((v) {
+      if (mounted) setState(() => _blocked = v);
+    });
     final rows = await db.messagesFor(widget.peerHaloId);
     if (!mounted) return;
     // collect msg_uids first, batch-load reactions, then setState.
@@ -842,7 +849,12 @@ class _ChatScreenState extends State<ChatScreen> {
     );
     if (confirm != true) return;
     await appState.block(widget.peerHaloId);
-    if (mounted) Navigator.of(context).pop();
+    if (mounted) setState(() => _blocked = true);
+  }
+
+  Future<void> _unblockContact() async {
+    await appState.unblock(widget.peerHaloId);
+    if (mounted) setState(() => _blocked = false);
   }
 
   Future<void> _renameContact() async {
@@ -994,7 +1006,9 @@ class _ChatScreenState extends State<ChatScreen> {
               target: _replyTo!,
               onCancel: () => setState(() => _replyTo = null),
             ),
-            _Composer(
+            _blocked
+                        ? _BlockedBar(onUnblock: _unblockContact)
+                        : _Composer(
               ghost: _ghost,
               onToggleGhost: () => setState(() => _ghost = !_ghost),
               onPickBurn: _pickBurnDuration,
@@ -1005,6 +1019,36 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _BlockedBar extends StatelessWidget {
+  final VoidCallback onUnblock;
+  const _BlockedBar({required this.onUnblock});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.block, size: 15, color: HaloColors.text3),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text('you blocked this contact',
+                style: HaloType.serif(size: 14, italic: true, color: HaloColors.text2)),
+          ),
+          TextButton(
+            onPressed: onUnblock,
+            child: Text('unblock',
+                style: HaloType.sans(size: 14, weight: FontWeight.w500, color: HaloColors.amber)),
+          ),
+        ],
       ),
     );
   }
