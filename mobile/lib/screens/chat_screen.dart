@@ -18,6 +18,7 @@ class ChatScreen extends StatefulWidget {
   final String peerOnion;
   final String peerXPub;
   final String avatarSeed;
+  final String? initialText;
 
   const ChatScreen({
     super.key,
@@ -25,6 +26,7 @@ class ChatScreen extends StatefulWidget {
     required this.peerOnion,
     required this.peerXPub,
     required this.avatarSeed,
+    this.initialText,
   });
 
   @override
@@ -128,6 +130,7 @@ class _ChatScreenState extends State<ChatScreen> {
     appState.addListener(_onAppStateChanged);
     appState.loadSendMode();
     currentChatPeer = widget.peerHaloId;
+    if (widget.initialText != null) _msgCtrl.text = widget.initialText!;
     db.getContact(widget.peerHaloId).then((c) {
       if (mounted) setState(() => _nickname = c?['nickname'] as String?);
     });
@@ -310,7 +313,31 @@ class _ChatScreenState extends State<ChatScreen> {
                     setState(() => _replyTo = target);
                   },
                 ),
-                if (target.direction == 'out') ...[
+                const SizedBox(height: 6),
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(999),
+                            onTap: () {
+                              dismiss();
+                              _forwardMessage(target);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: HaloColors.surface3,
+                                border: Border.all(
+                                    color: HaloColors.line, width: 0.5),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text('forward',
+                                  style: HaloType.sans(
+                                      size: 13, color: HaloColors.text)),
+                            ),
+                          ),
+                        ),
+                        if (target.direction == 'out') ...[
                   const SizedBox(height: 6),
                   Material(
                     color: Colors.transparent,
@@ -855,6 +882,77 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _unblockContact() async {
     await appState.unblock(widget.peerHaloId);
     if (mounted) setState(() => _blocked = false);
+  }
+
+  Future<void> _forwardMessage(_Msg m) async {
+    final targets = appState.contacts.where((c) => !c.blocked).toList();
+    final haloId = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: HaloColors.surface2,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+              child: Text('forward to',
+                  style: HaloType.serif(
+                      size: 18, italic: true, color: HaloColors.text)),
+            ),
+            if (targets.isEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+                child: Text('no contacts to forward to',
+                    style: HaloType.sans(size: 13, color: HaloColors.text2)),
+              )
+            else
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.only(bottom: 8),
+                  children: [
+                    for (final c in targets)
+                      InkWell(
+                        onTap: () => Navigator.pop(ctx, c.haloId),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 12),
+                          child: Row(
+                            children: [
+                              HaloAvatar(seed: c.avatarSeed, size: 32),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(c.nickname ?? c.haloId,
+                                    style: HaloType.sans(
+                                        size: 14, weight: FontWeight.w500)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (haloId == null || !mounted) return;
+    final row = await db.getContact(haloId);
+    if (row == null || !mounted) return;
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => ChatScreen(
+        peerHaloId: haloId,
+        peerOnion: (row['onion'] as String?) ?? '',
+        peerXPub: (row['xpub'] as String?) ?? '',
+        avatarSeed: haloId,
+        initialText: m.text,
+      ),
+    ));
   }
 
   Future<void> _renameContact() async {
