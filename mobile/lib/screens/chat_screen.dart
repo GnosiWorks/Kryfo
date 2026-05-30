@@ -123,6 +123,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final Map<int, GlobalKey> _matchKeys = {};
   String? _nickname;
   bool _blocked = false;
+  bool _muted = false;
 
   @override
   void initState() {
@@ -142,6 +143,9 @@ class _ChatScreenState extends State<ChatScreen> {
     });
     db.isBlocked(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _blocked = v);
+    });
+    db.isMuted(widget.peerHaloId).then((v) {
+      if (mounted) setState(() => _muted = v);
     });
     _lastCipher = _seenCipherPerPeer[widget.peerHaloId] ?? '';
     _loadMessages();
@@ -539,6 +543,9 @@ class _ChatScreenState extends State<ChatScreen> {
     db.isBlocked(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _blocked = v);
     });
+    db.isMuted(widget.peerHaloId).then((v) {
+      if (mounted) setState(() => _muted = v);
+    });
     final rows = await db.messagesFor(widget.peerHaloId);
     if (!mounted) return;
     // collect msg_uids first, batch-load reactions, then setState.
@@ -830,6 +837,66 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
+  Future<void> _chatActions() async {
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: HaloColors.surface2,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            InkWell(
+              onTap: () => Navigator.pop(ctx, 'mute'),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Row(children: [
+                  Icon(
+                      _muted
+                          ? Icons.notifications_active_outlined
+                          : Icons.notifications_off_outlined,
+                      size: 18, color: HaloColors.text2),
+                  const SizedBox(width: 14),
+                  Text(_muted ? 'unmute notifications' : 'mute notifications',
+                      style: HaloType.sans(size: 14, color: HaloColors.text)),
+                ]),
+              ),
+            ),
+            InkWell(
+              onTap: () => Navigator.pop(ctx, 'block'),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Row(children: [
+                  const Icon(Icons.block, size: 18, color: HaloColors.rose),
+                  const SizedBox(width: 14),
+                  Text('block contact',
+                      style: HaloType.sans(size: 14, color: HaloColors.rose)),
+                ]),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (action == 'mute') {
+      await _toggleMute();
+    } else if (action == 'block') {
+      await _blockContact();
+    }
+  }
+
+  Future<void> _toggleMute() async {
+    if (_muted) {
+      await appState.unmute(widget.peerHaloId);
+    } else {
+      await appState.mute(widget.peerHaloId);
+    }
+    if (mounted) setState(() => _muted = !_muted);
+  }
+
   Future<void> _blockContact() async {
     final confirm = await showModalBottomSheet<bool>(
       context: context,
@@ -1044,7 +1111,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 : _ChatHead(
                     haloId: widget.peerHaloId,
                     nickname: _nickname,
-                  onBlock: _blockContact,
+                  onBlock: _chatActions,
                     avatarSeed: widget.avatarSeed,
                     onBack: () => Navigator.pop(context),
                     onSearch: _openSearch,
