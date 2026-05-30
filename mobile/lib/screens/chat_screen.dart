@@ -865,6 +865,18 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             InkWell(
+              onTap: () => Navigator.pop(ctx, 'archive'),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Row(children: [
+                  const Icon(Icons.archive_outlined, size: 18, color: HaloColors.text2),
+                  const SizedBox(width: 14),
+                  Text('archive chat',
+                      style: HaloType.sans(size: 14, color: HaloColors.text)),
+                ]),
+              ),
+            ),
+            InkWell(
               onTap: () => Navigator.pop(ctx, 'block'),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -883,6 +895,9 @@ class _ChatScreenState extends State<ChatScreen> {
     );
     if (action == 'mute') {
       await _toggleMute();
+    } else if (action == 'archive') {
+      await appState.archive(widget.peerHaloId);
+      if (mounted) Navigator.of(context).pop();
     } else if (action == 'block') {
       await _blockContact();
     }
