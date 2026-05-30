@@ -283,7 +283,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 9,
+      version: 10,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -301,7 +301,8 @@ class HaloDb {
             first_seen INTEGER NOT NULL,
             last_seen INTEGER NOT NULL,
             back_paired INTEGER NOT NULL DEFAULT 0,
-            nickname TEXT
+            nickname TEXT,
+            blocked INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute('''
@@ -378,6 +379,9 @@ class HaloDb {
         }
         if (oldV < 9) {
           await db.execute('ALTER TABLE messages ADD COLUMN edited INTEGER NOT NULL DEFAULT 0');
+        }
+        if (oldV < 10) {
+          await db.execute('ALTER TABLE contacts ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0');
         }
         if (oldV < 7) {
           await db.execute('ALTER TABLE messages ADD COLUMN group_id TEXT');
@@ -457,6 +461,20 @@ class HaloDb {
   Future<List<Map<String, Object?>>> contacts() async {
     final db = await open();
     return db.query('contacts', orderBy: 'last_seen DESC');
+  }
+
+  Future<void> setBlocked(String haloId, bool blocked) async {
+    final db = await open();
+    await db.update('contacts', {'blocked': blocked ? 1 : 0},
+        where: 'halo_id = ?', whereArgs: [haloId]);
+  }
+
+  Future<bool> isBlocked(String haloId) async {
+    final db = await open();
+    final rows = await db.query('contacts',
+        columns: ['blocked'], where: 'halo_id = ?', whereArgs: [haloId], limit: 1);
+    if (rows.isEmpty) return false;
+    return (rows.first['blocked'] as int? ?? 0) == 1;
   }
 
   Future<void> setNickname(String haloId, String? name) async {
@@ -968,6 +986,7 @@ class AppState extends ChangeNotifier {
   // nostr poll) so the routing rules live in exactly one place.
   Future<void> _applyIncomingPayload(
       String senderHaloId, UnwrappedMessage env) async {
+    if (await db.isBlocked(senderHaloId)) return;
     // 1) group control
     if (env.groupControl != null) {
       await _applyGroupControl(senderHaloId, env);
@@ -1321,9 +1340,28 @@ class AppState extends ChangeNotifier {
     return bytes;
   }
 
+  Future<void> block(String haloId) async {
+    await db.setBlocked(haloId, true);
+    await refreshContacts();
+  }
+
+  Future<void> unblock(String haloId) async {
+    await db.setBlocked(haloId, false);
+    await refreshContacts();
+  }
+
+  Future<List<({String haloId, String? nickname})>> blockedContacts() async {
+    final rows = await db.contacts();
+    return [
+      for (final r in rows)
+        if ((r['blocked'] as int? ?? 0) == 1)
+          (haloId: r['halo_id'] as String, nickname: r['nickname'] as String?)
+    ];
+  }
+
   Future<void> refreshContacts() async {
     final rows = await db.contacts();
-    contacts = rows.map((r) {
+    contacts = rows.where((r) => (r['blocked'] as int? ?? 0) == 0).map((r) {
       final ts = r['last_seen'] as int;
       return ContactPreview(
         haloId: r['halo_id'] as String,
