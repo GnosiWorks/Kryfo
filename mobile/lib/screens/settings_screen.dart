@@ -8,6 +8,7 @@ import '../main.dart' show appState, engine;
 import '../lock_state.dart';
 import '../theme.dart';
 import 'modes_screen.dart';
+import 'blocked_screen.dart';
 import 'push_settings_screen.dart';
 import 'lock_setup_screen.dart';
 import 'panic_setup_screen.dart';
@@ -142,16 +143,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _Section('privacy'),
           _Row(
             label: 'speed & privacy',
-            value: 'normal · 1 hop',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const ModesScreen()),
-            ),
+            value: appState.sendMode == 'fast' ? 'fast · direct' : 'private · 3 hops',
+            onTap: () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ModesScreen()),
+              );
+              if (mounted) setState(() {});
+            },
           ),
           _Row(
             label: 'notifications',
             value: 'tor only',
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const PushSettingsScreen()),
+            ),
+          ),
+          _Row(
+            label: 'blocked',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const BlockedScreen()),
             ),
           ),
           const SizedBox(height: 24),

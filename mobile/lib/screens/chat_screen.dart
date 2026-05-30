@@ -796,6 +796,55 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
+  Future<void> _blockContact() async {
+    final confirm = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: HaloColors.surface2,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                const Icon(Icons.block, size: 15, color: HaloColors.amber),
+                const SizedBox(width: 8),
+                Text('block this contact?',
+                    style: HaloType.serif(size: 18, italic: true, color: HaloColors.text)),
+              ]),
+              const SizedBox(height: 8),
+              Text(
+                'their messages stop arriving and they disappear from your chats. '
+                "they're never told. you can unblock anytime from settings.",
+                style: HaloType.sans(size: 13, color: HaloColors.text2, height: 1.5)),
+              const SizedBox(height: 20),
+              Row(children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text('cancel',
+                      style: HaloType.sans(size: 14, color: HaloColors.text2)),
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: Text('block',
+                      style: HaloType.sans(size: 14, weight: FontWeight.w500, color: HaloColors.amber)),
+                ),
+              ]),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (confirm != true) return;
+    await appState.block(widget.peerHaloId);
+    if (mounted) Navigator.of(context).pop();
+  }
+
   Future<void> _renameContact() async {
     final ctrl = TextEditingController(text: _nickname ?? '');
     final result = await showModalBottomSheet<String>(
@@ -885,6 +934,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 : _ChatHead(
                     haloId: widget.peerHaloId,
                     nickname: _nickname,
+                  onBlock: _blockContact,
                     avatarSeed: widget.avatarSeed,
                     onBack: () => Navigator.pop(context),
                     onSearch: _openSearch,
@@ -967,6 +1017,7 @@ class _ChatHead extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onSearch;
   final VoidCallback onRename;
+  final VoidCallback onBlock;
   const _ChatHead({
     required this.haloId,
     this.nickname,
@@ -974,6 +1025,7 @@ class _ChatHead extends StatelessWidget {
     required this.onBack,
     required this.onSearch,
     required this.onRename,
+    required this.onBlock,
   });
 
   @override
@@ -1021,6 +1073,11 @@ class _ChatHead extends StatelessWidget {
             icon: const Icon(Icons.search_rounded,
                 color: HaloColors.text2, size: 21),
             onPressed: onSearch,
+          ),
+          IconButton(
+            icon: const Icon(Icons.more_vert,
+                color: HaloColors.text2, size: 21),
+            onPressed: onBlock,
           ),
         ],
       ),
