@@ -283,7 +283,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 10,
+      version: 11,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -302,7 +302,8 @@ class HaloDb {
             last_seen INTEGER NOT NULL,
             back_paired INTEGER NOT NULL DEFAULT 0,
             nickname TEXT,
-            blocked INTEGER NOT NULL DEFAULT 0
+            blocked INTEGER NOT NULL DEFAULT 0,
+            muted INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute('''
@@ -383,6 +384,9 @@ class HaloDb {
         if (oldV < 10) {
           await db.execute('ALTER TABLE contacts ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0');
         }
+        if (oldV < 11) {
+          await db.execute('ALTER TABLE contacts ADD COLUMN muted INTEGER NOT NULL DEFAULT 0');
+        }
         if (oldV < 7) {
           await db.execute('ALTER TABLE messages ADD COLUMN group_id TEXT');
           await db.execute(
@@ -461,6 +465,20 @@ class HaloDb {
   Future<List<Map<String, Object?>>> contacts() async {
     final db = await open();
     return db.query('contacts', orderBy: 'last_seen DESC');
+  }
+
+  Future<void> setMuted(String haloId, bool muted) async {
+    final db = await open();
+    await db.update('contacts', {'muted': muted ? 1 : 0},
+        where: 'halo_id = ?', whereArgs: [haloId]);
+  }
+
+  Future<bool> isMuted(String haloId) async {
+    final db = await open();
+    final rows = await db.query('contacts',
+        columns: ['muted'], where: 'halo_id = ?', whereArgs: [haloId], limit: 1);
+    if (rows.isEmpty) return false;
+    return (rows.first['muted'] as int? ?? 0) == 1;
   }
 
   Future<void> setBlocked(String haloId, bool blocked) async {
@@ -1043,7 +1061,7 @@ class AppState extends ChangeNotifier {
       notifTitle = senderHaloId;
       notifBody = env.message;
       notifPayload = senderHaloId;
-      suppress = currentChatPeer == senderHaloId;
+      suppress = currentChatPeer == senderHaloId || await db.isMuted(senderHaloId);
     }
     if (!suppress) {
       await showMessageNotification(
@@ -1338,6 +1356,16 @@ class AppState extends ChangeNotifier {
       bytes[i] = int.parse(s.substring(i * 2, i * 2 + 2), radix: 16);
     }
     return bytes;
+  }
+
+  Future<void> mute(String haloId) async {
+    await db.setMuted(haloId, true);
+    await refreshContacts();
+  }
+
+  Future<void> unmute(String haloId) async {
+    await db.setMuted(haloId, false);
+    await refreshContacts();
   }
 
   Future<void> block(String haloId) async {
