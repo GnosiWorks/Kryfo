@@ -283,7 +283,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 12,
+      version: 13,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -319,6 +319,7 @@ class HaloDb {
             reply_to TEXT,
             group_id TEXT,
             edited INTEGER NOT NULL DEFAULT 0,
+            pinned INTEGER NOT NULL DEFAULT 0,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
         ''');
@@ -390,6 +391,9 @@ class HaloDb {
         }
         if (oldV < 12) {
           await db.execute('ALTER TABLE contacts ADD COLUMN archived INTEGER NOT NULL DEFAULT 0');
+        }
+        if (oldV < 13) {
+          await db.execute('ALTER TABLE messages ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0');
         }
         if (oldV < 7) {
           await db.execute('ALTER TABLE messages ADD COLUMN group_id TEXT');
@@ -697,6 +701,12 @@ class HaloDb {
 
   // add or replace a reaction. reactor is '' for self, peer's halo id
   // for theirs. one reaction per (msgUid, reactor) — re-reacting replaces.
+  Future<void> setPinned(String msgUid, bool pinned) async {
+    final db = await open();
+    await db.update('messages', {'pinned': pinned ? 1 : 0},
+        where: 'msg_uid = ?', whereArgs: [msgUid]);
+  }
+
   Future<void> editMessage(String msgUid, String newText) async {
     final db = await open();
     await db.update('messages', {'plaintext': newText, 'edited': 1},

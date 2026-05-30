@@ -44,6 +44,7 @@ class _Msg {
   bool sending;
   bool failed;
   bool edited;
+  bool pinned;
   Map<String, String> reactions;
   _Msg(this.direction, this.text, this.when,
       {this.burnAt,
@@ -52,6 +53,7 @@ class _Msg {
       this.sending = false,
       this.failed = false,
       this.edited = false,
+      this.pinned = false,
       Map<String, String>? reactions})
       : reactions = reactions ?? <String, String>{};
 }
@@ -341,7 +343,31 @@ class _ChatScreenState extends State<ChatScreen> {
                             ),
                           ),
                         ),
-                        if (target.direction == 'out') ...[
+                        const SizedBox(height: 6),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(999),
+                      onTap: () {
+                        dismiss();
+                        _togglePin(target);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: HaloColors.surface3,
+                          border: Border.all(
+                              color: HaloColors.line, width: 0.5),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(target.pinned ? 'unpin' : 'pin',
+                            style: HaloType.sans(
+                                size: 13, color: HaloColors.text)),
+                      ),
+                    ),
+                  ),
+                  if (target.direction == 'out') ...[
                   const SizedBox(height: 6),
                   Material(
                     color: Colors.transparent,
@@ -391,6 +417,100 @@ class _ChatScreenState extends State<ChatScreen> {
       );
     });
     Overlay.of(context).insert(entry);
+  }
+
+Future<void> _showPinnedSheet() async {
+    final pinned = _messages.where((m) => m.pinned).toList();
+    if (pinned.isEmpty) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: HaloColors.surface2,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              child: Text('pinned messages',
+                  style: HaloType.mono(
+                      size: 10, color: HaloColors.text3, letter: 0.14)),
+            ),
+            for (final m in pinned)
+              InkWell(
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _scrollToMessage(m);
+                },
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.push_pin_outlined,
+                          size: 14, color: HaloColors.amber),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(m.text,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: HaloType.sans(
+                                size: 14, color: HaloColors.text)),
+                      ),
+                      const SizedBox(width: 12),
+                      InkWell(
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _togglePin(m);
+                        },
+                        borderRadius: BorderRadius.circular(999),
+                        child: const Padding(
+                          padding: EdgeInsets.all(4),
+                          child: Icon(Icons.close,
+                              size: 16, color: HaloColors.text3),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _togglePin(_Msg m) async {
+    if (m.msgUid == null) return;
+    if (!m.pinned) {
+      final count = _messages.where((x) => x.pinned).length;
+      if (count >= 3) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('max 3 pinned')),
+          );
+        }
+        return;
+      }
+    }
+    await db.setPinned(m.msgUid!, !m.pinned);
+    if (mounted) setState(() => m.pinned = !m.pinned);
+  }
+
+  void _scrollToMessage(_Msg m) {
+    final idx = _messages.indexOf(m);
+    if (idx < 0 || !_scrollCtrl.hasClients) return;
+    final max = _scrollCtrl.position.maxScrollExtent;
+    final approx = (idx / _messages.length) * max;
+    _scrollCtrl.animateTo(
+      approx.clamp(0.0, max),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
   }
 
   // 12-char base36 id from a high-precision timestamp + random salt.
@@ -561,6 +681,7 @@ class _ChatScreenState extends State<ChatScreen> {
         msgUid: uid,
         replyTo: r['reply_to'] as String?,
         edited: (r['edited'] as int? ?? 0) == 1,
+        pinned: (r['pinned'] as int? ?? 0) == 1,
       ));
       if (uid != null) uids.add(uid);
     }
@@ -1131,6 +1252,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     onBack: () => Navigator.pop(context),
                     onSearch: _openSearch,
                     onRename: _renameContact,
+                    pinnedCount:
+                        _messages.where((m) => m.pinned).length,
+                    onPinned: _showPinnedSheet,
                   ),
             Expanded(
               child: _messages.isEmpty
@@ -1242,6 +1366,8 @@ class _ChatHead extends StatelessWidget {
   final VoidCallback onSearch;
   final VoidCallback onRename;
   final VoidCallback onBlock;
+  final int pinnedCount;
+  final VoidCallback onPinned;
   const _ChatHead({
     required this.haloId,
     this.nickname,
@@ -1250,6 +1376,8 @@ class _ChatHead extends StatelessWidget {
     required this.onSearch,
     required this.onRename,
     required this.onBlock,
+    this.pinnedCount = 0,
+    required this.onPinned,
   });
 
   @override
@@ -1293,6 +1421,12 @@ class _ChatHead extends StatelessWidget {
               ),
             ),
           ),
+          if (pinnedCount > 0)
+            IconButton(
+              icon: const Icon(Icons.push_pin_outlined,
+                  color: HaloColors.amber, size: 19),
+              onPressed: onPinned,
+            ),
           IconButton(
             icon: const Icon(Icons.search_rounded,
                 color: HaloColors.text2, size: 21),
