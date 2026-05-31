@@ -3,16 +3,26 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'key_verification_screen.dart';
 import '../signal_session.dart';
-import '../message_envelope.dart' show wrapMessage, unwrapMessage, SenderInfo, ReactionFrame, EditFrame, savePeerEndpoint, loadPeerEndpoint;
+import '../message_envelope.dart'
+    show
+        wrapMessage,
+        unwrapMessage,
+        SenderInfo,
+        ReactionFrame,
+        EditFrame,
+        savePeerEndpoint,
+        loadPeerEndpoint;
 import '../theme.dart';
 import '../widgets/halo_avatar.dart';
-import '../main.dart' show engine, db, signalEncrypt, signalDecrypt, appState, currentChatPeer;
+import '../main.dart'
+    show engine, db, signalEncrypt, signalDecrypt, appState, currentChatPeer;
 import '../widgets/motion.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
@@ -53,39 +63,44 @@ class _Msg {
   bool removing;
   String? mediaPath;
   Map<String, String> reactions;
-  _Msg(this.direction, this.text, this.when,
-      {this.burnAt,
-      this.msgUid,
-      this.replyTo,
-      this.sending = false,
-      this.failed = false,
-      this.edited = false,
-      this.pinned = false,
-      this.removing = false,
-      this.mediaPath,
-      Map<String, String>? reactions})
-      : reactions = reactions ?? <String, String>{};
+  _Msg(
+    this.direction,
+    this.text,
+    this.when, {
+    this.burnAt,
+    this.msgUid,
+    this.replyTo,
+    this.sending = false,
+    this.failed = false,
+    this.edited = false,
+    this.pinned = false,
+    this.removing = false,
+    this.mediaPath,
+    Map<String, String>? reactions,
+  }) : reactions = reactions ?? <String, String>{};
 }
 
 void _openFullImage(BuildContext context, String path) {
-  Navigator.of(context).push(MaterialPageRoute(
-    fullscreenDialog: true,
-    builder: (ctx) => GestureDetector(
-      onTap: () => Navigator.of(ctx).pop(),
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        body: SafeArea(
-          child: Center(
-            child: InteractiveViewer(
-              minScale: 1,
-              maxScale: 4,
-              child: Image.file(File(path)),
+  Navigator.of(context).push(
+    MaterialPageRoute(
+      fullscreenDialog: true,
+      builder: (ctx) => GestureDetector(
+        onTap: () => Navigator.of(ctx).pop(),
+        child: Scaffold(
+          backgroundColor: Colors.black,
+          body: SafeArea(
+            child: Center(
+              child: InteractiveViewer(
+                minScale: 1,
+                maxScale: 4,
+                child: Image.file(File(path)),
+              ),
             ),
           ),
         ),
       ),
     ),
-  ));
+  );
 }
 
 String _friendlyStatus(String raw) {
@@ -117,8 +132,10 @@ String _fmtBurn(int burnAtMs) {
   final now = DateTime.now().millisecondsSinceEpoch;
   var s = ((burnAtMs - now) / 1000).round();
   if (s <= 0) return '0s';
-  final h = s ~/ 3600; s -= h * 3600;
-  final m = s ~/ 60; s -= m * 60;
+  final h = s ~/ 3600;
+  s -= h * 3600;
+  final m = s ~/ 60;
+  s -= m * 60;
   if (h > 0) return '${h}h ${m.toString().padLeft(2, '0')}m';
   if (m > 0) return '${m}m ${s.toString().padLeft(2, '0')}s';
   return '${s}s';
@@ -156,6 +173,8 @@ class _ChatScreenState extends State<ChatScreen> {
   String? _nickname;
   bool _blocked = false;
   bool _muted = false;
+  bool _verified = false;
+  bool _showScrollDown = false;
 
   @override
   void initState() {
@@ -179,6 +198,10 @@ class _ChatScreenState extends State<ChatScreen> {
     db.isMuted(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _muted = v);
     });
+    db.isVerified(widget.peerHaloId).then((v) {
+      if (mounted) setState(() => _verified = v);
+    });
+    _scrollCtrl.addListener(_onScroll);
     _lastCipher = _seenCipherPerPeer[widget.peerHaloId] ?? '';
     _loadMessages();
     _burnTick = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -187,11 +210,11 @@ class _ChatScreenState extends State<ChatScreen> {
       final before = _messages.length;
       _messages.removeWhere((m) => m.burnAt != null && m.burnAt! + 500 <= now);
       final removed = before - _messages.length;
-      final stillBurning =
-          _messages.where((m) => m.burnAt != null).toList();
+      final stillBurning = _messages.where((m) => m.burnAt != null).toList();
       if (stillBurning.isNotEmpty || removed > 0) {
         debugPrint('burnTick: removed=$removed burning=${stillBurning.length}');
       }
+      if (removed > 0) HapticFeedback.lightImpact();
       if (removed > 0 || stillBurning.isNotEmpty) {
         setState(() {});
       }
@@ -265,10 +288,11 @@ class _ChatScreenState extends State<ChatScreen> {
     if (_matches.isEmpty || !_scrollCtrl.hasClients) return;
     final idx = _matches[_matchPos];
     if (_messages.isNotEmpty) {
-      final approx = (idx / _messages.length) *
-          _scrollCtrl.position.maxScrollExtent;
+      final approx =
+          (idx / _messages.length) * _scrollCtrl.position.maxScrollExtent;
       _scrollCtrl.jumpTo(
-          approx.clamp(0.0, _scrollCtrl.position.maxScrollExtent));
+        approx.clamp(0.0, _scrollCtrl.position.maxScrollExtent),
+      );
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ctx = _matchKeys[idx]?.currentContext;
@@ -287,7 +311,9 @@ class _ChatScreenState extends State<ChatScreen> {
   // bubble. uses an OverlayEntry so it can sit outside the chat list and
   // avoid clipping. tap outside to dismiss.
   Future<void> _showEmojiPickerAt(
-      BuildContext bubbleContext, _Msg target) async {
+    BuildContext bubbleContext,
+    _Msg target,
+  ) async {
     // legacy messages (predating v5 migration) get a local uid assigned
     // on first reaction. peers won't know this uid so the reaction stays
     // local-only, but the UX works.
@@ -295,7 +321,10 @@ class _ChatScreenState extends State<ChatScreen> {
       final uid = _newMsgUid();
       target.msgUid = uid;
       await db.assignUidIfMissing(
-          widget.peerHaloId, target.when.millisecondsSinceEpoch, uid);
+        widget.peerHaloId,
+        target.when.millisecondsSinceEpoch,
+        uid,
+      );
     }
     if (!mounted) return;
     final box = bubbleContext.findRenderObject() as RenderBox?;
@@ -317,63 +346,72 @@ class _ChatScreenState extends State<ChatScreen> {
       if (entry.mounted) entry.remove();
     }
 
-    entry = OverlayEntry(builder: (_) {
-      return Stack(
-        children: [
-          Positioned.fill(
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: dismiss,
-              child: Container(color: Colors.black.withOpacity(0.32)),
+    entry = OverlayEntry(
+      builder: (_) {
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: dismiss,
+                child: Container(color: Colors.black.withOpacity(0.32)),
+              ),
             ),
-          ),
-          Positioned(
-            top: top,
-            left: alignRight ? null : 12,
-            right: alignRight ? 12 : null,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: target.direction == 'out'
-                  ? CrossAxisAlignment.end
-                  : CrossAxisAlignment.start,
-              children: [
-                _EmojiPickerBubble(
-                  emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
-                  selected: target.reactions[''],
-                  onPick: (e) {
-                    dismiss();
-                    _toggleReaction(target, e);
-                  },
-                  onReply: () {
-                    dismiss();
-                    setState(() => _replyTo = target);
-                  },
-                ),
-                const SizedBox(height: 6),
-                        Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(999),
-                            onTap: () {
-                              dismiss();
-                              _forwardMessage(target);
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: HaloColors.surface3,
-                                border: Border.all(
-                                    color: HaloColors.line, width: 0.5),
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text('forward',
-                                  style: HaloType.sans(
-                                      size: 13, color: HaloColors.text)),
-                            ),
+            Positioned(
+              top: top,
+              left: alignRight ? null : 12,
+              right: alignRight ? 12 : null,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: target.direction == 'out'
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
+                children: [
+                  _EmojiPickerBubble(
+                    emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
+                    selected: target.reactions[''],
+                    onPick: (e) {
+                      dismiss();
+                      _toggleReaction(target, e);
+                    },
+                    onReply: () {
+                      dismiss();
+                      setState(() => _replyTo = target);
+                    },
+                  ),
+                  const SizedBox(height: 6),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(999),
+                      onTap: () {
+                        dismiss();
+                        _forwardMessage(target);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: HaloColors.surface3,
+                          border: Border.all(
+                            color: HaloColors.line,
+                            width: 0.5,
+                          ),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          'forward',
+                          style: HaloType.sans(
+                            size: 13,
+                            color: HaloColors.text,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
                   Material(
                     color: Colors.transparent,
                     child: InkWell(
@@ -384,16 +422,24 @@ class _ChatScreenState extends State<ChatScreen> {
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 8),
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: HaloColors.surface3,
                           border: Border.all(
-                              color: HaloColors.line, width: 0.5),
+                            color: HaloColors.line,
+                            width: 0.5,
+                          ),
                           borderRadius: BorderRadius.circular(999),
                         ),
-                        child: Text(target.pinned ? 'unpin' : 'pin',
-                            style: HaloType.sans(
-                                size: 13, color: HaloColors.text)),
+                        child: Text(
+                          target.pinned ? 'unpin' : 'pin',
+                          style: HaloType.sans(
+                            size: 13,
+                            color: HaloColors.text,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -409,81 +455,102 @@ class _ChatScreenState extends State<ChatScreen> {
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 8),
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: HaloColors.surface3,
                             border: Border.all(
-                                color: HaloColors.line, width: 0.5),
+                              color: HaloColors.line,
+                              width: 0.5,
+                            ),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.delete_outline,
-                                  size: 14, color: HaloColors.rose),
+                              const Icon(
+                                Icons.delete_outline,
+                                size: 14,
+                                color: HaloColors.rose,
+                              ),
                               const SizedBox(width: 6),
-                              Text('unsend',
-                                  style: HaloType.sans(
-                                      size: 12,
-                                      weight: FontWeight.w500,
-                                      color: HaloColors.rose)),
+                              Text(
+                                'unsend',
+                                style: HaloType.sans(
+                                  size: 12,
+                                  weight: FontWeight.w500,
+                                  color: HaloColors.rose,
+                                ),
+                              ),
                             ],
                           ),
                         ),
                       ),
                     ),
-                  const SizedBox(height: 6),
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(999),
-                      onTap: () {
-                        dismiss();
-                        _editMessage(target);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: HaloColors.surface3,
-                          border: Border.all(
-                              color: HaloColors.line, width: 0.5),
-                          borderRadius: BorderRadius.circular(999),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.5),
-                              blurRadius: 20,
-                              offset: const Offset(0, 6),
+                    const SizedBox(height: 6),
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(999),
+                        onTap: () {
+                          dismiss();
+                          _editMessage(target);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: HaloColors.surface3,
+                            border: Border.all(
+                              color: HaloColors.line,
+                              width: 0.5,
                             ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.edit_outlined,
-                                size: 14, color: HaloColors.amber),
-                            const SizedBox(width: 6),
-                            Text('edit',
+                            borderRadius: BorderRadius.circular(999),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.5),
+                                blurRadius: 20,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.edit_outlined,
+                                size: 14,
+                                color: HaloColors.amber,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'edit',
                                 style: HaloType.sans(
-                                    size: 12,
-                                    weight: FontWeight.w500,
-                                    color: HaloColors.amber)),
-                          ],
+                                  size: 12,
+                                  weight: FontWeight.w500,
+                                  color: HaloColors.amber,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
-      );
-    });
+          ],
+        );
+      },
+    );
     Overlay.of(context).insert(entry);
   }
 
-Future<void> _showPinnedSheet() async {
+  Future<void> _showPinnedSheet() async {
     final pinned = _messages.where((m) => m.pinned).toList();
     if (pinned.isEmpty) return;
     await showModalBottomSheet<void>(
@@ -499,9 +566,14 @@ Future<void> _showPinnedSheet() async {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              child: Text('pinned messages',
-                  style: HaloType.mono(
-                      size: 10, color: HaloColors.text3, letter: 0.14)),
+              child: Text(
+                'pinned messages',
+                style: HaloType.mono(
+                  size: 10,
+                  color: HaloColors.text3,
+                  letter: 0.14,
+                ),
+              ),
             ),
             for (final m in pinned)
               InkWell(
@@ -510,19 +582,28 @@ Future<void> _showPinnedSheet() async {
                   _scrollToMessage(m);
                 },
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   child: Row(
                     children: [
-                      const Icon(Icons.push_pin_outlined,
-                          size: 14, color: HaloColors.amber),
+                      const Icon(
+                        Icons.push_pin_outlined,
+                        size: 14,
+                        color: HaloColors.amber,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Text(m.text,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: HaloType.sans(
-                                size: 14, color: HaloColors.text)),
+                        child: Text(
+                          m.text,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: HaloType.sans(
+                            size: 14,
+                            color: HaloColors.text,
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 12),
                       InkWell(
@@ -533,8 +614,11 @@ Future<void> _showPinnedSheet() async {
                         borderRadius: BorderRadius.circular(999),
                         child: const Padding(
                           padding: EdgeInsets.all(4),
-                          child: Icon(Icons.close,
-                              size: 16, color: HaloColors.text3),
+                          child: Icon(
+                            Icons.close,
+                            size: 16,
+                            color: HaloColors.text3,
+                          ),
                         ),
                       ),
                     ],
@@ -548,7 +632,7 @@ Future<void> _showPinnedSheet() async {
     );
   }
 
-Future<void> _unsendMessage(_Msg m) async {
+  Future<void> _unsendMessage(_Msg m) async {
     if (m.msgUid == null) return;
     final confirm = await showModalBottomSheet<bool>(
       context: context,
@@ -563,26 +647,39 @@ Future<void> _unsendMessage(_Msg m) async {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
-              child: Text('unsend message',
-                  style: HaloType.serif(size: 18, color: HaloColors.text)),
+              child: Text(
+                'unsend message',
+                style: HaloType.serif(size: 18, color: HaloColors.text),
+              ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
-              child: Text("it disappears with no trace. this can't be undone.",
-                  style: HaloType.sans(size: 13, color: HaloColors.text2)),
+              child: Text(
+                "it disappears with no trace. this can't be undone.",
+                style: HaloType.sans(size: 13, color: HaloColors.text2),
+              ),
             ),
             InkWell(
               onTap: () => Navigator.pop(ctx, true),
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: Row(children: [
-                  const Icon(Icons.delete_outline,
-                      size: 18, color: HaloColors.rose),
-                  const SizedBox(width: 14),
-                  Text('unsend',
-                      style: HaloType.sans(size: 14, color: HaloColors.rose)),
-                ]),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.delete_outline,
+                      size: 18,
+                      color: HaloColors.rose,
+                    ),
+                    const SizedBox(width: 14),
+                    Text(
+                      'unsend',
+                      style: HaloType.sans(size: 14, color: HaloColors.rose),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 8),
@@ -603,9 +700,9 @@ Future<void> _unsendMessage(_Msg m) async {
       final count = _messages.where((x) => x.pinned).length;
       if (count >= 3) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('max 3 pinned')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('max 3 pinned')));
         }
         return;
       }
@@ -630,11 +727,12 @@ Future<void> _unsendMessage(_Msg m) async {
   // collision-resistant enough for our scale.
   String _newMsgUid() {
     final t = DateTime.now().microsecondsSinceEpoch.toRadixString(36);
-    final r = (DateTime.now().microsecondsSinceEpoch ^
-            identityHashCode(this) ^
-            _msgUidCounter++)
-        .abs()
-        .toRadixString(36);
+    final r =
+        (DateTime.now().microsecondsSinceEpoch ^
+                identityHashCode(this) ^
+                _msgUidCounter++)
+            .abs()
+            .toRadixString(36);
     return '${t.padLeft(8, '0').substring(0, 8)}${r.substring(0, 4).padLeft(4, '0')}';
   }
 
@@ -646,7 +744,10 @@ Future<void> _unsendMessage(_Msg m) async {
       final uid = _newMsgUid();
       m.msgUid = uid;
       await db.assignUidIfMissing(
-          widget.peerHaloId, m.when.millisecondsSinceEpoch, uid);
+        widget.peerHaloId,
+        m.when.millisecondsSinceEpoch,
+        uid,
+      );
     }
     final ctrl = TextEditingController(text: m.text);
     final result = await showModalBottomSheet<String>(
@@ -658,15 +759,23 @@ Future<void> _unsendMessage(_Msg m) async {
       ),
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(
-          left: 20, right: 20, top: 20,
+          left: 20,
+          right: 20,
+          top: 20,
           bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('edit message',
-                style: HaloType.serif(size: 20, italic: true, color: HaloColors.amber)),
+            Text(
+              'edit message',
+              style: HaloType.serif(
+                size: 20,
+                italic: true,
+                color: HaloColors.amber,
+              ),
+            ),
             const SizedBox(height: 14),
             TextField(
               controller: ctrl,
@@ -688,14 +797,22 @@ Future<void> _unsendMessage(_Msg m) async {
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: Text('cancel',
-                      style: HaloType.sans(size: 13, color: HaloColors.text2)),
+                  child: Text(
+                    'cancel',
+                    style: HaloType.sans(size: 13, color: HaloColors.text2),
+                  ),
                 ),
                 const Spacer(),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, ctrl.text),
-                  child: Text('save',
-                      style: HaloType.sans(size: 14, weight: FontWeight.w500, color: HaloColors.amber)),
+                  child: Text(
+                    'save',
+                    style: HaloType.sans(
+                      size: 14,
+                      weight: FontWeight.w500,
+                      color: HaloColors.amber,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -734,7 +851,10 @@ Future<void> _unsendMessage(_Msg m) async {
       final uid = _newMsgUid();
       m.msgUid = uid;
       await db.assignUidIfMissing(
-          widget.peerHaloId, m.when.millisecondsSinceEpoch, uid);
+        widget.peerHaloId,
+        m.when.millisecondsSinceEpoch,
+        uid,
+      );
     }
     final current = m.reactions[''];
     final remove = current == emoji; // tapping same emoji = unreact
@@ -786,17 +906,19 @@ Future<void> _unsendMessage(_Msg m) async {
     final uids = <String>[];
     for (final r in rows) {
       final uid = r['msg_uid'] as String?;
-      loaded.add(_Msg(
-        r['direction'] as String,
-        r['plaintext'] as String,
-        DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
-        burnAt: r['burn_at'] as int?,
-        msgUid: uid,
-        replyTo: r['reply_to'] as String?,
-        edited: (r['edited'] as int? ?? 0) == 1,
-        pinned: (r['pinned'] as int? ?? 0) == 1,
-        mediaPath: r['media_path'] as String?,
-      ));
+      loaded.add(
+        _Msg(
+          r['direction'] as String,
+          r['plaintext'] as String,
+          DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+          burnAt: r['burn_at'] as int?,
+          msgUid: uid,
+          replyTo: r['reply_to'] as String?,
+          edited: (r['edited'] as int? ?? 0) == 1,
+          pinned: (r['pinned'] as int? ?? 0) == 1,
+          mediaPath: r['media_path'] as String?,
+        ),
+      );
       if (uid != null) uids.add(uid);
     }
     final reactionMap = await db.loadReactionsFor(uids);
@@ -849,10 +971,17 @@ Future<void> _unsendMessage(_Msg m) async {
       if (!mounted) return;
       await db.saveMessage(widget.peerHaloId, 'in', plain);
       setState(() {
-        _messages.add(_Msg('in', plain, DateTime.now(),
+        _messages.add(
+          _Msg(
+            'in',
+            plain,
+            DateTime.now(),
             burnAt: env.burnSeconds != null && env.burnSeconds! > 0
-                ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
-                : null));
+                ? DateTime.now().millisecondsSinceEpoch +
+                      env.burnSeconds! * 1000
+                : null,
+          ),
+        );
       });
       _scrollToEnd();
     }
@@ -867,16 +996,22 @@ Future<void> _unsendMessage(_Msg m) async {
     });
     final String cipher;
     try {
-      final wrapped = await wrapMessage(msg.text, sender: SenderInfo(
-        haloId: appState.myId,
-        edPub: engine.myEdPubkey(),
-        onion: appState.myOnion,
-        xPub: engine.myXPubkey(),
-      ));
+      final wrapped = await wrapMessage(
+        msg.text,
+        sender: SenderInfo(
+          haloId: appState.myId,
+          edPub: engine.myEdPubkey(),
+          onion: appState.myOnion,
+          xPub: engine.myXPubkey(),
+        ),
+      );
       cipher = await signalEncrypt(widget.peerHaloId, wrapped);
     } catch (e) {
       if (!mounted) return;
-      setState(() { msg.sending = false; msg.failed = true; });
+      setState(() {
+        msg.sending = false;
+        msg.failed = true;
+      });
       return;
     }
     // sprint 7.5: fire-and-forget. optimistic ✓ now; failure marks tap-to-retry
@@ -910,7 +1045,11 @@ Future<void> _unsendMessage(_Msg m) async {
         });
         await db.saveMessage(widget.peerHaloId, 'out', msg.text);
       } else {
-        setState(() { msg.sending = false; msg.failed = true; _status = result; });
+        setState(() {
+          msg.sending = false;
+          msg.failed = true;
+          _status = result;
+        });
       }
     });
   }
@@ -936,17 +1075,29 @@ Future<void> _unsendMessage(_Msg m) async {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(children: [
-                const Icon(Icons.local_fire_department_outlined,
-                    size: 14, color: HaloColors.amber),
-                const SizedBox(width: 8),
-                Text('ghost timer',
+              Row(
+                children: [
+                  const Icon(
+                    Icons.local_fire_department_outlined,
+                    size: 14,
+                    color: HaloColors.amber,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'ghost timer',
                     style: HaloType.serif(
-                        size: 16, color: HaloColors.text, italic: true)),
-              ]),
+                      size: 16,
+                      color: HaloColors.text,
+                      italic: true,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 4),
-              Text('how long before sent messages burn?',
-                  style: HaloType.mono(size: 11, color: HaloColors.text3)),
+              Text(
+                'how long before sent messages burn?',
+                style: HaloType.mono(size: 11, color: HaloColors.text3),
+              ),
               const SizedBox(height: 12),
               ...options.entries.map((e) {
                 final isSelected = _burnSeconds == e.key;
@@ -960,17 +1111,27 @@ Future<void> _unsendMessage(_Msg m) async {
                   },
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Row(children: [
-                      Expanded(child: Text(e.value,
-                          style: HaloType.sans(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            e.value,
+                            style: HaloType.sans(
                               size: 14,
                               color: isSelected
                                   ? HaloColors.amber
-                                  : HaloColors.text))),
-                      if (isSelected)
-                        const Icon(Icons.check_rounded,
-                            size: 16, color: HaloColors.amber),
-                    ]),
+                                  : HaloColors.text,
+                            ),
+                          ),
+                        ),
+                        if (isSelected)
+                          const Icon(
+                            Icons.check_rounded,
+                            size: 16,
+                            color: HaloColors.amber,
+                          ),
+                      ],
+                    ),
                   ),
                 );
               }),
@@ -981,7 +1142,7 @@ Future<void> _unsendMessage(_Msg m) async {
     );
   }
 
-Future<void> _pickAndSendImage() async {
+  Future<void> _pickAndSendImage() async {
     final XFile? picked = await ImagePicker().pickImage(
       source: ImageSource.gallery,
       maxWidth: 1280,
@@ -998,13 +1159,20 @@ Future<void> _pickAndSendImage() async {
     await mediaFile.writeAsBytes(bytes);
     final mediaPath = mediaFile.path;
     final b64 = base64Encode(bytes);
-    final msg = _Msg('out', '', DateTime.now(),
-        sending: true, msgUid: msgUid, mediaPath: mediaPath);
+    final msg = _Msg(
+      'out',
+      '',
+      DateTime.now(),
+      sending: true,
+      msgUid: msgUid,
+      mediaPath: mediaPath,
+    );
     setState(() {
       _messages.add(msg);
       _status = '';
     });
     _scrollToEnd();
+    HapticFeedback.lightImpact();
     final String cipher;
     try {
       final wrapped = await wrapMessage(
@@ -1042,8 +1210,13 @@ Future<void> _pickAndSendImage() async {
       if (!mounted) return;
       if (result == 'ok') {
         setState(() => msg.sending = false);
-        await db.saveMessage(widget.peerHaloId, 'out', '',
-            msgUid: msgUid, mediaPath: mediaPath);
+        await db.saveMessage(
+          widget.peerHaloId,
+          'out',
+          '',
+          msgUid: msgUid,
+          mediaPath: mediaPath,
+        );
       } else {
         setState(() {
           msg.sending = false;
@@ -1059,12 +1232,17 @@ Future<void> _pickAndSendImage() async {
     if (text.isEmpty || _sending) return;
     final msgUid = _newMsgUid();
     final replyToUid = _replyTo?.msgUid;
-    final msg = _Msg('out', text, DateTime.now(), sending: true,
-        msgUid: msgUid,
-        replyTo: replyToUid,
-        burnAt: _ghost
-            ? DateTime.now().millisecondsSinceEpoch + _burnSeconds * 1000
-            : null);
+    final msg = _Msg(
+      'out',
+      text,
+      DateTime.now(),
+      sending: true,
+      msgUid: msgUid,
+      replyTo: replyToUid,
+      burnAt: _ghost
+          ? DateTime.now().millisecondsSinceEpoch + _burnSeconds * 1000
+          : null,
+    );
     setState(() {
       _messages.add(msg);
       _sending = true;
@@ -1073,14 +1251,21 @@ Future<void> _pickAndSendImage() async {
     });
     _msgCtrl.clear();
     _scrollToEnd();
+    HapticFeedback.lightImpact();
     final String cipher;
     try {
-      final wrapped = await wrapMessage(text, burnSeconds: _ghost ? _burnSeconds : null, msgUid: msgUid, replyTo: replyToUid, sender: SenderInfo(
-        haloId: appState.myId,
-        edPub: engine.myEdPubkey(),
-        onion: appState.myOnion,
-        xPub: engine.myXPubkey(),
-      ));
+      final wrapped = await wrapMessage(
+        text,
+        burnSeconds: _ghost ? _burnSeconds : null,
+        msgUid: msgUid,
+        replyTo: replyToUid,
+        sender: SenderInfo(
+          haloId: appState.myId,
+          edPub: engine.myEdPubkey(),
+          onion: appState.myOnion,
+          xPub: engine.myXPubkey(),
+        ),
+      );
       cipher = await signalEncrypt(widget.peerHaloId, wrapped);
     } catch (e) {
       if (!mounted) return;
@@ -1093,7 +1278,10 @@ Future<void> _pickAndSendImage() async {
       return;
     }
     // sprint 7.5: fire-and-forget. optimistic ✓ now; failure marks tap-to-retry
-    setState(() { _sending = false; _status = ''; });
+    setState(() {
+      _sending = false;
+      _status = '';
+    });
     // before the peer back-pairs with us, force direct-onion so their
     // drain triggers the back-pair flow. nostr would dead-end because
     // they aren't subscribed to our xpub yet. once we receive anything
@@ -1121,14 +1309,22 @@ Future<void> _pickAndSendImage() async {
             Future(() => engine.ntfyPing(endpoint));
           }
         });
-        await db.saveMessage(widget.peerHaloId, 'out', text,
-            burnAt: _ghost
-                ? DateTime.now().millisecondsSinceEpoch + _burnSeconds * 1000
-                : null,
-            msgUid: msgUid,
-            replyTo: replyToUid);
+        await db.saveMessage(
+          widget.peerHaloId,
+          'out',
+          text,
+          burnAt: _ghost
+              ? DateTime.now().millisecondsSinceEpoch + _burnSeconds * 1000
+              : null,
+          msgUid: msgUid,
+          replyTo: replyToUid,
+        );
       } else {
-        setState(() { msg.sending = false; msg.failed = true; _status = result; });
+        setState(() {
+          msg.sending = false;
+          msg.failed = true;
+          _status = result;
+        });
       }
     });
   }
@@ -1159,54 +1355,91 @@ Future<void> _pickAndSendImage() async {
             InkWell(
               onTap: () => Navigator.pop(ctx, 'verify'),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: Row(children: [
-                  const Icon(Icons.verified_user_outlined,
-                      size: 18, color: HaloColors.amber),
-                  const SizedBox(width: 14),
-                  Text('verify safety number',
-                      style: HaloType.sans(size: 14, color: HaloColors.text)),
-                ]),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.verified_user_outlined,
+                      size: 18,
+                      color: HaloColors.amber,
+                    ),
+                    const SizedBox(width: 14),
+                    Text(
+                      'verify safety number',
+                      style: HaloType.sans(size: 14, color: HaloColors.text),
+                    ),
+                  ],
+                ),
               ),
             ),
             InkWell(
               onTap: () => Navigator.pop(ctx, 'mute'),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: Row(children: [
-                  Icon(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
                       _muted
                           ? Icons.notifications_active_outlined
                           : Icons.notifications_off_outlined,
-                      size: 18, color: HaloColors.text2),
-                  const SizedBox(width: 14),
-                  Text(_muted ? 'unmute notifications' : 'mute notifications',
-                      style: HaloType.sans(size: 14, color: HaloColors.text)),
-                ]),
+                      size: 18,
+                      color: HaloColors.text2,
+                    ),
+                    const SizedBox(width: 14),
+                    Text(
+                      _muted ? 'unmute notifications' : 'mute notifications',
+                      style: HaloType.sans(size: 14, color: HaloColors.text),
+                    ),
+                  ],
+                ),
               ),
             ),
             InkWell(
               onTap: () => Navigator.pop(ctx, 'archive'),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: Row(children: [
-                  const Icon(Icons.archive_outlined, size: 18, color: HaloColors.text2),
-                  const SizedBox(width: 14),
-                  Text('archive chat',
-                      style: HaloType.sans(size: 14, color: HaloColors.text)),
-                ]),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.archive_outlined,
+                      size: 18,
+                      color: HaloColors.text2,
+                    ),
+                    const SizedBox(width: 14),
+                    Text(
+                      'archive chat',
+                      style: HaloType.sans(size: 14, color: HaloColors.text),
+                    ),
+                  ],
+                ),
               ),
             ),
             InkWell(
               onTap: () => Navigator.pop(ctx, 'block'),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: Row(children: [
-                  const Icon(Icons.block, size: 18, color: HaloColors.rose),
-                  const SizedBox(width: 14),
-                  Text('block contact',
-                      style: HaloType.sans(size: 14, color: HaloColors.rose)),
-                ]),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.block, size: 18, color: HaloColors.rose),
+                    const SizedBox(width: 14),
+                    Text(
+                      'block contact',
+                      style: HaloType.sans(size: 14, color: HaloColors.rose),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 8),
@@ -1226,15 +1459,17 @@ Future<void> _pickAndSendImage() async {
     }
   }
 
-void _openKeyVerification() {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => KeyVerificationScreen(
-        peerHaloId: widget.peerHaloId,
-        peerName: _nickname ?? widget.peerHaloId,
-        myXpub: engine.myXPubkey(),
-        peerXpub: widget.peerXPub,
+  void _openKeyVerification() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => KeyVerificationScreen(
+          peerHaloId: widget.peerHaloId,
+          peerName: _nickname ?? widget.peerHaloId,
+          myXpub: engine.myXPubkey(),
+          peerXpub: widget.peerXPub,
+        ),
       ),
-    ));
+    );
   }
 
   Future<void> _toggleMute() async {
@@ -1260,31 +1495,54 @@ void _openKeyVerification() {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(children: [
-                const Icon(Icons.block, size: 15, color: HaloColors.amber),
-                const SizedBox(width: 8),
-                Text('block this contact?',
-                    style: HaloType.serif(size: 18, italic: true, color: HaloColors.text)),
-              ]),
+              Row(
+                children: [
+                  const Icon(Icons.block, size: 15, color: HaloColors.amber),
+                  const SizedBox(width: 8),
+                  Text(
+                    'block this contact?',
+                    style: HaloType.serif(
+                      size: 18,
+                      italic: true,
+                      color: HaloColors.text,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 8),
               Text(
                 'their messages stop arriving and they disappear from your chats. '
                 "they're never told. you can unblock anytime from settings.",
-                style: HaloType.sans(size: 13, color: HaloColors.text2, height: 1.5)),
+                style: HaloType.sans(
+                  size: 13,
+                  color: HaloColors.text2,
+                  height: 1.5,
+                ),
+              ),
               const SizedBox(height: 20),
-              Row(children: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: Text('cancel',
-                      style: HaloType.sans(size: 14, color: HaloColors.text2)),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  child: Text('block',
-                      style: HaloType.sans(size: 14, weight: FontWeight.w500, color: HaloColors.amber)),
-                ),
-              ]),
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: Text(
+                      'cancel',
+                      style: HaloType.sans(size: 14, color: HaloColors.text2),
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: Text(
+                      'block',
+                      style: HaloType.sans(
+                        size: 14,
+                        weight: FontWeight.w500,
+                        color: HaloColors.amber,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -1315,15 +1573,22 @@ void _openKeyVerification() {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
-              child: Text('forward to',
-                  style: HaloType.serif(
-                      size: 18, italic: true, color: HaloColors.text)),
+              child: Text(
+                'forward to',
+                style: HaloType.serif(
+                  size: 18,
+                  italic: true,
+                  color: HaloColors.text,
+                ),
+              ),
             ),
             if (targets.isEmpty)
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
-                child: Text('no contacts to forward to',
-                    style: HaloType.sans(size: 13, color: HaloColors.text2)),
+                child: Text(
+                  'no contacts to forward to',
+                  style: HaloType.sans(size: 13, color: HaloColors.text2),
+                ),
               )
             else
               Flexible(
@@ -1336,15 +1601,21 @@ void _openKeyVerification() {
                         onTap: () => Navigator.pop(ctx, c.haloId),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 12),
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
                           child: Row(
                             children: [
                               HaloAvatar(seed: c.avatarSeed, size: 32),
                               const SizedBox(width: 12),
                               Expanded(
-                                child: Text(c.nickname ?? c.haloId,
-                                    style: HaloType.sans(
-                                        size: 14, weight: FontWeight.w500)),
+                                child: Text(
+                                  c.nickname ?? c.haloId,
+                                  style: HaloType.sans(
+                                    size: 14,
+                                    weight: FontWeight.w500,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -1360,15 +1631,17 @@ void _openKeyVerification() {
     if (haloId == null || !mounted) return;
     final row = await db.getContact(haloId);
     if (row == null || !mounted) return;
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => ChatScreen(
-        peerHaloId: haloId,
-        peerOnion: (row['onion'] as String?) ?? '',
-        peerXPub: (row['xpub'] as String?) ?? '',
-        avatarSeed: haloId,
-        initialText: m.text,
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ChatScreen(
+          peerHaloId: haloId,
+          peerOnion: (row['onion'] as String?) ?? '',
+          peerXPub: (row['xpub'] as String?) ?? '',
+          avatarSeed: haloId,
+          initialText: m.text,
+        ),
       ),
-    ));
+    );
   }
 
   Future<void> _renameContact() async {
@@ -1382,18 +1655,28 @@ void _openKeyVerification() {
       ),
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(
-          left: 20, right: 20, top: 20,
+          left: 20,
+          right: 20,
+          top: 20,
           bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('name this contact',
-                style: HaloType.serif(size: 20, italic: true, color: HaloColors.amber)),
+            Text(
+              'name this contact',
+              style: HaloType.serif(
+                size: 20,
+                italic: true,
+                color: HaloColors.amber,
+              ),
+            ),
             const SizedBox(height: 4),
-            Text(widget.peerHaloId,
-                style: HaloType.mono(size: 11, color: HaloColors.text3)),
+            Text(
+              widget.peerHaloId,
+              style: HaloType.mono(size: 11, color: HaloColors.text3),
+            ),
             const SizedBox(height: 16),
             TextField(
               controller: ctrl,
@@ -1402,7 +1685,11 @@ void _openKeyVerification() {
               style: HaloType.sans(size: 15),
               decoration: InputDecoration(
                 hintText: 'what should i call them?',
-                hintStyle: HaloType.serif(size: 15, italic: true, color: HaloColors.text3),
+                hintStyle: HaloType.serif(
+                  size: 15,
+                  italic: true,
+                  color: HaloColors.text3,
+                ),
                 enabledBorder: const UnderlineInputBorder(
                   borderSide: BorderSide(color: HaloColors.line2),
                 ),
@@ -1418,14 +1705,22 @@ void _openKeyVerification() {
                 if ((_nickname ?? '').isNotEmpty)
                   TextButton(
                     onPressed: () => Navigator.pop(ctx, ''),
-                    child: Text('remove',
-                        style: HaloType.sans(size: 13, color: HaloColors.text2)),
+                    child: Text(
+                      'remove',
+                      style: HaloType.sans(size: 13, color: HaloColors.text2),
+                    ),
                   ),
                 const Spacer(),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, ctrl.text),
-                  child: Text('save',
-                      style: HaloType.sans(size: 14, weight: FontWeight.w500, color: HaloColors.amber)),
+                  child: Text(
+                    'save',
+                    style: HaloType.sans(
+                      size: 14,
+                      weight: FontWeight.w500,
+                      color: HaloColors.amber,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -1437,6 +1732,71 @@ void _openKeyVerification() {
     final t = result.trim();
     await db.setNickname(widget.peerHaloId, t.isEmpty ? null : t);
     if (mounted) setState(() => _nickname = t.isEmpty ? null : t);
+  }
+
+  void _onScroll() {
+    if (!_scrollCtrl.hasClients) return;
+    final pos = _scrollCtrl.position;
+    final show = (pos.maxScrollExtent - pos.pixels) > 240;
+    if (show != _showScrollDown && mounted) {
+      setState(() => _showScrollDown = show);
+    }
+  }
+
+  void _scrollToBottom() {
+    if (!_scrollCtrl.hasClients) return;
+    _scrollCtrl.animateTo(
+      _scrollCtrl.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
+
+  bool _sameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  Widget _dateDivider(DateTime when) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final d = DateTime(when.year, when.month, when.day);
+    final diff = today.difference(d).inDays;
+    String label;
+    if (diff == 0) {
+      label = 'today';
+    } else if (diff == 1) {
+      label = 'yesterday';
+    } else {
+      const months = [
+        'jan',
+        'feb',
+        'mar',
+        'apr',
+        'may',
+        'jun',
+        'jul',
+        'aug',
+        'sep',
+        'oct',
+        'nov',
+        'dec',
+      ];
+      label = '${when.day} ${months[when.month - 1]}';
+      if (when.year != now.year) label = '$label ${when.year}';
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Center(
+        child: Text(
+          label,
+          style: HaloType.serif(
+            size: 12.5,
+            italic: true,
+            color: HaloColors.text3,
+            weight: FontWeight.w300,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -1460,90 +1820,145 @@ void _openKeyVerification() {
                 : _ChatHead(
                     haloId: widget.peerHaloId,
                     nickname: _nickname,
-                  onBlock: _chatActions,
+                    verified: _verified,
+                    onBlock: _chatActions,
                     avatarSeed: widget.avatarSeed,
                     onBack: () => Navigator.pop(context),
                     onSearch: _openSearch,
                     onRename: _renameContact,
-                    pinnedCount:
-                        _messages.where((m) => m.pinned).length,
+                    pinnedCount: _messages.where((m) => m.pinned).length,
                     onPinned: _showPinnedSheet,
                   ),
             Expanded(
-              child: _messages.isEmpty
-                  ? const _EmptyConversation()
-                  : ListView.builder(
-                      controller: _scrollCtrl,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      itemCount: _messages.length,
-                      itemBuilder: (c, i) {
-                        final m = _messages[i];
-                        String? quoted;
-                        String? quotedAuthor;
-                        if (m.replyTo != null) {
-                          final original = _messages.firstWhere(
-                            (x) => x.msgUid == m.replyTo,
-                            orElse: () => _Msg('', '', DateTime.now()),
-                          );
-                          if (original.text.isNotEmpty) {
-                            quoted = original.text;
-                            quotedAuthor =
-                                original.direction == 'out' ? 'you' : 'them';
-                          } else {
-                            quoted = 'message unavailable';
-                          }
-                        }
-                        final isMatch = searchActive && _matches.contains(i);
-                        final isCurrent = searchActive &&
-                            _matches.isNotEmpty &&
-                            _matches[_matchPos] == i;
-                        final dimmed = searchActive && !isMatch;
-                        return AnimatedScale(
-                          scale: m.removing ? 0.92 : 1.0,
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeIn,
-                          child: AnimatedOpacity(
-                            opacity: m.removing ? 0.0 : 1.0,
-                            duration: const Duration(milliseconds: 300),
-                            child: _Bubble(
-                              key: isMatch ? _matchKeys[i] : null,
-                              msg: m,
-                              onRetry: _retry,
-                              onLongPress: (ctx) =>
-                                  _showEmojiPickerAt(ctx, m),
-                              quotedText: quoted,
-                              quotedAuthor: quotedAuthor,
-                              query: searchActive ? _query : '',
-                              isCurrentMatch: isCurrent,
-                              dimmed: dimmed,
-                            ),
+              child: Stack(
+                children: [
+                  _messages.isEmpty
+                      ? const _EmptyConversation()
+                      : ListView.builder(
+                          controller: _scrollCtrl,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
                           ),
-                        );
-                      },
+                          itemCount: _messages.length,
+                          itemBuilder: (c, i) {
+                            final m = _messages[i];
+                            String? quoted;
+                            String? quotedAuthor;
+                            if (m.replyTo != null) {
+                              final original = _messages.firstWhere(
+                                (x) => x.msgUid == m.replyTo,
+                                orElse: () => _Msg('', '', DateTime.now()),
+                              );
+                              if (original.text.isNotEmpty) {
+                                quoted = original.text;
+                                quotedAuthor = original.direction == 'out'
+                                    ? 'you'
+                                    : 'them';
+                              } else {
+                                quoted = 'message unavailable';
+                              }
+                            }
+                            final isMatch =
+                                searchActive && _matches.contains(i);
+                            final isCurrent =
+                                searchActive &&
+                                _matches.isNotEmpty &&
+                                _matches[_matchPos] == i;
+                            final dimmed = searchActive && !isMatch;
+                            final showDate =
+                                i == 0 ||
+                                !_sameDay(_messages[i - 1].when, m.when);
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                if (showDate) _dateDivider(m.when),
+                                AnimatedScale(
+                                  scale: m.removing ? 0.92 : 1.0,
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeIn,
+                                  child: AnimatedOpacity(
+                                    opacity: m.removing ? 0.0 : 1.0,
+                                    duration: const Duration(milliseconds: 300),
+                                    child: _Bubble(
+                                      key: isMatch ? _matchKeys[i] : null,
+                                      msg: m,
+                                      onRetry: _retry,
+                                      onLongPress: (ctx) =>
+                                          _showEmojiPickerAt(ctx, m),
+                                      quotedText: quoted,
+                                      quotedAuthor: quotedAuthor,
+                                      query: searchActive ? _query : '',
+                                      isCurrentMatch: isCurrent,
+                                      dimmed: dimmed,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                  if (_showScrollDown)
+                    Positioned(
+                      right: 12,
+                      bottom: 12,
+                      child: GestureDetector(
+                        onTap: _scrollToBottom,
+                        child: Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: HaloColors.surface2,
+                            border: Border.all(
+                              color: HaloColors.amber.withValues(alpha: 0.5),
+                              width: 0.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: HaloColors.amber.withValues(alpha: 0.18),
+                                blurRadius: 14,
+                                spreadRadius: -2,
+                              ),
+                            ],
+                          ),
+                          alignment: Alignment.center,
+                          child: const Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            color: HaloColors.amber,
+                            size: 22,
+                          ),
+                        ),
+                      ),
                     ),
+                ],
+              ),
             ),
             if (_status.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
-                child: Text(_friendlyStatus(_status),
-                    style: HaloType.mono(size: 10, color: HaloColors.text3)),
+                child: Text(
+                  _friendlyStatus(_status),
+                  style: HaloType.mono(size: 10, color: HaloColors.text3),
+                ),
               ),
-            if (_replyTo != null) _ReplyQuoteBar(
-              target: _replyTo!,
-              onCancel: () => setState(() => _replyTo = null),
-            ),
+            if (_replyTo != null)
+              _ReplyQuoteBar(
+                target: _replyTo!,
+                onCancel: () => setState(() => _replyTo = null),
+              ),
             _blocked
-                        ? _BlockedBar(onUnblock: _unblockContact)
-                        : _Composer(
-              onAttach: _pickAndSendImage,
-              ghost: _ghost,
-              onToggleGhost: () => setState(() => _ghost = !_ghost),
-              onPickBurn: _pickBurnDuration,
-              burnSeconds: _burnSeconds,
-              controller: _msgCtrl,
-              sending: _sending,
-              onSend: _send,
-            ),
+                ? _BlockedBar(onUnblock: _unblockContact)
+                : _Composer(
+                    onAttach: _pickAndSendImage,
+                    ghost: _ghost,
+                    onToggleGhost: () => setState(() => _ghost = !_ghost),
+                    onPickBurn: _pickBurnDuration,
+                    burnSeconds: _burnSeconds,
+                    controller: _msgCtrl,
+                    sending: _sending,
+                    onSend: _send,
+                  ),
           ],
         ),
       ),
@@ -1567,13 +1982,25 @@ class _BlockedBar extends StatelessWidget {
           const Icon(Icons.block, size: 15, color: HaloColors.text3),
           const SizedBox(width: 10),
           Expanded(
-            child: Text('you blocked this contact',
-                style: HaloType.serif(size: 14, italic: true, color: HaloColors.text2)),
+            child: Text(
+              'you blocked this contact',
+              style: HaloType.serif(
+                size: 14,
+                italic: true,
+                color: HaloColors.text2,
+              ),
+            ),
           ),
           TextButton(
             onPressed: onUnblock,
-            child: Text('unblock',
-                style: HaloType.sans(size: 14, weight: FontWeight.w500, color: HaloColors.amber)),
+            child: Text(
+              'unblock',
+              style: HaloType.sans(
+                size: 14,
+                weight: FontWeight.w500,
+                color: HaloColors.amber,
+              ),
+            ),
           ),
         ],
       ),
@@ -1591,6 +2018,7 @@ class _ChatHead extends StatelessWidget {
   final VoidCallback onBlock;
   final int pinnedCount;
   final VoidCallback onPinned;
+  final bool verified;
   const _ChatHead({
     required this.haloId,
     this.nickname,
@@ -1601,6 +2029,7 @@ class _ChatHead extends StatelessWidget {
     required this.onBlock,
     this.pinnedCount = 0,
     required this.onPinned,
+    this.verified = false,
   });
 
   @override
@@ -1613,7 +2042,11 @@ class _ChatHead extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
+            icon: const Icon(
+              Icons.chevron_left,
+              color: HaloColors.text2,
+              size: 26,
+            ),
             onPressed: onBack,
           ),
           HaloAvatar(seed: avatarSeed, size: 36),
@@ -1625,39 +2058,74 @@ class _ChatHead extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    transitionBuilder: (child, anim) => FadeTransition(
-                      opacity: anim,
-                      child: ScaleTransition(
-                        scale: Tween<double>(begin: 0.98, end: 1.0).animate(anim),
-                        child: child,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          transitionBuilder: (child, anim) => FadeTransition(
+                            opacity: anim,
+                            child: ScaleTransition(
+                              scale: Tween<double>(
+                                begin: 0.98,
+                                end: 1.0,
+                              ).animate(anim),
+                              child: child,
+                            ),
+                          ),
+                          child: Text(
+                            nickname ?? haloId,
+                            key: ValueKey<String>(nickname ?? haloId),
+                            overflow: TextOverflow.ellipsis,
+                            style: HaloType.sans(
+                              size: 14,
+                              weight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                    child: Text(nickname ?? haloId,
-                        key: ValueKey<String>(nickname ?? haloId),
-                        style: HaloType.sans(size: 14, weight: FontWeight.w500)),
+                      if (verified) ...[
+                        const SizedBox(width: 6),
+                        const Icon(
+                          Icons.verified_user,
+                          size: 13,
+                          color: HaloColors.amber,
+                        ),
+                      ],
+                    ],
                   ),
-                  Text(nickname != null ? haloId : 'onion',
-                      style: HaloType.mono(size: 10, color: HaloColors.text2)),
+                  Text(
+                    nickname != null ? haloId : 'onion',
+                    style: HaloType.mono(size: 10, color: HaloColors.text2),
+                  ),
                 ],
               ),
             ),
           ),
           if (pinnedCount > 0)
             IconButton(
-              icon: const Icon(Icons.push_pin_outlined,
-                  color: HaloColors.amber, size: 19),
+              icon: const Icon(
+                Icons.push_pin_outlined,
+                color: HaloColors.amber,
+                size: 19,
+              ),
               onPressed: onPinned,
             ),
           IconButton(
-            icon: const Icon(Icons.search_rounded,
-                color: HaloColors.text2, size: 21),
+            icon: const Icon(
+              Icons.search_rounded,
+              color: HaloColors.text2,
+              size: 21,
+            ),
             onPressed: onSearch,
           ),
           IconButton(
-            icon: const Icon(Icons.more_vert,
-                color: HaloColors.text2, size: 21),
+            icon: const Icon(
+              Icons.more_vert,
+              color: HaloColors.text2,
+              size: 21,
+            ),
             onPressed: onBlock,
           ),
         ],
@@ -1726,7 +2194,8 @@ class _SearchHeadState extends State<_SearchHead> {
         padding: const EdgeInsets.fromLTRB(8, 6, 12, 11),
         decoration: const BoxDecoration(
           border: Border(
-              bottom: BorderSide(color: HaloColors.line, width: 0.5)),
+            bottom: BorderSide(color: HaloColors.line, width: 0.5),
+          ),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1734,14 +2203,19 @@ class _SearchHeadState extends State<_SearchHead> {
             Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.close_rounded,
-                      color: HaloColors.text2, size: 20),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: HaloColors.text2,
+                    size: 20,
+                  ),
                   onPressed: widget.onClose,
                 ),
                 Expanded(
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: HaloColors.surface2,
                       borderRadius: BorderRadius.circular(999),
@@ -1749,8 +2223,11 @@ class _SearchHeadState extends State<_SearchHead> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.search_rounded,
-                            size: 15, color: HaloColors.amber),
+                        const Icon(
+                          Icons.search_rounded,
+                          size: 15,
+                          color: HaloColors.amber,
+                        ),
                         const SizedBox(width: 9),
                         Expanded(
                           child: TextField(
@@ -1760,17 +2237,21 @@ class _SearchHeadState extends State<_SearchHead> {
                             cursorColor: HaloColors.amber,
                             cursorWidth: 1.5,
                             style: HaloType.sans(
-                                size: 13, color: HaloColors.text),
+                              size: 13,
+                              color: HaloColors.text,
+                            ),
                             decoration: InputDecoration(
                               isDense: true,
                               border: InputBorder.none,
                               hintText: 'find in conversation',
                               hintStyle: HaloType.serif(
-                                  size: 13,
-                                  italic: true,
-                                  color: HaloColors.text3),
-                              contentPadding:
-                                  const EdgeInsets.symmetric(vertical: 10),
+                                size: 13,
+                                italic: true,
+                                color: HaloColors.text3,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 10,
+                              ),
                             ),
                           ),
                         ),
@@ -1796,23 +2277,27 @@ class _SearchHeadState extends State<_SearchHead> {
                           Text.rich(
                             TextSpan(
                               style: HaloType.mono(
-                                  size: 10, color: HaloColors.text2),
+                                size: 10,
+                                color: HaloColors.text2,
+                              ),
                               children: [
                                 TextSpan(
                                   text: widget.matchCount == 0
                                       ? 'no matches'
                                       : '${widget.matchPos}',
                                   style: HaloType.mono(
-                                      size: 10,
-                                      color: widget.matchCount == 0
-                                          ? HaloColors.text3
-                                          : HaloColors.amber,
-                                      weight: FontWeight.w500),
+                                    size: 10,
+                                    color: widget.matchCount == 0
+                                        ? HaloColors.text3
+                                        : HaloColors.amber,
+                                    weight: FontWeight.w500,
+                                  ),
                                 ),
                                 if (widget.matchCount > 0)
                                   TextSpan(
-                                      text:
-                                          ' of ${widget.matchCount} ${widget.matchCount == 1 ? 'match' : 'matches'}'),
+                                    text:
+                                        ' of ${widget.matchCount} ${widget.matchCount == 1 ? 'match' : 'matches'}',
+                                  ),
                               ],
                             ),
                           ),
@@ -1868,9 +2353,11 @@ class _NavBtn extends StatelessWidget {
           ),
         ),
         alignment: Alignment.center,
-        child: Icon(icon,
-            size: 16,
-            color: enabled ? HaloColors.amber : HaloColors.text3),
+        child: Icon(
+          icon,
+          size: 16,
+          color: enabled ? HaloColors.amber : HaloColors.text3,
+        ),
       ),
     );
   }
@@ -1925,16 +2412,18 @@ class _Bubble extends StatelessWidget {
       if (hit > start) {
         spans.add(TextSpan(text: text.substring(start, hit)));
       }
-      spans.add(TextSpan(
-        text: text.substring(hit, hit + q.length),
-        style: TextStyle(
-          color: isOut ? HaloColors.onAmber : HaloColors.amber,
-          fontWeight: FontWeight.w600,
-          decoration: TextDecoration.underline,
-          decorationColor: isOut ? HaloColors.onAmber : HaloColors.amber,
-          decorationThickness: 1.5,
+      spans.add(
+        TextSpan(
+          text: text.substring(hit, hit + q.length),
+          style: TextStyle(
+            color: isOut ? HaloColors.onAmber : HaloColors.amber,
+            fontWeight: FontWeight.w600,
+            decoration: TextDecoration.underline,
+            decorationColor: isOut ? HaloColors.onAmber : HaloColors.amber,
+            decorationThickness: 1.5,
+          ),
         ),
-      ));
+      );
       start = hit + q.length;
     }
     return Text.rich(TextSpan(style: base, children: spans));
@@ -1962,214 +2451,243 @@ class _Bubble extends StatelessWidget {
         curve: Curves.easeOut,
         scale: isExpiring ? 0.88 : 1.0,
         child: GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: msg.failed && onRetry != null ? () => onRetry!(msg) : null,
-      onLongPress: onLongPress == null ? null : () => onLongPress!(context),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Column(
-          crossAxisAlignment: isOut ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-          children: [
-            Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.78,
-              ),
-              padding: isImage
-                  ? EdgeInsets.zero
-                  : const EdgeInsets.fromLTRB(14, 10, 14, 8),
-              decoration: isImage
-                  ? const BoxDecoration()
-                  : BoxDecoration(
-                color: isOut ? null : HaloColors.surface3,
-                gradient: isOut
-                    ? const LinearGradient(
-                        begin: Alignment.topLeft, end: Alignment.bottomRight,
-                        colors: [HaloColors.amber, HaloColors.amberDeep],
-                      )
-                    : null,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(14),
-                  topRight: const Radius.circular(14),
-                  bottomLeft: Radius.circular(isOut ? 14 : 4),
-                  bottomRight: Radius.circular(isOut ? 4 : 14),
-                ),
-                border: isCurrentMatch
-                    ? Border.all(color: HaloColors.amber, width: 1)
-                    : null,
-                boxShadow: isCurrentMatch
-                    ? [
-                        BoxShadow(
-                          color: HaloColors.amber.withOpacity(0.28),
-                          blurRadius: 22,
-                          spreadRadius: -4,
-                          offset: const Offset(0, 6),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (quotedText != null) ...[
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 6),
-                      padding: const EdgeInsets.fromLTRB(10, 6, 10, 7),
-                      decoration: BoxDecoration(
-                        color: isOut
-                            ? Colors.black.withOpacity(0.12)
-                            : HaloColors.surface2,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border(
-                          left: BorderSide(
-                            color: isOut
-                                ? HaloColors.onAmber.withValues(alpha: 0.55)
-                                : HaloColors.amber,
-                            width: 2.5,
+          behavior: HitTestBehavior.opaque,
+          onTap: msg.failed && onRetry != null ? () => onRetry!(msg) : null,
+          onLongPress: onLongPress == null ? null : () => onLongPress!(context),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Column(
+              crossAxisAlignment: isOut
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
+              children: [
+                Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.78,
+                  ),
+                  padding: isImage
+                      ? EdgeInsets.zero
+                      : const EdgeInsets.fromLTRB(14, 10, 14, 8),
+                  decoration: isImage
+                      ? const BoxDecoration()
+                      : BoxDecoration(
+                          color: isOut ? null : HaloColors.surface3,
+                          gradient: isOut
+                              ? const LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    HaloColors.amber,
+                                    HaloColors.amberDeep,
+                                  ],
+                                )
+                              : null,
+                          borderRadius: BorderRadius.only(
+                            topLeft: const Radius.circular(14),
+                            topRight: const Radius.circular(14),
+                            bottomLeft: Radius.circular(isOut ? 14 : 4),
+                            bottomRight: Radius.circular(isOut ? 4 : 14),
                           ),
+                          border: isCurrentMatch
+                              ? Border.all(color: HaloColors.amber, width: 1)
+                              : null,
+                          boxShadow: isCurrentMatch
+                              ? [
+                                  BoxShadow(
+                                    color: HaloColors.amber.withOpacity(0.28),
+                                    blurRadius: 22,
+                                    spreadRadius: -4,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ]
+                              : null,
                         ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (quotedAuthor != null)
-                            Text(
-                              quotedAuthor!,
-                              style: HaloType.mono(
-                                size: 9.5,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (quotedText != null) ...[
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 6),
+                          padding: const EdgeInsets.fromLTRB(10, 6, 10, 7),
+                          decoration: BoxDecoration(
+                            color: isOut
+                                ? Colors.black.withOpacity(0.12)
+                                : HaloColors.surface2,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border(
+                              left: BorderSide(
                                 color: isOut
-                                    ? HaloColors.onAmber.withValues(alpha: 0.7)
+                                    ? HaloColors.onAmber.withValues(alpha: 0.55)
                                     : HaloColors.amber,
-                                letter: 0.6,
+                                width: 2.5,
                               ),
                             ),
-                          if (quotedAuthor != null) const SizedBox(height: 2),
-                          Text(
-                            quotedText!,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: HaloType.sans(
-                              size: 12.5,
-                              color: isOut
-                                  ? HaloColors.onAmber.withValues(alpha: 0.8)
-                                  : HaloColors.text2,
-                              height: 1.3,
-                            ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
-                  if (msg.mediaPath != null)
-                    GestureDetector(
-                      onTap: () => _openFullImage(context, msg.mediaPath!),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxHeight: 280),
-                          child: Image.file(
-                            File(msg.mediaPath!),
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
-                                const SizedBox.shrink(),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (quotedAuthor != null)
+                                Text(
+                                  quotedAuthor!,
+                                  style: HaloType.mono(
+                                    size: 9.5,
+                                    color: isOut
+                                        ? HaloColors.onAmber.withValues(
+                                            alpha: 0.7,
+                                          )
+                                        : HaloColors.amber,
+                                    letter: 0.6,
+                                  ),
+                                ),
+                              if (quotedAuthor != null)
+                                const SizedBox(height: 2),
+                              Text(
+                                quotedText!,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: HaloType.sans(
+                                  size: 12.5,
+                                  color: isOut
+                                      ? HaloColors.onAmber.withValues(
+                                          alpha: 0.8,
+                                        )
+                                      : HaloColors.text2,
+                                  height: 1.3,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                    ),
-                  if (msg.text.isNotEmpty) ...[
-                    if (msg.mediaPath != null) const SizedBox(height: 6),
-                    _body(isOut),
-                  ],
-                  if (showMeta) ...[
-                    const SizedBox(height: 4),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_fmtTime(msg.when),
-                            style: TextStyle(
-                              fontFamily: 'JetBrains Mono',
-                              fontSize: 9,
-                              color: metaColor,
-                              letterSpacing: 0.4,
-                            )),
-                        if (msg.edited) ...[
-                          const SizedBox(width: 5),
-                          Text('edited',
+                      ],
+                      if (msg.mediaPath != null)
+                        GestureDetector(
+                          onTap: () => _openFullImage(context, msg.mediaPath!),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxHeight: 280),
+                              child: Image.file(
+                                File(msg.mediaPath!),
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) =>
+                                    const SizedBox.shrink(),
+                              ),
+                            ),
+                          ),
+                        ),
+                      if (msg.text.isNotEmpty) ...[
+                        if (msg.mediaPath != null) const SizedBox(height: 6),
+                        _body(isOut),
+                      ],
+                      if (showMeta) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _fmtTime(msg.when),
                               style: TextStyle(
                                 fontFamily: 'JetBrains Mono',
                                 fontSize: 9,
                                 color: metaColor,
-                                fontStyle: FontStyle.italic,
                                 letterSpacing: 0.4,
-                              )),
-                        ],
-                        const SizedBox(width: 3),
-                        Text('✓', style: TextStyle(fontSize: 11, color: metaColor, fontWeight: FontWeight.w700, height: 1)),
+                              ),
+                            ),
+                            if (msg.edited) ...[
+                              const SizedBox(width: 5),
+                              Text(
+                                'edited',
+                                style: TextStyle(
+                                  fontFamily: 'JetBrains Mono',
+                                  fontSize: 9,
+                                  color: metaColor,
+                                  fontStyle: FontStyle.italic,
+                                  letterSpacing: 0.4,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(width: 3),
+                            Text(
+                              '✓',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: metaColor,
+                                fontWeight: FontWeight.w700,
+                                height: 1,
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
-                    ),
-                  ],
-                  if (msg.reactions.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      child: Wrap(
-                        spacing: 4,
-                        runSpacing: 4,
-                        children: _buildReactionChips(msg),
-                      ),
-                    ),
-                  ],
-                  if (msg.burnAt != null) ...[
-                const SizedBox(height: 4),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.local_fire_department_outlined,
-                          size: 11,
-                          color: isOut
-                              ? HaloColors.onAmber
-                              : HaloColors.amber.withOpacity(0.75)),
-                      const SizedBox(width: 4),
-                      Text('burns in ${_fmtBurn(msg.burnAt!)}',
-                          style: HaloType.mono(
-                              size: 9.5,
-                              color: isOut
-                                  ? HaloColors.onAmber
-                                  : HaloColors.amber.withOpacity(0.75),
-                              weight: FontWeight.w600)
-                              .copyWith(letterSpacing: 0.3)),
+                      if (msg.reactions.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child: Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            children: _buildReactionChips(msg),
+                          ),
+                        ),
+                      ],
+                      if (msg.burnAt != null) ...[
+                        const SizedBox(height: 4),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.local_fire_department_outlined,
+                                size: 11,
+                                color: isOut
+                                    ? HaloColors.onAmber
+                                    : HaloColors.amber.withOpacity(0.75),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'burns in ${_fmtBurn(msg.burnAt!)}',
+                                style: HaloType.mono(
+                                  size: 9.5,
+                                  color: isOut
+                                      ? HaloColors.onAmber
+                                      : HaloColors.amber.withOpacity(0.75),
+                                  weight: FontWeight.w600,
+                                ).copyWith(letterSpacing: 0.3),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      if (msg.failed) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          'failed · tap to retry',
+                          style: TextStyle(
+                            fontFamily: 'JetBrains Mono',
+                            fontSize: 9,
+                            color: HaloColors.onAmber.withValues(alpha: 0.75),
+                            letterSpacing: 0.4,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
-              ],
-              if (msg.failed) ...[
-                    const SizedBox(height: 4),
-                    Text('failed · tap to retry',
-                        style: TextStyle(
-                          fontFamily: 'JetBrains Mono',
-                          fontSize: 9,
-                          color: HaloColors.onAmber.withValues(alpha: 0.75),
-                          letterSpacing: 0.4,
-                        )),
-                  ],
+                if (showPill) ...[
+                  const SizedBox(height: 4),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: SendPill(mode: _pmFrom(appState.sendMode)),
+                  ),
                 ],
-              ),
+              ],
             ),
-            if (showPill) ...[
-              const SizedBox(height: 4),
-              Padding(
-                  padding: const EdgeInsets.only(right: 4),
-                  child: SendPill(mode: _pmFrom(appState.sendMode)),
-                ),
-            ],
-          ],
+          ),
         ),
       ),
-    ),
-    ),
     );
   }
 
@@ -2201,9 +2719,10 @@ class _Bubble extends StatelessWidget {
             Text(emoji, style: const TextStyle(fontSize: 13)),
             if (count > 1) ...[
               const SizedBox(width: 4),
-              Text('$count',
-                  style: HaloType.mono(
-                      size: 10, color: HaloColors.text2)),
+              Text(
+                '$count',
+                style: HaloType.mono(size: 10, color: HaloColors.text2),
+              ),
             ],
           ],
         ),
@@ -2245,9 +2764,7 @@ class _EmojiTapState extends State<_EmojiTap> {
           width: 46,
           height: 46,
           decoration: BoxDecoration(
-            color: widget.selected
-                ? HaloColors.amberSoft
-                : HaloColors.surface3,
+            color: widget.selected ? HaloColors.amberSoft : HaloColors.surface3,
             border: Border.all(
               color: widget.selected ? HaloColors.amber : HaloColors.line,
               width: 0.5,
@@ -2276,9 +2793,7 @@ class _ReplyQuoteBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
       decoration: const BoxDecoration(
         color: HaloColors.surface2,
-        border: Border(
-          top: BorderSide(color: HaloColors.line, width: 0.5),
-        ),
+        border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),
       ),
       child: Row(
         children: [
@@ -2300,7 +2815,10 @@ class _ReplyQuoteBar extends StatelessWidget {
                 Text(
                   'replying to ${target.direction == 'out' ? 'yourself' : 'them'}',
                   style: HaloType.mono(
-                      size: 9.5, color: HaloColors.amber, letter: 0.6),
+                    size: 9.5,
+                    color: HaloColors.amber,
+                    letter: 0.6,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -2308,7 +2826,10 @@ class _ReplyQuoteBar extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: HaloType.sans(
-                      size: 13, color: HaloColors.text2, height: 1.3),
+                    size: 13,
+                    color: HaloColors.text2,
+                    height: 1.3,
+                  ),
                 ),
               ],
             ),
@@ -2406,10 +2927,7 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   color: HaloColors.line2,
                 ),
-                _ActionTap(
-                  icon: Icons.reply_rounded,
-                  onTap: widget.onReply,
-                ),
+                _ActionTap(icon: Icons.reply_rounded, onTap: widget.onReply),
               ],
             ),
           ),
@@ -2467,12 +2985,16 @@ class _EmptyConversation extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(40),
-        child: Text('say hi.',
-            textAlign: TextAlign.center,
-            style: HaloType.serif(
-              size: 22, weight: FontWeight.w300,
-              italic: true, color: HaloColors.text3,
-            )),
+        child: Text(
+          'say hi.',
+          textAlign: TextAlign.center,
+          style: HaloType.serif(
+            size: 22,
+            weight: FontWeight.w300,
+            italic: true,
+            color: HaloColors.text3,
+          ),
+        ),
       ),
     );
   }
@@ -2527,105 +3049,134 @@ class _Composer extends StatelessWidget {
             child: ghost
                 ? Padding(
                     key: const ValueKey('ghost-banner'),
-                    padding: const EdgeInsets.only(left: 4, right: 4, bottom: 8),
+                    padding: const EdgeInsets.only(
+                      left: 4,
+                      right: 4,
+                      bottom: 8,
+                    ),
                     child: Row(
                       children: [
-                        const Icon(Icons.local_fire_department_outlined,
-                            size: 13, color: HaloColors.amber),
+                        const Icon(
+                          Icons.local_fire_department_outlined,
+                          size: 13,
+                          color: HaloColors.amber,
+                        ),
                         const SizedBox(width: 6),
-                        Text('ghost mode',
-                            style: HaloType.serif(
-                                size: 12,
-                                color: HaloColors.amber,
-                                italic: true)),
+                        Text(
+                          'ghost mode',
+                          style: HaloType.serif(
+                            size: 12,
+                            color: HaloColors.amber,
+                            italic: true,
+                          ),
+                        ),
                         const SizedBox(width: 8),
-                        Text('messages burn after ${_humanBurn(burnSeconds)}',
-                            style: HaloType.mono(
-                                size: 10.5, color: HaloColors.text3)),
+                        Text(
+                          'messages burn after ${_humanBurn(burnSeconds)}',
+                          style: HaloType.mono(
+                            size: 10.5,
+                            color: HaloColors.text3,
+                          ),
+                        ),
                       ],
                     ),
                   )
                 : const SizedBox.shrink(),
           ),
           Row(
-        children: [
-          GestureDetector(
-            onTap: onToggleGhost,
-            onLongPress: onPickBurn,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              width: 32, height: 32,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: ghost ? HaloColors.amber : HaloColors.surface3,
-                boxShadow: ghost
-                    ? [BoxShadow(
-                        color: HaloColors.amber.withOpacity(0.45),
-                        blurRadius: 12, spreadRadius: 1)]
-                    : null,
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.local_fire_department_outlined,
-                size: 18,
-                color: ghost ? HaloColors.onAmber : HaloColors.text2,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          GestureDetector(
-            onTap: onAttach,
-            behavior: HitTestBehavior.opaque,
-            child: const Icon(Icons.add_photo_alternate_outlined,
-                size: 22, color: HaloColors.text2),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              style: HaloType.sans(size: 14),
-              minLines: 1,
-              maxLines: 4,
-              decoration: InputDecoration(
-                hintText: 'message',
-                hintStyle: HaloType.sans(size: 14, color: HaloColors.text3),
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                filled: true,
-                fillColor: HaloColors.surface2,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  borderSide: const BorderSide(color: HaloColors.amber, width: 0.5),
+            children: [
+              GestureDetector(
+                onTap: onToggleGhost,
+                onLongPress: onPickBurn,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: ghost ? HaloColors.amber : HaloColors.surface3,
+                    boxShadow: ghost
+                        ? [
+                            BoxShadow(
+                              color: HaloColors.amber.withOpacity(0.45),
+                              blurRadius: 12,
+                              spreadRadius: 1,
+                            ),
+                          ]
+                        : null,
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Icons.local_fire_department_outlined,
+                    size: 18,
+                    color: ghost ? HaloColors.onAmber : HaloColors.text2,
+                  ),
                 ),
               ),
-              onSubmitted: (_) => onSend(),
-            ),
-          ),
-          const SizedBox(width: 10),
-          GestureDetector(
-            onTap: sending ? null : onSend,
-            child: Container(
-              width: 32, height: 32,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: sending ? HaloColors.surface3 : HaloColors.amber,
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: onAttach,
+                behavior: HitTestBehavior.opaque,
+                child: const Icon(
+                  Icons.add_photo_alternate_outlined,
+                  size: 22,
+                  color: HaloColors.text2,
+                ),
               ),
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.arrow_upward,
-                size: 18,
-                color: sending ? HaloColors.text3 : HaloColors.onAmber,
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  style: HaloType.sans(size: 14),
+                  minLines: 1,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    hintText: 'message',
+                    hintStyle: HaloType.sans(size: 14, color: HaloColors.text3),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    filled: true,
+                    fillColor: HaloColors.surface2,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: const BorderSide(
+                        color: HaloColors.amber,
+                        width: 0.5,
+                      ),
+                    ),
+                  ),
+                  onSubmitted: (_) => onSend(),
+                ),
               ),
-            ),
-          ),
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: sending ? null : onSend,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: sending ? HaloColors.surface3 : HaloColors.amber,
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Icons.arrow_upward,
+                    size: 18,
+                    color: sending ? HaloColors.text3 : HaloColors.onAmber,
+                  ),
+                ),
+              ),
             ],
           ),
         ],
@@ -2639,5 +3190,5 @@ class _Composer extends StatelessWidget {
 PrivacyMode _pmFrom(String m) => m == 'fast'
     ? PrivacyMode.fast
     : m == 'normal'
-        ? PrivacyMode.normal
-        : PrivacyMode.private;
+    ? PrivacyMode.normal
+    : PrivacyMode.private;

@@ -2,12 +2,14 @@
 // welcome → identity reveal → keep safe → first contact.
 
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import 'restore_screen.dart';
 import '../main.dart' show appState;
 import '../main.dart';
 import 'scan_screen.dart';
+import '../widgets/halo_avatar.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final AppState appState;
@@ -299,31 +301,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Spacer(),
-            AnimatedBuilder(
-              animation: _breath,
-              builder: (c, _) {
-                final op = 0.7 + 0.3 *
-                    math.sin(_breath.value * 2 * math.pi);
-                return Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const RadialGradient(
-                      center: Alignment(-0.4, -0.4),
-                      colors: [HaloColors.amber, HaloColors.amberDeep],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                          color:
-                              HaloColors.amber.withValues(alpha: 0.4 * op),
-                          blurRadius: 30,
-                          spreadRadius: 2),
-                    ],
-                  ),
-                );
-              },
-            ),
+            _sigilReveal(),
             const SizedBox(height: 22),
             Text('YOUR HALO ID',
                 style: HaloType.mono(size: 10, color: HaloColors.amber)
@@ -403,6 +381,42 @@ class _IdentityScreenState extends State<_IdentityScreen>
           ],
         ),
       ),
+    );
+  }
+
+  Widget _sigilReveal() {
+    return AnimatedBuilder(
+      animation: Listenable.merge([_breath, _reveal]),
+      builder: (c, _) {
+        final breath = 0.7 + 0.3 * math.sin(_breath.value * 2 * math.pi);
+        final rv = (_reveal.value * 3000 / 1100).clamp(0.0, 1.0);
+        final eased = Curves.easeOutCubic.transform(rv);
+        return SizedBox(
+          width: 88,
+          height: 88,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              CustomPaint(
+                size: const Size(88, 88),
+                painter: _HaloRingPainter(eased, breath),
+              ),
+              Opacity(
+                opacity: eased,
+                child: Transform.scale(
+                  scale: 0.72 + 0.28 * eased,
+                  child: HaloAvatar(
+                    seed: widget.appState.myId.isEmpty
+                        ? 'halo'
+                        : widget.appState.myId,
+                    size: 56,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -500,10 +514,8 @@ class _IdentityScreenState extends State<_IdentityScreen>
           child: Transform.translate(
             offset: Offset(0, dy),
             child: ImageFiltered(
-              imageFilter: blur > 0.1
-                  ? ColorFilter.mode(Colors.transparent, BlendMode.dst)
-                  : const ColorFilter.mode(
-                      Colors.transparent, BlendMode.dst),
+              imageFilter: ui.ImageFilter.blur(
+                  sigmaX: blur, sigmaY: blur, tileMode: TileMode.decal),
               child: Text(
                 word,
                 style: HaloType.mono(
@@ -541,6 +553,29 @@ class _IdentityScreenState extends State<_IdentityScreen>
       },
     );
   }
+}
+
+class _HaloRingPainter extends CustomPainter {
+  final double sweep; // 0..1 of a full circle
+  final double glow;  // 0..1 breath
+  _HaloRingPainter(this.sweep, this.glow);
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (sweep <= 0) return;
+    final center = size.center(Offset.zero);
+    final radius = size.width / 2 - 4;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+    final p = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round
+      ..color = HaloColors.amber.withValues(alpha: 0.92)
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 1.5 + 3.5 * glow);
+    canvas.drawArc(rect, -math.pi / 2, sweep * 2 * math.pi, false, p);
+  }
+  @override
+  bool shouldRepaint(_HaloRingPainter old) =>
+      old.sweep != sweep || old.glow != glow;
 }
 
 // === 04 · KEEP SAFE ===
