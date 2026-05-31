@@ -1,3 +1,4 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -27,11 +28,27 @@ Future<void> initNotifications({
   await android?.createNotificationChannel(channel);
 }
 
+const _hideContentKey = 'notif_hide_content';
+
+Future<bool> loadHideNotifContent() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool(_hideContentKey) ?? true;
+}
+
+Future<void> setHideNotifContent(bool v) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool(_hideContentKey, v);
+}
+
 Future<void> showMessageNotification({
   required String title,
   required String body,
   String? payload,
 }) async {
+  if (await loadHideNotifContent()) {
+    title = 'halo';
+    body = 'new message';
+  }
   final details = AndroidNotificationDetails(
     'halo_messages',
     'halo messages',

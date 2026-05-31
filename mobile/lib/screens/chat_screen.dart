@@ -3,6 +3,11 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'dart:convert';
+import 'key_verification_screen.dart';
 import '../signal_session.dart';
 import '../message_envelope.dart' show wrapMessage, unwrapMessage, SenderInfo, ReactionFrame, EditFrame, savePeerEndpoint, loadPeerEndpoint;
 import '../theme.dart';
@@ -45,6 +50,8 @@ class _Msg {
   bool failed;
   bool edited;
   bool pinned;
+  bool removing;
+  String? mediaPath;
   Map<String, String> reactions;
   _Msg(this.direction, this.text, this.when,
       {this.burnAt,
@@ -54,8 +61,31 @@ class _Msg {
       this.failed = false,
       this.edited = false,
       this.pinned = false,
+      this.removing = false,
+      this.mediaPath,
       Map<String, String>? reactions})
       : reactions = reactions ?? <String, String>{};
+}
+
+void _openFullImage(BuildContext context, String path) {
+  Navigator.of(context).push(MaterialPageRoute(
+    fullscreenDialog: true,
+    builder: (ctx) => GestureDetector(
+      onTap: () => Navigator.of(ctx).pop(),
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Center(
+            child: InteractiveViewer(
+              minScale: 1,
+              maxScale: 4,
+              child: Image.file(File(path)),
+            ),
+          ),
+        ),
+      ),
+    ),
+  ));
 }
 
 String _friendlyStatus(String raw) {
@@ -368,6 +398,40 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                   if (target.direction == 'out') ...[
+                    const SizedBox(height: 6),
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(999),
+                        onTap: () {
+                          dismiss();
+                          _unsendMessage(target);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: HaloColors.surface3,
+                            border: Border.all(
+                                color: HaloColors.line, width: 0.5),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.delete_outline,
+                                  size: 14, color: HaloColors.rose),
+                              const SizedBox(width: 6),
+                              Text('unsend',
+                                  style: HaloType.sans(
+                                      size: 12,
+                                      weight: FontWeight.w500,
+                                      color: HaloColors.rose)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   const SizedBox(height: 6),
                   Material(
                     color: Colors.transparent,
@@ -482,6 +546,55 @@ Future<void> _showPinnedSheet() async {
         ),
       ),
     );
+  }
+
+Future<void> _unsendMessage(_Msg m) async {
+    if (m.msgUid == null) return;
+    final confirm = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: HaloColors.surface2,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
+              child: Text('unsend message',
+                  style: HaloType.serif(size: 18, color: HaloColors.text)),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+              child: Text("it disappears with no trace. this can't be undone.",
+                  style: HaloType.sans(size: 13, color: HaloColors.text2)),
+            ),
+            InkWell(
+              onTap: () => Navigator.pop(ctx, true),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Row(children: [
+                  const Icon(Icons.delete_outline,
+                      size: 18, color: HaloColors.rose),
+                  const SizedBox(width: 14),
+                  Text('unsend',
+                      style: HaloType.sans(size: 14, color: HaloColors.rose)),
+                ]),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (confirm != true) return;
+    if (mounted) setState(() => m.removing = true);
+    await Future.delayed(const Duration(milliseconds: 300));
+    await db.deleteMessage(m.msgUid!);
+    if (mounted) setState(() => _messages.remove(m));
   }
 
   Future<void> _togglePin(_Msg m) async {
@@ -682,6 +795,7 @@ Future<void> _showPinnedSheet() async {
         replyTo: r['reply_to'] as String?,
         edited: (r['edited'] as int? ?? 0) == 1,
         pinned: (r['pinned'] as int? ?? 0) == 1,
+        mediaPath: r['media_path'] as String?,
       ));
       if (uid != null) uids.add(uid);
     }
@@ -867,6 +981,79 @@ Future<void> _showPinnedSheet() async {
     );
   }
 
+Future<void> _pickAndSendImage() async {
+    final XFile? picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1280,
+      maxHeight: 1280,
+      imageQuality: 70,
+    );
+    if (picked == null) return;
+    final bytes = await picked.readAsBytes();
+    final msgUid = _newMsgUid();
+    final dir = await getApplicationDocumentsDirectory();
+    final mediaDir = Directory('${dir.path}/media');
+    if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
+    final mediaFile = File('${mediaDir.path}/$msgUid.jpg');
+    await mediaFile.writeAsBytes(bytes);
+    final mediaPath = mediaFile.path;
+    final b64 = base64Encode(bytes);
+    final msg = _Msg('out', '', DateTime.now(),
+        sending: true, msgUid: msgUid, mediaPath: mediaPath);
+    setState(() {
+      _messages.add(msg);
+      _status = '';
+    });
+    _scrollToEnd();
+    final String cipher;
+    try {
+      final wrapped = await wrapMessage(
+        '',
+        msgUid: msgUid,
+        imageB64: b64,
+        sender: SenderInfo(
+          haloId: appState.myId,
+          edPub: engine.myEdPubkey(),
+          onion: appState.myOnion,
+          xPub: engine.myXPubkey(),
+        ),
+      );
+      cipher = await signalEncrypt(widget.peerHaloId, wrapped);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        msg.sending = false;
+        msg.failed = true;
+      });
+      return;
+    }
+    final sendFuture = Future<String>(() async {
+      String? tor;
+      if (!_backPaired && widget.peerOnion.isNotEmpty) {
+        tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
+        if (tor == 'ok') return 'ok';
+      }
+      if (_peerXPub != null) {
+        return await Future(() => engine.nostrSend(_peerXPub!, cipher));
+      }
+      return tor ?? 'error: no transport';
+    });
+    sendFuture.then((result) async {
+      if (!mounted) return;
+      if (result == 'ok') {
+        setState(() => msg.sending = false);
+        await db.saveMessage(widget.peerHaloId, 'out', '',
+            msgUid: msgUid, mediaPath: mediaPath);
+      } else {
+        setState(() {
+          msg.sending = false;
+          msg.failed = true;
+          _status = result;
+        });
+      }
+    });
+  }
+
   Future<void> _send() async {
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || _sending) return;
@@ -970,6 +1157,19 @@ Future<void> _showPinnedSheet() async {
           mainAxisSize: MainAxisSize.min,
           children: [
             InkWell(
+              onTap: () => Navigator.pop(ctx, 'verify'),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Row(children: [
+                  const Icon(Icons.verified_user_outlined,
+                      size: 18, color: HaloColors.amber),
+                  const SizedBox(width: 14),
+                  Text('verify safety number',
+                      style: HaloType.sans(size: 14, color: HaloColors.text)),
+                ]),
+              ),
+            ),
+            InkWell(
               onTap: () => Navigator.pop(ctx, 'mute'),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -1014,7 +1214,9 @@ Future<void> _showPinnedSheet() async {
         ),
       ),
     );
-    if (action == 'mute') {
+    if (action == 'verify') {
+      _openKeyVerification();
+    } else if (action == 'mute') {
       await _toggleMute();
     } else if (action == 'archive') {
       await appState.archive(widget.peerHaloId);
@@ -1022,6 +1224,17 @@ Future<void> _showPinnedSheet() async {
     } else if (action == 'block') {
       await _blockContact();
     }
+  }
+
+void _openKeyVerification() {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => KeyVerificationScreen(
+        peerHaloId: widget.peerHaloId,
+        peerName: _nickname ?? widget.peerHaloId,
+        myXpub: engine.myXPubkey(),
+        peerXpub: widget.peerXPub,
+      ),
+    ));
   }
 
   Future<void> _toggleMute() async {
@@ -1285,17 +1498,26 @@ Future<void> _showPinnedSheet() async {
                             _matches.isNotEmpty &&
                             _matches[_matchPos] == i;
                         final dimmed = searchActive && !isMatch;
-                        return _Bubble(
-                          key: isMatch ? _matchKeys[i] : null,
-                          msg: m,
-                          onRetry: _retry,
-                          onLongPress: (ctx) =>
-                              _showEmojiPickerAt(ctx, m),
-                          quotedText: quoted,
-                          quotedAuthor: quotedAuthor,
-                          query: searchActive ? _query : '',
-                          isCurrentMatch: isCurrent,
-                          dimmed: dimmed,
+                        return AnimatedScale(
+                          scale: m.removing ? 0.92 : 1.0,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeIn,
+                          child: AnimatedOpacity(
+                            opacity: m.removing ? 0.0 : 1.0,
+                            duration: const Duration(milliseconds: 300),
+                            child: _Bubble(
+                              key: isMatch ? _matchKeys[i] : null,
+                              msg: m,
+                              onRetry: _retry,
+                              onLongPress: (ctx) =>
+                                  _showEmojiPickerAt(ctx, m),
+                              quotedText: quoted,
+                              quotedAuthor: quotedAuthor,
+                              query: searchActive ? _query : '',
+                              isCurrentMatch: isCurrent,
+                              dimmed: dimmed,
+                            ),
+                          ),
                         );
                       },
                     ),
@@ -1313,6 +1535,7 @@ Future<void> _showPinnedSheet() async {
             _blocked
                         ? _BlockedBar(onUnblock: _unblockContact)
                         : _Composer(
+              onAttach: _pickAndSendImage,
               ghost: _ghost,
               onToggleGhost: () => setState(() => _ghost = !_ghost),
               onPickBurn: _pickBurnDuration,
@@ -1720,9 +1943,10 @@ class _Bubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isOut = msg.direction == 'out';
+    final isImage = msg.mediaPath != null && msg.text.isEmpty;
     final showMeta = isOut && !msg.sending && !msg.failed;
     final showPill = isOut && msg.sending;
-    final metaColor = isOut
+    final metaColor = (isOut && !isImage)
         ? HaloColors.onAmber.withValues(alpha: 0.55)
         : HaloColors.text3;
     final remainingMs = msg.burnAt != null
@@ -1750,8 +1974,12 @@ class _Bubble extends StatelessWidget {
               constraints: BoxConstraints(
                 maxWidth: MediaQuery.of(context).size.width * 0.78,
               ),
-              padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
-              decoration: BoxDecoration(
+              padding: isImage
+                  ? EdgeInsets.zero
+                  : const EdgeInsets.fromLTRB(14, 10, 14, 8),
+              decoration: isImage
+                  ? const BoxDecoration()
+                  : BoxDecoration(
                 color: isOut ? null : HaloColors.surface3,
                 gradient: isOut
                     ? const LinearGradient(
@@ -1833,7 +2061,26 @@ class _Bubble extends StatelessWidget {
                       ),
                     ),
                   ],
-                  _body(isOut),
+                  if (msg.mediaPath != null)
+                    GestureDetector(
+                      onTap: () => _openFullImage(context, msg.mediaPath!),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 280),
+                          child: Image.file(
+                            File(msg.mediaPath!),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                const SizedBox.shrink(),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (msg.text.isNotEmpty) ...[
+                    if (msg.mediaPath != null) const SizedBox(height: 6),
+                    _body(isOut),
+                  ],
                   if (showMeta) ...[
                     const SizedBox(height: 4),
                     Row(
@@ -2239,6 +2486,7 @@ class _Composer extends StatelessWidget {
   final VoidCallback onToggleGhost;
   final VoidCallback onPickBurn;
   final int burnSeconds;
+  final VoidCallback onAttach;
   const _Composer({
     required this.controller,
     required this.sending,
@@ -2247,6 +2495,7 @@ class _Composer extends StatelessWidget {
     required this.onToggleGhost,
     required this.onPickBurn,
     required this.burnSeconds,
+    required this.onAttach,
   });
 
   @override
@@ -2322,6 +2571,13 @@ class _Composer extends StatelessWidget {
                 color: ghost ? HaloColors.onAmber : HaloColors.text2,
               ),
             ),
+          ),
+          const SizedBox(width: 10),
+          GestureDetector(
+            onTap: onAttach,
+            behavior: HitTestBehavior.opaque,
+            child: const Icon(Icons.add_photo_alternate_outlined,
+                size: 22, color: HaloColors.text2),
           ),
           const SizedBox(width: 10),
           Expanded(

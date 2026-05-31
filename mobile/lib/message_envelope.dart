@@ -25,6 +25,7 @@ class UnwrappedMessage {
   final String? replyTo;      // 'q' field — msg_uid this message replies to
   final String? groupId;      // 'g' field — present for group messages
   final GroupControl? groupControl; // 'gc' field — present on group control msgs
+  final String? imageB64; // 'i' field — base64-encoded compressed jpeg
   UnwrappedMessage(
     this.message, {
     this.endpoint,
@@ -39,6 +40,7 @@ class UnwrappedMessage {
     this.replyTo,
     this.groupId,
     this.groupControl,
+    this.imageB64,
   });
 }
 
@@ -97,6 +99,7 @@ Future<String> wrapMessage(
   String? replyTo,
   String? groupId,
   GroupControl? groupControl,
+  String? imageB64,
 }) async {
   final mode = await loadPushMode();
   final body = <String, dynamic>{'m': plain};
@@ -108,6 +111,7 @@ Future<String> wrapMessage(
     body['ed'] = {'u': edit.targetUid, 'm': edit.newText};
   }
   if (replyTo != null) body['q'] = replyTo;
+  if (imageB64 != null) body['i'] = imageB64;
 
   if (mode == PushMode.ntfy) {
     final topic = await loadNtfyTopic();
@@ -194,6 +198,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       replyTo: json['q'] as String?,
       groupId: json['g'] as String?,
       groupControl: gc,
+      imageB64: json['i'] as String?,
     );
   } catch (_) {
     return UnwrappedMessage(wrapped);
