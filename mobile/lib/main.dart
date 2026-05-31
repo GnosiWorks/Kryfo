@@ -283,7 +283,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 13,
+      version: 15,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -304,7 +304,8 @@ class HaloDb {
             nickname TEXT,
             blocked INTEGER NOT NULL DEFAULT 0,
             muted INTEGER NOT NULL DEFAULT 0,
-            archived INTEGER NOT NULL DEFAULT 0
+            archived INTEGER NOT NULL DEFAULT 0,
+            verified INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute('''
@@ -320,6 +321,7 @@ class HaloDb {
             group_id TEXT,
             edited INTEGER NOT NULL DEFAULT 0,
             pinned INTEGER NOT NULL DEFAULT 0,
+            media_path TEXT,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
         ''');
@@ -394,6 +396,12 @@ class HaloDb {
         }
         if (oldV < 13) {
           await db.execute('ALTER TABLE messages ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0');
+        }
+        if (oldV < 14) {
+          await db.execute('ALTER TABLE contacts ADD COLUMN verified INTEGER NOT NULL DEFAULT 0');
+        }
+        if (oldV < 15) {
+          await db.execute('ALTER TABLE messages ADD COLUMN media_path TEXT');
         }
         if (oldV < 7) {
           await db.execute('ALTER TABLE messages ADD COLUMN group_id TEXT');
@@ -495,6 +503,20 @@ class HaloDb {
     return (rows.first['muted'] as int? ?? 0) == 1;
   }
 
+  Future<void> setVerified(String haloId, bool verified) async {
+    final db = await open();
+    await db.update('contacts', {'verified': verified ? 1 : 0},
+        where: 'halo_id = ?', whereArgs: [haloId]);
+  }
+
+  Future<bool> isVerified(String haloId) async {
+    final db = await open();
+    final rows = await db.query('contacts',
+        columns: ['verified'], where: 'halo_id = ?', whereArgs: [haloId], limit: 1);
+    if (rows.isEmpty) return false;
+    return (rows.first['verified'] as int? ?? 0) == 1;
+  }
+
   Future<void> setBlocked(String haloId, bool blocked) async {
     final db = await open();
     await db.update('contacts', {'blocked': blocked ? 1 : 0},
@@ -546,6 +568,7 @@ class HaloDb {
     String? msgUid,
     String? replyTo,
     String? groupId,
+    String? mediaPath,
   }) async {
     final db = await open();
     await db.insert('messages', {
@@ -557,6 +580,7 @@ class HaloDb {
       'msg_uid': msgUid,
       'reply_to': replyTo,
       'group_id': groupId,
+      'media_path': mediaPath,
     });
     // any inbound message proves the peer knows us, so flip back_paired.
     // subsequent sends to them can use nostr safely.
@@ -705,6 +729,12 @@ class HaloDb {
     final db = await open();
     await db.update('messages', {'pinned': pinned ? 1 : 0},
         where: 'msg_uid = ?', whereArgs: [msgUid]);
+  }
+
+  Future<void> deleteMessage(String msgUid) async {
+    final db = await open();
+    await db.delete('reactions', where: 'msg_uid = ?', whereArgs: [msgUid]);
+    await db.delete('messages', where: 'msg_uid = ?', whereArgs: [msgUid]);
   }
 
   Future<void> editMessage(String msgUid, String newText) async {
@@ -892,6 +922,15 @@ Future<String> handleHaloUri(String raw) async {
   }
 }
 
+Future<String> saveMediaBytes(List<int> bytes, String name) async {
+  final dir = await getApplicationDocumentsDirectory();
+  final mediaDir = Directory('${dir.path}/media');
+  if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
+  final file = File('${mediaDir.path}/$name.jpg');
+  await file.writeAsBytes(bytes);
+  return file.path;
+}
+
 String buildHaloUri(String id, String onion, String xpub) {
   return 'halo://share?id=$id&onion=$onion&xpub=$xpub';
 }
@@ -1053,6 +1092,13 @@ class AppState extends ChangeNotifier {
       debugPrint('dropping group msg for unknown group ${env.groupId}');
       return;
     }
+    String? mediaPath;
+    if (env.imageB64 != null && env.imageB64!.isNotEmpty) {
+      try {
+        mediaPath = await saveMediaBytes(base64Decode(env.imageB64!),
+            env.msgUid ?? DateTime.now().millisecondsSinceEpoch.toString());
+      } catch (_) {}
+    }
     await db.saveMessage(
       senderHaloId,
       'in',
@@ -1063,6 +1109,7 @@ class AppState extends ChangeNotifier {
       msgUid: env.msgUid,
       replyTo: env.replyTo,
       groupId: env.groupId,
+      mediaPath: mediaPath,
     );
     // notification context — for groups, title = group name and body
     // prefixes the sender. payload uses "group:<id>" so tap-to-open can
@@ -1079,7 +1126,7 @@ class AppState extends ChangeNotifier {
       suppress = currentChatPeer == notifPayload;
     } else {
       notifTitle = senderHaloId;
-      notifBody = env.message;
+      notifBody = env.message.isNotEmpty ? env.message : (mediaPath != null ? 'photo' : env.message);
       notifPayload = senderHaloId;
       suppress = currentChatPeer == senderHaloId || await db.isMuted(senderHaloId);
     }

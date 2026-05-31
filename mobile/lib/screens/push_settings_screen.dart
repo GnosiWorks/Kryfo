@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import '../main.dart' show appState;
 import '../push_mode.dart';
+import '../notifications.dart';
 import '../theme.dart';
 
 class PushSettingsScreen extends StatefulWidget {
@@ -19,6 +20,7 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
   String _ntfyServer = defaultNtfyServer;
   String _ntfyTopic = '';
   bool _loaded = false;
+  bool _hideContent = true;
 
   @override
   void initState() {
@@ -30,6 +32,9 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
         _ntfyTopic = vals[2] as String;
         _loaded = true;
       });
+    });
+    loadHideNotifContent().then((v) {
+      if (mounted) setState(() => _hideContent = v);
     });
   }
 
@@ -57,6 +62,37 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
                   _BackBar(onBack: () => Navigator.pop(context)),
                   const _Head(),
                   const SizedBox(height: 6),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('hide message preview',
+                                  style: HaloType.sans(
+                                      size: 14, color: HaloColors.text)),
+                              const SizedBox(height: 2),
+                              Text(
+                                  'lock screen shows a generic alert, no sender or message text',
+                                  style: HaloType.sans(
+                                      size: 12, color: HaloColors.text3)),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Switch(
+                          value: _hideContent,
+                          activeColor: HaloColors.amber,
+                          onChanged: (v) {
+                            setState(() => _hideContent = v);
+                            setHideNotifContent(v);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                   _PushCard(
                     name: 'Tor only',
                     accent: 'recommended',
