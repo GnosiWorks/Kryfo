@@ -76,27 +76,45 @@ class HaloEngine {
         ? DynamicLibrary.open('libhalo.so')
         : DynamicLibrary.process();
     _version = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloVersion');
-    _genIdentity = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloGenerateIdentity');
-    _restoreIdentity = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloRestoreIdentity');
+    _genIdentity = _lib.lookupFunction<CStrFn, CStrFnDart>(
+      'HaloGenerateIdentity',
+    );
+    _restoreIdentity = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>(
+      'HaloRestoreIdentity',
+    );
     _myId = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMyId');
     _myEdPub = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMyEdPubkey');
     _myXPub = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMyXPubkey');
     _myEdPriv = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMyEdPrivkey');
     _myXPriv = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMyXPrivkey');
     _encryptFor = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloEncryptFor');
-    _decryptFrom = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloDecryptFrom');
-    _start = _lib.lookupFunction<Pointer<Utf8> Function(Pointer<Utf8>), Pointer<Utf8> Function(Pointer<Utf8>)>('HaloStartListener');
+    _decryptFrom = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>(
+      'HaloDecryptFrom',
+    );
+    _start = _lib
+        .lookupFunction<
+          Pointer<Utf8> Function(Pointer<Utf8>),
+          Pointer<Utf8> Function(Pointer<Utf8>)
+        >('HaloStartListener');
     _drainInbox = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloDrainInbox');
     _getStatus = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloGetStatus');
     _send = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloSendTo');
     _nostrInit = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrInit');
     _nostrSend = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloNostrSend');
-    _nostrSubscribe = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrSubscribe');
+    _nostrSubscribe = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
+      'HaloNostrSubscribe',
+    );
     _nostrPoll = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloNostrPoll');
     _ntfyPing = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNtfyPing');
-    _idFromEdPub = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloIdFromEdPub');
-    _encryptBackup = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloEncryptBackup');
-    _decryptBackup = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloDecryptBackup');
+    _idFromEdPub = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
+      'HaloIdFromEdPub',
+    );
+    _encryptBackup = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>(
+      'HaloEncryptBackup',
+    );
+    _decryptBackup = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>(
+      'HaloDecryptBackup',
+    );
   }
 
   String version() => _version().toDartString();
@@ -114,6 +132,7 @@ class HaloEngine {
       malloc.free(ptr);
     }
   }
+
   List<String> drainInbox() {
     final raw = _drainInbox().toDartString();
     if (raw.isEmpty) return const [];
@@ -124,34 +143,51 @@ class HaloEngine {
 
   String nostrInit(String relaysCSV) {
     final ptr = relaysCSV.toNativeUtf8();
-    try { return _nostrInit(ptr).toDartString(); }
-    finally { malloc.free(ptr); }
+    try {
+      return _nostrInit(ptr).toDartString();
+    } finally {
+      malloc.free(ptr);
+    }
   }
 
   String ntfyPing(String endpoint) {
     final ptr = endpoint.toNativeUtf8();
-    try { return _ntfyPing(ptr).toDartString(); }
-    finally { calloc.free(ptr); }
+    try {
+      return _ntfyPing(ptr).toDartString();
+    } finally {
+      calloc.free(ptr);
+    }
   }
 
   String idFromEdPub(String hexPub) {
     final ptr = hexPub.toNativeUtf8();
-    try { return _idFromEdPub(ptr).toDartString(); }
-    finally { calloc.free(ptr); }
+    try {
+      return _idFromEdPub(ptr).toDartString();
+    } finally {
+      calloc.free(ptr);
+    }
   }
 
   String encryptBackup(String plain, String passphrase) {
     final p1 = plain.toNativeUtf8();
     final p2 = passphrase.toNativeUtf8();
-    try { return _encryptBackup(p1, p2).toDartString(); }
-    finally { calloc.free(p1); calloc.free(p2); }
+    try {
+      return _encryptBackup(p1, p2).toDartString();
+    } finally {
+      calloc.free(p1);
+      calloc.free(p2);
+    }
   }
 
   String decryptBackup(String blob, String passphrase) {
     final p1 = blob.toNativeUtf8();
     final p2 = passphrase.toNativeUtf8();
-    try { return _decryptBackup(p1, p2).toDartString(); }
-    finally { calloc.free(p1); calloc.free(p2); }
+    try {
+      return _decryptBackup(p1, p2).toDartString();
+    } finally {
+      calloc.free(p1);
+      calloc.free(p2);
+    }
   }
 
   // offloaded to a background isolate so a slow relay never freezes the ui.
@@ -160,8 +196,11 @@ class HaloEngine {
 
   String nostrSubscribe(String peerXPubHex) {
     final ptr = peerXPubHex.toNativeUtf8();
-    try { return _nostrSubscribe(ptr).toDartString(); }
-    finally { malloc.free(ptr); }
+    try {
+      return _nostrSubscribe(ptr).toDartString();
+    } finally {
+      malloc.free(ptr);
+    }
   }
 
   List<({String peer, String cipher})> nostrPoll() {
@@ -220,8 +259,11 @@ Future<String> _startListenerOnIsolate(String dataDir) {
     final lib = Platform.isAndroid
         ? DynamicLibrary.open('libhalo.so')
         : DynamicLibrary.process();
-    final fn = lib.lookupFunction<Pointer<Utf8> Function(Pointer<Utf8>),
-        Pointer<Utf8> Function(Pointer<Utf8>)>('HaloStartListener');
+    final fn = lib
+        .lookupFunction<
+          Pointer<Utf8> Function(Pointer<Utf8>),
+          Pointer<Utf8> Function(Pointer<Utf8>)
+        >('HaloStartListener');
     final p = dataDir.toNativeUtf8();
     try {
       return fn(p).toDartString();
@@ -237,7 +279,8 @@ Future<String> _sendOnIsolate(({bool nostr, String a, String b}) args) {
         ? DynamicLibrary.open('libhalo.so')
         : DynamicLibrary.process();
     final fn = lib.lookupFunction<TwoArgFn, TwoArgFnDart>(
-        args.nostr ? 'HaloNostrSend' : 'HaloSendTo');
+      args.nostr ? 'HaloNostrSend' : 'HaloSendTo',
+    );
     final p1 = args.a.toNativeUtf8();
     final p2 = args.b.toNativeUtf8();
     try {
@@ -334,8 +377,12 @@ class HaloDb {
             PRIMARY KEY (msg_uid, reactor)
           )
         ''');
-        await db.execute('CREATE INDEX idx_messages_msg_uid ON messages(msg_uid)');
-        await db.execute('CREATE INDEX idx_messages_group_id ON messages(group_id)');
+        await db.execute(
+          'CREATE INDEX idx_messages_msg_uid ON messages(msg_uid)',
+        );
+        await db.execute(
+          'CREATE INDEX idx_messages_group_id ON messages(group_id)',
+        );
         await db.execute('''
           CREATE TABLE groups (
             group_id TEXT PRIMARY KEY,
@@ -361,11 +408,15 @@ class HaloDb {
           await db.execute('ALTER TABLE messages ADD COLUMN burn_at INTEGER');
         }
         if (oldV < 4) {
-          await db.execute('ALTER TABLE contacts ADD COLUMN back_paired INTEGER NOT NULL DEFAULT 0');
+          await db.execute(
+            'ALTER TABLE contacts ADD COLUMN back_paired INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 5) {
           await db.execute('ALTER TABLE messages ADD COLUMN msg_uid TEXT');
-          await db.execute('CREATE INDEX IF NOT EXISTS idx_messages_msg_uid ON messages(msg_uid)');
+          await db.execute(
+            'CREATE INDEX IF NOT EXISTS idx_messages_msg_uid ON messages(msg_uid)',
+          );
           await db.execute('''
             CREATE TABLE reactions (
               msg_uid TEXT NOT NULL,
@@ -383,22 +434,34 @@ class HaloDb {
           await db.execute('ALTER TABLE contacts ADD COLUMN nickname TEXT');
         }
         if (oldV < 9) {
-          await db.execute('ALTER TABLE messages ADD COLUMN edited INTEGER NOT NULL DEFAULT 0');
+          await db.execute(
+            'ALTER TABLE messages ADD COLUMN edited INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 10) {
-          await db.execute('ALTER TABLE contacts ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0');
+          await db.execute(
+            'ALTER TABLE contacts ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 11) {
-          await db.execute('ALTER TABLE contacts ADD COLUMN muted INTEGER NOT NULL DEFAULT 0');
+          await db.execute(
+            'ALTER TABLE contacts ADD COLUMN muted INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 12) {
-          await db.execute('ALTER TABLE contacts ADD COLUMN archived INTEGER NOT NULL DEFAULT 0');
+          await db.execute(
+            'ALTER TABLE contacts ADD COLUMN archived INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 13) {
-          await db.execute('ALTER TABLE messages ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0');
+          await db.execute(
+            'ALTER TABLE messages ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 14) {
-          await db.execute('ALTER TABLE contacts ADD COLUMN verified INTEGER NOT NULL DEFAULT 0');
+          await db.execute(
+            'ALTER TABLE contacts ADD COLUMN verified INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldV < 15) {
           await db.execute('ALTER TABLE messages ADD COLUMN media_path TEXT');
@@ -406,7 +469,8 @@ class HaloDb {
         if (oldV < 7) {
           await db.execute('ALTER TABLE messages ADD COLUMN group_id TEXT');
           await db.execute(
-              'CREATE INDEX IF NOT EXISTS idx_messages_group_id ON messages(group_id)');
+            'CREATE INDEX IF NOT EXISTS idx_messages_group_id ON messages(group_id)',
+          );
           await db.execute('''
             CREATE TABLE groups (
               group_id TEXT PRIMARY KEY,
@@ -454,18 +518,29 @@ class HaloDb {
 
   Future<Map<String, Object?>?> getContact(String haloId) async {
     final db = await open();
-    final rows = await db.query('contacts',
-        where: 'halo_id = ?', whereArgs: [haloId], limit: 1);
+    final rows = await db.query(
+      'contacts',
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+      limit: 1,
+    );
     return rows.isEmpty ? null : rows.first;
   }
 
   // upsert a contact stub from group invite info. preserves existing rows
   // (won't overwrite onion/xpub if we already know this peer).
   Future<void> upsertContactStub(
-      String haloId, String onion, String xpub) async {
+    String haloId,
+    String onion,
+    String xpub,
+  ) async {
     final db = await open();
-    final existing = await db.query('contacts',
-        where: 'halo_id = ?', whereArgs: [haloId], limit: 1);
+    final existing = await db.query(
+      'contacts',
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+      limit: 1,
+    );
     if (existing.isNotEmpty) return;
     final now = DateTime.now().millisecondsSinceEpoch;
     await db.insert('contacts', {
@@ -485,48 +560,79 @@ class HaloDb {
 
   Future<void> setArchived(String haloId, bool archived) async {
     final db = await open();
-    await db.update('contacts', {'archived': archived ? 1 : 0},
-        where: 'halo_id = ?', whereArgs: [haloId]);
+    await db.update(
+      'contacts',
+      {'archived': archived ? 1 : 0},
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+    );
   }
 
   Future<void> setMuted(String haloId, bool muted) async {
     final db = await open();
-    await db.update('contacts', {'muted': muted ? 1 : 0},
-        where: 'halo_id = ?', whereArgs: [haloId]);
+    await db.update(
+      'contacts',
+      {'muted': muted ? 1 : 0},
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+    );
   }
 
   Future<bool> isMuted(String haloId) async {
     final db = await open();
-    final rows = await db.query('contacts',
-        columns: ['muted'], where: 'halo_id = ?', whereArgs: [haloId], limit: 1);
+    final rows = await db.query(
+      'contacts',
+      columns: ['muted'],
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+      limit: 1,
+    );
     if (rows.isEmpty) return false;
     return (rows.first['muted'] as int? ?? 0) == 1;
   }
 
   Future<void> setVerified(String haloId, bool verified) async {
     final db = await open();
-    await db.update('contacts', {'verified': verified ? 1 : 0},
-        where: 'halo_id = ?', whereArgs: [haloId]);
+    await db.update(
+      'contacts',
+      {'verified': verified ? 1 : 0},
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+    );
   }
 
   Future<bool> isVerified(String haloId) async {
     final db = await open();
-    final rows = await db.query('contacts',
-        columns: ['verified'], where: 'halo_id = ?', whereArgs: [haloId], limit: 1);
+    final rows = await db.query(
+      'contacts',
+      columns: ['verified'],
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+      limit: 1,
+    );
     if (rows.isEmpty) return false;
     return (rows.first['verified'] as int? ?? 0) == 1;
   }
 
   Future<void> setBlocked(String haloId, bool blocked) async {
     final db = await open();
-    await db.update('contacts', {'blocked': blocked ? 1 : 0},
-        where: 'halo_id = ?', whereArgs: [haloId]);
+    await db.update(
+      'contacts',
+      {'blocked': blocked ? 1 : 0},
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+    );
   }
 
   Future<bool> isBlocked(String haloId) async {
     final db = await open();
-    final rows = await db.query('contacts',
-        columns: ['blocked'], where: 'halo_id = ?', whereArgs: [haloId], limit: 1);
+    final rows = await db.query(
+      'contacts',
+      columns: ['blocked'],
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+      limit: 1,
+    );
     if (rows.isEmpty) return false;
     return (rows.first['blocked'] as int? ?? 0) == 1;
   }
@@ -534,14 +640,23 @@ class HaloDb {
   Future<void> setNickname(String haloId, String? name) async {
     final db = await open();
     final v = (name == null || name.trim().isEmpty) ? null : name.trim();
-    await db.update('contacts', {'nickname': v},
-        where: 'halo_id = ?', whereArgs: [haloId]);
+    await db.update(
+      'contacts',
+      {'nickname': v},
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+    );
   }
 
   Future<void> upsertContact(String haloId, String onion, String xpub) async {
     final db = await open();
     final now = DateTime.now().millisecondsSinceEpoch;
-    final existing = await db.query('contacts', where: 'halo_id = ?', whereArgs: [haloId], limit: 1);
+    final existing = await db.query(
+      'contacts',
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+      limit: 1,
+    );
     if (existing.isEmpty) {
       await db.insert('contacts', {
         'halo_id': haloId,
@@ -601,7 +716,10 @@ class HaloDb {
   // reactions on messages that predate the v5 migration). returns the
   // uid. matches by (peer_id, sent_at) which is unique enough in practice.
   Future<void> assignUidIfMissing(
-      String peerId, int sentAtMs, String uid) async {
+    String peerId,
+    int sentAtMs,
+    String uid,
+  ) async {
     final db = await open();
     await db.update(
       'messages',
@@ -656,8 +774,13 @@ class HaloDb {
 
   Future<bool> groupExists(String groupId) async {
     final db = await open();
-    final rows = await db.query('groups',
-        columns: ['group_id'], where: 'group_id = ?', whereArgs: [groupId], limit: 1);
+    final rows = await db.query(
+      'groups',
+      columns: ['group_id'],
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+      limit: 1,
+    );
     return rows.isNotEmpty;
   }
 
@@ -668,18 +791,24 @@ class HaloDb {
 
   Future<Map<String, Object?>?> getGroup(String groupId) async {
     final db = await open();
-    final rows = await db.query('groups',
-        where: 'group_id = ?', whereArgs: [groupId], limit: 1);
+    final rows = await db.query(
+      'groups',
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+      limit: 1,
+    );
     return rows.isEmpty ? null : rows.first;
   }
 
   Future<List<String>> getGroupMembers(String groupId) async {
     final db = await open();
-    final rows = await db.query('group_members',
-        columns: ['halo_id'],
-        where: 'group_id = ?',
-        whereArgs: [groupId],
-        orderBy: 'joined_at ASC');
+    final rows = await db.query(
+      'group_members',
+      columns: ['halo_id'],
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+      orderBy: 'joined_at ASC',
+    );
     return rows.map((r) => r['halo_id'] as String).toList();
   }
 
@@ -694,41 +823,55 @@ class HaloDb {
 
   Future<void> removeGroupMember(String groupId, String haloId) async {
     final db = await open();
-    await db.delete('group_members',
-        where: 'group_id = ? AND halo_id = ?',
-        whereArgs: [groupId, haloId]);
+    await db.delete(
+      'group_members',
+      where: 'group_id = ? AND halo_id = ?',
+      whereArgs: [groupId, haloId],
+    );
   }
 
   Future<void> renameGroup(String groupId, String name) async {
     final db = await open();
-    await db.update('groups', {'name': name},
-        where: 'group_id = ?', whereArgs: [groupId]);
+    await db.update(
+      'groups',
+      {'name': name},
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+    );
   }
 
   Future<void> deleteGroup(String groupId) async {
     final db = await open();
-    await db.delete('group_members',
-        where: 'group_id = ?', whereArgs: [groupId]);
-    await db.delete('groups',
-        where: 'group_id = ?', whereArgs: [groupId]);
+    await db.delete(
+      'group_members',
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+    );
+    await db.delete('groups', where: 'group_id = ?', whereArgs: [groupId]);
   }
 
   // load all messages for a group, oldest-first. peer_id on each row is the
   // SENDER's halo id (for our own messages this is our halo id).
   Future<List<Map<String, Object?>>> loadGroupMessages(String groupId) async {
     final db = await open();
-    return db.query('messages',
-        where: 'group_id = ?',
-        whereArgs: [groupId],
-        orderBy: 'sent_at ASC');
+    return db.query(
+      'messages',
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+      orderBy: 'sent_at ASC',
+    );
   }
 
   // add or replace a reaction. reactor is '' for self, peer's halo id
   // for theirs. one reaction per (msgUid, reactor) — re-reacting replaces.
   Future<void> setPinned(String msgUid, bool pinned) async {
     final db = await open();
-    await db.update('messages', {'pinned': pinned ? 1 : 0},
-        where: 'msg_uid = ?', whereArgs: [msgUid]);
+    await db.update(
+      'messages',
+      {'pinned': pinned ? 1 : 0},
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+    );
   }
 
   Future<void> deleteMessage(String msgUid) async {
@@ -739,22 +882,22 @@ class HaloDb {
 
   Future<void> editMessage(String msgUid, String newText) async {
     final db = await open();
-    await db.update('messages', {'plaintext': newText, 'edited': 1},
-        where: 'msg_uid = ?', whereArgs: [msgUid]);
+    await db.update(
+      'messages',
+      {'plaintext': newText, 'edited': 1},
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+    );
   }
 
   Future<void> addReaction(String msgUid, String reactor, String emoji) async {
     final db = await open();
-    await db.insert(
-      'reactions',
-      {
-        'msg_uid': msgUid,
-        'reactor': reactor,
-        'emoji': emoji,
-        'reacted_at': DateTime.now().millisecondsSinceEpoch,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('reactions', {
+      'msg_uid': msgUid,
+      'reactor': reactor,
+      'emoji': emoji,
+      'reacted_at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<void> removeReaction(String msgUid, String reactor) async {
@@ -769,7 +912,8 @@ class HaloDb {
   // load reactions for a batch of messages. returns
   // { msgUid: [ (reactor, emoji), ... ] }.
   Future<Map<String, List<MapEntry<String, String>>>> loadReactionsFor(
-      List<String> msgUids) async {
+    List<String> msgUids,
+  ) async {
     if (msgUids.isEmpty) return {};
     final db = await open();
     final placeholders = List.filled(msgUids.length, '?').join(',');
@@ -809,14 +953,38 @@ class HaloDb {
       orderBy: 'sent_at ASC',
     );
   }
+
+  // newest message for a peer (or null) — drives the home-list preview and
+  // ordering without loading the whole conversation.
+  Future<Map<String, Object?>?> lastMessageFor(String peerId) async {
+    final db = await open();
+    final rows = await db.query(
+      'messages',
+      where: 'peer_id = ?',
+      whereArgs: [peerId],
+      orderBy: 'sent_at DESC',
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first;
+  }
 }
 
 Future<void> _signalTables(Database db) async {
-  await db.execute('CREATE TABLE IF NOT EXISTS prekeys (id INTEGER PRIMARY KEY, record BLOB NOT NULL)');
-  await db.execute('CREATE TABLE IF NOT EXISTS signed_prekeys (id INTEGER PRIMARY KEY, record BLOB NOT NULL, created_at INTEGER NOT NULL)');
-  await db.execute('CREATE TABLE IF NOT EXISTS sessions (address TEXT NOT NULL, device_id INTEGER NOT NULL, record BLOB NOT NULL, PRIMARY KEY (address, device_id))');
-  await db.execute('CREATE TABLE IF NOT EXISTS peer_identities (address TEXT PRIMARY KEY, identity_key BLOB NOT NULL)');
-  await db.execute('CREATE TABLE IF NOT EXISTS signal_meta (k TEXT PRIMARY KEY, v TEXT NOT NULL)');
+  await db.execute(
+    'CREATE TABLE IF NOT EXISTS prekeys (id INTEGER PRIMARY KEY, record BLOB NOT NULL)',
+  );
+  await db.execute(
+    'CREATE TABLE IF NOT EXISTS signed_prekeys (id INTEGER PRIMARY KEY, record BLOB NOT NULL, created_at INTEGER NOT NULL)',
+  );
+  await db.execute(
+    'CREATE TABLE IF NOT EXISTS sessions (address TEXT NOT NULL, device_id INTEGER NOT NULL, record BLOB NOT NULL, PRIMARY KEY (address, device_id))',
+  );
+  await db.execute(
+    'CREATE TABLE IF NOT EXISTS peer_identities (address TEXT PRIMARY KEY, identity_key BLOB NOT NULL)',
+  );
+  await db.execute(
+    'CREATE TABLE IF NOT EXISTS signal_meta (k TEXT PRIMARY KEY, v TEXT NOT NULL)',
+  );
 }
 
 Future<String> makePreKeyBundleB64() async {
@@ -824,7 +992,9 @@ Future<String> makePreKeyBundleB64() async {
   final database = await db.open();
   final pkRows = await database.query('prekeys', limit: 1, orderBy: 'id ASC');
   if (pkRows.isEmpty) throw 'no prekeys';
-  final pk = await signalSession.preKeyStore.loadPreKey(pkRows.first['id'] as int);
+  final pk = await signalSession.preKeyStore.loadPreKey(
+    pkRows.first['id'] as int,
+  );
   final bundle = {
     'registrationId': signalSession.registrationId,
     'deviceId': 1,
@@ -833,13 +1003,16 @@ Future<String> makePreKeyBundleB64() async {
     'signedPreKeyId': spk.id,
     'signedPreKeyPublic': base64Encode(spk.getKeyPair().publicKey.serialize()),
     'signedPreKeySignature': base64Encode(spk.signature),
-    'identityKey': base64Encode(signalSession.identityKeyPair.getPublicKey().serialize()),
+    'identityKey': base64Encode(
+      signalSession.identityKeyPair.getPublicKey().serialize(),
+    ),
   };
   return base64Encode(utf8.encode(jsonEncode(bundle)));
 }
 
 Future<void> processPeerBundle(String haloId, String bundleB64) async {
-  final j = jsonDecode(utf8.decode(base64Decode(bundleB64))) as Map<String, dynamic>;
+  final j =
+      jsonDecode(utf8.decode(base64Decode(bundleB64))) as Map<String, dynamic>;
   final preKeyBundle = PreKeyBundle(
     j['registrationId'] as int,
     j['deviceId'] as int,
@@ -893,7 +1066,9 @@ Future<String?> signalDecrypt(String peerId, String wireB64) async {
     if (type == CiphertextMessage.prekeyType) {
       plain = await cipher.decrypt(PreKeySignalMessage(body));
     } else {
-      plain = await cipher.decryptFromSignal(SignalMessage.fromSerialized(body));
+      plain = await cipher.decryptFromSignal(
+        SignalMessage.fromSerialized(body),
+      );
     }
     return utf8.decode(plain);
   } catch (e) {
@@ -901,7 +1076,6 @@ Future<String?> signalDecrypt(String peerId, String wireB64) async {
     return null;
   }
 }
-
 
 Future<String> handleHaloUri(String raw) async {
   final parsed = parseHaloUri(raw);
@@ -967,7 +1141,6 @@ Map<String, String>? parseHaloUri(String raw) {
 final engine = HaloEngine();
 final db = HaloDb();
 
-
 // open ChatScreen for a given halo id. used by notification taps
 // (both warm — onDidReceiveNotificationResponse — and cold starts
 // via getNotificationAppLaunchDetails). reads contact details from
@@ -980,14 +1153,16 @@ Future<void> openChatForHalo(String? haloId) async {
   final matches = rows.where((r) => r['halo_id'] == haloId).toList();
   if (matches.isEmpty) return;
   final row = matches.first;
-  nav.push(MaterialPageRoute(
-    builder: (_) => ChatScreen(
-      peerHaloId: haloId,
-      peerOnion: row['onion'] as String,
-      peerXPub: row['xpub'] as String,
-      avatarSeed: haloId,
+  nav.push(
+    MaterialPageRoute(
+      builder: (_) => ChatScreen(
+        peerHaloId: haloId,
+        peerOnion: row['onion'] as String,
+        peerXPub: row['xpub'] as String,
+        avatarSeed: haloId,
+      ),
     ),
-  ));
+  );
 }
 
 // halo id of the peer whose chat is currently on screen. set by
@@ -1033,6 +1208,7 @@ class AppState extends ChangeNotifier {
         await const FlutterSecureStorage().read(key: 'send_mode') ?? 'private';
     notifyListeners();
   }
+
   Future<void> setSendMode(String m) async {
     _sendMode = m;
     notifyListeners();
@@ -1062,7 +1238,9 @@ class AppState extends ChangeNotifier {
   // called from all three receive paths (back-pair-from-cipher, tor drain,
   // nostr poll) so the routing rules live in exactly one place.
   Future<void> _applyIncomingPayload(
-      String senderHaloId, UnwrappedMessage env) async {
+    String senderHaloId,
+    UnwrappedMessage env,
+  ) async {
     if (await db.isBlocked(senderHaloId)) return;
     // 1) group control
     if (env.groupControl != null) {
@@ -1095,8 +1273,10 @@ class AppState extends ChangeNotifier {
     String? mediaPath;
     if (env.imageB64 != null && env.imageB64!.isNotEmpty) {
       try {
-        mediaPath = await saveMediaBytes(base64Decode(env.imageB64!),
-            env.msgUid ?? DateTime.now().millisecondsSinceEpoch.toString());
+        mediaPath = await saveMediaBytes(
+          base64Decode(env.imageB64!),
+          env.msgUid ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        );
       } catch (_) {}
     }
     await db.saveMessage(
@@ -1126,13 +1306,19 @@ class AppState extends ChangeNotifier {
       suppress = currentChatPeer == notifPayload;
     } else {
       notifTitle = senderHaloId;
-      notifBody = env.message.isNotEmpty ? env.message : (mediaPath != null ? 'photo' : env.message);
+      notifBody = env.message.isNotEmpty
+          ? env.message
+          : (mediaPath != null ? 'photo' : env.message);
       notifPayload = senderHaloId;
-      suppress = currentChatPeer == senderHaloId || await db.isMuted(senderHaloId);
+      suppress =
+          currentChatPeer == senderHaloId || await db.isMuted(senderHaloId);
     }
     if (!suppress) {
       await showMessageNotification(
-          title: notifTitle, body: notifBody, payload: notifPayload);
+        title: notifTitle,
+        body: notifBody,
+        payload: notifPayload,
+      );
     }
   }
 
@@ -1140,7 +1326,9 @@ class AppState extends ChangeNotifier {
   // control; env.groupId is the target group; env.groupControl carries the
   // action and payload.
   Future<void> _applyGroupControl(
-      String senderHaloId, UnwrappedMessage env) async {
+    String senderHaloId,
+    UnwrappedMessage env,
+  ) async {
     final gc = env.groupControl!;
     final groupId = env.groupId;
     if (groupId == null) return;
@@ -1150,8 +1338,7 @@ class AppState extends ChangeNotifier {
         // a regular member. group.is_admin stays 0.
         if (gc.members == null || gc.name == null) return;
         if (!await db.groupExists(groupId)) {
-          await db.createGroup(groupId, gc.name!, gc.members!,
-              isAdmin: false);
+          await db.createGroup(groupId, gc.name!, gc.members!, isAdmin: false);
         }
         // auto-create contact stubs for unknown participants so we can
         // immediately send to them.
@@ -1213,6 +1400,7 @@ class AppState extends ChangeNotifier {
       await _ntfyListener!.start();
     }
   }
+
   bool onboardingComplete = false;
   late AppLinks _appLinks;
   String myId = '';
@@ -1275,7 +1463,9 @@ class AppState extends ChangeNotifier {
       return h;
     } catch (e) {
       debugPrint('back-pair error: $e');
-      try { await signalSession.sessionStore.deleteSession(tempAddr); } catch (_) {}
+      try {
+        await signalSession.sessionStore.deleteSession(tempAddr);
+      } catch (_) {}
       return null;
     }
   }
@@ -1370,8 +1560,9 @@ class AppState extends ChangeNotifier {
       debugPrint('nostr poll: ${msgs.length} messages');
       for (final m in msgs) {
         var haloId = _xPubToHaloId[m.peer];
-        String? wrapped =
-            haloId == null ? null : await signalDecrypt(haloId, m.cipher);
+        String? wrapped = haloId == null
+            ? null
+            : await signalDecrypt(haloId, m.cipher);
         // fallback: xpub not mapped yet (or it decrypted wrong) — trial
         // against known contacts like the direct path, then remember it.
         if (wrapped == null) {
@@ -1398,7 +1589,9 @@ class AppState extends ChangeNotifier {
         notifyListeners();
       }
     });
-    final _stored = await const FlutterSecureStorage().read(key: 'onboarding_done');
+    final _stored = await const FlutterSecureStorage().read(
+      key: 'onboarding_done',
+    );
     onboardingComplete = _stored == 'true';
     ready = true;
     notifyListeners();
@@ -1460,23 +1653,49 @@ class AppState extends ChangeNotifier {
     return [
       for (final r in rows)
         if ((r['blocked'] as int? ?? 0) == 1)
-          (haloId: r['halo_id'] as String, nickname: r['nickname'] as String?)
+          (haloId: r['halo_id'] as String, nickname: r['nickname'] as String?),
     ];
   }
 
   Future<void> refreshContacts() async {
     final rows = await db.contacts();
-    contacts = rows.map((r) {
-      final ts = r['last_seen'] as int;
-      return ContactPreview(
-        haloId: r['halo_id'] as String,
-        nickname: r['nickname'] as String?,
-        avatarSeed: r['halo_id'] as String,
-        when: DateTime.fromMillisecondsSinceEpoch(ts),
-        blocked: (r['blocked'] as int? ?? 0) == 1,
-        archived: (r['archived'] as int? ?? 0) == 1,
+    final list = <ContactPreview>[];
+    for (final r in rows) {
+      final haloId = r['halo_id'] as String;
+      final last = await db.lastMessageFor(haloId);
+      String? preview;
+      // default to the contact's last_seen; a real message overrides it.
+      DateTime when = DateTime.fromMillisecondsSinceEpoch(
+        r['last_seen'] as int,
       );
-    }).toList();
+      if (last != null) {
+        final dir = last['direction'] as String?;
+        final text = (last['plaintext'] as String?) ?? '';
+        final media = last['media_path'] as String?;
+        final body = text.isNotEmpty ? text : (media != null ? 'photo' : '');
+        if (body.isNotEmpty) preview = dir == 'out' ? 'you: $body' : body;
+        final sentAt = last['sent_at'] as int?;
+        if (sentAt != null) {
+          when = DateTime.fromMillisecondsSinceEpoch(sentAt);
+        }
+      }
+      list.add(
+        ContactPreview(
+          haloId: haloId,
+          nickname: r['nickname'] as String?,
+          avatarSeed: haloId,
+          preview: preview,
+          when: when,
+          blocked: (r['blocked'] as int? ?? 0) == 1,
+          archived: (r['archived'] as int? ?? 0) == 1,
+        ),
+      );
+    }
+    // most-recent conversation floats to the top
+    list.sort(
+      (a, b) => (b.when ?? DateTime(0)).compareTo(a.when ?? DateTime(0)),
+    );
+    contacts = list;
     notifyListeners();
   }
 
@@ -1488,24 +1707,28 @@ class AppState extends ChangeNotifier {
     for (final r in rows) {
       final gid = r['group_id'] as String;
       final members = await db.getGroupMembers(gid);
-      list.add(GroupPreview(
-        groupId: gid,
-        name: r['name'] as String,
-        memberCount: members.length,
-        isAdmin: (r['is_admin'] as int? ?? 0) == 1,
-        createdAt: DateTime.fromMillisecondsSinceEpoch(r['created_at'] as int),
-      ));
+      list.add(
+        GroupPreview(
+          groupId: gid,
+          name: r['name'] as String,
+          memberCount: members.length,
+          isAdmin: (r['is_admin'] as int? ?? 0) == 1,
+          createdAt: DateTime.fromMillisecondsSinceEpoch(
+            r['created_at'] as int,
+          ),
+        ),
+      );
     }
     groups = list;
     notifyListeners();
   }
 
   SenderInfo _mySender() => SenderInfo(
-        haloId: myId,
-        edPub: engine.myEdPubkey(),
-        onion: myOnion,
-        xPub: engine.myXPubkey(),
-      );
+    haloId: myId,
+    edPub: engine.myEdPubkey(),
+    onion: myOnion,
+    xPub: engine.myXPubkey(),
+  );
 
   // pairwise envelope send. wraps libsignal encrypt + transport choice
   // (direct-onion if peer hasn't back-paired yet, nostr otherwise).
@@ -1538,8 +1761,12 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _sendControlToGroup(String groupId, GroupControl gc) async {
-    final wrapped = await wrapMessage('',
-        groupId: groupId, groupControl: gc, sender: _mySender());
+    final wrapped = await wrapMessage(
+      '',
+      groupId: groupId,
+      groupControl: gc,
+      sender: _mySender(),
+    );
     final members = await db.getGroupMembers(groupId);
     await Future.wait([
       for (final memberId in members)
@@ -1563,14 +1790,23 @@ class AppState extends ChangeNotifier {
         : null;
     // save the local row up-front so the chat list shows it immediately.
     // peer_id = self so we render it as outgoing.
-    await db.saveMessage(myId, 'out', plain,
-        groupId: groupId, msgUid: msgUid, replyTo: replyTo, burnAt: burnAt);
-    final wrapped = await wrapMessage(plain,
-        msgUid: msgUid,
-        replyTo: replyTo,
-        burnSeconds: burnSeconds,
-        groupId: groupId,
-        sender: _mySender());
+    await db.saveMessage(
+      myId,
+      'out',
+      plain,
+      groupId: groupId,
+      msgUid: msgUid,
+      replyTo: replyTo,
+      burnAt: burnAt,
+    );
+    final wrapped = await wrapMessage(
+      plain,
+      msgUid: msgUid,
+      replyTo: replyTo,
+      burnSeconds: burnSeconds,
+      groupId: groupId,
+      sender: _mySender(),
+    );
     final members = await db.getGroupMembers(groupId);
     final results = await Future.wait([
       for (final memberId in members)
@@ -1583,16 +1819,21 @@ class AppState extends ChangeNotifier {
 
   // pairwise reaction multicast for group messages.
   Future<void> reactInGroup(
-      String groupId, String targetMsgUid, String emoji) async {
+    String groupId,
+    String targetMsgUid,
+    String emoji,
+  ) async {
     if (emoji.isEmpty) {
       await db.removeReaction(targetMsgUid, '');
     } else {
       await db.addReaction(targetMsgUid, '', emoji);
     }
-    final wrapped = await wrapMessage('',
-        groupId: groupId,
-        reaction: ReactionFrame(targetUid: targetMsgUid, emoji: emoji),
-        sender: _mySender());
+    final wrapped = await wrapMessage(
+      '',
+      groupId: groupId,
+      reaction: ReactionFrame(targetUid: targetMsgUid, emoji: emoji),
+      sender: _mySender(),
+    );
     final members = await db.getGroupMembers(groupId);
     await Future.wait([
       for (final memberId in members)
@@ -1605,7 +1846,8 @@ class AppState extends ChangeNotifier {
   // (or for our own halo). used to give group invites enough info that
   // recipients can fan-out to members they don't yet know.
   Future<List<Map<String, String>>> _buildParticipants(
-      List<String> haloIds) async {
+    List<String> haloIds,
+  ) async {
     final out = <Map<String, String>>[];
     for (final h in haloIds) {
       if (h == myId) {
@@ -1628,7 +1870,9 @@ class AppState extends ChangeNotifier {
   // is the set of OTHER members (caller's halo id is added automatically).
   // returns the new group id.
   Future<String> createGroupAndAnnounce(
-      String name, List<String> memberHaloIds) async {
+    String name,
+    List<String> memberHaloIds,
+  ) async {
     final groupId = newMsgUid();
     final full = [myId, ...memberHaloIds];
     await db.createGroup(groupId, name, full, isAdmin: true);
@@ -1648,7 +1892,9 @@ class AppState extends ChangeNotifier {
   // (with participants for the new ones), and sends a full 'create' to
   // each new member so they bootstrap the group.
   Future<void> addMembersToGroup(
-      String groupId, List<String> newHaloIds) async {
+    String groupId,
+    List<String> newHaloIds,
+  ) async {
     final group = await db.getGroup(groupId);
     if (group == null) return;
     if ((group['is_admin'] as int? ?? 0) != 1) return;
@@ -1664,8 +1910,12 @@ class AppState extends ChangeNotifier {
     );
     for (final memberId in existingMembers) {
       if (memberId == myId) continue;
-      final wrapped = await wrapMessage('',
-          groupId: groupId, groupControl: addGc, sender: _mySender());
+      final wrapped = await wrapMessage(
+        '',
+        groupId: groupId,
+        groupControl: addGc,
+        sender: _mySender(),
+      );
       await _sendOneEnvelope(memberId, wrapped);
     }
     final allMembers = await db.getGroupMembers(groupId);
@@ -1677,8 +1927,12 @@ class AppState extends ChangeNotifier {
       participants: allParticipants,
     );
     for (final newMember in newHaloIds) {
-      final wrapped = await wrapMessage('',
-          groupId: groupId, groupControl: createGc, sender: _mySender());
+      final wrapped = await wrapMessage(
+        '',
+        groupId: groupId,
+        groupControl: createGc,
+        sender: _mySender(),
+      );
       await _sendOneEnvelope(newMember, wrapped);
     }
     await refreshGroups();
@@ -1687,7 +1941,9 @@ class AppState extends ChangeNotifier {
   // admin-only. removes locally and tells everyone (including removed) so
   // both sides converge on the new member list.
   Future<void> removeMembersFromGroup(
-      String groupId, List<String> removedHaloIds) async {
+    String groupId,
+    List<String> removedHaloIds,
+  ) async {
     final group = await db.getGroup(groupId);
     if (group == null) return;
     if ((group['is_admin'] as int? ?? 0) != 1) return;
@@ -1698,8 +1954,12 @@ class AppState extends ChangeNotifier {
     final gc = GroupControl(type: 'remove', members: removedHaloIds);
     for (final memberId in allMembers) {
       if (memberId == myId) continue;
-      final wrapped = await wrapMessage('',
-          groupId: groupId, groupControl: gc, sender: _mySender());
+      final wrapped = await wrapMessage(
+        '',
+        groupId: groupId,
+        groupControl: gc,
+        sender: _mySender(),
+      );
       await _sendOneEnvelope(memberId, wrapped);
     }
     await refreshGroups();
@@ -1742,7 +2002,10 @@ class AppState extends ChangeNotifier {
 
   Future<void> markOnboardingComplete() async {
     onboardingComplete = true;
-    await const FlutterSecureStorage().write(key: 'onboarding_done', value: 'true');
+    await const FlutterSecureStorage().write(
+      key: 'onboarding_done',
+      value: 'true',
+    );
     notifyListeners();
   }
 }
@@ -1758,8 +2021,10 @@ void main() async {
     final details = await notifPlugin.getNotificationAppLaunchDetails();
     if (details?.didNotificationLaunchApp ?? false) {
       final payload = details?.notificationResponse?.payload;
-      Future.delayed(const Duration(milliseconds: 500),
-          () => openChatForHalo(payload));
+      Future.delayed(
+        const Duration(milliseconds: 500),
+        () => openChatForHalo(payload),
+      );
     }
   });
 }
@@ -1809,8 +2074,10 @@ class _RootShellState extends State<RootShell> {
       return Scaffold(
         backgroundColor: HaloColors.surface,
         body: Center(
-          child: Text('booting...',
-              style: HaloType.mono(size: 11, color: HaloColors.text2)),
+          child: Text(
+            'booting...',
+            style: HaloType.mono(size: 11, color: HaloColors.text2),
+          ),
         ),
       );
     }
@@ -1818,11 +2085,13 @@ class _RootShellState extends State<RootShell> {
       haloId: appState.myId,
       contacts: appState.contacts,
       groups: appState.groups
-          .map((g) => GroupSummary(
-                groupId: g.groupId,
-                name: g.name,
-                memberCount: g.memberCount,
-              ))
+          .map(
+            (g) => GroupSummary(
+              groupId: g.groupId,
+              name: g.name,
+              memberCount: g.memberCount,
+            ),
+          )
           .toList(),
       onAddContact: () => _open(const DevScreen()),
       onNewGroup: () => _open(const NewGroupScreen()),
@@ -1833,20 +2102,23 @@ class _RootShellState extends State<RootShell> {
         final matches = rows.where((r) => r['halo_id'] == id).toList();
         if (matches.isEmpty || !mounted) return;
         final row = matches.first;
-        Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(
-          peerHaloId: id,
-          peerOnion: row['onion'] as String,
-          peerXPub: row['xpub'] as String,
-          avatarSeed: id,
-        )));
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChatScreen(
+              peerHaloId: id,
+              peerOnion: row['onion'] as String,
+              peerXPub: row['xpub'] as String,
+              avatarSeed: id,
+            ),
+          ),
+        );
       },
       onOpenGroup: (groupId) async {
         if (!mounted) return;
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => GroupChatScreen(groupId: groupId),
-          ),
+          MaterialPageRoute(builder: (_) => GroupChatScreen(groupId: groupId)),
         );
       },
     );
@@ -1912,17 +2184,17 @@ class _DevScreenState extends State<DevScreen> {
         });
       }
       final msgs = engine.drainInbox();
-        if (msgs.isEmpty || _peerXPub.isEmpty) return;
-        for (final r in msgs) {
-          final plain = engine.decryptFrom(_peerXPub, r);
-          if (!plain.startsWith('error')) {
-            db.saveMessage(_peerId, 'in', plain);
-          }
-          setState(() {
-            _receivedCipher = r;
-            _receivedPlain = plain;
-          });
+      if (msgs.isEmpty || _peerXPub.isEmpty) return;
+      for (final r in msgs) {
+        final plain = engine.decryptFrom(_peerXPub, r);
+        if (!plain.startsWith('error')) {
+          db.saveMessage(_peerId, 'in', plain);
         }
+        setState(() {
+          _receivedCipher = r;
+          _receivedPlain = plain;
+        });
+      }
     });
   }
 
@@ -1960,13 +2232,19 @@ class _DevScreenState extends State<DevScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('your halo',
-                  style: HaloType.serif(
-                    size: 14, italic: true, color: HaloColors.amber,
-                  )),
+              Text(
+                'your halo',
+                style: HaloType.serif(
+                  size: 14,
+                  italic: true,
+                  color: HaloColors.amber,
+                ),
+              ),
               const SizedBox(height: 4),
-              Text(appState.myId,
-                  style: HaloType.mono(size: 18, color: HaloColors.amber)),
+              Text(
+                appState.myId,
+                style: HaloType.mono(size: 18, color: HaloColors.amber),
+              ),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(14),
@@ -1995,12 +2273,12 @@ class _DevScreenState extends State<DevScreen> {
               TextButton(
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: uri));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('uri copied')),
-                  );
+                  showHaloToast(context, 'uri copied');
                 },
-                child: Text('copy uri',
-                    style: HaloType.sans(color: HaloColors.amber)),
+                child: Text(
+                  'copy uri',
+                  style: HaloType.sans(color: HaloColors.amber),
+                ),
               ),
             ],
           ),
@@ -2015,8 +2293,10 @@ class _DevScreenState extends State<DevScreen> {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: HaloColors.surface2,
-        title: Text('add a halo',
-            style: HaloType.sans(color: HaloColors.amber)),
+        title: Text(
+          'add a halo',
+          style: HaloType.sans(color: HaloColors.amber),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -2033,8 +2313,10 @@ class _DevScreenState extends State<DevScreen> {
               ),
             ),
             const SizedBox(height: 14),
-            Text('— or paste —',
-                style: HaloType.sans(size: 11, color: HaloColors.text3)),
+            Text(
+              '— or paste —',
+              style: HaloType.sans(size: 11, color: HaloColors.text3),
+            ),
             const SizedBox(height: 10),
             TextField(
               controller: ctrl,
@@ -2054,8 +2336,10 @@ class _DevScreenState extends State<DevScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, 'paste'),
-            child: Text('import',
-                style: HaloType.sans(color: HaloColors.amber)),
+            child: Text(
+              'import',
+              style: HaloType.sans(color: HaloColors.amber),
+            ),
           ),
         ],
       ),
@@ -2064,9 +2348,9 @@ class _DevScreenState extends State<DevScreen> {
 
     String uri;
     if (action == 'scan') {
-      final result = await Navigator.of(context).push<String>(
-        MaterialPageRoute(builder: (_) => const ScanScreen()),
-      );
+      final result = await Navigator.of(
+        context,
+      ).push<String>(MaterialPageRoute(builder: (_) => const ScanScreen()));
       if (result == null) return;
       uri = result;
     } else {
@@ -2100,8 +2384,10 @@ class _DevScreenState extends State<DevScreen> {
       appBar: AppBar(
         backgroundColor: HaloColors.surface,
         elevation: 0,
-        title: Text('dev',
-            style: HaloType.serif(size: 18, italic: true, color: HaloColors.text)),
+        title: Text(
+          'dev',
+          style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -2110,17 +2396,26 @@ class _DevScreenState extends State<DevScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 8),
-              Text('halo',
-                  style: HaloType.serif(
-                    size: 56, weight: FontWeight.w300,
-                    italic: true, color: HaloColors.amber, height: 1,
-                  )),
+              Text(
+                'halo',
+                style: HaloType.serif(
+                  size: 56,
+                  weight: FontWeight.w300,
+                  italic: true,
+                  color: HaloColors.amber,
+                  height: 1,
+                ),
+              ),
               const SizedBox(height: 4),
-              Text(engine.version(),
-                  style: HaloType.sans(size: 11, color: HaloColors.text3)),
+              Text(
+                engine.version(),
+                style: HaloType.sans(size: 11, color: HaloColors.text3),
+              ),
               const SizedBox(height: 16),
-              Text('your halo:',
-                  style: HaloType.sans(size: 11, color: HaloColors.text2)),
+              Text(
+                'your halo:',
+                style: HaloType.sans(size: 11, color: HaloColors.text2),
+              ),
               Container(
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.only(top: 6),
@@ -2132,15 +2427,19 @@ class _DevScreenState extends State<DevScreen> {
                 child: Text(
                   appState.myId.isEmpty ? '...' : appState.myId,
                   style: HaloType.mono(
-                    size: 18, color: HaloColors.amber, letter: 0.04,
+                    size: 18,
+                    color: HaloColors.amber,
+                    letter: 0.04,
                   ),
                 ),
               ),
               if (appState.restored)
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
-                  child: Text('restored from disk',
-                      style: HaloType.mono(size: 9, color: HaloColors.green)),
+                  child: Text(
+                    'restored from disk',
+                    style: HaloType.mono(size: 9, color: HaloColors.green),
+                  ),
                 ),
               const SizedBox(height: 16),
               ElevatedButton(
@@ -2165,7 +2464,10 @@ class _DevScreenState extends State<DevScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: OutlinedButton.icon(
-                      icon: const Icon(Icons.content_paste, color: HaloColors.violet),
+                      icon: const Icon(
+                        Icons.content_paste,
+                        color: HaloColors.violet,
+                      ),
                       label: const Text('import peer'),
                       onPressed: _importPeer,
                     ),
@@ -2174,8 +2476,10 @@ class _DevScreenState extends State<DevScreen> {
               ),
               const SizedBox(height: 16),
               if (_peerId.isNotEmpty) ...[
-                Text('peer:',
-                    style: HaloType.sans(size: 11, color: HaloColors.text2)),
+                Text(
+                  'peer:',
+                  style: HaloType.sans(size: 11, color: HaloColors.text2),
+                ),
                 Container(
                   padding: const EdgeInsets.all(10),
                   margin: const EdgeInsets.only(top: 4),
@@ -2202,7 +2506,9 @@ class _DevScreenState extends State<DevScreen> {
               ),
               const SizedBox(height: 8),
               ElevatedButton(
-                onPressed: (_myAddr.isEmpty || _peerOnion.isEmpty) ? null : _send,
+                onPressed: (_myAddr.isEmpty || _peerOnion.isEmpty)
+                    ? null
+                    : _send,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: HaloColors.amber,
                   foregroundColor: HaloColors.onAmber,
@@ -2214,25 +2520,29 @@ class _DevScreenState extends State<DevScreen> {
               TorWarmupGraph(status: _torStatus, bootstrapPct: _bootstrapPct),
               const SizedBox(height: 12),
               if (_status.isNotEmpty)
-                Text('status: $_status',
-                    style: HaloType.sans(size: 12, color: HaloColors.text2)),
+                Text(
+                  'status: $_status',
+                  style: HaloType.sans(size: 12, color: HaloColors.text2),
+                ),
               const SizedBox(height: 24),
               GestureDetector(
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const ModesScreen()),
+                onTap: () => Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const ModesScreen())),
+                child: Text(
+                  'speed & privacy →',
+                  style: HaloType.mono(size: 11, color: HaloColors.amber),
                 ),
-                child: Text('speed & privacy →',
-                    style: HaloType.mono(
-                        size: 11, color: HaloColors.amber)),
               ),
               const SizedBox(height: 8),
               GestureDetector(
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const PushSettingsScreen()),
                 ),
-                child: Text('notifications →',
-                    style: HaloType.mono(
-                        size: 11, color: HaloColors.amber)),
+                child: Text(
+                  'notifications →',
+                  style: HaloType.mono(size: 11, color: HaloColors.amber),
+                ),
               ),
               const SizedBox(height: 8),
               GestureDetector(
@@ -2242,44 +2552,59 @@ class _DevScreenState extends State<DevScreen> {
                       context: context,
                       builder: (ctx) => AlertDialog(
                         backgroundColor: HaloColors.surface3,
-                        title: Text('disable app lock?',
-                            style: HaloType.serif(
-                                size: 18, color: HaloColors.text)),
+                        title: Text(
+                          'disable app lock?',
+                          style: HaloType.serif(
+                            size: 18,
+                            color: HaloColors.text,
+                          ),
+                        ),
                         content: Text(
                           'the pin will be removed. anyone with your phone will see halo when they open it.',
                           style: HaloType.sans(
-                              size: 13, color: HaloColors.text2),
+                            size: 13,
+                            color: HaloColors.text2,
+                          ),
                         ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(ctx).pop(false),
-                            child: Text('cancel',
-                                style: HaloType.sans(
-                                    size: 13, color: HaloColors.text2)),
+                            child: Text(
+                              'cancel',
+                              style: HaloType.sans(
+                                size: 13,
+                                color: HaloColors.text2,
+                              ),
+                            ),
                           ),
                           TextButton(
                             onPressed: () => Navigator.of(ctx).pop(true),
-                            child: Text('disable',
-                                style: HaloType.sans(
-                                    size: 13, color: HaloColors.rose)),
+                            child: Text(
+                              'disable',
+                              style: HaloType.sans(
+                                size: 13,
+                                color: HaloColors.rose,
+                              ),
+                            ),
                           ),
                         ],
                       ),
                     );
                     if (ok == true) await lockState.disable();
                   } else {
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => const LockSetupScreen()));
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const LockSetupScreen(),
+                      ),
+                    );
                   }
                 },
                 child: AnimatedBuilder(
                   animation: lockState,
                   builder: (_, __) => Text(
-                      lockState.enabled
-                          ? 'app lock · on →'
-                          : 'app lock · off →',
-                      style: HaloType.mono(
-                          size: 11, color: HaloColors.amber)),
+                    lockState.enabled ? 'app lock · on →' : 'app lock · off →',
+                    style: HaloType.mono(size: 11, color: HaloColors.amber),
+                  ),
                 ),
               ),
               if (_receivedPlain.isNotEmpty) ...[
@@ -2294,11 +2619,15 @@ class _DevScreenState extends State<DevScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('decrypted:',
-                          style: HaloType.mono(size: 10, color: HaloColors.green)),
+                      Text(
+                        'decrypted:',
+                        style: HaloType.mono(size: 10, color: HaloColors.green),
+                      ),
                       const SizedBox(height: 4),
-                      Text(_receivedPlain,
-                          style: HaloType.sans(size: 14, color: HaloColors.text)),
+                      Text(
+                        _receivedPlain,
+                        style: HaloType.sans(size: 14, color: HaloColors.text),
+                      ),
                     ],
                   ),
                 ),
@@ -2347,7 +2676,6 @@ class _OnboardingGateState extends State<_OnboardingGate> {
     );
   }
 }
-
 
 class _LockGate extends StatefulWidget {
   final Widget child;

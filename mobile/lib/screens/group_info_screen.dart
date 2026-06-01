@@ -43,29 +43,31 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       context: context,
       builder: (c) => AlertDialog(
         backgroundColor: HaloColors.surface2,
-        title: Text('rename group',
-            style: HaloType.serif(
-                size: 18, italic: true, color: HaloColors.text)),
+        title: Text(
+          'rename group',
+          style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
+        ),
         content: TextField(
           controller: ctrl,
           autofocus: true,
           style: HaloType.sans(size: 14, color: HaloColors.text),
           cursorColor: HaloColors.amber,
-          decoration: const InputDecoration(
-            border: UnderlineInputBorder(),
-          ),
+          decoration: const InputDecoration(border: UnderlineInputBorder()),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(c),
-            child: Text('cancel',
-                style: HaloType.sans(size: 13, color: HaloColors.text2)),
+            child: Text(
+              'cancel',
+              style: HaloType.sans(size: 13, color: HaloColors.text2),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(c, ctrl.text.trim()),
-            child: Text('save',
-                style: HaloType.sans(
-                    size: 13, color: HaloColors.amber)),
+            child: Text(
+              'save',
+              style: HaloType.sans(size: 13, color: HaloColors.amber),
+            ),
           ),
         ],
       ),
@@ -81,12 +83,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
         .where((c) => !_members.contains(c.haloId))
         .toList();
     if (available.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        backgroundColor: HaloColors.surface3,
-        content: Text('no contacts to add',
-            style:
-                HaloType.sans(size: 13, color: HaloColors.text)),
-      ));
+      showHaloToast(context, 'no contacts to add');
       return;
     }
     final picked = await showModalBottomSheet<Set<String>>(
@@ -109,22 +106,28 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       context: context,
       builder: (c) => AlertDialog(
         backgroundColor: HaloColors.surface2,
-        title: Text('remove $haloId?',
-            style: HaloType.serif(
-                size: 16, italic: true, color: HaloColors.text)),
+        title: Text(
+          'remove $haloId?',
+          style: HaloType.serif(size: 16, italic: true, color: HaloColors.text),
+        ),
         content: Text(
-            'they will stop receiving messages from this group.',
-            style: HaloType.sans(size: 13, color: HaloColors.text2)),
+          'they will stop receiving messages from this group.',
+          style: HaloType.sans(size: 13, color: HaloColors.text2),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(c, false),
-            child: Text('cancel',
-                style: HaloType.sans(size: 13, color: HaloColors.text2)),
+            child: Text(
+              'cancel',
+              style: HaloType.sans(size: 13, color: HaloColors.text2),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(c, true),
-            child: Text('remove',
-                style: HaloType.sans(size: 13, color: HaloColors.rose)),
+            child: Text(
+              'remove',
+              style: HaloType.sans(size: 13, color: HaloColors.rose),
+            ),
           ),
         ],
       ),
@@ -140,22 +143,28 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       context: context,
       builder: (c) => AlertDialog(
         backgroundColor: HaloColors.surface2,
-        title: Text('leave group?',
-            style: HaloType.serif(
-                size: 18, italic: true, color: HaloColors.text)),
+        title: Text(
+          'leave group?',
+          style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
+        ),
         content: Text(
-            'you will stop receiving messages and other members will see you leave.',
-            style: HaloType.sans(size: 13, color: HaloColors.text2)),
+          'you will stop receiving messages and other members will see you leave.',
+          style: HaloType.sans(size: 13, color: HaloColors.text2),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(c, false),
-            child: Text('cancel',
-                style: HaloType.sans(size: 13, color: HaloColors.text2)),
+            child: Text(
+              'cancel',
+              style: HaloType.sans(size: 13, color: HaloColors.text2),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(c, true),
-            child: Text('leave',
-                style: HaloType.sans(size: 13, color: HaloColors.rose)),
+            child: Text(
+              'leave',
+              style: HaloType.sans(size: 13, color: HaloColors.rose),
+            ),
           ),
         ],
       ),
@@ -174,9 +183,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     if (_loading) {
       return const Scaffold(
         backgroundColor: HaloColors.surface,
-        body: Center(
-          child: CircularProgressIndicator(color: HaloColors.amber),
-        ),
+        body: Center(child: CircularProgressIndicator(color: HaloColors.amber)),
       );
     }
     final myId = appState.myId;
@@ -191,15 +198,22 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.chevron_left,
-                        color: HaloColors.text, size: 26),
+                    icon: const Icon(
+                      Icons.chevron_left,
+                      color: HaloColors.text,
+                      size: 26,
+                    ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   Expanded(
-                    child: Text('group info',
-                        style: HaloType.serif(
-                          size: 18, italic: true, color: HaloColors.text,
-                        )),
+                    child: Text(
+                      'group info',
+                      style: HaloType.serif(
+                        size: 18,
+                        italic: true,
+                        color: HaloColors.text,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -210,13 +224,15 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
               child: Column(
                 children: [
                   Container(
-                    width: 72, height: 72,
+                    width: 72,
+                    height: 72,
                     decoration: BoxDecoration(
                       color: HaloColors.amberSoft,
                       borderRadius: BorderRadius.circular(18),
                       border: Border.all(
-                          color: HaloColors.amber.withOpacity(0.45),
-                          width: 0.8),
+                        color: HaloColors.amber.withOpacity(0.45),
+                        width: 0.8,
+                      ),
                     ),
                     alignment: Alignment.center,
                     child: Text(
@@ -224,7 +240,10 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                           ? '·'
                           : _name.characters.first.toUpperCase(),
                       style: HaloType.serif(
-                          size: 36, italic: true, color: HaloColors.amber),
+                        size: 36,
+                        italic: true,
+                        color: HaloColors.amber,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -233,30 +252,44 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(_name,
-                            style: HaloType.serif(
-                                size: 22,
-                                italic: true,
-                                color: HaloColors.text)),
+                        Text(
+                          _name,
+                          style: HaloType.serif(
+                            size: 22,
+                            italic: true,
+                            color: HaloColors.text,
+                          ),
+                        ),
                         if (_isAdmin) ...[
                           const SizedBox(width: 6),
-                          const Icon(Icons.edit_outlined,
-                              size: 16, color: HaloColors.text3),
+                          const Icon(
+                            Icons.edit_outlined,
+                            size: 16,
+                            color: HaloColors.text3,
+                          ),
                         ],
                       ],
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text('${_members.length} members',
-                      style: HaloType.mono(
-                          size: 11, color: HaloColors.text3, letter: 0.1)),
+                  Text(
+                    '${_members.length} members',
+                    style: HaloType.mono(
+                      size: 11,
+                      color: HaloColors.text3,
+                      letter: 0.1,
+                    ),
+                  ),
                   if (_isAdmin) ...[
                     const SizedBox(height: 4),
-                    Text('admin',
-                        style: HaloType.mono(
-                            size: 10,
-                            color: HaloColors.amber,
-                            letter: 0.4)),
+                    Text(
+                      'admin',
+                      style: HaloType.mono(
+                        size: 10,
+                        color: HaloColors.amber,
+                        letter: 0.4,
+                      ),
+                    ),
                   ],
                 ],
               ),
@@ -267,11 +300,14 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
               child: Row(
                 children: [
-                  Text('members',
-                      style: HaloType.mono(
-                          size: 10,
-                          color: HaloColors.text3,
-                          letter: 0.14)),
+                  Text(
+                    'members',
+                    style: HaloType.mono(
+                      size: 10,
+                      color: HaloColors.text3,
+                      letter: 0.14,
+                    ),
+                  ),
                   const Spacer(),
                   if (_isAdmin)
                     GestureDetector(
@@ -279,14 +315,20 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.add_rounded,
-                              size: 14, color: HaloColors.amber),
+                          const Icon(
+                            Icons.add_rounded,
+                            size: 14,
+                            color: HaloColors.amber,
+                          ),
                           const SizedBox(width: 3),
-                          Text('add',
-                              style: HaloType.mono(
-                                  size: 10,
-                                  color: HaloColors.amber,
-                                  letter: 0.14)),
+                          Text(
+                            'add',
+                            style: HaloType.mono(
+                              size: 10,
+                              color: HaloColors.amber,
+                              letter: 0.14,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -301,7 +343,9 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   final isMe = m == myId;
                   return Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 8),
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: Row(
                       children: [
                         HaloAvatar(seed: m, size: 36),
@@ -310,26 +354,33 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(m,
-                                  style: HaloType.sans(
-                                    size: 14,
-                                    weight: FontWeight.w500,
-                                    color: HaloColors.text,
-                                  )),
+                              Text(
+                                m,
+                                style: HaloType.sans(
+                                  size: 14,
+                                  weight: FontWeight.w500,
+                                  color: HaloColors.text,
+                                ),
+                              ),
                               if (isMe)
-                                Text('you',
-                                    style: HaloType.mono(
-                                      size: 10,
-                                      color: HaloColors.amber,
-                                      letter: 0.3,
-                                    )),
+                                Text(
+                                  'you',
+                                  style: HaloType.mono(
+                                    size: 10,
+                                    color: HaloColors.amber,
+                                    letter: 0.3,
+                                  ),
+                                ),
                             ],
                           ),
                         ),
                         if (_isAdmin && !isMe)
                           IconButton(
-                            icon: const Icon(Icons.remove_circle_outline,
-                                size: 18, color: HaloColors.text3),
+                            icon: const Icon(
+                              Icons.remove_circle_outline,
+                              size: 18,
+                              color: HaloColors.text3,
+                            ),
                             onPressed: () => _confirmRemove(m),
                           ),
                       ],
@@ -350,16 +401,19 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                     color: HaloColors.surface2,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                        color: HaloColors.rose.withOpacity(0.4),
-                        width: 0.6),
+                      color: HaloColors.rose.withOpacity(0.4),
+                      width: 0.6,
+                    ),
                   ),
                   alignment: Alignment.center,
-                  child: Text('leave group',
-                      style: HaloType.sans(
-                        size: 14,
-                        weight: FontWeight.w500,
-                        color: HaloColors.rose,
-                      )),
+                  child: Text(
+                    'leave group',
+                    style: HaloType.sans(
+                      size: 14,
+                      weight: FontWeight.w500,
+                      color: HaloColors.rose,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -387,7 +441,8 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
         children: [
           const SizedBox(height: 8),
           Container(
-            width: 36, height: 4,
+            width: 36,
+            height: 4,
             decoration: BoxDecoration(
               color: HaloColors.line2,
               borderRadius: BorderRadius.circular(2),
@@ -397,22 +452,28 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
           Row(
             children: [
               const SizedBox(width: 20),
-              Text('add members',
-                  style: HaloType.serif(
-                    size: 16, italic: true, color: HaloColors.text,
-                  )),
+              Text(
+                'add members',
+                style: HaloType.serif(
+                  size: 16,
+                  italic: true,
+                  color: HaloColors.text,
+                ),
+              ),
               const Spacer(),
               TextButton(
                 onPressed: _picked.isEmpty
                     ? null
                     : () => Navigator.pop(context, _picked),
-                child: Text('add ${_picked.length}',
-                    style: HaloType.sans(
-                      size: 13,
-                      color: _picked.isEmpty
-                          ? HaloColors.text3
-                          : HaloColors.amber,
-                    )),
+                child: Text(
+                  'add ${_picked.length}',
+                  style: HaloType.sans(
+                    size: 13,
+                    color: _picked.isEmpty
+                        ? HaloColors.text3
+                        : HaloColors.amber,
+                  ),
+                ),
               ),
               const SizedBox(width: 8),
             ],
@@ -435,22 +496,27 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                   }),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
                     child: Row(
                       children: [
                         HaloAvatar(seed: c.avatarSeed, size: 32),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: Text(c.haloId,
-                              style: HaloType.sans(
-                                size: 14,
-                                weight: FontWeight.w500,
-                                color: HaloColors.text,
-                              )),
+                          child: Text(
+                            c.haloId,
+                            style: HaloType.sans(
+                              size: 14,
+                              weight: FontWeight.w500,
+                              color: HaloColors.text,
+                            ),
+                          ),
                         ),
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 120),
-                          width: 20, height: 20,
+                          width: 20,
+                          height: 20,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: picked
@@ -465,8 +531,11 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                           ),
                           alignment: Alignment.center,
                           child: picked
-                              ? const Icon(Icons.check_rounded,
-                                  size: 12, color: HaloColors.onAmber)
+                              ? const Icon(
+                                  Icons.check_rounded,
+                                  size: 12,
+                                  color: HaloColors.onAmber,
+                                )
                               : null,
                         ),
                       ],
