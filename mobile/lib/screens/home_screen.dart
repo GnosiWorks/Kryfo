@@ -11,7 +11,7 @@ import '../miui_autostart.dart';
 bool _miuiPromptChecked = false;
 
 class HomeScreen extends StatelessWidget {
-  final String haloId;            // "neon-tiger-saturn"
+  final String haloId; // "neon-tiger-saturn"
   final List<ContactPreview> contacts;
   final List<GroupSummary> groups;
   final VoidCallback onAddContact;
@@ -53,9 +53,9 @@ class HomeScreen extends StatelessWidget {
             const _StatusBar(),
             _HomeHead(now: now, haloId: haloId),
             _NotesPin(
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const NotesScreen()),
-              ),
+              onTap: () => Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const NotesScreen())),
             ),
             if (hasArchived)
               _ArchivedPin(
@@ -74,7 +74,11 @@ class HomeScreen extends StatelessWidget {
                       onNewGroup: onNewGroup,
                     ),
             ),
-            _NavTabs(active: 'chats', onDevLongPress: onOpenDev, onMeTap: onOpenSettings),
+            _NavTabs(
+              active: 'chats',
+              onDevLongPress: onOpenDev,
+              onMeTap: onOpenSettings,
+            ),
           ],
         ),
       ),
@@ -125,8 +129,22 @@ class _StatusBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('9:41', style: HaloType.sans(size: 11, weight: FontWeight.w500, color: HaloColors.text2)),
-          Text('•••', style: HaloType.sans(size: 11, color: HaloColors.text2.withOpacity(0.6), letter: 2)),
+          Text(
+            '9:41',
+            style: HaloType.sans(
+              size: 11,
+              weight: FontWeight.w500,
+              color: HaloColors.text2,
+            ),
+          ),
+          Text(
+            '•••',
+            style: HaloType.sans(
+              size: 11,
+              color: HaloColors.text2.withOpacity(0.6),
+              letter: 2,
+            ),
+          ),
         ],
       ),
     );
@@ -135,10 +153,28 @@ class _StatusBar extends StatelessWidget {
 
 // ───────── date header ─────────
 
-const _days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const _days = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
 const _months = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 class _HomeHead extends StatelessWidget {
@@ -154,15 +190,28 @@ class _HomeHead extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('$day,', style: HaloType.serif(size: 26, weight: FontWeight.w400)),
-          Text('$month ${now.day}',
-              style: HaloType.serif(
-                size: 26, weight: FontWeight.w300,
-                color: HaloColors.amber, italic: true,
-              )),
+          Text(
+            '$day,',
+            style: HaloType.serif(size: 26, weight: FontWeight.w400),
+          ),
+          Text(
+            '$month ${now.day}',
+            style: HaloType.serif(
+              size: 26,
+              weight: FontWeight.w300,
+              color: HaloColors.amber,
+              italic: true,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text('your halo · $haloId',
-              style: HaloType.mono(size: 11, color: HaloColors.text2, letter: 0.04)),
+          Text(
+            'your halo · $haloId',
+            style: HaloType.mono(
+              size: 11,
+              color: HaloColors.text2,
+              letter: 0.04,
+            ),
+          ),
         ],
       ),
     );
@@ -183,39 +232,60 @@ class _EmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 56, height: 56,
+              width: 56,
+              height: 56,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: HaloColors.amberSoft,
-                border: Border.all(color: HaloColors.amber.withOpacity(0.3), width: 0.5),
+                border: Border.all(
+                  color: HaloColors.amber.withOpacity(0.3),
+                  width: 0.5,
+                ),
               ),
-              child: const Icon(Icons.qr_code_2_rounded, color: HaloColors.amber, size: 26),
+              child: const Icon(
+                Icons.qr_code_2_rounded,
+                color: HaloColors.amber,
+                size: 26,
+              ),
             ),
             const SizedBox(height: 18),
-            Text('no halos yet.',
-                textAlign: TextAlign.center,
-                style: HaloType.serif(
-                  size: 22, weight: FontWeight.w300,
-                  italic: true, color: HaloColors.text,
-                )),
+            Text(
+              'no halos yet.',
+              textAlign: TextAlign.center,
+              style: HaloType.serif(
+                size: 22,
+                weight: FontWeight.w300,
+                italic: true,
+                color: HaloColors.text,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text('scan a QR to add your first one.',
-                textAlign: TextAlign.center,
-                style: HaloType.sans(size: 13, color: HaloColors.text2)),
+            Text(
+              'scan a QR to add your first one.',
+              textAlign: TextAlign.center,
+              style: HaloType.sans(size: 13, color: HaloColors.text2),
+            ),
             const SizedBox(height: 22),
             GestureDetector(
               onTap: onAdd,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: HaloColors.amber,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Text('scan',
-                    style: HaloType.sans(
-                      size: 13, weight: FontWeight.w500,
-                      color: HaloColors.onAmber, height: 1,
-                    )),
+                child: Text(
+                  'scan',
+                  style: HaloType.sans(
+                    size: 13,
+                    weight: FontWeight.w500,
+                    color: HaloColors.onAmber,
+                    height: 1,
+                  ),
+                ),
               ),
             ),
           ],
@@ -236,14 +306,22 @@ class _ArchivedPin extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        child: Row(children: [
-          const Icon(Icons.archive_outlined, size: 16, color: HaloColors.text3),
-          const SizedBox(width: 12),
-          Text('archived',
-              style: HaloType.sans(size: 13, color: HaloColors.text2)),
-          const Spacer(),
-          const Icon(Icons.chevron_right, color: Color(0xFF6B625A), size: 18),
-        ]),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.archive_outlined,
+              size: 16,
+              color: HaloColors.text3,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'archived',
+              style: HaloType.sans(size: 13, color: HaloColors.text2),
+            ),
+            const Spacer(),
+            const Icon(Icons.chevron_right, color: Color(0xFF6B625A), size: 18),
+          ],
+        ),
       ),
     );
   }
@@ -276,10 +354,14 @@ class _ContactList extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
           child: Row(
             children: [
-              Text('groups',
-                  style: HaloType.mono(
-                    size: 10, color: HaloColors.text3, letter: 0.14,
-                  )),
+              Text(
+                'groups',
+                style: HaloType.mono(
+                  size: 10,
+                  color: HaloColors.text3,
+                  letter: 0.14,
+                ),
+              ),
               const Spacer(),
               GestureDetector(
                 onTap: onNewGroup,
@@ -287,27 +369,40 @@ class _ContactList extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.add_rounded,
-                        size: 14, color: HaloColors.amber),
+                    const Icon(
+                      Icons.add_rounded,
+                      size: 14,
+                      color: HaloColors.amber,
+                    ),
                     const SizedBox(width: 3),
-                    Text('new',
-                        style: HaloType.mono(
-                          size: 10, color: HaloColors.amber, letter: 0.14,
-                        )),
+                    Text(
+                      'new',
+                      style: HaloType.mono(
+                        size: 10,
+                        color: HaloColors.amber,
+                        letter: 0.14,
+                      ),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
         ),
-        ...groups.map((g) => _GroupRow(g: g, onTap: () => onOpenGroup(g.groupId))),
+        ...groups.map(
+          (g) => _GroupRow(g: g, onTap: () => onOpenGroup(g.groupId)),
+        ),
         if (rest.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-            child: Text('more',
-                style: HaloType.mono(
-                  size: 10, color: HaloColors.text3, letter: 0.14,
-                )),
+            child: Text(
+              'more',
+              style: HaloType.mono(
+                size: 10,
+                color: HaloColors.text3,
+                letter: 0.14,
+              ),
+            ),
           ),
           ...rest.map((c) => _Row(c: c, onTap: () => onTap(c.haloId))),
         ],
@@ -326,41 +421,55 @@ class _GroupRow extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Row(children: [
-          // group avatar: square tile in amberSoft with the first letter
-          // of the group name in italic serif. distinct from contact
-          // avatars (circular) so groups feel different at a glance.
-          Container(
-            width: 36, height: 36,
-            decoration: BoxDecoration(
-              color: HaloColors.amberSoft,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: HaloColors.amber.withOpacity(0.35), width: 0.6),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              g.name.isEmpty ? '·' : g.name.characters.first.toUpperCase(),
-              style: HaloType.serif(
-                size: 18, italic: true, color: HaloColors.amber,
+        child: Row(
+          children: [
+            // group avatar: square tile in amberSoft with the first letter
+            // of the group name in italic serif. distinct from contact
+            // avatars (circular) so groups feel different at a glance.
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: HaloColors.amberSoft,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: HaloColors.amber.withOpacity(0.35),
+                  width: 0.6,
+                ),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                g.name.isEmpty ? '·' : g.name.characters.first.toUpperCase(),
+                style: HaloType.serif(
+                  size: 18,
+                  italic: true,
+                  color: HaloColors.amber,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(g.name,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    g.name,
                     style: HaloType.sans(
-                        size: 14, weight: FontWeight.w500, color: HaloColors.text)),
-                const SizedBox(height: 2),
-                Text('${g.memberCount} members',
-                    style: HaloType.mono(size: 10, color: HaloColors.text3)),
-              ],
+                      size: 14,
+                      weight: FontWeight.w500,
+                      color: HaloColors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${g.memberCount} members',
+                    style: HaloType.mono(size: 10, color: HaloColors.text3),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ]),
+          ],
+        ),
       ),
     );
   }
@@ -379,7 +488,8 @@ class _HeroCard extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            begin: Alignment.topLeft, end: Alignment.bottomRight,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: [HaloColors.amber, HaloColors.amberDeep],
           ),
           borderRadius: BorderRadius.circular(16),
@@ -387,24 +497,43 @@ class _HeroCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: [
-              HaloAvatar(seed: c.avatarSeed, size: 42),
-              const SizedBox(width: 11),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(c.nickname ?? c.haloId,
-                        style: HaloType.sans(size: 14, weight: FontWeight.w500, color: HaloColors.onAmber)),
-                    Text((c.blocked ? 'blocked' : _relTime(c.when)),
-                        style: HaloType.mono(size: 11, color: HaloColors.onAmber.withOpacity(0.7))),
-                  ],
+            Row(
+              children: [
+                HaloAvatar(seed: c.avatarSeed, size: 42),
+                const SizedBox(width: 11),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        c.nickname ?? c.haloId,
+                        style: HaloType.sans(
+                          size: 14,
+                          weight: FontWeight.w500,
+                          color: HaloColors.onAmber,
+                        ),
+                      ),
+                      Text(
+                        (c.blocked ? 'blocked' : _relTime(c.when)),
+                        style: HaloType.mono(
+                          size: 11,
+                          color: HaloColors.onAmber.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ]),
+              ],
+            ),
             const SizedBox(height: 10),
-            Text(c.preview ?? '',
-                style: HaloType.sans(size: 13, color: HaloColors.onAmber, height: 1.5)),
+            Text(
+              c.preview ?? '',
+              style: HaloType.sans(
+                size: 13,
+                color: HaloColors.onAmber,
+                height: 1.5,
+              ),
+            ),
           ],
         ),
       ),
@@ -422,30 +551,46 @@ class _Row extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Row(children: [
-          HaloAvatar(seed: c.avatarSeed, size: 36),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(c.nickname ?? c.haloId,
-                        style: HaloType.sans(size: 14, weight: FontWeight.w500, color: HaloColors.text)),
-                    Text((c.blocked ? 'blocked' : _relTime(c.when)),
-                        style: HaloType.mono(size: 10, color: HaloColors.text3)),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(c.preview ?? '',
-                    style: HaloType.sans(size: 12, color: HaloColors.text2),
-                    maxLines: 1, overflow: TextOverflow.ellipsis),
-              ],
+        child: Row(
+          children: [
+            Opacity(
+              opacity: c.blocked ? 0.4 : 1,
+              child: HaloAvatar(seed: c.avatarSeed, size: 36),
             ),
-          ),
-        ]),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        c.nickname ?? c.haloId,
+                        style: HaloType.sans(
+                          size: 14,
+                          weight: FontWeight.w500,
+                          color: c.blocked ? HaloColors.text3 : HaloColors.text,
+                        ),
+                      ),
+                      Text(
+                        (c.blocked ? 'blocked' : _relTime(c.when)),
+                        style: HaloType.mono(size: 10, color: HaloColors.text3),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    c.preview ?? '',
+                    style: HaloType.sans(size: 12, color: HaloColors.text2),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -457,7 +602,23 @@ String _relTime(DateTime? t) {
   if (d.inMinutes < 1) return 'now';
   if (d.inMinutes < 60) return '${d.inMinutes}m';
   if (d.inHours < 24) return '${d.inHours}h';
-  return '${d.inDays}d';
+  if (d.inDays < 7) return '${d.inDays}d';
+  // older than a week: a short date reads better than a big day count
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  return '${t.day} ${months[t.month - 1]}';
 }
 
 // ───────── nav tabs ─────────
@@ -466,7 +627,11 @@ class _NavTabs extends StatelessWidget {
   final String active;
   final VoidCallback onDevLongPress;
   final VoidCallback onMeTap;
-  const _NavTabs({required this.active, required this.onDevLongPress, required this.onMeTap});
+  const _NavTabs({
+    required this.active,
+    required this.onDevLongPress,
+    required this.onMeTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -499,12 +664,14 @@ class _Tab extends StatelessWidget {
   const _Tab({required this.label, required this.active});
   @override
   Widget build(BuildContext context) {
-    return Text(label,
-        style: HaloType.sans(
-          size: 11,
-          weight: active ? FontWeight.w500 : FontWeight.w400,
-          color: active ? HaloColors.text : HaloColors.text2,
-        ));
+    return Text(
+      label,
+      style: HaloType.sans(
+        size: 11,
+        weight: active ? FontWeight.w500 : FontWeight.w400,
+        color: active ? HaloColors.text : HaloColors.text2,
+      ),
+    );
   }
 }
 
@@ -535,32 +702,37 @@ class _NotesPin extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               alignment: Alignment.center,
-              child: const Icon(Icons.bookmark_outline,
-                  color: HaloColors.amber, size: 18),
+              child: const Icon(
+                Icons.bookmark_outline,
+                color: HaloColors.amber,
+                size: 18,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('note to self',
-                      style: HaloType.serif(
-                          size: 14,
-                          color: HaloColors.text,
-                          italic: true)),
+                  Text(
+                    'note to self',
+                    style: HaloType.serif(
+                      size: 14,
+                      color: HaloColors.text,
+                      italic: true,
+                    ),
+                  ),
                   const SizedBox(height: 2),
-                  Text('a private space, only on this phone',
-                      style: HaloType.sans(
-                          size: 11.5, color: HaloColors.text3)),
+                  Text(
+                    'a private space, only on this phone',
+                    style: HaloType.sans(size: 11.5, color: HaloColors.text3),
+                  ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right,
-                color: Color(0xFF6B625A), size: 18),
+            const Icon(Icons.chevron_right, color: Color(0xFF6B625A), size: 18),
           ],
         ),
       ),
     );
   }
 }
-

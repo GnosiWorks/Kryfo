@@ -29,8 +29,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: HaloColors.surface3,
-        title: Text('wipe halo?',
-            style: HaloType.serif(size: 18, color: HaloColors.rose)),
+        title: Text(
+          'wipe halo?',
+          style: HaloType.serif(size: 18, color: HaloColors.rose),
+        ),
         content: Text(
           "this deletes your identity, all messages, all contacts, and every setting on this phone. unrecoverable unless you have a backup.",
           style: HaloType.sans(size: 13, color: HaloColors.text2, height: 1.5),
@@ -38,13 +40,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('cancel',
-                style: HaloType.sans(size: 13, color: HaloColors.text2)),
+            child: Text(
+              'cancel',
+              style: HaloType.sans(size: 13, color: HaloColors.text2),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text('continue',
-                style: HaloType.sans(size: 13, color: HaloColors.rose)),
+            child: Text(
+              'continue',
+              style: HaloType.sans(size: 13, color: HaloColors.rose),
+            ),
           ),
         ],
       ),
@@ -57,8 +63,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: HaloColors.surface3,
-        title: Text("type 'wipe' to confirm",
-            style: HaloType.serif(size: 18, color: HaloColors.text)),
+        title: Text(
+          "type 'wipe' to confirm",
+          style: HaloType.serif(size: 18, color: HaloColors.text),
+        ),
         content: TextField(
           controller: confirmCtrl,
           autofocus: true,
@@ -75,14 +83,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('cancel',
-                style: HaloType.sans(size: 13, color: HaloColors.text2)),
+            child: Text(
+              'cancel',
+              style: HaloType.sans(size: 13, color: HaloColors.text2),
+            ),
           ),
           TextButton(
-            onPressed: () => Navigator.of(ctx).pop(
-                confirmCtrl.text.trim().toLowerCase() == 'wipe'),
-            child: Text('wipe halo',
-                style: HaloType.sans(size: 13, color: HaloColors.rose)),
+            onPressed: () => Navigator.of(
+              ctx,
+            ).pop(confirmCtrl.text.trim().toLowerCase() == 'wipe'),
+            child: Text(
+              'wipe halo',
+              style: HaloType.sans(size: 13, color: HaloColors.rose),
+            ),
           ),
         ],
       ),
@@ -95,8 +108,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: HaloColors.surface3,
-        title: Text('disable app lock?',
-            style: HaloType.serif(size: 18, color: HaloColors.text)),
+        title: Text(
+          'disable app lock?',
+          style: HaloType.serif(size: 18, color: HaloColors.text),
+        ),
         content: Text(
           'the pin will be removed. anyone with your phone will see halo when they open it.',
           style: HaloType.sans(size: 13, color: HaloColors.text2),
@@ -104,13 +119,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('cancel',
-                style: HaloType.sans(size: 13, color: HaloColors.text2)),
+            child: Text(
+              'cancel',
+              style: HaloType.sans(size: 13, color: HaloColors.text2),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text('disable',
-                style: HaloType.sans(size: 13, color: HaloColors.rose)),
+            child: Text(
+              'disable',
+              style: HaloType.sans(size: 13, color: HaloColors.rose),
+            ),
           ),
         ],
       ),
@@ -126,28 +145,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: const BackButton(color: Color(0xFFAAAAAA)),
-        title: Text('settings',
-            style: HaloType.serif(
-                size: 22, color: HaloColors.text, italic: true)),
+        title: Text(
+          'settings',
+          style: HaloType.serif(size: 22, color: HaloColors.text, italic: true),
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
           _Section('identity'),
-          _IdentityCard(
-            haloId: appState.myId,
-            onion: appState.myOnion,
-          ),
+          _IdentityCard(haloId: appState.myId, onion: appState.myOnion),
           const SizedBox(height: 24),
 
           _Section('privacy'),
           _Row(
             label: 'speed & privacy',
-            value: appState.sendMode == 'fast' ? 'fast · direct' : 'private · 3 hops',
+            value: appState.sendMode == 'fast'
+                ? 'fast · direct'
+                : 'private · 3 hops',
             onTap: () async {
-              await Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const ModesScreen()),
-              );
+              await Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const ModesScreen()));
               if (mounted) setState(() {});
             },
           ),
@@ -160,9 +179,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           _Row(
             label: 'blocked',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const BlockedScreen()),
-            ),
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const BlockedScreen())),
           ),
           const SizedBox(height: 24),
 
@@ -178,8 +197,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     if (lockState.enabled) {
                       await _confirmDisableLock();
                     } else {
-                      await Navigator.of(context).push(MaterialPageRoute(
-                          builder: (_) => const LockSetupScreen()));
+                      await Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const LockSetupScreen(),
+                        ),
+                      );
                       setState(() {});
                     }
                   },
@@ -200,24 +222,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           context: context,
                           builder: (ctx) => AlertDialog(
                             backgroundColor: HaloColors.surface3,
-                            title: Text('panic pin is set',
-                                style: HaloType.serif(
-                                    size: 18, color: HaloColors.text)),
-                            content: Text('remove the panic pin?',
-                                style: HaloType.sans(
-                                    size: 13, color: HaloColors.text2)),
+                            title: Text(
+                              'panic pin is set',
+                              style: HaloType.serif(
+                                size: 18,
+                                color: HaloColors.text,
+                              ),
+                            ),
+                            content: Text(
+                              'remove the panic pin?',
+                              style: HaloType.sans(
+                                size: 13,
+                                color: HaloColors.text2,
+                              ),
+                            ),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.of(ctx).pop(false),
-                                child: Text('cancel',
-                                    style: HaloType.sans(
-                                        size: 13, color: HaloColors.text2)),
+                                child: Text(
+                                  'cancel',
+                                  style: HaloType.sans(
+                                    size: 13,
+                                    color: HaloColors.text2,
+                                  ),
+                                ),
                               ),
                               TextButton(
                                 onPressed: () => Navigator.of(ctx).pop(true),
-                                child: Text('remove',
-                                    style: HaloType.sans(
-                                        size: 13, color: HaloColors.rose)),
+                                child: Text(
+                                  'remove',
+                                  style: HaloType.sans(
+                                    size: 13,
+                                    color: HaloColors.rose,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -226,9 +264,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           await lockState.disablePanicPin();
                         }
                       } else {
-                        await Navigator.of(context).push(MaterialPageRoute(
-                          builder: (_) => PanicSetupScreen(),
-                        ));
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => PanicSetupScreen()),
+                        );
                       }
                     },
                   ),
@@ -241,16 +279,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _Row(
             label: 'back up identity',
             value: 'encrypted file',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const BackupScreen()),
-            ),
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const BackupScreen())),
           ),
           _Row(
             label: 'restore from backup',
             value: 'replace current',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const RestoreScreen()),
-            ),
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const RestoreScreen())),
           ),
           const SizedBox(height: 24),
 
@@ -267,12 +305,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text('wipe halo from this phone',
-                        style: HaloType.sans(
-                            size: 14, color: HaloColors.rose)),
+                    child: Text(
+                      'wipe halo from this phone',
+                      style: HaloType.sans(size: 14, color: HaloColors.rose),
+                    ),
                   ),
-                  const Icon(Icons.chevron_right,
-                      color: HaloColors.rose, size: 18),
+                  const Icon(
+                    Icons.chevron_right,
+                    color: HaloColors.rose,
+                    size: 18,
+                  ),
                 ],
               ),
             ),
@@ -314,16 +356,23 @@ class _Row extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: Text(label,
-                  style: HaloType.sans(size: 14, color: HaloColors.text)),
+              child: Text(
+                label,
+                style: HaloType.sans(size: 14, color: HaloColors.text),
+              ),
             ),
             if (value != null)
-              Text(value!,
-                  style: HaloType.sans(size: 13, color: HaloColors.text2)),
+              Text(
+                value!,
+                style: HaloType.sans(size: 13, color: HaloColors.text2),
+              ),
             if (onTap != null) ...[
               const SizedBox(width: 8),
-              const Icon(Icons.chevron_right,
-                  color: Color(0xFF6B625A), size: 18),
+              const Icon(
+                Icons.chevron_right,
+                color: Color(0xFF6B625A),
+                size: 18,
+              ),
             ],
           ],
         ),
@@ -339,12 +388,7 @@ class _IdentityCard extends StatelessWidget {
 
   void _copy(BuildContext context, String text, String what) {
     Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('$what copied',
-          style: HaloType.sans(size: 12, color: HaloColors.text)),
-      backgroundColor: HaloColors.surface3,
-      duration: const Duration(seconds: 1),
-    ));
+    showHaloToast(context, '$what copied');
   }
 
   @override
@@ -364,12 +408,16 @@ class _IdentityCard extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: Text(haloId,
-                      style: HaloType.mono(
-                          size: 16, color: HaloColors.amber)),
+                  child: Text(
+                    haloId,
+                    style: HaloType.mono(size: 16, color: HaloColors.amber),
+                  ),
                 ),
-                const Icon(Icons.copy_outlined,
-                    color: Color(0xFF6B625A), size: 14),
+                const Icon(
+                  Icons.copy_outlined,
+                  color: Color(0xFF6B625A),
+                  size: 14,
+                ),
               ],
             ),
           ),
@@ -390,8 +438,11 @@ class _IdentityCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Icon(Icons.copy_outlined,
-                      color: Color(0xFF6B625A), size: 14),
+                  const Icon(
+                    Icons.copy_outlined,
+                    color: Color(0xFF6B625A),
+                    size: 14,
+                  ),
                 ],
               ),
             ),

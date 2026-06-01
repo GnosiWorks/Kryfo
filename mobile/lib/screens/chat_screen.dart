@@ -27,6 +27,8 @@ import '../widgets/motion.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
 final Map<String, String> _seenCipherPerPeer = {};
+// unsent drafts kept per peer so text survives leaving a chat.
+final Map<String, String> _draftPerPeer = {};
 
 class ChatScreen extends StatefulWidget {
   final String peerHaloId;
@@ -52,7 +54,8 @@ class _Msg {
   final String direction;
   String text;
   final DateTime when;
-  final int? burnAt;
+  int? burnAt;
+  int? burnSecs; // intended burn window; lit into burnAt on delivery.
   String? msgUid;
   // msg_uid of the message this one replies to, or null.
   final String? replyTo;
@@ -68,6 +71,7 @@ class _Msg {
     this.text,
     this.when, {
     this.burnAt,
+    this.burnSecs,
     this.msgUid,
     this.replyTo,
     this.sending = false,
@@ -175,6 +179,8 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _muted = false;
   bool _verified = false;
   bool _showScrollDown = false;
+  int _seenCount = 0;
+  String? _rippleUid;
 
   @override
   void initState() {
@@ -182,7 +188,11 @@ class _ChatScreenState extends State<ChatScreen> {
     appState.addListener(_onAppStateChanged);
     appState.loadSendMode();
     currentChatPeer = widget.peerHaloId;
-    if (widget.initialText != null) _msgCtrl.text = widget.initialText!;
+    if (widget.initialText != null) {
+      _msgCtrl.text = widget.initialText!;
+    } else {
+      _msgCtrl.text = _draftPerPeer[widget.peerHaloId] ?? '';
+    }
     db.getContact(widget.peerHaloId).then((c) {
       if (mounted) setState(() => _nickname = c?['nickname'] as String?);
     });
@@ -204,7 +214,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollCtrl.addListener(_onScroll);
     _lastCipher = _seenCipherPerPeer[widget.peerHaloId] ?? '';
     _loadMessages();
-    _burnTick = Timer.periodic(const Duration(seconds: 1), (_) {
+    _burnTick = Timer.periodic(const Duration(milliseconds: 250), (_) {
       if (!mounted) return;
       final now = DateTime.now().millisecondsSinceEpoch;
       final before = _messages.length;
@@ -314,6 +324,7 @@ class _ChatScreenState extends State<ChatScreen> {
     BuildContext bubbleContext,
     _Msg target,
   ) async {
+    HapticFeedback.selectionClick();
     // legacy messages (predating v5 migration) get a local uid assigned
     // on first reaction. peers won't know this uid so the reaction stays
     // local-only, but the UX works.
@@ -372,7 +383,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     selected: target.reactions[''],
                     onPick: (e) {
                       dismiss();
+                      final added = target.reactions[''] != e;
                       _toggleReaction(target, e);
+                      if (added) _flashReaction(target);
                     },
                     onReply: () {
                       dismiss();
@@ -386,6 +399,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       borderRadius: BorderRadius.circular(999),
                       onTap: () {
                         dismiss();
+                        HapticFeedback.selectionClick();
                         _forwardMessage(target);
                       },
                       child: Container(
@@ -418,6 +432,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       borderRadius: BorderRadius.circular(999),
                       onTap: () {
                         dismiss();
+                        HapticFeedback.selectionClick();
                         _togglePin(target);
                       },
                       child: Container(
@@ -451,6 +466,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         borderRadius: BorderRadius.circular(999),
                         onTap: () {
                           dismiss();
+                          HapticFeedback.selectionClick();
                           _unsendMessage(target);
                         },
                         child: Container(
@@ -700,9 +716,7 @@ class _ChatScreenState extends State<ChatScreen> {
       final count = _messages.where((x) => x.pinned).length;
       if (count >= 3) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('max 3 pinned')));
+          showHaloToast(context, 'max 3 pinned');
         }
         return;
       }
@@ -1037,7 +1051,13 @@ class _ChatScreenState extends State<ChatScreen> {
     sendFuture.then((result) async {
       if (!mounted) return;
       if (result == 'ok') {
-        setState(() => msg.sending = false);
+        setState(() {
+          msg.sending = false;
+          if (msg.burnSecs != null) {
+            msg.burnAt =
+                DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
+          }
+        });
         loadPeerEndpoint(widget.peerHaloId).then((endpoint) {
           if (endpoint != null && endpoint.isNotEmpty) {
             Future(() => engine.ntfyPing(endpoint));
@@ -1142,37 +1162,35 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Future<void> _pickAndSendImage() async {
-    final XFile? picked = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 1280,
-      maxHeight: 1280,
-      imageQuality: 70,
-    );
-    if (picked == null) return;
-    final bytes = await picked.readAsBytes();
-    final msgUid = _newMsgUid();
-    final dir = await getApplicationDocumentsDirectory();
-    final mediaDir = Directory('${dir.path}/media');
-    if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
-    final mediaFile = File('${mediaDir.path}/$msgUid.jpg');
-    await mediaFile.writeAsBytes(bytes);
-    final mediaPath = mediaFile.path;
-    final b64 = base64Encode(bytes);
-    final msg = _Msg(
-      'out',
-      '',
-      DateTime.now(),
-      sending: true,
-      msgUid: msgUid,
-      mediaPath: mediaPath,
-    );
-    setState(() {
-      _messages.add(msg);
-      _status = '';
+  // resend a failed image: re-read the saved file, re-encrypt, and push it
+  // back through the same tor-first-then-nostr path the first send used.
+  // flash a one-shot amber ring on a bubble when a reaction lands on it.
+  // _rippleUid clears after the animation so it only fires once.
+  void _flashReaction(_Msg msg) {
+    HapticFeedback.selectionClick();
+    if (msg.msgUid == null) return;
+    setState(() => _rippleUid = msg.msgUid);
+    Future.delayed(const Duration(milliseconds: 650), () {
+      if (!mounted) return;
+      if (_rippleUid == msg.msgUid) setState(() => _rippleUid = null);
     });
-    _scrollToEnd();
-    HapticFeedback.lightImpact();
+  }
+
+  Future<void> _retryImage(_Msg msg) async {
+    final path = msg.mediaPath;
+    if (path == null) return;
+    final file = File(path);
+    if (!await file.exists()) {
+      setState(() => msg.failed = true);
+      return;
+    }
+    setState(() {
+      msg.failed = false;
+      msg.sending = true;
+    });
+    final b64 = base64Encode(await file.readAsBytes());
+    final msgUid = msg.msgUid ?? _newMsgUid();
+    msg.msgUid = msgUid;
     final String cipher;
     try {
       final wrapped = await wrapMessage(
@@ -1209,13 +1227,170 @@ class _ChatScreenState extends State<ChatScreen> {
     sendFuture.then((result) async {
       if (!mounted) return;
       if (result == 'ok') {
-        setState(() => msg.sending = false);
+        setState(() {
+          msg.sending = false;
+          if (msg.burnSecs != null) {
+            msg.burnAt =
+                DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
+          }
+        });
         await db.saveMessage(
           widget.peerHaloId,
           'out',
           '',
           msgUid: msgUid,
+          mediaPath: path,
+        );
+      } else {
+        setState(() {
+          msg.sending = false;
+          msg.failed = true;
+        });
+      }
+    });
+  }
+
+  // bottom sheet: camera or gallery, instead of jumping straight to gallery.
+  void _showAttachSheet() {
+    HapticFeedback.selectionClick();
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: HaloColors.surface2,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) {
+        Widget tile(IconData icon, String label, ImageSource source) {
+          return ListTile(
+            leading: Icon(icon, color: HaloColors.amber, size: 22),
+            title: Text(
+              label,
+              style: HaloType.sans(size: 15, color: HaloColors.text),
+            ),
+            onTap: () {
+              Navigator.of(sheetCtx).pop();
+              _pickAndSendImage(source);
+            },
+          );
+        }
+
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 10),
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: HaloColors.line,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 6),
+              tile(Icons.photo_camera_outlined, 'camera', ImageSource.camera),
+              tile(
+                Icons.photo_library_outlined,
+                'gallery',
+                ImageSource.gallery,
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickAndSendImage(ImageSource source) async {
+    final XFile? picked = await ImagePicker().pickImage(
+      source: source,
+      maxWidth: 1280,
+      maxHeight: 1280,
+      imageQuality: 70,
+    );
+    if (picked == null) return;
+    final bytes = await picked.readAsBytes();
+    if (!mounted) return;
+    // preview the photo and let the user add a caption before it sends.
+    // back = cancel; the send button returns the caption (may be empty).
+    final caption = await Navigator.of(context).push<String?>(
+      MaterialPageRoute(builder: (_) => _ImageCaptionScreen(bytes: bytes)),
+    );
+    if (caption == null) return;
+    final msgUid = _newMsgUid();
+    final dir = await getApplicationDocumentsDirectory();
+    final mediaDir = Directory('${dir.path}/media');
+    if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
+    final mediaFile = File('${mediaDir.path}/$msgUid.jpg');
+    await mediaFile.writeAsBytes(bytes);
+    final mediaPath = mediaFile.path;
+    final b64 = base64Encode(bytes);
+    final msg = _Msg(
+      'out',
+      caption,
+      DateTime.now(),
+      sending: true,
+      msgUid: msgUid,
+      mediaPath: mediaPath,
+      burnSecs: _ghost ? _burnSeconds : null,
+    );
+    setState(() {
+      _messages.add(msg);
+      _status = '';
+    });
+    _scrollToEnd();
+    HapticFeedback.lightImpact();
+    final String cipher;
+    try {
+      final wrapped = await wrapMessage(
+        caption,
+        msgUid: msgUid,
+        imageB64: b64,
+        sender: SenderInfo(
+          haloId: appState.myId,
+          edPub: engine.myEdPubkey(),
+          onion: appState.myOnion,
+          xPub: engine.myXPubkey(),
+        ),
+      );
+      cipher = await signalEncrypt(widget.peerHaloId, wrapped);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        msg.sending = false;
+        msg.failed = true;
+      });
+      return;
+    }
+    final sendFuture = Future<String>(() async {
+      String? tor;
+      if (!_backPaired && widget.peerOnion.isNotEmpty) {
+        tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
+        if (tor == 'ok') return 'ok';
+      }
+      if (_peerXPub != null) {
+        return await Future(() => engine.nostrSend(_peerXPub!, cipher));
+      }
+      return tor ?? 'error: no transport';
+    });
+    sendFuture.then((result) async {
+      if (!mounted) return;
+      if (result == 'ok') {
+        setState(() {
+          msg.sending = false;
+          if (msg.burnSecs != null) {
+            msg.burnAt =
+                DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
+          }
+        });
+        await db.saveMessage(
+          widget.peerHaloId,
+          'out',
+          caption,
+          msgUid: msgUid,
           mediaPath: mediaPath,
+          burnAt: msg.burnAt,
         );
       } else {
         setState(() {
@@ -1239,9 +1414,7 @@ class _ChatScreenState extends State<ChatScreen> {
       sending: true,
       msgUid: msgUid,
       replyTo: replyToUid,
-      burnAt: _ghost
-          ? DateTime.now().millisecondsSinceEpoch + _burnSeconds * 1000
-          : null,
+      burnSecs: _ghost ? _burnSeconds : null,
     );
     setState(() {
       _messages.add(msg);
@@ -1303,7 +1476,13 @@ class _ChatScreenState extends State<ChatScreen> {
     sendFuture.then((result) async {
       if (!mounted) return;
       if (result == 'ok') {
-        setState(() => msg.sending = false);
+        setState(() {
+          msg.sending = false;
+          if (msg.burnSecs != null) {
+            msg.burnAt =
+                DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
+          }
+        });
         loadPeerEndpoint(widget.peerHaloId).then((endpoint) {
           if (endpoint != null && endpoint.isNotEmpty) {
             Future(() => engine.ntfyPing(endpoint));
@@ -1313,9 +1492,7 @@ class _ChatScreenState extends State<ChatScreen> {
           widget.peerHaloId,
           'out',
           text,
-          burnAt: _ghost
-              ? DateTime.now().millisecondsSinceEpoch + _burnSeconds * 1000
-              : null,
+          burnAt: msg.burnAt,
           msgUid: msgUid,
           replyTo: replyToUid,
         );
@@ -1335,6 +1512,12 @@ class _ChatScreenState extends State<ChatScreen> {
     _burnTick?.cancel();
     if (currentChatPeer == widget.peerHaloId) currentChatPeer = null;
     appState.removeListener(_onAppStateChanged);
+    final draft = _msgCtrl.text;
+    if (draft.trim().isEmpty) {
+      _draftPerPeer.remove(widget.peerHaloId);
+    } else {
+      _draftPerPeer[widget.peerHaloId] = draft;
+    }
     _msgCtrl.dispose();
     _searchCtrl.dispose();
     _scrollCtrl.dispose();
@@ -1738,6 +1921,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (!_scrollCtrl.hasClients) return;
     final pos = _scrollCtrl.position;
     final show = (pos.maxScrollExtent - pos.pixels) > 240;
+    if (!show) _seenCount = _messages.length;
     if (show != _showScrollDown && mounted) {
       setState(() => _showScrollDown = show);
     }
@@ -1745,6 +1929,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _scrollToBottom() {
     if (!_scrollCtrl.hasClients) return;
+    setState(() => _seenCount = _messages.length);
     _scrollCtrl.animateTo(
       _scrollCtrl.position.maxScrollExtent,
       duration: const Duration(milliseconds: 300),
@@ -1873,24 +2058,59 @@ class _ChatScreenState extends State<ChatScreen> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 if (showDate) _dateDivider(m.when),
-                                AnimatedScale(
-                                  scale: m.removing ? 0.92 : 1.0,
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeIn,
-                                  child: AnimatedOpacity(
-                                    opacity: m.removing ? 0.0 : 1.0,
-                                    duration: const Duration(milliseconds: 300),
-                                    child: _Bubble(
-                                      key: isMatch ? _matchKeys[i] : null,
-                                      msg: m,
-                                      onRetry: _retry,
-                                      onLongPress: (ctx) =>
-                                          _showEmojiPickerAt(ctx, m),
-                                      quotedText: quoted,
-                                      quotedAuthor: quotedAuthor,
-                                      query: searchActive ? _query : '',
-                                      isCurrentMatch: isCurrent,
-                                      dimmed: dimmed,
+                                Dismissible(
+                                  key: ObjectKey(m),
+                                  direction: DismissDirection.startToEnd,
+                                  dismissThresholds: const {
+                                    DismissDirection.startToEnd: 0.28,
+                                  },
+                                  confirmDismiss: (_) async {
+                                    HapticFeedback.selectionClick();
+                                    setState(() => _replyTo = m);
+                                    return false;
+                                  },
+                                  background: const Padding(
+                                    padding: EdgeInsets.only(left: 12),
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Icon(
+                                        Icons.reply_rounded,
+                                        size: 20,
+                                        color: HaloColors.amber,
+                                      ),
+                                    ),
+                                  ),
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    child: AnimatedScale(
+                                      scale: m.removing ? 0.92 : 1.0,
+                                      duration: const Duration(
+                                        milliseconds: 300,
+                                      ),
+                                      curve: Curves.easeIn,
+                                      child: AnimatedOpacity(
+                                        opacity: m.removing ? 0.0 : 1.0,
+                                        duration: const Duration(
+                                          milliseconds: 300,
+                                        ),
+                                        child: _Bubble(
+                                          key: isMatch ? _matchKeys[i] : null,
+                                          msg: m,
+                                          onRetry: (m) => m.mediaPath != null
+                                              ? _retryImage(m)
+                                              : _retry(m),
+                                          onLongPress: (ctx) =>
+                                              _showEmojiPickerAt(ctx, m),
+                                          quotedText: quoted,
+                                          quotedAuthor: quotedAuthor,
+                                          query: searchActive ? _query : '',
+                                          isCurrentMatch: isCurrent,
+                                          dimmed: dimmed,
+                                          ripple:
+                                              m.msgUid != null &&
+                                              m.msgUid == _rippleUid,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -1900,34 +2120,81 @@ class _ChatScreenState extends State<ChatScreen> {
                         ),
                   if (_showScrollDown)
                     Positioned(
-                      right: 12,
+                      left: 0,
+                      right: 0,
                       bottom: 12,
-                      child: GestureDetector(
-                        onTap: _scrollToBottom,
-                        child: Container(
-                          width: 38,
-                          height: 38,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: HaloColors.surface2,
-                            border: Border.all(
-                              color: HaloColors.amber.withValues(alpha: 0.5),
-                              width: 0.5,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: HaloColors.amber.withValues(alpha: 0.18),
-                                blurRadius: 14,
-                                spreadRadius: -2,
-                              ),
-                            ],
-                          ),
+                      child: Center(
+                        child: Stack(
+                          clipBehavior: Clip.none,
                           alignment: Alignment.center,
-                          child: const Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            color: HaloColors.amber,
-                            size: 22,
-                          ),
+                          children: [
+                            GestureDetector(
+                              onTap: _scrollToBottom,
+                              child: Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: HaloColors.surface2,
+                                  border: Border.all(
+                                    color: HaloColors.amber.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                    width: 0.5,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: HaloColors.amber.withValues(
+                                        alpha: 0.18,
+                                      ),
+                                      blurRadius: 14,
+                                      spreadRadius: -2,
+                                    ),
+                                  ],
+                                ),
+                                alignment: Alignment.center,
+                                child: const Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  color: HaloColors.amber,
+                                  size: 22,
+                                ),
+                              ),
+                            ),
+                            if (_messages.length - _seenCount > 0)
+                              Positioned(
+                                top: -3,
+                                right: -3,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 5,
+                                    vertical: 1,
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 17,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: HaloColors.amber,
+                                    borderRadius: BorderRadius.circular(9),
+                                    border: Border.all(
+                                      color: HaloColors.surface,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    '${_messages.length - _seenCount}',
+                                    style:
+                                        HaloType.mono(
+                                          size: 9,
+                                          color: HaloColors.onAmber,
+                                        ).copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          height: 1.2,
+                                        ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     ),
@@ -1942,15 +2209,26 @@ class _ChatScreenState extends State<ChatScreen> {
                   style: HaloType.mono(size: 10, color: HaloColors.text3),
                 ),
               ),
-            if (_replyTo != null)
-              _ReplyQuoteBar(
-                target: _replyTo!,
-                onCancel: () => setState(() => _replyTo = null),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeIn,
+              transitionBuilder: (child, anim) => SizeTransition(
+                sizeFactor: anim,
+                axisAlignment: -1,
+                child: FadeTransition(opacity: anim, child: child),
               ),
+              child: _replyTo != null
+                  ? _ReplyQuoteBar(
+                      target: _replyTo!,
+                      onCancel: () => setState(() => _replyTo = null),
+                    )
+                  : const SizedBox.shrink(),
+            ),
             _blocked
                 ? _BlockedBar(onUnblock: _unblockContact)
                 : _Composer(
-                    onAttach: _pickAndSendImage,
+                    onAttach: _showAttachSheet,
                     ghost: _ghost,
                     onToggleGhost: () => setState(() => _ghost = !_ghost),
                     onPickBurn: _pickBurnDuration,
@@ -2049,7 +2327,11 @@ class _ChatHead extends StatelessWidget {
             ),
             onPressed: onBack,
           ),
-          HaloAvatar(seed: avatarSeed, size: 36),
+          GestureDetector(
+            onTap: onBlock, // avatar -> contact actions + verify
+            behavior: HitTestBehavior.opaque,
+            child: HaloAvatar(seed: avatarSeed, size: 36),
+          ),
           const SizedBox(width: 11),
           Expanded(
             child: GestureDetector(
@@ -2375,6 +2657,7 @@ class _Bubble extends StatelessWidget {
   final String query;
   final bool isCurrentMatch;
   final bool dimmed;
+  final bool ripple;
   const _Bubble({
     super.key,
     required this.msg,
@@ -2385,14 +2668,15 @@ class _Bubble extends StatelessWidget {
     this.query = '',
     this.isCurrentMatch = false,
     this.dimmed = false,
+    this.ripple = false,
   });
 
   // builds the message body, underlining query matches in amber. plain
   // Text when there's no active query.
-  Widget _body(bool isOut) {
+  Widget _body(bool isOut, {bool image = false}) {
     final base = HaloType.sans(
       size: 14,
-      color: isOut ? HaloColors.onAmber : HaloColors.text,
+      color: (isOut && !image) ? HaloColors.onAmber : HaloColors.text,
       height: 1.4,
     );
     if (query.isEmpty) {
@@ -2416,10 +2700,12 @@ class _Bubble extends StatelessWidget {
         TextSpan(
           text: text.substring(hit, hit + q.length),
           style: TextStyle(
-            color: isOut ? HaloColors.onAmber : HaloColors.amber,
+            color: (isOut && !image) ? HaloColors.onAmber : HaloColors.amber,
             fontWeight: FontWeight.w600,
             decoration: TextDecoration.underline,
-            decorationColor: isOut ? HaloColors.onAmber : HaloColors.amber,
+            decorationColor: (isOut && !image)
+                ? HaloColors.onAmber
+                : HaloColors.amber,
             decorationThickness: 1.5,
           ),
         ),
@@ -2432,7 +2718,7 @@ class _Bubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isOut = msg.direction == 'out';
-    final isImage = msg.mediaPath != null && msg.text.isEmpty;
+    final isImage = msg.mediaPath != null;
     final showMeta = isOut && !msg.sending && !msg.failed;
     final showPill = isOut && msg.sending;
     final metaColor = (isOut && !isImage)
@@ -2442,14 +2728,20 @@ class _Bubble extends StatelessWidget {
         ? msg.burnAt! - DateTime.now().millisecondsSinceEpoch
         : 9999999;
     final isExpiring = msg.burnAt != null && remainingMs < 600;
+    // freshly-sent outgoing bubble: play a one-shot lift-in. the time window
+    // keeps it from re-firing on old bubbles when opening or scrolling a chat.
+    final justSent =
+        isOut &&
+        !msg.failed &&
+        DateTime.now().difference(msg.when).inMilliseconds < 900;
     return AnimatedOpacity(
-      duration: const Duration(milliseconds: 250),
+      duration: Duration(milliseconds: isExpiring ? 440 : 250),
       curve: Curves.easeOut,
       opacity: isExpiring ? 0.0 : (dimmed ? 0.28 : 1.0),
       child: AnimatedScale(
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeOut,
-        scale: isExpiring ? 0.88 : 1.0,
+        duration: Duration(milliseconds: isExpiring ? 560 : 500),
+        curve: isExpiring ? Curves.easeInCubic : Curves.easeOut,
+        scale: isExpiring ? 1.07 : 1.0,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: msg.failed && onRetry != null ? () => onRetry!(msg) : null,
@@ -2461,18 +2753,23 @@ class _Bubble extends StatelessWidget {
                   ? CrossAxisAlignment.end
                   : CrossAxisAlignment.start,
               children: [
-                Container(
-                  constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.78,
-                  ),
-                  padding: msg.mediaPath != null
-                      ? EdgeInsets.zero
-                      : const EdgeInsets.fromLTRB(14, 10, 14, 8),
-                  decoration: isImage
-                      ? const BoxDecoration()
-                      : BoxDecoration(
-                          color: isOut ? null : HaloColors.surface3,
-                          gradient: isOut
+                _sendOffEntrance(
+                  active: justSent,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * 0.78,
+                        ),
+                        padding: msg.mediaPath != null
+                            ? EdgeInsets.zero
+                            : const EdgeInsets.fromLTRB(14, 10, 14, 8),
+                        decoration: BoxDecoration(
+                          color: (isOut || isImage)
+                              ? null
+                              : HaloColors.surface3,
+                          gradient: (isOut && !isImage)
                               ? const LinearGradient(
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
@@ -2502,201 +2799,295 @@ class _Bubble extends StatelessWidget {
                                 ]
                               : null,
                         ),
-                  clipBehavior: msg.mediaPath != null
-                      ? Clip.antiAlias
-                      : Clip.none,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (quotedText != null) ...[
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 6),
-                          padding: const EdgeInsets.fromLTRB(10, 6, 10, 7),
-                          decoration: BoxDecoration(
-                            color: isOut
-                                ? Colors.black.withOpacity(0.12)
-                                : HaloColors.surface2,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border(
-                              left: BorderSide(
-                                color: isOut
-                                    ? HaloColors.onAmber.withValues(alpha: 0.55)
-                                    : HaloColors.amber,
-                                width: 2.5,
-                              ),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (quotedAuthor != null)
-                                Text(
-                                  quotedAuthor!,
-                                  style: HaloType.mono(
-                                    size: 9.5,
-                                    color: isOut
-                                        ? HaloColors.onAmber.withValues(
-                                            alpha: 0.7,
-                                          )
-                                        : HaloColors.amber,
-                                    letter: 0.6,
-                                  ),
-                                ),
-                              if (quotedAuthor != null)
-                                const SizedBox(height: 2),
-                              Text(
-                                quotedText!,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: HaloType.sans(
-                                  size: 12.5,
-                                  color: isOut
-                                      ? HaloColors.onAmber.withValues(
-                                          alpha: 0.8,
-                                        )
-                                      : HaloColors.text2,
-                                  height: 1.3,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                      if (msg.mediaPath != null)
-                        GestureDetector(
-                          onTap: () => _openFullImage(context, msg.mediaPath!),
-                          child: ClipRRect(
-                            borderRadius: msg.text.isEmpty
-                                ? BorderRadius.circular(16)
-                                : const BorderRadius.vertical(
-                                    top: Radius.circular(14),
-                                  ),
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxHeight: 280),
-                              child: Image.file(
-                                File(msg.mediaPath!),
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                errorBuilder: (_, __, ___) =>
-                                    const SizedBox.shrink(),
-                              ),
-                            ),
-                          ),
-                        ),
-                      Padding(
-                        padding: msg.mediaPath != null
-                            ? const EdgeInsets.fromLTRB(14, 8, 14, 8)
-                            : EdgeInsets.zero,
+                        clipBehavior: msg.mediaPath != null
+                            ? Clip.antiAlias
+                            : Clip.none,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            if (msg.text.isNotEmpty) _body(isOut),
-                            if (showMeta) ...[
-                              const SizedBox(height: 4),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    _fmtTime(msg.when),
-                                    style: TextStyle(
-                                      fontFamily: 'JetBrains Mono',
-                                      fontSize: 9,
-                                      color: metaColor,
-                                      letterSpacing: 0.4,
+                            if (quotedText != null) ...[
+                              Container(
+                                margin: const EdgeInsets.only(bottom: 6),
+                                padding: const EdgeInsets.fromLTRB(
+                                  10,
+                                  6,
+                                  10,
+                                  7,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isOut
+                                      ? Colors.black.withOpacity(0.12)
+                                      : HaloColors.surface2,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border(
+                                    left: BorderSide(
+                                      color: isOut
+                                          ? HaloColors.onAmber.withValues(
+                                              alpha: 0.55,
+                                            )
+                                          : HaloColors.amber,
+                                      width: 2.5,
                                     ),
                                   ),
-                                  if (msg.edited) ...[
-                                    const SizedBox(width: 5),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (quotedAuthor != null)
+                                      Text(
+                                        quotedAuthor!,
+                                        style: HaloType.mono(
+                                          size: 9.5,
+                                          color: isOut
+                                              ? HaloColors.onAmber.withValues(
+                                                  alpha: 0.7,
+                                                )
+                                              : HaloColors.amber,
+                                          letter: 0.6,
+                                        ),
+                                      ),
+                                    if (quotedAuthor != null)
+                                      const SizedBox(height: 2),
                                     Text(
-                                      'edited',
+                                      quotedText!,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: HaloType.sans(
+                                        size: 12.5,
+                                        color: isOut
+                                            ? HaloColors.onAmber.withValues(
+                                                alpha: 0.8,
+                                              )
+                                            : HaloColors.text2,
+                                        height: 1.3,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            if (msg.mediaPath != null)
+                              GestureDetector(
+                                onTap: () =>
+                                    _openFullImage(context, msg.mediaPath!),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(14),
+                                  child: Stack(
+                                    children: [
+                                      ConstrainedBox(
+                                        constraints: const BoxConstraints(
+                                          maxHeight: 280,
+                                        ),
+                                        child: Image.file(
+                                          File(msg.mediaPath!),
+                                          fit: BoxFit.cover,
+                                          width: double.infinity,
+                                          errorBuilder: (_, __, ___) =>
+                                              const SizedBox.shrink(),
+                                        ),
+                                      ),
+                                      if (showMeta)
+                                        Positioned(
+                                          right: 8,
+                                          bottom: 8,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 7,
+                                              vertical: 3,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withValues(
+                                                alpha: 0.45,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  _fmtTime(msg.when),
+                                                  style: const TextStyle(
+                                                    fontFamily:
+                                                        'JetBrains Mono',
+                                                    fontSize: 9,
+                                                    color: Colors.white,
+                                                    letterSpacing: 0.4,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 3),
+                                                const Text(
+                                                  '✓',
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.w700,
+                                                    height: 1,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            Padding(
+                              padding: msg.mediaPath != null
+                                  ? const EdgeInsets.fromLTRB(2, 6, 2, 0)
+                                  : EdgeInsets.zero,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (msg.text.isNotEmpty)
+                                    _body(isOut, image: msg.mediaPath != null),
+                                  if (showMeta && msg.mediaPath == null) ...[
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          _fmtTime(msg.when),
+                                          style: TextStyle(
+                                            fontFamily: 'JetBrains Mono',
+                                            fontSize: 9,
+                                            color: metaColor,
+                                            letterSpacing: 0.4,
+                                          ),
+                                        ),
+                                        if (msg.edited) ...[
+                                          const SizedBox(width: 5),
+                                          Text(
+                                            'edited',
+                                            style: TextStyle(
+                                              fontFamily: 'JetBrains Mono',
+                                              fontSize: 9,
+                                              color: metaColor,
+                                              fontStyle: FontStyle.italic,
+                                              letterSpacing: 0.4,
+                                            ),
+                                          ),
+                                        ],
+                                        const SizedBox(width: 3),
+                                        Text(
+                                          '✓',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: metaColor,
+                                            fontWeight: FontWeight.w700,
+                                            height: 1,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                  if (msg.reactions.isNotEmpty) ...[
+                                    const SizedBox(height: 6),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 2,
+                                      ),
+                                      child: Wrap(
+                                        spacing: 4,
+                                        runSpacing: 4,
+                                        children: _buildReactionChips(msg),
+                                      ),
+                                    ),
+                                  ],
+                                  if (msg.burnAt != null) ...[
+                                    const SizedBox(height: 4),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 4,
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons
+                                                .local_fire_department_outlined,
+                                            size: 11,
+                                            color: isOut
+                                                ? HaloColors.onAmber
+                                                : HaloColors.amber.withOpacity(
+                                                    0.75,
+                                                  ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'burns in ${_fmtBurn(msg.burnAt!)}',
+                                            style: HaloType.mono(
+                                              size: 9.5,
+                                              color: isOut
+                                                  ? HaloColors.onAmber
+                                                  : HaloColors.amber
+                                                        .withOpacity(0.75),
+                                              weight: FontWeight.w600,
+                                            ).copyWith(letterSpacing: 0.3),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                  if (msg.failed) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'failed · tap to retry',
                                       style: TextStyle(
                                         fontFamily: 'JetBrains Mono',
                                         fontSize: 9,
-                                        color: metaColor,
-                                        fontStyle: FontStyle.italic,
+                                        color: HaloColors.onAmber.withValues(
+                                          alpha: 0.75,
+                                        ),
                                         letterSpacing: 0.4,
                                       ),
                                     ),
                                   ],
-                                  const SizedBox(width: 3),
-                                  Text(
-                                    '✓',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: metaColor,
-                                      fontWeight: FontWeight.w700,
-                                      height: 1,
-                                    ),
-                                  ),
                                 ],
                               ),
-                            ],
-                            if (msg.reactions.isNotEmpty) ...[
-                              const SizedBox(height: 6),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 2,
-                                ),
-                                child: Wrap(
-                                  spacing: 4,
-                                  runSpacing: 4,
-                                  children: _buildReactionChips(msg),
-                                ),
-                              ),
-                            ],
-                            if (msg.burnAt != null) ...[
-                              const SizedBox(height: 4),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.local_fire_department_outlined,
-                                      size: 11,
-                                      color: isOut
-                                          ? HaloColors.onAmber
-                                          : HaloColors.amber.withOpacity(0.75),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      'burns in ${_fmtBurn(msg.burnAt!)}',
-                                      style: HaloType.mono(
-                                        size: 9.5,
-                                        color: isOut
-                                            ? HaloColors.onAmber
-                                            : HaloColors.amber.withOpacity(
-                                                0.75,
-                                              ),
-                                        weight: FontWeight.w600,
-                                      ).copyWith(letterSpacing: 0.3),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                            if (msg.failed) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                'failed · tap to retry',
-                                style: TextStyle(
-                                  fontFamily: 'JetBrains Mono',
-                                  fontSize: 9,
-                                  color: HaloColors.onAmber.withValues(
-                                    alpha: 0.75,
-                                  ),
-                                  letterSpacing: 0.4,
-                                ),
-                              ),
-                            ],
+                            ),
                           ],
                         ),
                       ),
+                      if (isExpiring) const _BurnEmbers(),
+                      if (ripple)
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            child: TweenAnimationBuilder<double>(
+                              tween: Tween(begin: 0.0, end: 1.0),
+                              duration: const Duration(milliseconds: 600),
+                              curve: Curves.easeOut,
+                              builder: (context, t, child) => Opacity(
+                                opacity: (1 - t) * 0.7,
+                                child: Transform.scale(
+                                  scale: 1 + t * 0.12,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: const Radius.circular(14),
+                                        topRight: const Radius.circular(14),
+                                        bottomLeft: Radius.circular(
+                                          isOut ? 14 : 4,
+                                        ),
+                                        bottomRight: Radius.circular(
+                                          isOut ? 4 : 14,
+                                        ),
+                                      ),
+                                      border: Border.all(
+                                        color: HaloColors.amber,
+                                        width: 2,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -3184,22 +3575,48 @@ class _Composer extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              GestureDetector(
-                onTap: sending ? null : onSend,
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: sending ? HaloColors.surface3 : HaloColors.amber,
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(
-                    Icons.arrow_upward,
-                    size: 18,
-                    color: sending ? HaloColors.text3 : HaloColors.onAmber,
-                  ),
-                ),
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: controller,
+                builder: (context, value, _) {
+                  final canSend = !sending && value.text.trim().isNotEmpty;
+                  return GestureDetector(
+                    onTap: canSend ? onSend : null,
+                    child: AnimatedScale(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOut,
+                      scale: canSend ? 1.0 : 0.88,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeOut,
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: canSend
+                              ? HaloColors.amber
+                              : HaloColors.surface3,
+                          boxShadow: canSend
+                              ? [
+                                  BoxShadow(
+                                    color: HaloColors.amber.withOpacity(0.35),
+                                    blurRadius: 12,
+                                    spreadRadius: -1,
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.arrow_upward,
+                          size: 18,
+                          color: canSend
+                              ? HaloColors.onAmber
+                              : HaloColors.text3,
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -3207,6 +3624,219 @@ class _Composer extends StatelessWidget {
       ),
     );
   }
+}
+
+// full-screen preview shown after picking a photo: the image plus a caption
+// field. pops the caption on send, or null on back (cancel).
+class _ImageCaptionScreen extends StatefulWidget {
+  final Uint8List bytes;
+  const _ImageCaptionScreen({required this.bytes});
+  @override
+  State<_ImageCaptionScreen> createState() => _ImageCaptionScreenState();
+}
+
+class _ImageCaptionScreenState extends State<_ImageCaptionScreen> {
+  final _ctrl = TextEditingController();
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: HaloColors.surface,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 4, 16, 4),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: HaloColors.text2),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  Text(
+                    'send photo',
+                    style: HaloType.serif(
+                      size: 16,
+                      italic: true,
+                      color: HaloColors.text,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.memory(widget.bytes, fit: BoxFit.contain),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _ctrl,
+                      autofocus: true,
+                      style: HaloType.sans(size: 14),
+                      minLines: 1,
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        hintText: 'add a caption…',
+                        hintStyle: HaloType.sans(
+                          size: 14,
+                          color: HaloColors.text3,
+                        ),
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        filled: true,
+                        fillColor: HaloColors.surface2,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      Navigator.of(context).pop(_ctrl.text.trim());
+                    },
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: HaloColors.amber,
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.arrow_upward,
+                        size: 20,
+                        color: HaloColors.onAmber,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// one-shot lift + fade for a freshly-sent bubble. inactive -> returns the
+// child untouched, so old/scrolled bubbles never re-animate.
+Widget _sendOffEntrance({required bool active, required Widget child}) {
+  if (!active) return child;
+  return TweenAnimationBuilder<double>(
+    tween: Tween(begin: 0.0, end: 1.0),
+    duration: const Duration(milliseconds: 340),
+    curve: Curves.easeOutCubic,
+    child: child,
+    builder: (_, t, c) => Opacity(
+      opacity: t,
+      child: Transform.translate(
+        offset: Offset(0, (1 - t) * 16),
+        child: Transform.scale(
+          scale: 0.94 + 0.06 * t,
+          alignment: Alignment.bottomCenter,
+          child: c,
+        ),
+      ),
+    ),
+  );
+}
+
+// a quick burst of rising embers + a warm glow, painted over a ghost message
+// as it burns away. one-shot 0->1 tween; fixed phases stagger the embers so it
+// looks alive without a particle engine.
+class _BurnEmbers extends StatelessWidget {
+  const _BurnEmbers();
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 620),
+          curve: Curves.easeOut,
+          builder: (_, t, __) => CustomPaint(painter: _EmberPainter(t)),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmberPainter extends CustomPainter {
+  final double t;
+  _EmberPainter(this.t);
+
+  // x-fraction + start phase per ember
+  static const _seeds = [
+    [0.12, 0.0],
+    [0.30, 0.35],
+    [0.46, 0.12],
+    [0.58, 0.55],
+    [0.71, 0.05],
+    [0.84, 0.4],
+    [0.22, 0.7],
+    [0.66, 0.85],
+    [0.40, 0.9],
+    [0.92, 0.25],
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final glow = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.bottomCenter,
+        end: Alignment.topCenter,
+        colors: [
+          HaloColors.amber.withValues(alpha: 0.22 * (1 - t)),
+          HaloColors.amber.withValues(alpha: 0.0),
+        ],
+      ).createShader(Offset.zero & size);
+    canvas.drawRect(Offset.zero & size, glow);
+
+    for (final seed in _seeds) {
+      final tt = (t + seed[1]) % 1.0;
+      final op = (1 - tt) * (1 - t * 0.4);
+      if (op <= 0.02) continue;
+      final x = seed[0] * size.width;
+      final y = size.height - size.height * 0.7 * tt - 4;
+      final r = 1.4 + 1.6 * (1 - tt);
+      final paint = Paint()
+        ..color = Color.lerp(
+          HaloColors.amberSoft,
+          HaloColors.amber,
+          tt,
+        )!.withValues(alpha: op.clamp(0.0, 1.0))
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.6);
+      canvas.drawCircle(Offset(x, y), r, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _EmberPainter old) => old.t != t;
 }
 
 // map the saved mode string to the pill's enum. private = full tor (3 hops),
