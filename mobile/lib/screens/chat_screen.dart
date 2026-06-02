@@ -29,6 +29,8 @@ import '../widgets/motion.dart';
 final Map<String, String> _seenCipherPerPeer = {};
 // unsent drafts kept per peer so text survives leaving a chat.
 final Map<String, String> _draftPerPeer = {};
+// newest message ms seen when the chat was last left, per peer.
+final Map<String, int> _lastReadPerPeer = {};
 
 class ChatScreen extends StatefulWidget {
   final String peerHaloId;
@@ -147,6 +149,8 @@ String _fmtBurn(int burnAtMs) {
 
 class _ChatScreenState extends State<ChatScreen> {
   final _msgCtrl = TextEditingController();
+  int _unreadAfterMs = 0;
+  int _firstUnreadIndex = -1;
   bool _ghost = false; // per-chat session toggle.
   int _burnSeconds = 300; // default 5m. long-press the fire button to change.
   Timer? _burnTick;
@@ -188,6 +192,9 @@ class _ChatScreenState extends State<ChatScreen> {
     appState.addListener(_onAppStateChanged);
     appState.loadSendMode();
     currentChatPeer = widget.peerHaloId;
+    _unreadAfterMs =
+        _lastReadPerPeer[widget.peerHaloId] ??
+        DateTime.now().millisecondsSinceEpoch;
     if (widget.initialText != null) {
       _msgCtrl.text = widget.initialText!;
     } else {
@@ -238,6 +245,38 @@ class _ChatScreenState extends State<ChatScreen> {
   void _onAppStateChanged() {
     if (!mounted) return;
     _loadMessages();
+  }
+
+  Widget _newMessagesDivider() {
+    final line = Container(
+      height: 0.5,
+      color: HaloColors.amber.withValues(alpha: 0.35),
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          Expanded(child: line),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Text(
+              'new messages',
+              style: HaloType.mono(
+                size: 9.5,
+                color: HaloColors.amber,
+                letter: 1.5,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Container(
+              height: 0.5,
+              color: HaloColors.amber.withValues(alpha: 0.35),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // ---- search ----------------------------------------------------------
@@ -945,6 +984,14 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     }
     if (!mounted) return;
+    _firstUnreadIndex = -1;
+    for (var i = 0; i < loaded.length; i++) {
+      if (loaded[i].direction != 'out' &&
+          loaded[i].when.millisecondsSinceEpoch > _unreadAfterMs) {
+        _firstUnreadIndex = i;
+        break;
+      }
+    }
     setState(() {
       _messages
         ..clear()
@@ -1512,6 +1559,9 @@ class _ChatScreenState extends State<ChatScreen> {
     _burnTick?.cancel();
     if (currentChatPeer == widget.peerHaloId) currentChatPeer = null;
     appState.removeListener(_onAppStateChanged);
+    _lastReadPerPeer[widget.peerHaloId] = _messages.isNotEmpty
+        ? _messages.last.when.millisecondsSinceEpoch
+        : 0;
     final draft = _msgCtrl.text;
     if (draft.trim().isEmpty) {
       _draftPerPeer.remove(widget.peerHaloId);
@@ -2058,6 +2108,8 @@ class _ChatScreenState extends State<ChatScreen> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 if (showDate) _dateDivider(m.when),
+                                if (i == _firstUnreadIndex)
+                                  _newMessagesDivider(),
                                 Dismissible(
                                   key: ObjectKey(m),
                                   direction: DismissDirection.startToEnd,
@@ -2737,7 +2789,7 @@ class _Bubble extends StatelessWidget {
     return AnimatedOpacity(
       duration: Duration(milliseconds: isExpiring ? 440 : 250),
       curve: Curves.easeOut,
-      opacity: isExpiring ? 0.0 : (dimmed ? 0.28 : 1.0),
+      opacity: dimmed ? 0.28 : 1.0,
       child: AnimatedScale(
         duration: Duration(milliseconds: isExpiring ? 560 : 500),
         curve: isExpiring ? Curves.easeInCubic : Curves.easeOut,
@@ -2758,299 +2810,329 @@ class _Bubble extends StatelessWidget {
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      Container(
-                        constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width * 0.78,
+                      AnimatedOpacity(
+                        duration: Duration(
+                          milliseconds: isExpiring ? 650 : 180,
                         ),
-                        padding: msg.mediaPath != null
-                            ? EdgeInsets.zero
-                            : const EdgeInsets.fromLTRB(14, 10, 14, 8),
-                        decoration: BoxDecoration(
-                          color: (isOut || isImage)
-                              ? null
-                              : HaloColors.surface3,
-                          gradient: (isOut && !isImage)
-                              ? const LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    HaloColors.amber,
-                                    HaloColors.amberDeep,
-                                  ],
-                                )
-                              : null,
-                          borderRadius: BorderRadius.only(
-                            topLeft: const Radius.circular(14),
-                            topRight: const Radius.circular(14),
-                            bottomLeft: Radius.circular(isOut ? 14 : 4),
-                            bottomRight: Radius.circular(isOut ? 4 : 14),
+                        curve: Curves.easeOut,
+                        opacity: isExpiring ? 0.0 : 1.0,
+                        child: Container(
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.78,
                           ),
-                          border: isCurrentMatch
-                              ? Border.all(color: HaloColors.amber, width: 1)
-                              : null,
-                          boxShadow: isCurrentMatch
-                              ? [
-                                  BoxShadow(
-                                    color: HaloColors.amber.withOpacity(0.28),
-                                    blurRadius: 22,
-                                    spreadRadius: -4,
-                                    offset: const Offset(0, 6),
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        clipBehavior: msg.mediaPath != null
-                            ? Clip.antiAlias
-                            : Clip.none,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (quotedText != null) ...[
-                              Container(
-                                margin: const EdgeInsets.only(bottom: 6),
-                                padding: const EdgeInsets.fromLTRB(
-                                  10,
-                                  6,
-                                  10,
-                                  7,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isOut
-                                      ? Colors.black.withOpacity(0.12)
-                                      : HaloColors.surface2,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border(
-                                    left: BorderSide(
-                                      color: isOut
-                                          ? HaloColors.onAmber.withValues(
-                                              alpha: 0.55,
-                                            )
-                                          : HaloColors.amber,
-                                      width: 2.5,
+                          padding: msg.mediaPath != null
+                              ? EdgeInsets.zero
+                              : const EdgeInsets.fromLTRB(14, 10, 14, 8),
+                          decoration: BoxDecoration(
+                            color: (isImage && msg.text.isNotEmpty)
+                                ? HaloColors.surface2
+                                : (isOut || isImage)
+                                ? null
+                                : HaloColors.surface3,
+                            gradient: (isOut && !isImage)
+                                ? const LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      HaloColors.amber,
+                                      HaloColors.amberDeep,
+                                    ],
+                                  )
+                                : null,
+                            borderRadius: BorderRadius.only(
+                              topLeft: const Radius.circular(14),
+                              topRight: const Radius.circular(14),
+                              bottomLeft: Radius.circular(isOut ? 14 : 4),
+                              bottomRight: Radius.circular(isOut ? 4 : 14),
+                            ),
+                            border: isCurrentMatch
+                                ? Border.all(color: HaloColors.amber, width: 1)
+                                : null,
+                            boxShadow: isCurrentMatch
+                                ? [
+                                    BoxShadow(
+                                      color: HaloColors.amber.withOpacity(0.28),
+                                      blurRadius: 22,
+                                      spreadRadius: -4,
+                                      offset: const Offset(0, 6),
                                     ),
+                                  ]
+                                : null,
+                          ),
+                          clipBehavior: msg.mediaPath != null
+                              ? Clip.antiAlias
+                              : Clip.none,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (quotedText != null) ...[
+                                Container(
+                                  margin: const EdgeInsets.only(bottom: 6),
+                                  padding: const EdgeInsets.fromLTRB(
+                                    10,
+                                    6,
+                                    10,
+                                    7,
                                   ),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (quotedAuthor != null)
-                                      Text(
-                                        quotedAuthor!,
-                                        style: HaloType.mono(
-                                          size: 9.5,
-                                          color: isOut
-                                              ? HaloColors.onAmber.withValues(
-                                                  alpha: 0.7,
-                                                )
-                                              : HaloColors.amber,
-                                          letter: 0.6,
-                                        ),
-                                      ),
-                                    if (quotedAuthor != null)
-                                      const SizedBox(height: 2),
-                                    Text(
-                                      quotedText!,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: HaloType.sans(
-                                        size: 12.5,
+                                  decoration: BoxDecoration(
+                                    color: isOut
+                                        ? Colors.black.withOpacity(0.12)
+                                        : HaloColors.surface2,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border(
+                                      left: BorderSide(
                                         color: isOut
                                             ? HaloColors.onAmber.withValues(
-                                                alpha: 0.8,
+                                                alpha: 0.55,
                                               )
-                                            : HaloColors.text2,
-                                        height: 1.3,
+                                            : HaloColors.amber,
+                                        width: 2.5,
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                            if (msg.mediaPath != null)
-                              GestureDetector(
-                                onTap: () =>
-                                    _openFullImage(context, msg.mediaPath!),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(14),
-                                  child: Stack(
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      ConstrainedBox(
-                                        constraints: const BoxConstraints(
-                                          maxHeight: 280,
-                                        ),
-                                        child: Image.file(
-                                          File(msg.mediaPath!),
-                                          fit: BoxFit.cover,
-                                          width: double.infinity,
-                                          errorBuilder: (_, __, ___) =>
-                                              const SizedBox.shrink(),
-                                        ),
-                                      ),
-                                      if (showMeta)
-                                        Positioned(
-                                          right: 8,
-                                          bottom: 8,
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 7,
-                                              vertical: 3,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: Colors.black.withValues(
-                                                alpha: 0.45,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Text(
-                                                  _fmtTime(msg.when),
-                                                  style: const TextStyle(
-                                                    fontFamily:
-                                                        'JetBrains Mono',
-                                                    fontSize: 9,
-                                                    color: Colors.white,
-                                                    letterSpacing: 0.4,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 3),
-                                                const Text(
-                                                  '✓',
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.w700,
-                                                    height: 1,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
+                                      if (quotedAuthor != null)
+                                        Text(
+                                          quotedAuthor!,
+                                          style: HaloType.mono(
+                                            size: 9.5,
+                                            color: isOut
+                                                ? HaloColors.onAmber.withValues(
+                                                    alpha: 0.7,
+                                                  )
+                                                : HaloColors.amber,
+                                            letter: 0.6,
                                           ),
                                         ),
+                                      if (quotedAuthor != null)
+                                        const SizedBox(height: 2),
+                                      Text(
+                                        quotedText!,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: HaloType.sans(
+                                          size: 12.5,
+                                          color: isOut
+                                              ? HaloColors.onAmber.withValues(
+                                                  alpha: 0.8,
+                                                )
+                                              : HaloColors.text2,
+                                          height: 1.3,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
-                              ),
-                            Padding(
-                              padding: msg.mediaPath != null
-                                  ? const EdgeInsets.fromLTRB(2, 6, 2, 0)
-                                  : EdgeInsets.zero,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (msg.text.isNotEmpty)
-                                    _body(isOut, image: msg.mediaPath != null),
-                                  if (showMeta && msg.mediaPath == null) ...[
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
+                              ],
+                              if (msg.mediaPath != null)
+                                GestureDetector(
+                                  onTap: () =>
+                                      _openFullImage(context, msg.mediaPath!),
+                                  child: ClipRRect(
+                                    borderRadius: msg.text.isNotEmpty
+                                        ? const BorderRadius.vertical(
+                                            top: Radius.circular(14),
+                                          )
+                                        : BorderRadius.circular(14),
+                                    child: Stack(
                                       children: [
-                                        Text(
-                                          _fmtTime(msg.when),
-                                          style: TextStyle(
-                                            fontFamily: 'JetBrains Mono',
-                                            fontSize: 9,
-                                            color: metaColor,
-                                            letterSpacing: 0.4,
+                                        ConstrainedBox(
+                                          constraints: const BoxConstraints(
+                                            maxHeight: 280,
+                                          ),
+                                          child: Image.file(
+                                            File(msg.mediaPath!),
+                                            fit: BoxFit.cover,
+                                            width: double.infinity,
+                                            errorBuilder: (_, __, ___) =>
+                                                const SizedBox.shrink(),
                                           ),
                                         ),
-                                        if (msg.edited) ...[
-                                          const SizedBox(width: 5),
+                                        if (showMeta)
+                                          Positioned(
+                                            right: 8,
+                                            bottom: 8,
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 7,
+                                                    vertical: 3,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.45,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(
+                                                    _fmtTime(msg.when),
+                                                    style: const TextStyle(
+                                                      fontFamily:
+                                                          'JetBrains Mono',
+                                                      fontSize: 9,
+                                                      color: Colors.white,
+                                                      letterSpacing: 0.4,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 3),
+                                                  const Text(
+                                                    '✓',
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      color: Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      height: 1,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              Padding(
+                                padding: msg.mediaPath != null
+                                    ? (msg.text.isNotEmpty
+                                          ? const EdgeInsets.fromLTRB(
+                                              12,
+                                              8,
+                                              12,
+                                              10,
+                                            )
+                                          : const EdgeInsets.fromLTRB(
+                                              2,
+                                              6,
+                                              2,
+                                              0,
+                                            ))
+                                    : EdgeInsets.zero,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (msg.text.isNotEmpty)
+                                      _body(
+                                        isOut,
+                                        image: msg.mediaPath != null,
+                                      ),
+                                    if (showMeta && msg.mediaPath == null) ...[
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
                                           Text(
-                                            'edited',
+                                            _fmtTime(msg.when),
                                             style: TextStyle(
                                               fontFamily: 'JetBrains Mono',
                                               fontSize: 9,
                                               color: metaColor,
-                                              fontStyle: FontStyle.italic,
                                               letterSpacing: 0.4,
                                             ),
                                           ),
-                                        ],
-                                        const SizedBox(width: 3),
-                                        Text(
-                                          '✓',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: metaColor,
-                                            fontWeight: FontWeight.w700,
-                                            height: 1,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                  if (msg.reactions.isNotEmpty) ...[
-                                    const SizedBox(height: 6),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 2,
-                                      ),
-                                      child: Wrap(
-                                        spacing: 4,
-                                        runSpacing: 4,
-                                        children: _buildReactionChips(msg),
-                                      ),
-                                    ),
-                                  ],
-                                  if (msg.burnAt != null) ...[
-                                    const SizedBox(height: 4),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 4,
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons
-                                                .local_fire_department_outlined,
-                                            size: 11,
-                                            color: isOut
-                                                ? HaloColors.onAmber
-                                                : HaloColors.amber.withOpacity(
-                                                    0.75,
-                                                  ),
-                                          ),
-                                          const SizedBox(width: 4),
+                                          if (msg.edited) ...[
+                                            const SizedBox(width: 5),
+                                            Text(
+                                              'edited',
+                                              style: TextStyle(
+                                                fontFamily: 'JetBrains Mono',
+                                                fontSize: 9,
+                                                color: metaColor,
+                                                fontStyle: FontStyle.italic,
+                                                letterSpacing: 0.4,
+                                              ),
+                                            ),
+                                          ],
+                                          const SizedBox(width: 3),
                                           Text(
-                                            'burns in ${_fmtBurn(msg.burnAt!)}',
-                                            style: HaloType.mono(
-                                              size: 9.5,
-                                              color: isOut
+                                            '✓',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: metaColor,
+                                              fontWeight: FontWeight.w700,
+                                              height: 1,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                    if (msg.reactions.isNotEmpty) ...[
+                                      const SizedBox(height: 6),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 2,
+                                        ),
+                                        child: Wrap(
+                                          spacing: 4,
+                                          runSpacing: 4,
+                                          children: _buildReactionChips(msg),
+                                        ),
+                                      ),
+                                    ],
+                                    if (msg.burnAt != null) ...[
+                                      const SizedBox(height: 4),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons
+                                                  .local_fire_department_outlined,
+                                              size: 11,
+                                              color: (isOut && !isImage)
                                                   ? HaloColors.onAmber
                                                   : HaloColors.amber
                                                         .withOpacity(0.75),
-                                              weight: FontWeight.w600,
-                                            ).copyWith(letterSpacing: 0.3),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                  if (msg.failed) ...[
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'failed · tap to retry',
-                                      style: TextStyle(
-                                        fontFamily: 'JetBrains Mono',
-                                        fontSize: 9,
-                                        color: HaloColors.onAmber.withValues(
-                                          alpha: 0.75,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'burns in ${_fmtBurn(msg.burnAt!)}',
+                                              style: HaloType.mono(
+                                                size: 9.5,
+                                                color: (isOut && !isImage)
+                                                    ? HaloColors.onAmber
+                                                    : HaloColors.amber
+                                                          .withOpacity(0.75),
+                                                weight: FontWeight.w600,
+                                              ).copyWith(letterSpacing: 0.3),
+                                            ),
+                                          ],
                                         ),
-                                        letterSpacing: 0.4,
                                       ),
-                                    ),
+                                    ],
+                                    if (msg.failed) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'failed · tap to retry',
+                                        style: TextStyle(
+                                          fontFamily: 'JetBrains Mono',
+                                          fontSize: 9,
+                                          color: HaloColors.onAmber.withValues(
+                                            alpha: 0.75,
+                                          ),
+                                          letterSpacing: 0.4,
+                                        ),
+                                      ),
+                                    ],
                                   ],
-                                ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                       if (isExpiring) const _BurnEmbers(),
