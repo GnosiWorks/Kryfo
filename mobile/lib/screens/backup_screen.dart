@@ -140,11 +140,11 @@ class _PinField extends StatelessWidget {
         labelStyle: HaloType.sans(size: 12, color: HaloColors.text2),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: HaloColors.line, width: 0.5),
+          borderSide: BorderSide(color: HaloColors.line, width: 0.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: HaloColors.amber, width: 0.8),
+          borderSide: BorderSide(color: HaloColors.amber, width: 0.8),
         ),
       ),
     );

@@ -207,7 +207,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                                   color: HaloColors.text)),
                         ),
                         if (opt.$1 == _burnSeconds)
-                          const Icon(Icons.check_rounded,
+                          Icon(Icons.check_rounded,
                               color: HaloColors.amber, size: 18),
                       ],
                     ),
@@ -304,7 +304,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                 color: HaloColors.amberSoft,
                 child: Row(
                   children: [
-                    const Icon(Icons.local_fire_department_rounded,
+                    Icon(Icons.local_fire_department_rounded,
                         size: 14, color: HaloColors.amber),
                     const SizedBox(width: 6),
                     Text(
@@ -315,7 +315,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                   ],
                 ),
               ),
-            const Divider(
+            Divider(
                 height: 0.5, color: HaloColors.line, thickness: 0.5),
             Expanded(
               child: _messages.isEmpty
@@ -437,7 +437,7 @@ class _Header extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.chevron_left,
+            icon: Icon(Icons.chevron_left,
                 color: HaloColors.text, size: 26),
             onPressed: onBack,
           ),
@@ -503,7 +503,7 @@ class _ReplyQuoteBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: HaloColors.surface2,
         border: Border(
           top: BorderSide(color: HaloColors.line, width: 0.5),
@@ -540,7 +540,7 @@ class _ReplyQuoteBar extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.close_rounded,
+            icon: Icon(Icons.close_rounded,
                 size: 18, color: HaloColors.text2),
             onPressed: onCancel,
           ),
@@ -568,7 +568,7 @@ class _Composer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(
           top: BorderSide(color: HaloColors.line, width: 0.5),
         ),
@@ -622,12 +622,12 @@ class _Composer extends StatelessWidget {
             onTap: sending ? null : onSend,
             child: Container(
               width: 42, height: 42,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: HaloColors.amber,
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
-              child: const Icon(Icons.arrow_upward_rounded,
+              child: Icon(Icons.arrow_upward_rounded,
                   color: HaloColors.onAmber, size: 20),
             ),
           ),

@@ -118,6 +118,30 @@ String _friendlyStatus(String raw) {
   return raw;
 }
 
+String _fmtFull(DateTime d) {
+  const months = [
+    'jan',
+    'feb',
+    'mar',
+    'apr',
+    'may',
+    'jun',
+    'jul',
+    'aug',
+    'sep',
+    'oct',
+    'nov',
+    'dec',
+  ];
+  final hh = d.hour.toString().padLeft(2, '0');
+  final mm = d.minute.toString().padLeft(2, '0');
+  final now = DateTime.now();
+  final date = d.year == now.year
+      ? '${d.day} ${months[d.month - 1]}'
+      : '${d.day} ${months[d.month - 1]} ${d.year}';
+  return '$date · $hh:$mm';
+}
+
 String _fmtTime(DateTime d) {
   final h = d.hour.toString().padLeft(2, '0');
   final m = d.minute.toString().padLeft(2, '0');
@@ -155,7 +179,17 @@ class _ChatScreenState extends State<ChatScreen> {
   int _burnSeconds = 300; // default 5m. long-press the fire button to change.
   Timer? _burnTick;
   final _scrollCtrl = ScrollController();
+  final Map<int, GlobalKey> _dayKeys = {};
+  final GlobalKey _listKey = GlobalKey();
+  final ValueNotifier<String?> _stickyLabel = ValueNotifier(null);
+  final ValueNotifier<bool> _stickyShown = ValueNotifier(false);
+  int? _stickyDayMs;
+  String? _revealedUid;
+  Timer? _stickyHideTimer;
+  bool _suppressSticky = true;
   final List<_Msg> _messages = [];
+  bool _loaded = false;
+  _Atmo _atmosphere = _Atmo.none;
   String _status = '';
   String _lastCipher = '';
   Timer? _pollTimer;
@@ -178,6 +212,8 @@ class _ChatScreenState extends State<ChatScreen> {
   List<int> _matches = [];
   int _matchPos = 0;
   final Map<int, GlobalKey> _matchKeys = {};
+  final GlobalKey _jumpKey = GlobalKey();
+  int? _jumpIndex;
   String? _nickname;
   bool _blocked = false;
   bool _muted = false;
@@ -185,6 +221,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _showScrollDown = false;
   int _seenCount = 0;
   String? _rippleUid;
+  String? _note;
 
   @override
   void initState() {
@@ -192,6 +229,7 @@ class _ChatScreenState extends State<ChatScreen> {
     appState.addListener(_onAppStateChanged);
     appState.loadSendMode();
     currentChatPeer = widget.peerHaloId;
+    db.clearUnread(widget.peerHaloId).then((_) => appState.refreshContacts());
     _unreadAfterMs =
         _lastReadPerPeer[widget.peerHaloId] ??
         DateTime.now().millisecondsSinceEpoch;
@@ -201,7 +239,15 @@ class _ChatScreenState extends State<ChatScreen> {
       _msgCtrl.text = _draftPerPeer[widget.peerHaloId] ?? '';
     }
     db.getContact(widget.peerHaloId).then((c) {
-      if (mounted) setState(() => _nickname = c?['nickname'] as String?);
+      if (mounted) {
+        setState(() {
+          _nickname = c?['nickname'] as String?;
+          _note = c?['note'] as String?;
+        });
+      }
+    });
+    db.getAtmosphere(widget.peerHaloId).then((a) {
+      if (mounted) setState(() => _atmosphere = _atmoFromName(a));
     });
     signalSession.peerXPubHex(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _peerXPub = v);
@@ -219,6 +265,10 @@ class _ChatScreenState extends State<ChatScreen> {
       if (mounted) setState(() => _verified = v);
     });
     _scrollCtrl.addListener(_onScroll);
+    _scrollCtrl.addListener(_updateSticky);
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      if (mounted) _suppressSticky = false;
+    });
     _lastCipher = _seenCipherPerPeer[widget.peerHaloId] ?? '';
     _loadMessages();
     _burnTick = Timer.periodic(const Duration(milliseconds: 250), (_) {
@@ -228,9 +278,6 @@ class _ChatScreenState extends State<ChatScreen> {
       _messages.removeWhere((m) => m.burnAt != null && m.burnAt! + 500 <= now);
       final removed = before - _messages.length;
       final stillBurning = _messages.where((m) => m.burnAt != null).toList();
-      if (stillBurning.isNotEmpty || removed > 0) {
-        debugPrint('burnTick: removed=$removed burning=${stillBurning.length}');
-      }
       if (removed > 0) HapticFeedback.lightImpact();
       if (removed > 0 || stillBurning.isNotEmpty) {
         setState(() {});
@@ -524,7 +571,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.delete_outline,
                                 size: 14,
                                 color: HaloColors.rose,
@@ -575,7 +622,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.edit_outlined,
                                 size: 14,
                                 color: HaloColors.amber,
@@ -643,7 +690,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.push_pin_outlined,
                         size: 14,
                         color: HaloColors.amber,
@@ -667,7 +714,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           _togglePin(m);
                         },
                         borderRadius: BorderRadius.circular(999),
-                        child: const Padding(
+                        child: Padding(
                           padding: EdgeInsets.all(4),
                           child: Icon(
                             Icons.close,
@@ -723,7 +770,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.delete_outline,
                       size: 18,
                       color: HaloColors.rose,
@@ -767,13 +814,30 @@ class _ChatScreenState extends State<ChatScreen> {
   void _scrollToMessage(_Msg m) {
     final idx = _messages.indexOf(m);
     if (idx < 0 || !_scrollCtrl.hasClients) return;
+    setState(() => _jumpIndex = idx);
     final max = _scrollCtrl.position.maxScrollExtent;
     final approx = (idx / _messages.length) * max;
-    _scrollCtrl.animateTo(
-      approx.clamp(0.0, max),
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOut,
-    );
+    _scrollCtrl.jumpTo(approx.clamp(0.0, max));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _jumpKey.currentContext;
+      if (ctx != null) {
+        Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOut,
+          alignment: 0.3,
+        );
+      }
+      _jumpIndex = null;
+      if (m.msgUid != null) {
+        setState(() => _rippleUid = m.msgUid);
+        Future.delayed(const Duration(milliseconds: 1300), () {
+          if (mounted && _rippleUid == m.msgUid) {
+            setState(() => _rippleUid = null);
+          }
+        });
+      }
+    });
   }
 
   // 12-char base36 id from a high-precision timestamp + random salt.
@@ -836,7 +900,7 @@ class _ChatScreenState extends State<ChatScreen> {
               maxLines: null,
               cursorColor: HaloColors.amber,
               style: HaloType.sans(size: 15),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 enabledBorder: UnderlineInputBorder(
                   borderSide: BorderSide(color: HaloColors.line2),
                 ),
@@ -954,6 +1018,7 @@ class _ChatScreenState extends State<ChatScreen> {
     });
     final rows = await db.messagesFor(widget.peerHaloId);
     if (!mounted) return;
+    _loaded = true;
     // collect msg_uids first, batch-load reactions, then setState.
     final loaded = <_Msg>[];
     final uids = <String>[];
@@ -996,6 +1061,14 @@ class _ChatScreenState extends State<ChatScreen> {
       _messages
         ..clear()
         ..addAll(loaded);
+      if (loaded.isNotEmpty) {
+        final last = loaded.last.when;
+        _stickyDayMs = DateTime(
+          last.year,
+          last.month,
+          last.day,
+        ).millisecondsSinceEpoch;
+      }
     });
     // if a search is active, recompute matches against the fresh list.
     if (_searching && _query.isNotEmpty) {
@@ -1144,7 +1217,7 @@ class _ChatScreenState extends State<ChatScreen> {
             children: [
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.local_fire_department_outlined,
                     size: 14,
                     color: HaloColors.amber,
@@ -1192,7 +1265,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                         ),
                         if (isSelected)
-                          const Icon(
+                          Icon(
                             Icons.check_rounded,
                             size: 16,
                             color: HaloColors.amber,
@@ -1570,11 +1643,17 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     _msgCtrl.dispose();
     _searchCtrl.dispose();
+    _stickyHideTimer?.cancel();
+    _scrollCtrl.removeListener(_updateSticky);
+    _stickyLabel.dispose();
+    _stickyShown.dispose();
     _scrollCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _chatActions() async {
+    final contact = await db.getContact(widget.peerHaloId);
+    final pinned = (contact?['pinned'] as int? ?? 0) == 1;
     final action = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: HaloColors.surface2,
@@ -1594,7 +1673,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.verified_user_outlined,
                       size: 18,
                       color: HaloColors.amber,
@@ -1642,7 +1721,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.archive_outlined,
                       size: 18,
                       color: HaloColors.text2,
@@ -1650,6 +1729,98 @@ class _ChatScreenState extends State<ChatScreen> {
                     const SizedBox(width: 14),
                     Text(
                       'archive chat',
+                      style: HaloType.sans(size: 14, color: HaloColors.text),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            InkWell(
+              onTap: () => Navigator.pop(ctx, 'atmosphere'),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.palette_outlined,
+                      size: 18,
+                      color: HaloColors.text2,
+                    ),
+                    const SizedBox(width: 14),
+                    Text(
+                      'atmosphere',
+                      style: HaloType.sans(size: 14, color: HaloColors.text),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            InkWell(
+              onTap: () => Navigator.pop(ctx, 'clear'),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.delete_sweep_outlined,
+                      size: 18,
+                      color: HaloColors.text2,
+                    ),
+                    const SizedBox(width: 14),
+                    Text(
+                      'clear conversation',
+                      style: HaloType.sans(size: 14, color: HaloColors.text),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            InkWell(
+              onTap: () => Navigator.pop(ctx, 'note'),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.sticky_note_2_outlined,
+                      size: 18,
+                      color: HaloColors.text2,
+                    ),
+                    const SizedBox(width: 14),
+                    Text(
+                      'note on this contact',
+                      style: HaloType.sans(size: 14, color: HaloColors.text),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            InkWell(
+              onTap: () => Navigator.pop(ctx, 'pin'),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      pinned ? Icons.push_pin : Icons.push_pin_outlined,
+                      size: 18,
+                      color: HaloColors.text2,
+                    ),
+                    const SizedBox(width: 14),
+                    Text(
+                      pinned ? 'unpin' : 'pin to top',
                       style: HaloType.sans(size: 14, color: HaloColors.text),
                     ),
                   ],
@@ -1665,7 +1836,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.block, size: 18, color: HaloColors.rose),
+                    Icon(Icons.block, size: 18, color: HaloColors.rose),
                     const SizedBox(width: 14),
                     Text(
                       'block contact',
@@ -1689,7 +1860,280 @@ class _ChatScreenState extends State<ChatScreen> {
       if (mounted) Navigator.of(context).pop();
     } else if (action == 'block') {
       await _blockContact();
+    } else if (action == 'clear') {
+      await _clearConversation();
+    } else if (action == 'atmosphere') {
+      await _pickAtmosphere();
+    } else if (action == 'note') {
+      await _editNote();
+      final c = await db.getContact(widget.peerHaloId);
+      if (mounted) setState(() => _note = c?['note'] as String?);
+    } else if (action == 'pin') {
+      await _toggleContactPin();
     }
+  }
+
+  Future<void> _openLetter() async {
+    final text = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => _LetterScreen(
+          peerName: _nickname ?? widget.peerHaloId,
+          initial: _msgCtrl.text,
+        ),
+      ),
+    );
+    if (text == null || text.trim().isEmpty) return;
+    _msgCtrl.text = text.trim();
+    await _send();
+  }
+
+  Future<void> _toggleContactPin() async {
+    final contact = await db.getContact(widget.peerHaloId);
+    final pinned = (contact?['pinned'] as int? ?? 0) == 1;
+    await db.setContactPinned(widget.peerHaloId, !pinned);
+    await appState.refreshContacts();
+    if (mounted) {
+      showHaloToast(context, pinned ? 'unpinned' : 'pinned to top');
+    }
+  }
+
+  Future<void> _editNote() async {
+    final contact = await db.getContact(widget.peerHaloId);
+    final current = (contact?['note'] as String?) ?? '';
+    final ctrl = TextEditingController(text: current);
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: HaloColors.surface2,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 18,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 22,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'note on this contact',
+              style: HaloType.serif(size: 18, color: HaloColors.text),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'just for you. never sent, never leaves this phone.',
+              style: HaloType.sans(size: 12, color: HaloColors.text2),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: ctrl,
+              autofocus: true,
+              minLines: 1,
+              maxLines: 4,
+              cursorColor: HaloColors.amber,
+              style: HaloType.serif(
+                size: 16,
+                italic: true,
+                color: HaloColors.text,
+              ),
+              decoration: InputDecoration(
+                hintText: 'a quiet reminder…',
+                hintStyle: HaloType.serif(
+                  size: 16,
+                  italic: true,
+                  color: HaloColors.text3,
+                ),
+                border: InputBorder.none,
+              ),
+            ),
+            const SizedBox(height: 18),
+            Align(
+              alignment: Alignment.centerRight,
+              child: GestureDetector(
+                onTap: () async {
+                  await db.setNote(widget.peerHaloId, ctrl.text.trim());
+                  Navigator.pop(ctx);
+                  if (mounted) showHaloToast(context, 'note saved');
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: HaloColors.amber.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    'save',
+                    style: HaloType.sans(
+                      size: 13,
+                      weight: FontWeight.w600,
+                      color: HaloColors.amber,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickAtmosphere() async {
+    final picked = await showModalBottomSheet<_Atmo>(
+      context: context,
+      backgroundColor: HaloColors.surface2,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'atmosphere',
+                style: HaloType.serif(size: 18, color: HaloColors.text),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'a quiet wash behind this conversation. yours only.',
+                style: HaloType.sans(size: 12, color: HaloColors.text2),
+              ),
+              const SizedBox(height: 18),
+              Wrap(
+                spacing: 16,
+                runSpacing: 14,
+                children: _Atmo.values.map((a) {
+                  final sel = a == _atmosphere;
+                  final accent = _atmoAccent(a);
+                  return GestureDetector(
+                    onTap: () => Navigator.pop(ctx, a),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 46,
+                          height: 46,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: a == _Atmo.none
+                                ? HaloColors.surface3
+                                : accent.withValues(alpha: 0.18),
+                            border: Border.all(
+                              color: sel ? HaloColors.amber : HaloColors.line,
+                              width: sel ? 1.5 : 0.5,
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: a == _Atmo.none
+                              ? Icon(
+                                  Icons.not_interested,
+                                  size: 16,
+                                  color: HaloColors.text3,
+                                )
+                              : null,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          _atmoLabel(a),
+                          style: HaloType.mono(
+                            size: 10,
+                            color: sel ? HaloColors.amber : HaloColors.text3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (picked == null) return;
+    HapticFeedback.selectionClick();
+    await db.setAtmosphere(widget.peerHaloId, picked.name);
+    if (!mounted) return;
+    setState(() => _atmosphere = picked);
+  }
+
+  Future<void> _clearConversation() async {
+    final confirm = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: HaloColors.surface2,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'clear this conversation?',
+                style: HaloType.serif(size: 18, color: HaloColors.text),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'every message here is erased from this phone. this only '
+                'clears your copy — it does not touch their device.',
+                style: HaloType.sans(
+                  size: 13,
+                  color: HaloColors.text2,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: Text(
+                      'cancel',
+                      style: HaloType.sans(size: 14, color: HaloColors.text2),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: Text(
+                      'clear',
+                      style: HaloType.sans(
+                        size: 14,
+                        weight: FontWeight.w600,
+                        color: HaloColors.rose,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (confirm != true) return;
+    HapticFeedback.selectionClick();
+    await db.clearConversation(widget.peerHaloId);
+    await appState.refreshContacts();
+    if (!mounted) return;
+    setState(() {
+      _messages.clear();
+    });
   }
 
   void _openKeyVerification() {
@@ -1730,7 +2174,7 @@ class _ChatScreenState extends State<ChatScreen> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.block, size: 15, color: HaloColors.amber),
+                  Icon(Icons.block, size: 15, color: HaloColors.amber),
                   const SizedBox(width: 8),
                   Text(
                     'block this contact?',
@@ -1923,10 +2367,10 @@ class _ChatScreenState extends State<ChatScreen> {
                   italic: true,
                   color: HaloColors.text3,
                 ),
-                enabledBorder: const UnderlineInputBorder(
+                enabledBorder: UnderlineInputBorder(
                   borderSide: BorderSide(color: HaloColors.line2),
                 ),
-                focusedBorder: const UnderlineInputBorder(
+                focusedBorder: UnderlineInputBorder(
                   borderSide: BorderSide(color: HaloColors.amber),
                 ),
               ),
@@ -1990,39 +2434,76 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _sameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
-  Widget _dateDivider(DateTime when) {
+  void _updateSticky() {
+    if (_suppressSticky || !_scrollCtrl.hasClients) return;
+    if (_scrollCtrl.position.maxScrollExtent <= 0) return;
+    final listObj = _listKey.currentContext?.findRenderObject();
+    if (listObj is! RenderBox) return;
+    final top = listObj.localToGlobal(Offset.zero).dy;
+    int? best;
+    double bestDy = -1e9;
+    _dayKeys.forEach((dayMs, key) {
+      final obj = key.currentContext?.findRenderObject();
+      if (obj is! RenderBox) return;
+      final dy = obj.localToGlobal(Offset.zero).dy;
+      if (dy <= top + 6 && dy > bestDy) {
+        bestDy = dy;
+        best = dayMs;
+      }
+    });
+    if (best != null) _stickyDayMs = best;
+    if (_stickyDayMs != null) {
+      _stickyLabel.value = _dayLabel(
+        DateTime.fromMillisecondsSinceEpoch(_stickyDayMs!),
+      );
+    }
+    _stickyShown.value = true;
+    _stickyHideTimer?.cancel();
+    _stickyHideTimer = Timer(
+      const Duration(milliseconds: 900),
+      () => _stickyShown.value = false,
+    );
+  }
+
+  String _dayLabel(DateTime when) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final d = DateTime(when.year, when.month, when.day);
     final diff = today.difference(d).inDays;
-    String label;
-    if (diff == 0) {
-      label = 'today';
-    } else if (diff == 1) {
-      label = 'yesterday';
-    } else {
-      const months = [
-        'jan',
-        'feb',
-        'mar',
-        'apr',
-        'may',
-        'jun',
-        'jul',
-        'aug',
-        'sep',
-        'oct',
-        'nov',
-        'dec',
-      ];
-      label = '${when.day} ${months[when.month - 1]}';
-      if (when.year != now.year) label = '$label ${when.year}';
-    }
+    if (diff == 0) return 'today';
+    if (diff == 1) return 'yesterday';
+    const months = [
+      'jan',
+      'feb',
+      'mar',
+      'apr',
+      'may',
+      'jun',
+      'jul',
+      'aug',
+      'sep',
+      'oct',
+      'nov',
+      'dec',
+    ];
+    var label = '${when.day} ${months[when.month - 1]}';
+    if (when.year != now.year) label = '$label ${when.year}';
+    return label;
+  }
+
+  Widget _dateDivider(DateTime when) {
+    final dayMs = DateTime(
+      when.year,
+      when.month,
+      when.day,
+    ).millisecondsSinceEpoch;
+    final key = _dayKeys.putIfAbsent(dayMs, () => GlobalKey());
     return Padding(
+      key: key,
       padding: const EdgeInsets.symmetric(vertical: 14),
       child: Center(
         child: Text(
-          label,
+          _dayLabel(when),
           style: HaloType.serif(
             size: 12.5,
             italic: true,
@@ -2055,6 +2536,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 : _ChatHead(
                     haloId: widget.peerHaloId,
                     nickname: _nickname,
+                    note: _note,
                     verified: _verified,
                     onBlock: _chatActions,
                     avatarSeed: widget.avatarSeed,
@@ -2066,8 +2548,13 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
             Expanded(
               child: Stack(
+                key: _listKey,
                 children: [
-                  _messages.isEmpty
+                  if (_atmosphere != _Atmo.none)
+                    Positioned.fill(child: _AtmosphereWash(_atmosphere)),
+                  !_loaded
+                      ? const SizedBox.shrink()
+                      : _messages.isEmpty
                       ? const _EmptyConversation()
                       : ListView.builder(
                           controller: _scrollCtrl,
@@ -2110,59 +2597,89 @@ class _ChatScreenState extends State<ChatScreen> {
                                 if (showDate) _dateDivider(m.when),
                                 if (i == _firstUnreadIndex)
                                   _newMessagesDivider(),
-                                Dismissible(
-                                  key: ObjectKey(m),
-                                  direction: DismissDirection.startToEnd,
-                                  dismissThresholds: const {
-                                    DismissDirection.startToEnd: 0.28,
-                                  },
-                                  confirmDismiss: (_) async {
-                                    HapticFeedback.selectionClick();
-                                    setState(() => _replyTo = m);
-                                    return false;
-                                  },
-                                  background: const Padding(
-                                    padding: EdgeInsets.only(left: 12),
-                                    child: Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: Icon(
-                                        Icons.reply_rounded,
-                                        size: 20,
-                                        color: HaloColors.amber,
+                                TweenAnimationBuilder<double>(
+                                  tween: Tween(
+                                    begin: 1.0,
+                                    end: m.removing ? 0.0 : 1.0,
+                                  ),
+                                  duration: const Duration(milliseconds: 280),
+                                  curve: Curves.easeOut,
+                                  child: Dismissible(
+                                    key: ObjectKey(m),
+                                    direction: DismissDirection.startToEnd,
+                                    dismissThresholds: const {
+                                      DismissDirection.startToEnd: 0.28,
+                                    },
+                                    confirmDismiss: (_) async {
+                                      HapticFeedback.selectionClick();
+                                      setState(() => _replyTo = m);
+                                      return false;
+                                    },
+                                    background: Padding(
+                                      padding: EdgeInsets.only(left: 12),
+                                      child: Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Icon(
+                                          Icons.reply_rounded,
+                                          size: 20,
+                                          color: HaloColors.amber,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  child: SizedBox(
-                                    width: double.infinity,
-                                    child: AnimatedScale(
-                                      scale: m.removing ? 0.92 : 1.0,
-                                      duration: const Duration(
-                                        milliseconds: 300,
-                                      ),
-                                      curve: Curves.easeIn,
-                                      child: AnimatedOpacity(
-                                        opacity: m.removing ? 0.0 : 1.0,
+                                    child: SizedBox(
+                                      width: double.infinity,
+                                      child: AnimatedScale(
+                                        scale: m.removing ? 0.92 : 1.0,
                                         duration: const Duration(
                                           milliseconds: 300,
                                         ),
-                                        child: _Bubble(
-                                          key: isMatch ? _matchKeys[i] : null,
-                                          msg: m,
-                                          onRetry: (m) => m.mediaPath != null
-                                              ? _retryImage(m)
-                                              : _retry(m),
-                                          onLongPress: (ctx) =>
-                                              _showEmojiPickerAt(ctx, m),
-                                          quotedText: quoted,
-                                          quotedAuthor: quotedAuthor,
-                                          query: searchActive ? _query : '',
-                                          isCurrentMatch: isCurrent,
-                                          dimmed: dimmed,
-                                          ripple:
-                                              m.msgUid != null &&
-                                              m.msgUid == _rippleUid,
+                                        curve: Curves.easeIn,
+                                        child: AnimatedOpacity(
+                                          opacity: m.removing ? 0.0 : 1.0,
+                                          duration: const Duration(
+                                            milliseconds: 300,
+                                          ),
+                                          child: _Bubble(
+                                            key: isMatch
+                                                ? _matchKeys[i]
+                                                : (i == _jumpIndex
+                                                      ? _jumpKey
+                                                      : null),
+                                            msg: m,
+                                            revealed:
+                                                m.msgUid != null &&
+                                                m.msgUid == _revealedUid,
+                                            onReveal: m.msgUid == null
+                                                ? null
+                                                : () => setState(
+                                                    () => _revealedUid =
+                                                        _revealedUid == m.msgUid
+                                                        ? null
+                                                        : m.msgUid,
+                                                  ),
+                                            onRetry: (m) => m.mediaPath != null
+                                                ? _retryImage(m)
+                                                : _retry(m),
+                                            onLongPress: (ctx) =>
+                                                _showEmojiPickerAt(ctx, m),
+                                            quotedText: quoted,
+                                            quotedAuthor: quotedAuthor,
+                                            query: searchActive ? _query : '',
+                                            isCurrentMatch: isCurrent,
+                                            dimmed: dimmed,
+                                            ripple:
+                                                m.msgUid != null &&
+                                                m.msgUid == _rippleUid,
+                                          ),
                                         ),
                                       ),
+                                    ),
+                                  ),
+                                  builder: (_, f, child) => ClipRect(
+                                    child: Align(
+                                      alignment: Alignment.topCenter,
+                                      heightFactor: f,
+                                      child: child,
                                     ),
                                   ),
                                 ),
@@ -2205,7 +2722,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                   ],
                                 ),
                                 alignment: Alignment.center,
-                                child: const Icon(
+                                child: Icon(
                                   Icons.keyboard_arrow_down_rounded,
                                   color: HaloColors.amber,
                                   size: 22,
@@ -2250,6 +2767,51 @@ class _ChatScreenState extends State<ChatScreen> {
                         ),
                       ),
                     ),
+                  Positioned(
+                    top: 6,
+                    left: 0,
+                    right: 0,
+                    child: IgnorePointer(
+                      child: Center(
+                        child: ValueListenableBuilder<bool>(
+                          valueListenable: _stickyShown,
+                          builder: (_, shown, __) => AnimatedOpacity(
+                            duration: const Duration(milliseconds: 220),
+                            opacity: shown ? 1.0 : 0.0,
+                            child: ValueListenableBuilder<String?>(
+                              valueListenable: _stickyLabel,
+                              builder: (_, label, __) => label == null
+                                  ? const SizedBox.shrink()
+                                  : Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 5,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: HaloColors.surface2.withValues(
+                                          alpha: 0.92,
+                                        ),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: HaloColors.line,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        label,
+                                        style: HaloType.serif(
+                                          size: 12,
+                                          italic: true,
+                                          color: HaloColors.text2,
+                                          weight: FontWeight.w300,
+                                        ),
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -2288,6 +2850,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     controller: _msgCtrl,
                     sending: _sending,
                     onSend: _send,
+                    onLetter: _openLetter,
                   ),
           ],
         ),
@@ -2304,12 +2867,12 @@ class _BlockedBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.block, size: 15, color: HaloColors.text3),
+          Icon(Icons.block, size: 15, color: HaloColors.text3),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -2349,6 +2912,7 @@ class _ChatHead extends StatelessWidget {
   final int pinnedCount;
   final VoidCallback onPinned;
   final bool verified;
+  final String? note;
   const _ChatHead({
     required this.haloId,
     this.nickname,
@@ -2360,19 +2924,20 @@ class _ChatHead extends StatelessWidget {
     this.pinnedCount = 0,
     required this.onPinned,
     this.verified = false,
+    this.note,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(4, 4, 8, 12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: HaloColors.line, width: 0.5)),
       ),
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.chevron_left,
               color: HaloColors.text2,
               size: 26,
@@ -2421,7 +2986,7 @@ class _ChatHead extends StatelessWidget {
                       ),
                       if (verified) ...[
                         const SizedBox(width: 6),
-                        const Icon(
+                        Icon(
                           Icons.verified_user,
                           size: 13,
                           color: HaloColors.amber,
@@ -2433,13 +2998,40 @@ class _ChatHead extends StatelessWidget {
                     nickname != null ? haloId : 'onion',
                     style: HaloType.mono(size: 10, color: HaloColors.text2),
                   ),
+                  if ((note ?? '').isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 3),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.sticky_note_2_outlined,
+                            size: 11,
+                            color: HaloColors.amber,
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              note!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: HaloType.serif(
+                                size: 12,
+                                italic: true,
+                                color: HaloColors.amber,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
           ),
           if (pinnedCount > 0)
             IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.push_pin_outlined,
                 color: HaloColors.amber,
                 size: 19,
@@ -2447,7 +3039,7 @@ class _ChatHead extends StatelessWidget {
               onPressed: onPinned,
             ),
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.search_rounded,
               color: HaloColors.text2,
               size: 21,
@@ -2455,7 +3047,7 @@ class _ChatHead extends StatelessWidget {
             onPressed: onSearch,
           ),
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.more_vert,
               color: HaloColors.text2,
               size: 21,
@@ -2526,7 +3118,7 @@ class _SearchHeadState extends State<_SearchHead> {
       ),
       child: Container(
         padding: const EdgeInsets.fromLTRB(8, 6, 12, 11),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(color: HaloColors.line, width: 0.5),
           ),
@@ -2537,7 +3129,7 @@ class _SearchHeadState extends State<_SearchHead> {
             Row(
               children: [
                 IconButton(
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.close_rounded,
                     color: HaloColors.text2,
                     size: 20,
@@ -2557,7 +3149,7 @@ class _SearchHeadState extends State<_SearchHead> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.search_rounded,
                           size: 15,
                           color: HaloColors.amber,
@@ -2710,6 +3302,8 @@ class _Bubble extends StatelessWidget {
   final bool isCurrentMatch;
   final bool dimmed;
   final bool ripple;
+  final bool revealed;
+  final VoidCallback? onReveal;
   const _Bubble({
     super.key,
     required this.msg,
@@ -2721,6 +3315,8 @@ class _Bubble extends StatelessWidget {
     this.isCurrentMatch = false,
     this.dimmed = false,
     this.ripple = false,
+    this.revealed = false,
+    this.onReveal,
   });
 
   // builds the message body, underlining query matches in amber. plain
@@ -2796,7 +3392,7 @@ class _Bubble extends StatelessWidget {
         scale: isExpiring ? 1.07 : 1.0,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: msg.failed && onRetry != null ? () => onRetry!(msg) : null,
+          onTap: msg.failed && onRetry != null ? () => onRetry!(msg) : onReveal,
           onLongPress: onLongPress == null ? null : () => onLongPress!(context),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
@@ -2830,7 +3426,7 @@ class _Bubble extends StatelessWidget {
                                 ? null
                                 : HaloColors.surface3,
                             gradient: (isOut && !isImage)
-                                ? const LinearGradient(
+                                ? LinearGradient(
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                     colors: [
@@ -2947,6 +3543,9 @@ class _Bubble extends StatelessWidget {
                                           ),
                                           child: Image.file(
                                             File(msg.mediaPath!),
+                                            cacheWidth: 1080,
+                                            gaplessPlayback: true,
+                                            filterQuality: FilterQuality.medium,
                                             fit: BoxFit.cover,
                                             width: double.infinity,
                                             errorBuilder: (_, __, ___) =>
@@ -3141,12 +3740,12 @@ class _Bubble extends StatelessWidget {
                           child: IgnorePointer(
                             child: TweenAnimationBuilder<double>(
                               tween: Tween(begin: 0.0, end: 1.0),
-                              duration: const Duration(milliseconds: 600),
+                              duration: const Duration(milliseconds: 820),
                               curve: Curves.easeOut,
                               builder: (context, t, child) => Opacity(
-                                opacity: (1 - t) * 0.7,
+                                opacity: (1 - t) * 0.92,
                                 child: Transform.scale(
-                                  scale: 1 + t * 0.12,
+                                  scale: 1 + t * 0.16,
                                   child: Container(
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.only(
@@ -3173,6 +3772,18 @@ class _Bubble extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (revealed)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4, left: 4, right: 4),
+                    child: Text(
+                      _fmtFull(msg.when),
+                      style: HaloType.mono(
+                        size: 9.5,
+                        color: HaloColors.text3,
+                        letter: 0.3,
+                      ),
+                    ),
+                  ),
                 if (showPill) ...[
                   const SizedBox(height: 4),
                   Padding(
@@ -3288,7 +3899,7 @@ class _ReplyQuoteBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: HaloColors.surface2,
         border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),
       ),
@@ -3475,24 +4086,377 @@ class _ActionTapState extends State<_ActionTap> {
   }
 }
 
+enum _Atmo { none, ember, dusk, moss, rose }
+
+_Atmo _atmoFromName(String? n) => switch (n) {
+  'ember' => _Atmo.ember,
+  'dusk' => _Atmo.dusk,
+  'moss' => _Atmo.moss,
+  'rose' => _Atmo.rose,
+  _ => _Atmo.none,
+};
+
+Color _atmoAccent(_Atmo a) => switch (a) {
+  _Atmo.ember => HaloColors.amber,
+  _Atmo.dusk => HaloColors.violet,
+  _Atmo.moss => HaloColors.green,
+  _Atmo.rose => HaloColors.rose,
+  _Atmo.none => HaloColors.surface,
+};
+
+String _atmoLabel(_Atmo a) => switch (a) {
+  _Atmo.none => 'none',
+  _Atmo.ember => 'ember',
+  _Atmo.dusk => 'dusk',
+  _Atmo.moss => 'moss',
+  _Atmo.rose => 'rose',
+};
+
+class _AtmosphereWash extends StatelessWidget {
+  final _Atmo atmo;
+  const _AtmosphereWash(this.atmo);
+  @override
+  Widget build(BuildContext context) {
+    if (atmo == _Atmo.none) return const SizedBox.shrink();
+    final accent = _atmoAccent(atmo);
+    final deep = Color.lerp(accent, HaloColors.ink, 0.55)!;
+    return IgnorePointer(
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    accent.withValues(alpha: 0.17),
+                    accent.withValues(alpha: 0.05),
+                    deep.withValues(alpha: 0.13),
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(-0.6, -1.0),
+                  radius: 1.2,
+                  colors: [
+                    accent.withValues(alpha: 0.15),
+                    accent.withValues(alpha: 0.0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _EmptyConversation extends StatelessWidget {
   const _EmptyConversation();
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Text(
-          'say hi.',
-          textAlign: TextAlign.center,
-          style: HaloType.serif(
-            size: 22,
-            weight: FontWeight.w300,
-            italic: true,
-            color: HaloColors.text3,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.0, end: 1.0),
+        duration: const Duration(milliseconds: 650),
+        curve: Curves.easeOutCubic,
+        builder: (context, t, child) => Opacity(
+          opacity: t.clamp(0.0, 1.0),
+          child: Transform.translate(
+            offset: Offset(0, (1 - t) * 12),
+            child: child,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: HaloColors.amberSoft,
+                  border: Border.all(
+                    color: HaloColors.amber.withOpacity(0.3),
+                    width: 0.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: HaloColors.amber.withOpacity(0.18),
+                      blurRadius: 28,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.lock_outline_rounded,
+                  color: HaloColors.amber,
+                  size: 25,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'say hi.',
+                textAlign: TextAlign.center,
+                style: HaloType.serif(
+                  size: 24,
+                  weight: FontWeight.w300,
+                  italic: true,
+                  color: HaloColors.text,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'just the two of you, end-to-end encrypted.',
+                textAlign: TextAlign.center,
+                style: HaloType.sans(
+                  size: 13,
+                  color: HaloColors.text2,
+                  height: 1.5,
+                ),
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _LetterScreen extends StatefulWidget {
+  final String peerName;
+  final String initial;
+  const _LetterScreen({required this.peerName, required this.initial});
+  @override
+  State<_LetterScreen> createState() => _LetterScreenState();
+}
+
+class _LetterScreenState extends State<_LetterScreen>
+    with SingleTickerProviderStateMixin {
+  late final TextEditingController _ctrl;
+  late final AnimationController _seal;
+  bool _sealing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: widget.initial);
+    _seal =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 860),
+        )..addStatusListener((st) {
+          if (st == AnimationStatus.completed && mounted) {
+            Navigator.of(context).pop(_ctrl.text);
+          }
+        });
+  }
+
+  @override
+  void dispose() {
+    _seal.dispose();
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _runSeal() {
+    if (_sealing) return;
+    if (_ctrl.text.trim().isEmpty) {
+      Navigator.of(context).pop(_ctrl.text);
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    setState(() => _sealing = true);
+    Future.delayed(const Duration(milliseconds: 230), () {
+      if (mounted) HapticFeedback.mediumImpact();
+    });
+    _seal.forward();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: HaloColors.surface,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 4, 16, 4),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.close, color: HaloColors.text2),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                      Text(
+                        'to ${widget.peerName}',
+                        style: HaloType.serif(
+                          size: 18,
+                          italic: true,
+                          color: HaloColors.text,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+                    child: TextField(
+                      controller: _ctrl,
+                      autofocus: true,
+                      maxLines: null,
+                      expands: true,
+                      textAlignVertical: TextAlignVertical.top,
+                      cursorColor: HaloColors.amber,
+                      style: HaloType.serif(
+                        size: 19,
+                        height: 1.6,
+                        color: HaloColors.text,
+                      ),
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        hintText: 'dear…',
+                        hintStyle: HaloType.serif(
+                          size: 19,
+                          italic: true,
+                          color: HaloColors.text3,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      GestureDetector(
+                        onTap: _runSeal,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: HaloColors.amber,
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.send,
+                                size: 16,
+                                color: HaloColors.onAmber,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'seal & send',
+                                style: HaloType.sans(
+                                  size: 14,
+                                  weight: FontWeight.w600,
+                                  color: HaloColors.onAmber,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (_sealing) Positioned.fill(child: _sealOverlay()),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sealOverlay() {
+    return AnimatedBuilder(
+      animation: _seal,
+      builder: (context, _) {
+        final t = _seal.value;
+        final stamp = Curves.easeOutBack.transform(
+          ((t.clamp(0.2, 0.7)) - 0.2) / 0.5,
+        );
+        final ring = (((t.clamp(0.5, 0.95)) - 0.5) / 0.45).clamp(0.0, 1.0);
+        return AbsorbPointer(
+          child: Container(
+            color: HaloColors.surface.withOpacity(
+              0.86 * (t.clamp(0.0, 0.3) / 0.3),
+            ),
+            alignment: Alignment.center,
+            child: SizedBox(
+              width: 170,
+              height: 170,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Opacity(
+                    opacity: (1 - ring) * 0.5,
+                    child: Transform.scale(
+                      scale: 0.7 + ring * 1.4,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: HaloColors.amber, width: 2),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Opacity(
+                    opacity: stamp.clamp(0.0, 1.0),
+                    child: Transform.scale(
+                      scale: 0.6 + stamp.clamp(0.0, 1.0) * 0.4,
+                      child: Container(
+                        width: 86,
+                        height: 86,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: HaloColors.amber,
+                          boxShadow: [
+                            BoxShadow(
+                              color: HaloColors.amber.withOpacity(0.45),
+                              blurRadius: 26,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          'h',
+                          style: HaloType.serif(
+                            size: 42,
+                            italic: true,
+                            color: HaloColors.onAmber,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -3506,6 +4470,7 @@ class _Composer extends StatelessWidget {
   final VoidCallback onPickBurn;
   final int burnSeconds;
   final VoidCallback onAttach;
+  final VoidCallback onLetter;
   const _Composer({
     required this.controller,
     required this.sending,
@@ -3515,6 +4480,7 @@ class _Composer extends StatelessWidget {
     required this.onPickBurn,
     required this.burnSeconds,
     required this.onAttach,
+    required this.onLetter,
   });
 
   @override
@@ -3553,7 +4519,7 @@ class _Composer extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.local_fire_department_outlined,
                           size: 13,
                           color: HaloColors.amber,
@@ -3614,7 +4580,7 @@ class _Composer extends StatelessWidget {
               GestureDetector(
                 onTap: onAttach,
                 behavior: HitTestBehavior.opaque,
-                child: const Icon(
+                child: Icon(
                   Icons.add_photo_alternate_outlined,
                   size: 22,
                   color: HaloColors.text2,
@@ -3647,13 +4613,25 @@ class _Composer extends StatelessWidget {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20),
-                      borderSide: const BorderSide(
+                      borderSide: BorderSide(
                         color: HaloColors.amber,
                         width: 0.5,
                       ),
                     ),
                   ),
                   onSubmitted: (_) => onSend(),
+                ),
+              ),
+              GestureDetector(
+                onTap: onLetter,
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 10, right: 6),
+                  child: Icon(
+                    Icons.history_edu,
+                    size: 24,
+                    color: HaloColors.text2,
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -3737,7 +4715,7 @@ class _ImageCaptionScreenState extends State<_ImageCaptionScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: HaloColors.text2),
+                    icon: Icon(Icons.arrow_back, color: HaloColors.text2),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   Text(
@@ -3802,12 +4780,12 @@ class _ImageCaptionScreenState extends State<_ImageCaptionScreen> {
                     child: Container(
                       width: 44,
                       height: 44,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: HaloColors.amber,
                       ),
                       alignment: Alignment.center,
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_upward,
                         size: 20,
                         color: HaloColors.onAmber,
@@ -3840,7 +4818,19 @@ Widget _sendOffEntrance({required bool active, required Widget child}) {
         child: Transform.scale(
           scale: 0.94 + 0.06 * t,
           alignment: Alignment.bottomCenter,
-          child: c,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: HaloColors.amber.withValues(alpha: 0.45 * (1 - t)),
+                  blurRadius: 18 * (1 - t) + 2,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: c,
+          ),
         ),
       ),
     ),

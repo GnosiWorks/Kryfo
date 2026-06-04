@@ -326,7 +326,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 15,
+      version: 18,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -348,7 +348,11 @@ class HaloDb {
             blocked INTEGER NOT NULL DEFAULT 0,
             muted INTEGER NOT NULL DEFAULT 0,
             archived INTEGER NOT NULL DEFAULT 0,
-            verified INTEGER NOT NULL DEFAULT 0
+            verified INTEGER NOT NULL DEFAULT 0,
+            unread INTEGER NOT NULL DEFAULT 0,
+            atmosphere TEXT,
+            note TEXT,
+            pinned INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute('''
@@ -463,6 +467,20 @@ class HaloDb {
             'ALTER TABLE contacts ADD COLUMN verified INTEGER NOT NULL DEFAULT 0',
           );
         }
+        if (oldV < 16) {
+          await db.execute(
+            'ALTER TABLE contacts ADD COLUMN unread INTEGER NOT NULL DEFAULT 0',
+          );
+        }
+        if (oldV < 17) {
+          await db.execute('ALTER TABLE contacts ADD COLUMN atmosphere TEXT');
+        }
+        if (oldV < 18) {
+          await db.execute('ALTER TABLE contacts ADD COLUMN note TEXT');
+          await db.execute(
+            'ALTER TABLE contacts ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0',
+          );
+        }
         if (oldV < 15) {
           await db.execute('ALTER TABLE messages ADD COLUMN media_path TEXT');
         }
@@ -514,6 +532,26 @@ class HaloDb {
       'x_priv': xPriv,
       'created_at': DateTime.now().millisecondsSinceEpoch,
     });
+  }
+
+  Future<void> setNote(String haloId, String note) async {
+    final db = await open();
+    await db.update(
+      'contacts',
+      {'note': note},
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+    );
+  }
+
+  Future<void> setContactPinned(String haloId, bool pinned) async {
+    final db = await open();
+    await db.update(
+      'contacts',
+      {'pinned': pinned ? 1 : 0},
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+    );
   }
 
   Future<Map<String, Object?>?> getContact(String haloId) async {
@@ -880,6 +918,57 @@ class HaloDb {
     await db.delete('messages', where: 'msg_uid = ?', whereArgs: [msgUid]);
   }
 
+  Future<void> bumpUnread(String peerId) async {
+    final db = await open();
+    await db.rawUpdate(
+      'UPDATE contacts SET unread = unread + 1 WHERE halo_id = ?',
+      [peerId],
+    );
+  }
+
+  Future<void> clearUnread(String peerId) async {
+    final db = await open();
+    await db.update(
+      'contacts',
+      {'unread': 0},
+      where: 'halo_id = ?',
+      whereArgs: [peerId],
+    );
+  }
+
+  Future<void> setAtmosphere(String peerId, String atmosphere) async {
+    final db = await open();
+    await db.update(
+      'contacts',
+      {'atmosphere': atmosphere},
+      where: 'halo_id = ?',
+      whereArgs: [peerId],
+    );
+  }
+
+  Future<String?> getAtmosphere(String peerId) async {
+    final db = await open();
+    final rows = await db.query(
+      'contacts',
+      columns: ['atmosphere'],
+      where: 'halo_id = ?',
+      whereArgs: [peerId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return rows.first['atmosphere'] as String?;
+  }
+
+  Future<void> clearConversation(String peerId) async {
+    final db = await open();
+    await db.rawDelete(
+      'DELETE FROM reactions WHERE msg_uid IN '
+      '(SELECT msg_uid FROM messages WHERE peer_id = ? AND msg_uid IS NOT NULL)',
+      [peerId],
+    );
+    await db.delete('messages', where: 'peer_id = ?', whereArgs: [peerId]);
+  }
+
   Future<void> editMessage(String msgUid, String newText) async {
     final db = await open();
     await db.update(
@@ -1215,6 +1304,68 @@ class AppState extends ChangeNotifier {
     await const FlutterSecureStorage().write(key: 'send_mode', value: m);
   }
 
+  String _displayName = '';
+  String get displayName => _displayName;
+  Future<void> loadDisplayName() async {
+    _displayName =
+        await const FlutterSecureStorage().read(key: 'display_name') ?? '';
+    notifyListeners();
+  }
+
+  Future<void> setDisplayName(String name) async {
+    _displayName = name;
+    notifyListeners();
+    await const FlutterSecureStorage().write(key: 'display_name', value: name);
+  }
+
+  static const _platformChannel = MethodChannel('halo/platform');
+  bool _blockScreenshots = false;
+  bool get blockScreenshots => _blockScreenshots;
+  Future<void> loadScreenshotPref() async {
+    _blockScreenshots =
+        (await const FlutterSecureStorage().read(key: 'block_screenshots')) ==
+        'true';
+    await _applyScreenSecure();
+    notifyListeners();
+  }
+
+  Future<void> setBlockScreenshots(bool v) async {
+    _blockScreenshots = v;
+    notifyListeners();
+    await const FlutterSecureStorage().write(
+      key: 'block_screenshots',
+      value: v.toString(),
+    );
+    await _applyScreenSecure();
+  }
+
+  Future<void> loadThemePref() async {
+    try {
+      final v =
+          (await const FlutterSecureStorage().read(key: 'theme_light')) ==
+          'true';
+      HaloColors.setLight(v);
+    } catch (_) {}
+  }
+
+  Future<void> setLight(bool v) async {
+    HaloColors.setLight(v);
+    themeRevision.value++;
+    notifyListeners();
+    await const FlutterSecureStorage().write(
+      key: 'theme_light',
+      value: v.toString(),
+    );
+  }
+
+  Future<void> _applyScreenSecure() async {
+    try {
+      await _platformChannel.invokeMethod('setSecure', {
+        'on': _blockScreenshots,
+      });
+    } catch (_) {}
+  }
+
   NtfyListener? _ntfyListener;
 
   Future<void> applyPushMode(PushMode m) async {
@@ -1294,6 +1445,9 @@ class AppState extends ChangeNotifier {
     // notification context — for groups, title = group name and body
     // prefixes the sender. payload uses "group:<id>" so tap-to-open can
     // route to the right screen.
+    if (!isGroup && currentChatPeer != senderHaloId) {
+      await db.bumpUnread(senderHaloId);
+    }
     final String notifTitle;
     final String notifBody;
     final String notifPayload;
@@ -1409,6 +1563,11 @@ class AppState extends ChangeNotifier {
   String myXPub = '';
   bool restored = false;
   bool ready = false;
+  // live tor state; the home halo breathes off this.
+  TorStatus _torStatus = TorStatus.off;
+  int _bootstrapPct = 0;
+  TorStatus get torStatus => _torStatus;
+  int get bootstrapPct => _bootstrapPct;
   List<ContactPreview> contacts = [];
   final Map<String, String> _xPubToHaloId = {};
 
@@ -1470,6 +1629,26 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  Future<Map<String, String>> _loadXPubCache() async {
+    try {
+      final raw = await const FlutterSecureStorage().read(key: 'xpub_cache');
+      if (raw == null || raw.isEmpty) return {};
+      final decoded = jsonDecode(raw) as Map<String, dynamic>;
+      return decoded.map((k, v) => MapEntry(k, v as String));
+    } catch (_) {
+      return {};
+    }
+  }
+
+  Future<void> _saveXPubCache(Map<String, String> cache) async {
+    try {
+      await const FlutterSecureStorage().write(
+        key: 'xpub_cache',
+        value: jsonEncode(cache),
+      );
+    } catch (_) {}
+  }
+
   Future<void> boot() async {
     if (ready) return;
     final saved = await db.loadIdentity();
@@ -1494,6 +1673,13 @@ class AppState extends ChangeNotifier {
 
     await refreshContacts();
     await refreshGroups();
+    // paint the home as soon as contacts/groups are ready; notifications,
+    // nostr subscriptions and ntfy keep warming up in the background.
+    onboardingComplete =
+        (await const FlutterSecureStorage().read(key: 'onboarding_done')) ==
+        'true';
+    ready = true;
+    notifyListeners();
     // sprint 7.5: auto-start tor; nostr subs retry every 10s until ready
     final docsDir = await getApplicationDocumentsDirectory();
     _startListenerOnIsolate(docsDir.path).then((addr) {
@@ -1502,7 +1688,21 @@ class AppState extends ChangeNotifier {
         notifyListeners();
       }
     });
+    // poll bootstrap so the halo can breathe while the listener warms up.
+    Timer.periodic(const Duration(seconds: 1), (t) {
+      final raw = engine.getStatus();
+      final st = parseTorStatus(raw);
+      final pct = parseBootstrapPct(raw);
+      if (st != _torStatus || pct != _bootstrapPct) {
+        _torStatus = st;
+        _bootstrapPct = pct;
+        notifyListeners();
+      }
+      if (st == TorStatus.reachable) t.cancel();
+    });
     engine.nostrInit('wss://relay.damus.io,wss://nos.lol');
+    await loadDisplayName();
+    await loadScreenshotPref();
     await initNotifications(onTap: openChatForHalo);
 
     // periodic sweep: delete messages whose burn_at has passed.
@@ -1511,13 +1711,40 @@ class AppState extends ChangeNotifier {
         await db.purgeExpired();
       } catch (_) {}
     });
-    for (final c in contacts) {
-      final xPub = await signalSession.peerXPubHex(c.haloId);
-      if (xPub != null) {
-        _xPubToHaloId[xPub] = c.haloId;
+    // warm up signal sessions + nostr subs after the first frame. a cached
+    // xpub→haloId map (encrypted) lets returning users skip the per-contact
+    // crypto entirely; only uncached contacts hit the heavy lookup.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future.delayed(const Duration(milliseconds: 300));
+      final currentIds = {for (final c in contacts) c.haloId};
+      final cache = await _loadXPubCache();
+      final knownIds = <String>{};
+      final fresh = <String, String>{};
+      var changed = false;
+      cache.forEach((xPub, haloId) {
+        if (!currentIds.contains(haloId)) {
+          changed = true;
+          return;
+        }
+        fresh[xPub] = haloId;
+        _xPubToHaloId[xPub] = haloId;
         engine.nostrSubscribe(xPub);
+        knownIds.add(haloId);
+      });
+      for (final c in contacts) {
+        if (knownIds.contains(c.haloId)) continue;
+        await Future.delayed(Duration.zero);
+        final xPub = await signalSession.peerXPubHex(c.haloId);
+        if (xPub != null) {
+          _xPubToHaloId[xPub] = c.haloId;
+          engine.nostrSubscribe(xPub);
+          fresh[xPub] = c.haloId;
+          knownIds.add(c.haloId);
+          changed = true;
+        }
       }
-    }
+      if (changed) await _saveXPubCache(fresh);
+    });
     // sprint 11d: open ntfy websocket when push mode is ntfy. on incoming
     // ping, the existing 1s drain loop catches up — we just log for now.
     final mode = await loadPushMode();
@@ -1688,13 +1915,18 @@ class AppState extends ChangeNotifier {
           when: when,
           blocked: (r['blocked'] as int? ?? 0) == 1,
           archived: (r['archived'] as int? ?? 0) == 1,
+          muted: (r['muted'] as int? ?? 0) == 1,
+          verified: (r['verified'] as int? ?? 0) == 1,
+          unread: (r['unread'] as int? ?? 0),
+          pinned: (r['pinned'] as int? ?? 0) == 1,
         ),
       );
     }
     // most-recent conversation floats to the top
-    list.sort(
-      (a, b) => (b.when ?? DateTime(0)).compareTo(a.when ?? DateTime(0)),
-    );
+    list.sort((a, b) {
+      if (a.pinned != b.pinned) return a.pinned ? -1 : 1;
+      return (b.when ?? DateTime(0)).compareTo(a.when ?? DateTime(0));
+    });
     contacts = list;
     notifyListeners();
   }
@@ -2014,6 +2246,7 @@ final appState = AppState();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await appState.loadThemePref();
   runApp(const HaloApp());
   // cold-start: if launched from a notification tap, open the chat
   // after the first frame so rootNavKey has a navigator.
@@ -2029,15 +2262,20 @@ void main() async {
   });
 }
 
+final themeRevision = ValueNotifier<int>(0);
+
 class HaloApp extends StatelessWidget {
   const HaloApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: rootNavKey,
-      title: 'Halo',
-      theme: buildHaloTheme(),
-      home: const _LockGate(child: _OnboardingGate(child: RootShell())),
+    return ValueListenableBuilder<int>(
+      valueListenable: themeRevision,
+      builder: (context, _, __) => MaterialApp(
+        navigatorKey: rootNavKey,
+        title: 'Halo',
+        theme: buildHaloTheme(),
+        home: _LockGate(child: _OnboardingGate(child: RootShell())),
+      ),
     );
   }
 }
@@ -2456,7 +2694,7 @@ class _DevScreenState extends State<DevScreen> {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      icon: const Icon(Icons.qr_code, color: HaloColors.amber),
+                      icon: Icon(Icons.qr_code, color: HaloColors.amber),
                       label: const Text('show my qr'),
                       onPressed: _showMyQr,
                     ),
@@ -2464,10 +2702,7 @@ class _DevScreenState extends State<DevScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: OutlinedButton.icon(
-                      icon: const Icon(
-                        Icons.content_paste,
-                        color: HaloColors.violet,
-                      ),
+                      icon: Icon(Icons.content_paste, color: HaloColors.violet),
                       label: const Text('import peer'),
                       onPressed: _importPeer,
                     ),

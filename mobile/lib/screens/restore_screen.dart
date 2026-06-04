@@ -161,12 +161,12 @@ class _RestoreScreenState extends State<RestoreScreen> {
                         size: 12, color: HaloColors.text2),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(
+                      borderSide: BorderSide(
                           color: HaloColors.line, width: 0.5),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(
+                      borderSide: BorderSide(
                           color: HaloColors.amber, width: 0.8),
                     ),
                   ),

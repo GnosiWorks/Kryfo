@@ -292,7 +292,7 @@ class _Viewfinder extends StatelessWidget {
                     shape: BoxShape.circle,
                     color: HaloColors.green,
                   ),
-                  child: const Icon(Icons.check_rounded,
+                  child: Icon(Icons.check_rounded,
                       color: HaloColors.ink, size: 38),
                 ),
               ),

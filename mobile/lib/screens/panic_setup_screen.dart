@@ -164,7 +164,7 @@ class _Pad extends StatelessWidget {
                 child: InkWell(
                   onTap: onBack,
                   customBorder: const CircleBorder(),
-                  child: const Center(
+                  child: Center(
                     child: Icon(Icons.backspace_outlined,
                         color: HaloColors.text2, size: 22),
                   ),

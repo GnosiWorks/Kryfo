@@ -181,7 +181,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: HaloColors.surface,
         body: Center(child: CircularProgressIndicator(color: HaloColors.amber)),
       );
@@ -198,7 +198,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.chevron_left,
                       color: HaloColors.text,
                       size: 26,
@@ -262,7 +262,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                         ),
                         if (_isAdmin) ...[
                           const SizedBox(width: 6),
-                          const Icon(
+                          Icon(
                             Icons.edit_outlined,
                             size: 16,
                             color: HaloColors.text3,
@@ -315,7 +315,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.add_rounded,
                             size: 14,
                             color: HaloColors.amber,
@@ -376,7 +376,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                         ),
                         if (_isAdmin && !isMe)
                           IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.remove_circle_outline,
                               size: 18,
                               color: HaloColors.text3,
@@ -531,7 +531,7 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                           ),
                           alignment: Alignment.center,
                           child: picked
-                              ? const Icon(
+                              ? Icon(
                                   Icons.check_rounded,
                                   size: 12,
                                   color: HaloColors.onAmber,

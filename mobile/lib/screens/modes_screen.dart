@@ -80,7 +80,7 @@ class _BackBar extends StatelessWidget {
       child: Row(children: [
         IconButton(
           onPressed: onBack,
-          icon: const Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
+          icon: Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
         ),
       ]),
     );

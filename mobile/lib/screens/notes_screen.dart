@@ -86,7 +86,7 @@ class _NotesScreenState extends State<NotesScreen> {
                     ),
             ),
             Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(
                     top: BorderSide(color: HaloColors.line, width: 0.5)),
               ),
@@ -109,7 +109,7 @@ class _NotesScreenState extends State<NotesScreen> {
                   ),
                   IconButton(
                     onPressed: _save,
-                    icon: const Icon(Icons.arrow_upward_rounded,
+                    icon: Icon(Icons.arrow_upward_rounded,
                         color: HaloColors.amber),
                   ),
                 ],

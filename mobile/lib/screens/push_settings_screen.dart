@@ -149,7 +149,7 @@ class _BackBar extends StatelessWidget {
       child: Row(children: [
         IconButton(
           onPressed: onBack,
-          icon: const Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
+          icon: Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
         ),
       ]),
     );
@@ -330,11 +330,11 @@ class _ServerFieldState extends State<_ServerField> {
             fillColor: HaloColors.surface2,
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: HaloColors.line, width: 0.5),
+              borderSide: BorderSide(color: HaloColors.line, width: 0.5),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: HaloColors.amber, width: 1),
+              borderSide: BorderSide(color: HaloColors.amber, width: 1),
             ),
           ),
           onSubmitted: widget.onChanged,
