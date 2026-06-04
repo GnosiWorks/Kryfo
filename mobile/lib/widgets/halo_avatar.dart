@@ -22,9 +22,11 @@ class HaloAvatar extends StatelessWidget {
         : '?';
     // first letter of each of the first three words ("TBB" for thumb-behave-boring)
     final tag = List<int>.generate(3, (i) => i)
-        .map((i) => (i < parts.length && parts[i].isNotEmpty)
-            ? parts[i][0].toUpperCase()
-            : '')
+        .map(
+          (i) => (i < parts.length && parts[i].isNotEmpty)
+              ? parts[i][0].toUpperCase()
+              : '',
+        )
         .join();
 
     // show the divider + tag only when the avatar is large enough to be
@@ -97,33 +99,103 @@ class _Palette {
   const _Palette(this.start, this.end, this.ink, this.mark);
 }
 
-const _palettes = <_Palette>[
+List<_Palette> get _palettes => <_Palette>[
   // dark-bg palettes — cream letter, varied tag accents
-  _Palette(HaloColors.ink,      HaloColors.amberDeep, HaloColors.text, HaloColors.amber),
-  _Palette(HaloColors.ink,      HaloColors.violet,    HaloColors.text, HaloColors.amber),
-  _Palette(HaloColors.ink,      HaloColors.rose,      HaloColors.text, HaloColors.green),
-  _Palette(HaloColors.ink,      HaloColors.green,     HaloColors.text, HaloColors.amber),
-  _Palette(HaloColors.ink,      HaloColors.amber,     HaloColors.text, HaloColors.rose),
-  _Palette(HaloColors.ink,      HaloColors.violet,    HaloColors.text, HaloColors.green),
-  _Palette(HaloColors.ink,      HaloColors.green,     HaloColors.text, HaloColors.violet),
-  _Palette(HaloColors.ink,      HaloColors.rose,      HaloColors.text, HaloColors.violet),
-  _Palette(HaloColors.surface3, HaloColors.violet,    HaloColors.text, HaloColors.rose),
-  _Palette(HaloColors.surface3, HaloColors.amberDeep, HaloColors.text, HaloColors.green),
-  _Palette(HaloColors.surface3, HaloColors.rose,      HaloColors.text, HaloColors.amber),
-  _Palette(HaloColors.line2,    HaloColors.amberDeep, HaloColors.text, HaloColors.violet),
-  _Palette(HaloColors.line2,    HaloColors.green,     HaloColors.text, HaloColors.rose),
+  _Palette(
+    HaloColors.ink,
+    HaloColors.amberDeep,
+    HaloColors.text,
+    HaloColors.amber,
+  ),
+  _Palette(
+    HaloColors.ink,
+    HaloColors.violet,
+    HaloColors.text,
+    HaloColors.amber,
+  ),
+  _Palette(HaloColors.ink, HaloColors.rose, HaloColors.text, HaloColors.green),
+  _Palette(HaloColors.ink, HaloColors.green, HaloColors.text, HaloColors.amber),
+  _Palette(HaloColors.ink, HaloColors.amber, HaloColors.text, HaloColors.rose),
+  _Palette(
+    HaloColors.ink,
+    HaloColors.violet,
+    HaloColors.text,
+    HaloColors.green,
+  ),
+  _Palette(
+    HaloColors.ink,
+    HaloColors.green,
+    HaloColors.text,
+    HaloColors.violet,
+  ),
+  _Palette(HaloColors.ink, HaloColors.rose, HaloColors.text, HaloColors.violet),
+  _Palette(
+    HaloColors.surface3,
+    HaloColors.violet,
+    HaloColors.text,
+    HaloColors.rose,
+  ),
+  _Palette(
+    HaloColors.surface3,
+    HaloColors.amberDeep,
+    HaloColors.text,
+    HaloColors.green,
+  ),
+  _Palette(
+    HaloColors.surface3,
+    HaloColors.rose,
+    HaloColors.text,
+    HaloColors.amber,
+  ),
+  _Palette(
+    HaloColors.line2,
+    HaloColors.amberDeep,
+    HaloColors.text,
+    HaloColors.violet,
+  ),
+  _Palette(
+    HaloColors.line2,
+    HaloColors.green,
+    HaloColors.text,
+    HaloColors.rose,
+  ),
   // bright palettes — ink letter, cream/dark tag
-  _Palette(HaloColors.amberDeep, HaloColors.rose,    HaloColors.ink, HaloColors.text),
-  _Palette(HaloColors.amber,     HaloColors.rose,    HaloColors.ink, HaloColors.text),
-  _Palette(HaloColors.amber,     HaloColors.violet,  HaloColors.ink, HaloColors.text),
-  _Palette(HaloColors.amberDeep, HaloColors.violet,  HaloColors.ink, HaloColors.text),
-  _Palette(HaloColors.violet,    HaloColors.rose,    HaloColors.ink, HaloColors.text),
-  _Palette(HaloColors.violet,    HaloColors.amber,   HaloColors.ink, HaloColors.text),
-  _Palette(HaloColors.green,     HaloColors.amber,   HaloColors.ink, HaloColors.text),
-  _Palette(HaloColors.amber,     HaloColors.green,   HaloColors.ink, HaloColors.text),
-  _Palette(HaloColors.green,     HaloColors.rose,    HaloColors.ink, HaloColors.text),
-  _Palette(HaloColors.rose,      HaloColors.green,   HaloColors.ink, HaloColors.text),
-  _Palette(HaloColors.green,     HaloColors.violet,  HaloColors.ink, HaloColors.text),
+  _Palette(
+    HaloColors.amberDeep,
+    HaloColors.rose,
+    HaloColors.ink,
+    HaloColors.text,
+  ),
+  _Palette(HaloColors.amber, HaloColors.rose, HaloColors.ink, HaloColors.text),
+  _Palette(
+    HaloColors.amber,
+    HaloColors.violet,
+    HaloColors.ink,
+    HaloColors.text,
+  ),
+  _Palette(
+    HaloColors.amberDeep,
+    HaloColors.violet,
+    HaloColors.ink,
+    HaloColors.text,
+  ),
+  _Palette(HaloColors.violet, HaloColors.rose, HaloColors.ink, HaloColors.text),
+  _Palette(
+    HaloColors.violet,
+    HaloColors.amber,
+    HaloColors.ink,
+    HaloColors.text,
+  ),
+  _Palette(HaloColors.green, HaloColors.amber, HaloColors.ink, HaloColors.text),
+  _Palette(HaloColors.amber, HaloColors.green, HaloColors.ink, HaloColors.text),
+  _Palette(HaloColors.green, HaloColors.rose, HaloColors.ink, HaloColors.text),
+  _Palette(HaloColors.rose, HaloColors.green, HaloColors.ink, HaloColors.text),
+  _Palette(
+    HaloColors.green,
+    HaloColors.violet,
+    HaloColors.ink,
+    HaloColors.text,
+  ),
 ];
 
 // FNV-1a-like rolling mix produces a stable byte stream from a string.

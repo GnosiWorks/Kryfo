@@ -55,7 +55,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.chevron_left,
+                    icon: Icon(Icons.chevron_left,
                         color: HaloColors.text, size: 26),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
@@ -191,7 +191,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                                   ),
                                   alignment: Alignment.center,
                                   child: picked
-                                      ? const Icon(Icons.check_rounded,
+                                      ? Icon(Icons.check_rounded,
                                           size: 14, color: HaloColors.onAmber)
                                       : null,
                                 ),

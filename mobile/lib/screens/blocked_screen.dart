@@ -49,7 +49,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.chevron_left,
+                    icon: Icon(Icons.chevron_left,
                         color: HaloColors.text2, size: 26),
                     onPressed: () => Navigator.of(context).pop(),
                   ),

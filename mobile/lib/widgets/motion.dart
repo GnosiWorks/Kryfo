@@ -6,32 +6,38 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-const kInk        = Color(0xFF0D0B09);
-const kSurface    = Color(0xFF161310);
-const kSurface2   = Color(0xFF201C17);
-const kSurface3   = Color(0xFF2A251F);
-const kLine       = Color(0xFF2F2922);
-const kLine2      = Color(0xFF3D3629);
-const kText       = Color(0xFFF5F1EA);
-const kText2      = Color(0xFFC8BFB2);
-const kText3      = Color(0xFF948A7E);
-const kAmber      = Color(0xFFF59E0B);
-const kAmberSoft  = Color(0x24F59E0B);
-const kGreen      = Color(0xFF34D399);
-const kGreenSoft  = Color(0x2434D399);
+const kInk = Color(0xFF0D0B09);
+const kSurface = Color(0xFF161310);
+const kSurface2 = Color(0xFF201C17);
+const kSurface3 = Color(0xFF2A251F);
+const kLine = Color(0xFF2F2922);
+const kLine2 = Color(0xFF3D3629);
+const kText = Color(0xFFF5F1EA);
+const kText2 = Color(0xFFC8BFB2);
+const kText3 = Color(0xFF948A7E);
+const kAmber = Color(0xFFF59E0B);
+const kAmberSoft = Color(0x24F59E0B);
+const kGreen = Color(0xFF34D399);
+const kGreenSoft = Color(0x2434D399);
 
 enum TorStatus { off, starting, bootstrapped, publishing, reachable }
+
 enum PrivacyMode { fast, normal, private }
 
 TorStatus parseTorStatus(String raw) {
   final parts = raw.split('|');
   if (parts.isEmpty) return TorStatus.off;
   switch (parts[0]) {
-    case 'starting': return TorStatus.starting;
-    case 'bootstrapped': return TorStatus.bootstrapped;
-    case 'publishing': return TorStatus.publishing;
-    case 'reachable': return TorStatus.reachable;
-    default: return TorStatus.off;
+    case 'starting':
+      return TorStatus.starting;
+    case 'bootstrapped':
+      return TorStatus.bootstrapped;
+    case 'publishing':
+      return TorStatus.publishing;
+    case 'reachable':
+      return TorStatus.reachable;
+    default:
+      return TorStatus.off;
   }
 }
 
@@ -91,11 +97,16 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
 
   int _targetPhase(TorStatus s) {
     switch (s) {
-      case TorStatus.off: return 0;
-      case TorStatus.starting: return 1;
-      case TorStatus.bootstrapped: return 2;
-      case TorStatus.publishing: return 3;
-      case TorStatus.reachable: return 4;
+      case TorStatus.off:
+        return 0;
+      case TorStatus.starting:
+        return 1;
+      case TorStatus.bootstrapped:
+        return 2;
+      case TorStatus.publishing:
+        return 3;
+      case TorStatus.reachable:
+        return 4;
     }
   }
 
@@ -103,13 +114,15 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
     _phaseTimer?.cancel();
     if (_phase == target) return;
     final stepDur = _phase < target
-        ? const Duration(milliseconds: 700)
+        ? const Duration(milliseconds: 1100)
         : const Duration(milliseconds: 200);
     _phaseTimer = Timer(stepDur, () {
       if (!mounted) return;
       setState(() {
-        if (_phase < target) _phase++;
-        else if (_phase > target) _phase--;
+        if (_phase < target)
+          _phase++;
+        else if (_phase > target)
+          _phase--;
       });
       _walkTo(target);
     });
@@ -122,12 +135,18 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
 
   double get _progress {
     switch (_phase) {
-      case 0: return 0;
-      case 1: return 0.0;
-      case 2: return 0.33;
-      case 3: return 0.66;
-      case 4: return 1.0;
-      default: return 0;
+      case 0:
+        return 0;
+      case 1:
+        return 0.0;
+      case 2:
+        return 0.33;
+      case 3:
+        return 0.66;
+      case 4:
+        return 1.0;
+      default:
+        return 0;
     }
   }
 
@@ -139,27 +158,38 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
 
   String get _label {
     switch (widget.status) {
-      case TorStatus.off: return 'STANDBY';
-      case TorStatus.starting: return 'CONNECTING';
-      case TorStatus.bootstrapped: return 'BUILDING';
-      case TorStatus.publishing: return 'PUBLISHING';
-      case TorStatus.reachable: return 'READY';
+      case TorStatus.off:
+        return 'STANDBY';
+      case TorStatus.starting:
+        return 'CONNECTING';
+      case TorStatus.bootstrapped:
+        return 'BUILDING';
+      case TorStatus.publishing:
+        return 'PUBLISHING';
+      case TorStatus.reachable:
+        return 'READY';
     }
   }
 
   String get _italic {
     switch (widget.status) {
-      case TorStatus.off: return 'preparing to connect';
-      case TorStatus.starting: return 'finding a private path';
-      case TorStatus.bootstrapped: return 'carving the path';
-      case TorStatus.publishing: return 'announcing your arrival';
-      case TorStatus.reachable: return "you're anonymous";
+      case TorStatus.off:
+        return 'preparing to connect';
+      case TorStatus.starting:
+        return 'finding a private path';
+      case TorStatus.bootstrapped:
+        return 'carving the path';
+      case TorStatus.publishing:
+        return 'announcing your arrival';
+      case TorStatus.reachable:
+        return "you're anonymous";
     }
   }
 
   String get _help {
     switch (widget.status) {
-      case TorStatus.off: return 'tor is starting in the background. this graph lights up as the connection forms.';
+      case TorStatus.off:
+        return 'tor is starting in the background. this graph lights up as the connection forms.';
       case TorStatus.starting:
         return 'making a fresh route through anonymous relays.';
       case TorStatus.bootstrapped:
@@ -173,23 +203,33 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
 
   String get _circuit {
     switch (widget.status) {
-      case TorStatus.off: return '\u2014';
-      case TorStatus.starting: return 'building';
+      case TorStatus.off:
+        return '\u2014';
+      case TorStatus.starting:
+        return 'building';
       case TorStatus.bootstrapped:
-      case TorStatus.publishing: return 'open';
-      case TorStatus.reachable: return 'live';
+      case TorStatus.publishing:
+        return 'open';
+      case TorStatus.reachable:
+        return 'live';
     }
   }
 
   int _displayPct() {
     if (widget.bootstrapPct > 0) return widget.bootstrapPct;
     switch (_phase) {
-      case 0: return 0;
-      case 1: return 15;
-      case 2: return 45;
-      case 3: return 78;
-      case 4: return 100;
-      default: return 0;
+      case 0:
+        return 0;
+      case 1:
+        return 15;
+      case 2:
+        return 45;
+      case 3:
+        return 78;
+      case 4:
+        return 100;
+      default:
+        return 0;
     }
   }
 
@@ -214,14 +254,14 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
                     : const ColorFilter.mode(Colors.transparent, BlendMode.dst),
                 child: CustomPaint(
                   painter: _ZigZagWarmupPainter(
-                  activeIdx: _activeIdx,
-                  lit: _lit,
-                  progress: _progress,
-                  green: _green,
-                  t: _ctl.value,
+                    activeIdx: _activeIdx,
+                    lit: _lit,
+                    progress: _progress,
+                    green: _green,
+                    t: _ctl.value,
+                  ),
+                  size: Size.infinite,
                 ),
-                size: Size.infinite,
-              ),
               ),
             ),
           ),
@@ -287,7 +327,10 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
                       const TextSpan(text: 'circuit \u00b7 '),
                       TextSpan(
                         text: _circuit,
-                        style: TextStyle(color: _accent, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                          color: _accent,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ],
                   ),
@@ -442,7 +485,7 @@ class _ZigZagWarmupPainter extends CustomPainter {
       for (int k = 0; k < layers.length; k++) {
         final radius = layers[k][0];
         final baseOp = layers[k][1];
-        final visible = isActive || (isLit && k == 0) || (isLit && k == 3) || green;
+        final visible = isActive || isLit || green;
         if (!visible) continue;
 
         final isCore = k == 3;
@@ -467,7 +510,9 @@ class _ZigZagWarmupPainter extends CustomPainter {
             c,
             radius,
             Paint()
-              ..color = accent.withValues(alpha: baseOp * breathOp * (isActive ? 1.0 : 0.6))
+              ..color = accent.withValues(
+                alpha: baseOp * breathOp * (isActive ? 1.0 : 0.6),
+              )
               ..style = PaintingStyle.stroke
               ..strokeWidth = 0.6,
           );
@@ -501,7 +546,9 @@ class _ZigZagWarmupPainter extends CustomPainter {
   }
 
   void _drawLabel(Canvas canvas, String text, double cx) {
-    final accent = green ? kGreen.withValues(alpha: 0.7) : kAmber.withValues(alpha: 0.7);
+    final accent = green
+        ? kGreen.withValues(alpha: 0.7)
+        : kAmber.withValues(alpha: 0.7);
     final tp = TextPainter(
       text: TextSpan(
         text: text,
@@ -551,6 +598,7 @@ class _SendPillState extends State<SendPill>
       duration: const Duration(milliseconds: 1400),
     )..repeat();
   }
+
   @override
   void dispose() {
     _ctl.dispose();
@@ -559,23 +607,28 @@ class _SendPillState extends State<SendPill>
 
   int get _onionCount {
     switch (widget.mode) {
-      case PrivacyMode.fast: return 0;
-      case PrivacyMode.normal: return 1;
-      case PrivacyMode.private: return 3;
+      case PrivacyMode.fast:
+        return 0;
+      case PrivacyMode.normal:
+        return 1;
+      case PrivacyMode.private:
+        return 3;
     }
   }
 
   String get _label {
     if (widget.delivered) return 'delivered';
     switch (widget.mode) {
-      case PrivacyMode.fast: return 'sent';
-      case PrivacyMode.normal: return '1 hop';
-      case PrivacyMode.private: return '3 hops';
+      case PrivacyMode.fast:
+        return 'sent';
+      case PrivacyMode.normal:
+        return '1 hop';
+      case PrivacyMode.private:
+        return '3 hops';
     }
   }
 
-  Color get _color =>
-      widget.delivered ? kGreen : kAmber;
+  Color get _color => widget.delivered ? kGreen : kAmber;
 
   @override
   Widget build(BuildContext context) {
@@ -603,12 +656,15 @@ class _SendPillState extends State<SendPill>
           ),
           if (widget.delivered) ...[
             const SizedBox(width: 5),
-            Text('\u2713',
-                style: TextStyle(
-                    fontSize: 11,
-                    color: _color,
-                    height: 1,
-                    fontWeight: FontWeight.w700)),
+            Text(
+              '\u2713',
+              style: TextStyle(
+                fontSize: 11,
+                color: _color,
+                height: 1,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ] else if (_onionCount > 0) ...[
             const SizedBox(width: 7),
             for (int i = 0; i < _onionCount; i++) ...[
@@ -640,7 +696,11 @@ class _OnionSpinPainter extends CustomPainter {
   final double t;
   final double phase;
   final Color color;
-  _OnionSpinPainter({required this.t, required this.phase, required this.color});
+  _OnionSpinPainter({
+    required this.t,
+    required this.phase,
+    required this.color,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -648,21 +708,24 @@ class _OnionSpinPainter extends CustomPainter {
     final r = size.width / 2;
     // 3 static rings + filled core
     canvas.drawCircle(
-      c, r * 0.85,
+      c,
+      r * 0.85,
       Paint()
         ..color = color.withValues(alpha: 0.3)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.5,
     );
     canvas.drawCircle(
-      c, r * 0.55,
+      c,
+      r * 0.55,
       Paint()
         ..color = color.withValues(alpha: 0.5)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.5,
     );
     canvas.drawCircle(
-      c, r * 0.32,
+      c,
+      r * 0.32,
       Paint()
         ..color = color.withValues(alpha: 0.7)
         ..style = PaintingStyle.stroke
@@ -674,7 +737,10 @@ class _OnionSpinPainter extends CustomPainter {
     final p = ((t + phase) % 1.0) * 2 * math.pi;
     final rect = Rect.fromCircle(center: c, radius: r * 0.85);
     canvas.drawArc(
-      rect, p, math.pi / 2, false,
+      rect,
+      p,
+      math.pi / 2,
+      false,
       Paint()
         ..color = color
         ..style = PaintingStyle.stroke
@@ -706,11 +772,13 @@ class _TypingDotsState extends State<TypingDots>
       duration: const Duration(milliseconds: 1400),
     )..repeat();
   }
+
   @override
   void dispose() {
     _ctl.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -739,6 +807,7 @@ class _TypingDotsState extends State<TypingDots>
       ),
     );
   }
+
   Widget _dot(double phase) {
     final ph = (_ctl.value + phase) % 1.0;
     final dy = ph < 0.3 ? -3.0 * (math.sin(ph / 0.3 * math.pi)) : 0.0;
@@ -746,7 +815,8 @@ class _TypingDotsState extends State<TypingDots>
     return Transform.translate(
       offset: Offset(0, dy),
       child: Container(
-        width: 5, height: 5,
+        width: 5,
+        height: 5,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: kAmber.withValues(alpha: op),
@@ -776,26 +846,28 @@ class _BreathDotState extends State<BreathDot>
       duration: const Duration(milliseconds: 2400),
     )..repeat();
   }
+
   @override
   void dispose() {
     _ctl.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-        animation: _ctl,
-        builder: (ctx, _) {
-          final op = 0.5 + 0.5 * math.sin(_ctl.value * 2 * math.pi);
-          return Container(
-            width: widget.size,
-            height: widget.size,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: widget.color.withValues(alpha: op),
-            ),
-          );
-        },
+    animation: _ctl,
+    builder: (ctx, _) {
+      final op = 0.5 + 0.5 * math.sin(_ctl.value * 2 * math.pi);
+      return Container(
+        width: widget.size,
+        height: widget.size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: widget.color.withValues(alpha: op),
+        ),
       );
+    },
+  );
 }
 
 // === BLINKING CURSOR ===
@@ -818,21 +890,23 @@ class _BlinkCursorState extends State<BlinkCursor>
       duration: const Duration(milliseconds: 1200),
     )..repeat();
   }
+
   @override
   void dispose() {
     _ctl.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-        animation: _ctl,
-        builder: (ctx, _) {
-          final visible = _ctl.value < 0.5;
-          return Container(
-            width: 1.5,
-            height: widget.height,
-            color: visible ? widget.color : Colors.transparent,
-          );
-        },
+    animation: _ctl,
+    builder: (ctx, _) {
+      final visible = _ctl.value < 0.5;
+      return Container(
+        width: 1.5,
+        height: widget.height,
+        color: visible ? widget.color : Colors.transparent,
       );
+    },
+  );
 }

@@ -2,11 +2,14 @@
 // matches 08_complete_spec.html "the everyday" home tile.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../widgets/halo_avatar.dart';
 import 'notes_screen.dart';
 import 'archived_screen.dart';
 import '../miui_autostart.dart';
+import '../main.dart';
+import '../widgets/motion.dart';
 
 bool _miuiPromptChecked = false;
 
@@ -59,9 +62,11 @@ class HomeScreen extends StatelessWidget {
             ),
             if (hasArchived)
               _ArchivedPin(
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const ArchivedScreen()),
-                ),
+                count: contacts.where((c) => c.archived).length,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  Navigator.of(context).push(_archivedRoute());
+                },
               ),
             Expanded(
               child: visible.isEmpty
@@ -94,6 +99,10 @@ class ContactPreview {
   final String avatarSeed;
   final bool blocked;
   final bool archived;
+  final bool muted;
+  final bool verified;
+  final int unread;
+  final bool pinned;
   ContactPreview({
     required this.haloId,
     this.nickname,
@@ -102,6 +111,10 @@ class ContactPreview {
     required this.avatarSeed,
     this.blocked = false,
     this.archived = false,
+    this.muted = false,
+    this.verified = false,
+    this.unread = 0,
+    this.pinned = false,
   });
 }
 
@@ -124,29 +137,34 @@ class _StatusBar extends StatelessWidget {
   const _StatusBar();
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            '9:41',
-            style: HaloType.sans(
-              size: 11,
-              weight: FontWeight.w500,
-              color: HaloColors.text2,
-            ),
+    return ListenableBuilder(
+      listenable: appState,
+      builder: (context, _) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '9:41',
+                style: HaloType.sans(
+                  size: 11,
+                  weight: FontWeight.w500,
+                  color: HaloColors.text2,
+                ),
+              ),
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _showConnectionSheet(context),
+                child: _ConnectionHalo(
+                  status: appState.torStatus,
+                  pct: appState.bootstrapPct,
+                ),
+              ),
+            ],
           ),
-          Text(
-            '•••',
-            style: HaloType.sans(
-              size: 11,
-              color: HaloColors.text2.withOpacity(0.6),
-              letter: 2,
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -176,6 +194,165 @@ const _months = [
   'November',
   'December',
 ];
+
+class _ConnectionHalo extends StatefulWidget {
+  final TorStatus status;
+  final int pct;
+  const _ConnectionHalo({required this.status, required this.pct});
+  @override
+  State<_ConnectionHalo> createState() => _ConnectionHaloState();
+}
+
+class _ConnectionHaloState extends State<_ConnectionHalo>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c;
+  int _peak = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _c = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+    _peak = widget.pct;
+    if (widget.status != TorStatus.reachable) _c.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(covariant _ConnectionHalo old) {
+    super.didUpdateWidget(old);
+    if (widget.pct > _peak) _peak = widget.pct;
+    final live = widget.status != TorStatus.reachable;
+    if (live && !_c.isAnimating) {
+      _c.repeat(reverse: true);
+    } else if (!live && _c.isAnimating) {
+      _c.animateTo(0, duration: const Duration(milliseconds: 400));
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  String _label() {
+    if (widget.status == TorStatus.reachable) return 'connected';
+    return _peak > 0 ? 'connecting $_peak%' : 'connecting';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reachable = widget.status == TorStatus.reachable;
+    final dot = reachable ? HaloColors.green : HaloColors.amber;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AnimatedBuilder(
+          animation: _c,
+          builder: (_, __) {
+            final t = _c.value;
+            final glow = reachable ? 0.45 : (0.2 + 0.5 * t);
+            final spread = reachable ? 1.0 : (0.4 + 2.4 * t);
+            return Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: dot,
+                boxShadow: [
+                  BoxShadow(
+                    color: dot.withOpacity(glow),
+                    blurRadius: reachable ? 5 : (3 + 5 * t),
+                    spreadRadius: spread,
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        const SizedBox(width: 7),
+        Text(
+          _label(),
+          style: HaloType.mono(
+            size: 10,
+            color: reachable ? HaloColors.text2 : HaloColors.amber,
+            letter: 0.04,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+void _showConnectionSheet(BuildContext context) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: HaloColors.surface2,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+    ),
+    builder: (ctx) => SafeArea(
+      child: ListenableBuilder(
+        listenable: appState,
+        builder: (ctx, _) {
+          final reachable = appState.torStatus == TorStatus.reachable;
+          return SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 22, 24, 26),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'your connection',
+                  style: HaloType.serif(size: 20, color: HaloColors.text),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  reachable ? 'connected over tor' : 'connecting over tor',
+                  style: HaloType.mono(
+                    size: 11,
+                    color: reachable ? HaloColors.green : HaloColors.amber,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Center(
+                  child: TorWarmupGraph(
+                    status: appState.torStatus,
+                    bootstrapPct: appState.bootstrapPct,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Text(
+                  'halo sends every message through tor — a chain of relays '
+                  'that hides who you are talking to and where you are. no '
+                  'single server ever sees both ends.',
+                  style: HaloType.sans(
+                    size: 13,
+                    color: HaloColors.text2,
+                    height: 1.55,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'the first connection after opening takes a moment while '
+                  'that path is built. once it is green, you are through.',
+                  style: HaloType.sans(
+                    size: 13,
+                    color: HaloColors.text3,
+                    height: 1.55,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    ),
+  );
+}
 
 class _HomeHead extends StatelessWidget {
   final DateTime now;
@@ -242,7 +419,7 @@ class _EmptyState extends StatelessWidget {
                   width: 0.5,
                 ),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.qr_code_2_rounded,
                 color: HaloColors.amber,
                 size: 26,
@@ -297,30 +474,92 @@ class _EmptyState extends StatelessWidget {
 
 // ───────── contact list (used once contacts exist) ─────────
 
+Route<void> _archivedRoute() {
+  return PageRouteBuilder<void>(
+    transitionDuration: const Duration(milliseconds: 340),
+    reverseTransitionDuration: const Duration(milliseconds: 260),
+    pageBuilder: (_, __, ___) => const ArchivedScreen(),
+    transitionsBuilder: (_, anim, __, child) {
+      final curved = CurvedAnimation(
+        parent: anim,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      );
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween(
+            begin: const Offset(0, 0.06),
+            end: Offset.zero,
+          ).animate(curved),
+          child: child,
+        ),
+      );
+    },
+  );
+}
+
 class _ArchivedPin extends StatelessWidget {
   final VoidCallback onTap;
-  const _ArchivedPin({required this.onTap});
+  final int count;
+  const _ArchivedPin({required this.onTap, required this.count});
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        child: Row(
-          children: [
-            const Icon(
-              Icons.archive_outlined,
-              size: 16,
-              color: HaloColors.text3,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+      child: Material(
+        color: HaloColors.surface2,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+            child: Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: HaloColors.amberSoft,
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Icons.inventory_2_outlined,
+                    size: 16,
+                    color: HaloColors.amber,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'archived',
+                        style: HaloType.sans(
+                          size: 14,
+                          weight: FontWeight.w500,
+                          color: HaloColors.text,
+                        ),
+                      ),
+                      const SizedBox(height: 1),
+                      Text(
+                        count == 1 ? '1 chat' : '$count chats',
+                        style: HaloType.mono(size: 10, color: HaloColors.text3),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: HaloColors.text3,
+                  size: 18,
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Text(
-              'archived',
-              style: HaloType.sans(size: 13, color: HaloColors.text2),
-            ),
-            const Spacer(),
-            const Icon(Icons.chevron_right, color: Color(0xFF6B625A), size: 18),
-          ],
+          ),
         ),
       ),
     );
@@ -369,7 +608,7 @@ class _ContactList extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.add_rounded,
                       size: 14,
                       color: HaloColors.amber,
@@ -404,7 +643,7 @@ class _ContactList extends StatelessWidget {
               ),
             ),
           ),
-          ...rest.map((c) => _Row(c: c, onTap: () => onTap(c.haloId))),
+          ...rest.map((c) => _SwipeRow(c: c, onTap: () => onTap(c.haloId))),
         ],
       ],
     );
@@ -487,7 +726,7 @@ class _HeroCard extends StatelessWidget {
         margin: const EdgeInsets.fromLTRB(16, 10, 16, 20),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [HaloColors.amber, HaloColors.amberDeep],
@@ -499,7 +738,18 @@ class _HeroCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                HaloAvatar(seed: c.avatarSeed, size: 42),
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    HaloAvatar(seed: c.avatarSeed, size: 42),
+                    if (c.verified)
+                      Positioned(
+                        right: -1,
+                        bottom: -1,
+                        child: _verifiedTick(onAmber: true),
+                      ),
+                  ],
+                ),
                 const SizedBox(width: 11),
                 Expanded(
                   child: Column(
@@ -513,12 +763,25 @@ class _HeroCard extends StatelessWidget {
                           color: HaloColors.onAmber,
                         ),
                       ),
-                      Text(
-                        (c.blocked ? 'blocked' : _relTime(c.when)),
-                        style: HaloType.mono(
-                          size: 11,
-                          color: HaloColors.onAmber.withOpacity(0.7),
-                        ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (c.muted) ...[
+                            Icon(
+                              Icons.notifications_off_outlined,
+                              size: 12,
+                              color: HaloColors.onAmber.withOpacity(0.7),
+                            ),
+                            const SizedBox(width: 4),
+                          ],
+                          Text(
+                            (c.blocked ? 'blocked' : _relTime(c.when)),
+                            style: HaloType.mono(
+                              size: 11,
+                              color: HaloColors.onAmber.withOpacity(0.7),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -541,6 +804,69 @@ class _HeroCard extends StatelessWidget {
   }
 }
 
+Widget _verifiedTick({required bool onAmber}) {
+  final ring = onAmber ? HaloColors.amber : HaloColors.surface;
+  final fill = onAmber ? HaloColors.onAmber : HaloColors.amber;
+  final glyph = onAmber ? HaloColors.amber : HaloColors.surface;
+  return Container(
+    width: 14,
+    height: 14,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: fill,
+      border: Border.all(color: ring, width: 1.5),
+    ),
+    alignment: Alignment.center,
+    child: Icon(Icons.check, size: 8, color: glyph),
+  );
+}
+
+class _SwipeRow extends StatelessWidget {
+  final ContactPreview c;
+  final VoidCallback onTap;
+  const _SwipeRow({required this.c, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Dismissible(
+      key: ValueKey('swipe_' + c.haloId),
+      background: Container(
+        color: HaloColors.surface2,
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.only(left: 24),
+        child: Icon(
+          c.muted
+              ? Icons.notifications_active_outlined
+              : Icons.notifications_off_outlined,
+          size: 20,
+          color: HaloColors.text2,
+        ),
+      ),
+      secondaryBackground: Container(
+        color: HaloColors.surface2,
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 24),
+        child: Icon(
+          Icons.archive_outlined,
+          size: 20,
+          color: HaloColors.amber,
+        ),
+      ),
+      confirmDismiss: (dir) async {
+        if (dir == DismissDirection.endToStart) {
+          await appState.archive(c.haloId);
+        } else if (c.muted) {
+          await appState.unmute(c.haloId);
+        } else {
+          await appState.mute(c.haloId);
+        }
+        return false;
+      },
+      child: _Row(c: c, onTap: onTap),
+    );
+  }
+}
+
 class _Row extends StatelessWidget {
   final ContactPreview c;
   final VoidCallback onTap;
@@ -555,7 +881,18 @@ class _Row extends StatelessWidget {
           children: [
             Opacity(
               opacity: c.blocked ? 0.4 : 1,
-              child: HaloAvatar(seed: c.avatarSeed, size: 36),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  HaloAvatar(seed: c.avatarSeed, size: 36),
+                  if (c.verified)
+                    Positioned(
+                      right: -1,
+                      bottom: -1,
+                      child: _verifiedTick(onAmber: false),
+                    ),
+                ],
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -573,18 +910,74 @@ class _Row extends StatelessWidget {
                           color: c.blocked ? HaloColors.text3 : HaloColors.text,
                         ),
                       ),
-                      Text(
-                        (c.blocked ? 'blocked' : _relTime(c.when)),
-                        style: HaloType.mono(size: 10, color: HaloColors.text3),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (c.pinned) ...[
+                            Icon(
+                              Icons.push_pin,
+                              size: 11,
+                              color: HaloColors.text3,
+                            ),
+                            const SizedBox(width: 4),
+                          ],
+                          if (c.muted) ...[
+                            Icon(
+                              Icons.notifications_off_outlined,
+                              size: 12,
+                              color: HaloColors.text3,
+                            ),
+                            const SizedBox(width: 4),
+                          ],
+                          Text(
+                            (c.blocked ? 'blocked' : _relTime(c.when)),
+                            style: HaloType.mono(
+                              size: 10,
+                              color: HaloColors.text3,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    c.preview ?? '',
-                    style: HaloType.sans(size: 12, color: HaloColors.text2),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          c.preview ?? '',
+                          style: HaloType.sans(
+                            size: 12,
+                            color: HaloColors.text2,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (c.unread > 0) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 1,
+                          ),
+                          constraints: const BoxConstraints(minWidth: 18),
+                          decoration: BoxDecoration(
+                            color: HaloColors.amber,
+                            borderRadius: BorderRadius.circular(9),
+                          ),
+                          child: Text(
+                            c.unread > 99 ? '99+' : '\${c.unread}',
+                            textAlign: TextAlign.center,
+                            style: HaloType.sans(
+                              size: 10,
+                              weight: FontWeight.w600,
+                              color: HaloColors.onAmber,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
@@ -636,7 +1029,7 @@ class _NavTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),
       ),
       padding: const EdgeInsets.fromLTRB(0, 10, 0, 14),
@@ -702,7 +1095,7 @@ class _NotesPin extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               alignment: Alignment.center,
-              child: const Icon(
+              child: Icon(
                 Icons.bookmark_outline,
                 color: HaloColors.amber,
                 size: 18,

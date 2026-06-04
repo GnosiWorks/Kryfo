@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import '../theme.dart';
-import '../main.dart' show db;
+import '../main.dart' show db, appState;
 
 // safety number for a contact: a 60-digit code derived from both X25519
 // public keys, order-independent so both phones show the same number. if it
@@ -19,7 +19,8 @@ String haloSafetyNumber(String myXpubHex, String peerXpubHex) {
   final groups = <String>[];
   for (var i = 0; i < 12; i++) {
     final o = i * 4;
-    final n = (bytes[o] << 24) |
+    final n =
+        (bytes[o] << 24) |
         (bytes[o + 1] << 16) |
         (bytes[o + 2] << 8) |
         bytes[o + 3];
@@ -59,6 +60,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
   Future<void> _toggle() async {
     final next = !_verified;
     await db.setVerified(widget.peerHaloId, next);
+    await appState.refreshContacts();
     if (mounted) setState(() => _verified = next);
   }
 
@@ -73,26 +75,37 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(4, 4, 8, 4),
-              child: Row(children: [
-                IconButton(
-                  icon: const Icon(Icons.chevron_left,
-                      color: HaloColors.text2, size: 26),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                Text('safety number',
-                    style: HaloType.serif(size: 22, color: HaloColors.text)),
-              ]),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.chevron_left,
+                      color: HaloColors.text2,
+                      size: 26,
+                    ),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  Text(
+                    'safety number',
+                    style: HaloType.serif(size: 22, color: HaloColors.text),
+                  ),
+                ],
+              ),
             ),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
                 children: [
-                  Text('with ${widget.peerName}',
-                      style: HaloType.sans(size: 14, color: HaloColors.text2)),
+                  Text(
+                    'with ${widget.peerName}',
+                    style: HaloType.sans(size: 14, color: HaloColors.text2),
+                  ),
                   const SizedBox(height: 24),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 24),
+                      horizontal: 20,
+                      vertical: 24,
+                    ),
                     decoration: BoxDecoration(
                       color: HaloColors.surface2,
                       borderRadius: BorderRadius.circular(16),
@@ -104,9 +117,14 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                       alignment: WrapAlignment.center,
                       children: [
                         for (final g in groups)
-                          Text(g,
-                              style: HaloType.mono(
-                                  size: 18, color: HaloColors.text, letter: 1.0)),
+                          Text(
+                            g,
+                            style: HaloType.mono(
+                              size: 18,
+                              color: HaloColors.text,
+                              letter: 1.0,
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -114,7 +132,10 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                   Text(
                     'if ${widget.peerName} sees the same number, your messages are private to just the two of you. comparing in person or over a call you trust is the surest way to be sure — but it is optional, never required to chat.',
                     style: HaloType.sans(
-                        size: 13, color: HaloColors.text2, height: 1.5),
+                      size: 13,
+                      color: HaloColors.text2,
+                      height: 1.5,
+                    ),
                   ),
                   const SizedBox(height: 28),
                   _VerifyButton(verified: _verified, onTap: _toggle),
@@ -148,26 +169,29 @@ class _VerifyButton extends StatelessWidget {
                 : HaloColors.surface2,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-                color: verified
-                    ? HaloColors.amber.withOpacity(0.5)
-                    : HaloColors.line,
-                width: 0.5),
+              color: verified
+                  ? HaloColors.amber.withOpacity(0.5)
+                  : HaloColors.line,
+              width: 0.5,
+            ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                  verified
-                      ? Icons.verified_user
-                      : Icons.verified_user_outlined,
-                  size: 18,
-                  color: verified ? HaloColors.amber : HaloColors.text2),
+                verified ? Icons.verified_user : Icons.verified_user_outlined,
+                size: 18,
+                color: verified ? HaloColors.amber : HaloColors.text2,
+              ),
               const SizedBox(width: 10),
-              Text(verified ? 'verified' : 'mark as verified',
-                  style: HaloType.sans(
-                      size: 14,
-                      weight: FontWeight.w500,
-                      color: verified ? HaloColors.amber : HaloColors.text)),
+              Text(
+                verified ? 'verified' : 'mark as verified',
+                style: HaloType.sans(
+                  size: 14,
+                  weight: FontWeight.w500,
+                  color: verified ? HaloColors.amber : HaloColors.text,
+                ),
+              ),
             ],
           ),
         ),

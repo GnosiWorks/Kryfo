@@ -12,7 +12,7 @@ import androidx.core.app.NotificationCompat
 
 class HaloListenerService : Service() {
     companion object {
-        const val CHANNEL_ID = "halo_listener"
+        const val CHANNEL_ID = "halo_listener_v2"
         const val NOTIFICATION_ID = 1
     }
 
@@ -30,12 +30,12 @@ class HaloListenerService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("halo")
-            .setContentText("you are anonymous")
+            .setContentTitle("halo is on")
+            .setContentText("your encrypted line stays open so messages arrive")
             .setSmallIcon(R.drawable.ic_halo_notification)
             .setColor(0xFFF59E0B.toInt())
             .setOngoing(true)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_MIN)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setContentIntent(pendingIntent)
             .setShowWhen(false)
@@ -50,10 +50,10 @@ class HaloListenerService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "halo listening",
-                NotificationManager.IMPORTANCE_LOW
+                "staying connected",
+                NotificationManager.IMPORTANCE_MIN
             ).apply {
-                description = "keeps halo running so encrypted messages can arrive"
+                description = "keeps halo connected so encrypted messages arrive while it is closed. turning this off stops delivery."
                 setShowBadge(false)
                 enableVibration(false)
                 setSound(null, null)

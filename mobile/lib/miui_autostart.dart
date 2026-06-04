@@ -42,7 +42,7 @@ Future<void> _showDialog(BuildContext context) {
       backgroundColor: HaloColors.surface2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: HaloColors.line2),
+        side: BorderSide(color: HaloColors.line2),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),

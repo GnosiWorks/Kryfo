@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../main.dart' show appState, engine;
 import '../lock_state.dart';
+import '../widgets/motion.dart' show TorStatus;
+import 'my_halo_screen.dart';
+import 'why_halo_screen.dart';
 import '../theme.dart';
 import 'modes_screen.dart';
 import 'blocked_screen.dart';
@@ -15,6 +18,31 @@ import 'panic_setup_screen.dart';
 import 'backup_screen.dart';
 import '../wipe.dart';
 import 'restore_screen.dart';
+
+Widget _postureLine(String label, bool on, String onText, String offText) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(
+      children: [
+        Icon(
+          on ? Icons.check_circle : Icons.radio_button_unchecked,
+          size: 16,
+          color: on ? HaloColors.green : HaloColors.text3,
+        ),
+        const SizedBox(width: 10),
+        Text(label, style: HaloType.sans(size: 13, color: HaloColors.text)),
+        const Spacer(),
+        Text(
+          on ? onText : offText,
+          style: HaloType.mono(
+            size: 10,
+            color: on ? HaloColors.green : HaloColors.text3,
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -71,7 +99,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           controller: confirmCtrl,
           autofocus: true,
           style: HaloType.mono(size: 14, color: HaloColors.text),
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             enabledBorder: UnderlineInputBorder(
               borderSide: BorderSide(color: HaloColors.line, width: 0.5),
             ),
@@ -138,6 +166,89 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   @override
+  Future<void> _editDisplayName() async {
+    final ctrl = TextEditingController(text: appState.displayName);
+    final name = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: HaloColors.surface2,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          18,
+          20,
+          20 + MediaQuery.of(ctx).viewInsets.bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'display name',
+              style: HaloType.serif(size: 18, color: HaloColors.text),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'a name you choose for yourself. it is not verified and not '
+              'sent anywhere yet — for now it only shows on this phone.',
+              style: HaloType.sans(
+                size: 12,
+                color: HaloColors.text2,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: ctrl,
+              autofocus: true,
+              maxLength: 32,
+              style: HaloType.serif(
+                size: 20,
+                italic: true,
+                color: HaloColors.text,
+              ),
+              cursorColor: HaloColors.amber,
+              decoration: InputDecoration(
+                hintText: 'your name',
+                counterText: '',
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: HaloColors.line, width: 0.5),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: HaloColors.amber, width: 0.8),
+                ),
+              ),
+              onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+                  child: Text(
+                    'save',
+                    style: HaloType.sans(
+                      size: 14,
+                      weight: FontWeight.w600,
+                      color: HaloColors.amber,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+    if (name == null) return;
+    await appState.setDisplayName(name);
+    if (mounted) setState(() {});
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: HaloColors.surface,
@@ -153,8 +264,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
+          ListenableBuilder(
+            listenable: Listenable.merge([appState, lockState]),
+            builder: (_, __) {
+              final tor = appState.torStatus == TorStatus.reachable;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 24),
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                decoration: BoxDecoration(
+                  color: HaloColors.surface2,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: HaloColors.line, width: 0.5),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'your protections',
+                      style: HaloType.mono(size: 11, color: HaloColors.amber),
+                    ),
+                    const SizedBox(height: 10),
+                    _postureLine('tor routing', tor, 'connected', 'connecting'),
+                    _postureLine(
+                      'screenshots',
+                      appState.blockScreenshots,
+                      'blocked',
+                      'allowed',
+                    ),
+                    _postureLine('app lock', lockState.enabled, 'on', 'off'),
+                  ],
+                ),
+              );
+            },
+          ),
           _Section('identity'),
           _IdentityCard(haloId: appState.myId, onion: appState.myOnion),
+          _Row(
+            accent: true,
+            label: 'my halo code',
+            value: 'show & share',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const MyHaloScreen()),
+            ),
+          ),
+          _Row(
+            label: 'display name',
+            value: appState.displayName.isEmpty
+                ? 'not set'
+                : appState.displayName,
+            onTap: _editDisplayName,
+          ),
           const SizedBox(height: 24),
 
           _Section('privacy'),
@@ -186,6 +346,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 24),
 
           _Section('security'),
+          _Row(
+            label: 'block screenshots',
+            value: appState.blockScreenshots ? 'on' : 'off',
+            onTap: () async {
+              await appState.setBlockScreenshots(!appState.blockScreenshots);
+              setState(() {});
+            },
+          ),
+          _Row(
+            label: 'light theme',
+            value: HaloColors.isLight ? 'on' : 'off',
+            onTap: () async {
+              await appState.setLight(!HaloColors.isLight);
+              setState(() {});
+            },
+          ),
           AnimatedBuilder(
             animation: lockState,
             builder: (_, __) => Column(
@@ -293,6 +469,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 24),
 
           _Section('about'),
+          _Row(
+            label: 'why halo',
+            value: 'how it protects you',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const WhyHaloScreen()),
+            ),
+          ),
           _Row(label: 'version', value: '0.1 · alpha'),
           _Row(label: 'open source', value: 'github.com/halo'),
           const SizedBox(height: 24),
@@ -310,11 +494,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: HaloType.sans(size: 14, color: HaloColors.rose),
                     ),
                   ),
-                  const Icon(
-                    Icons.chevron_right,
-                    color: HaloColors.rose,
-                    size: 18,
-                  ),
+                  Icon(Icons.chevron_right, color: HaloColors.rose, size: 18),
                 ],
               ),
             ),
@@ -345,10 +525,54 @@ class _Row extends StatelessWidget {
   final String label;
   final String? value;
   final VoidCallback? onTap;
-  const _Row({required this.label, this.value, this.onTap});
+  final bool accent;
+  const _Row({
+    required this.label,
+    this.value,
+    this.onTap,
+    this.accent = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    if (accent) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 14),
+          decoration: BoxDecoration(
+            color: HaloColors.amber.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: HaloColors.amber.withValues(alpha: 0.45)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.qr_code_2, color: HaloColors.amber, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: HaloType.sans(
+                    size: 14,
+                    weight: FontWeight.w600,
+                    color: HaloColors.amber,
+                  ),
+                ),
+              ),
+              if (value != null)
+                Text(
+                  value!,
+                  style: HaloType.sans(size: 13, color: HaloColors.amber),
+                ),
+              const SizedBox(width: 8),
+              Icon(Icons.chevron_right, color: HaloColors.amber, size: 18),
+            ],
+          ),
+        ),
+      );
+    }
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -423,7 +647,7 @@ class _IdentityCard extends StatelessWidget {
           ),
           if (onion.isNotEmpty) ...[
             const SizedBox(height: 12),
-            const Divider(color: HaloColors.line, height: 1),
+            Divider(color: HaloColors.line, height: 1),
             const SizedBox(height: 12),
             GestureDetector(
               onTap: () => _copy(context, onion, 'onion address'),
