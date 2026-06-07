@@ -50,12 +50,12 @@ const _dark = _Palette(
 );
 
 const _light = _Palette(
-  ink: Color(0xFFFCFAF5),
-  surface: Color(0xFFF6F1E9),
-  surface2: Color(0xFFEEE8DC),
-  surface3: Color(0xFFE5DDCD),
-  line: Color(0xFFDED5C4),
-  line2: Color(0xFFCEC3AF),
+  ink: Color(0xFFF2ECDF),
+  surface: Color(0xFFEBE4D5),
+  surface2: Color(0xFFE2DAC8),
+  surface3: Color(0xFFD8CEB9),
+  line: Color(0xFFCBBFA8),
+  line2: Color(0xFFBAAC90),
   text: Color(0xFF1C1813),
   text2: Color(0xFF6E655B),
   text3: Color(0xFF9C9388),

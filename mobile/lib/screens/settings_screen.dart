@@ -309,6 +309,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           _Row(
+            icon: Icons.badge_outlined,
             label: 'display name',
             value: appState.displayName.isEmpty
                 ? 'not set'
@@ -319,6 +320,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           _Section('privacy'),
           _Row(
+            icon: Icons.shield_outlined,
             label: 'speed & privacy',
             value: appState.sendMode == 'fast'
                 ? 'fast · direct'
@@ -331,6 +333,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           _Row(
+            icon: Icons.notifications_none,
             label: 'notifications',
             value: 'tor only',
             onTap: () => Navigator.of(context).push(
@@ -338,6 +341,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           _Row(
+            icon: Icons.block,
             label: 'blocked',
             onTap: () => Navigator.of(
               context,
@@ -347,6 +351,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           _Section('security'),
           _Row(
+            icon: Icons.visibility_off_outlined,
             label: 'block screenshots',
             value: appState.blockScreenshots ? 'on' : 'off',
             onTap: () async {
@@ -355,6 +360,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           _Row(
+            icon: Icons.light_mode_outlined,
             label: 'light theme',
             value: HaloColors.isLight ? 'on' : 'off',
             onTap: () async {
@@ -367,6 +373,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             builder: (_, __) => Column(
               children: [
                 _Row(
+                  icon: Icons.lock_outline,
                   label: 'app lock',
                   value: lockState.enabled ? 'on' : 'off',
                   onTap: () async {
@@ -384,12 +391,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 if (lockState.enabled && lockState.bioSupported)
                   _Row(
+                    icon: Icons.fingerprint,
                     label: 'unlock with fingerprint',
                     value: lockState.biometric ? 'on' : 'off',
                     onTap: () => lockState.setBiometric(!lockState.biometric),
                   ),
                 if (lockState.enabled)
                   _Row(
+                    icon: Icons.warning_amber_rounded,
                     label: 'panic pin',
                     value: lockState.panicEnabled ? 'set' : 'off',
                     onTap: () async {
@@ -453,6 +462,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           _Section('backup'),
           _Row(
+            icon: Icons.save_alt,
             label: 'back up identity',
             value: 'encrypted file',
             onTap: () => Navigator.of(
@@ -460,6 +470,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ).push(MaterialPageRoute(builder: (_) => const BackupScreen())),
           ),
           _Row(
+            icon: Icons.restore,
             label: 'restore from backup',
             value: 'replace current',
             onTap: () => Navigator.of(
@@ -470,6 +481,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           _Section('about'),
           _Row(
+            icon: Icons.help_outline,
             label: 'why halo',
             value: 'how it protects you',
             onTap: () => Navigator.push(
@@ -477,15 +489,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
               MaterialPageRoute(builder: (_) => const WhyHaloScreen()),
             ),
           ),
-          _Row(label: 'version', value: '0.1 · alpha'),
-          _Row(label: 'open source', value: 'github.com/halo'),
+          _Row(
+            icon: Icons.info_outline,
+            label: 'version',
+            value: '0.1 · alpha',
+          ),
+          _Row(
+            icon: Icons.code,
+            label: 'open source',
+            value: 'github.com/halo',
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 10, 12, 0),
+            child: Text(
+              'not independently audited. pre-alpha — good for testing, '
+              'not yet for high-stakes use.',
+              style: HaloType.sans(
+                size: 12,
+                color: HaloColors.text3,
+                height: 1.4,
+              ),
+            ),
+          ),
           const SizedBox(height: 24),
 
           _Section('danger zone'),
           InkWell(
             onTap: _confirmWipe,
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+              padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 4),
               child: Row(
                 children: [
                   Expanded(
@@ -526,11 +558,13 @@ class _Row extends StatelessWidget {
   final String? value;
   final VoidCallback? onTap;
   final bool accent;
+  final IconData? icon;
   const _Row({
     required this.label,
     this.value,
     this.onTap,
     this.accent = false,
+    this.icon,
   });
 
   @override
@@ -575,10 +609,20 @@ class _Row extends StatelessWidget {
     }
     return InkWell(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
+        decoration: BoxDecoration(
+          color: HaloColors.surface2,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: HaloColors.line, width: 0.5),
+        ),
         child: Row(
           children: [
+            if (icon != null) ...[
+              Icon(icon, size: 18, color: HaloColors.amber),
+              const SizedBox(width: 14),
+            ],
             Expanded(
               child: Text(
                 label,

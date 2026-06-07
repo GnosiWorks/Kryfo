@@ -194,6 +194,10 @@ class HaloEngine {
   Future<String> nostrSend(String peerXPubHex, String b64Cipher) =>
       _sendOnIsolate((nostr: true, a: peerXPubHex, b: b64Cipher));
 
+  void nostrSubscribeBg(String peerXPubHex) {
+    _subscribeOnIsolate(peerXPubHex).ignore();
+  }
+
   String nostrSubscribe(String peerXPubHex) {
     final ptr = peerXPubHex.toNativeUtf8();
     try {
@@ -254,6 +258,21 @@ class HaloEngine {
 // run a blocking native send on a throwaway background isolate so the ui
 // thread never stalls on a tor dial. opens its own handle to libhalo —
 // same process image, so it shares the running tor — and frees its strings.
+Future<String> _nostrInitOnIsolate(String relaysCSV) {
+  return Isolate.run(() {
+    final lib = Platform.isAndroid
+        ? DynamicLibrary.open('libhalo.so')
+        : DynamicLibrary.process();
+    final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrInit');
+    final p = relaysCSV.toNativeUtf8();
+    try {
+      return fn(p).toDartString();
+    } finally {
+      malloc.free(p);
+    }
+  });
+}
+
 Future<String> _startListenerOnIsolate(String dataDir) {
   return Isolate.run(() {
     final lib = Platform.isAndroid
@@ -288,6 +307,21 @@ Future<String> _sendOnIsolate(({bool nostr, String a, String b}) args) {
     } finally {
       malloc.free(p1);
       malloc.free(p2);
+    }
+  });
+}
+
+Future<String> _subscribeOnIsolate(String xPub) {
+  return Isolate.run(() {
+    final lib = Platform.isAndroid
+        ? DynamicLibrary.open('libhalo.so')
+        : DynamicLibrary.process();
+    final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrSubscribe');
+    final p = xPub.toNativeUtf8();
+    try {
+      return fn(p).toDartString();
+    } finally {
+      malloc.free(p);
     }
   });
 }
@@ -918,6 +952,28 @@ class HaloDb {
     await db.delete('messages', where: 'msg_uid = ?', whereArgs: [msgUid]);
   }
 
+  Future<void> purgeExpiredBurns() async {
+    final db = await open();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final rows = await db.query(
+      'messages',
+      columns: ['msg_uid'],
+      where: 'burn_at IS NOT NULL AND burn_at < ?',
+      whereArgs: [now],
+    );
+    for (final r in rows) {
+      final uid = r['msg_uid'] as String?;
+      if (uid != null) {
+        await db.delete('reactions', where: 'msg_uid = ?', whereArgs: [uid]);
+      }
+    }
+    await db.delete(
+      'messages',
+      where: 'burn_at IS NOT NULL AND burn_at < ?',
+      whereArgs: [now],
+    );
+  }
+
   Future<void> bumpUnread(String peerId) async {
     final db = await open();
     await db.rawUpdate(
@@ -974,6 +1030,16 @@ class HaloDb {
     await db.update(
       'messages',
       {'plaintext': newText, 'edited': 1},
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+    );
+  }
+
+  Future<void> setMsgBurnAt(String msgUid, int burnAt) async {
+    final db = await open();
+    await db.update(
+      'messages',
+      {'burn_at': burnAt},
       where: 'msg_uid = ?',
       whereArgs: [msgUid],
     );
@@ -1242,9 +1308,10 @@ Future<void> openChatForHalo(String? haloId) async {
   final matches = rows.where((r) => r['halo_id'] == haloId).toList();
   if (matches.isEmpty) return;
   final row = matches.first;
+  if (haloId == currentChatPeer) return;
   nav.push(
-    MaterialPageRoute(
-      builder: (_) => ChatScreen(
+    haloRoute(
+      ChatScreen(
         peerHaloId: haloId,
         peerOnion: row['onion'] as String,
         peerXPub: row['xpub'] as String,
@@ -1292,6 +1359,20 @@ class AppState extends ChangeNotifier {
   // every message routes over full tor until fast/hop modes wire up (phase 2).
   String _sendMode = 'private';
   String get sendMode => _sendMode;
+
+  Future<void> saveGhostPref(bool on, int secs) async {
+    const s = FlutterSecureStorage();
+    await s.write(key: 'ghost_on', value: on ? '1' : '0');
+    await s.write(key: 'ghost_secs', value: '$secs');
+  }
+
+  Future<(bool, int)> loadGhostPref() async {
+    const s = FlutterSecureStorage();
+    final on = (await s.read(key: 'ghost_on')) == '1';
+    final secs = int.tryParse(await s.read(key: 'ghost_secs') ?? '') ?? 300;
+    return (on, secs);
+  }
+
   Future<void> loadSendMode() async {
     _sendMode =
         await const FlutterSecureStorage().read(key: 'send_mode') ?? 'private';
@@ -1571,7 +1652,7 @@ class AppState extends ChangeNotifier {
   List<ContactPreview> contacts = [];
   final Map<String, String> _xPubToHaloId = {};
 
-  // sprint 6.13: when an unknown sender's PreKey message arrives via
+  // when an unknown sender's PreKey message arrives via
   // direct onion, decrypt under a placeholder peerId, then verify the
   // sender's claimed identity (via envelope) and move the libsignal
   // session to the real HaloID.
@@ -1610,7 +1691,7 @@ class AppState extends ChangeNotifier {
       await db.upsertContact(h, env.senderOnion ?? '', env.senderXPub ?? '');
       if (env.senderXPub != null && env.senderXPub!.isNotEmpty) {
         _xPubToHaloId[env.senderXPub!] = h;
-        engine.nostrSubscribe(env.senderXPub!);
+        engine.nostrSubscribeBg(env.senderXPub!);
       }
       if (env.endpoint != null) {
         await savePeerEndpoint(h, env.endpoint!);
@@ -1678,9 +1759,11 @@ class AppState extends ChangeNotifier {
     onboardingComplete =
         (await const FlutterSecureStorage().read(key: 'onboarding_done')) ==
         'true';
+    // let the onion linger a beat before the home appears
+    await Future.delayed(const Duration(seconds: 2));
     ready = true;
     notifyListeners();
-    // sprint 7.5: auto-start tor; nostr subs retry every 10s until ready
+    // auto-start tor; nostr subs retry every 10s until ready
     final docsDir = await getApplicationDocumentsDirectory();
     _startListenerOnIsolate(docsDir.path).then((addr) {
       if (addr.isNotEmpty && !addr.startsWith('error')) {
@@ -1700,7 +1783,7 @@ class AppState extends ChangeNotifier {
       }
       if (st == TorStatus.reachable) t.cancel();
     });
-    engine.nostrInit('wss://relay.damus.io,wss://nos.lol');
+    _nostrInitOnIsolate('wss://relay.damus.io,wss://nos.lol');
     await loadDisplayName();
     await loadScreenshotPref();
     await initNotifications(onTap: openChatForHalo);
@@ -1728,7 +1811,7 @@ class AppState extends ChangeNotifier {
         }
         fresh[xPub] = haloId;
         _xPubToHaloId[xPub] = haloId;
-        engine.nostrSubscribe(xPub);
+        engine.nostrSubscribeBg(xPub);
         knownIds.add(haloId);
       });
       for (final c in contacts) {
@@ -1737,7 +1820,7 @@ class AppState extends ChangeNotifier {
         final xPub = await signalSession.peerXPubHex(c.haloId);
         if (xPub != null) {
           _xPubToHaloId[xPub] = c.haloId;
-          engine.nostrSubscribe(xPub);
+          engine.nostrSubscribeBg(xPub);
           fresh[xPub] = c.haloId;
           knownIds.add(c.haloId);
           changed = true;
@@ -1745,7 +1828,7 @@ class AppState extends ChangeNotifier {
       }
       if (changed) await _saveXPubCache(fresh);
     });
-    // sprint 11d: open ntfy websocket when push mode is ntfy. on incoming
+    // open ntfy websocket when push mode is ntfy. on incoming
     // ping, the existing 1s drain loop catches up — we just log for now.
     final mode = await loadPushMode();
     if (mode == PushMode.ntfy) {
@@ -1756,7 +1839,7 @@ class AppState extends ChangeNotifier {
       _ntfyListener!.start();
     }
 
-    // sprint 6.13: continuous drain of direct-onion inbox. handles back-
+    // continuous drain of direct-onion inbox. handles back-
     // pair from strangers + falls back to trial-decrypt against known
     // contacts for in-session direct-onion messages.
     Timer.periodic(const Duration(seconds: 1), (_) async {
@@ -2228,7 +2311,7 @@ class AppState extends ChangeNotifier {
     final xPub = await signalSession.peerXPubHex(haloId);
     if (xPub != null) {
       _xPubToHaloId[xPub] = haloId;
-      engine.nostrSubscribe(xPub);
+      engine.nostrSubscribeBg(xPub);
     }
   }
 
@@ -2303,7 +2386,7 @@ class _RootShellState extends State<RootShell> {
   }
 
   void _open(Widget w) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => w));
+    Navigator.push(context, haloRoute(w));
   }
 
   @override
@@ -2342,8 +2425,8 @@ class _RootShellState extends State<RootShell> {
         final row = matches.first;
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => ChatScreen(
+          haloRoute(
+            ChatScreen(
               peerHaloId: id,
               peerOnion: row['onion'] as String,
               peerXPub: row['xpub'] as String,
@@ -2354,10 +2437,7 @@ class _RootShellState extends State<RootShell> {
       },
       onOpenGroup: (groupId) async {
         if (!mounted) return;
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => GroupChatScreen(groupId: groupId)),
-        );
+        Navigator.push(context, haloRoute(GroupChatScreen(groupId: groupId)));
       },
     );
   }

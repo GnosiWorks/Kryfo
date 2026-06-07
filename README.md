@@ -10,6 +10,8 @@ anonymous bip-39 identities · libsignal double ratchet · tor onion routing · 
 
 pre-alpha. solo dev, open source, taking the time to do it right. usable for technical testers; not yet ready for friends-and-family.
 
+the cryptography uses standard building blocks (libsignal, tor, sqlcipher) but this implementation has not been independently audited. trust it for trying the ideas — not for anything where a leak or compromise could put someone at real risk.
+
 ## what it does today
 
 - 1:1 encrypted chat over tor onion v3 (direct p2p) or nostr relays (store-and-forward)

@@ -32,3 +32,11 @@ Thumbs.db
 .env
 *.key
 *.pem
+
+# local-only — keep out of the repo (mockups, backups, logs, patches)
+CONTEXT*.md
+*.bak
+08_complete_spec.html
+Halo.html
+*.log
+patch_*.py

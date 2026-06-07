@@ -2,6 +2,7 @@
 // matches 08_complete_spec.html "the everyday" chat tile.
 
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -171,12 +172,16 @@ String _fmtBurn(int burnAtMs) {
   return '${s}s';
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+// last-used ghost settings, remembered for the session
+int _lastBurnSeconds = 300;
+bool _lastGhost = false;
+
+class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   final _msgCtrl = TextEditingController();
   int _unreadAfterMs = 0;
   int _firstUnreadIndex = -1;
-  bool _ghost = false; // per-chat session toggle.
-  int _burnSeconds = 300; // default 5m. long-press the fire button to change.
+  bool _ghost = _lastGhost; // restored from last use this session.
+  int _burnSeconds = _lastBurnSeconds; // restored from last use this session.
   Timer? _burnTick;
   final _scrollCtrl = ScrollController();
   final Map<int, GlobalKey> _dayKeys = {};
@@ -209,6 +214,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _searching = false;
   final _searchCtrl = TextEditingController();
   String _query = '';
+  String? _liftedUid;
   List<int> _matches = [];
   int _matchPos = 0;
   final Map<int, GlobalKey> _matchKeys = {};
@@ -221,11 +227,23 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _showScrollDown = false;
   int _seenCount = 0;
   String? _rippleUid;
+  _Msg? _replyFlash;
   String? _note;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    appState.loadGhostPref().then((p) {
+      if (mounted) {
+        setState(() {
+          _ghost = p.$1;
+          _burnSeconds = p.$2;
+          _lastGhost = p.$1;
+          _lastBurnSeconds = p.$2;
+        });
+      }
+    });
     appState.addListener(_onAppStateChanged);
     appState.loadSendMode();
     currentChatPeer = widget.peerHaloId;
@@ -274,15 +292,23 @@ class _ChatScreenState extends State<ChatScreen> {
     _burnTick = Timer.periodic(const Duration(milliseconds: 250), (_) {
       if (!mounted) return;
       final now = DateTime.now().millisecondsSinceEpoch;
-      final before = _messages.length;
-      _messages.removeWhere((m) => m.burnAt != null && m.burnAt! + 500 <= now);
-      final removed = before - _messages.length;
+      final expired = _messages
+          .where((m) => m.burnAt != null && m.burnAt! <= now && !m.removing)
+          .toList();
+      for (final m in expired) {
+        m.removing = true;
+        Future.delayed(const Duration(milliseconds: 320), () {
+          if (mounted) setState(() => _messages.remove(m));
+          if (m.msgUid != null) db.deleteMessage(m.msgUid!);
+        });
+      }
+      if (expired.isNotEmpty) HapticFeedback.lightImpact();
       final stillBurning = _messages.where((m) => m.burnAt != null).toList();
-      if (removed > 0) HapticFeedback.lightImpact();
-      if (removed > 0 || stillBurning.isNotEmpty) {
+      if (expired.isNotEmpty || stillBurning.isNotEmpty) {
         setState(() {});
       }
     });
+
     _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       _checkInbox();
@@ -430,17 +456,22 @@ class _ChatScreenState extends State<ChatScreen> {
     final bubbleSize = box.size;
     const pickerH = 54.0;
     // prefer above the bubble. fall back to below if too close to the top.
-    double top = offset.dy - pickerH - 10;
-    if (top < MediaQuery.of(context).padding.top + 8) {
-      top = offset.dy + bubbleSize.height + 10;
-    }
+    final safeTop = MediaQuery.of(context).padding.top + 8;
+    final aboveTop = offset.dy - pickerH - 14;
+    final reactAbove = aboveTop >= safeTop;
+    final reactTop = reactAbove ? aboveTop : offset.dy + bubbleSize.height + 10;
+    final menuTop = reactAbove
+        ? offset.dy + bubbleSize.height + 10
+        : reactTop + pickerH + 8;
     // pin the bar to the message's side so reply + edit never
     // run off the right edge. 12px margin from screen edge.
     final alignRight = target.direction == 'out';
 
+    if (mounted) setState(() => _liftedUid = target.msgUid);
     late OverlayEntry entry;
     void dismiss() {
       if (entry.mounted) entry.remove();
+      if (mounted) setState(() => _liftedUid = null);
     }
 
     entry = OverlayEntry(
@@ -451,100 +482,99 @@ class _ChatScreenState extends State<ChatScreen> {
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: dismiss,
-                child: Container(color: Colors.black.withOpacity(0.32)),
+                child: const _MenuBackdrop(),
               ),
             ),
             Positioned(
-              top: top,
+              left: offset.dx,
+              top: offset.dy,
+              width: bubbleSize.width,
+              child: IgnorePointer(
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOut,
+                  child: _Bubble(msg: target),
+                  builder: (_, t, child) =>
+                      Transform.scale(scale: 1.0 + 0.04 * t, child: child),
+                ),
+              ),
+            ),
+
+            Positioned(
+              top: reactTop,
               left: alignRight ? null : 12,
               right: alignRight ? 12 : null,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: target.direction == 'out'
-                    ? CrossAxisAlignment.end
-                    : CrossAxisAlignment.start,
-                children: [
-                  _EmojiPickerBubble(
-                    emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
-                    selected: target.reactions[''],
-                    onPick: (e) {
-                      dismiss();
-                      final added = target.reactions[''] != e;
-                      _toggleReaction(target, e);
-                      if (added) _flashReaction(target);
-                    },
-                    onReply: () {
-                      dismiss();
-                      setState(() => _replyTo = target);
-                    },
-                  ),
-                  const SizedBox(height: 6),
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(999),
-                      onTap: () {
-                        dismiss();
-                        HapticFeedback.selectionClick();
-                        _forwardMessage(target);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: HaloColors.surface3,
-                          border: Border.all(
-                            color: HaloColors.line,
-                            width: 0.5,
+              child: _MenuPop(
+                side: alignRight,
+                child: _EmojiPickerBubble(
+                  emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
+                  selected: target.reactions[''],
+                  onPick: (e) {
+                    dismiss();
+                    final added = target.reactions[''] != e;
+                    _toggleReaction(target, e);
+                    if (added) _flashReaction(target);
+                  },
+                  onReply: () {
+                    dismiss();
+                    setState(() {
+                      _replyTo = target;
+                      _replyFlash = target;
+                    });
+                    Future.delayed(const Duration(milliseconds: 700), () {
+                      if (mounted && identical(_replyFlash, target)) {
+                        setState(() => _replyFlash = null);
+                      }
+                    });
+                  },
+                ),
+              ),
+            ),
+            Positioned(
+              top: menuTop,
+              left: alignRight ? null : 12,
+              right: alignRight ? 12 : null,
+              child: _MenuPop(
+                side: alignRight,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: target.direction == 'out'
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start,
+                  children: [
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(999),
+                        onTap: () {
+                          dismiss();
+                          HapticFeedback.selectionClick();
+                          _forwardMessage(target);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
                           ),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          'forward',
-                          style: HaloType.sans(
-                            size: 13,
-                            color: HaloColors.text,
+                          decoration: BoxDecoration(
+                            color: HaloColors.surface3,
+                            border: Border.all(
+                              color: HaloColors.line,
+                              width: 0.5,
+                            ),
+                            borderRadius: BorderRadius.circular(999),
                           ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(999),
-                      onTap: () {
-                        dismiss();
-                        HapticFeedback.selectionClick();
-                        _togglePin(target);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: HaloColors.surface3,
-                          border: Border.all(
-                            color: HaloColors.line,
-                            width: 0.5,
-                          ),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          target.pinned ? 'unpin' : 'pin',
-                          style: HaloType.sans(
-                            size: 13,
-                            color: HaloColors.text,
+                          child: Text(
+                            'forward',
+                            style: HaloType.sans(
+                              size: 13,
+                              color: HaloColors.text,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  if (target.direction == 'out') ...[
                     const SizedBox(height: 6),
                     Material(
                       color: Colors.transparent,
@@ -553,7 +583,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         onTap: () {
                           dismiss();
                           HapticFeedback.selectionClick();
-                          _unsendMessage(target);
+                          _togglePin(target);
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
@@ -568,81 +598,116 @@ class _ChatScreenState extends State<ChatScreen> {
                             ),
                             borderRadius: BorderRadius.circular(999),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.delete_outline,
-                                size: 14,
-                                color: HaloColors.rose,
+                          child: Text(
+                            target.pinned ? 'unpin' : 'pin',
+                            style: HaloType.sans(
+                              size: 13,
+                              color: HaloColors.text,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (target.direction == 'out') ...[
+                      const SizedBox(height: 6),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(999),
+                          onTap: () {
+                            dismiss();
+                            HapticFeedback.selectionClick();
+                            _unsendMessage(target);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: HaloColors.surface3,
+                              border: Border.all(
+                                color: HaloColors.line,
+                                width: 0.5,
                               ),
-                              const SizedBox(width: 6),
-                              Text(
-                                'unsend',
-                                style: HaloType.sans(
-                                  size: 12,
-                                  weight: FontWeight.w500,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.delete_outline,
+                                  size: 14,
                                   color: HaloColors.rose,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 6),
+                                Text(
+                                  'unsend',
+                                  style: HaloType.sans(
+                                    size: 12,
+                                    weight: FontWeight.w500,
+                                    color: HaloColors.rose,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(999),
-                        onTap: () {
-                          dismiss();
-                          _editMessage(target);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: HaloColors.surface3,
-                            border: Border.all(
-                              color: HaloColors.line,
-                              width: 0.5,
+                      const SizedBox(height: 6),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(999),
+                          onTap: () {
+                            dismiss();
+                            _editMessage(target);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
                             ),
-                            borderRadius: BorderRadius.circular(999),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.5),
-                                blurRadius: 20,
-                                offset: const Offset(0, 6),
+                            decoration: BoxDecoration(
+                              color: HaloColors.surface3,
+                              border: Border.all(
+                                color: HaloColors.line,
+                                width: 0.5,
                               ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.edit_outlined,
-                                size: 14,
-                                color: HaloColors.amber,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                'edit',
-                                style: HaloType.sans(
-                                  size: 12,
-                                  weight: FontWeight.w500,
+                              borderRadius: BorderRadius.circular(999),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.5),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.edit_outlined,
+                                  size: 14,
                                   color: HaloColors.amber,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 6),
+                                Text(
+                                  'edit',
+                                  style: HaloType.sans(
+                                    size: 12,
+                                    weight: FontWeight.w500,
+                                    color: HaloColors.amber,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ],
@@ -816,14 +881,17 @@ class _ChatScreenState extends State<ChatScreen> {
     if (idx < 0 || !_scrollCtrl.hasClients) return;
     setState(() => _jumpIndex = idx);
     final max = _scrollCtrl.position.maxScrollExtent;
-    final approx = (idx / _messages.length) * max;
+    final approx =
+        ((idx / _messages.length) * max -
+                _scrollCtrl.position.viewportDimension * 0.3)
+            .clamp(0.0, max);
     _scrollCtrl.jumpTo(approx.clamp(0.0, max));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ctx = _jumpKey.currentContext;
       if (ctx != null) {
         Scrollable.ensureVisible(
           ctx,
-          duration: const Duration(milliseconds: 280),
+          duration: Duration.zero,
           curve: Curves.easeOut,
           alignment: 0.3,
         );
@@ -1007,6 +1075,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _loadMessages() async {
+    await db.purgeExpiredBurns();
     db.isBackPaired(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _backPaired = v);
     });
@@ -1018,7 +1087,6 @@ class _ChatScreenState extends State<ChatScreen> {
     });
     final rows = await db.messagesFor(widget.peerHaloId);
     if (!mounted) return;
-    _loaded = true;
     // collect msg_uids first, batch-load reactions, then setState.
     final loaded = <_Msg>[];
     final uids = <String>[];
@@ -1058,6 +1126,7 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     }
     setState(() {
+      _loaded = true;
       _messages
         ..clear()
         ..addAll(loaded);
@@ -1148,7 +1217,7 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       return;
     }
-    // sprint 7.5: fire-and-forget. optimistic ✓ now; failure marks tap-to-retry
+    // fire-and-forget. optimistic ✓ now; failure marks tap-to-retry
     // stays in 'sending' until the transport replies below.
     // before the peer back-pairs with us, force direct-onion so their
     // drain triggers the back-pair flow. nostr would dead-end because
@@ -1169,6 +1238,11 @@ class _ChatScreenState extends State<ChatScreen> {
       return tor ?? 'error: no transport';
     });
     sendFuture.then((result) async {
+      if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
+        final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
+        await db.setMsgBurnAt(msg.msgUid!, ba);
+        msg.burnAt = ba;
+      }
       if (!mounted) return;
       if (result == 'ok') {
         setState(() {
@@ -1183,7 +1257,6 @@ class _ChatScreenState extends State<ChatScreen> {
             Future(() => engine.ntfyPing(endpoint));
           }
         });
-        await db.saveMessage(widget.peerHaloId, 'out', msg.text);
       } else {
         setState(() {
           msg.sending = false;
@@ -1246,6 +1319,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     setState(() {
                       _burnSeconds = e.key;
                       _ghost = true;
+                      _lastBurnSeconds = e.key;
+                      _lastGhost = true;
+                      appState.saveGhostPref(true, e.key);
                     });
                     Navigator.of(ctx).pop();
                   },
@@ -1345,6 +1421,11 @@ class _ChatScreenState extends State<ChatScreen> {
       return tor ?? 'error: no transport';
     });
     sendFuture.then((result) async {
+      if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
+        final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
+        await db.setMsgBurnAt(msg.msgUid!, ba);
+        msg.burnAt = ba;
+      }
       if (!mounted) return;
       if (result == 'ok') {
         setState(() {
@@ -1354,13 +1435,6 @@ class _ChatScreenState extends State<ChatScreen> {
                 DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
           }
         });
-        await db.saveMessage(
-          widget.peerHaloId,
-          'out',
-          '',
-          msgUid: msgUid,
-          mediaPath: path,
-        );
       } else {
         setState(() {
           msg.sending = false;
@@ -1454,6 +1528,9 @@ class _ChatScreenState extends State<ChatScreen> {
       msgUid: msgUid,
       mediaPath: mediaPath,
       burnSecs: _ghost ? _burnSeconds : null,
+      burnAt: _ghost
+          ? DateTime.now().millisecondsSinceEpoch + _burnSeconds * 1000
+          : null,
     );
     setState(() {
       _messages.add(msg);
@@ -1461,6 +1538,14 @@ class _ChatScreenState extends State<ChatScreen> {
     });
     _scrollToEnd();
     HapticFeedback.lightImpact();
+    await db.saveMessage(
+      widget.peerHaloId,
+      'out',
+      caption,
+      msgUid: msgUid,
+      mediaPath: mediaPath,
+      burnAt: msg.burnAt,
+    );
     final String cipher;
     try {
       final wrapped = await wrapMessage(
@@ -1495,6 +1580,11 @@ class _ChatScreenState extends State<ChatScreen> {
       return tor ?? 'error: no transport';
     });
     sendFuture.then((result) async {
+      if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
+        final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
+        await db.setMsgBurnAt(msg.msgUid!, ba);
+        msg.burnAt = ba;
+      }
       if (!mounted) return;
       if (result == 'ok') {
         setState(() {
@@ -1504,14 +1594,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
           }
         });
-        await db.saveMessage(
-          widget.peerHaloId,
-          'out',
-          caption,
-          msgUid: msgUid,
-          mediaPath: mediaPath,
-          burnAt: msg.burnAt,
-        );
+        if (msg.burnAt != null) {
+          await db.setMsgBurnAt(msgUid, msg.burnAt!);
+        }
       } else {
         setState(() {
           msg.sending = false;
@@ -1535,6 +1620,9 @@ class _ChatScreenState extends State<ChatScreen> {
       msgUid: msgUid,
       replyTo: replyToUid,
       burnSecs: _ghost ? _burnSeconds : null,
+      burnAt: _ghost
+          ? DateTime.now().millisecondsSinceEpoch + _burnSeconds * 1000
+          : null,
     );
     setState(() {
       _messages.add(msg);
@@ -1545,6 +1633,14 @@ class _ChatScreenState extends State<ChatScreen> {
     _msgCtrl.clear();
     _scrollToEnd();
     HapticFeedback.lightImpact();
+    await db.saveMessage(
+      widget.peerHaloId,
+      'out',
+      text,
+      burnAt: msg.burnAt,
+      msgUid: msgUid,
+      replyTo: replyToUid,
+    );
     final String cipher;
     try {
       final wrapped = await wrapMessage(
@@ -1570,7 +1666,7 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       return;
     }
-    // sprint 7.5: fire-and-forget. optimistic ✓ now; failure marks tap-to-retry
+    // fire-and-forget. optimistic ✓ now; failure marks tap-to-retry
     setState(() {
       _sending = false;
       _status = '';
@@ -1594,6 +1690,11 @@ class _ChatScreenState extends State<ChatScreen> {
       return tor ?? 'error: no transport';
     });
     sendFuture.then((result) async {
+      if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
+        final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
+        await db.setMsgBurnAt(msg.msgUid!, ba);
+        msg.burnAt = ba;
+      }
       if (!mounted) return;
       if (result == 'ok') {
         setState(() {
@@ -1603,25 +1704,34 @@ class _ChatScreenState extends State<ChatScreen> {
                 DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
           }
         });
+        if (msg.burnAt != null) {
+          await db.setMsgBurnAt(msgUid, msg.burnAt!);
+        }
         loadPeerEndpoint(widget.peerHaloId).then((endpoint) {
           if (endpoint != null && endpoint.isNotEmpty) {
             Future(() => engine.ntfyPing(endpoint));
           }
         });
-        await db.saveMessage(
-          widget.peerHaloId,
-          'out',
-          text,
-          burnAt: msg.burnAt,
-          msgUid: msgUid,
-          replyTo: replyToUid,
-        );
       } else {
         setState(() {
           msg.sending = false;
           msg.failed = true;
           _status = result;
         });
+      }
+    });
+  }
+
+  @override
+  void didChangeMetrics() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollCtrl.hasClients) return;
+      if (MediaQuery.of(context).viewInsets.bottom > 0) {
+        _scrollCtrl.animateTo(
+          _scrollCtrl.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+        );
       }
     });
   }
@@ -1648,6 +1758,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _stickyLabel.dispose();
     _stickyShown.dispose();
     _scrollCtrl.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -1871,20 +1982,6 @@ class _ChatScreenState extends State<ChatScreen> {
     } else if (action == 'pin') {
       await _toggleContactPin();
     }
-  }
-
-  Future<void> _openLetter() async {
-    final text = await Navigator.of(context).push<String>(
-      MaterialPageRoute(
-        builder: (_) => _LetterScreen(
-          peerName: _nickname ?? widget.peerHaloId,
-          initial: _msgCtrl.text,
-        ),
-      ),
-    );
-    if (text == null || text.trim().isEmpty) return;
-    _msgCtrl.text = text.trim();
-    await _send();
   }
 
   Future<void> _toggleContactPin() async {
@@ -2546,6 +2643,12 @@ class _ChatScreenState extends State<ChatScreen> {
                     pinnedCount: _messages.where((m) => m.pinned).length,
                     onPinned: _showPinnedSheet,
                   ),
+            if (_messages.any((m) => m.pinned))
+              _PinnedBar(
+                message: _messages.lastWhere((m) => m.pinned),
+                onTap: () =>
+                    _scrollToMessage(_messages.lastWhere((m) => m.pinned)),
+              ),
             Expanded(
               child: Stack(
                 key: _listKey,
@@ -2591,7 +2694,22 @@ class _ChatScreenState extends State<ChatScreen> {
                             final showDate =
                                 i == 0 ||
                                 !_sameDay(_messages[i - 1].when, m.when);
+                            final prevMsg = i > 0 ? _messages[i - 1] : null;
+                            final nextMsg = i < _messages.length - 1
+                                ? _messages[i + 1]
+                                : null;
+                            bool sameRun(_Msg? o) =>
+                                o != null &&
+                                o.direction == m.direction &&
+                                !o.removing &&
+                                _sameDay(o.when, m.when) &&
+                                (m.when.difference(o.when).inSeconds).abs() <
+                                    120;
+                            final firstInGroup =
+                                !sameRun(prevMsg) || i == _firstUnreadIndex;
+                            final lastInGroup = !sameRun(nextMsg);
                             return Column(
+                              key: ObjectKey(m),
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 if (showDate) _dateDivider(m.when),
@@ -2612,7 +2730,19 @@ class _ChatScreenState extends State<ChatScreen> {
                                     },
                                     confirmDismiss: (_) async {
                                       HapticFeedback.selectionClick();
-                                      setState(() => _replyTo = m);
+                                      setState(() {
+                                        _replyTo = m;
+                                        _replyFlash = m;
+                                      });
+                                      Future.delayed(
+                                        const Duration(milliseconds: 700),
+                                        () {
+                                          if (mounted &&
+                                              identical(_replyFlash, m)) {
+                                            setState(() => _replyFlash = null);
+                                          }
+                                        },
+                                      );
                                       return false;
                                     },
                                     background: Padding(
@@ -2635,7 +2765,12 @@ class _ChatScreenState extends State<ChatScreen> {
                                         ),
                                         curve: Curves.easeIn,
                                         child: AnimatedOpacity(
-                                          opacity: m.removing ? 0.0 : 1.0,
+                                          opacity:
+                                              (m.removing ||
+                                                  (m.msgUid != null &&
+                                                      m.msgUid == _liftedUid))
+                                              ? 0.0
+                                              : 1.0,
                                           duration: const Duration(
                                             milliseconds: 300,
                                           ),
@@ -2646,6 +2781,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                                       ? _jumpKey
                                                       : null),
                                             msg: m,
+                                            firstInGroup: firstInGroup,
+                                            lastInGroup: lastInGroup,
                                             revealed:
                                                 m.msgUid != null &&
                                                 m.msgUid == _revealedUid,
@@ -2663,13 +2800,26 @@ class _ChatScreenState extends State<ChatScreen> {
                                             onLongPress: (ctx) =>
                                                 _showEmojiPickerAt(ctx, m),
                                             quotedText: quoted,
+                                            onQuoteTap: m.replyTo == null
+                                                ? null
+                                                : () {
+                                                    for (final x in _messages) {
+                                                      if (x.msgUid != null &&
+                                                          x.msgUid ==
+                                                              m.replyTo) {
+                                                        _scrollToMessage(x);
+                                                        break;
+                                                      }
+                                                    }
+                                                  },
                                             quotedAuthor: quotedAuthor,
                                             query: searchActive ? _query : '',
                                             isCurrentMatch: isCurrent,
                                             dimmed: dimmed,
                                             ripple:
                                                 m.msgUid != null &&
-                                                m.msgUid == _rippleUid,
+                                                (m.msgUid == _rippleUid ||
+                                                    identical(m, _replyFlash)),
                                           ),
                                         ),
                                       ),
@@ -2687,86 +2837,97 @@ class _ChatScreenState extends State<ChatScreen> {
                             );
                           },
                         ),
-                  if (_showScrollDown)
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 12,
-                      child: Center(
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          alignment: Alignment.center,
-                          children: [
-                            GestureDetector(
-                              onTap: _scrollToBottom,
-                              child: Container(
-                                width: 38,
-                                height: 38,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: HaloColors.surface2,
-                                  border: Border.all(
-                                    color: HaloColors.amber.withValues(
-                                      alpha: 0.5,
-                                    ),
-                                    width: 0.5,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: HaloColors.amber.withValues(
-                                        alpha: 0.18,
-                                      ),
-                                      blurRadius: 14,
-                                      spreadRadius: -2,
-                                    ),
-                                  ],
-                                ),
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  Icons.keyboard_arrow_down_rounded,
-                                  color: HaloColors.amber,
-                                  size: 22,
-                                ),
-                              ),
-                            ),
-                            if (_messages.length - _seenCount > 0)
-                              Positioned(
-                                top: -3,
-                                right: -3,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 5,
-                                    vertical: 1,
-                                  ),
-                                  constraints: const BoxConstraints(
-                                    minWidth: 17,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: HaloColors.amber,
-                                    borderRadius: BorderRadius.circular(9),
-                                    border: Border.all(
-                                      color: HaloColors.surface,
-                                      width: 1.5,
-                                    ),
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    '${_messages.length - _seenCount}',
-                                    style:
-                                        HaloType.mono(
-                                          size: 9,
-                                          color: HaloColors.onAmber,
-                                        ).copyWith(
-                                          fontWeight: FontWeight.w700,
-                                          height: 1.2,
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 12,
+                    child: IgnorePointer(
+                      ignoring: !_showScrollDown,
+                      child: AnimatedScale(
+                        scale: _showScrollDown ? 1.0 : 0.6,
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeOutBack,
+                        child: AnimatedOpacity(
+                          opacity: _showScrollDown ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 180),
+                          child: Center(
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              alignment: Alignment.center,
+                              children: [
+                                GestureDetector(
+                                  onTap: _scrollToBottom,
+                                  child: Container(
+                                    width: 38,
+                                    height: 38,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: HaloColors.surface2,
+                                      border: Border.all(
+                                        color: HaloColors.amber.withValues(
+                                          alpha: 0.5,
                                         ),
+                                        width: 0.5,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: HaloColors.amber.withValues(
+                                            alpha: 0.18,
+                                          ),
+                                          blurRadius: 14,
+                                          spreadRadius: -2,
+                                        ),
+                                      ],
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Icon(
+                                      Icons.keyboard_arrow_down_rounded,
+                                      color: HaloColors.amber,
+                                      size: 22,
+                                    ),
                                   ),
                                 ),
-                              ),
-                          ],
+                                if (_messages.length - _seenCount > 0)
+                                  Positioned(
+                                    top: -3,
+                                    right: -3,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 5,
+                                        vertical: 1,
+                                      ),
+                                      constraints: const BoxConstraints(
+                                        minWidth: 17,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: HaloColors.amber,
+                                        borderRadius: BorderRadius.circular(9),
+                                        border: Border.all(
+                                          color: HaloColors.surface,
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        '${_messages.length - _seenCount}',
+                                        style:
+                                            HaloType.mono(
+                                              size: 9,
+                                              color: HaloColors.onAmber,
+                                            ).copyWith(
+                                              fontWeight: FontWeight.w700,
+                                              height: 1.2,
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ),
+                  ),
                   Positioned(
                     top: 6,
                     left: 0,
@@ -2844,13 +3005,16 @@ class _ChatScreenState extends State<ChatScreen> {
                 : _Composer(
                     onAttach: _showAttachSheet,
                     ghost: _ghost,
-                    onToggleGhost: () => setState(() => _ghost = !_ghost),
+                    onToggleGhost: () => setState(() {
+                      _ghost = !_ghost;
+                      _lastGhost = _ghost;
+                      appState.saveGhostPref(_ghost, _burnSeconds);
+                    }),
                     onPickBurn: _pickBurnDuration,
                     burnSeconds: _burnSeconds,
                     controller: _msgCtrl,
                     sending: _sending,
                     onSend: _send,
-                    onLetter: _openLetter,
                   ),
           ],
         ),
@@ -2937,11 +3101,7 @@ class _ChatHead extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            icon: Icon(
-              Icons.chevron_left,
-              color: HaloColors.text2,
-              size: 26,
-            ),
+            icon: Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
             onPressed: onBack,
           ),
           GestureDetector(
@@ -3039,19 +3199,11 @@ class _ChatHead extends StatelessWidget {
               onPressed: onPinned,
             ),
           IconButton(
-            icon: Icon(
-              Icons.search_rounded,
-              color: HaloColors.text2,
-              size: 21,
-            ),
+            icon: Icon(Icons.search_rounded, color: HaloColors.text2, size: 21),
             onPressed: onSearch,
           ),
           IconButton(
-            icon: Icon(
-              Icons.more_vert,
-              color: HaloColors.text2,
-              size: 21,
-            ),
+            icon: Icon(Icons.more_vert, color: HaloColors.text2, size: 21),
             onPressed: onBlock,
           ),
         ],
@@ -3289,12 +3441,96 @@ class _NavBtn extends StatelessWidget {
   }
 }
 
+// blurred, dimmed backdrop behind the long-press menu. fades the blur in
+// so the chat recedes instead of just darkening.
+// the long-press menu blooming out: scale + fade from the bubble's side.
+class _MenuPop extends StatefulWidget {
+  final bool side;
+  final Widget child;
+  const _MenuPop({required this.side, required this.child});
+
+  @override
+  State<_MenuPop> createState() => _MenuPopState();
+}
+
+class _MenuPopState extends State<_MenuPop>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 240),
+  )..forward();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _c,
+      child: widget.child,
+      builder: (_, child) {
+        final v = _c.value.clamp(0.0, 1.0);
+        final t = Curves.easeOutBack.transform(v);
+        return Opacity(
+          opacity: v,
+          child: Transform.scale(
+            scale: 0.8 + 0.2 * t,
+            alignment: widget.side
+                ? Alignment.bottomRight
+                : Alignment.bottomLeft,
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _MenuBackdrop extends StatefulWidget {
+  const _MenuBackdrop();
+
+  @override
+  State<_MenuBackdrop> createState() => _MenuBackdropState();
+}
+
+class _MenuBackdropState extends State<_MenuBackdrop>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 220),
+  )..forward();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (_, __) {
+        final t = Curves.easeOut.transform(_c.value);
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16 * t, sigmaY: 16 * t),
+          child: Container(color: Colors.black.withOpacity(0.42 * t)),
+        );
+      },
+    );
+  }
+}
+
 class _Bubble extends StatelessWidget {
   final _Msg msg;
   final void Function(_Msg)? onRetry;
   final void Function(BuildContext)? onLongPress;
   final String? quotedText;
   final String? quotedAuthor;
+  final VoidCallback? onQuoteTap;
   // search context: the live query (empty when not searching), whether
   // this bubble is the current hit (gets a soft amber halo), and whether
   // it should dim (search active but this isn't a match).
@@ -3304,6 +3540,8 @@ class _Bubble extends StatelessWidget {
   final bool ripple;
   final bool revealed;
   final VoidCallback? onReveal;
+  final bool firstInGroup;
+  final bool lastInGroup;
   const _Bubble({
     super.key,
     required this.msg,
@@ -3311,22 +3549,31 @@ class _Bubble extends StatelessWidget {
     this.onLongPress,
     this.quotedText,
     this.quotedAuthor,
+    this.onQuoteTap,
     this.query = '',
     this.isCurrentMatch = false,
     this.dimmed = false,
     this.ripple = false,
     this.revealed = false,
     this.onReveal,
+    this.firstInGroup = true,
+    this.lastInGroup = true,
   });
 
   // builds the message body, underlining query matches in amber. plain
   // Text when there's no active query.
   Widget _body(bool isOut, {bool image = false}) {
-    final base = HaloType.sans(
-      size: 14,
-      color: (isOut && !image) ? HaloColors.onAmber : HaloColors.text,
-      height: 1.4,
-    );
+    final base = image
+        ? HaloType.serif(
+            size: 13.5,
+            italic: true,
+            color: isOut ? HaloColors.onAmber : HaloColors.text,
+          )
+        : HaloType.sans(
+            size: 14,
+            color: (isOut && !image) ? HaloColors.onAmber : HaloColors.text,
+            height: 1.4,
+          );
     if (query.isEmpty) {
       return Text(msg.text, style: base);
     }
@@ -3350,11 +3597,6 @@ class _Bubble extends StatelessWidget {
           style: TextStyle(
             color: (isOut && !image) ? HaloColors.onAmber : HaloColors.amber,
             fontWeight: FontWeight.w600,
-            decoration: TextDecoration.underline,
-            decorationColor: (isOut && !image)
-                ? HaloColors.onAmber
-                : HaloColors.amber,
-            decorationThickness: 1.5,
           ),
         ),
       );
@@ -3382,6 +3624,10 @@ class _Bubble extends StatelessWidget {
         isOut &&
         !msg.failed &&
         DateTime.now().difference(msg.when).inMilliseconds < 900;
+    final justArrived =
+        !isOut &&
+        !msg.failed &&
+        DateTime.now().difference(msg.when).inMilliseconds < 900;
     return AnimatedOpacity(
       duration: Duration(milliseconds: isExpiring ? 440 : 250),
       curve: Curves.easeOut,
@@ -3389,29 +3635,29 @@ class _Bubble extends StatelessWidget {
       child: AnimatedScale(
         duration: Duration(milliseconds: isExpiring ? 560 : 500),
         curve: isExpiring ? Curves.easeInCubic : Curves.easeOut,
-        scale: isExpiring ? 1.07 : 1.0,
+        scale: 1.0,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: msg.failed && onRetry != null ? () => onRetry!(msg) : onReveal,
           onLongPress: onLongPress == null ? null : () => onLongPress!(context),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
+            padding: EdgeInsets.only(
+              top: firstInGroup ? 4 : 1,
+              bottom: lastInGroup ? 4 : 1,
+            ),
             child: Column(
               crossAxisAlignment: isOut
                   ? CrossAxisAlignment.end
                   : CrossAxisAlignment.start,
               children: [
-                _sendOffEntrance(
-                  active: justSent,
+                _bubbleEntrance(
+                  isOut: isOut,
+                  active: isOut ? justSent : justArrived,
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      AnimatedOpacity(
-                        duration: Duration(
-                          milliseconds: isExpiring ? 650 : 180,
-                        ),
-                        curve: Curves.easeOut,
-                        opacity: isExpiring ? 0.0 : 1.0,
+                      _BurnFade(
+                        active: isExpiring,
                         child: Container(
                           constraints: BoxConstraints(
                             maxWidth: MediaQuery.of(context).size.width * 0.78,
@@ -3422,24 +3668,21 @@ class _Bubble extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: (isImage && msg.text.isNotEmpty)
                                 ? HaloColors.surface2
-                                : (isOut || isImage)
+                                : isImage
                                 ? null
+                                : isOut
+                                ? HaloColors.amber
                                 : HaloColors.surface3,
-                            gradient: (isOut && !isImage)
-                                ? LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      HaloColors.amber,
-                                      HaloColors.amberDeep,
-                                    ],
-                                  )
-                                : null,
+                            gradient: null,
                             borderRadius: BorderRadius.only(
                               topLeft: const Radius.circular(14),
                               topRight: const Radius.circular(14),
-                              bottomLeft: Radius.circular(isOut ? 14 : 4),
-                              bottomRight: Radius.circular(isOut ? 4 : 14),
+                              bottomLeft: Radius.circular(
+                                isOut ? 14 : (lastInGroup ? 4 : 14),
+                              ),
+                              bottomRight: Radius.circular(
+                                isOut ? (lastInGroup ? 4 : 14) : 14,
+                              ),
                             ),
                             border: isCurrentMatch
                                 ? Border.all(color: HaloColors.amber, width: 1)
@@ -3462,69 +3705,71 @@ class _Bubble extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              if (quotedText != null) ...[
-                                Container(
-                                  margin: const EdgeInsets.only(bottom: 6),
-                                  padding: const EdgeInsets.fromLTRB(
-                                    10,
-                                    6,
-                                    10,
-                                    7,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isOut
-                                        ? Colors.black.withOpacity(0.12)
-                                        : HaloColors.surface2,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border(
-                                      left: BorderSide(
-                                        color: isOut
-                                            ? HaloColors.onAmber.withValues(
-                                                alpha: 0.55,
-                                              )
-                                            : HaloColors.amber,
-                                        width: 2.5,
-                                      ),
+                              if (quotedText != null)
+                                GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: onQuoteTap,
+                                  child: Container(
+                                    margin: const EdgeInsets.only(bottom: 6),
+                                    padding: const EdgeInsets.fromLTRB(
+                                      10,
+                                      6,
+                                      10,
+                                      7,
                                     ),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      if (quotedAuthor != null)
-                                        Text(
-                                          quotedAuthor!,
-                                          style: HaloType.mono(
-                                            size: 9.5,
-                                            color: isOut
-                                                ? HaloColors.onAmber.withValues(
-                                                    alpha: 0.7,
-                                                  )
-                                                : HaloColors.amber,
-                                            letter: 0.6,
-                                          ),
-                                        ),
-                                      if (quotedAuthor != null)
-                                        const SizedBox(height: 2),
-                                      Text(
-                                        quotedText!,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: HaloType.sans(
-                                          size: 12.5,
+                                    decoration: BoxDecoration(
+                                      color: isOut
+                                          ? Colors.black.withOpacity(0.12)
+                                          : HaloColors.surface2,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border(
+                                        left: BorderSide(
                                           color: isOut
                                               ? HaloColors.onAmber.withValues(
-                                                  alpha: 0.8,
+                                                  alpha: 0.55,
                                                 )
-                                              : HaloColors.text2,
-                                          height: 1.3,
+                                              : HaloColors.amber,
+                                          width: 2.5,
                                         ),
                                       ),
-                                    ],
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (quotedAuthor != null)
+                                          Text(
+                                            quotedAuthor!,
+                                            style: HaloType.mono(
+                                              size: 9.5,
+                                              color: isOut
+                                                  ? HaloColors.onAmber
+                                                        .withValues(alpha: 0.7)
+                                                  : HaloColors.amber,
+                                              letter: 0.6,
+                                            ),
+                                          ),
+                                        if (quotedAuthor != null)
+                                          const SizedBox(height: 2),
+                                        Text(
+                                          quotedText!,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: HaloType.sans(
+                                            size: 12.5,
+                                            color: isOut
+                                                ? HaloColors.onAmber.withValues(
+                                                    alpha: 0.8,
+                                                  )
+                                                : HaloColors.text2,
+                                            height: 1.3,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ],
                               if (msg.mediaPath != null)
                                 GestureDetector(
                                   onTap: () =>
@@ -3622,10 +3867,27 @@ class _Bubble extends StatelessWidget {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     if (msg.text.isNotEmpty)
-                                      _body(
-                                        isOut,
-                                        image: msg.mediaPath != null,
-                                      ),
+                                      msg.mediaPath != null
+                                          ? Container(
+                                              margin: const EdgeInsets.only(
+                                                top: 2,
+                                              ),
+                                              padding: const EdgeInsets.only(
+                                                left: 9,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                border: Border(
+                                                  left: BorderSide(
+                                                    color: isOut
+                                                        ? HaloColors.onAmber
+                                                        : HaloColors.amber,
+                                                    width: 2.5,
+                                                  ),
+                                                ),
+                                              ),
+                                              child: _body(isOut, image: true),
+                                            )
+                                          : _body(isOut, image: false),
                                     if (showMeta && msg.mediaPath == null) ...[
                                       const SizedBox(height: 4),
                                       Row(
@@ -3679,7 +3941,7 @@ class _Bubble extends StatelessWidget {
                                         ),
                                       ),
                                     ],
-                                    if (msg.burnAt != null) ...[
+                                    if (msg.burnAt != null && !msg.sending) ...[
                                       const SizedBox(height: 4),
                                       Padding(
                                         padding: const EdgeInsets.symmetric(
@@ -3699,7 +3961,7 @@ class _Bubble extends StatelessWidget {
                                             ),
                                             const SizedBox(width: 4),
                                             Text(
-                                              'burns in ${_fmtBurn(msg.burnAt!)}',
+                                              _fmtBurn(msg.burnAt!),
                                               style: HaloType.mono(
                                                 size: 9.5,
                                                 color: (isOut && !isImage)
@@ -3734,7 +3996,6 @@ class _Bubble extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (isExpiring) const _BurnEmbers(),
                       if (ripple)
                         Positioned.fill(
                           child: IgnorePointer(
@@ -3752,10 +4013,10 @@ class _Bubble extends StatelessWidget {
                                         topLeft: const Radius.circular(14),
                                         topRight: const Radius.circular(14),
                                         bottomLeft: Radius.circular(
-                                          isOut ? 14 : 4,
+                                          isOut ? 14 : (lastInGroup ? 4 : 14),
                                         ),
                                         bottomRight: Radius.circular(
-                                          isOut ? 4 : 14,
+                                          isOut ? (lastInGroup ? 4 : 14) : 14,
                                         ),
                                       ),
                                       border: Border.all(
@@ -3811,31 +4072,129 @@ class _Bubble extends StatelessWidget {
       final emoji = e.key;
       final count = e.value;
       final isMine = emoji == mine;
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-          color: isMine ? HaloColors.amberSoft : HaloColors.surface3,
-          border: Border.all(
-            color: isMine ? HaloColors.amber : HaloColors.line,
-            width: 0.5,
+      return _ReactionPop(
+        key: ValueKey(emoji),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: isMine ? HaloColors.amberSoft : HaloColors.surface3,
+            border: Border.all(
+              color: isMine ? HaloColors.amber : HaloColors.line,
+              width: 0.5,
+            ),
+            borderRadius: BorderRadius.circular(12),
           ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 13)),
-            if (count > 1) ...[
-              const SizedBox(width: 4),
-              Text(
-                '$count',
-                style: HaloType.mono(size: 10, color: HaloColors.text2),
-              ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 13)),
+              if (count > 1) ...[
+                const SizedBox(width: 4),
+                Text(
+                  '$count',
+                  style: HaloType.mono(size: 10, color: HaloColors.text2),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       );
     }).toList();
+  }
+}
+
+// a reaction chip springing onto the bubble when added. keyed by emoji so
+// existing chips keep their state and only a new one animates.
+class _ReactionPop extends StatefulWidget {
+  final Widget child;
+  const _ReactionPop({super.key, required this.child});
+
+  @override
+  State<_ReactionPop> createState() => _ReactionPopState();
+}
+
+class _ReactionPopState extends State<_ReactionPop>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 260),
+  )..forward();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: CurvedAnimation(parent: _c, curve: Curves.easeOutBack),
+      child: widget.child,
+    );
+  }
+}
+
+class _PinnedBar extends StatelessWidget {
+  final _Msg message;
+  final VoidCallback onTap;
+  const _PinnedBar({required this.message, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final preview = message.text.isEmpty ? 'photo' : message.text;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          decoration: BoxDecoration(
+            color: HaloColors.surface2,
+            border: Border(
+              bottom: BorderSide(color: HaloColors.line, width: 0.5),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 2.5,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: HaloColors.amber,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'pinned',
+                      style: HaloType.mono(
+                        size: 9.5,
+                        color: HaloColors.amber,
+                        letter: 0.6,
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      preview,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: HaloType.sans(size: 13, color: HaloColors.text),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.push_pin, size: 14, color: HaloColors.amber),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -3996,7 +4355,7 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
 
   @override
   Widget build(BuildContext context) {
-    final scale = CurvedAnimation(parent: _ctrl, curve: Curves.easeOutBack);
+    final scale = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
     return Material(
       color: Colors.transparent,
       child: ScaleTransition(
@@ -4021,12 +4380,26 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ...widget.emojis.map((e) {
-                  final isSelected = e == widget.selected;
-                  return _EmojiTap(
-                    emoji: e,
-                    selected: isSelected,
-                    onTap: () => widget.onPick(e),
+                ...widget.emojis.asMap().entries.map((entry) {
+                  final i = entry.key;
+                  final e = entry.value;
+                  final n = widget.emojis.length;
+                  final start = (i / n) * 0.55;
+                  final pop = CurvedAnimation(
+                    parent: _ctrl,
+                    curve: Interval(
+                      start,
+                      (start + 0.45).clamp(0.0, 1.0),
+                      curve: Curves.easeOutBack,
+                    ),
+                  );
+                  return ScaleTransition(
+                    scale: pop,
+                    child: _EmojiTap(
+                      emoji: e,
+                      selected: e == widget.selected,
+                      onTap: () => widget.onPick(e),
+                    ),
                   );
                 }),
                 Container(
@@ -4233,234 +4606,6 @@ class _EmptyConversation extends StatelessWidget {
   }
 }
 
-class _LetterScreen extends StatefulWidget {
-  final String peerName;
-  final String initial;
-  const _LetterScreen({required this.peerName, required this.initial});
-  @override
-  State<_LetterScreen> createState() => _LetterScreenState();
-}
-
-class _LetterScreenState extends State<_LetterScreen>
-    with SingleTickerProviderStateMixin {
-  late final TextEditingController _ctrl;
-  late final AnimationController _seal;
-  bool _sealing = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = TextEditingController(text: widget.initial);
-    _seal =
-        AnimationController(
-          vsync: this,
-          duration: const Duration(milliseconds: 860),
-        )..addStatusListener((st) {
-          if (st == AnimationStatus.completed && mounted) {
-            Navigator.of(context).pop(_ctrl.text);
-          }
-        });
-  }
-
-  @override
-  void dispose() {
-    _seal.dispose();
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  void _runSeal() {
-    if (_sealing) return;
-    if (_ctrl.text.trim().isEmpty) {
-      Navigator.of(context).pop(_ctrl.text);
-      return;
-    }
-    FocusScope.of(context).unfocus();
-    setState(() => _sealing = true);
-    Future.delayed(const Duration(milliseconds: 230), () {
-      if (mounted) HapticFeedback.mediumImpact();
-    });
-    _seal.forward();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: HaloColors.surface,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 4, 16, 4),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.close, color: HaloColors.text2),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                      Text(
-                        'to ${widget.peerName}',
-                        style: HaloType.serif(
-                          size: 18,
-                          italic: true,
-                          color: HaloColors.text,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
-                    child: TextField(
-                      controller: _ctrl,
-                      autofocus: true,
-                      maxLines: null,
-                      expands: true,
-                      textAlignVertical: TextAlignVertical.top,
-                      cursorColor: HaloColors.amber,
-                      style: HaloType.serif(
-                        size: 19,
-                        height: 1.6,
-                        color: HaloColors.text,
-                      ),
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        hintText: 'dear…',
-                        hintStyle: HaloType.serif(
-                          size: 19,
-                          italic: true,
-                          color: HaloColors.text3,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      GestureDetector(
-                        onTap: _runSeal,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: HaloColors.amber,
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.send,
-                                size: 16,
-                                color: HaloColors.onAmber,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'seal & send',
-                                style: HaloType.sans(
-                                  size: 14,
-                                  weight: FontWeight.w600,
-                                  color: HaloColors.onAmber,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            if (_sealing) Positioned.fill(child: _sealOverlay()),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _sealOverlay() {
-    return AnimatedBuilder(
-      animation: _seal,
-      builder: (context, _) {
-        final t = _seal.value;
-        final stamp = Curves.easeOutBack.transform(
-          ((t.clamp(0.2, 0.7)) - 0.2) / 0.5,
-        );
-        final ring = (((t.clamp(0.5, 0.95)) - 0.5) / 0.45).clamp(0.0, 1.0);
-        return AbsorbPointer(
-          child: Container(
-            color: HaloColors.surface.withOpacity(
-              0.86 * (t.clamp(0.0, 0.3) / 0.3),
-            ),
-            alignment: Alignment.center,
-            child: SizedBox(
-              width: 170,
-              height: 170,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Opacity(
-                    opacity: (1 - ring) * 0.5,
-                    child: Transform.scale(
-                      scale: 0.7 + ring * 1.4,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: HaloColors.amber, width: 2),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Opacity(
-                    opacity: stamp.clamp(0.0, 1.0),
-                    child: Transform.scale(
-                      scale: 0.6 + stamp.clamp(0.0, 1.0) * 0.4,
-                      child: Container(
-                        width: 86,
-                        height: 86,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: HaloColors.amber,
-                          boxShadow: [
-                            BoxShadow(
-                              color: HaloColors.amber.withOpacity(0.45),
-                              blurRadius: 26,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          'h',
-                          style: HaloType.serif(
-                            size: 42,
-                            italic: true,
-                            color: HaloColors.onAmber,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
 class _Composer extends StatelessWidget {
   final TextEditingController controller;
   final bool sending;
@@ -4470,7 +4615,7 @@ class _Composer extends StatelessWidget {
   final VoidCallback onPickBurn;
   final int burnSeconds;
   final VoidCallback onAttach;
-  final VoidCallback onLetter;
+
   const _Composer({
     required this.controller,
     required this.sending,
@@ -4480,7 +4625,6 @@ class _Composer extends StatelessWidget {
     required this.onPickBurn,
     required this.burnSeconds,
     required this.onAttach,
-    required this.onLetter,
   });
 
   @override
@@ -4515,7 +4659,7 @@ class _Composer extends StatelessWidget {
                     padding: const EdgeInsets.only(
                       left: 4,
                       right: 4,
-                      bottom: 8,
+                      bottom: 10,
                     ),
                     child: Row(
                       children: [
@@ -4620,18 +4764,6 @@ class _Composer extends StatelessWidget {
                     ),
                   ),
                   onSubmitted: (_) => onSend(),
-                ),
-              ),
-              GestureDetector(
-                onTap: onLetter,
-                behavior: HitTestBehavior.opaque,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 10, right: 6),
-                  child: Icon(
-                    Icons.history_edu,
-                    size: 24,
-                    color: HaloColors.text2,
-                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -4814,9 +4946,9 @@ Widget _sendOffEntrance({required bool active, required Widget child}) {
     builder: (_, t, c) => Opacity(
       opacity: t,
       child: Transform.translate(
-        offset: Offset(0, (1 - t) * 16),
+        offset: Offset((1 - t) * 14, (1 - t) * 30),
         child: Transform.scale(
-          scale: 0.94 + 0.06 * t,
+          scale: 0.82 + 0.18 * t,
           alignment: Alignment.bottomCenter,
           child: DecoratedBox(
             decoration: BoxDecoration(
@@ -4837,23 +4969,89 @@ Widget _sendOffEntrance({required bool active, required Widget child}) {
   );
 }
 
-// a quick burst of rising embers + a warm glow, painted over a ghost message
-// as it burns away. one-shot 0->1 tween; fixed phases stagger the embers so it
-// looks alive without a particle engine.
-class _BurnEmbers extends StatelessWidget {
-  const _BurnEmbers();
+// the receiving side: a softer arrival that slides in from the left and
+// settles, distinct from the sender's amber send-off.
+Widget _arriveEntrance({required bool active, required Widget child}) {
+  if (!active) return child;
+  return TweenAnimationBuilder<double>(
+    tween: Tween(begin: 0.0, end: 1.0),
+    duration: const Duration(milliseconds: 320),
+    curve: Curves.easeOutCubic,
+    child: child,
+    builder: (_, t, c) => Opacity(
+      opacity: t,
+      child: Transform.translate(
+        offset: Offset((1 - t) * -14, (1 - t) * 6),
+        child: Transform.scale(
+          scale: 0.96 + 0.04 * t,
+          alignment: Alignment.centerLeft,
+          child: c,
+        ),
+      ),
+    ),
+  );
+}
+
+Widget _bubbleEntrance({
+  required bool isOut,
+  required bool active,
+  required Widget child,
+}) {
+  if (!active) return child;
+  return isOut
+      ? _sendOffEntrance(active: true, child: child)
+      : _arriveEntrance(active: true, child: child);
+}
+
+// a message burning away: the bubble dissolves bottom-up along a rising
+// edge while sparks peel off the burn line. one tween drives both.
+class _BurnFade extends StatelessWidget {
+  final bool active;
+  final Widget child;
+  const _BurnFade({required this.active, required this.child});
 
   @override
   Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.0, end: 1.0),
-          duration: const Duration(milliseconds: 620),
-          curve: Curves.easeOut,
-          builder: (_, t, __) => CustomPaint(painter: _EmberPainter(t)),
-        ),
-      ),
+    if (!active) return child;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 520),
+      curve: Curves.easeIn,
+      builder: (context, t, _) {
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            ShaderMask(
+              blendMode: BlendMode.dstIn,
+              shaderCallback: (rect) {
+                final line = 1 - t;
+                return LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: const [
+                    Colors.white,
+                    Colors.white,
+                    Colors.transparent,
+                    Colors.transparent,
+                  ],
+                  stops: [
+                    0.0,
+                    (line - 0.16).clamp(0.0, 1.0),
+                    (line + 0.02).clamp(0.0, 1.0),
+                    1.0,
+                  ],
+                ).createShader(rect);
+              },
+              child: child,
+            ),
+            Positioned.fill(
+              child: IgnorePointer(
+                child: CustomPaint(painter: _EmberPainter(t)),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -4862,48 +5060,95 @@ class _EmberPainter extends CustomPainter {
   final double t;
   _EmberPainter(this.t);
 
-  // x-fraction + start phase per ember
+  // x-fraction, ignition phase, size, sway direction
   static const _seeds = [
-    [0.12, 0.0],
-    [0.30, 0.35],
-    [0.46, 0.12],
-    [0.58, 0.55],
-    [0.71, 0.05],
-    [0.84, 0.4],
-    [0.22, 0.7],
-    [0.66, 0.85],
-    [0.40, 0.9],
-    [0.92, 0.25],
+    [0.12, 0.00, 1.0, 1.0],
+    [0.24, 0.22, 0.7, -1.0],
+    [0.34, 0.08, 1.1, 1.0],
+    [0.46, 0.40, 0.65, -1.0],
+    [0.55, 0.15, 1.0, 1.0],
+    [0.64, 0.55, 0.8, -1.0],
+    [0.73, 0.30, 1.05, 1.0],
+    [0.82, 0.62, 0.6, -1.0],
+    [0.90, 0.45, 0.85, 1.0],
+    [0.30, 0.70, 0.7, -1.0],
+    [0.60, 0.80, 0.6, 1.0],
+    [0.18, 0.50, 0.75, -1.0],
   ];
 
   @override
   void paint(Canvas canvas, Size size) {
-    final glow = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.bottomCenter,
-        end: Alignment.topCenter,
-        colors: [
-          HaloColors.amber.withValues(alpha: 0.22 * (1 - t)),
-          HaloColors.amber.withValues(alpha: 0.0),
-        ],
-      ).createShader(Offset.zero & size);
-    canvas.drawRect(Offset.zero & size, glow);
+    final w = size.width;
+    final h = size.height;
+    final line = 1 - t;
+    final fy = h * line;
 
-    for (final seed in _seeds) {
-      final tt = (t + seed[1]) % 1.0;
-      final op = (1 - tt) * (1 - t * 0.4);
-      if (op <= 0.02) continue;
-      final x = seed[0] * size.width;
-      final y = size.height - size.height * 0.7 * tt - 4;
-      final r = 1.4 + 1.6 * (1 - tt);
-      final paint = Paint()
-        ..color = Color.lerp(
-          HaloColors.amberSoft,
-          HaloColors.amber,
-          tt,
-        )!.withValues(alpha: op.clamp(0.0, 1.0))
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.6);
-      canvas.drawCircle(Offset(x, y), r, paint);
+    // warm glow pooled at the burning edge, climbing and fading.
+    if (t < 0.96) {
+      final band = h * 0.42;
+      final rect = Rect.fromLTWH(0, fy - band, w, band + 6);
+      final glow = Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            HaloColors.amber.withValues(alpha: 0.0),
+            HaloColors.amber.withValues(alpha: 0.26 * (1 - t * 0.5)),
+          ],
+        ).createShader(rect);
+      canvas.drawRect(rect, glow);
+    }
+
+    // the bright frontier line itself.
+    if (t > 0.02 && t < 0.97) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(3, fy - 2.5, w - 6, 5),
+          const Radius.circular(3),
+        ),
+        Paint()
+          ..color = Color.lerp(
+            HaloColors.amber,
+            Colors.white,
+            0.35,
+          )!.withValues(alpha: 0.55 * (1 - t * 0.3))
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5.0),
+      );
+    }
+
+    // sparks peeling off the edge, white-hot cooling to amber.
+    for (final s in _seeds) {
+      final birth = s[1] * 0.8;
+      final age = (t - birth) / 0.32;
+      if (age < 0 || age > 1) continue;
+      final bornY = h * (1 - birth);
+      final rise = age * h * 0.28;
+      final sway = s[3] * age * 8.0 * s[2];
+      final x = s[0] * w + sway;
+      final y = bornY - rise - 2;
+      final life = 1 - age;
+      final r = (0.6 + 1.5 * life) * s[2];
+      final col = Color.lerp(
+        HaloColors.amber,
+        Colors.white,
+        life * 0.55,
+      )!.withValues(alpha: life.clamp(0.0, 1.0));
+      canvas.drawCircle(
+        Offset(x, y),
+        r * 2.3,
+        Paint()
+          ..color = HaloColors.amber.withValues(
+            alpha: (life * 0.28).clamp(0.0, 1.0),
+          )
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.0),
+      );
+      canvas.drawCircle(
+        Offset(x, y),
+        r,
+        Paint()
+          ..color = col
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.7),
+      );
     }
   }
 

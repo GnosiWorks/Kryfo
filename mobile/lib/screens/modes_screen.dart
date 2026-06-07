@@ -46,15 +46,22 @@ class _ModesScreenState extends State<ModesScreen> {
               name: 'Private',
               accent: '·',
               active: _mode == 'private',
-              desc: 'Full onion routing, 3 hops. A message takes 2–5 seconds. Nobody sees who you talk to.',
-              speed: 'slower', hops: '3', ipVisible: false,
+              desc:
+                  'Full onion routing, 3 hops. A message takes 2–5 seconds. Nobody sees who you talk to.',
+              speed: 'slower',
+              hops: '3',
+              ipVisible: false,
               onTap: () => _pick('private'),
             ),
             _ModeCard(
               name: 'Fast',
+              soon: true,
               active: _mode == 'fast',
-              desc: 'Direct connection. Near-instant. Use for low-stakes chats.',
-              speed: 'instant', hops: '0', ipVisible: true,
+              desc:
+                  'Direct connection. Near-instant. Use for low-stakes chats.',
+              speed: 'instant',
+              hops: '0',
+              ipVisible: true,
               warning: 'not active yet · every message still uses full Tor.',
               onTap: () => _pick('fast'),
             ),
@@ -77,12 +84,14 @@ class _BackBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 4, 0, 0),
-      child: Row(children: [
-        IconButton(
-          onPressed: onBack,
-          icon: Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
-        ),
-      ]),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: onBack,
+            icon: Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -96,20 +105,31 @@ class _Head extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic, children: [
-            Text('speed',
-                style: HaloType.serif(size: 30, weight: FontWeight.w400)),
-            const SizedBox(width: 8),
-            Text('& privacy',
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                'speed',
+                style: HaloType.serif(size: 30, weight: FontWeight.w400),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '& privacy',
                 style: HaloType.serif(
-                  size: 30, weight: FontWeight.w300,
-                  italic: true, color: HaloColors.amber,
-                )),
-          ]),
+                  size: 30,
+                  weight: FontWeight.w300,
+                  italic: true,
+                  color: HaloColors.amber,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 8),
-          Text('change globally, or per chat',
-              style: HaloType.sans(size: 11, color: HaloColors.text2)),
+          Text(
+            'change globally, or per chat',
+            style: HaloType.sans(size: 11, color: HaloColors.text2),
+          ),
         ],
       ),
     );
@@ -120,6 +140,7 @@ class _ModeCard extends StatelessWidget {
   final String name;
   final String? accent;
   final bool active;
+  final bool soon;
   final String desc;
   final String speed;
   final String hops;
@@ -130,6 +151,7 @@ class _ModeCard extends StatelessWidget {
     required this.name,
     this.accent,
     required this.active,
+    this.soon = false,
     required this.desc,
     required this.speed,
     required this.hops,
@@ -143,11 +165,13 @@ class _ModeCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 6, 14, 4),
       child: GestureDetector(
-        onTap: onTap,
+        onTap: soon ? null : onTap,
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: active ? HaloColors.amber.withOpacity(0.10) : HaloColors.surface,
+            color: active
+                ? HaloColors.amber.withOpacity(0.10)
+                : HaloColors.surface,
             border: Border.all(
               color: active ? HaloColors.amber : HaloColors.line,
               width: active ? 1 : 0.5,
@@ -159,49 +183,95 @@ class _ModeCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Text(name,
-                      style: HaloType.serif(size: 18, weight: FontWeight.w400)),
+                  Text(
+                    name,
+                    style: HaloType.serif(size: 18, weight: FontWeight.w400),
+                  ),
+                  if (soon) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: HaloColors.surface3,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'soon',
+                        style: HaloType.mono(
+                          size: 9,
+                          color: HaloColors.amber,
+                          letter: 0.6,
+                        ),
+                      ),
+                    ),
+                  ],
                   if (active && accent != null) ...[
                     const SizedBox(width: 6),
-                    Text(accent!,
-                        style: HaloType.serif(
-                          size: 18, weight: FontWeight.w400,
-                          italic: true, color: HaloColors.amber,
-                        )),
+                    Text(
+                      accent!,
+                      style: HaloType.serif(
+                        size: 18,
+                        weight: FontWeight.w400,
+                        italic: true,
+                        color: HaloColors.amber,
+                      ),
+                    ),
                   ],
                   const Spacer(),
                   if (active)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: HaloColors.amber,
                         borderRadius: BorderRadius.circular(999),
                       ),
-                      child: Text('active',
-                          style: HaloType.mono(
-                            size: 10, weight: FontWeight.w500,
-                            color: HaloColors.onAmber,
-                          )),
+                      child: Text(
+                        'active',
+                        style: HaloType.mono(
+                          size: 10,
+                          weight: FontWeight.w500,
+                          color: HaloColors.onAmber,
+                        ),
+                      ),
                     ),
                 ],
               ),
               const SizedBox(height: 8),
-              Text(desc,
-                  style: HaloType.sans(
-                    size: 11, color: HaloColors.text2, height: 1.5,
-                  )),
+              Text(
+                desc,
+                style: HaloType.sans(
+                  size: 11,
+                  color: HaloColors.text2,
+                  height: 1.5,
+                ),
+              ),
               const SizedBox(height: 10),
-              Row(children: [
-                _Meta(k: 'speed', v: speed),
-                const SizedBox(width: 14),
-                _Meta(k: 'hops', v: hops),
-                const SizedBox(width: 14),
-                _Meta(k: 'ip', v: ipVisible ? 'visible' : 'hidden', red: ipVisible),
-              ]),
+              Row(
+                children: [
+                  _Meta(k: 'speed', v: speed),
+                  const SizedBox(width: 14),
+                  _Meta(k: 'hops', v: hops),
+                  const SizedBox(width: 14),
+                  _Meta(
+                    k: 'ip',
+                    v: ipVisible ? 'visible' : 'hidden',
+                    red: ipVisible,
+                  ),
+                ],
+              ),
               if (warning != null && active) ...[
                 const SizedBox(height: 10),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 7,
+                  ),
                   decoration: BoxDecoration(
                     color: HaloColors.rose.withOpacity(0.10),
                     border: Border.all(
@@ -213,13 +283,16 @@ class _ModeCard extends StatelessWidget {
                   child: RichText(
                     text: TextSpan(
                       style: HaloType.sans(
-                        size: 10, color: HaloColors.rose, height: 1.4,
+                        size: 10,
+                        color: HaloColors.rose,
+                        height: 1.4,
                       ),
                       children: [
                         TextSpan(
                           text: 'heads up: ',
                           style: HaloType.sans(
-                            size: 10, weight: FontWeight.w500,
+                            size: 10,
+                            weight: FontWeight.w500,
                             color: HaloColors.rose,
                           ),
                         ),
@@ -244,16 +317,23 @@ class _Meta extends StatelessWidget {
   const _Meta({required this.k, required this.v, this.red = false});
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      Text(k.toUpperCase(),
-          style: HaloType.mono(size: 10, color: HaloColors.text3)),
-      const SizedBox(width: 4),
-      Text(v,
+    return Row(
+      children: [
+        Text(
+          k.toUpperCase(),
+          style: HaloType.mono(size: 10, color: HaloColors.text3),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          v,
           style: HaloType.sans(
-            size: 10, weight: FontWeight.w500,
+            size: 10,
+            weight: FontWeight.w500,
             color: red ? HaloColors.rose : HaloColors.text,
-          )),
-    ]);
+          ),
+        ),
+      ],
+    );
   }
 }
 

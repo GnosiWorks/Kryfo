@@ -24,6 +24,32 @@ enum TorStatus { off, starting, bootstrapped, publishing, reachable }
 
 enum PrivacyMode { fast, normal, private }
 
+// shared screen transition — a calm rise-and-fade, one way in across the app.
+Route<T> haloRoute<T>(Widget page) {
+  return PageRouteBuilder<T>(
+    transitionDuration: const Duration(milliseconds: 340),
+    reverseTransitionDuration: const Duration(milliseconds: 260),
+    pageBuilder: (_, __, ___) => page,
+    transitionsBuilder: (_, anim, __, child) {
+      final curved = CurvedAnimation(
+        parent: anim,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      );
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween(
+            begin: const Offset(0, 0.06),
+            end: Offset.zero,
+          ).animate(curved),
+          child: child,
+        ),
+      );
+    },
+  );
+}
+
 TorStatus parseTorStatus(String raw) {
   final parts = raw.split('|');
   if (parts.isEmpty) return TorStatus.off;
