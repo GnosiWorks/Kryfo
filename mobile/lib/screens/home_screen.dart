@@ -1,6 +1,7 @@
 // home screen. date header, hero card or empty state, nav tabs.
 // matches 08_complete_spec.html "the everyday" home tile.
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
@@ -53,7 +54,6 @@ class HomeScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            const _StatusBar(),
             _HomeHead(now: now, haloId: haloId),
             _NotesPin(
               onTap: () => Navigator.of(
@@ -552,11 +552,7 @@ class _ArchivedPin extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right,
-                  color: HaloColors.text3,
-                  size: 18,
-                ),
+                Icon(Icons.chevron_right, color: HaloColors.text3, size: 18),
               ],
             ),
           ),
@@ -586,7 +582,10 @@ class _ContactList extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.zero,
       children: [
-        _HeroCard(c: hero, onTap: () => onTap(hero.haloId)),
+        _Enter(
+          index: 0,
+          child: _HeroCard(c: hero, onTap: () => onTap(hero.haloId)),
+        ),
         // groups section (header + rows + new-group tile). always show the
         // tile so user can create a group even with no existing groups.
         Padding(
@@ -608,11 +607,7 @@ class _ContactList extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.add_rounded,
-                      size: 14,
-                      color: HaloColors.amber,
-                    ),
+                    Icon(Icons.add_rounded, size: 14, color: HaloColors.amber),
                     const SizedBox(width: 3),
                     Text(
                       'new',
@@ -628,8 +623,14 @@ class _ContactList extends StatelessWidget {
             ],
           ),
         ),
-        ...groups.map(
-          (g) => _GroupRow(g: g, onTap: () => onOpenGroup(g.groupId)),
+        ...groups.asMap().entries.map(
+          (e) => _Enter(
+            index: 1 + e.key,
+            child: _GroupRow(
+              g: e.value,
+              onTap: () => onOpenGroup(e.value.groupId),
+            ),
+          ),
         ),
         if (rest.isNotEmpty) ...[
           Padding(
@@ -643,9 +644,73 @@ class _ContactList extends StatelessWidget {
               ),
             ),
           ),
-          ...rest.map((c) => _SwipeRow(c: c, onTap: () => onTap(c.haloId))),
+          ...rest.asMap().entries.map(
+            (e) => _Enter(
+              index: 1 + groups.length + e.key,
+              child: _SwipeRow(c: e.value, onTap: () => onTap(e.value.haloId)),
+            ),
+          ),
         ],
       ],
+    );
+  }
+}
+
+bool _homeEntered = false;
+
+// one-shot staggered entrance for the home list. plays on the first render
+// after launch, then stays put so message updates never re-animate rows.
+class _Enter extends StatefulWidget {
+  final int index;
+  final Widget child;
+  const _Enter({required this.index, required this.child});
+  @override
+  State<_Enter> createState() => _EnterState();
+}
+
+class _EnterState extends State<_Enter> with SingleTickerProviderStateMixin {
+  late final bool _animate = !_homeEntered;
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 360),
+    value: _animate ? 0.0 : 1.0,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    if (_animate) {
+      if (!_homeEntered) {
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _homeEntered = true,
+        );
+      }
+      Future.delayed(Duration(milliseconds: widget.index * 45), () {
+        if (mounted) _c.forward();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_animate) return widget.child;
+    final curved = CurvedAnimation(parent: _c, curve: Curves.easeOutCubic);
+    return AnimatedBuilder(
+      animation: curved,
+      child: widget.child,
+      builder: (_, child) => Opacity(
+        opacity: curved.value,
+        child: Transform.translate(
+          offset: Offset(0, 12 * (1 - curved.value)),
+          child: child,
+        ),
+      ),
     );
   }
 }
@@ -846,11 +911,7 @@ class _SwipeRow extends StatelessWidget {
         color: HaloColors.surface2,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 24),
-        child: Icon(
-          Icons.archive_outlined,
-          size: 20,
-          color: HaloColors.amber,
-        ),
+        child: Icon(Icons.archive_outlined, size: 20, color: HaloColors.amber),
       ),
       confirmDismiss: (dir) async {
         if (dir == DismissDirection.endToStart) {

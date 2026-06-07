@@ -32,3 +32,12 @@ Thumbs.db
 .env
 *.key
 *.pem
+
+# local-only — keep out of the repo (AI files, mockups, backups, logs, patches)
+CLAUDE.md
+CONTEXT*.md
+*.bak
+08_complete_spec.html
+Halo.html
+*.log
+patch_*.py
