@@ -141,8 +141,9 @@ Future<void> restoreBackupBlob(String blob, String passphrase) async {
   final onionKeyB64 = payload['onionKey'] as String?;
   if (onionKeyB64 != null) {
     final onionBytes = base64Decode(onionKeyB64);
-    await File(p.join(docsDir.path, 'onion.key'))
-        .writeAsBytes(onionBytes, flush: true);
+    await File(
+      p.join(docsDir.path, 'onion.key'),
+    ).writeAsBytes(onionBytes, flush: true);
   }
 
   // restore prefs
@@ -171,6 +172,6 @@ Future<void> restoreBackupBlob(String blob, String passphrase) async {
   // restore identity in engine (this also rehydrates myId)
   final edPriv = payload['edPriv'] as String;
   final xPriv = payload['xPriv'] as String;
-  final newId = engine.restoreIdentity(edPriv, xPriv);
-  debugPrint('backup: restored identity $newId');
+  engine.restoreIdentity(edPriv, xPriv);
+  debugPrint('backup: restored identity');
 }

@@ -26,7 +26,9 @@ class NtfyListener {
     final s = _socket;
     _socket = null;
     if (s != null) {
-      try { await s.close(); } catch (_) {}
+      try {
+        await s.close();
+      } catch (_) {}
     }
   }
 
@@ -36,8 +38,10 @@ class NtfyListener {
         final server = await loadNtfyServer();
         final topic = await loadNtfyTopic();
         final wsUrl = _toWs(server, topic);
-        log('ntfy: connecting $wsUrl');
-        _socket = await WebSocket.connect(wsUrl).timeout(const Duration(seconds: 30));
+        log('ntfy: connecting');
+        _socket = await WebSocket.connect(
+          wsUrl,
+        ).timeout(const Duration(seconds: 30));
         _retryMs = 1000;
         log('ntfy: connected');
 

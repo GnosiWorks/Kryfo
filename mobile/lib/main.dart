@@ -26,6 +26,7 @@ import 'screens/scan_screen.dart';
 import 'screens/modes_screen.dart';
 import 'screens/push_settings_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/my_halo_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'lock_state.dart';
 import 'screens/lock_screen.dart';
@@ -192,7 +193,10 @@ class HaloEngine {
 
   // offloaded to a background isolate so a slow relay never freezes the ui.
   Future<String> nostrSend(String peerXPubHex, String b64Cipher) =>
-      _sendOnIsolate((nostr: true, a: peerXPubHex, b: b64Cipher));
+      _sendOnIsolate((nostr: true, a: peerXPubHex, b: b64Cipher)).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => 'error: relay timeout',
+      );
 
   void nostrSubscribeBg(String peerXPubHex) {
     _subscribeOnIsolate(peerXPubHex).ignore();
@@ -252,7 +256,10 @@ class HaloEngine {
 
   // offloaded to a background isolate so a slow tor dial never freezes the ui.
   Future<String> sendTo(String addr, String msg) =>
-      _sendOnIsolate((nostr: false, a: addr, b: msg));
+      _sendOnIsolate((nostr: false, a: addr, b: msg)).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () => 'error: onion timeout',
+      );
 }
 
 // run a blocking native send on a throwaway background isolate so the ui
@@ -360,7 +367,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 18,
+      version: 19,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -403,6 +410,7 @@ class HaloDb {
             edited INTEGER NOT NULL DEFAULT 0,
             pinned INTEGER NOT NULL DEFAULT 0,
             media_path TEXT,
+            sent INTEGER NOT NULL DEFAULT 1,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
         ''');
@@ -441,6 +449,11 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 19) {
+          await db.execute(
+            'ALTER TABLE messages ADD COLUMN sent INTEGER NOT NULL DEFAULT 1',
+          );
+        }
         if (oldV < 2) await _signalTables(db);
         if (oldV < 3) {
           await db.execute('ALTER TABLE messages ADD COLUMN burn_at INTEGER');
@@ -756,6 +769,7 @@ class HaloDb {
     String? replyTo,
     String? groupId,
     String? mediaPath,
+    int sent = 1,
   }) async {
     final db = await open();
     await db.insert('messages', {
@@ -768,6 +782,7 @@ class HaloDb {
       'reply_to': replyTo,
       'group_id': groupId,
       'media_path': mediaPath,
+      'sent': sent,
     });
     // any inbound message proves the peer knows us, so flip back_paired.
     // subsequent sends to them can use nostr safely.
@@ -1096,6 +1111,16 @@ class HaloDb {
       'messages',
       where: 'burn_at IS NOT NULL AND burn_at < ?',
       whereArgs: [DateTime.now().millisecondsSinceEpoch],
+    );
+  }
+
+  Future<void> markSent(String msgUid) async {
+    final db = await open();
+    await db.update(
+      'messages',
+      {'sent': 1},
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
     );
   }
 
@@ -1679,7 +1704,7 @@ class AppState extends ChangeNotifier {
       final derived = engine.idFromEdPub(e);
       if (derived != h) {
         await signalSession.sessionStore.deleteSession(tempAddr);
-        debugPrint('back-pair: HaloID mismatch ($derived vs $h)');
+        debugPrint('back-pair: HaloID mismatch');
         return null;
       }
       // move session from temp to real HaloID
@@ -1699,7 +1724,7 @@ class AppState extends ChangeNotifier {
       await _applyIncomingPayload(h, env);
       await refreshContacts();
       notifyListeners();
-      debugPrint('back-pair: created contact $h via direct onion');
+      debugPrint('back-pair: created contact via direct onion');
       return h;
     } catch (e) {
       debugPrint('back-pair error: $e');
@@ -1731,8 +1756,18 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> boot() async {
+    final _bsw = Stopwatch()..start();
     if (ready) return;
+    final docsDir = await getApplicationDocumentsDirectory();
+    // start tor first so it bootstraps while the db + keys load
+    _startListenerOnIsolate(docsDir.path).then((addr) {
+      if (addr.isNotEmpty && !addr.startsWith('error')) {
+        myOnion = addr;
+        notifyListeners();
+      }
+    });
     final saved = await db.loadIdentity();
+    debugPrint('BOOT db+loadIdentity +${_bsw.elapsedMilliseconds}ms');
     if (saved != null) {
       myId = engine.restoreIdentity(saved['ed_priv']!, saved['x_priv']!);
       restored = true;
@@ -1741,7 +1776,9 @@ class AppState extends ChangeNotifier {
       await db.saveIdentity(myId, engine.myEdPrivkey(), engine.myXPrivkey());
     }
     myXPub = engine.myXPubkey();
+    debugPrint('BOOT identity +${_bsw.elapsedMilliseconds}ms');
     await _bootSignal();
+    debugPrint('BOOT signal +${_bsw.elapsedMilliseconds}ms');
     _appLinks = AppLinks();
     _appLinks.uriLinkStream.listen((uri) async {
       if (uri.scheme == 'halo') {
@@ -1753,29 +1790,27 @@ class AppState extends ChangeNotifier {
     });
 
     await refreshContacts();
+    debugPrint('BOOT contacts +${_bsw.elapsedMilliseconds}ms');
     await refreshGroups();
+    debugPrint('BOOT groups +${_bsw.elapsedMilliseconds}ms');
     // paint the home as soon as contacts/groups are ready; notifications,
     // nostr subscriptions and ntfy keep warming up in the background.
     onboardingComplete =
         (await const FlutterSecureStorage().read(key: 'onboarding_done')) ==
         'true';
     // let the onion linger a beat before the home appears
-    await Future.delayed(const Duration(seconds: 2));
+    if (onboardingComplete) {
+      await Future.delayed(const Duration(milliseconds: 1800));
+    }
     ready = true;
+    debugPrint('BOOT ready +${_bsw.elapsedMilliseconds}ms');
     notifyListeners();
-    // auto-start tor; nostr subs retry every 10s until ready
-    final docsDir = await getApplicationDocumentsDirectory();
-    _startListenerOnIsolate(docsDir.path).then((addr) {
-      if (addr.isNotEmpty && !addr.startsWith('error')) {
-        myOnion = addr;
-        notifyListeners();
-      }
-    });
     // poll bootstrap so the halo can breathe while the listener warms up.
     Timer.periodic(const Duration(seconds: 1), (t) {
       final raw = engine.getStatus();
       final st = parseTorStatus(raw);
       final pct = parseBootstrapPct(raw);
+      debugPrint('TOR_RAW: "$raw" st=$st pct=$pct');
       if (st != _torStatus || pct != _bootstrapPct) {
         _torStatus = st;
         _bootstrapPct = pct;
@@ -2329,6 +2364,7 @@ final appState = AppState();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await appState.loadThemePref();
   runApp(const HaloApp());
   // cold-start: if launched from a notification tap, open the chat
@@ -2396,7 +2432,9 @@ class _RootShellState extends State<RootShell> {
         backgroundColor: HaloColors.surface,
         body: Center(
           child: Text(
-            'booting...',
+            appState.onboardingComplete
+                ? 'booting...'
+                : 'setting up your identity...',
             style: HaloType.mono(size: 11, color: HaloColors.text2),
           ),
         ),
@@ -2414,7 +2452,7 @@ class _RootShellState extends State<RootShell> {
             ),
           )
           .toList(),
-      onAddContact: () => _open(const DevScreen()),
+      onAddContact: () => showAddContact(context),
       onNewGroup: () => _open(const NewGroupScreen()),
       onOpenDev: () => _open(const DevScreen()),
       onOpenSettings: () => _open(SettingsScreen()),
@@ -2443,6 +2481,223 @@ class _RootShellState extends State<RootShell> {
   }
 }
 
+Future<void> showAddContact(BuildContext context) async {
+  final ctrl = TextEditingController();
+  final action = await showModalBottomSheet<String>(
+    context: context,
+    backgroundColor: HaloColors.surface2,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (sheetCtx) => Padding(
+      padding: EdgeInsets.fromLTRB(
+        22,
+        18,
+        22,
+        24 + MediaQuery.of(sheetCtx).viewInsets.bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: HaloColors.line,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            'add a contact',
+            style: HaloType.serif(
+              size: 22,
+              italic: true,
+              color: HaloColors.text,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'scan their code in person, or paste an invite link',
+            style: HaloType.sans(size: 12.5, color: HaloColors.text),
+          ),
+          const SizedBox(height: 14),
+          _Pressable(
+            onTap: () => Navigator.pop(sheetCtx, 'scan'),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              decoration: BoxDecoration(
+                color: HaloColors.amber,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x33F59E0B),
+                    blurRadius: 14,
+                    offset: Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.qr_code_scanner,
+                    size: 19,
+                    color: HaloColors.onAmber,
+                  ),
+                  const SizedBox(width: 9),
+                  Text(
+                    'scan qr code',
+                    style: HaloType.sans(
+                      size: 14,
+                      weight: FontWeight.w600,
+                      color: HaloColors.onAmber,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _Pressable(
+            onTap: () => Navigator.pop(sheetCtx, 'mine'),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.qr_code_2, size: 16, color: HaloColors.amber),
+                const SizedBox(width: 7),
+                Text(
+                  'show my own code',
+                  style: HaloType.sans(
+                    size: 13,
+                    weight: FontWeight.w600,
+                    color: HaloColors.amber,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(child: Divider(color: HaloColors.line, height: 1)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Text(
+                  'or paste a link',
+                  style: HaloType.sans(size: 11, color: HaloColors.text2),
+                ),
+              ),
+              Expanded(child: Divider(color: HaloColors.line, height: 1)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+            decoration: BoxDecoration(
+              color: HaloColors.surface3,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: HaloColors.line, width: 0.5),
+            ),
+            child: TextField(
+              controller: ctrl,
+              minLines: 1,
+              maxLines: 3,
+              style: HaloType.mono(size: 12, color: HaloColors.text),
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: 'halo://share?...',
+                hintStyle: HaloType.mono(size: 12, color: HaloColors.text3),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          _Pressable(
+            onTap: () => Navigator.pop(sheetCtx, 'paste'),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 13),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: HaloColors.amber, width: 1),
+              ),
+              child: Center(
+                child: Text(
+                  'import from link',
+                  style: HaloType.sans(
+                    size: 13.5,
+                    weight: FontWeight.w600,
+                    color: HaloColors.amber,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+        ],
+      ),
+    ),
+  );
+  if (action == null) return;
+  if (action == 'mine') {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const MyHaloScreen()));
+    return;
+  }
+
+  String uri;
+  if (action == 'scan') {
+    final result = await Navigator.of(
+      context,
+    ).push<String>(MaterialPageRoute(builder: (_) => const ScanScreen()));
+    if (result == null) return;
+    uri = result;
+  } else {
+    uri = ctrl.text.trim();
+    if (uri.isEmpty) return;
+  }
+
+  final status = await handleHaloUri(uri);
+  await appState.refreshContacts();
+  showHaloToast(context, status);
+}
+
+class _Pressable extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  const _Pressable({required this.child, required this.onTap});
+  @override
+  State<_Pressable> createState() => _PressableState();
+}
+
+class _PressableState extends State<_Pressable> {
+  double _scale = 1;
+  void _set(double v) {
+    if (mounted) setState(() => _scale = v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) => _set(0.96),
+      onTapUp: (_) => _set(1),
+      onTapCancel: () => _set(1),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _scale,
+        duration: const Duration(milliseconds: 90),
+        curve: Curves.easeOut,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
 class DevScreen extends StatefulWidget {
   const DevScreen({super.key});
   @override
@@ -2459,7 +2714,7 @@ class _DevScreenState extends State<DevScreen> {
   String _peerOnion = '';
   String _peerXPub = '';
   String _receivedCipher = '';
-  String _receivedPlain = '';
+
   Timer? _pollTimer;
 
   @override
@@ -2510,7 +2765,6 @@ class _DevScreenState extends State<DevScreen> {
         }
         setState(() {
           _receivedCipher = r;
-          _receivedPlain = plain;
         });
       }
     });
@@ -2922,31 +3176,6 @@ class _DevScreenState extends State<DevScreen> {
                   ),
                 ),
               ),
-              if (_receivedPlain.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: HaloColors.surface3,
-                    border: Border.all(color: HaloColors.green),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'decrypted:',
-                        style: HaloType.mono(size: 10, color: HaloColors.green),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _receivedPlain,
-                        style: HaloType.sans(size: 14, color: HaloColors.text),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
               const SizedBox(height: 40),
             ],
           ),
@@ -3030,6 +3259,197 @@ class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
         if (lockState.locked) return const LockScreen();
         return widget.child;
       },
+    );
+  }
+}
+
+class TorHalo extends StatefulWidget {
+  final bool label;
+  const TorHalo({this.label = false});
+  @override
+  State<TorHalo> createState() => TorHaloState();
+}
+
+class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
+  late final AnimationController _c;
+
+  bool get _isConnecting {
+    final s = appState.torStatus;
+    return s == TorStatus.starting ||
+        s == TorStatus.bootstrapped ||
+        s == TorStatus.publishing;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _c = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+    appState.addListener(_sync);
+    _sync();
+  }
+
+  void _sync() {
+    if (_isConnecting && !_c.isAnimating) {
+      _c.repeat();
+    } else if (!_isConnecting && _c.isAnimating) {
+      _c.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    appState.removeListener(_sync);
+    _c.dispose();
+    super.dispose();
+  }
+
+  void _explain() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: HaloColors.surface2,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (_) => AnimatedBuilder(
+        animation: appState,
+        builder: (context, _) {
+          final s = appState.torStatus;
+          final pct = appState.bootstrapPct;
+          final line = s == TorStatus.off
+              ? 'tor is off'
+              : s == TorStatus.reachable
+              ? 'connected · routed through 3 relays'
+              : s == TorStatus.publishing
+              ? 'connecting · publishing your route'
+              : 'connecting · $pct%';
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(22, 18, 22, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'tor',
+                  style: HaloType.serif(
+                    size: 20,
+                    italic: true,
+                    color: HaloColors.text,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TorWarmupGraph(status: s, bootstrapPct: pct),
+                const SizedBox(height: 16),
+                Text(
+                  line,
+                  style: HaloType.mono(size: 12, color: HaloColors.text),
+                ),
+                if (s != TorStatus.reachable) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    s == TorStatus.off
+                        ? 'tor is off. turn it on to connect privately.'
+                        : 'the first connection takes a minute or two while tor builds a private route. after that it is cached, so opening halo later is much faster.',
+                    style: HaloType.sans(
+                      size: 12.5,
+                      color: HaloColors.text,
+                    ).copyWith(height: 1.5),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'a faster mode that skips tor (and reveals your ip) is coming soon.',
+                    style: HaloType.sans(size: 11, color: HaloColors.text2),
+                  ),
+                ],
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _ring(double size, Color color, double w) => Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      border: Border.all(color: color, width: w),
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _explain,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedBuilder(
+        animation: Listenable.merge([appState, _c]),
+        builder: (context, _) {
+          final s = appState.torStatus;
+          final off = s == TorStatus.off;
+          final secured = s == TorStatus.reachable;
+          final connecting = !off && !secured;
+          const torGreen = Color(0xFF34D399);
+          final accent = off
+              ? HaloColors.text3
+              : secured
+              ? torGreen
+              : HaloColors.amber;
+          final t = _c.value;
+          final dot = SizedBox(
+            width: 18,
+            height: 18,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                if (connecting)
+                  Transform.scale(
+                    scale: 0.5 + t,
+                    child: Opacity(
+                      opacity: (1 - t) * 0.7,
+                      child: _ring(12, HaloColors.amber, 1.4),
+                    ),
+                  ),
+                _ring(
+                  12,
+                  off
+                      ? HaloColors.text3.withValues(alpha: 0.4)
+                      : accent.withValues(alpha: secured ? 1.0 : 0.85),
+                  1.4,
+                ),
+                Container(
+                  width: 5,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: accent,
+                  ),
+                ),
+              ],
+            ),
+          );
+          if (!widget.label) {
+            return SizedBox(width: 20, height: 20, child: Center(child: dot));
+          }
+          final txt = off
+              ? 'tor off'
+              : secured
+              ? 'connected'
+              : 'connecting';
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              dot,
+              const SizedBox(width: 6),
+              Text(txt, style: HaloType.mono(size: 11, color: accent)),
+            ],
+          );
+        },
+      ),
     );
   }
 }
