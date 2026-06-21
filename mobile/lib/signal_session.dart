@@ -29,23 +29,49 @@ class SignalSession {
     clamped[0] &= 0xF8;
     clamped[31] &= 0x7F;
     clamped[31] |= 0x40;
-    final pub = Curve.decodePoint(
-        Uint8List.fromList([0x05, ...xPubBytes]), 0);
+    final pub = Curve.decodePoint(Uint8List.fromList([0x05, ...xPubBytes]), 0);
     final priv = Curve.decodePrivatePoint(clamped);
     identityKeyPair = IdentityKeyPair(IdentityKey(pub), priv);
 
     registrationId = await _loadOrGenRegId(database);
 
-    identityStore = HaloIdentityKeyStore(database, identityKeyPair, registrationId);
+    identityStore = HaloIdentityKeyStore(
+      database,
+      identityKeyPair,
+      registrationId,
+    );
     preKeyStore = HaloPreKeyStore(database);
     sessionStore = HaloSessionStore(database);
     signedPreKeyStore = HaloSignedPreKeyStore(database);
 
     final spkRows = await database.query('signed_prekeys', limit: 1);
-    if (spkRows.isEmpty) {
-      final spk = generateSignedPreKey(identityKeyPair, 1);
-      await signedPreKeyStore.storeSignedPreKey(spk.id, spk);
-      debugPrint('signal: generated signed prekey id=${spk.id}');
+    SignedPreKeyRecord? spk;
+    if (spkRows.isNotEmpty) {
+      spk = SignedPreKeyRecord.fromSerialized(
+        spkRows.first['record'] as Uint8List,
+      );
+      final ok = Curve.verifySignature(
+        identityKeyPair.getPublicKey().publicKey,
+        spk.getKeyPair().publicKey.serialize(),
+        spk.signature,
+      );
+      debugPrint('signal: existing spk self-verify = $ok');
+      if (!ok) {
+        await signedPreKeyStore.removeSignedPreKey(spk.id);
+        spk = null;
+      }
+    }
+    if (spk == null) {
+      final fresh = generateSignedPreKey(identityKeyPair, 1);
+      await signedPreKeyStore.storeSignedPreKey(fresh.id, fresh);
+      final ok = Curve.verifySignature(
+        identityKeyPair.getPublicKey().publicKey,
+        fresh.getKeyPair().publicKey.serialize(),
+        fresh.signature,
+      );
+      debugPrint(
+        'signal: generated signed prekey id=${fresh.id} self-verify = $ok',
+      );
     }
 
     final pkRows = await database.query('prekeys');
@@ -63,8 +89,12 @@ class SignalSession {
   }
 
   Future<int> _loadOrGenRegId(Database d) async {
-    final rows = await d.query('signal_meta',
-        where: 'k = ?', whereArgs: ['regId'], limit: 1);
+    final rows = await d.query(
+      'signal_meta',
+      where: 'k = ?',
+      whereArgs: ['regId'],
+      limit: 1,
+    );
     if (rows.isNotEmpty) return int.parse(rows.first['v'] as String);
     final id = generateRegistrationId(false);
     await d.insert('signal_meta', {'k': 'regId', 'v': id.toString()});

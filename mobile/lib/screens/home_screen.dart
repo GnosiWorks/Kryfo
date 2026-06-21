@@ -54,7 +54,7 @@ class HomeScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            _HomeHead(now: now, haloId: haloId),
+            _HomeHead(now: now, haloId: haloId, onAdd: onAddContact),
             _NotesPin(
               onTap: () => Navigator.of(
                 context,
@@ -354,41 +354,84 @@ void _showConnectionSheet(BuildContext context) {
   );
 }
 
+class _AddScanButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _AddScanButton({required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      child: Container(
+        width: 38,
+        height: 38,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: HaloColors.amber.withValues(alpha: 0.55),
+            width: 1.4,
+          ),
+        ),
+        child: Icon(Icons.add, size: 20, color: HaloColors.amber),
+      ),
+    );
+  }
+}
+
 class _HomeHead extends StatelessWidget {
   final DateTime now;
   final String haloId;
-  const _HomeHead({required this.now, required this.haloId});
+  final VoidCallback onAdd;
+  const _HomeHead({
+    required this.now,
+    required this.haloId,
+    required this.onAdd,
+  });
   @override
   Widget build(BuildContext context) {
     final day = _days[now.weekday - 1];
     final month = _months[now.month - 1];
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '$day,',
-            style: HaloType.serif(size: 26, weight: FontWeight.w400),
-          ),
-          Text(
-            '$month ${now.day}',
-            style: HaloType.serif(
-              size: 26,
-              weight: FontWeight.w300,
-              color: HaloColors.amber,
-              italic: true,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$day,',
+                  style: HaloType.serif(size: 26, weight: FontWeight.w400),
+                ),
+                Text(
+                  '$month ${now.day}',
+                  style: HaloType.serif(
+                    size: 26,
+                    weight: FontWeight.w300,
+                    color: HaloColors.amber,
+                    italic: true,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'your halo · $haloId',
+                  style: HaloType.mono(
+                    size: 11,
+                    color: HaloColors.text2,
+                    letter: 0.04,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'your halo · $haloId',
-            style: HaloType.mono(
-              size: 11,
-              color: HaloColors.text2,
-              letter: 0.04,
-            ),
-          ),
+          _AddScanButton(onTap: onAdd),
+          const SizedBox(width: 12),
+          TorHalo(label: true),
         ],
       ),
     );
@@ -1104,7 +1147,10 @@ class _NavTabs extends StatelessWidget {
             onLongPress: onDevLongPress,
             onTap: onMeTap,
             behavior: HitTestBehavior.opaque,
-            child: _Tab(label: 'Me', active: active == 'me'),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              child: _Tab(label: 'Me', active: active == 'me'),
+            ),
           ),
         ],
       ),

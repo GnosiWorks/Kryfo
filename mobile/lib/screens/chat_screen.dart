@@ -23,7 +23,14 @@ import '../message_envelope.dart'
 import '../theme.dart';
 import '../widgets/halo_avatar.dart';
 import '../main.dart'
-    show engine, db, signalEncrypt, signalDecrypt, appState, currentChatPeer;
+    show
+        engine,
+        db,
+        signalEncrypt,
+        signalDecrypt,
+        appState,
+        currentChatPeer,
+        TorHalo;
 import '../widgets/motion.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
@@ -115,7 +122,10 @@ String _friendlyStatus(String raw) {
   if (raw.startsWith('error: dial:') || raw.contains('host unreachable')) {
     return "couldn't reach peer · they may be offline";
   }
-  if (raw.startsWith('error:')) return 'something went wrong';
+  if (raw.startsWith('error:')) {
+    debugPrint('SENDERR ' + raw);
+    return 'something went wrong';
+  }
   return raw;
 }
 
@@ -180,6 +190,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   final _msgCtrl = TextEditingController();
   int _unreadAfterMs = 0;
   int _firstUnreadIndex = -1;
+  bool _unreadResolved = false;
   bool _ghost = _lastGhost; // restored from last use this session.
   int _burnSeconds = _lastBurnSeconds; // restored from last use this session.
   Timer? _burnTick;
@@ -196,6 +207,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool _loaded = false;
   _Atmo _atmosphere = _Atmo.none;
   String _status = '';
+  bool _loading = false;
+  bool _reloadPending = false;
   String _lastCipher = '';
   Timer? _pollTimer;
   bool _sending = false;
@@ -293,7 +306,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (!mounted) return;
       final now = DateTime.now().millisecondsSinceEpoch;
       final expired = _messages
-          .where((m) => m.burnAt != null && m.burnAt! <= now && !m.removing)
+          .where(
+            (m) =>
+                m.burnAt != null &&
+                m.burnAt! <= now &&
+                !m.removing &&
+                !m.sending &&
+                !m.failed,
+          )
           .toList();
       for (final m in expired) {
         m.removing = true;
@@ -455,14 +475,26 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final offset = box.localToGlobal(Offset.zero);
     final bubbleSize = box.size;
     const pickerH = 54.0;
-    // prefer above the bubble. fall back to below if too close to the top.
+    const menuH = 200.0;
+    final screenH = MediaQuery.of(context).size.height;
     final safeTop = MediaQuery.of(context).padding.top + 8;
-    final aboveTop = offset.dy - pickerH - 14;
-    final reactAbove = aboveTop >= safeTop;
-    final reactTop = reactAbove ? aboveTop : offset.dy + bubbleSize.height + 10;
-    final menuTop = reactAbove
-        ? offset.dy + bubbleSize.height + 10
-        : reactTop + pickerH + 8;
+    final safeBottom = screenH - MediaQuery.of(context).padding.bottom - 12;
+    final bubbleTop = offset.dy;
+    final bubbleBottom = offset.dy + bubbleSize.height;
+    final aboveTop = bubbleTop - pickerH - 14;
+    double reactTop;
+    double? menuTop;
+    double? menuBottom;
+    if (aboveTop >= safeTop && safeBottom - bubbleBottom >= menuH + 14) {
+      reactTop = aboveTop;
+      menuTop = bubbleBottom + 10;
+    } else if (aboveTop >= safeTop) {
+      reactTop = aboveTop;
+      menuBottom = screenH - (reactTop - 8);
+    } else {
+      reactTop = bubbleBottom + 10;
+      menuTop = reactTop + pickerH + 8;
+    }
     // pin the bar to the message's side so reply + edit never
     // run off the right edge. 12px margin from screen edge.
     final alignRight = target.direction == 'out';
@@ -494,7 +526,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   tween: Tween(begin: 0.0, end: 1.0),
                   duration: const Duration(milliseconds: 220),
                   curve: Curves.easeOut,
-                  child: _Bubble(msg: target),
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: _Bubble(msg: target),
+                  ),
                   builder: (_, t, child) =>
                       Transform.scale(scale: 1.0 + 0.04 * t, child: child),
                 ),
@@ -533,6 +568,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             ),
             Positioned(
               top: menuTop,
+              bottom: menuBottom,
               left: alignRight ? null : 12,
               right: alignRight ? 12 : null,
               child: _MenuPop(
@@ -1020,6 +1056,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       );
       final cipher = await signalEncrypt(widget.peerHaloId, wrapped);
       final useDirectOnion = !_backPaired || _peerXPub == null;
+      debugPrint(
+        'SEND route=' +
+            (useDirectOnion ? 'onion' : 'relay') +
+            ' tor=' +
+            appState.torStatus.toString(),
+      );
       final f = useDirectOnion
           ? Future(() => engine.sendTo(widget.peerOnion, cipher))
           : Future(() => engine.nostrSend(_peerXPub!, cipher));
@@ -1065,6 +1107,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       );
       final cipher = await signalEncrypt(widget.peerHaloId, wrapped);
       final useDirectOnion = !_backPaired || _peerXPub == null;
+      debugPrint(
+        'SEND route=' +
+            (useDirectOnion ? 'onion' : 'relay') +
+            ' tor=' +
+            appState.torStatus.toString(),
+      );
       final f = useDirectOnion
           ? Future(() => engine.sendTo(widget.peerOnion, cipher))
           : Future(() => engine.nostrSend(_peerXPub!, cipher));
@@ -1075,7 +1123,26 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _loadMessages() async {
+    if (_loading) {
+      _reloadPending = true;
+      return;
+    }
+    _loading = true;
+    try {
+      await _loadMessagesInner();
+    } finally {
+      _loading = false;
+      if (_reloadPending && mounted) {
+        _reloadPending = false;
+        _loadMessages();
+      }
+    }
+  }
+
+  Future<void> _loadMessagesInner() async {
+    final _lsw = Stopwatch()..start();
     await db.purgeExpiredBurns();
+    debugPrint('LOAD purge +${_lsw.elapsedMilliseconds}ms');
     db.isBackPaired(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _backPaired = v);
     });
@@ -1086,6 +1153,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (mounted) setState(() => _muted = v);
     });
     final rows = await db.messagesFor(widget.peerHaloId);
+    debugPrint('LOAD messagesFor +${_lsw.elapsedMilliseconds}ms');
     if (!mounted) return;
     // collect msg_uids first, batch-load reactions, then setState.
     final loaded = <_Msg>[];
@@ -1103,6 +1171,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           edited: (r['edited'] as int? ?? 0) == 1,
           pinned: (r['pinned'] as int? ?? 0) == 1,
           mediaPath: r['media_path'] as String?,
+          sending:
+              (r['direction'] as String) == 'out' &&
+              (r['sent'] as int? ?? 1) == 0,
         ),
       );
       if (uid != null) uids.add(uid);
@@ -1117,13 +1188,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
     }
     if (!mounted) return;
-    _firstUnreadIndex = -1;
-    for (var i = 0; i < loaded.length; i++) {
-      if (loaded[i].direction != 'out' &&
-          loaded[i].when.millisecondsSinceEpoch > _unreadAfterMs) {
-        _firstUnreadIndex = i;
-        break;
+    if (!_unreadResolved) {
+      _firstUnreadIndex = -1;
+      for (var i = 0; i < loaded.length; i++) {
+        if (loaded[i].direction != 'out' &&
+            loaded[i].when.millisecondsSinceEpoch > _unreadAfterMs) {
+          _firstUnreadIndex = i;
+          break;
+        }
       }
+      _unreadResolved = true;
     }
     setState(() {
       _loaded = true;
@@ -1149,13 +1223,23 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   void _scrollToEnd() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollCtrl.hasClients) {
-        _scrollCtrl.animateTo(
-          _scrollCtrl.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-        );
-      }
+      if (!_scrollCtrl.hasClients) return;
+      final target = _scrollCtrl.position.maxScrollExtent;
+      _scrollCtrl.animateTo(
+        target,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_scrollCtrl.hasClients) return;
+        final grown = _scrollCtrl.position.maxScrollExtent;
+        if (grown > target + 4) _scrollCtrl.jumpTo(grown);
+      });
+      Future.delayed(const Duration(milliseconds: 160), () {
+        if (!mounted || !_scrollCtrl.hasClients) return;
+        final end = _scrollCtrl.position.maxScrollExtent;
+        if ((end - _scrollCtrl.offset).abs() > 2) _scrollCtrl.jumpTo(end);
+      });
     });
   }
 
@@ -1226,18 +1310,30 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // try direct tor first if peer hasn't back-paired and we have their onion.
     // on tor failure / timeout, fall back to nostr store-and-forward.
     final sendFuture = Future<String>(() async {
+      var torWait = 0;
+      while (!_torReadyToSend() && torWait < 90000) {
+        await Future.delayed(const Duration(milliseconds: 400));
+        torWait += 400;
+      }
+      debugPrint('TICK torStatus=${appState.torStatus} waited=${torWait}ms');
+      if (!_torReadyToSend()) return 'error: tor not ready';
       String? tor;
       if (!_backPaired && widget.peerOnion.isNotEmpty) {
+        debugPrint('SEND route=onion tor=' + appState.torStatus.toString());
         tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
         if (tor == 'ok') return 'ok';
         debugPrint('chat send: tor direct failed (\$tor), trying nostr');
       }
       if (_peerXPub != null) {
+        debugPrint('SEND route=relay tor=' + appState.torStatus.toString());
         return await Future(() => engine.nostrSend(_peerXPub!, cipher));
       }
       return tor ?? 'error: no transport';
     });
     sendFuture.then((result) async {
+      if (result == 'ok' && msg.msgUid != null) {
+        await db.markSent(msg.msgUid!);
+      }
       if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
         final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
         await db.setMsgBurnAt(msg.msgUid!, ba);
@@ -1393,6 +1489,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         '',
         msgUid: msgUid,
         imageB64: b64,
+        burnSeconds: msg.burnSecs,
         sender: SenderInfo(
           haloId: appState.myId,
           edPub: engine.myEdPubkey(),
@@ -1410,17 +1507,29 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       return;
     }
     final sendFuture = Future<String>(() async {
+      var torWait = 0;
+      while (!_torReadyToSend() && torWait < 90000) {
+        await Future.delayed(const Duration(milliseconds: 400));
+        torWait += 400;
+      }
+      debugPrint('TICK torStatus=${appState.torStatus} waited=${torWait}ms');
+      if (!_torReadyToSend()) return 'error: tor not ready';
       String? tor;
       if (!_backPaired && widget.peerOnion.isNotEmpty) {
+        debugPrint('SEND route=onion tor=' + appState.torStatus.toString());
         tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
         if (tor == 'ok') return 'ok';
       }
       if (_peerXPub != null) {
+        debugPrint('SEND route=relay tor=' + appState.torStatus.toString());
         return await Future(() => engine.nostrSend(_peerXPub!, cipher));
       }
       return tor ?? 'error: no transport';
     });
     sendFuture.then((result) async {
+      if (result == 'ok' && msg.msgUid != null) {
+        await db.markSent(msg.msgUid!);
+      }
       if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
         final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
         await db.setMsgBurnAt(msg.msgUid!, ba);
@@ -1528,9 +1637,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       msgUid: msgUid,
       mediaPath: mediaPath,
       burnSecs: _ghost ? _burnSeconds : null,
-      burnAt: _ghost
-          ? DateTime.now().millisecondsSinceEpoch + _burnSeconds * 1000
-          : null,
+      burnAt: null,
     );
     setState(() {
       _messages.add(msg);
@@ -1545,6 +1652,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       msgUid: msgUid,
       mediaPath: mediaPath,
       burnAt: msg.burnAt,
+      sent: 0,
     );
     final String cipher;
     try {
@@ -1552,6 +1660,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         caption,
         msgUid: msgUid,
         imageB64: b64,
+        burnSeconds: _ghost ? _burnSeconds : null,
         sender: SenderInfo(
           haloId: appState.myId,
           edPub: engine.myEdPubkey(),
@@ -1569,17 +1678,29 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       return;
     }
     final sendFuture = Future<String>(() async {
+      var torWait = 0;
+      while (!_torReadyToSend() && torWait < 90000) {
+        await Future.delayed(const Duration(milliseconds: 400));
+        torWait += 400;
+      }
+      debugPrint('TICK torStatus=${appState.torStatus} waited=${torWait}ms');
+      if (!_torReadyToSend()) return 'error: tor not ready';
       String? tor;
       if (!_backPaired && widget.peerOnion.isNotEmpty) {
+        debugPrint('SEND route=onion tor=' + appState.torStatus.toString());
         tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
         if (tor == 'ok') return 'ok';
       }
       if (_peerXPub != null) {
+        debugPrint('SEND route=relay tor=' + appState.torStatus.toString());
         return await Future(() => engine.nostrSend(_peerXPub!, cipher));
       }
       return tor ?? 'error: no transport';
     });
     sendFuture.then((result) async {
+      if (result == 'ok' && msg.msgUid != null) {
+        await db.markSent(msg.msgUid!);
+      }
       if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
         final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
         await db.setMsgBurnAt(msg.msgUid!, ba);
@@ -1607,6 +1728,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
   }
 
+  bool _torReadyToSend() {
+    final s = appState.torStatus;
+    return s == TorStatus.bootstrapped ||
+        s == TorStatus.publishing ||
+        s == TorStatus.reachable;
+  }
+
   Future<void> _send() async {
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || _sending) return;
@@ -1620,9 +1748,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       msgUid: msgUid,
       replyTo: replyToUid,
       burnSecs: _ghost ? _burnSeconds : null,
-      burnAt: _ghost
-          ? DateTime.now().millisecondsSinceEpoch + _burnSeconds * 1000
-          : null,
+      burnAt: null,
     );
     setState(() {
       _messages.add(msg);
@@ -1640,6 +1766,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       burnAt: msg.burnAt,
       msgUid: msgUid,
       replyTo: replyToUid,
+      sent: 0,
     );
     final String cipher;
     try {
@@ -1678,18 +1805,30 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // try direct tor first if peer hasn't back-paired and we have their onion.
     // on tor failure / timeout, fall back to nostr store-and-forward.
     final sendFuture = Future<String>(() async {
+      var torWait = 0;
+      while (!_torReadyToSend() && torWait < 90000) {
+        await Future.delayed(const Duration(milliseconds: 400));
+        torWait += 400;
+      }
+      debugPrint('TICK torStatus=${appState.torStatus} waited=${torWait}ms');
+      if (!_torReadyToSend()) return 'error: tor not ready';
       String? tor;
       if (!_backPaired && widget.peerOnion.isNotEmpty) {
+        debugPrint('SEND route=onion tor=' + appState.torStatus.toString());
         tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
         if (tor == 'ok') return 'ok';
         debugPrint('chat send: tor direct failed (\$tor), trying nostr');
       }
       if (_peerXPub != null) {
+        debugPrint('SEND route=relay tor=' + appState.torStatus.toString());
         return await Future(() => engine.nostrSend(_peerXPub!, cipher));
       }
       return tor ?? 'error: no transport';
     });
     sendFuture.then((result) async {
+      if (result == 'ok' && msg.msgUid != null) {
+        await db.markSent(msg.msgUid!);
+      }
       if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
         final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
         await db.setMsgBurnAt(msg.msgUid!, ba);
@@ -3158,6 +3297,27 @@ class _ChatHead extends StatelessWidget {
                     nickname != null ? haloId : 'onion',
                     style: HaloType.mono(size: 10, color: HaloColors.text2),
                   ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.lock_outline,
+                          size: 10,
+                          color: HaloColors.amber,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'encrypted · over tor',
+                          style: HaloType.mono(
+                            size: 10,
+                            color: HaloColors.text2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   if ((note ?? '').isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 3),
@@ -3189,6 +3349,7 @@ class _ChatHead extends StatelessWidget {
               ),
             ),
           ),
+
           if (pinnedCount > 0)
             IconButton(
               icon: Icon(
@@ -3564,11 +3725,7 @@ class _Bubble extends StatelessWidget {
   // Text when there's no active query.
   Widget _body(bool isOut, {bool image = false}) {
     final base = image
-        ? HaloType.serif(
-            size: 13.5,
-            italic: true,
-            color: isOut ? HaloColors.onAmber : HaloColors.text,
-          )
+        ? HaloType.serif(size: 13.5, italic: true, color: HaloColors.text)
         : HaloType.sans(
             size: 14,
             color: (isOut && !image) ? HaloColors.onAmber : HaloColors.text,
@@ -3617,7 +3774,7 @@ class _Bubble extends StatelessWidget {
     final remainingMs = msg.burnAt != null
         ? msg.burnAt! - DateTime.now().millisecondsSinceEpoch
         : 9999999;
-    final isExpiring = msg.burnAt != null && remainingMs < 600;
+    final isExpiring = msg.burnAt != null && remainingMs < 900;
     // freshly-sent outgoing bubble: play a one-shot lift-in. the time window
     // keeps it from re-firing on old bubbles when opening or scrolling a chat.
     final justSent =
@@ -3828,16 +3985,18 @@ class _Bubble extends StatelessWidget {
                                                     ),
                                                   ),
                                                   const SizedBox(width: 3),
-                                                  const Text(
-                                                    '✓',
-                                                    style: TextStyle(
-                                                      fontSize: 10,
-                                                      color: Colors.white,
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                      height: 1,
+                                                  if (!msg.sending &&
+                                                      !msg.failed)
+                                                    const Text(
+                                                      '✓',
+                                                      style: TextStyle(
+                                                        fontSize: 10,
+                                                        color: Colors.white,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        height: 1,
+                                                      ),
                                                     ),
-                                                  ),
                                                 ],
                                               ),
                                             ),
@@ -3928,19 +4087,7 @@ class _Bubble extends StatelessWidget {
                                         ],
                                       ),
                                     ],
-                                    if (msg.reactions.isNotEmpty) ...[
-                                      const SizedBox(height: 6),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 2,
-                                        ),
-                                        child: Wrap(
-                                          spacing: 4,
-                                          runSpacing: 4,
-                                          children: _buildReactionChips(msg),
-                                        ),
-                                      ),
-                                    ],
+
                                     if (msg.burnAt != null && !msg.sending) ...[
                                       const SizedBox(height: 4),
                                       Padding(
@@ -3996,6 +4143,15 @@ class _Bubble extends StatelessWidget {
                           ),
                         ),
                       ),
+                      if (msg.reactions.isNotEmpty)
+                        Positioned(
+                          bottom: -7,
+                          left: 6,
+                          child: Wrap(
+                            spacing: 4,
+                            children: _buildReactionChips(msg),
+                          ),
+                        ),
                       if (ripple)
                         Positioned.fill(
                           child: IgnorePointer(
@@ -4075,27 +4231,41 @@ class _Bubble extends StatelessWidget {
       return _ReactionPop(
         key: ValueKey(emoji),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          padding: const EdgeInsets.all(2),
           decoration: BoxDecoration(
-            color: isMine ? HaloColors.amberSoft : HaloColors.surface3,
-            border: Border.all(
-              color: isMine ? HaloColors.amber : HaloColors.line,
-              width: 0.5,
-            ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(emoji, style: const TextStyle(fontSize: 13)),
-              if (count > 1) ...[
-                const SizedBox(width: 4),
-                Text(
-                  '$count',
-                  style: HaloType.mono(size: 10, color: HaloColors.text2),
-                ),
-              ],
+            color: HaloColors.surface,
+            borderRadius: BorderRadius.circular(13),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x38000000),
+                blurRadius: 5,
+                offset: Offset(0, 2),
+              ),
             ],
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: isMine ? HaloColors.amberSoft : HaloColors.surface3,
+              border: Border.all(
+                color: isMine ? HaloColors.amber : HaloColors.line,
+                width: 0.5,
+              ),
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(emoji, style: const TextStyle(fontSize: 13)),
+                if (count > 1) ...[
+                  const SizedBox(width: 4),
+                  Text(
+                    '$count',
+                    style: HaloType.mono(size: 10, color: HaloColors.text2),
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
       );
@@ -4117,7 +4287,7 @@ class _ReactionPopState extends State<_ReactionPop>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 260),
+    duration: const Duration(milliseconds: 340),
   )..forward();
 
   @override
@@ -4128,9 +4298,30 @@ class _ReactionPopState extends State<_ReactionPop>
 
   @override
   Widget build(BuildContext context) {
-    return ScaleTransition(
-      scale: CurvedAnimation(parent: _c, curve: Curves.easeOutBack),
-      child: widget.child,
+    return FadeTransition(
+      opacity: CurvedAnimation(
+        parent: _c,
+        curve: const Interval(0, 0.5, curve: Curves.easeOut),
+      ),
+      child: ScaleTransition(
+        scale: TweenSequence<double>([
+          TweenSequenceItem(
+            tween: Tween(
+              begin: 0.0,
+              end: 1.18,
+            ).chain(CurveTween(curve: Curves.easeOut)),
+            weight: 62,
+          ),
+          TweenSequenceItem(
+            tween: Tween(
+              begin: 1.18,
+              end: 1.0,
+            ).chain(CurveTween(curve: Curves.easeInOut)),
+            weight: 38,
+          ),
+        ]).animate(_c),
+        child: widget.child,
+      ),
     );
   }
 }
