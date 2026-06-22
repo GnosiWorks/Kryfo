@@ -76,6 +76,7 @@ class _Msg {
   bool removing;
   String? mediaPath;
   Map<String, String> reactions;
+  bool fresh = false;
   _Msg(
     this.direction,
     this.text,
@@ -895,6 +896,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     await Future.delayed(const Duration(milliseconds: 300));
     await db.deleteMessage(m.msgUid!);
     if (mounted) setState(() => _messages.remove(m));
+    try {
+      final wrapped = await wrapMessage('', unsend: m.msgUid);
+      final cipher = await signalEncrypt(widget.peerHaloId, wrapped);
+      final useDirectOnion = !_backPaired || _peerXPub == null;
+      await (useDirectOnion
+          ? Future(() => engine.sendTo(widget.peerOnion, cipher))
+          : Future(() => engine.nostrSend(_peerXPub!, cipher)));
+    } catch (e) {
+      debugPrint('unsend send failed: $e');
+    }
   }
 
   Future<void> _togglePin(_Msg m) async {
@@ -1122,6 +1133,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
+  final Set<String> _seenUids = <String>{};
+
   Future<void> _loadMessages() async {
     if (_loading) {
       _reloadPending = true;
@@ -1188,6 +1201,22 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
     }
     if (!mounted) return;
+    final newSeen = <String>{};
+    for (final m in loaded) {
+      if (m.msgUid != null) newSeen.add(m.msgUid!);
+    }
+    if (_loaded) {
+      for (final m in loaded) {
+        if (m.direction != 'out' &&
+            m.msgUid != null &&
+            !_seenUids.contains(m.msgUid)) {
+          m.fresh = true;
+        }
+      }
+    }
+    _seenUids
+      ..clear()
+      ..addAll(newSeen);
     if (!_unreadResolved) {
       _firstUnreadIndex = -1;
       for (var i = 0; i < loaded.length; i++) {
@@ -1198,6 +1227,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         }
       }
       _unreadResolved = true;
+    }
+    if (!_loaded) {
+      // anything still 'sending' on first open is dead - its future died when
+      // the app closed. mark failed so you get tap-to-retry not a stuck spinner
+      for (final m in loaded) {
+        if (m.direction == 'out' && m.sending) {
+          m.sending = false;
+          m.failed = true;
+        }
+      }
     }
     setState(() {
       _loaded = true;
@@ -3781,10 +3820,7 @@ class _Bubble extends StatelessWidget {
         isOut &&
         !msg.failed &&
         DateTime.now().difference(msg.when).inMilliseconds < 900;
-    final justArrived =
-        !isOut &&
-        !msg.failed &&
-        DateTime.now().difference(msg.when).inMilliseconds < 900;
+    final justArrived = !isOut && !msg.failed && msg.fresh;
     return AnimatedOpacity(
       duration: Duration(milliseconds: isExpiring ? 440 : 250),
       curve: Curves.easeOut,
@@ -3829,7 +3865,7 @@ class _Bubble extends StatelessWidget {
                                 ? null
                                 : isOut
                                 ? HaloColors.amber
-                                : HaloColors.surface3,
+                                : const Color(0xFF3B332A),
                             gradient: null,
                             borderRadius: BorderRadius.only(
                               topLeft: const Radius.circular(14),

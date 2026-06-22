@@ -620,15 +620,10 @@ class _ContactList extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
-    final hero = contacts.first;
-    final rest = contacts.skip(1).toList();
+    final rest = contacts;
     return ListView(
       padding: EdgeInsets.zero,
       children: [
-        _Enter(
-          index: 0,
-          child: _HeroCard(c: hero, onTap: () => onTap(hero.haloId)),
-        ),
         // groups section (header + rows + new-group tile). always show the
         // tile so user can create a group even with no existing groups.
         Padding(
@@ -676,17 +671,6 @@ class _ContactList extends StatelessWidget {
           ),
         ),
         if (rest.isNotEmpty) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-            child: Text(
-              'more',
-              style: HaloType.mono(
-                size: 10,
-                color: HaloColors.text3,
-                letter: 0.14,
-              ),
-            ),
-          ),
           ...rest.asMap().entries.map(
             (e) => _Enter(
               index: 1 + groups.length + e.key,
@@ -979,8 +963,16 @@ class _Row extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Container(
+        decoration: c.unread > 0
+            ? BoxDecoration(
+                color: HaloColors.amber.withValues(alpha: 0.06),
+                border: Border(
+                  left: BorderSide(color: HaloColors.amber, width: 2),
+                ),
+              )
+            : null,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
         child: Row(
           children: [
             Opacity(
@@ -988,7 +980,7 @@ class _Row extends StatelessWidget {
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  HaloAvatar(seed: c.avatarSeed, size: 36),
+                  HaloAvatar(seed: c.avatarSeed, size: 44),
                   if (c.verified)
                     Positioned(
                       right: -1,
@@ -1010,8 +1002,14 @@ class _Row extends StatelessWidget {
                         c.nickname ?? c.haloId,
                         style: HaloType.sans(
                           size: 14,
-                          weight: FontWeight.w500,
-                          color: c.blocked ? HaloColors.text3 : HaloColors.text,
+                          weight: c.unread > 0
+                              ? FontWeight.w600
+                              : FontWeight.w500,
+                          color: c.blocked
+                              ? HaloColors.text3
+                              : (c.unread > 0
+                                    ? HaloColors.text
+                                    : HaloColors.text2),
                         ),
                       ),
                       Row(
@@ -1035,9 +1033,12 @@ class _Row extends StatelessWidget {
                           ],
                           Text(
                             (c.blocked ? 'blocked' : _relTime(c.when)),
-                            style: HaloType.mono(
-                              size: 10,
-                              color: HaloColors.text3,
+                            style: HaloType.serif(
+                              size: 11.5,
+                              italic: true,
+                              color: c.unread > 0
+                                  ? HaloColors.amber
+                                  : HaloColors.text3,
                             ),
                           ),
                         ],
@@ -1052,7 +1053,9 @@ class _Row extends StatelessWidget {
                           c.preview ?? '',
                           style: HaloType.sans(
                             size: 12,
-                            color: HaloColors.text2,
+                            color: c.unread > 0
+                                ? HaloColors.text2
+                                : HaloColors.text3,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -1099,6 +1102,7 @@ String _relTime(DateTime? t) {
   if (d.inMinutes < 1) return 'now';
   if (d.inMinutes < 60) return '${d.inMinutes}m';
   if (d.inHours < 24) return '${d.inHours}h';
+  if (d.inDays == 1) return 'yesterday';
   if (d.inDays < 7) return '${d.inDays}d';
   // older than a week: a short date reads better than a big day count
   const months = [

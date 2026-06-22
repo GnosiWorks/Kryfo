@@ -15,17 +15,19 @@ class UnwrappedMessage {
   final String message;
   final String? endpoint;
   final String? senderHaloId; // 'h' field
-  final String? senderEdPub;  // 'e' field, hex
-  final String? senderOnion;  // 'o' field
-  final String? senderXPub;   // 'x' field, hex
-  final int? burnSeconds;     // 'b' field — seconds-from-receive
-  final String? msgUid;       // 'u' field — stable cross-device message id
+  final String? senderEdPub; // 'e' field, hex
+  final String? senderOnion; // 'o' field
+  final String? senderXPub; // 'x' field, hex
+  final int? burnSeconds; // 'b' field — seconds-from-receive
+  final String? msgUid; // 'u' field — stable cross-device message id
   final ReactionFrame? reaction; // 'r' field — present on reaction control msgs
-  final EditFrame? edit;       // 'ed' field — present on edit control msgs
-  final String? replyTo;      // 'q' field — msg_uid this message replies to
-  final String? groupId;      // 'g' field — present for group messages
-  final GroupControl? groupControl; // 'gc' field — present on group control msgs
+  final EditFrame? edit; // 'ed' field — present on edit control msgs
+  final String? replyTo; // 'q' field — msg_uid this message replies to
+  final String? groupId; // 'g' field — present for group messages
+  final GroupControl?
+  groupControl; // 'gc' field — present on group control msgs
   final String? imageB64; // 'i' field — base64-encoded compressed jpeg
+  final String? unsend; // 'un' field - recalled msg_uid
   UnwrappedMessage(
     this.message, {
     this.endpoint,
@@ -41,6 +43,7 @@ class UnwrappedMessage {
     this.groupId,
     this.groupControl,
     this.imageB64,
+    this.unsend,
   });
 }
 
@@ -48,23 +51,28 @@ class UnwrappedMessage {
 /// is not a message body but a group state update (create, member add/remove,
 /// rename, leave). The 'm' body should be ignored when this is present.
 class GroupControl {
-  final String type;            // 'create' | 'add' | 'remove' | 'rename' | 'leave'
-  final String? name;           // present on 'create' and 'rename'
-  final List<String>? members;  // full member list on 'create'; the target halo id list on 'add'/'remove'
+  final String type; // 'create' | 'add' | 'remove' | 'rename' | 'leave'
+  final String? name; // present on 'create' and 'rename'
+  final List<String>?
+  members; // full member list on 'create'; the target halo id list on 'add'/'remove'
   // participants carries full SenderInfo (halo_id + onion + xpub) for each
   // member the receiver might not already have as a contact. populated on
   // 'create' (every member) and 'add' (each newly added member). receivers
   // auto-create contact stubs from this so subsequent group sends work.
   final List<Map<String, String>>? participants;
-  const GroupControl(
-      {required this.type, this.name, this.members, this.participants});
+  const GroupControl({
+    required this.type,
+    this.name,
+    this.members,
+    this.participants,
+  });
 }
 
 /// A reaction "control message" — when present in an envelope, the payload
 /// is not a message body but a reaction (add or remove) on a previous one.
 class ReactionFrame {
   final String targetUid; // the msg_uid this reaction applies to
-  final String emoji;     // '' means remove the reactor's reaction
+  final String emoji; // '' means remove the reactor's reaction
   const ReactionFrame({required this.targetUid, required this.emoji});
 }
 
@@ -100,6 +108,7 @@ Future<String> wrapMessage(
   String? groupId,
   GroupControl? groupControl,
   String? imageB64,
+  String? unsend,
 }) async {
   final mode = await loadPushMode();
   final body = <String, dynamic>{'m': plain};
@@ -112,6 +121,7 @@ Future<String> wrapMessage(
   }
   if (replyTo != null) body['q'] = replyTo;
   if (imageB64 != null) body['i'] = imageB64;
+  if (unsend != null) body['un'] = unsend;
 
   if (mode == PushMode.ntfy) {
     final topic = await loadNtfyTopic();
@@ -143,8 +153,9 @@ UnwrappedMessage unwrapMessage(String wrapped) {
     return UnwrappedMessage(wrapped);
   }
   try {
-    final json = jsonDecode(wrapped.substring(_envelopePrefix.length))
-        as Map<String, dynamic>;
+    final json =
+        jsonDecode(wrapped.substring(_envelopePrefix.length))
+            as Map<String, dynamic>;
     ReactionFrame? reaction;
     final rRaw = json['r'];
     if (rRaw is Map) {
@@ -199,6 +210,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       groupId: json['g'] as String?,
       groupControl: gc,
       imageB64: json['i'] as String?,
+      unsend: json['un'] as String?,
     );
   } catch (_) {
     return UnwrappedMessage(wrapped);
