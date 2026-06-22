@@ -986,13 +986,14 @@ class _FirstContactScreen extends StatelessWidget {
             'scan a halo',
             "scan a friend's QR code or paste their three words",
             () async {
+              // open the scanner first, then finish onboarding once it returns.
+              // marking onboarding done first rebuilt the tree to home and ate the
+              // navigation, dropping the user on home with no camera.
+              final nav = Navigator.of(context);
+              await nav.push(
+                MaterialPageRoute(builder: (_) => const ScanScreen()),
+              );
               onComplete();
-              await Future.delayed(const Duration(milliseconds: 100));
-              if (context.mounted) {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const ScanScreen()));
-              }
             },
           ),
           const Spacer(),

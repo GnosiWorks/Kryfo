@@ -367,7 +367,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 19,
+      version: 20,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -393,7 +393,8 @@ class HaloDb {
             unread INTEGER NOT NULL DEFAULT 0,
             atmosphere TEXT,
             note TEXT,
-            pinned INTEGER NOT NULL DEFAULT 0
+            pinned INTEGER NOT NULL DEFAULT 0,
+            key_changed INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute('''
@@ -449,6 +450,11 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 20) {
+          await db.execute(
+            'ALTER TABLE contacts ADD COLUMN key_changed INTEGER NOT NULL DEFAULT 0',
+          );
+        }
         if (oldV < 19) {
           await db.execute(
             'ALTER TABLE messages ADD COLUMN sent INTEGER NOT NULL DEFAULT 1',
@@ -638,6 +644,29 @@ class HaloDb {
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
+  Future<bool> keyChanged(String haloId) async {
+    final db = await open();
+    final rows = await db.query(
+      'contacts',
+      columns: ['key_changed'],
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return false;
+    return (rows.first['key_changed'] as int? ?? 0) == 1;
+  }
+
+  Future<void> clearKeyChanged(String haloId) async {
+    final db = await open();
+    await db.update(
+      'contacts',
+      {'key_changed': 0},
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+    );
+  }
+
   Future<List<Map<String, Object?>>> contacts() async {
     final db = await open();
     return db.query('contacts', orderBy: 'last_seen DESC');
@@ -751,9 +780,23 @@ class HaloDb {
         'last_seen': now,
       });
     } else {
+      // xpub changed on someone we already know = they reinstalled, or its a
+      // mitm. dont just swap the key silently, flag it so the chat warns
+      final priorX = existing.first['xpub'] as String?;
+      final changed =
+          priorX != null &&
+          priorX.isNotEmpty &&
+          xpub.isNotEmpty &&
+          priorX != xpub;
       await db.update(
         'contacts',
-        {'onion': onion, 'xpub': xpub, 'last_seen': now},
+        {
+          'onion': onion,
+          'xpub': xpub,
+          'last_seen': now,
+          if (changed) 'key_changed': 1,
+          if (changed) 'verified': 0,
+        },
         where: 'halo_id = ?',
         whereArgs: [haloId],
       );
@@ -961,10 +1004,31 @@ class HaloDb {
     );
   }
 
+  // kill the jpgs too, not just the rows. otherwise a burned photo is still
+  // sitting on disk
+  Future<void> _scrubMedia(List<Map<String, Object?>> rows) async {
+    for (final r in rows) {
+      final mp = r['media_path'] as String?;
+      if (mp != null && mp.isNotEmpty) {
+        try {
+          final f = File(mp);
+          if (await f.exists()) await f.delete();
+        } catch (_) {}
+      }
+    }
+  }
+
   Future<void> deleteMessage(String msgUid) async {
     final db = await open();
+    final media = await db.query(
+      'messages',
+      columns: ['media_path'],
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+    );
     await db.delete('reactions', where: 'msg_uid = ?', whereArgs: [msgUid]);
     await db.delete('messages', where: 'msg_uid = ?', whereArgs: [msgUid]);
+    await _scrubMedia(media);
   }
 
   Future<void> purgeExpiredBurns() async {
@@ -987,6 +1051,7 @@ class HaloDb {
       where: 'burn_at IS NOT NULL AND burn_at < ?',
       whereArgs: [now],
     );
+    await _scrubMedia(rows);
   }
 
   Future<void> bumpUnread(String peerId) async {
@@ -1032,12 +1097,19 @@ class HaloDb {
 
   Future<void> clearConversation(String peerId) async {
     final db = await open();
+    final media = await db.query(
+      'messages',
+      columns: ['media_path'],
+      where: 'peer_id = ?',
+      whereArgs: [peerId],
+    );
     await db.rawDelete(
       'DELETE FROM reactions WHERE msg_uid IN '
       '(SELECT msg_uid FROM messages WHERE peer_id = ? AND msg_uid IS NOT NULL)',
       [peerId],
     );
     await db.delete('messages', where: 'peer_id = ?', whereArgs: [peerId]);
+    await _scrubMedia(media);
   }
 
   Future<void> editMessage(String msgUid, String newText) async {
@@ -1107,11 +1179,20 @@ class HaloDb {
   // sweep started in boot().
   Future<int> purgeExpired() async {
     final db = await open();
-    return db.delete(
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final media = await db.query(
+      'messages',
+      columns: ['media_path'],
+      where: 'burn_at IS NOT NULL AND burn_at < ?',
+      whereArgs: [now],
+    );
+    final n = await db.delete(
       'messages',
       where: 'burn_at IS NOT NULL AND burn_at < ?',
-      whereArgs: [DateTime.now().millisecondsSinceEpoch],
+      whereArgs: [now],
     );
+    await _scrubMedia(media);
+    return n;
   }
 
   Future<void> markSent(String msgUid) async {
@@ -1519,6 +1600,11 @@ class AppState extends ChangeNotifier {
       await db.editMessage(env.edit!.targetUid, env.edit!.newText);
       return;
     }
+    // 2.6) unsend - sender recalled a message; delete our copy
+    if (env.unsend != null) {
+      await db.deleteMessage(env.unsend!);
+      return;
+    }
     // 3) data message — could be 1:1 or group
     final isGroup = env.groupId != null;
     if (isGroup && !await db.groupExists(env.groupId!)) {
@@ -1554,6 +1640,9 @@ class AppState extends ChangeNotifier {
     if (!isGroup && currentChatPeer != senderHaloId) {
       await db.bumpUnread(senderHaloId);
     }
+    // a message landed: rebuild the contact list so the home shows the
+    // new preview, time and unread dot without needing the chat opened.
+    await refreshContacts();
     final String notifTitle;
     final String notifBody;
     final String notifPayload;
@@ -1759,13 +1848,6 @@ class AppState extends ChangeNotifier {
     final _bsw = Stopwatch()..start();
     if (ready) return;
     final docsDir = await getApplicationDocumentsDirectory();
-    // start tor first so it bootstraps while the db + keys load
-    _startListenerOnIsolate(docsDir.path).then((addr) {
-      if (addr.isNotEmpty && !addr.startsWith('error')) {
-        myOnion = addr;
-        notifyListeners();
-      }
-    });
     final saved = await db.loadIdentity();
     debugPrint('BOOT db+loadIdentity +${_bsw.elapsedMilliseconds}ms');
     if (saved != null) {
@@ -1800,11 +1882,20 @@ class AppState extends ChangeNotifier {
         'true';
     // let the onion linger a beat before the home appears
     if (onboardingComplete) {
-      await Future.delayed(const Duration(milliseconds: 1800));
+      await Future.delayed(const Duration(milliseconds: 300));
     }
     ready = true;
     debugPrint('BOOT ready +${_bsw.elapsedMilliseconds}ms');
     notifyListeners();
+    // start tor last, after all sync identity + signal work. nothing
+    // above needs it, and starting it earlier stalled the main thread
+    // while tor bootstrapped.
+    _startListenerOnIsolate(docsDir.path).then((addr) {
+      if (addr.isNotEmpty && !addr.startsWith('error')) {
+        myOnion = addr;
+        notifyListeners();
+      }
+    });
     // poll bootstrap so the halo can breathe while the listener warms up.
     Timer.periodic(const Duration(seconds: 1), (t) {
       final raw = engine.getStatus();
