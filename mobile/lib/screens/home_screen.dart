@@ -1,6 +1,7 @@
 // home screen. date header, hero card or empty state, nav tabs.
 // matches 08_complete_spec.html "the everyday" home tile.
 
+import 'saved_screen.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -46,7 +47,7 @@ class HomeScreen extends StatelessWidget {
     if (!_miuiPromptChecked) {
       _miuiPromptChecked = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        maybeShowMiuiPrompt(context);
+        maybeShowBackgroundPrompt(context);
       });
     }
     return Scaffold(
@@ -55,10 +56,16 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           children: [
             _HomeHead(now: now, haloId: haloId, onAdd: onAddContact),
+            const _OfflineStrip(),
             _NotesPin(
               onTap: () => Navigator.of(
                 context,
               ).push(MaterialPageRoute(builder: (_) => const NotesScreen())),
+            ),
+            _SavedPin(
+              onTap: () => Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const SavedScreen())),
             ),
             if (hasArchived)
               _ArchivedPin(
@@ -418,12 +425,31 @@ class _HomeHead extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  'your halo · $haloId',
-                  style: HaloType.mono(
-                    size: 11,
-                    color: HaloColors.text2,
-                    letter: 0.04,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: RichText(
+                    maxLines: 1,
+                    softWrap: false,
+                    text: TextSpan(
+                      style: HaloType.mono(
+                        size: 11.5,
+                        color: HaloColors.text3,
+                        letter: 0.04,
+                      ),
+                      children: [
+                        const TextSpan(text: 'your halo · '),
+                        TextSpan(
+                          text: haloId,
+                          style: HaloType.mono(
+                            size: 11.5,
+                            color: HaloColors.text,
+                            weight: FontWeight.w500,
+                            letter: 0.04,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -439,6 +465,56 @@ class _HomeHead extends StatelessWidget {
 }
 
 // ───────── empty state ─────────
+
+class _OfflineStrip extends StatelessWidget {
+  const _OfflineStrip();
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: appState,
+      builder: (context, _) {
+        if (appState.online) return const SizedBox.shrink();
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
+          decoration: BoxDecoration(
+            color: HaloColors.rose.withValues(alpha: 0.14),
+            border: Border(
+              bottom: BorderSide(
+                color: HaloColors.rose.withValues(alpha: 0.35),
+                width: 0.5,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              BreathDot(color: HaloColors.rose, size: 7),
+              const SizedBox(width: 10),
+              Text(
+                'offline',
+                style: HaloType.mono(
+                  size: 12,
+                  color: HaloColors.rose,
+                  weight: FontWeight.w500,
+                  letter: 0.08,
+                ),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Text(
+                  'sends when you reconnect',
+                  style: HaloType.mono(size: 11.5, color: HaloColors.text2),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
 
 class _EmptyState extends StatelessWidget {
   final VoidCallback onAdd;
@@ -1005,11 +1081,7 @@ class _Row extends StatelessWidget {
                           weight: c.unread > 0
                               ? FontWeight.w600
                               : FontWeight.w500,
-                          color: c.blocked
-                              ? HaloColors.text3
-                              : (c.unread > 0
-                                    ? HaloColors.text
-                                    : HaloColors.text2),
+                          color: c.blocked ? HaloColors.text3 : HaloColors.text,
                         ),
                       ),
                       Row(
@@ -1074,7 +1146,7 @@ class _Row extends StatelessWidget {
                             borderRadius: BorderRadius.circular(9),
                           ),
                           child: Text(
-                            c.unread > 99 ? '99+' : '\${c.unread}',
+                            c.unread > 99 ? '99+' : '${c.unread}',
                             textAlign: TextAlign.center,
                             style: HaloType.sans(
                               size: 10,
@@ -1174,6 +1246,64 @@ class _Tab extends StatelessWidget {
         size: 11,
         weight: active ? FontWeight.w500 : FontWeight.w400,
         color: active ? HaloColors.text : HaloColors.text2,
+      ),
+    );
+  }
+}
+
+class _SavedPin extends StatelessWidget {
+  final VoidCallback onTap;
+  const _SavedPin({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: HaloColors.surface2,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: HaloColors.line, width: 0.5),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: HaloColors.amberSoft,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              alignment: Alignment.center,
+              child: Icon(Icons.bookmark, color: HaloColors.amber, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'saved',
+                    style: HaloType.serif(
+                      size: 14,
+                      color: HaloColors.text,
+                      italic: true,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'messages you kept, from every chat',
+                    style: HaloType.sans(size: 11.5, color: HaloColors.text3),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Color(0xFF6B625A), size: 18),
+          ],
+        ),
       ),
     );
   }

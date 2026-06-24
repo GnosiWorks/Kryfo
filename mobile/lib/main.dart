@@ -20,6 +20,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'theme.dart';
 import 'screens/home_screen.dart';
 import 'screens/new_group_screen.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'screens/group_chat_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/scan_screen.dart';
@@ -367,7 +368,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 20,
+      version: 22,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -411,6 +412,10 @@ class HaloDb {
             edited INTEGER NOT NULL DEFAULT 0,
             pinned INTEGER NOT NULL DEFAULT 0,
             media_path TEXT,
+            file_path TEXT,
+            file_name TEXT,
+            voice_disguised INTEGER NOT NULL DEFAULT 0,
+            saved INTEGER NOT NULL DEFAULT 0,
             sent INTEGER NOT NULL DEFAULT 1,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
@@ -450,6 +455,18 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 22) {
+          await db.execute(
+            'ALTER TABLE messages ADD COLUMN voice_disguised INTEGER NOT NULL DEFAULT 0',
+          );
+          await db.execute(
+            'ALTER TABLE messages ADD COLUMN saved INTEGER NOT NULL DEFAULT 0',
+          );
+        }
+        if (oldV < 21) {
+          await db.execute('ALTER TABLE messages ADD COLUMN file_path TEXT');
+          await db.execute('ALTER TABLE messages ADD COLUMN file_name TEXT');
+        }
         if (oldV < 20) {
           await db.execute(
             'ALTER TABLE contacts ADD COLUMN key_changed INTEGER NOT NULL DEFAULT 0',
@@ -812,6 +829,10 @@ class HaloDb {
     String? replyTo,
     String? groupId,
     String? mediaPath,
+    String? filePath,
+    String? fileName,
+    bool voiceDisguised = false,
+    bool saved = false,
     int sent = 1,
   }) async {
     final db = await open();
@@ -825,6 +846,10 @@ class HaloDb {
       'reply_to': replyTo,
       'group_id': groupId,
       'media_path': mediaPath,
+      'file_path': filePath,
+      'file_name': fileName,
+      'voice_disguised': voiceDisguised ? 1 : 0,
+      'saved': saved ? 1 : 0,
       'sent': sent,
     });
     // any inbound message proves the peer knows us, so flip back_paired.
@@ -1002,6 +1027,23 @@ class HaloDb {
       where: 'msg_uid = ?',
       whereArgs: [msgUid],
     );
+  }
+
+  Future<void> setSaved(String msgUid, bool saved) async {
+    final db = await open();
+    await db.update(
+      'messages',
+      {'saved': saved ? 1 : 0},
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+    );
+  }
+
+  // every saved message across all chats, newest first. peer_id rides along
+  // so the saved screen can show who it's from.
+  Future<List<Map<String, Object?>>> savedMessages() async {
+    final db = await open();
+    return db.query('messages', where: 'saved = 1', orderBy: 'sent_at DESC');
   }
 
   // kill the jpgs too, not just the rows. otherwise a burned photo is still
@@ -1215,6 +1257,21 @@ class HaloDb {
     );
   }
 
+  // only messages newer than a timestamp, oldest-first. used by the chat's
+  // append-on-receive fast path so a live message doesn't reload the world.
+  Future<List<Map<String, Object?>>> messagesAfter(
+    String peerId,
+    int afterMs,
+  ) async {
+    final db = await open();
+    return db.query(
+      'messages',
+      where: 'peer_id = ? AND sent_at > ?',
+      whereArgs: [peerId, afterMs],
+      orderBy: 'sent_at ASC',
+    );
+  }
+
   // newest message for a peer (or null) — drives the home-list preview and
   // ordering without loading the whole conversation.
   Future<Map<String, Object?>?> lastMessageFor(String peerId) async {
@@ -1357,6 +1414,16 @@ Future<String> handleHaloUri(String raw) async {
   }
 }
 
+Future<String> saveFileBytes(List<int> bytes, String uid, String name) async {
+  final dir = await getApplicationDocumentsDirectory();
+  final mediaDir = Directory('${dir.path}/media');
+  if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
+  final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+  final file = File('${mediaDir.path}/f_${uid}_\$safe');
+  await file.writeAsBytes(bytes);
+  return file.path;
+}
+
 Future<String> saveMediaBytes(List<int> bytes, String name) async {
   final dir = await getApplicationDocumentsDirectory();
   final mediaDir = Directory('${dir.path}/media');
@@ -1477,6 +1544,16 @@ class AppState extends ChangeNotifier {
     final on = (await s.read(key: 'ghost_on')) == '1';
     final secs = int.tryParse(await s.read(key: 'ghost_secs') ?? '') ?? 300;
     return (on, secs);
+  }
+
+  Future<bool> loadDisguisePref() async {
+    const s = FlutterSecureStorage();
+    return (await s.read(key: 'disguise_on')) == '1';
+  }
+
+  Future<void> saveDisguisePref(bool on) async {
+    const s = FlutterSecureStorage();
+    await s.write(key: 'disguise_on', value: on ? '1' : '0');
   }
 
   Future<void> loadSendMode() async {
@@ -1622,6 +1699,17 @@ class AppState extends ChangeNotifier {
         );
       } catch (_) {}
     }
+    String? filePath;
+    final fileName = env.fileName;
+    if (env.fileB64 != null && env.fileB64!.isNotEmpty) {
+      try {
+        filePath = await saveFileBytes(
+          base64Decode(env.fileB64!),
+          env.msgUid ?? DateTime.now().millisecondsSinceEpoch.toString(),
+          fileName ?? 'file',
+        );
+      } catch (_) {}
+    }
     await db.saveMessage(
       senderHaloId,
       'in',
@@ -1632,7 +1720,10 @@ class AppState extends ChangeNotifier {
       msgUid: env.msgUid,
       replyTo: env.replyTo,
       groupId: env.groupId,
+      voiceDisguised: env.voiceDisguised,
       mediaPath: mediaPath,
+      filePath: filePath,
+      fileName: fileName,
     );
     // notification context — for groups, title = group name and body
     // prefixes the sender. payload uses "group:<id>" so tap-to-open can
@@ -1657,7 +1748,9 @@ class AppState extends ChangeNotifier {
       notifTitle = senderHaloId;
       notifBody = env.message.isNotEmpty
           ? env.message
-          : (mediaPath != null ? 'photo' : env.message);
+          : (fileName != null
+                ? fileName
+                : (mediaPath != null ? 'photo' : env.message));
       notifPayload = senderHaloId;
       suppress =
           currentChatPeer == senderHaloId || await db.isMuted(senderHaloId);
@@ -1763,6 +1856,8 @@ class AppState extends ChangeNotifier {
   int _bootstrapPct = 0;
   TorStatus get torStatus => _torStatus;
   int get bootstrapPct => _bootstrapPct;
+  bool _online = true;
+  bool get online => _online;
   List<ContactPreview> contacts = [];
   final Map<String, String> _xPubToHaloId = {};
 
@@ -1909,6 +2004,7 @@ class AppState extends ChangeNotifier {
       }
       if (st == TorStatus.reachable) t.cancel();
     });
+    _initConnectivity();
     _nostrInitOnIsolate('wss://relay.damus.io,wss://nos.lol');
     await loadDisplayName();
     await loadScreenshotPref();
@@ -2031,6 +2127,21 @@ class AppState extends ChangeNotifier {
     onboardingComplete = _stored == 'true';
     ready = true;
     notifyListeners();
+  }
+
+  Future<void> _initConnectivity() async {
+    try {
+      final init = await Connectivity().checkConnectivity();
+      _online = init.any((r) => r != ConnectivityResult.none);
+      notifyListeners();
+    } catch (_) {}
+    Connectivity().onConnectivityChanged.listen((results) {
+      final on = results.any((r) => r != ConnectivityResult.none);
+      if (on != _online) {
+        _online = on;
+        notifyListeners();
+      }
+    });
   }
 
   Future<void> _bootSignal() async {

@@ -1,12 +1,18 @@
 // chat screen. message bubbles, composer, live receive over tor.
 // matches 08_complete_spec.html "the everyday" chat tile.
 
+import 'dart:typed_data';
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:cross_file/cross_file.dart';
+import 'package:record/record.dart';
+import 'package:just_audio/just_audio.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'key_verification_screen.dart';
@@ -46,6 +52,7 @@ class ChatScreen extends StatefulWidget {
   final String peerXPub;
   final String avatarSeed;
   final String? initialText;
+  final String? jumpToUid;
 
   const ChatScreen({
     super.key,
@@ -54,6 +61,7 @@ class ChatScreen extends StatefulWidget {
     required this.peerXPub,
     required this.avatarSeed,
     this.initialText,
+    this.jumpToUid,
   });
 
   @override
@@ -75,6 +83,10 @@ class _Msg {
   bool pinned;
   bool removing;
   String? mediaPath;
+  String? filePath;
+  String? fileName;
+  bool voiceDisguised;
+  bool saved;
   Map<String, String> reactions;
   bool fresh = false;
   _Msg(
@@ -91,8 +103,99 @@ class _Msg {
     this.pinned = false,
     this.removing = false,
     this.mediaPath,
+    this.filePath,
+    this.fileName,
+    this.voiceDisguised = false,
+    this.saved = false,
     Map<String, String>? reactions,
   }) : reactions = reactions ?? <String, String>{};
+}
+
+String _humanSize(int bytes) {
+  if (bytes < 1024) return '$bytes b';
+  if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(0)} kb';
+  return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} mb';
+}
+
+IconData _fileGlyph(String name) {
+  final n = name.toLowerCase();
+  if (n.endsWith('.pdf')) return Icons.picture_as_pdf_outlined;
+  if (n.endsWith('.zip') || n.endsWith('.rar') || n.endsWith('.7z')) {
+    return Icons.folder_zip_outlined;
+  }
+  if (n.endsWith('.doc') || n.endsWith('.docx') || n.endsWith('.txt')) {
+    return Icons.description_outlined;
+  }
+  if (n.endsWith('.mp3') || n.endsWith('.wav') || n.endsWith('.m4a')) {
+    return Icons.audiotrack_outlined;
+  }
+  if (n.endsWith('.mp4') || n.endsWith('.mov') || n.endsWith('.mkv')) {
+    return Icons.movie_outlined;
+  }
+  return Icons.insert_drive_file_outlined;
+}
+
+Widget _fileCard(_Msg msg, bool isOut) {
+  final fg = isOut ? HaloColors.onAmber : HaloColors.text;
+  final sub = isOut ? HaloColors.onAmber : HaloColors.text3;
+  final icon = isOut ? HaloColors.onAmber : HaloColors.amber;
+  int? sz;
+  try {
+    if (msg.filePath != null) sz = File(msg.filePath!).lengthSync();
+  } catch (_) {}
+  final ext = (msg.fileName ?? '').contains('.')
+      ? msg.fileName!.split('.').last.toUpperCase()
+      : 'FILE';
+  return Container(
+    constraints: const BoxConstraints(maxWidth: 230),
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+    decoration: BoxDecoration(
+      color: isOut
+          ? HaloColors.onAmber.withValues(alpha: 0.12)
+          : HaloColors.surface3,
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: isOut
+                ? HaloColors.onAmber.withValues(alpha: 0.16)
+                : HaloColors.amberSoft,
+            borderRadius: BorderRadius.circular(9),
+          ),
+          child: Icon(_fileGlyph(msg.fileName ?? ''), size: 19, color: icon),
+        ),
+        const SizedBox(width: 10),
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                msg.fileName ?? 'file',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: HaloType.sans(
+                  size: 13,
+                  color: fg,
+                  weight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                sz != null ? '$ext · ${_humanSize(sz)}' : ext,
+                style: HaloType.mono(size: 9, color: sub),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 void _openFullImage(BuildContext context, String path) {
@@ -120,6 +223,9 @@ void _openFullImage(BuildContext context, String path) {
 
 String _friendlyStatus(String raw) {
   if (raw.isEmpty) return '';
+  if (!appState.online && raw.startsWith('error:')) {
+    return "you are offline · sends when you reconnect";
+  }
   if (raw.startsWith('error: dial:') || raw.contains('host unreachable')) {
     return "couldn't reach peer · they may be offline";
   }
@@ -193,8 +299,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   int _firstUnreadIndex = -1;
   bool _unreadResolved = false;
   bool _ghost = _lastGhost; // restored from last use this session.
+  bool _disguise = false;
   int _burnSeconds = _lastBurnSeconds; // restored from last use this session.
   Timer? _burnTick;
+  int _lastBurnSec = 0;
   final _scrollCtrl = ScrollController();
   final Map<int, GlobalKey> _dayKeys = {};
   final GlobalKey _listKey = GlobalKey();
@@ -258,6 +366,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         });
       }
     });
+    appState.loadDisguisePref().then((d) {
+      if (mounted) setState(() => _disguise = d);
+    });
     appState.addListener(_onAppStateChanged);
     appState.loadSendMode();
     currentChatPeer = widget.peerHaloId;
@@ -270,6 +381,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     } else {
       _msgCtrl.text = _draftPerPeer[widget.peerHaloId] ?? '';
     }
+    // save the draft live on every keystroke so it survives leaving the chat
+    // regardless of when dispose runs.
+    _msgCtrl.addListener(() {
+      final t = _msgCtrl.text;
+      if (t.trim().isEmpty) {
+        _draftPerPeer.remove(widget.peerHaloId);
+      } else {
+        _draftPerPeer[widget.peerHaloId] = t;
+      }
+    });
     db.getContact(widget.peerHaloId).then((c) {
       if (mounted) {
         setState(() {
@@ -324,8 +445,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         });
       }
       if (expired.isNotEmpty) HapticFeedback.lightImpact();
-      final stillBurning = _messages.where((m) => m.burnAt != null).toList();
-      if (expired.isNotEmpty || stillBurning.isNotEmpty) {
+      // avoid repainting the whole list every 250ms for a ghost's full life.
+      // repaint near the burn moment and once a second for the countdown.
+      int? soonest;
+      for (final m in _messages) {
+        if (m.burnAt == null) continue;
+        final r = m.burnAt! - now;
+        if (soonest == null || r < soonest) soonest = r;
+      }
+      final burningNow = soonest != null && soonest < 1500;
+      final sec = now ~/ 1000;
+      final ticked = soonest != null && sec != _lastBurnSec;
+      if (expired.isNotEmpty || burningNow || ticked) {
+        _lastBurnSec = sec;
         setState(() {});
       }
     });
@@ -338,7 +470,89 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   void _onAppStateChanged() {
     if (!mounted) return;
-    _loadMessages();
+    _retryFailedOnReconnect();
+    _tryAppendNew();
+  }
+
+  // when tor comes back (down -> reachable), re-fire anything that failed while
+  // offline. only touches messages already marked failed — never the ones still
+  // 'sending' (those have a live future). fires once per reconnect via the
+  // _wasReachable edge, so a stream of status ticks won't spam resends.
+  void _retryFailedOnReconnect() {
+    final reachable = appState.torStatus == TorStatus.reachable;
+    if (reachable && !_wasReachable) {
+      for (final m in _messages) {
+        if (m.direction == 'out' && m.failed && m.msgUid != null) {
+          if (m.mediaPath != null) {
+            _retryImage(m);
+          } else {
+            _retry(m);
+          }
+        }
+      }
+    }
+    _wasReachable = reachable;
+  }
+
+  // fast path for a live message landing while you're in the chat. pulls only
+  // rows newer than the newest we hold and tacks them on, so the list doesn't
+  // rebuild from scratch (that full reload was eating the bubble-in animation
+  // and felt laggy). falls back to a full reload if anything looks off — an
+  // edit, a delete, a reaction, or a row we already have.
+  Future<void> _tryAppendNew() async {
+    if (!_loaded || _searching) {
+      _loadMessages();
+      return;
+    }
+    final lastMs = _messages.isEmpty
+        ? 0
+        : _messages
+              .map((m) => m.when.millisecondsSinceEpoch)
+              .reduce((a, b) => a > b ? a : b);
+    final rows = await db.messagesAfter(widget.peerHaloId, lastMs);
+    if (!mounted) return;
+    final have = _messages.map((m) => m.msgUid).toSet();
+    // any new row we don't already hold? if not, fall back to a full reload —
+    // covers edits/reactions/deletes and clock-skew (a received msg whose
+    // sent_at is older than our local newest, e.g. voice notes).
+    final brandNew = rows
+        .where(
+          (r) =>
+              (r['msg_uid'] as String?) != null &&
+              !have.contains(r['msg_uid'] as String?),
+        )
+        .toList();
+    if (brandNew.isEmpty) {
+      _loadMessages();
+      return;
+    }
+    final fresh = <_Msg>[];
+    for (final r in brandNew) {
+      final uid = r['msg_uid'] as String?;
+      final m = _Msg(
+        r['direction'] as String,
+        r['plaintext'] as String,
+        DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+        burnAt: r['burn_at'] as int?,
+        msgUid: uid,
+        replyTo: r['reply_to'] as String?,
+        edited: (r['edited'] as int? ?? 0) == 1,
+        pinned: (r['pinned'] as int? ?? 0) == 1,
+        mediaPath: r['media_path'] as String?,
+        filePath: r['file_path'] as String?,
+        fileName: r['file_name'] as String?,
+        voiceDisguised: (r['voice_disguised'] as int? ?? 0) == 1,
+        saved: (r['saved'] as int? ?? 0) == 1,
+        sending:
+            (r['direction'] as String) == 'out' &&
+            (r['sent'] as int? ?? 1) == 0,
+      );
+      if (m.direction != 'out' && uid != null) m.fresh = true;
+      fresh.add(m);
+      if (uid != null) _seenUids.add(uid);
+    }
+    setState(() => _messages.addAll(fresh));
+    _scrollToEnd();
   }
 
   Widget _newMessagesDivider() {
@@ -580,6 +794,54 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ? CrossAxisAlignment.end
                       : CrossAxisAlignment.start,
                   children: [
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(999),
+                        onTap: () {
+                          dismiss();
+                          HapticFeedback.selectionClick();
+                          _toggleSaved(target);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: HaloColors.surface3,
+                            border: Border.all(
+                              color: HaloColors.line,
+                              width: 0.5,
+                            ),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                target.saved
+                                    ? Icons.bookmark
+                                    : Icons.bookmark_border,
+                                size: 16,
+                                color: target.saved
+                                    ? HaloColors.amber
+                                    : HaloColors.text2,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                target.saved ? 'unsave' : 'save',
+                                style: HaloType.sans(
+                                  size: 13,
+                                  color: HaloColors.text,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
@@ -1184,6 +1446,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           edited: (r['edited'] as int? ?? 0) == 1,
           pinned: (r['pinned'] as int? ?? 0) == 1,
           mediaPath: r['media_path'] as String?,
+          filePath: r['file_path'] as String?,
+          fileName: r['file_name'] as String?,
+          voiceDisguised: (r['voice_disguised'] as int? ?? 0) == 1,
+          saved: (r['saved'] as int? ?? 0) == 1,
           sending:
               (r['direction'] as String) == 'out' &&
               (r['sent'] as int? ?? 1) == 0,
@@ -1255,12 +1521,62 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // if a search is active, recompute matches against the fresh list.
     if (_searching && _query.isNotEmpty) {
       _onQueryChanged(_query);
+    } else if (!_didJump && widget.jumpToUid != null) {
+      _didJump = true;
+      _jumpToUid(widget.jumpToUid!);
     } else {
       _scrollToEnd();
     }
   }
 
+  bool _didJump = false;
+  bool _wasReachable = false;
+  bool _jumpActive = false;
+
+  // scroll a specific message into view and pulse it, for jump-from-saved.
+  void _jumpToUid(String uid) {
+    final idx = _messages.indexWhere((m) => m.msgUid == uid);
+    if (idx < 0) {
+      _scrollToEnd();
+      return;
+    }
+    // the list isn't laid out yet when this fires from the load tail, so a
+    // position read here is stale and the jump lands at the bottom. wait a
+    // frame, rough-jump so the target builds, wait once more, then ensureVisible
+    // on the real context. attach _jumpKey via _jumpIndex so the key lands on
+    // the target bubble.
+    _jumpActive = true;
+    setState(() => _jumpIndex = idx);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollCtrl.hasClients) return;
+      final max = _scrollCtrl.position.maxScrollExtent;
+      final approx =
+          ((idx / _messages.length) * max -
+                  _scrollCtrl.position.viewportDimension * 0.3)
+              .clamp(0.0, max);
+      _scrollCtrl.jumpTo(approx);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final ctx = _jumpKey.currentContext;
+        if (ctx != null) {
+          Scrollable.ensureVisible(
+            ctx,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+            alignment: 0.4,
+          );
+        }
+        setState(() => _rippleUid = uid);
+      });
+    });
+    Future.delayed(const Duration(milliseconds: 1700), () {
+      _jumpActive = false;
+      if (mounted && _rippleUid == uid) setState(() => _rippleUid = null);
+    });
+  }
+
   void _scrollToEnd() {
+    if (_jumpActive) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollCtrl.hasClients) return;
       final target = _scrollCtrl.position.maxScrollExtent;
@@ -1631,10 +1947,35 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
               const SizedBox(height: 6),
               tile(Icons.photo_camera_outlined, 'camera', ImageSource.camera),
-              tile(
-                Icons.photo_library_outlined,
-                'gallery',
-                ImageSource.gallery,
+              ListTile(
+                leading: Icon(
+                  Icons.photo_library_outlined,
+                  color: HaloColors.amber,
+                  size: 22,
+                ),
+                title: Text(
+                  'gallery',
+                  style: HaloType.sans(size: 15, color: HaloColors.text),
+                ),
+                onTap: () {
+                  Navigator.of(sheetCtx).pop();
+                  _pickAndSendMultiple();
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.attach_file,
+                  color: HaloColors.amber,
+                  size: 22,
+                ),
+                title: Text(
+                  'file',
+                  style: HaloType.sans(size: 15, color: HaloColors.text),
+                ),
+                onTap: () {
+                  Navigator.of(sheetCtx).pop();
+                  _pickAndSendFile();
+                },
               ),
               const SizedBox(height: 8),
             ],
@@ -1644,22 +1985,226 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
-  Future<void> _pickAndSendImage(ImageSource source) async {
-    final XFile? picked = await ImagePicker().pickImage(
-      source: source,
-      maxWidth: 1280,
-      maxHeight: 1280,
-      imageQuality: 70,
+  void _toggleDisguise() {
+    setState(() => _disguise = !_disguise);
+    appState.saveDisguisePref(_disguise);
+    HapticFeedback.selectionClick();
+  }
+
+  void _onVoiceComplete(String path, int ms, bool cancelled) {
+    if (cancelled || path.isEmpty) return;
+    _sendVoice(path, ms);
+  }
+
+  Future<void> _sendVoice(String srcPath, int ms) async {
+    final src = File(srcPath);
+    if (!await src.exists()) return;
+    var bytes = await src.readAsBytes();
+    if (_disguise) bytes = disguiseWav(bytes);
+    final msgUid = _newMsgUid();
+    final dir = await getApplicationDocumentsDirectory();
+    final mediaDir = Directory('${dir.path}/media');
+    if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
+    final dest = File('${mediaDir.path}/vn_$msgUid.wav');
+    await dest.writeAsBytes(bytes);
+    final filePath = dest.path;
+    final b64 = base64Encode(bytes);
+    final msg = _Msg(
+      'out',
+      '',
+      DateTime.now(),
+      sending: true,
+      msgUid: msgUid,
+      filePath: filePath,
+      fileName: 'voice.wav',
+      voiceDisguised: _disguise,
+      burnSecs: _ghost ? _burnSeconds : null,
+      burnAt: null,
     );
-    if (picked == null) return;
-    final bytes = await picked.readAsBytes();
-    if (!mounted) return;
-    // preview the photo and let the user add a caption before it sends.
-    // back = cancel; the send button returns the caption (may be empty).
-    final caption = await Navigator.of(context).push<String?>(
-      MaterialPageRoute(builder: (_) => _ImageCaptionScreen(bytes: bytes)),
+    setState(() {
+      _messages.add(msg);
+      _status = '';
+    });
+    _scrollToEnd();
+    HapticFeedback.lightImpact();
+    await db.saveMessage(
+      widget.peerHaloId,
+      'out',
+      '',
+      msgUid: msgUid,
+      filePath: filePath,
+      fileName: 'voice.wav',
+      voiceDisguised: _disguise,
+      burnAt: msg.burnAt,
+      sent: 0,
     );
-    if (caption == null) return;
+    final String cipher;
+    try {
+      final wrapped = await wrapMessage(
+        '',
+        msgUid: msgUid,
+        fileB64: b64,
+        fileName: 'voice.wav',
+        voice: true,
+        voiceDisguised: _disguise,
+        burnSeconds: _ghost ? _burnSeconds : null,
+        sender: SenderInfo(
+          haloId: appState.myId,
+          edPub: engine.myEdPubkey(),
+          onion: appState.myOnion,
+          xPub: engine.myXPubkey(),
+        ),
+      );
+      cipher = await signalEncrypt(widget.peerHaloId, wrapped);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        msg.sending = false;
+        msg.failed = true;
+      });
+      return;
+    }
+    final sendFuture = Future<String>(() async {
+      var torWait = 0;
+      while (!_torReadyToSend() && torWait < 90000) {
+        await Future.delayed(const Duration(milliseconds: 400));
+        torWait += 400;
+      }
+      if (!_torReadyToSend()) return 'error: tor not ready';
+      String? tor;
+      if (!_backPaired && widget.peerOnion.isNotEmpty) {
+        tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
+        if (tor == 'ok') return 'ok';
+      }
+      if (_peerXPub != null) {
+        return await Future(() => engine.nostrSend(_peerXPub!, cipher));
+      }
+      return tor ?? 'error: no transport';
+    });
+    sendFuture.then((result) async {
+      if (result == 'ok' && msg.msgUid != null) await db.markSent(msg.msgUid!);
+      if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
+        final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
+        await db.setMsgBurnAt(msg.msgUid!, ba);
+        msg.burnAt = ba;
+      }
+      if (!mounted) return;
+      setState(() {
+        msg.sending = false;
+        if (result != 'ok') {
+          msg.failed = true;
+          _status = result;
+        }
+      });
+    });
+  }
+
+  Future<void> _pickAndSendFile() async {
+    final res = await FilePicker.pickFiles(withData: true);
+    if (res == null || res.files.isEmpty) return;
+    final data = res.files.first.bytes;
+    final name = res.files.first.name;
+    if (data == null) return;
+    if (data.length > 10 * 1024 * 1024) {
+      if (mounted) showHaloToast(context, 'file too big · 10 mb max');
+      return;
+    }
+    final msgUid = _newMsgUid();
+    final dir = await getApplicationDocumentsDirectory();
+    final mediaDir = Directory('${dir.path}/media');
+    if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
+    final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+    final dest = File('${mediaDir.path}/f_${msgUid}_$safe');
+    await dest.writeAsBytes(data);
+    final filePath = dest.path;
+    final b64 = base64Encode(data);
+    final msg = _Msg(
+      'out',
+      '',
+      DateTime.now(),
+      sending: true,
+      msgUid: msgUid,
+      filePath: filePath,
+      fileName: name,
+      burnSecs: _ghost ? _burnSeconds : null,
+      burnAt: null,
+    );
+    setState(() {
+      _messages.add(msg);
+      _status = '';
+    });
+    _scrollToEnd();
+    HapticFeedback.lightImpact();
+    await db.saveMessage(
+      widget.peerHaloId,
+      'out',
+      '',
+      msgUid: msgUid,
+      filePath: filePath,
+      fileName: name,
+      burnAt: msg.burnAt,
+      sent: 0,
+    );
+    final String cipher;
+    try {
+      final wrapped = await wrapMessage(
+        '',
+        msgUid: msgUid,
+        fileB64: b64,
+        fileName: name,
+        burnSeconds: _ghost ? _burnSeconds : null,
+        sender: SenderInfo(
+          haloId: appState.myId,
+          edPub: engine.myEdPubkey(),
+          onion: appState.myOnion,
+          xPub: engine.myXPubkey(),
+        ),
+      );
+      cipher = await signalEncrypt(widget.peerHaloId, wrapped);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        msg.sending = false;
+        msg.failed = true;
+      });
+      return;
+    }
+    final sendFuture = Future<String>(() async {
+      var torWait = 0;
+      while (!_torReadyToSend() && torWait < 90000) {
+        await Future.delayed(const Duration(milliseconds: 400));
+        torWait += 400;
+      }
+      if (!_torReadyToSend()) return 'error: tor not ready';
+      String? tor;
+      if (!_backPaired && widget.peerOnion.isNotEmpty) {
+        tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
+        if (tor == 'ok') return 'ok';
+      }
+      if (_peerXPub != null) {
+        return await Future(() => engine.nostrSend(_peerXPub!, cipher));
+      }
+      return tor ?? 'error: no transport';
+    });
+    sendFuture.then((result) async {
+      if (result == 'ok' && msg.msgUid != null) await db.markSent(msg.msgUid!);
+      if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
+        final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
+        await db.setMsgBurnAt(msg.msgUid!, ba);
+        msg.burnAt = ba;
+      }
+      if (!mounted) return;
+      setState(() {
+        msg.sending = false;
+        if (result != 'ok') {
+          msg.failed = true;
+          _status = result;
+        }
+      });
+    });
+  }
+
+  Future<void> _sendOneImage(Uint8List bytes, String caption) async {
     final msgUid = _newMsgUid();
     final dir = await getApplicationDocumentsDirectory();
     final mediaDir = Directory('${dir.path}/media');
@@ -1765,6 +2310,39 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         });
       }
     });
+  }
+
+  Future<void> _pickAndSendMultiple() async {
+    final picked = await ImagePicker().pickMultiImage(
+      maxWidth: 1280,
+      maxHeight: 1280,
+      imageQuality: 70,
+    );
+    if (picked.isEmpty) return;
+    for (final x in picked) {
+      final bytes = await x.readAsBytes();
+      if (!mounted) return;
+      await _sendOneImage(bytes, '');
+    }
+  }
+
+  Future<void> _pickAndSendImage(ImageSource source) async {
+    final XFile? picked = await ImagePicker().pickImage(
+      source: source,
+      maxWidth: 1280,
+      maxHeight: 1280,
+      imageQuality: 70,
+    );
+    if (picked == null) return;
+    final bytes = await picked.readAsBytes();
+    if (!mounted) return;
+    // preview the photo and let the user add a caption before it sends.
+    // back = cancel; the send button returns the caption (may be empty).
+    final caption = await Navigator.of(context).push<String?>(
+      MaterialPageRoute(builder: (_) => _ImageCaptionScreen(bytes: bytes)),
+    );
+    if (caption == null) return;
+    await _sendOneImage(bytes, caption);
   }
 
   bool _torReadyToSend() {
@@ -1940,203 +2518,249 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     super.dispose();
   }
 
+  Future<void> _openMediaGallery() async {
+    final rows = await db.messagesFor(widget.peerHaloId);
+    final paths = <String>[];
+    for (final r in rows) {
+      final mp = r['media_path'] as String?;
+      if (mp != null && mp.isNotEmpty && await File(mp).exists()) {
+        paths.add(mp);
+      }
+    }
+    if (!mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => _MediaGalleryScreen(
+          paths: paths.reversed.toList(),
+          title: _nickname ?? widget.peerHaloId,
+        ),
+      ),
+    );
+  }
+
   Future<void> _chatActions() async {
     final contact = await db.getContact(widget.peerHaloId);
     final pinned = (contact?['pinned'] as int? ?? 0) == 1;
     final action = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: HaloColors.surface2,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
       builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            InkWell(
-              onTap: () => Navigator.pop(ctx, 'verify'),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.verified_user_outlined,
-                      size: 18,
-                      color: HaloColors.amber,
-                    ),
-                    const SizedBox(width: 14),
-                    Text(
-                      'verify safety number',
-                      style: HaloType.sans(size: 14, color: HaloColors.text),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            InkWell(
-              onTap: () => Navigator.pop(ctx, 'mute'),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      _muted
-                          ? Icons.notifications_active_outlined
-                          : Icons.notifications_off_outlined,
-                      size: 18,
-                      color: HaloColors.text2,
-                    ),
-                    const SizedBox(width: 14),
-                    Text(
-                      _muted ? 'unmute notifications' : 'mute notifications',
-                      style: HaloType.sans(size: 14, color: HaloColors.text),
-                    ),
-                  ],
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              InkWell(
+                onTap: () => Navigator.pop(ctx, 'verify'),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.verified_user_outlined,
+                        size: 18,
+                        color: HaloColors.amber,
+                      ),
+                      const SizedBox(width: 14),
+                      Text(
+                        'verify safety number',
+                        style: HaloType.sans(size: 14, color: HaloColors.text),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            InkWell(
-              onTap: () => Navigator.pop(ctx, 'archive'),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.archive_outlined,
-                      size: 18,
-                      color: HaloColors.text2,
-                    ),
-                    const SizedBox(width: 14),
-                    Text(
-                      'archive chat',
-                      style: HaloType.sans(size: 14, color: HaloColors.text),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            InkWell(
-              onTap: () => Navigator.pop(ctx, 'atmosphere'),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.palette_outlined,
-                      size: 18,
-                      color: HaloColors.text2,
-                    ),
-                    const SizedBox(width: 14),
-                    Text(
-                      'atmosphere',
-                      style: HaloType.sans(size: 14, color: HaloColors.text),
-                    ),
-                  ],
+              InkWell(
+                onTap: () => Navigator.pop(ctx, 'photos'),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.photo_library_outlined,
+                        size: 18,
+                        color: HaloColors.text2,
+                      ),
+                      const SizedBox(width: 14),
+                      Text(
+                        'shared photos',
+                        style: HaloType.sans(size: 14, color: HaloColors.text),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            InkWell(
-              onTap: () => Navigator.pop(ctx, 'clear'),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.delete_sweep_outlined,
-                      size: 18,
-                      color: HaloColors.text2,
-                    ),
-                    const SizedBox(width: 14),
-                    Text(
-                      'clear conversation',
-                      style: HaloType.sans(size: 14, color: HaloColors.text),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            InkWell(
-              onTap: () => Navigator.pop(ctx, 'note'),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.sticky_note_2_outlined,
-                      size: 18,
-                      color: HaloColors.text2,
-                    ),
-                    const SizedBox(width: 14),
-                    Text(
-                      'note on this contact',
-                      style: HaloType.sans(size: 14, color: HaloColors.text),
-                    ),
-                  ],
+              InkWell(
+                onTap: () => Navigator.pop(ctx, 'mute'),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _muted
+                            ? Icons.notifications_active_outlined
+                            : Icons.notifications_off_outlined,
+                        size: 18,
+                        color: HaloColors.text2,
+                      ),
+                      const SizedBox(width: 14),
+                      Text(
+                        _muted ? 'unmute notifications' : 'mute notifications',
+                        style: HaloType.sans(size: 14, color: HaloColors.text),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            InkWell(
-              onTap: () => Navigator.pop(ctx, 'pin'),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      pinned ? Icons.push_pin : Icons.push_pin_outlined,
-                      size: 18,
-                      color: HaloColors.text2,
-                    ),
-                    const SizedBox(width: 14),
-                    Text(
-                      pinned ? 'unpin' : 'pin to top',
-                      style: HaloType.sans(size: 14, color: HaloColors.text),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            InkWell(
-              onTap: () => Navigator.pop(ctx, 'block'),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.block, size: 18, color: HaloColors.rose),
-                    const SizedBox(width: 14),
-                    Text(
-                      'block contact',
-                      style: HaloType.sans(size: 14, color: HaloColors.rose),
-                    ),
-                  ],
+              InkWell(
+                onTap: () => Navigator.pop(ctx, 'archive'),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.archive_outlined,
+                        size: 18,
+                        color: HaloColors.text2,
+                      ),
+                      const SizedBox(width: 14),
+                      Text(
+                        'archive chat',
+                        style: HaloType.sans(size: 14, color: HaloColors.text),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-          ],
+              InkWell(
+                onTap: () => Navigator.pop(ctx, 'atmosphere'),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.palette_outlined,
+                        size: 18,
+                        color: HaloColors.text2,
+                      ),
+                      const SizedBox(width: 14),
+                      Text(
+                        'atmosphere',
+                        style: HaloType.sans(size: 14, color: HaloColors.text),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              InkWell(
+                onTap: () => Navigator.pop(ctx, 'clear'),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.delete_sweep_outlined,
+                        size: 18,
+                        color: HaloColors.text2,
+                      ),
+                      const SizedBox(width: 14),
+                      Text(
+                        'clear conversation',
+                        style: HaloType.sans(size: 14, color: HaloColors.text),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              InkWell(
+                onTap: () => Navigator.pop(ctx, 'note'),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.sticky_note_2_outlined,
+                        size: 18,
+                        color: HaloColors.text2,
+                      ),
+                      const SizedBox(width: 14),
+                      Text(
+                        'note on this contact',
+                        style: HaloType.sans(size: 14, color: HaloColors.text),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              InkWell(
+                onTap: () => Navigator.pop(ctx, 'pin'),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        pinned ? Icons.push_pin : Icons.push_pin_outlined,
+                        size: 18,
+                        color: HaloColors.text2,
+                      ),
+                      const SizedBox(width: 14),
+                      Text(
+                        pinned ? 'unpin' : 'pin to top',
+                        style: HaloType.sans(size: 14, color: HaloColors.text),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              InkWell(
+                onTap: () => Navigator.pop(ctx, 'block'),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.block, size: 18, color: HaloColors.rose),
+                      const SizedBox(width: 14),
+                      Text(
+                        'block contact',
+                        style: HaloType.sans(size: 14, color: HaloColors.rose),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );
@@ -2159,6 +2783,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (mounted) setState(() => _note = c?['note'] as String?);
     } else if (action == 'pin') {
       await _toggleContactPin();
+    } else if (action == 'photos') {
+      await _openMediaGallery();
     }
   }
 
@@ -2508,6 +3134,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _unblockContact() async {
     await appState.unblock(widget.peerHaloId);
     if (mounted) setState(() => _blocked = false);
+  }
+
+  Future<void> _toggleSaved(_Msg m) async {
+    if (m.msgUid == null) return;
+    final next = !m.saved;
+    setState(() => m.saved = next);
+    await db.setSaved(m.msgUid!, next);
+    if (mounted) {
+      showHaloToast(context, next ? 'saved' : 'removed from saved');
+    }
   }
 
   Future<void> _forwardMessage(_Msg m) async {
@@ -2886,132 +3522,125 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             final firstInGroup =
                                 !sameRun(prevMsg) || i == _firstUnreadIndex;
                             final lastInGroup = !sameRun(nextMsg);
-                            return Column(
-                              key: ObjectKey(m),
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                if (showDate) _dateDivider(m.when),
-                                if (i == _firstUnreadIndex)
-                                  _newMessagesDivider(),
-                                TweenAnimationBuilder<double>(
-                                  tween: Tween(
-                                    begin: 1.0,
-                                    end: m.removing ? 0.0 : 1.0,
-                                  ),
-                                  duration: const Duration(milliseconds: 280),
-                                  curve: Curves.easeOut,
-                                  child: Dismissible(
-                                    key: ObjectKey(m),
-                                    direction: DismissDirection.startToEnd,
-                                    dismissThresholds: const {
-                                      DismissDirection.startToEnd: 0.28,
-                                    },
-                                    confirmDismiss: (_) async {
-                                      HapticFeedback.selectionClick();
-                                      setState(() {
-                                        _replyTo = m;
-                                        _replyFlash = m;
-                                      });
-                                      Future.delayed(
-                                        const Duration(milliseconds: 700),
-                                        () {
-                                          if (mounted &&
-                                              identical(_replyFlash, m)) {
-                                            setState(() => _replyFlash = null);
-                                          }
-                                        },
-                                      );
-                                      return false;
-                                    },
-                                    background: Padding(
-                                      padding: EdgeInsets.only(left: 12),
-                                      child: Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: Icon(
-                                          Icons.reply_rounded,
-                                          size: 20,
-                                          color: HaloColors.amber,
-                                        ),
-                                      ),
+                            return RepaintBoundary(
+                              child: Column(
+                                key: ObjectKey(m),
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  if (showDate) _dateDivider(m.when),
+                                  if (i == _firstUnreadIndex)
+                                    _newMessagesDivider(),
+                                  TweenAnimationBuilder<double>(
+                                    tween: Tween(
+                                      begin: 1.0,
+                                      end: m.removing ? 0.0 : 1.0,
                                     ),
-                                    child: SizedBox(
-                                      width: double.infinity,
-                                      child: AnimatedScale(
-                                        scale: m.removing ? 0.92 : 1.0,
-                                        duration: const Duration(
-                                          milliseconds: 300,
-                                        ),
-                                        curve: Curves.easeIn,
-                                        child: AnimatedOpacity(
-                                          opacity:
-                                              (m.removing ||
-                                                  (m.msgUid != null &&
-                                                      m.msgUid == _liftedUid))
-                                              ? 0.0
-                                              : 1.0,
+                                    duration: const Duration(milliseconds: 280),
+                                    curve: Curves.easeOut,
+                                    child: _SwipeToReply(
+                                      onReply: () {
+                                        HapticFeedback.selectionClick();
+                                        setState(() {
+                                          _replyTo = m;
+                                          _replyFlash = m;
+                                        });
+                                        Future.delayed(
+                                          const Duration(milliseconds: 700),
+                                          () {
+                                            if (mounted &&
+                                                identical(_replyFlash, m)) {
+                                              setState(
+                                                () => _replyFlash = null,
+                                              );
+                                            }
+                                          },
+                                        );
+                                      },
+                                      child: SizedBox(
+                                        width: double.infinity,
+                                        child: AnimatedScale(
+                                          scale: m.removing ? 0.92 : 1.0,
                                           duration: const Duration(
                                             milliseconds: 300,
                                           ),
-                                          child: _Bubble(
-                                            key: isMatch
-                                                ? _matchKeys[i]
-                                                : (i == _jumpIndex
-                                                      ? _jumpKey
-                                                      : null),
-                                            msg: m,
-                                            firstInGroup: firstInGroup,
-                                            lastInGroup: lastInGroup,
-                                            revealed:
-                                                m.msgUid != null &&
-                                                m.msgUid == _revealedUid,
-                                            onReveal: m.msgUid == null
-                                                ? null
-                                                : () => setState(
-                                                    () => _revealedUid =
-                                                        _revealedUid == m.msgUid
-                                                        ? null
-                                                        : m.msgUid,
-                                                  ),
-                                            onRetry: (m) => m.mediaPath != null
-                                                ? _retryImage(m)
-                                                : _retry(m),
-                                            onLongPress: (ctx) =>
-                                                _showEmojiPickerAt(ctx, m),
-                                            quotedText: quoted,
-                                            onQuoteTap: m.replyTo == null
-                                                ? null
-                                                : () {
-                                                    for (final x in _messages) {
-                                                      if (x.msgUid != null &&
-                                                          x.msgUid ==
-                                                              m.replyTo) {
-                                                        _scrollToMessage(x);
-                                                        break;
+                                          curve: Curves.easeIn,
+                                          child: AnimatedOpacity(
+                                            opacity:
+                                                (m.removing ||
+                                                    (m.msgUid != null &&
+                                                        m.msgUid == _liftedUid))
+                                                ? 0.0
+                                                : 1.0,
+                                            duration: const Duration(
+                                              milliseconds: 300,
+                                            ),
+                                            child: _Bubble(
+                                              key: isMatch
+                                                  ? _matchKeys[i]
+                                                  : (i == _jumpIndex
+                                                        ? _jumpKey
+                                                        : null),
+                                              msg: m,
+                                              firstInGroup: firstInGroup,
+                                              lastInGroup: lastInGroup,
+                                              revealed:
+                                                  m.msgUid != null &&
+                                                  m.msgUid == _revealedUid,
+                                              onReveal: m.msgUid == null
+                                                  ? null
+                                                  : () => setState(
+                                                      () => _revealedUid =
+                                                          _revealedUid ==
+                                                              m.msgUid
+                                                          ? null
+                                                          : m.msgUid,
+                                                    ),
+                                              onRetry: (m) =>
+                                                  m.mediaPath != null
+                                                  ? _retryImage(m)
+                                                  : _retry(m),
+                                              onLongPress: (ctx) =>
+                                                  _showEmojiPickerAt(ctx, m),
+                                              quotedText: quoted,
+                                              onQuoteTap: m.replyTo == null
+                                                  ? null
+                                                  : () {
+                                                      for (final x
+                                                          in _messages) {
+                                                        if (x.msgUid != null &&
+                                                            x.msgUid ==
+                                                                m.replyTo) {
+                                                          _scrollToMessage(x);
+                                                          break;
+                                                        }
                                                       }
-                                                    }
-                                                  },
-                                            quotedAuthor: quotedAuthor,
-                                            query: searchActive ? _query : '',
-                                            isCurrentMatch: isCurrent,
-                                            dimmed: dimmed,
-                                            ripple:
-                                                m.msgUid != null &&
-                                                (m.msgUid == _rippleUid ||
-                                                    identical(m, _replyFlash)),
+                                                    },
+                                              quotedAuthor: quotedAuthor,
+                                              query: searchActive ? _query : '',
+                                              isCurrentMatch: isCurrent,
+                                              dimmed: dimmed,
+                                              ripple:
+                                                  m.msgUid != null &&
+                                                  (m.msgUid == _rippleUid ||
+                                                      identical(
+                                                        m,
+                                                        _replyFlash,
+                                                      )),
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  builder: (_, f, child) => ClipRect(
-                                    child: Align(
-                                      alignment: Alignment.topCenter,
-                                      heightFactor: f,
-                                      child: child,
+                                    builder: (_, f, child) => ClipRect(
+                                      child: Align(
+                                        alignment: Alignment.topCenter,
+                                        heightFactor: f,
+                                        child: child,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             );
                           },
                         ),
@@ -3193,6 +3822,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     controller: _msgCtrl,
                     sending: _sending,
                     onSend: _send,
+                    disguise: _disguise,
+                    onToggleDisguise: _toggleDisguise,
+                    onVoiceComplete: _onVoiceComplete,
                   ),
           ],
         ),
@@ -3644,6 +4276,89 @@ class _NavBtn extends StatelessWidget {
 // blurred, dimmed backdrop behind the long-press menu. fades the blur in
 // so the chat recedes instead of just darkening.
 // the long-press menu blooming out: scale + fade from the bubble's side.
+class _SwipeToReply extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onReply;
+  const _SwipeToReply({required this.child, required this.onReply});
+  @override
+  State<_SwipeToReply> createState() => _SwipeToReplyState();
+}
+
+class _SwipeToReplyState extends State<_SwipeToReply>
+    with SingleTickerProviderStateMixin {
+  double _dx = 0;
+  bool _armed = false;
+  static const double _trigger = 56;
+  static const double _max = 80;
+  late final AnimationController _spring = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 240),
+  );
+  Animation<double> _back = const AlwaysStoppedAnimation(0);
+
+  @override
+  void dispose() {
+    _spring.dispose();
+    super.dispose();
+  }
+
+  void _settle() {
+    _back = Tween(begin: _dx, end: 0.0).animate(
+      CurvedAnimation(parent: _spring, curve: Curves.easeOutCubic),
+    )..addListener(() => setState(() => _dx = _back.value));
+    _spring
+      ..reset()
+      ..forward();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = (_dx / _trigger).clamp(0.0, 1.0);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onHorizontalDragUpdate: (d) {
+        if (_spring.isAnimating) return;
+        var nx = _dx + d.delta.dx;
+        if (nx < 0) nx = 0;
+        if (nx > _trigger) nx = _trigger + (nx - _trigger) * 0.35;
+        if (nx > _max) nx = _max;
+        final wasArmed = _armed;
+        _armed = nx >= _trigger;
+        if (_armed && !wasArmed) HapticFeedback.selectionClick();
+        setState(() => _dx = nx);
+      },
+      onHorizontalDragEnd: (_) {
+        if (_armed) widget.onReply();
+        _armed = false;
+        _settle();
+      },
+      child: Stack(
+        children: [
+          Positioned(
+            left: 14,
+            top: 0,
+            bottom: 0,
+            child: Center(
+              child: Opacity(
+                opacity: progress,
+                child: Transform.scale(
+                  scale: 0.6 + 0.4 * progress,
+                  child: Icon(
+                    Icons.reply_rounded,
+                    size: 20,
+                    color: HaloColors.amber,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Transform.translate(offset: Offset(_dx, 0), child: widget.child),
+        ],
+      ),
+    );
+  }
+}
+
 class _MenuPop extends StatefulWidget {
   final bool side;
   final Widget child;
@@ -3904,63 +4619,113 @@ class _Bubble extends StatelessWidget {
                                   onTap: onQuoteTap,
                                   child: Container(
                                     margin: const EdgeInsets.only(bottom: 6),
-                                    padding: const EdgeInsets.fromLTRB(
-                                      10,
-                                      6,
-                                      10,
-                                      7,
-                                    ),
+                                    clipBehavior: Clip.antiAlias,
                                     decoration: BoxDecoration(
                                       color: isOut
-                                          ? Colors.black.withOpacity(0.12)
-                                          : HaloColors.surface2,
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border(
-                                        left: BorderSide(
-                                          color: isOut
-                                              ? HaloColors.onAmber.withValues(
-                                                  alpha: 0.55,
-                                                )
-                                              : HaloColors.amber,
-                                          width: 2.5,
-                                        ),
-                                      ),
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        if (quotedAuthor != null)
-                                          Text(
-                                            quotedAuthor!,
-                                            style: HaloType.mono(
-                                              size: 9.5,
-                                              color: isOut
-                                                  ? HaloColors.onAmber
-                                                        .withValues(alpha: 0.7)
-                                                  : HaloColors.amber,
-                                              letter: 0.6,
+                                          ? HaloColors.onAmber.withValues(
+                                              alpha: 0.1,
+                                            )
+                                          : HaloColors.amber.withValues(
+                                              alpha: 0.08,
                                             ),
-                                          ),
-                                        if (quotedAuthor != null)
-                                          const SizedBox(height: 2),
-                                        Text(
-                                          quotedText!,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: HaloType.sans(
-                                            size: 12.5,
+                                      borderRadius: BorderRadius.circular(9),
+                                    ),
+                                    child: IntrinsicHeight(
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            width: 3,
                                             color: isOut
                                                 ? HaloColors.onAmber.withValues(
-                                                    alpha: 0.8,
+                                                    alpha: 0.7,
                                                   )
-                                                : HaloColors.text2,
-                                            height: 1.3,
+                                                : HaloColors.amber,
                                           ),
-                                        ),
-                                      ],
+                                          const SizedBox(width: 9),
+                                          Flexible(
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.fromLTRB(
+                                                    0,
+                                                    6,
+                                                    10,
+                                                    6,
+                                                  ),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  if (quotedAuthor != null)
+                                                    Text(
+                                                      quotedAuthor!,
+                                                      style: HaloType.mono(
+                                                        size: 10,
+                                                        color: isOut
+                                                            ? HaloColors.onAmber
+                                                                  .withValues(
+                                                                    alpha: 0.85,
+                                                                  )
+                                                            : HaloColors.amber,
+                                                        letter: 0.4,
+                                                      ),
+                                                    ),
+                                                  if (quotedAuthor != null)
+                                                    const SizedBox(height: 2),
+                                                  Text(
+                                                    quotedText!,
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: HaloType.sans(
+                                                      size: 12.5,
+                                                      color: isOut
+                                                          ? HaloColors.onAmber
+                                                                .withValues(
+                                                                  alpha: 0.85,
+                                                                )
+                                                          : HaloColors.text2,
+                                                      height: 1.25,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
+                                  ),
+                                ),
+                              if (msg.fileName == 'voice.wav' &&
+                                  msg.filePath != null)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 2,
+                                  ),
+                                  child: _VoiceBubble(
+                                    key: ValueKey('vb_${msg.filePath}'),
+                                    path: msg.filePath!,
+                                    isOut: isOut,
+                                    disguised: msg.voiceDisguised,
+                                  ),
+                                )
+                              else if (msg.fileName != null)
+                                GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () {
+                                    if (msg.filePath != null) {
+                                      Share.shareXFiles([XFile(msg.filePath!)]);
+                                    }
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 2,
+                                    ),
+                                    child: _fileCard(msg, isOut),
                                   ),
                                 ),
                               if (msg.mediaPath != null)
@@ -4833,6 +5598,426 @@ class _EmptyConversation extends StatelessWidget {
   }
 }
 
+// pitch-shift a 16-bit pcm wav so the voice is harder to recognize.
+// resamples the body by a fixed ratio then plays it back at the original
+// rate. moves pitch and formants together (not formant-preserving), so
+// label it "harder to recognize", never "anonymous".
+Uint8List disguiseWav(Uint8List wav) {
+  if (wav.length < 44) return wav;
+  // wav header is 44 bytes; samples are 16-bit little-endian after it.
+  const headerLen = 44;
+  final header = wav.sublist(0, headerLen);
+  final body = wav.buffer.asInt16List(
+    wav.offsetInBytes + headerLen,
+    (wav.length - headerLen) ~/ 2,
+  );
+  // ratio < 1 keeps more samples = lower, slower-sounding voice once
+  // played at the original rate. 0.82 is a noticeable but still-clear drop.
+  const ratio = 0.78;
+  final outLen = (body.length / ratio).floor();
+  final out = Int16List(outLen);
+  for (var i = 0; i < outLen; i++) {
+    final srcF = i * ratio;
+    final i0 = srcF.floor();
+    final i1 = (i0 + 1 < body.length) ? i0 + 1 : i0;
+    final frac = srcF - i0;
+    out[i] = (body[i0] * (1 - frac) + body[i1] * frac).round();
+  }
+  final outBytes = out.buffer.asUint8List();
+  // patch the two little-endian length fields in the header to match.
+  final result = Uint8List(headerLen + outBytes.length);
+  result.setRange(0, headerLen, header);
+  result.setRange(headerLen, result.length, outBytes);
+  final dataLen = outBytes.length;
+  final riffLen = 36 + dataLen;
+  result[4] = riffLen & 0xff;
+  result[5] = (riffLen >> 8) & 0xff;
+  result[6] = (riffLen >> 16) & 0xff;
+  result[7] = (riffLen >> 24) & 0xff;
+  result[40] = dataLen & 0xff;
+  result[41] = (dataLen >> 8) & 0xff;
+  result[42] = (dataLen >> 16) & 0xff;
+  result[43] = (dataLen >> 24) & 0xff;
+  return result;
+}
+
+class _VoiceBubble extends StatefulWidget {
+  final String path;
+  final bool isOut;
+  final bool disguised;
+  const _VoiceBubble({
+    required this.path,
+    required this.isOut,
+    this.disguised = false,
+  });
+  @override
+  State<_VoiceBubble> createState() => _VoiceBubbleState();
+}
+
+class _VoiceBubbleState extends State<_VoiceBubble> {
+  final _player = AudioPlayer();
+  bool _ready = false;
+  bool _playing = false;
+  Duration _dur = Duration.zero;
+  Duration _pos = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+    _player.playerStateStream.listen((st) {
+      if (!mounted) return;
+      setState(() => _playing = st.playing);
+      if (st.processingState == ProcessingState.completed) {
+        _player.seek(Duration.zero);
+        _player.pause();
+        if (mounted) setState(() => _playing = false);
+      }
+    });
+    _player.positionStream.listen((p) {
+      if (mounted) setState(() => _pos = p);
+    });
+  }
+
+  Future<void> _load() async {
+    try {
+      _dur = await _player.setFilePath(widget.path) ?? Duration.zero;
+      if (mounted) setState(() => _ready = true);
+    } catch (_) {}
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+
+  void _toggle() async {
+    if (!_ready) {
+      await _load();
+      if (!_ready) return;
+    }
+    if (_playing) {
+      _player.pause();
+    } else {
+      _player.play();
+    }
+  }
+
+  String _fmt(Duration d) {
+    final s = d.inSeconds;
+    return '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = widget.isOut ? HaloColors.onAmber : HaloColors.amber;
+    final track = widget.isOut
+        ? HaloColors.onAmber.withValues(alpha: 0.3)
+        : HaloColors.text3.withValues(alpha: 0.4);
+    final progress = (_dur.inMilliseconds == 0)
+        ? 0.0
+        : (_pos.inMilliseconds / _dur.inMilliseconds).clamp(0.0, 1.0);
+    final shown = _pos > Duration.zero ? _pos : _dur;
+    return GestureDetector(
+      onTap: _toggle,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 168,
+        child: Row(
+          children: [
+            Icon(
+              _playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+              size: 26,
+              color: fg,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 3,
+                      backgroundColor: track,
+                      valueColor: AlwaysStoppedAnimation(fg),
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Row(
+                    children: [
+                      Text(
+                        _fmt(shown),
+                        style: HaloType.mono(
+                          size: 10,
+                          color: widget.isOut
+                              ? HaloColors.onAmber
+                              : HaloColors.text3,
+                        ),
+                      ),
+                      if (widget.disguised) ...[
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.theater_comedy_outlined,
+                          size: 11,
+                          color: widget.isOut
+                              ? HaloColors.onAmber
+                              : HaloColors.amber,
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          'hidden',
+                          style: HaloType.mono(
+                            size: 9,
+                            color: widget.isOut
+                                ? HaloColors.onAmber
+                                : HaloColors.amber,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HoldToTalkMic extends StatefulWidget {
+  final bool disguise;
+  final VoidCallback onToggleDisguise;
+  final void Function(String path, int ms, bool cancelled) onComplete;
+  const _HoldToTalkMic({
+    required this.disguise,
+    required this.onToggleDisguise,
+    required this.onComplete,
+  });
+  @override
+  State<_HoldToTalkMic> createState() => _HoldToTalkMicState();
+}
+
+class _HoldToTalkMicState extends State<_HoldToTalkMic> {
+  final _rec = AudioRecorder();
+  OverlayEntry? _overlay;
+  Timer? _ticker;
+  int _ms = 0;
+  bool _willCancel = false;
+  double _dragDx = 0;
+  bool _busy = false;
+  String? _path;
+  double _bottomInset = 0;
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    _overlay?.remove();
+    _rec.dispose();
+    super.dispose();
+  }
+
+  Future<void> _start() async {
+    if (_busy) return;
+    _busy = true;
+    if (!await _rec.hasPermission()) {
+      _busy = false;
+      if (mounted) showHaloToast(context, 'mic permission needed');
+      return;
+    }
+    final dir = await getTemporaryDirectory();
+    final path = '${dir.path}/vn_${DateTime.now().millisecondsSinceEpoch}.wav';
+    await _rec.start(
+      const RecordConfig(
+        encoder: AudioEncoder.wav,
+        sampleRate: 16000,
+        numChannels: 1,
+      ),
+      path: path,
+    );
+    _path = path;
+    _ms = 0;
+    _willCancel = false;
+    _dragDx = 0;
+    HapticFeedback.mediumImpact();
+    _ticker = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      _ms += 100;
+      _overlay?.markNeedsBuild();
+    });
+    if (mounted) _bottomInset = MediaQuery.of(context).padding.bottom;
+    _overlay = OverlayEntry(builder: (_) => _bar());
+    if (mounted) Overlay.of(context).insert(_overlay!);
+    _busy = false;
+  }
+
+  Future<void> _end() async {
+    _ticker?.cancel();
+    _ticker = null;
+    _overlay?.remove();
+    _overlay = null;
+    final path = await _rec.stop();
+    final ms = _ms;
+    final cancel = _willCancel || ms < 400;
+    if (cancel) {
+      final p = path ?? _path;
+      if (p != null) {
+        try {
+          await File(p).delete();
+        } catch (_) {}
+      }
+      HapticFeedback.lightImpact();
+      widget.onComplete('', 0, true);
+      return;
+    }
+    HapticFeedback.mediumImpact();
+    widget.onComplete(path ?? _path ?? '', ms, false);
+  }
+
+  String get _time {
+    final s = _ms ~/ 1000;
+    final m = s ~/ 60;
+    final ss = (s % 60).toString().padLeft(2, '0');
+    return '$m:$ss';
+  }
+
+  Widget _bar() {
+    final cancel = _willCancel;
+    // fade the slide hint out as the finger approaches the cancel threshold.
+    final slideProgress = (_dragDx / -90).clamp(0.0, 1.0);
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 0,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.0, end: 1.0),
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutCubic,
+        builder: (_, t, child) => Opacity(
+          opacity: t,
+          child: Transform.translate(
+            offset: Offset(0, (1 - t) * 44),
+            child: child,
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: EdgeInsets.fromLTRB(18, 16, 18, 16 + _bottomInset),
+            decoration: BoxDecoration(
+              color: HaloColors.surface,
+              border: Border(
+                top: BorderSide(
+                  color: cancel ? HaloColors.rose : HaloColors.line,
+                  width: 0.8,
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                // pulsing record dot
+                TweenAnimationBuilder<double>(
+                  key: const ValueKey('rec-dot'),
+                  tween: Tween(begin: 0.4, end: 1.0),
+                  duration: const Duration(milliseconds: 650),
+                  curve: Curves.easeInOut,
+                  builder: (_, v, __) => Opacity(
+                    opacity: cancel ? 1.0 : v,
+                    child: Container(
+                      width: 11,
+                      height: 11,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: HaloColors.rose,
+                      ),
+                    ),
+                  ),
+                  onEnd: () => _overlay?.markNeedsBuild(),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  _time,
+                  style: HaloType.mono(size: 14, color: HaloColors.text),
+                ),
+                Expanded(
+                  child: cancel
+                      ? Center(
+                          child: Text(
+                            'release to cancel',
+                            style: HaloType.mono(
+                              size: 12,
+                              color: HaloColors.rose,
+                            ),
+                          ),
+                        )
+                      : Transform.translate(
+                          offset: Offset(_dragDx * 0.5, 0),
+                          child: Opacity(
+                            opacity: (1 - slideProgress * 0.7),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.chevron_left,
+                                  size: 16,
+                                  color: HaloColors.text3,
+                                ),
+                                Text(
+                                  'slide to cancel',
+                                  style: HaloType.mono(
+                                    size: 11,
+                                    color: HaloColors.text3,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                ),
+                if (widget.disguise) ...[
+                  Icon(
+                    Icons.theater_comedy_outlined,
+                    size: 14,
+                    color: HaloColors.amber,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'hidden',
+                    style: HaloType.mono(size: 10, color: HaloColors.amber),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onLongPressStart: (_) => _start(),
+      onLongPressMoveUpdate: (d) {
+        _dragDx = d.offsetFromOrigin.dx.clamp(-160.0, 0.0);
+        final wc = d.offsetFromOrigin.dx < -90;
+        if (wc != _willCancel) {
+          _willCancel = wc;
+          if (wc) HapticFeedback.mediumImpact();
+        }
+        _overlay?.markNeedsBuild();
+      },
+      onLongPressEnd: (_) => _end(),
+      child: Icon(Icons.mic_none_rounded, size: 22, color: HaloColors.text2),
+    );
+  }
+}
+
 class _Composer extends StatelessWidget {
   final TextEditingController controller;
   final bool sending;
@@ -4842,6 +6027,9 @@ class _Composer extends StatelessWidget {
   final VoidCallback onPickBurn;
   final int burnSeconds;
   final VoidCallback onAttach;
+  final bool disguise;
+  final VoidCallback onToggleDisguise;
+  final void Function(String path, int ms, bool cancelled) onVoiceComplete;
 
   const _Composer({
     required this.controller,
@@ -4852,6 +6040,9 @@ class _Composer extends StatelessWidget {
     required this.onPickBurn,
     required this.burnSeconds,
     required this.onAttach,
+    required this.disguise,
+    required this.onToggleDisguise,
+    required this.onVoiceComplete,
   });
 
   @override
@@ -4997,7 +6188,36 @@ class _Composer extends StatelessWidget {
               ValueListenableBuilder<TextEditingValue>(
                 valueListenable: controller,
                 builder: (context, value, _) {
-                  final canSend = !sending && value.text.trim().isNotEmpty;
+                  final hasText = value.text.trim().isNotEmpty;
+                  if (!hasText && !sending) {
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        GestureDetector(
+                          onTap: onToggleDisguise,
+                          behavior: HitTestBehavior.opaque,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 12),
+                            child: Icon(
+                              disguise
+                                  ? Icons.record_voice_over
+                                  : Icons.voice_over_off,
+                              size: 20,
+                              color: disguise
+                                  ? HaloColors.amber
+                                  : HaloColors.text3,
+                            ),
+                          ),
+                        ),
+                        _HoldToTalkMic(
+                          disguise: disguise,
+                          onToggleDisguise: onToggleDisguise,
+                          onComplete: onVoiceComplete,
+                        ),
+                      ],
+                    );
+                  }
+                  final canSend = !sending && hasText;
                   return GestureDetector(
                     onTap: canSend ? onSend : null,
                     child: AnimatedScale(
@@ -5047,6 +6267,70 @@ class _Composer extends StatelessWidget {
 
 // full-screen preview shown after picking a photo: the image plus a caption
 // field. pops the caption on send, or null on back (cancel).
+class _MediaGalleryScreen extends StatelessWidget {
+  final List<String> paths;
+  final String title;
+  const _MediaGalleryScreen({required this.paths, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: HaloColors.surface,
+      appBar: AppBar(
+        backgroundColor: HaloColors.surface,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, size: 20),
+          color: HaloColors.text,
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'shared photos',
+              style: HaloType.serif(size: 17, color: HaloColors.text),
+            ),
+            Text(
+              '${paths.length} ${paths.length == 1 ? 'photo' : 'photos'} · $title',
+              style: HaloType.mono(size: 10, color: HaloColors.text3),
+            ),
+          ],
+        ),
+      ),
+      body: paths.isEmpty
+          ? Center(
+              child: Text(
+                'no photos in this chat yet',
+                style: HaloType.sans(size: 13, color: HaloColors.text3),
+              ),
+            )
+          : GridView.builder(
+              padding: const EdgeInsets.all(2),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 2,
+                crossAxisSpacing: 2,
+              ),
+              itemCount: paths.length,
+              itemBuilder: (context, i) {
+                final path = paths[i];
+                return GestureDetector(
+                  onTap: () => _openFullImage(context, path),
+                  child: Image.file(
+                    File(path),
+                    fit: BoxFit.cover,
+                    cacheWidth: 360,
+                    filterQuality: FilterQuality.low,
+                  ),
+                );
+              },
+            ),
+    );
+  }
+}
+
 class _ImageCaptionScreen extends StatefulWidget {
   final Uint8List bytes;
   const _ImageCaptionScreen({required this.bytes});

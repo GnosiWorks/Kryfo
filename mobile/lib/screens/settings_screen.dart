@@ -249,6 +249,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (mounted) setState(() {});
   }
 
+  bool _disguise = false;
+
+  @override
+  void initState() {
+    super.initState();
+    appState.loadDisguisePref().then((d) {
+      if (mounted) setState(() => _disguise = d);
+    });
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: HaloColors.surface,
@@ -476,6 +486,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () => Navigator.of(
               context,
             ).push(MaterialPageRoute(builder: (_) => const RestoreScreen())),
+          ),
+          const SizedBox(height: 24),
+
+          _Section('voice'),
+          _Row(
+            icon: Icons.record_voice_over,
+            label: 'disguise voice',
+            value: _disguise ? 'on' : 'off',
+            onTap: () async {
+              setState(() => _disguise = !_disguise);
+              await appState.saveDisguisePref(_disguise);
+            },
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 2, 12, 0),
+            child: Text(
+              'shifts your pitch so your voice is harder to recognize. '
+              'not anonymous — a determined listener with samples may still '
+              'identify you.',
+              style: HaloType.sans(
+                size: 12,
+                color: HaloColors.text3,
+                height: 1.4,
+              ),
+            ),
           ),
           const SizedBox(height: 24),
 

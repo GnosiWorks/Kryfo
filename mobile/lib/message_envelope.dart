@@ -28,6 +28,10 @@ class UnwrappedMessage {
   groupControl; // 'gc' field — present on group control msgs
   final String? imageB64; // 'i' field — base64-encoded compressed jpeg
   final String? unsend; // 'un' field - recalled msg_uid
+  final String? fileB64; // 'f' field - base64 file bytes
+  final String? fileName; // 'fn' field - original display name
+  final bool voice; // 'vo' field - true when the file is a voice note
+  final bool voiceDisguised; // 'vd' field - voice note was pitch-shifted
   UnwrappedMessage(
     this.message, {
     this.endpoint,
@@ -44,6 +48,10 @@ class UnwrappedMessage {
     this.groupControl,
     this.imageB64,
     this.unsend,
+    this.fileB64,
+    this.fileName,
+    this.voice = false,
+    this.voiceDisguised = false,
   });
 }
 
@@ -109,6 +117,10 @@ Future<String> wrapMessage(
   GroupControl? groupControl,
   String? imageB64,
   String? unsend,
+  String? fileB64,
+  String? fileName,
+  bool voice = false,
+  bool voiceDisguised = false,
 }) async {
   final mode = await loadPushMode();
   final body = <String, dynamic>{'m': plain};
@@ -122,6 +134,10 @@ Future<String> wrapMessage(
   if (replyTo != null) body['q'] = replyTo;
   if (imageB64 != null) body['i'] = imageB64;
   if (unsend != null) body['un'] = unsend;
+  if (fileB64 != null) body['f'] = fileB64;
+  if (fileName != null) body['fn'] = fileName;
+  if (voice) body['vo'] = 1;
+  if (voiceDisguised) body['vd'] = 1;
 
   if (mode == PushMode.ntfy) {
     final topic = await loadNtfyTopic();
@@ -211,6 +227,10 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       groupControl: gc,
       imageB64: json['i'] as String?,
       unsend: json['un'] as String?,
+      fileB64: json['f'] as String?,
+      fileName: json['fn'] as String?,
+      voice: json['vo'] == 1,
+      voiceDisguised: json['vd'] == 1,
     );
   } catch (_) {
     return UnwrappedMessage(wrapped);
