@@ -1,13 +1,11 @@
-// notes_screen.dart — note to self. local-only chat with yourself,
-// saved to db.messages under peerHaloId = '_notes_self_'. nothing
-// ever leaves the device. encrypted at rest via sqlcipher.
-
 import 'package:flutter/material.dart';
-import '../main.dart' show db;
+import '../main.dart';
 import '../theme.dart';
 
 const String kNotesPeerId = '_notes_self_';
 
+// note to self. a private place that never leaves the phone — stored as
+// messages against the reserved kNotesPeerId.
 class NotesScreen extends StatefulWidget {
   const NotesScreen({super.key});
   @override
@@ -27,6 +25,7 @@ class _NotesScreenState extends State<NotesScreen> {
 
   Future<void> _load() async {
     final rows = await db.messagesFor(kNotesPeerId);
+    if (!mounted) return;
     setState(() => _notes = rows);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) {
@@ -51,31 +50,34 @@ class _NotesScreenState extends State<NotesScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: const BackButton(color: Color(0xFFAAAAAA)),
-        title: Text('note to self',
-            style: HaloType.serif(
-                size: 22, color: HaloColors.text, italic: true)),
+        titleSpacing: 0,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'note to self',
+              style: HaloType.serif(
+                size: 20,
+                color: HaloColors.text,
+                italic: true,
+              ),
+            ),
+            Text(
+              'only on this phone',
+              style: HaloType.mono(size: 9.5, color: HaloColors.text3),
+            ),
+          ],
+        ),
       ),
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
               child: _notes.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 48),
-                        child: Text(
-                          'a private place. nothing here leaves your phone.',
-                          textAlign: TextAlign.center,
-                          style: HaloType.sans(
-                              size: 13.5,
-                              color: HaloColors.text2,
-                              height: 1.55),
-                        ),
-                      ),
-                    )
+                  ? _empty()
                   : ListView.builder(
                       controller: _scroll,
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                       itemCount: _notes.length,
                       itemBuilder: (_, i) {
                         final n = _notes[i];
@@ -85,38 +87,114 @@ class _NotesScreenState extends State<NotesScreen> {
                       },
                     ),
             ),
+            _inputBar(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _empty() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 44),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
             Container(
+              width: 66,
+              height: 66,
               decoration: BoxDecoration(
-                border: Border(
-                    top: BorderSide(color: HaloColors.line, width: 0.5)),
+                color: HaloColors.amberSoft,
+                shape: BoxShape.circle,
               ),
-              padding: const EdgeInsets.fromLTRB(12, 10, 8, 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _input,
-                      maxLines: 4,
-                      minLines: 1,
-                      style: HaloType.sans(size: 14, color: HaloColors.text),
-                      decoration: InputDecoration(
-                        hintText: 'jot something down…',
-                        hintStyle:
-                            HaloType.sans(size: 13, color: HaloColors.text3),
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: _save,
-                    icon: Icon(Icons.arrow_upward_rounded,
-                        color: HaloColors.amber),
-                  ),
-                ],
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.edit_note_rounded,
+                color: HaloColors.amber,
+                size: 30,
+              ),
+            ),
+            const SizedBox(height: 22),
+            Text(
+              'a quiet place',
+              style: HaloType.serif(size: 24, color: HaloColors.text),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'jot anything down. it stays on this phone and never leaves.',
+              textAlign: TextAlign.center,
+              style: HaloType.sans(
+                size: 12.5,
+                color: HaloColors.text2,
+                height: 1.55,
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _inputBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: HaloColors.surface,
+        border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),
+      ),
+      padding: const EdgeInsets.fromLTRB(14, 10, 10, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+              decoration: BoxDecoration(
+                color: HaloColors.surface2,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: HaloColors.line, width: 0.5),
+              ),
+              child: TextField(
+                controller: _input,
+                maxLines: 5,
+                minLines: 1,
+                style: HaloType.sans(size: 14, color: HaloColors.text),
+                decoration: InputDecoration(
+                  hintText: 'jot something down…',
+                  hintStyle: HaloType.sans(size: 13, color: HaloColors.text3),
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: _save,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 120),
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: HaloColors.amber,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: HaloColors.amber.withValues(alpha: 0.25),
+                    blurRadius: 12,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.arrow_upward_rounded,
+                color: HaloColors.onAmber,
+                size: 21,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -139,22 +217,38 @@ class _NoteBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-        decoration: BoxDecoration(
-          color: HaloColors.surface2,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: HaloColors.line, width: 0.5),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(text,
-                style: HaloType.sans(
-                    size: 14, color: HaloColors.text, height: 1.45)),
-            const SizedBox(height: 4),
-            Text(_time(),
-                style: HaloType.mono(size: 10, color: HaloColors.text3)),
+            Container(
+              width: 3,
+              decoration: BoxDecoration(
+                color: HaloColors.amber.withValues(alpha: 0.55),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    text,
+                    style: HaloType.sans(
+                      size: 14.5,
+                      color: HaloColors.text,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    _time(),
+                    style: HaloType.mono(size: 9.5, color: HaloColors.text3),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
