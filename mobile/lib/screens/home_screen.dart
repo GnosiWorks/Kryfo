@@ -503,7 +503,11 @@ class _OfflineStrip extends StatelessWidget {
               Expanded(
                 child: Text(
                   'sends when you reconnect',
-                  style: HaloType.mono(size: 11.5, color: HaloColors.text2),
+                  style: HaloType.mono(
+                    size: 11.5,
+                    color: HaloColors.rose.withValues(alpha: 0.85),
+                    weight: FontWeight.w500,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

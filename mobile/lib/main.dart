@@ -69,6 +69,8 @@ class HaloEngine {
   late final OneArgFnDart _nostrSubscribe;
   late final CStrFnDart _nostrPoll;
   late final OneArgFnDart _ntfyPing;
+  late final OneArgFnDart _torGet;
+  late final OneArgFnDart _torGetB64;
   late final OneArgFnDart _idFromEdPub;
   late final TwoArgFnDart _encryptBackup;
   late final TwoArgFnDart _decryptBackup;
@@ -108,6 +110,8 @@ class HaloEngine {
     );
     _nostrPoll = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloNostrPoll');
     _ntfyPing = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNtfyPing');
+    _torGet = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGet');
+    _torGetB64 = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetB64');
     _idFromEdPub = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
       'HaloIdFromEdPub',
     );
@@ -207,6 +211,27 @@ class HaloEngine {
     final ptr = peerXPubHex.toNativeUtf8();
     try {
       return _nostrSubscribe(ptr).toDartString();
+    } finally {
+      malloc.free(ptr);
+    }
+  }
+
+  // fetch a url's html over tor (for sender-side link previews). slow + can
+  // fail — caller treats anything starting 'error:' as no-preview.
+  String torGet(String url) {
+    final ptr = url.toNativeUtf8();
+    try {
+      return _torGet(ptr).toDartString();
+    } finally {
+      malloc.free(ptr);
+    }
+  }
+
+  // fetch binary (preview image) over tor, returns 'ok:<base64>' or 'error:..'.
+  String torGetB64(String url) {
+    final ptr = url.toNativeUtf8();
+    try {
+      return _torGetB64(ptr).toDartString();
     } finally {
       malloc.free(ptr);
     }
@@ -368,7 +393,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 22,
+      version: 23,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -417,6 +442,7 @@ class HaloDb {
             voice_disguised INTEGER NOT NULL DEFAULT 0,
             saved INTEGER NOT NULL DEFAULT 0,
             sent INTEGER NOT NULL DEFAULT 1,
+            preview TEXT,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
         ''');
@@ -455,6 +481,9 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 23) {
+          await db.execute('ALTER TABLE messages ADD COLUMN preview TEXT');
+        }
         if (oldV < 22) {
           await db.execute(
             'ALTER TABLE messages ADD COLUMN voice_disguised INTEGER NOT NULL DEFAULT 0',
@@ -834,6 +863,7 @@ class HaloDb {
     bool voiceDisguised = false,
     bool saved = false,
     int sent = 1,
+    String? preview,
   }) async {
     final db = await open();
     await db.insert('messages', {
@@ -849,6 +879,7 @@ class HaloDb {
       'file_path': filePath,
       'file_name': fileName,
       'voice_disguised': voiceDisguised ? 1 : 0,
+      'preview': preview,
       'saved': saved ? 1 : 0,
       'sent': sent,
     });
@@ -1164,6 +1195,16 @@ class HaloDb {
     );
   }
 
+  Future<void> setMsgPreview(String msgUid, String previewJson) async {
+    final db = await open();
+    await db.update(
+      'messages',
+      {'preview': previewJson},
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+    );
+  }
+
   Future<void> setMsgBurnAt(String msgUid, int burnAt) async {
     final db = await open();
     await db.update(
@@ -1251,6 +1292,7 @@ class HaloDb {
     final db = await open();
     return db.query(
       'messages',
+      columns: ['*', 'rowid'],
       where: 'peer_id = ?',
       whereArgs: [peerId],
       orderBy: 'sent_at ASC',
@@ -1261,14 +1303,18 @@ class HaloDb {
   // append-on-receive fast path so a live message doesn't reload the world.
   Future<List<Map<String, Object?>>> messagesAfter(
     String peerId,
-    int afterMs,
+    int afterRowid,
   ) async {
     final db = await open();
+    // key off rowid (insertion order), not sent_at — a received note can carry
+    // a sent_at older than our local newest (clock skew) and would be missed by
+    // a timestamp filter. rowid always climbs as rows are saved.
     return db.query(
       'messages',
-      where: 'peer_id = ? AND sent_at > ?',
-      whereArgs: [peerId, afterMs],
-      orderBy: 'sent_at ASC',
+      columns: ['*', 'rowid'],
+      where: 'peer_id = ? AND rowid > ?',
+      whereArgs: [peerId, afterRowid],
+      orderBy: 'rowid ASC',
     );
   }
 
@@ -1276,11 +1322,14 @@ class HaloDb {
   // ordering without loading the whole conversation.
   Future<Map<String, Object?>?> lastMessageFor(String peerId) async {
     final db = await open();
+    // order by rowid (insertion order), not sent_at — a received note can carry
+    // a sent_at older than our local newest (clock skew between phones) and
+    // would otherwise never surface as the latest. rowid always climbs.
     final rows = await db.query(
       'messages',
       where: 'peer_id = ?',
       whereArgs: [peerId],
-      orderBy: 'sent_at DESC',
+      orderBy: 'rowid DESC',
       limit: 1,
     );
     return rows.isEmpty ? null : rows.first;
@@ -1680,6 +1729,19 @@ class AppState extends ChangeNotifier {
     // 2.6) unsend - sender recalled a message; delete our copy
     if (env.unsend != null) {
       await db.deleteMessage(env.unsend!);
+      // refresh so it vanishes live if the peer's looking at the chat now,
+      // not only after they leave and come back.
+      notifyListeners();
+      return;
+    }
+    // 2.7) link preview update — sender fetched it over tor and is attaching
+    // the card to a message we already have. empty body + '_t' target uid.
+    final pv = env.preview;
+    if (pv != null && pv['_t'] != null) {
+      final target = pv['_t']!;
+      final card = Map<String, String>.from(pv)..remove('_t');
+      await db.setMsgPreview(target, jsonEncode(card));
+      notifyListeners();
       return;
     }
     // 3) data message — could be 1:1 or group
@@ -1724,12 +1786,16 @@ class AppState extends ChangeNotifier {
       mediaPath: mediaPath,
       filePath: filePath,
       fileName: fileName,
+      preview: env.preview != null ? jsonEncode(env.preview) : null,
     );
     // notification context — for groups, title = group name and body
     // prefixes the sender. payload uses "group:<id>" so tap-to-open can
     // route to the right screen.
     if (!isGroup && currentChatPeer != senderHaloId) {
       await db.bumpUnread(senderHaloId);
+    } else if (!isGroup && currentChatPeer == senderHaloId) {
+      // already reading this chat — clear any stale badge instead of leaving it.
+      await db.clearUnread(senderHaloId);
     }
     // a message landed: rebuild the contact list so the home shows the
     // new preview, time and unread dot without needing the chat opened.
@@ -2219,7 +2285,19 @@ class AppState extends ChangeNotifier {
         final dir = last['direction'] as String?;
         final text = (last['plaintext'] as String?) ?? '';
         final media = last['media_path'] as String?;
-        final body = text.isNotEmpty ? text : (media != null ? 'photo' : '');
+        final fileName = last['file_name'] as String?;
+        String body;
+        if (text.isNotEmpty) {
+          body = text;
+        } else if (fileName == 'voice.wav') {
+          body = 'voice message';
+        } else if (fileName != null) {
+          body = fileName;
+        } else if (media != null) {
+          body = 'photo';
+        } else {
+          body = '';
+        }
         if (body.isNotEmpty) preview = dir == 'out' ? 'you: $body' : body;
         final sentAt = last['sent_at'] as int?;
         if (sentAt != null) {

@@ -25,8 +25,10 @@ import "C"
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -384,4 +386,78 @@ return C.CString(fmt.Sprintf("error: status %d", resp.StatusCode))
 }
 log.Printf("ntfy: pinged %s -> %d", endpoint, resp.StatusCode)
 return C.CString("ok")
+}
+
+//export HaloTorGet
+// fetch a url over the tor http client and return the html body (capped).
+// used for sender-side link previews so the receiver never has to fetch and
+// leak their ip. best-effort: returns "error: ..." on any failure, caller skips.
+func HaloTorGet(cUrl *C.char) *C.char {
+url := C.GoString(cUrl)
+if url == "" {
+return C.CString("error: empty url")
+}
+client, err := torNostrClient()
+if err != nil {
+return C.CString(fmt.Sprintf("error: tor client: %v", err))
+}
+req, err := http.NewRequest("GET", url, nil)
+if err != nil {
+return C.CString(fmt.Sprintf("error: req: %v", err))
+}
+req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; halo-preview)")
+ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+defer cancel()
+resp, err := client.Do(req.WithContext(ctx))
+if err != nil {
+return C.CString(fmt.Sprintf("error: get: %v", err))
+}
+defer resp.Body.Close()
+if resp.StatusCode != 200 {
+return C.CString(fmt.Sprintf("error: status %d", resp.StatusCode))
+}
+// cap at 256kb — the og tags live in <head>, no need for the whole page.
+limited := io.LimitReader(resp.Body, 256*1024)
+body, err := io.ReadAll(limited)
+if err != nil {
+return C.CString(fmt.Sprintf("error: read: %v", err))
+}
+return C.CString(string(body))
+}
+
+//export HaloTorGetB64
+// like HaloTorGet but returns the body base64-encoded, for binary content
+// (link-preview images). fetched over tor so the receiver never loads the
+// image from the origin and leaks their ip. capped larger than html.
+func HaloTorGetB64(cUrl *C.char) *C.char {
+url := C.GoString(cUrl)
+if url == "" {
+return C.CString("error: empty url")
+}
+client, err := torNostrClient()
+if err != nil {
+return C.CString(fmt.Sprintf("error: tor client: %v", err))
+}
+req, err := http.NewRequest("GET", url, nil)
+if err != nil {
+return C.CString(fmt.Sprintf("error: req: %v", err))
+}
+req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; halo-preview)")
+ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
+defer cancel()
+resp, err := client.Do(req.WithContext(ctx))
+if err != nil {
+return C.CString(fmt.Sprintf("error: get: %v", err))
+}
+defer resp.Body.Close()
+if resp.StatusCode != 200 {
+return C.CString(fmt.Sprintf("error: status %d", resp.StatusCode))
+}
+// cap at 1mb — preview thumbnails, not full-res.
+limited := io.LimitReader(resp.Body, 1024*1024)
+body, err := io.ReadAll(limited)
+if err != nil {
+return C.CString(fmt.Sprintf("error: read: %v", err))
+}
+return C.CString("ok:" + base64.StdEncoding.EncodeToString(body))
 }

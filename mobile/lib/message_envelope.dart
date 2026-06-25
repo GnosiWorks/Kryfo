@@ -32,6 +32,7 @@ class UnwrappedMessage {
   final String? fileName; // 'fn' field - original display name
   final bool voice; // 'vo' field - true when the file is a voice note
   final bool voiceDisguised; // 'vd' field - voice note was pitch-shifted
+  final Map<String, String>? preview; // 'pv' field - link preview card data
   UnwrappedMessage(
     this.message, {
     this.endpoint,
@@ -52,6 +53,7 @@ class UnwrappedMessage {
     this.fileName,
     this.voice = false,
     this.voiceDisguised = false,
+    this.preview,
   });
 }
 
@@ -121,6 +123,7 @@ Future<String> wrapMessage(
   String? fileName,
   bool voice = false,
   bool voiceDisguised = false,
+  Map<String, String>? preview,
 }) async {
   final mode = await loadPushMode();
   final body = <String, dynamic>{'m': plain};
@@ -138,6 +141,7 @@ Future<String> wrapMessage(
   if (fileName != null) body['fn'] = fileName;
   if (voice) body['vo'] = 1;
   if (voiceDisguised) body['vd'] = 1;
+  if (preview != null && preview.isNotEmpty) body['pv'] = preview;
 
   if (mode == PushMode.ntfy) {
     final topic = await loadNtfyTopic();
@@ -211,6 +215,11 @@ UnwrappedMessage unwrapMessage(String wrapped) {
         participants: parts,
       );
     }
+    Map<String, String>? preview;
+    final pvRaw = json['pv'];
+    if (pvRaw is Map) {
+      preview = pvRaw.map((k, v) => MapEntry(k.toString(), v.toString()));
+    }
     return UnwrappedMessage(
       (json['m'] as String?) ?? '',
       endpoint: json['p'] as String?,
@@ -231,6 +240,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       fileName: json['fn'] as String?,
       voice: json['vo'] == 1,
       voiceDisguised: json['vd'] == 1,
+      preview: preview,
     );
   } catch (_) {
     return UnwrappedMessage(wrapped);
