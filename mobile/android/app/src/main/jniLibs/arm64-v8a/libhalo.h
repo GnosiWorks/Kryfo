@@ -130,6 +130,16 @@ extern char* HaloNostrPoll(void);
 // only cares that *something* arrived to wake subscribers.
 extern char* HaloNtfyPing(char* cEndpoint);
 
+// fetch a url over the tor http client and return the html body (capped).
+// used for sender-side link previews so the receiver never has to fetch and
+// leak their ip. best-effort: returns "error: ..." on any failure, caller skips.
+extern char* HaloTorGet(char* cUrl);
+
+// like HaloTorGet but returns the body base64-encoded, for binary content
+// (link-preview images). fetched over tor so the receiver never loads the
+// image from the origin and leaks their ip. capped larger than html.
+extern char* HaloTorGetB64(char* cUrl);
+
 #ifdef __cplusplus
 }
 #endif
