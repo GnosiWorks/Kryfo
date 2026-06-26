@@ -1195,9 +1195,22 @@ class HaloDb {
     );
   }
 
-  Future<void> setMsgPreview(String msgUid, String previewJson) async {
+  Future<String?> getMsgPreview(String msgUid) async {
     final db = await open();
-    await db.update(
+    final rows = await db.query(
+      'messages',
+      columns: ['preview'],
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return rows.first['preview'] as String?;
+  }
+
+  Future<int> setMsgPreview(String msgUid, String previewJson) async {
+    final db = await open();
+    return db.update(
       'messages',
       {'preview': previewJson},
       where: 'msg_uid = ?',
@@ -1740,7 +1753,8 @@ class AppState extends ChangeNotifier {
     if (pv != null && pv['_t'] != null) {
       final target = pv['_t']!;
       final card = Map<String, String>.from(pv)..remove('_t');
-      await db.setMsgPreview(target, jsonEncode(card));
+      final n = await db.setMsgPreview(target, jsonEncode(card));
+      debugPrint('PREVIEW-RECV target=$target rowsUpdated=$n');
       notifyListeners();
       return;
     }
@@ -3075,6 +3089,7 @@ class _DevScreenState extends State<DevScreen> {
       return;
     }
     final uri = await buildHaloUriV2(appState.myId, _myAddr);
+    if (!context.mounted) return;
     showDialog(
       context: context,
       builder: (_) => Dialog(

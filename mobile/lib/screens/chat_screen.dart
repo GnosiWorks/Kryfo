@@ -11,7 +11,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:cross_file/cross_file.dart';
 import 'package:record/record.dart';
 import 'package:just_audio/just_audio.dart';
 import 'dart:io';
@@ -473,6 +472,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       _checkInbox();
+      _refreshPreviews();
     });
   }
 
@@ -509,6 +509,32 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // rebuild from scratch (that full reload was eating the bubble-in animation
   // and felt laggy). falls back to a full reload if anything looks off — an
   // edit, a delete, a reaction, or a row we already have.
+  // a link-preview update arrives as a separate control message and only
+  // updates an existing row's preview column — _tryAppendNew won't see it (no
+  // new row). so each tick, pull previews for messages that have a url but no
+  // card yet and patch them in live. cheap: only runs while a preview is
+  // genuinely missing.
+  Future<void> _refreshPreviews() async {
+    if (!_loaded) return;
+    final pending = _messages
+        .where((m) => m.preview == null && _firstUrl(m.text) != null)
+        .toList();
+    if (pending.isEmpty) return;
+    var changed = false;
+    for (final m in pending) {
+      if (m.msgUid == null) continue;
+      final pv = await db.getMsgPreview(m.msgUid!);
+      if (pv != null && pv.isNotEmpty) {
+        try {
+          final d = jsonDecode(pv) as Map<String, dynamic>;
+          m.preview = d.map((k, v) => MapEntry(k, v.toString()));
+          changed = true;
+        } catch (_) {}
+      }
+    }
+    if (changed && mounted) setState(() {});
+  }
+
   Future<void> _tryAppendNew() async {
     if (!_loaded || _searching) {
       _loadMessages();
@@ -661,8 +687,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (_matches.isEmpty || !_scrollCtrl.hasClients) return;
     final idx = _matches[_matchPos];
     if (_messages.isNotEmpty) {
-      final approx =
-          (idx / _messages.length) * _scrollCtrl.position.maxScrollExtent;
+      // reversed list: newest is at offset 0, so a message at index idx sits at
+      // roughly (len-1-idx)/len of the extent.
+      final frac = (_messages.length - 1 - idx) / _messages.length;
+      final approx = frac * _scrollCtrl.position.maxScrollExtent;
       _scrollCtrl.jumpTo(
         approx.clamp(0.0, _scrollCtrl.position.maxScrollExtent),
       );
@@ -1244,10 +1272,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (idx < 0 || !_scrollCtrl.hasClients) return;
     setState(() => _jumpIndex = idx);
     final max = _scrollCtrl.position.maxScrollExtent;
-    final approx =
-        ((idx / _messages.length) * max -
-                _scrollCtrl.position.viewportDimension * 0.3)
-            .clamp(0.0, max);
+    final frac = (_messages.length - 1 - idx) / _messages.length;
+    final approx = (frac * max - _scrollCtrl.position.viewportDimension * 0.3)
+        .clamp(0.0, max);
     _scrollCtrl.jumpTo(approx.clamp(0.0, max));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ctx = _jumpKey.currentContext;
@@ -1612,10 +1639,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     void step() {
       if (!mounted || !_scrollCtrl.hasClients) return;
       final max = _scrollCtrl.position.maxScrollExtent;
-      final approx =
-          ((idx / _messages.length) * max -
-                  _scrollCtrl.position.viewportDimension * 0.3)
-              .clamp(0.0, max);
+      final frac = (_messages.length - 1 - idx) / _messages.length;
+      final approx = (frac * max - _scrollCtrl.position.viewportDimension * 0.3)
+          .clamp(0.0, max);
       _scrollCtrl.jumpTo(approx);
       final ctx = _jumpKey.currentContext;
       final settled = (max - lastMax).abs() < 1.0 && attempts > 1;
@@ -1649,86 +1675,53 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   void _scrollToEnd({bool instant = false}) {
     if (_jumpActive) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_scrollCtrl.hasClients) return;
-      final target = _scrollCtrl.position.maxScrollExtent;
-      if (instant) {
-        // bubbles with images/voice measure their height a frame or two late,
-        // so a single jump lands mid-screen. poll: jump to the running bottom
-        // each frame until the extent stops growing.
-        var lastMax = -1.0;
-        var tries = 0;
-        void settle() {
-          if (!mounted || !_scrollCtrl.hasClients) return;
-          final max = _scrollCtrl.position.maxScrollExtent;
-          _scrollCtrl.jumpTo(max);
-          tries++;
-          if ((max - lastMax).abs() < 1.0 && tries > 3) return;
-          lastMax = max;
-          if (tries < 30) {
-            WidgetsBinding.instance.addPostFrameCallback((_) => settle());
-          }
-        }
-
-        settle();
-        // images/voice can decode height hundreds of ms late — re-pin a few
-        // times after first layout so we don't settle on a still-growing list.
-        for (final ms in [120, 300, 600, 1000]) {
-          Future.delayed(Duration(milliseconds: ms), () {
-            if (!mounted || !_scrollCtrl.hasClients) return;
-            final end = _scrollCtrl.position.maxScrollExtent;
-            if ((end - _scrollCtrl.offset).abs() > 2) _scrollCtrl.jumpTo(end);
-          });
-        }
-      } else {
-        _scrollCtrl.animateTo(
-          target,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-        );
-      }
+    // reversed list: the newest message lives at offset 0, so "scroll to end"
+    // is just jump/animate to 0. no post-layout settling needed — the list is
+    // naturally pinned to the bottom.
+    if (!_scrollCtrl.hasClients) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!_scrollCtrl.hasClients) return;
-        final grown = _scrollCtrl.position.maxScrollExtent;
-        if (grown > target + 4) _scrollCtrl.jumpTo(grown);
+        if (_scrollCtrl.hasClients) _scrollCtrl.jumpTo(0);
       });
-      Future.delayed(const Duration(milliseconds: 160), () {
-        if (!mounted || !_scrollCtrl.hasClients) return;
-        final end = _scrollCtrl.position.maxScrollExtent;
-        if ((end - _scrollCtrl.offset).abs() > 2) _scrollCtrl.jumpTo(end);
-      });
-    });
+      return;
+    }
+    if (instant) {
+      _scrollCtrl.jumpTo(0);
+    } else {
+      _scrollCtrl.animateTo(
+        0,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
+  // the global receiver in main.dart owns the engine inbox and routes every
+  // incoming message through _applyIncomingPayload (which handles reactions,
+  // previews, unsends and empty-body control frames correctly). this used to
+  // drain the same inbox in parallel and save control frames as blank stub
+  // bubbles — a race. now it just pulls any new/changed rows from the db.
   Future<void> _checkInbox() async {
-    final msgs = engine.drainInbox();
-    if (msgs.isEmpty) return;
-    for (final r in msgs) {
-      final wrapped = await signalDecrypt(widget.peerHaloId, r);
-      if (wrapped == null) continue;
-      final env = unwrapMessage(wrapped);
-      if (env.endpoint != null) {
-        await savePeerEndpoint(widget.peerHaloId, env.endpoint!);
-      }
-      final plain = env.message;
-      _lastCipher = r;
-      if (!mounted) return;
-      await db.saveMessage(widget.peerHaloId, 'in', plain);
-      setState(() {
-        _messages.add(
-          _Msg(
-            'in',
-            plain,
-            DateTime.now(),
-            burnAt: env.burnSeconds != null && env.burnSeconds! > 0
-                ? DateTime.now().millisecondsSinceEpoch +
-                      env.burnSeconds! * 1000
-                : null,
-          ),
-        );
-      });
-      _scrollToEnd();
-    }
+    if (!_loaded || _searching) return;
+    // cheap tick: pull only rows strictly newer than our newest by rowid and
+    // append them. never full-reload here — that rebuilds the whole list every
+    // second and makes everything blink + snaps the scroll. edits/reactions/
+    // previews come through their own refresh paths.
+    final lastRowid = _messages.isEmpty
+        ? 0
+        : _messages.map((m) => m.rowid).reduce((a, b) => a > b ? a : b);
+    final rows = await db.messagesAfter(widget.peerHaloId, lastRowid);
+    if (!mounted || rows.isEmpty) return;
+    final have = _messages.map((m) => m.msgUid).toSet();
+    final brandNew = rows
+        .where(
+          (r) =>
+              (r['msg_uid'] as String?) != null &&
+              !have.contains(r['msg_uid'] as String?),
+        )
+        .toList();
+    if (brandNew.isEmpty) return;
+    // genuinely new rows arrived — let the existing append path build them.
+    await _tryAppendNew();
   }
 
   Future<void> _retry(_Msg msg) async {
@@ -2530,6 +2523,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       // reaches them without us fetching on their device (ip stays private).
       try {
         final pvOut = Map<String, String>.from(pv)..['_t'] = msgUid;
+        // a big base64 image blows past the single-event transport size and the
+        // whole control msg silently fails to deliver (reactions are tiny so
+        // they always make it — this is why the peer saw nothing). drop the
+        // image from the wire copy if it's heavy; peer gets a text preview,
+        // which always arrives. sender still shows the full image locally.
+        final img = pvOut['img'];
+        if (img != null && img.length > 80 * 1024) {
+          pvOut.remove('img');
+        }
+        debugPrint('PREVIEW-SEND target=$msgUid keys=${pvOut.keys.toList()}');
         final wrapped = await wrapMessage('', preview: pvOut);
         final cipher = await signalEncrypt(widget.peerHaloId, wrapped);
         final useDirectOnion = !_backPaired || _peerXPub == null;
@@ -2694,8 +2697,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scrollCtrl.hasClients) return;
       if (MediaQuery.of(context).viewInsets.bottom > 0) {
+        // reversed list: bottom (newest) is offset 0.
         _scrollCtrl.animateTo(
-          _scrollCtrl.position.maxScrollExtent,
+          0,
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeOut,
         );
@@ -2721,6 +2725,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _msgCtrl.dispose();
     _searchCtrl.dispose();
     _stickyHideTimer?.cancel();
+    _scrollCtrl.removeListener(_onScroll);
     _scrollCtrl.removeListener(_updateSticky);
     _stickyLabel.dispose();
     _stickyShown.dispose();
@@ -3536,7 +3541,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void _onScroll() {
     if (!_scrollCtrl.hasClients) return;
     final pos = _scrollCtrl.position;
-    final show = (pos.maxScrollExtent - pos.pixels) > 240;
+    // reversed list: bottom is offset 0, so 'scrolled up from bottom' is
+    // simply pixels past a threshold.
+    final show = pos.pixels > 240;
     if (!show) _seenCount = _messages.length;
     if (show != _showScrollDown && mounted) {
       setState(() => _showScrollDown = show);
@@ -3546,8 +3553,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void _scrollToBottom() {
     if (!_scrollCtrl.hasClients) return;
     setState(() => _seenCount = _messages.length);
+    // reversed list: newest sits at offset 0.
     _scrollCtrl.animateTo(
-      _scrollCtrl.position.maxScrollExtent,
+      0,
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOut,
     );
@@ -3686,13 +3694,23 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ? const _EmptyConversation()
                       : ListView.builder(
                           controller: _scrollCtrl,
+                          reverse: true,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,
                             vertical: 12,
                           ),
                           itemCount: _messages.length,
                           itemBuilder: (c, i) {
-                            final m = _messages[i];
+                            final ix = _messages.length - 1 - i;
+                            final m = _messages[ix];
+                            // a leaked empty control message (an old reaction/preview frame that fell
+                            // through) renders as a blank stub bubble. skip anything with no content.
+                            if (m.text.isEmpty &&
+                                m.mediaPath == null &&
+                                m.filePath == null &&
+                                m.preview == null) {
+                              return const SizedBox.shrink();
+                            }
                             String? quoted;
                             String? quotedAuthor;
                             if (m.replyTo != null) {
@@ -3710,18 +3728,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               }
                             }
                             final isMatch =
-                                searchActive && _matches.contains(i);
+                                searchActive && _matches.contains(ix);
                             final isCurrent =
                                 searchActive &&
                                 _matches.isNotEmpty &&
-                                _matches[_matchPos] == i;
+                                _matches[_matchPos] == ix;
                             final dimmed = searchActive && !isMatch;
                             final showDate =
-                                i == 0 ||
-                                !_sameDay(_messages[i - 1].when, m.when);
-                            final prevMsg = i > 0 ? _messages[i - 1] : null;
-                            final nextMsg = i < _messages.length - 1
-                                ? _messages[i + 1]
+                                ix == 0 ||
+                                !_sameDay(_messages[ix - 1].when, m.when);
+                            final prevMsg = ix > 0 ? _messages[ix - 1] : null;
+                            final nextMsg = ix < _messages.length - 1
+                                ? _messages[ix + 1]
                                 : null;
                             bool sameRun(_Msg? o) =>
                                 o != null &&
@@ -3731,7 +3749,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                 (m.when.difference(o.when).inSeconds).abs() <
                                     120;
                             final firstInGroup =
-                                !sameRun(prevMsg) || i == _firstUnreadIndex;
+                                !sameRun(prevMsg) || ix == _firstUnreadIndex;
                             final lastInGroup = !sameRun(nextMsg);
                             return RepaintBoundary(
                               child: Column(
@@ -3739,7 +3757,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   if (showDate) _dateDivider(m.when),
-                                  if (i == _firstUnreadIndex)
+                                  if (ix == _firstUnreadIndex)
                                     _newMessagesDivider(),
                                   TweenAnimationBuilder<double>(
                                     tween: Tween(
@@ -4641,9 +4659,12 @@ class _MenuBackdropState extends State<_MenuBackdrop>
       animation: _c,
       builder: (_, __) {
         final t = Curves.easeOut.transform(_c.value);
+        // animate only the dark overlay (cheap). the blur sigma stays fixed —
+        // animating BackdropFilter blur recomputes the whole blur every frame
+        // and janks the long-press menu on weaker phones.
         return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16 * t, sigmaY: 16 * t),
-          child: Container(color: Colors.black.withOpacity(0.42 * t)),
+          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+          child: Container(color: Colors.black.withValues(alpha: 0.42 * t)),
         );
       },
     );
@@ -4950,6 +4971,7 @@ class _Bubble extends StatelessWidget {
                                           )
                                         : BorderRadius.circular(14),
                                     child: Stack(
+                                      clipBehavior: Clip.none,
                                       children: [
                                         ConstrainedBox(
                                           constraints: const BoxConstraints(
@@ -5164,7 +5186,7 @@ class _Bubble extends StatelessWidget {
                       ),
                       if (msg.reactions.isNotEmpty)
                         Positioned(
-                          bottom: -15,
+                          bottom: -10,
                           left: 8,
                           child: Wrap(
                             spacing: 4,
@@ -5242,22 +5264,21 @@ class _Bubble extends StatelessWidget {
     for (final emoji in m.reactions.values) {
       counts[emoji] = (counts[emoji] ?? 0) + 1;
     }
-    final mine = m.reactions[''];
     return counts.entries.map<Widget>((e) {
       final emoji = e.key;
       final count = e.value;
-      final isMine = emoji == mine;
       // ig-style single pill that sits half over the bubble corner. dark
       // translucent fill, thin ring, soft shadow, emoji + count.
       return _ReactionPop(
         key: ValueKey(emoji),
+        popKey: '${m.msgUid}:$emoji',
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: isMine
-                ? HaloColors.amber.withValues(alpha: 0.22)
-                : HaloColors.ink.withValues(alpha: 0.78),
-            borderRadius: BorderRadius.circular(12),
+            // ig-style: one neutral dark pill for every reaction, mine or not.
+            // (the amber-when-mine fill was reading as an orange border.)
+            color: HaloColors.ink.withValues(alpha: 0.82),
+            borderRadius: BorderRadius.circular(14),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x4D000000),
@@ -5269,7 +5290,7 @@ class _Bubble extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 13)),
+              Text(emoji, style: const TextStyle(fontSize: 13, height: 1.2)),
               if (count > 1) ...[
                 const SizedBox(width: 3),
                 Text(
@@ -5293,7 +5314,13 @@ class _Bubble extends StatelessWidget {
 // existing chips keep their state and only a new one animates.
 class _ReactionPop extends StatefulWidget {
   final Widget child;
-  const _ReactionPop({super.key, required this.child});
+  final String popKey;
+  const _ReactionPop({super.key, required this.child, required this.popKey});
+
+  // emojis that have already played their pop. on a chat rebuild we don't want
+  // every existing reaction to spring in again (that read as a blink). a chip
+  // animates the first time it's seen, then renders settled forever after.
+  static final Set<String> _popped = {};
 
   @override
   State<_ReactionPop> createState() => _ReactionPopState();
@@ -5304,7 +5331,18 @@ class _ReactionPopState extends State<_ReactionPop>
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 420),
-  )..forward();
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    if (_ReactionPop._popped.contains(widget.popKey)) {
+      _c.value = 1.0; // already animated before — render settled, no blink.
+    } else {
+      _ReactionPop._popped.add(widget.popKey);
+      _c.forward();
+    }
+  }
 
   @override
   void dispose() {
@@ -5881,7 +5919,11 @@ class _VoiceBubbleState extends State<_VoiceBubble> {
   @override
   void initState() {
     super.initState();
-    _load();
+    // don't call _load() here — it allocates a native media handle per bubble,
+    // and a chat with several voice notes exhausts android's codec pool so the
+    // later ones fail to play. just check the file exists (cheap); the real
+    // load happens lazily on first tap in _toggle.
+    _checkExists();
     _player.playerStateStream.listen((st) {
       if (!mounted) return;
       setState(() => _playing = st.playing);
@@ -5896,6 +5938,25 @@ class _VoiceBubbleState extends State<_VoiceBubble> {
     _player.positionStream.listen((p) {
       if (mounted && _playing) setState(() => _pos = p);
     });
+  }
+
+  // flag missing files, and read just the clip length with a throwaway player
+  // so the bubble can show the real duration. the probe is disposed right after
+  // so we don't hold a codec handle per bubble (holding them all was the
+  // exhaustion that stopped later notes playing).
+  Future<void> _checkExists() async {
+    if (!await File(widget.path).exists()) {
+      if (mounted) setState(() => _missing = true);
+      return;
+    }
+    final probe = AudioPlayer();
+    try {
+      final d = await probe.setFilePath(widget.path);
+      if (d != null && mounted) setState(() => _dur = d);
+    } catch (_) {
+    } finally {
+      await probe.dispose();
+    }
   }
 
   Future<void> _load() async {
@@ -6779,10 +6840,27 @@ class _LinkPreviewCard extends StatelessWidget {
   final bool isOut;
   const _LinkPreviewCard({required this.preview, required this.isOut});
 
+  // decode each preview image once and keep the bytes, so list repaints (burn
+  // ticks, scroll) don't re-decode base64 every frame and make the card blink.
+  static final Map<String, Uint8List> _imgCache = {};
+  static Uint8List? _decode(String? b64) {
+    if (b64 == null) return null;
+    final hit = _imgCache[b64];
+    if (hit != null) return hit;
+    try {
+      final bytes = base64Decode(b64);
+      _imgCache[b64] = bytes;
+      return bytes;
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final title = preview['title'];
     final imgB64 = preview['img'];
+    final imgBytes = _decode(imgB64);
     final site = preview['site'];
     final url = preview['url'];
     final fg = isOut ? HaloColors.onAmber : HaloColors.text;
@@ -6809,12 +6887,13 @@ class _LinkPreviewCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (imgB64 != null)
+            if (imgBytes != null)
               AspectRatio(
                 aspectRatio: 1.91,
                 child: Image.memory(
-                  base64Decode(imgB64),
+                  imgBytes,
                   fit: BoxFit.cover,
+                  gaplessPlayback: true,
                   errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                 ),
               ),
