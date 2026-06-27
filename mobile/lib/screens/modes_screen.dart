@@ -1,4 +1,4 @@
-// speed & privacy modes. cosmetic in phase 1 — tor is mandatory in the engine.
+// speed & privacy modes. cosmetic in phase 1 - tor is mandatory in the engine.
 // fast mode wires up in phase 2.
 
 import 'package:flutter/material.dart';

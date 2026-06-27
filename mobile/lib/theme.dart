@@ -170,7 +170,7 @@ ThemeData buildHaloTheme() {
   );
 }
 
-// editorial toast: ink surface, hairline amber edge — reads like part of halo
+// editorial toast: ink surface, hairline amber edge - reads like part of halo
 // rather than a default grey snackbar. clears any in-flight toast first.
 void showHaloToast(BuildContext context, String message) {
   final messenger = ScaffoldMessenger.of(context);

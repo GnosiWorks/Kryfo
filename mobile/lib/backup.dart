@@ -1,4 +1,4 @@
-// backup.dart — full identity + db + prefs backup, encrypted with a
+// backup.dart - full identity + db + prefs backup, encrypted with a
 // user passphrase. one blob, restorable on any device. uses the engine
 // for scrypt + aes-gcm (HaloEncryptBackup / HaloDecryptBackup).
 
@@ -39,7 +39,7 @@ Future<String> createBackupBlob(String passphrase) async {
       throw BackupError('identity not loaded');
     }
 
-    // onion key — may not exist yet if user never started the listener
+    // onion key - may not exist yet if user never started the listener
     String? onionKeyB64;
     final onionPath = p.join(docsDir.path, 'onion.key');
     final onionFile = File(onionPath);

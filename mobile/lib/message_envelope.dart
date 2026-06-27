@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-// message_envelope.dart — wrap outgoing plain text with optional metadata
+// message_envelope.dart - wrap outgoing plain text with optional metadata
 // (ntfy endpoint + sender identity for back-pair) so the peer learns our
 // push endpoint and identity over the existing encrypted channel. wrapped
 // messages use the sentinel prefix "halo/1:" + JSON object so legacy plain
@@ -58,7 +58,7 @@ class UnwrappedMessage {
   });
 }
 
-/// A group "control message" — when present in an envelope, the payload
+/// A group "control message" - when present in an envelope, the payload
 /// is not a message body but a group state update (create, member add/remove,
 /// rename, leave). The 'm' body should be ignored when this is present.
 class GroupControl {
@@ -79,7 +79,7 @@ class GroupControl {
   });
 }
 
-/// A reaction "control message" — when present in an envelope, the payload
+/// A reaction "control message" - when present in an envelope, the payload
 /// is not a message body but a reaction (add or remove) on a previous one.
 class ReactionFrame {
   final String targetUid; // the msg_uid this reaction applies to

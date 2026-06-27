@@ -1,4 +1,4 @@
-// lock_screen.dart — pin entry over the entire app when locked.
+// lock_screen.dart - pin entry over the entire app when locked.
 // 4-digit pin, custom keypad, no system keyboard. wrong pin shakes.
 // when biometric is enabled, auto-fires the system fingerprint prompt
 // on screen entry; "use fingerprint" link re-fires it.
@@ -50,7 +50,7 @@ class _LockScreenState extends State<LockScreen>
       setState(() => _busy = true);
       final result = await lockState.verifyPin(_pin);
       if (result == PinResult.panic) {
-        // silent wipe — the screen stays as if processing, then halo
+        // silent wipe - the screen stays as if processing, then halo
         // exits. to the coercer it looks like the app crashed.
         await wipeHalo();
         return;

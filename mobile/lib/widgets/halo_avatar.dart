@@ -1,4 +1,4 @@
-// halo_avatar.dart — procedural avatar from a seed string.
+// halo_avatar.dart - procedural avatar from a seed string.
 // gradient background, large italic serif initial, thin divider,
 // and a 3-letter mono tag below. seed-driven palette so identical
 // halo ids produce identical avatars across devices.
@@ -100,7 +100,7 @@ class _Palette {
 }
 
 List<_Palette> get _palettes => <_Palette>[
-  // dark-bg palettes — cream letter, varied tag accents
+  // dark-bg palettes - cream letter, varied tag accents
   _Palette(
     HaloColors.ink,
     HaloColors.amberDeep,
@@ -159,7 +159,7 @@ List<_Palette> get _palettes => <_Palette>[
     HaloColors.text,
     HaloColors.rose,
   ),
-  // bright palettes — ink letter, cream/dark tag
+  // bright palettes - ink letter, cream/dark tag
   _Palette(
     HaloColors.amberDeep,
     HaloColors.rose,

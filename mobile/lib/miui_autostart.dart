@@ -1,4 +1,4 @@
-// miui_autostart.dart — onboarding nag for xiaomi devices.
+// miui_autostart.dart - onboarding nag for xiaomi devices.
 // miui kills background apps unless autostart is enabled per-app.
 // no way to enable it programmatically, so we explain + open the right
 // settings panel.

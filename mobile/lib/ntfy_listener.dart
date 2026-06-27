@@ -1,4 +1,4 @@
-// ntfy_listener.dart — keeps a websocket alive to the user's ntfy server
+// ntfy_listener.dart - keeps a websocket alive to the user's ntfy server
 // so an external ping triggers an immediate Nostr drain. when push mode
 // is not ntfy, the listener is dormant.
 

@@ -24,7 +24,7 @@ class SignalSession {
   }) async {
     if (_ready) return;
 
-    // clamp priv per RFC 7748 — libsignal expects already-clamped scalar
+    // clamp priv per RFC 7748 - libsignal expects already-clamped scalar
     final clamped = Uint8List.fromList(xPrivBytes);
     clamped[0] &= 0xF8;
     clamped[31] &= 0x7F;
