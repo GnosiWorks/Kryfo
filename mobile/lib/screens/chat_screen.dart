@@ -1,6 +1,7 @@
 // chat screen. message bubbles, composer, live receive over tor.
 // matches 08_complete_spec.html "the everyday" chat tile.
 
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
@@ -2341,13 +2342,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // a gif must NOT be re-encoded (that kills the animation), so it skips the
     // image-quality resize path and sends raw bytes. big gifs choke tor on one
     // un-chunked envelope, so cap at ~4mb until chunked transfer lands.
-    // until chunked media transfer lands, a gif rides one un-chunked envelope.
-    // big ones silently fail over tor/nostr, so cap small - tiny reaction gifs
-    // deliver, anything bigger gets a clear message instead of a black hole.
-    if (data.length > 200 * 1024) {
-      if (mounted) {
-        showHaloToast(context, 'gif too big · small gifs only for now');
-      }
+    // chunked transfer splits big media across envelopes, so gifs can be larger
+    // now. still cap to keep send time + memory sane over tor on weak phones.
+    if (data.length > 8 * 1024 * 1024) {
+      if (mounted) showHaloToast(context, 'gif too big · 8 mb max');
       return;
     }
     // send raw through the image path - Image.memory animates gifs by the bytes,
@@ -2389,54 +2387,81 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       burnAt: msg.burnAt,
       sent: 0,
     );
-    final String cipher;
-    try {
-      final wrapped = await wrapMessage(
-        caption,
-        msgUid: msgUid,
-        imageB64: b64,
-        burnSeconds: _ghost ? _burnSeconds : null,
-        sender: SenderInfo(
-          haloId: appState.myId,
-          edPub: engine.myEdPubkey(),
-          onion: appState.myOnion,
-          xPub: engine.myXPubkey(),
-        ),
-      );
-      cipher = await signalEncrypt(widget.peerHaloId, wrapped);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        msg.sending = false;
-        msg.failed = true;
-      });
-      return;
+    // chunk the base64 so no single envelope exceeds the transport limit. small
+    // images stay one chunk and behave exactly as before. big ones split into
+    // ~60kb slices that the receiver reassembles by mediaId.
+    // 30kb keeps each chunk + envelope overhead under the public relay event
+    // size limit (many cap ~32-64kb). bigger chunks got 'no relays accepted'.
+    const chunkSize = 30 * 1024;
+    final chunks = <String>[];
+    for (var i = 0; i < b64.length; i += chunkSize) {
+      chunks.add(b64.substring(i, math.min(i + chunkSize, b64.length)));
     }
+    final total = chunks.length;
     final sendFuture = Future<String>(() async {
       var torWait = 0;
       while (!_torReadyToSend() && torWait < 30000) {
         await Future.delayed(const Duration(milliseconds: 400));
         torWait += 400;
       }
-      debugPrint('TICK torStatus=${appState.torStatus} waited=${torWait}ms');
       if (!_torReadyToSend()) return 'error: tor not ready';
-      String? tor;
-      if (!_backPaired && widget.peerOnion.isNotEmpty) {
-        debugPrint('SEND route=onion tor=' + appState.torStatus.toString());
-        tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
-        if (tor == 'ok') return 'ok';
+      // send each chunk in order. caption + burn ride chunk 0 only so the
+      // reassembled message carries them once. any chunk failing fails the send.
+      for (var i = 0; i < total; i++) {
+        final String cipher;
+        try {
+          final wrapped = await wrapMessage(
+            i == 0 ? caption : '',
+            msgUid: msgUid,
+            imageB64: chunks[i],
+            mediaId: total > 1 ? msgUid : null,
+            chunkIndex: total > 1 ? i : null,
+            chunkTotal: total > 1 ? total : null,
+            burnSeconds: i == 0 && _ghost ? _burnSeconds : null,
+            sender: SenderInfo(
+              haloId: appState.myId,
+              edPub: engine.myEdPubkey(),
+              onion: appState.myOnion,
+              xPub: engine.myXPubkey(),
+            ),
+          );
+          cipher = await signalEncrypt(widget.peerHaloId, wrapped);
+        } catch (e) {
+          return 'error: encrypt';
+        }
+        // each chunk gets a few tries - a single tor hiccup shouldn't kill the
+        // whole multi-chunk send (the slow samsung path drops one now and then).
+        var sent = false;
+        String lastErr = 'error: no transport';
+        for (var attempt = 0; attempt < 3 && !sent; attempt++) {
+          String? tor;
+          if (!_backPaired && widget.peerOnion.isNotEmpty) {
+            tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
+            if (tor == 'ok') {
+              sent = true;
+              break;
+            }
+            if (tor != null) lastErr = tor;
+          }
+          var xpub = _peerXPub;
+          xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
+          if (xpub != null) {
+            _peerXPub = xpub;
+            final r = await Future(() => engine.nostrSend(xpub!, cipher));
+            if (r == 'ok') {
+              sent = true;
+              break;
+            }
+            lastErr = r;
+          }
+          if (!sent) await Future.delayed(const Duration(milliseconds: 600));
+        }
+        if (!sent) {
+          debugPrint('CHUNK $i/$total failed after retries: $lastErr');
+          return lastErr;
+        }
       }
-      // peer xpub may be null on a fresh back-pair / reconnect (it's loaded
-      // once at open). re-fetch from the session before giving up, so the relay
-      // route is available instead of dead-ending on 'no transport'.
-      var xpub = _peerXPub;
-      xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
-      if (xpub != null) {
-        _peerXPub = xpub;
-        debugPrint('SEND route=relay tor=' + appState.torStatus.toString());
-        return await Future(() => engine.nostrSend(xpub!, cipher));
-      }
-      return tor ?? 'error: no transport';
+      return 'ok';
     });
     sendFuture.then((result) async {
       if (result == 'ok' && msg.msgUid != null) {

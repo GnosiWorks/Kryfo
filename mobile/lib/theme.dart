@@ -184,7 +184,7 @@ void showHaloToast(BuildContext context, String message) {
       backgroundColor: HaloColors.surface2,
       behavior: SnackBarBehavior.floating,
       elevation: 0,
-      duration: const Duration(milliseconds: 1800),
+      duration: const Duration(milliseconds: 3500),
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),

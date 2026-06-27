@@ -1637,6 +1637,9 @@ class AppState extends ChangeNotifier {
   // uids being processed right now, to dedup near-simultaneous arrivals
   // (preview re-send racing a manual retry) before the db write lands.
   final Set<String> _inflightUids = <String>{};
+  // incoming media chunks buffered by mediaId until all arrive, then
+  // reassembled into the full base64. single-chunk media skips this.
+  final Map<String, Map<int, String>> _mediaChunks = {};
   // global send-privacy mode: 'fast' | 'normal' | 'private'. cosmetic for now -
   // every message routes over full tor until fast/hop modes wire up (phase 2).
   String _sendMode = 'private';
@@ -1805,21 +1808,48 @@ class AppState extends ChangeNotifier {
       debugPrint('dropping group msg for unknown group ${env.groupId}');
       return;
     }
+    // chunked media: a big image/file arrives as several envelopes sharing one
+    // mediaId. buffer the slices until all chunkTotal are in, then rebuild the
+    // full base64. single-chunk (or unchunked) media skips this entirely.
+    String? imgB64 = env.imageB64;
+    String? fileB64v = env.fileB64;
+    if (env.mediaId != null && env.chunkTotal != null && env.chunkTotal! > 1) {
+      final mid = env.mediaId!;
+      final slot = _mediaChunks.putIfAbsent(mid, () => <int, String>{});
+      final slice = (env.imageB64 ?? env.fileB64) ?? '';
+      slot[env.chunkIndex ?? 0] = slice;
+      if (slot.length < env.chunkTotal!) {
+        // still waiting on more pieces - nothing to show yet.
+        return;
+      }
+      // all pieces in: stitch them back in index order.
+      final full = StringBuffer();
+      for (var i = 0; i < env.chunkTotal!; i++) {
+        full.write(slot[i] ?? '');
+      }
+      _mediaChunks.remove(mid);
+      // which field it belonged to: file if a name was sent, else image.
+      if (env.fileName != null) {
+        fileB64v = full.toString();
+      } else {
+        imgB64 = full.toString();
+      }
+    }
     String? mediaPath;
-    if (env.imageB64 != null && env.imageB64!.isNotEmpty) {
+    if (imgB64 != null && imgB64.isNotEmpty) {
       try {
         mediaPath = await saveMediaBytes(
-          base64Decode(env.imageB64!),
+          base64Decode(imgB64),
           env.msgUid ?? DateTime.now().millisecondsSinceEpoch.toString(),
         );
       } catch (_) {}
     }
     String? filePath;
     final fileName = env.fileName;
-    if (env.fileB64 != null && env.fileB64!.isNotEmpty) {
+    if (fileB64v != null && fileB64v.isNotEmpty) {
       try {
         filePath = await saveFileBytes(
-          base64Decode(env.fileB64!),
+          base64Decode(fileB64v),
           env.msgUid ?? DateTime.now().millisecondsSinceEpoch.toString(),
           fileName ?? 'file',
         );
