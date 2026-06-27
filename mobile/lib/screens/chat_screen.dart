@@ -1536,6 +1536,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               (r['sent'] as int? ?? 1) == 0,
         ),
       );
+      final pvRaw = r['preview'] as String?;
+      if (pvRaw != null && pvRaw.isNotEmpty) {
+        try {
+          final d = jsonDecode(pvRaw) as Map<String, dynamic>;
+          loaded.last.preview = d.map((k, v) => MapEntry(k, v.toString()));
+        } catch (_) {}
+      }
       if (uid != null) uids.add(uid);
     }
     final reactionMap = await db.loadReactionsFor(uids);
@@ -2477,7 +2484,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _enrichPreview(_Msg msg, String url, String msgUid) async {
     try {
       final html = await Future(() => engine.torGet(url));
-      if (html.startsWith('error:') || html.isEmpty) return;
+      debugPrint(
+        'PREVIEW-FETCH url=$url len=${html.length} head=${html.substring(0, html.length < 60 ? html.length : 60)}',
+      );
+      if (html.startsWith('error:') || html.isEmpty) {
+        debugPrint('PREVIEW-FETCH bailed: error or empty');
+        return;
+      }
       String? grab(String prop) {
         final re = RegExp(
           '<meta[^>]+(?:property|name)=["\']' +
@@ -2498,7 +2511,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
       final image = grab('og:image') ?? grab('twitter:image');
       final site = grab('og:site_name');
-      if (title == null && image == null) return;
+      debugPrint('PREVIEW-PARSE title=$title image=$image site=$site');
+      if (title == null && image == null) {
+        debugPrint('PREVIEW-PARSE bailed: no title, no image');
+        return;
+      }
       // fetch the thumbnail over tor too and embed the bytes, so the card
       // renders from local data and never leaks an ip to the image host.
       String? imageData;
@@ -2515,25 +2532,38 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         if (site != null) 'site': _unescape(site),
       };
       if (!mounted) return;
+      // show the full card (with image) live on the sender.
       setState(() => msg.preview = pv);
-      await db.setMsgPreview(msgUid, jsonEncode(pv));
-      // tell the peer too: a tiny control message (empty body) carrying the
-      // preview tagged with the target msg uid. the receiver applies it to the
-      // existing message rather than creating a new one. this is how the card
-      // reaches them without us fetching on their device (ip stays private).
+      // a big base64 image makes jsonEncode + the db write hitch the ui thread.
+      // store a capped copy: small images keep their thumbnail, huge ones drop
+      // it (card still shows title/site). avoids the send-time lag spike.
+      final stored = Map<String, String>.from(pv);
+      final simg = stored['img'];
+      if (simg != null && simg.length > 80 * 1024) stored.remove('img');
+      await db.setMsgPreview(msgUid, jsonEncode(stored));
+      // option A: re-send the original message (same uid) now carrying the
+      // resolved preview, over the normal message route. the empty-body control
+      // frame we used before kept vanishing over tor; a real message rides the
+      // reliable path. the peer's receiver dedups on uid — it patches the card
+      // onto the bubble it already has instead of making a second one.
       try {
-        final pvOut = Map<String, String>.from(pv)..['_t'] = msgUid;
-        // a big base64 image blows past the single-event transport size and the
-        // whole control msg silently fails to deliver (reactions are tiny so
-        // they always make it — this is why the peer saw nothing). drop the
-        // image from the wire copy if it's heavy; peer gets a text preview,
-        // which always arrives. sender still shows the full image locally.
+        final pvOut = Map<String, String>.from(pv);
+        // a heavy base64 image blows past the single-event transport size, so
+        // drop it from the wire copy if big — peer still gets the text card,
+        // sender keeps the full image locally.
         final img = pvOut['img'];
         if (img != null && img.length > 80 * 1024) {
           pvOut.remove('img');
         }
-        debugPrint('PREVIEW-SEND target=$msgUid keys=${pvOut.keys.toList()}');
-        final wrapped = await wrapMessage('', preview: pvOut);
+        debugPrint(
+          'PREVIEW-SEND resend uid=$msgUid keys=${pvOut.keys.toList()}',
+        );
+        final wrapped = await wrapMessage(
+          msg.text,
+          msgUid: msgUid,
+          replyTo: msg.replyTo,
+          preview: pvOut,
+        );
         final cipher = await signalEncrypt(widget.peerHaloId, wrapped);
         final useDirectOnion = !_backPaired || _peerXPub == null;
         final f = useDirectOnion
@@ -2558,6 +2588,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || _sending) return;
     final msgUid = _newMsgUid();
+    debugPrint('TEXT-SEND uid=$msgUid text="$text"');
     final replyToUid = _replyTo?.msgUid;
     final msg = _Msg(
       'out',
@@ -3564,9 +3595,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool _sameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
+  DateTime _lastSticky = DateTime.fromMillisecondsSinceEpoch(0);
   void _updateSticky() {
     if (_suppressSticky || !_scrollCtrl.hasClients) return;
     if (_scrollCtrl.position.maxScrollExtent <= 0) return;
+    // throttle: this does a layout query per day-divider, and the raw scroll
+    // stream fires many times a frame. cap it to ~10x a second so a fast flick
+    // doesn't drown in geometry work (that was the scroll lag).
+    final now = DateTime.now();
+    if (now.difference(_lastSticky).inMilliseconds < 100) return;
+    _lastSticky = now;
     final listObj = _listKey.currentContext?.findRenderObject();
     if (listObj is! RenderBox) return;
     final top = listObj.localToGlobal(Offset.zero).dy;
@@ -4672,6 +4710,9 @@ class _MenuBackdropState extends State<_MenuBackdrop>
 }
 
 class _Bubble extends StatelessWidget {
+  // uids whose entrance animation already played, so a list rebuild doesn't
+  // replay it (that was the periodic + on-open blink).
+  static final Set<String> _entered = {};
   final _Msg msg;
   final void Function(_Msg)? onRetry;
   final void Function(BuildContext)? onLongPress;
@@ -4767,7 +4808,23 @@ class _Bubble extends StatelessWidget {
         isOut &&
         !msg.failed &&
         DateTime.now().difference(msg.when).inMilliseconds < 900;
-    final justArrived = !isOut && !msg.failed && msg.fresh;
+    // a message's entrance should play once. fresh was never cleared, so every
+    // rebuild replayed it (the blink). gate on a seen-set keyed by uid.
+    final entranceKey = msg.msgUid ?? '';
+    final alreadyPlayed = _Bubble._entered.contains(entranceKey);
+    final justArrived = !isOut && !msg.failed && msg.fresh && !alreadyPlayed;
+    final willAnimate = (justArrived || (isOut && msg.fresh && !alreadyPlayed));
+    if (willAnimate && entranceKey.isNotEmpty) {
+      _Bubble._entered.add(entranceKey);
+    }
+    // clear fresh after the entrance plays so a later rebuild can't replay it
+    // (that was the residual blink). belt-and-suspenders alongside _entered,
+    // and it also covers messages whose uid was null when they arrived.
+    if (msg.fresh && willAnimate) {
+      Future.delayed(const Duration(milliseconds: 650), () {
+        msg.fresh = false;
+      });
+    }
     return AnimatedOpacity(
       duration: Duration(milliseconds: isExpiring ? 440 : 250),
       curve: Curves.easeOut,
@@ -5186,10 +5243,10 @@ class _Bubble extends StatelessWidget {
                       ),
                       if (msg.reactions.isNotEmpty)
                         Positioned(
-                          bottom: -10,
-                          left: 8,
+                          bottom: -8,
+                          right: 10,
                           child: Wrap(
-                            spacing: 4,
+                            spacing: 3,
                             children: _buildReactionChips(msg),
                           ),
                         ),
@@ -5273,19 +5330,14 @@ class _Bubble extends StatelessWidget {
         key: ValueKey(emoji),
         popKey: '${m.msgUid}:$emoji',
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
           decoration: BoxDecoration(
-            // ig-style: one neutral dark pill for every reaction, mine or not.
-            // (the amber-when-mine fill was reading as an orange border.)
-            color: HaloColors.ink.withValues(alpha: 0.82),
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x4D000000),
-                blurRadius: 6,
-                offset: Offset(0, 2),
-              ),
-            ],
+            // ig-style: the emoji sits on a disc the colour of the chat
+            // background so it reads as lifted off the bubble, not a dark
+            // smudge. a hairline separates it from the bubble edge. no shadow.
+            color: HaloColors.ink,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: HaloColors.ink, width: 2),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -5944,19 +5996,35 @@ class _VoiceBubbleState extends State<_VoiceBubble> {
   // so the bubble can show the real duration. the probe is disposed right after
   // so we don't hold a codec handle per bubble (holding them all was the
   // exhaustion that stopped later notes playing).
+  // duration read once per file, ever. opening a chat with many voice notes used
+  // to spin up + tear down a player per bubble and froze weak phones.
+  static final Map<String, Duration> _durCache = {};
+
   Future<void> _checkExists() async {
     if (!await File(widget.path).exists()) {
       if (mounted) setState(() => _missing = true);
       return;
     }
-    final probe = AudioPlayer();
-    try {
-      final d = await probe.setFilePath(widget.path);
-      if (d != null && mounted) setState(() => _dur = d);
-    } catch (_) {
-    } finally {
-      await probe.dispose();
+    final cached = _durCache[widget.path];
+    if (cached != null) {
+      if (mounted) setState(() => _dur = cached);
+      return;
     }
+    // probe just once, off the first frame so it never blocks chat-open layout.
+    Future.delayed(const Duration(milliseconds: 400), () async {
+      if (!mounted) return;
+      final probe = AudioPlayer();
+      try {
+        final d = await probe.setFilePath(widget.path);
+        if (d != null) {
+          _durCache[widget.path] = d;
+          if (mounted) setState(() => _dur = d);
+        }
+      } catch (_) {
+      } finally {
+        await probe.dispose();
+      }
+    });
   }
 
   Future<void> _load() async {

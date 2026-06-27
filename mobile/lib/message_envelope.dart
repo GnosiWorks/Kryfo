@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 // message_envelope.dart — wrap outgoing plain text with optional metadata
 // (ntfy endpoint + sender identity for back-pair) so the peer learns our
 // push endpoint and identity over the existing encrypted channel. wrapped
@@ -242,7 +243,10 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       voiceDisguised: json['vd'] == 1,
       preview: preview,
     );
-  } catch (_) {
+  } catch (e) {
+    debugPrint(
+      'UNWRAP-FAIL $e raw=${wrapped.substring(0, wrapped.length < 80 ? wrapped.length : 80)}',
+    );
     return UnwrappedMessage(wrapped);
   }
 }
