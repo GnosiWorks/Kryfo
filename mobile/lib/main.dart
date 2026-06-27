@@ -1602,6 +1602,9 @@ class GroupPreview {
 }
 
 class AppState extends ChangeNotifier {
+  // uids being processed right now, to dedup near-simultaneous arrivals
+  // (preview re-send racing a manual retry) before the db write lands.
+  final Set<String> _inflightUids = <String>{};
   // global send-privacy mode: 'fast' | 'normal' | 'private'. cosmetic for now —
   // every message routes over full tor until fast/hop modes wire up (phase 2).
   String _sendMode = 'private';
@@ -1790,15 +1793,22 @@ class AppState extends ChangeNotifier {
         );
       } catch (_) {}
     }
-    // dedup: a message can arrive twice — once as the original, then again once
-    // the sender's tor preview fetch resolves (carrying pv). second time, just
-    // patch the preview onto the row we already have, don't make a new bubble.
-    if (env.msgUid != null && await db.messageExists(env.msgUid!)) {
-      if (env.preview != null) {
-        await db.setMsgPreview(env.msgUid!, jsonEncode(env.preview));
+    // dedup: a message can arrive twice — the original, then the preview re-send
+    // (option A), and sometimes a manual retry too. the db check alone races when
+    // two copies arrive in the same instant (both pass before either saves), so
+    // we also hold an in-memory set of uids currently being processed. first one
+    // in claims the uid; any twin takes the update path instead of inserting.
+    final uid = env.msgUid;
+    if (uid != null) {
+      final known = _inflightUids.contains(uid) || await db.messageExists(uid);
+      if (known) {
+        if (env.preview != null) {
+          await db.setMsgPreview(uid, jsonEncode(env.preview));
+        }
+        notifyListeners();
+        return;
       }
-      notifyListeners();
-      return;
+      _inflightUids.add(uid);
     }
     await db.saveMessage(
       senderHaloId,
