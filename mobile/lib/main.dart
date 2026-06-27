@@ -1195,6 +1195,18 @@ class HaloDb {
     );
   }
 
+  Future<bool> messageExists(String msgUid) async {
+    final db = await open();
+    final rows = await db.query(
+      'messages',
+      columns: ['rowid'],
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
+  }
+
   Future<String?> getMsgPreview(String msgUid) async {
     final db = await open();
     final rows = await db.query(
@@ -1718,6 +1730,9 @@ class AppState extends ChangeNotifier {
     String senderHaloId,
     UnwrappedMessage env,
   ) async {
+    debugPrint(
+      'INCOMING msg="${env.message}" hasPreview=${env.preview != null} pvKeys=${env.preview?.keys.toList()} uid=${env.msgUid}',
+    );
     if (await db.isBlocked(senderHaloId)) return;
     // 1) group control
     if (env.groupControl != null) {
@@ -1744,17 +1759,6 @@ class AppState extends ChangeNotifier {
       await db.deleteMessage(env.unsend!);
       // refresh so it vanishes live if the peer's looking at the chat now,
       // not only after they leave and come back.
-      notifyListeners();
-      return;
-    }
-    // 2.7) link preview update — sender fetched it over tor and is attaching
-    // the card to a message we already have. empty body + '_t' target uid.
-    final pv = env.preview;
-    if (pv != null && pv['_t'] != null) {
-      final target = pv['_t']!;
-      final card = Map<String, String>.from(pv)..remove('_t');
-      final n = await db.setMsgPreview(target, jsonEncode(card));
-      debugPrint('PREVIEW-RECV target=$target rowsUpdated=$n');
       notifyListeners();
       return;
     }
@@ -1785,6 +1789,16 @@ class AppState extends ChangeNotifier {
           fileName ?? 'file',
         );
       } catch (_) {}
+    }
+    // dedup: a message can arrive twice — once as the original, then again once
+    // the sender's tor preview fetch resolves (carrying pv). second time, just
+    // patch the preview onto the row we already have, don't make a new bubble.
+    if (env.msgUid != null && await db.messageExists(env.msgUid!)) {
+      if (env.preview != null) {
+        await db.setMsgPreview(env.msgUid!, jsonEncode(env.preview));
+      }
+      notifyListeners();
+      return;
     }
     await db.saveMessage(
       senderHaloId,
@@ -2162,7 +2176,10 @@ class AppState extends ChangeNotifier {
             break;
           }
         }
-        if (!handled) await backPairFromCipher(cipher);
+        if (!handled) {
+          debugPrint('DRAIN-UNHANDLED cipher fell through to backpair');
+          await backPairFromCipher(cipher);
+        }
       }
     });
 

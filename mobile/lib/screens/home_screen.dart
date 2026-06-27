@@ -1131,7 +1131,7 @@ class _Row extends StatelessWidget {
                             size: 12,
                             color: c.unread > 0
                                 ? HaloColors.text2
-                                : HaloColors.text3,
+                                : HaloColors.text2,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
