@@ -1,4 +1,4 @@
-// halo motion library — tor warmup, send pills, typing/cursor/breath utilities.
+// halo motion library - tor warmup, send pills, typing/cursor/breath utilities.
 // matches the design language: fraunces serif, jetbrains mono, gentle curves,
 // breathing motion. one vocabulary, used throughout.
 
@@ -24,7 +24,7 @@ enum TorStatus { off, starting, bootstrapped, publishing, reachable }
 
 enum PrivacyMode { fast, normal, private }
 
-// shared screen transition — a calm rise-and-fade, one way in across the app.
+// shared screen transition - a calm rise-and-fade, one way in across the app.
 Route<T> haloRoute<T>(Widget page) {
   return PageRouteBuilder<T>(
     transitionDuration: const Duration(milliseconds: 340),

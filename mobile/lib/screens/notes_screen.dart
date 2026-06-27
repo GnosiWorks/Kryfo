@@ -4,7 +4,7 @@ import '../theme.dart';
 
 const String kNotesPeerId = '_notes_self_';
 
-// note to self. a private place that never leaves the phone — stored as
+// note to self. a private place that never leaves the phone - stored as
 // messages against the reserved kNotesPeerId.
 class NotesScreen extends StatefulWidget {
   const NotesScreen({super.key});

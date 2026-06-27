@@ -1,4 +1,4 @@
-// restore_screen.dart — pick a halo backup file, enter passphrase,
+// restore_screen.dart - pick a halo backup file, enter passphrase,
 // overwrites local identity + db + prefs with backup contents. asks
 // user to force-close and reopen halo afterwards (cleanest way to
 // rehydrate all in-memory state).

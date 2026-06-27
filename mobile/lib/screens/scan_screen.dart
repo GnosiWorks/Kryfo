@@ -1,4 +1,4 @@
-// in-app QR scanner. private — never leaves the app. focus on UX:
+// in-app QR scanner. private - never leaves the app. focus on UX:
 // dark masked viewfinder, animated scan line, success pulse on detect,
 // torch toggle for low-light, and clear feedback when a non-halo qr
 // is in frame.
@@ -78,7 +78,7 @@ class _ScanScreenState extends State<ScanScreen>
       body: Stack(
         children: [
           MobileScanner(controller: _ctrl, onDetect: _onDetect),
-          // dim mask with a transparent cutout — uses a CustomPaint with
+          // dim mask with a transparent cutout - uses a CustomPaint with
           // even-odd fill for the hole. saturated/dimmed outside the
           // viewfinder so the user's eye is drawn to the right area.
           IgnorePointer(
@@ -95,7 +95,7 @@ class _ScanScreenState extends State<ScanScreen>
               scanAnim: _scanAnim,
             ),
           ),
-          // top bar — back + title + torch
+          // top bar - back + title + torch
           Positioned(
             top: 0,
             left: 0,
@@ -137,7 +137,7 @@ class _ScanScreenState extends State<ScanScreen>
               ),
             ),
           ),
-          // bottom helper text — switches to a transient warning when a
+          // bottom helper text - switches to a transient warning when a
           // non-halo qr appears in frame.
           Positioned(
             bottom: 0,
@@ -231,7 +231,7 @@ class _Viewfinder extends StatelessWidget {
       height: size,
       child: Stack(
         children: [
-          // corner brackets — 4 L-shapes
+          // corner brackets - 4 L-shapes
           Positioned(left: 0, top: 0, child: _corner(accent, true, true)),
           Positioned(right: 0, top: 0, child: _corner(accent, false, true)),
           Positioned(
@@ -270,7 +270,7 @@ class _Viewfinder extends StatelessWidget {
                 );
               },
             ),
-          // success overlay — amber/green wash + checkmark
+          // success overlay - amber/green wash + checkmark
           AnimatedOpacity(
             opacity: success ? 1.0 : 0.0,
             duration: const Duration(milliseconds: 260),

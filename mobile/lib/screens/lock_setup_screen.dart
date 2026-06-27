@@ -1,4 +1,4 @@
-// lock_setup_screen.dart — first-time pin setup. enter pin twice, confirm.
+// lock_setup_screen.dart - first-time pin setup. enter pin twice, confirm.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

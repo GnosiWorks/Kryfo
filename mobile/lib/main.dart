@@ -1,4 +1,4 @@
-// halo mobile — phase 1: identity persistence + ECDH + editorial UI
+// halo mobile - phase 1: identity persistence + ECDH + editorial UI
 
 import 'dart:async';
 import 'widgets/tor_boot_splash.dart';
@@ -217,7 +217,7 @@ class HaloEngine {
   }
 
   // fetch a url's html over tor (for sender-side link previews). slow + can
-  // fail — caller treats anything starting 'error:' as no-preview.
+  // fail - caller treats anything starting 'error:' as no-preview.
   String torGet(String url) {
     final ptr = url.toNativeUtf8();
     try {
@@ -289,8 +289,8 @@ class HaloEngine {
 }
 
 // run a blocking native send on a throwaway background isolate so the ui
-// thread never stalls on a tor dial. opens its own handle to libhalo —
-// same process image, so it shares the running tor — and frees its strings.
+// thread never stalls on a tor dial. opens its own handle to libhalo -
+// same process image, so it shares the running tor - and frees its strings.
 Future<String> _nostrInitOnIsolate(String relaysCSV) {
   return Isolate.run(() {
     final lib = Platform.isAndroid
@@ -1049,7 +1049,7 @@ class HaloDb {
   }
 
   // add or replace a reaction. reactor is '' for self, peer's halo id
-  // for theirs. one reaction per (msgUid, reactor) — re-reacting replaces.
+  // for theirs. one reaction per (msgUid, reactor) - re-reacting replaces.
   Future<void> setPinned(String msgUid, bool pinned) async {
     final db = await open();
     await db.update(
@@ -1331,7 +1331,7 @@ class HaloDb {
     int afterRowid,
   ) async {
     final db = await open();
-    // key off rowid (insertion order), not sent_at — a received note can carry
+    // key off rowid (insertion order), not sent_at - a received note can carry
     // a sent_at older than our local newest (clock skew) and would be missed by
     // a timestamp filter. rowid always climbs as rows are saved.
     return db.query(
@@ -1343,11 +1343,11 @@ class HaloDb {
     );
   }
 
-  // newest message for a peer (or null) — drives the home-list preview and
+  // newest message for a peer (or null) - drives the home-list preview and
   // ordering without loading the whole conversation.
   Future<Map<String, Object?>?> lastMessageFor(String peerId) async {
     final db = await open();
-    // order by rowid (insertion order), not sent_at — a received note can carry
+    // order by rowid (insertion order), not sent_at - a received note can carry
     // a sent_at older than our local newest (clock skew between phones) and
     // would otherwise never surface as the latest. rowid always climbs.
     final rows = await db.query(
@@ -1492,7 +1492,6 @@ Future<String> saveFileBytes(List<int> bytes, String uid, String name) async {
   final dir = await getApplicationDocumentsDirectory();
   final mediaDir = Directory('${dir.path}/media');
   if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
-  final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
   final file = File('${mediaDir.path}/f_${uid}_\$safe');
   await file.writeAsBytes(bytes);
   return file.path;
@@ -1544,7 +1543,7 @@ final engine = HaloEngine();
 final db = HaloDb();
 
 // open ChatScreen for a given halo id. used by notification taps
-// (both warm — onDidReceiveNotificationResponse — and cold starts
+// (both warm - onDidReceiveNotificationResponse - and cold starts
 // via getNotificationAppLaunchDetails). reads contact details from
 // the db and pushes the route on the root navigator.
 Future<void> openChatForHalo(String? haloId) async {
@@ -1605,7 +1604,7 @@ class AppState extends ChangeNotifier {
   // uids being processed right now, to dedup near-simultaneous arrivals
   // (preview re-send racing a manual retry) before the db write lands.
   final Set<String> _inflightUids = <String>{};
-  // global send-privacy mode: 'fast' | 'normal' | 'private'. cosmetic for now —
+  // global send-privacy mode: 'fast' | 'normal' | 'private'. cosmetic for now -
   // every message routes over full tor until fast/hop modes wire up (phase 2).
   String _sendMode = 'private';
   String get sendMode => _sendMode;
@@ -1726,7 +1725,7 @@ class AppState extends ChangeNotifier {
   // unified incoming routing. handles three payload variants:
   //   1) group control msg (no chat row, no notif)
   //   2) reaction       (add/remove on a target uid, no chat row, no notif)
-  //   3) data message   (1:1 or group — save + maybe notify)
+  //   3) data message   (1:1 or group - save + maybe notify)
   // called from all three receive paths (back-pair-from-cipher, tor drain,
   // nostr poll) so the routing rules live in exactly one place.
   Future<void> _applyIncomingPayload(
@@ -1752,7 +1751,7 @@ class AppState extends ChangeNotifier {
       }
       return;
     }
-    // 2.5) edit — swap the text of an existing message
+    // 2.5) edit - swap the text of an existing message
     if (env.edit != null) {
       await db.editMessage(env.edit!.targetUid, env.edit!.newText);
       return;
@@ -1765,10 +1764,10 @@ class AppState extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    // 3) data message — could be 1:1 or group
+    // 3) data message - could be 1:1 or group
     final isGroup = env.groupId != null;
     if (isGroup && !await db.groupExists(env.groupId!)) {
-      // unknown group — drop. prevents random senders from injecting rows
+      // unknown group - drop. prevents random senders from injecting rows
       // into groups we never joined.
       debugPrint('dropping group msg for unknown group ${env.groupId}');
       return;
@@ -1793,7 +1792,7 @@ class AppState extends ChangeNotifier {
         );
       } catch (_) {}
     }
-    // dedup: a message can arrive twice — the original, then the preview re-send
+    // dedup: a message can arrive twice - the original, then the preview re-send
     // (option A), and sometimes a manual retry too. the db check alone races when
     // two copies arrive in the same instant (both pass before either saves), so
     // we also hold an in-memory set of uids currently being processed. first one
@@ -1826,13 +1825,13 @@ class AppState extends ChangeNotifier {
       fileName: fileName,
       preview: env.preview != null ? jsonEncode(env.preview) : null,
     );
-    // notification context — for groups, title = group name and body
+    // notification context - for groups, title = group name and body
     // prefixes the sender. payload uses "group:<id>" so tap-to-open can
     // route to the right screen.
     if (!isGroup && currentChatPeer != senderHaloId) {
       await db.bumpUnread(senderHaloId);
     } else if (!isGroup && currentChatPeer == senderHaloId) {
-      // already reading this chat — clear any stale badge instead of leaving it.
+      // already reading this chat - clear any stale badge instead of leaving it.
       await db.clearUnread(senderHaloId);
     }
     // a message landed: rebuild the contact list so the home shows the
@@ -2048,7 +2047,6 @@ class AppState extends ChangeNotifier {
     if (ready) return;
     final docsDir = await getApplicationDocumentsDirectory();
     final saved = await db.loadIdentity();
-    debugPrint('BOOT db+loadIdentity +${_bsw.elapsedMilliseconds}ms');
     if (saved != null) {
       myId = engine.restoreIdentity(saved['ed_priv']!, saved['x_priv']!);
       restored = true;
@@ -2155,7 +2153,7 @@ class AppState extends ChangeNotifier {
       if (changed) await _saveXPubCache(fresh);
     });
     // open ntfy websocket when push mode is ntfy. on incoming
-    // ping, the existing 1s drain loop catches up — we just log for now.
+    // ping, the existing 1s drain loop catches up - we just log for now.
     final mode = await loadPushMode();
     if (mode == PushMode.ntfy) {
       _ntfyListener = NtfyListener(
@@ -2187,7 +2185,6 @@ class AppState extends ChangeNotifier {
           }
         }
         if (!handled) {
-          debugPrint('DRAIN-UNHANDLED cipher fell through to backpair');
           await backPairFromCipher(cipher);
         }
       }
@@ -2196,13 +2193,12 @@ class AppState extends ChangeNotifier {
     Timer.periodic(const Duration(seconds: 1), (_) async {
       final msgs = engine.nostrPoll();
       if (msgs.isEmpty) return;
-      debugPrint('nostr poll: ${msgs.length} messages');
       for (final m in msgs) {
         var haloId = _xPubToHaloId[m.peer];
         String? wrapped = haloId == null
             ? null
             : await signalDecrypt(haloId, m.cipher);
-        // fallback: xpub not mapped yet (or it decrypted wrong) — trial
+        // fallback: xpub not mapped yet (or it decrypted wrong) - trial
         // against known contacts like the direct path, then remember it.
         if (wrapped == null) {
           for (final c in contacts) {
@@ -3034,7 +3030,6 @@ class _DevScreenState extends State<DevScreen> {
   String _peerId = '';
   String _peerOnion = '';
   String _peerXPub = '';
-  String _receivedCipher = '';
 
   Timer? _pollTimer;
 
@@ -3084,9 +3079,7 @@ class _DevScreenState extends State<DevScreen> {
         if (!plain.startsWith('error')) {
           db.saveMessage(_peerId, 'in', plain);
         }
-        setState(() {
-          _receivedCipher = r;
-        });
+        setState(() {});
       }
     });
   }

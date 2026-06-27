@@ -28,7 +28,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
       _selected.toList(),
     );
     if (!mounted) return;
-    // pop the picker, then push the group chat — the user lands inside
+    // pop the picker, then push the group chat - the user lands inside
     // the group they just made, the way every other messenger does it.
     Navigator.of(context).pop();
     Navigator.of(context).push(MaterialPageRoute(

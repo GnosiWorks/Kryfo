@@ -1,4 +1,4 @@
-// lock_state.dart — pin-based app lock with auto-lock on backgrounding.
+// lock_state.dart - pin-based app lock with auto-lock on backgrounding.
 // pin hash + salt are stored in flutter_secure_storage (Android Keystore-
 // backed), so brute force on a stolen unlocked device still needs the
 // keystore-protected blob.
@@ -77,7 +77,7 @@ class LockState extends ChangeNotifier {
       }
     }
     // then the panic pin, if set. matching it means the user wants
-    // the app wiped right now — caller is responsible for invoking
+    // the app wiped right now - caller is responsible for invoking
     // wipeHalo(). we do NOT change _locked here.
     if (_panicEnabled) {
       final pSalt = await _storage.read(key: _kPanicSalt);
@@ -171,7 +171,7 @@ class LockState extends ChangeNotifier {
   }
 
   String _hashPin(String pin, String salt) {
-    // sha256(salt:pin) — fine for 4-digit pin protected by keystore.
+    // sha256(salt:pin) - fine for 4-digit pin protected by keystore.
     // pbkdf2 here is overkill given the storage layer.
     final bytes = utf8.encode('$salt:$pin');
     return sha256.convert(bytes).toString();

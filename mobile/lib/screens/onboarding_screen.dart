@@ -1,4 +1,4 @@
-// halo onboarding flow — 5 screens shown on first launch, then never again.
+// halo onboarding flow - 5 screens shown on first launch, then never again.
 // welcome → identity reveal → keep safe → staying connected → first contact.
 
 import 'dart:math' as math;
@@ -6,8 +6,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import 'restore_screen.dart';
-import '../main.dart' show appState;
-import '../main.dart';
+import '../main.dart' show appState, AppState;
 import 'scan_screen.dart';
 import '../widgets/halo_avatar.dart';
 

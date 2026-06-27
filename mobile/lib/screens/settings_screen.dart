@@ -1,4 +1,4 @@
-// settings_screen.dart — user-facing settings, consolidated from dev.
+// settings_screen.dart - user-facing settings, consolidated from dev.
 // reachable from the "Me" tab. tap on tab opens this, long-press still
 // opens dev for technical use.
 

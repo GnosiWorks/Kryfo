@@ -1,7 +1,7 @@
-// panic_setup_screen.dart — set a panic pin distinct from the
+// panic_setup_screen.dart - set a panic pin distinct from the
 // normal pin. entering it on the lock screen silently wipes halo
 // and exits. for coercion scenarios where you want plausible
-// deniability — to the attacker it looks like the app crashed.
+// deniability - to the attacker it looks like the app crashed.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

@@ -1,4 +1,4 @@
-// backup_screen.dart — creates an encrypted backup blob and hands it
+// backup_screen.dart - creates an encrypted backup blob and hands it
 // to the system share sheet so the user can save it to drive, email
 // it to themselves, etc.
 

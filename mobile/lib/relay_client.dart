@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 // fast-mode transport: a persistent wss link to the halo relay. it carries the
-// same opaque libsignal ciphertext the tor path does — the relay can't read it,
+// same opaque libsignal ciphertext the tor path does - the relay can't read it,
 // only route it. fast path for speed; pair with the nostr mailbox as the
 // durable fallback so nothing is lost if the peer is offline past the relay's
 // queue window.

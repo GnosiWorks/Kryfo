@@ -1,4 +1,4 @@
-// push_settings_screen.dart — three-tier notification wake-up picker.
+// push_settings_screen.dart - three-tier notification wake-up picker.
 // tier 1 (tor only) is live. tier 3 (ntfy push) is wired in sprint 11.
 // tier 2 (fcm) is deferred until a play-store variant ships.
 
