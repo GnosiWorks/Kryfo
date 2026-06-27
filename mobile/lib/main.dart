@@ -426,7 +426,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 23,
+      version: 24,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -498,6 +498,7 @@ class HaloDb {
           CREATE TABLE groups (
             group_id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
+            description TEXT,
             created_at INTEGER NOT NULL,
             is_admin INTEGER NOT NULL DEFAULT 0
           )
@@ -514,6 +515,9 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 24) {
+          await db.execute('ALTER TABLE groups ADD COLUMN description TEXT');
+        }
         if (oldV < 23) {
           await db.execute('ALTER TABLE messages ADD COLUMN preview TEXT');
         }
