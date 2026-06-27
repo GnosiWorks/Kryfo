@@ -359,6 +359,39 @@ Future<String> _subscribeOnIsolate(String xPub) {
   });
 }
 
+// tor fetches run on a background isolate. the raw ffi call blocks for the whole
+// tor round-trip (5-8s), so doing it on the main isolate froze the ui while a
+// link preview resolved. re-open the lib inside the isolate, same as sends.
+Future<String> torGetOnIsolate(String url) {
+  return Isolate.run(() {
+    final lib = Platform.isAndroid
+        ? DynamicLibrary.open('libhalo.so')
+        : DynamicLibrary.process();
+    final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGet');
+    final p = url.toNativeUtf8();
+    try {
+      return fn(p).toDartString();
+    } finally {
+      malloc.free(p);
+    }
+  });
+}
+
+Future<String> torGetB64OnIsolate(String url) {
+  return Isolate.run(() {
+    final lib = Platform.isAndroid
+        ? DynamicLibrary.open('libhalo.so')
+        : DynamicLibrary.process();
+    final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetB64');
+    final p = url.toNativeUtf8();
+    try {
+      return fn(p).toDartString();
+    } finally {
+      malloc.free(p);
+    }
+  });
+}
+
 class HaloDb {
   static const _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
