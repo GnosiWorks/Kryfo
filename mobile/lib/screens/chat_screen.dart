@@ -2074,6 +2074,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
               ListTile(
                 leading: Icon(
+                  Icons.gif_box_outlined,
+                  color: HaloColors.amber,
+                  size: 22,
+                ),
+                title: Text(
+                  'gif from phone',
+                  style: HaloType.sans(size: 15, color: HaloColors.text),
+                ),
+                onTap: () {
+                  Navigator.of(sheetCtx).pop();
+                  _pickAndSendGif();
+                },
+              ),
+              ListTile(
+                leading: Icon(
                   Icons.attach_file,
                   color: HaloColors.amber,
                   size: 22,
@@ -2312,6 +2327,32 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         }
       });
     });
+  }
+
+  Future<void> _pickAndSendGif() async {
+    final res = await FilePicker.pickFiles(
+      withData: true,
+      type: FileType.custom,
+      allowedExtensions: ['gif'],
+    );
+    if (res == null || res.files.isEmpty) return;
+    final data = res.files.first.bytes;
+    if (data == null) return;
+    // a gif must NOT be re-encoded (that kills the animation), so it skips the
+    // image-quality resize path and sends raw bytes. big gifs choke tor on one
+    // un-chunked envelope, so cap at ~4mb until chunked transfer lands.
+    // until chunked media transfer lands, a gif rides one un-chunked envelope.
+    // big ones silently fail over tor/nostr, so cap small - tiny reaction gifs
+    // deliver, anything bigger gets a clear message instead of a black hole.
+    if (data.length > 200 * 1024) {
+      if (mounted) {
+        showHaloToast(context, 'gif too big · small gifs only for now');
+      }
+      return;
+    }
+    // send raw through the image path - Image.memory animates gifs by the bytes,
+    // the .jpg filename doesn't matter.
+    await _sendOneImage(data, '');
   }
 
   Future<void> _sendOneImage(Uint8List bytes, String caption) async {
@@ -5287,7 +5328,13 @@ class _Bubble extends StatelessWidget {
                 ),
                 if (revealed)
                   Padding(
-                    padding: const EdgeInsets.only(top: 4, left: 4, right: 4),
+                    // a reaction pill hangs ~13px below the bubble. when the
+                    // timestamp reveals, push it clear so they don't overlap.
+                    padding: EdgeInsets.only(
+                      top: msg.reactions.isNotEmpty ? 16 : 4,
+                      left: 4,
+                      right: 4,
+                    ),
                     child: Text(
                       _fmtFull(msg.when),
                       style: HaloType.mono(
