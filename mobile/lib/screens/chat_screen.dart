@@ -21,7 +21,15 @@ import '../message_envelope.dart'
     show wrapMessage, SenderInfo, ReactionFrame, EditFrame, loadPeerEndpoint;
 import '../theme.dart';
 import '../widgets/halo_avatar.dart';
-import '../main.dart' show engine, db, signalEncrypt, appState, currentChatPeer;
+import '../main.dart'
+    show
+        engine,
+        db,
+        signalEncrypt,
+        appState,
+        currentChatPeer,
+        torGetOnIsolate,
+        torGetB64OnIsolate;
 import '../widgets/motion.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
@@ -408,7 +416,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (mounted) _suppressSticky = false;
     });
     _loadMessages();
-    _burnTick = Timer.periodic(const Duration(milliseconds: 250), (_) {
+    _burnTick = Timer.periodic(const Duration(milliseconds: 100), (_) {
       if (!mounted) return;
       final now = DateTime.now().millisecondsSinceEpoch;
       final expired = _messages
@@ -1721,6 +1729,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     try {
       final wrapped = await wrapMessage(
         msg.text,
+        msgUid: msg.msgUid,
+        replyTo: msg.replyTo,
+        burnSeconds: msg.burnSecs,
         sender: SenderInfo(
           haloId: appState.myId,
           edPub: engine.myEdPubkey(),
@@ -1790,6 +1801,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
           }
         });
+        // preview was lost when the first send failed; re-fetch off-thread so
+        // the card comes back on a successful retry.
+        final retryUrl = _firstUrl(msg.text);
+        if (retryUrl != null && msg.preview == null && msg.msgUid != null) {
+          unawaited(_enrichPreview(msg, retryUrl, msg.msgUid!));
+        }
         loadPeerEndpoint(widget.peerHaloId).then((endpoint) {
           if (endpoint != null && endpoint.isNotEmpty) {
             Future(() => engine.ntfyPing(endpoint));
@@ -2462,7 +2479,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // runs after the message is already sent, updates the row + ui when ready.
   Future<void> _enrichPreview(_Msg msg, String url, String msgUid) async {
     try {
-      final html = await Future(() => engine.torGet(url));
+      final html = await torGetOnIsolate(url);
       debugPrint(
         'PREVIEW-FETCH url=$url len=${html.length} head=${html.substring(0, html.length < 60 ? html.length : 60)}',
       );
@@ -2497,7 +2514,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       String? imageData;
       if (image != null) {
         try {
-          final raw = await Future(() => engine.torGetB64(image));
+          final raw = await torGetB64OnIsolate(image);
           if (raw.startsWith('ok:')) imageData = raw.substring(3);
         } catch (_) {}
       }
@@ -4029,7 +4046,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Text(
                   _friendlyStatus(_status),
-                  style: HaloType.mono(size: 10, color: HaloColors.text3),
+                  style: HaloType.mono(size: 10, color: HaloColors.amber),
                 ),
               ),
             AnimatedSwitcher(
@@ -4814,7 +4831,9 @@ class _Bubble extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.only(
               top: firstInGroup ? 4 : 1,
-              bottom: lastInGroup ? 4 : 1,
+              // a reaction hangs ~13px below the bubble. reserve room so the
+              // next message does not overlap and clip the pill.
+              bottom: msg.reactions.isNotEmpty ? 16 : (lastInGroup ? 4 : 1),
             ),
             child: Column(
               crossAxisAlignment: isOut
@@ -5217,8 +5236,13 @@ class _Bubble extends StatelessWidget {
                       ),
                       if (msg.reactions.isNotEmpty)
                         Positioned(
-                          bottom: -8,
-                          right: 10,
+                          // ig-style: hangs below the bubble, on the sender's
+                          // side. your own reactions tuck bottom-right, everyone
+                          // else's bottom-left. works the same in groups since
+                          // it keys off direction, not a two-person assumption.
+                          bottom: -13,
+                          right: isOut ? 10 : null,
+                          left: isOut ? null : 10,
                           child: Wrap(
                             spacing: 3,
                             children: _buildReactionChips(msg),
@@ -5306,12 +5330,11 @@ class _Bubble extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
           decoration: BoxDecoration(
-            // ig-style: the emoji sits on a disc the colour of the chat
-            // background so it reads as lifted off the bubble, not a dark
-            // smudge. a hairline separates it from the bubble edge. no shadow.
+            // ig-style: emoji on a pill the colour of the chat background, so it
+            // reads as a little tab cut below the bubble, not a smudge on top.
+            // solid ink (not translucent), no border, no shadow.
             color: HaloColors.ink,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: HaloColors.ink, width: 2),
+            borderRadius: BorderRadius.circular(11),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -6936,6 +6959,9 @@ class _LinkPreviewCard extends StatelessWidget {
                   imgBytes,
                   fit: BoxFit.cover,
                   gaplessPlayback: true,
+                  // decode at card width, not full res - lighter on weak phones
+                  // while scrolling (samsung).
+                  cacheWidth: 520,
                   errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                 ),
               ),
