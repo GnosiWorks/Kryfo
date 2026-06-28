@@ -426,7 +426,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 24,
+      version: 25,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -500,7 +500,8 @@ class HaloDb {
             name TEXT NOT NULL,
             description TEXT,
             created_at INTEGER NOT NULL,
-            is_admin INTEGER NOT NULL DEFAULT 0
+            is_admin INTEGER NOT NULL DEFAULT 0,
+            admin_id TEXT
           )
         ''');
         await db.execute('''
@@ -515,6 +516,9 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 25) {
+          await db.execute('ALTER TABLE groups ADD COLUMN admin_id TEXT');
+        }
         if (oldV < 24) {
           await db.execute('ALTER TABLE groups ADD COLUMN description TEXT');
         }
@@ -975,6 +979,7 @@ class HaloDb {
     String name,
     List<String> members, {
     required bool isAdmin,
+    String? adminId,
   }) async {
     final db = await open();
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -983,6 +988,7 @@ class HaloDb {
       'name': name,
       'created_at': now,
       'is_admin': isAdmin ? 1 : 0,
+      'admin_id': adminId,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
     final batch = db.batch();
     for (final m in members) {
@@ -1023,6 +1029,21 @@ class HaloDb {
     return rows.isEmpty ? null : rows.first;
   }
 
+  // the group creator/admin halo id. used to verify a roster self-heal
+  // really came from the admin, not a member spoofing membership changes.
+  Future<String?> groupAdminId(String groupId) async {
+    final db = await open();
+    final rows = await db.query(
+      'groups',
+      columns: ['admin_id'],
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return rows.first['admin_id'] as String?;
+  }
+
   Future<List<String>> getGroupMembers(String groupId) async {
     final db = await open();
     final rows = await db.query(
@@ -1042,6 +1063,24 @@ class HaloDb {
       'halo_id': haloId,
       'joined_at': DateTime.now().millisecondsSinceEpoch,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  // replace the whole member set for a group with the authoritative list.
+  // used when a create/reconcile control arrives so a re-add or membership
+  // change syncs cleanly instead of leaving stale or missing rows.
+  Future<void> syncGroupMembers(String groupId, List<String> members) async {
+    final db = await open();
+    final batch = db.batch();
+    batch.delete('group_members', where: 'group_id = ?', whereArgs: [groupId]);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final h in members) {
+      batch.insert('group_members', {
+        'group_id': groupId,
+        'halo_id': h,
+        'joined_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    }
+    await batch.commit(noResult: true);
   }
 
   Future<void> removeGroupMember(String groupId, String haloId) async {
@@ -1355,7 +1394,10 @@ class HaloDb {
     return db.query(
       'messages',
       columns: ['*', 'rowid'],
-      where: 'peer_id = ?',
+      // group_id IS NULL keeps group messages out of the 1:1 thread - a group
+      // row carries peer_id = sender AND a group_id, so without this it leaked
+      // into the direct chat with that sender.
+      where: 'peer_id = ? AND group_id IS NULL',
       whereArgs: [peerId],
       orderBy: 'sent_at ASC',
     );
@@ -1374,7 +1416,7 @@ class HaloDb {
     return db.query(
       'messages',
       columns: ['*', 'rowid'],
-      where: 'peer_id = ? AND rowid > ?',
+      where: 'peer_id = ? AND rowid > ? AND group_id IS NULL',
       whereArgs: [peerId, afterRowid],
       orderBy: 'rowid ASC',
     );
@@ -1812,6 +1854,15 @@ class AppState extends ChangeNotifier {
       debugPrint('dropping group msg for unknown group ${env.groupId}');
       return;
     }
+    // roster self-heal: if the admin rode their full member list on this
+    // message and our copy drifted, reconcile. only trust it from the real
+    // admin so a member can't rewrite membership by spoofing a roster.
+    if (isGroup && env.roster != null) {
+      final adminId = await db.groupAdminId(env.groupId!);
+      if (adminId != null && senderHaloId == adminId) {
+        await db.syncGroupMembers(env.groupId!, env.roster!);
+      }
+    }
     // chunked media: a big image/file arrives as several envelopes sharing one
     // mediaId. buffer the slices until all chunkTotal are in, then rebuild the
     // full base64. single-chunk (or unchunked) media skips this entirely.
@@ -1950,7 +2001,18 @@ class AppState extends ChangeNotifier {
         // a regular member. group.is_admin stays 0.
         if (gc.members == null || gc.name == null) return;
         if (!await db.groupExists(groupId)) {
-          await db.createGroup(groupId, gc.name!, gc.members!, isAdmin: false);
+          await db.createGroup(
+            groupId,
+            gc.name!,
+            gc.members!,
+            isAdmin: false,
+            adminId: senderHaloId,
+          );
+        } else {
+          // already in the group - reconcile the member list so a re-add or
+          // membership change syncs instead of leaving a stale count.
+          await db.syncGroupMembers(groupId, gc.members!);
+          await db.renameGroup(groupId, gc.name!);
         }
         // auto-create contact stubs for unknown participants so we can
         // immediately send to them.
@@ -1989,14 +2051,20 @@ class AppState extends ChangeNotifier {
         if (gc.members == null) return;
         for (final h in gc.members!) {
           await db.removeGroupMember(groupId, h);
+          // removed person drops the whole group locally so it leaves
+          // their list and they stop multicasting into it.
+          if (h == myId) await db.deleteGroup(groupId);
         }
+        await refreshGroups();
         break;
       case 'rename':
         if (gc.name == null) return;
         await db.renameGroup(groupId, gc.name!);
+        await refreshGroups();
         break;
       case 'leave':
         await db.removeGroupMember(groupId, senderHaloId);
+        await refreshGroups();
         break;
     }
   }
@@ -2533,15 +2601,23 @@ class AppState extends ChangeNotifier {
       replyTo: replyTo,
       burnAt: burnAt,
     );
+    final members = await db.getGroupMembers(groupId);
+    // if we are the group admin, ride the full roster on the message so any
+    // member whose list drifted self-heals the moment they receive it.
+    final adminId = await db.groupAdminId(groupId);
+    final amAdmin = adminId == myId;
     final wrapped = await wrapMessage(
       plain,
       msgUid: msgUid,
       replyTo: replyTo,
       burnSeconds: burnSeconds,
       groupId: groupId,
+      roster: amAdmin ? members : null,
       sender: _mySender(),
     );
-    final members = await db.getGroupMembers(groupId);
+    debugPrint(
+      'GRPSEND group=$groupId members=$members me=$myId admin=$amAdmin',
+    );
     final results = await Future.wait([
       for (final memberId in members)
         if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
