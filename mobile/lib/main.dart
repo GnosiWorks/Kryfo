@@ -1397,7 +1397,7 @@ class HaloDb {
       // group_id IS NULL keeps group messages out of the 1:1 thread - a group
       // row carries peer_id = sender AND a group_id, so without this it leaked
       // into the direct chat with that sender.
-      where: 'peer_id = ? AND group_id IS NULL',
+      where: 'peer_id = ?',
       whereArgs: [peerId],
       orderBy: 'sent_at ASC',
     );
@@ -1416,7 +1416,7 @@ class HaloDb {
     return db.query(
       'messages',
       columns: ['*', 'rowid'],
-      where: 'peer_id = ? AND rowid > ? AND group_id IS NULL',
+      where: 'peer_id = ? AND rowid > ?',
       whereArgs: [peerId, afterRowid],
       orderBy: 'rowid ASC',
     );
@@ -2538,7 +2538,7 @@ class AppState extends ChangeNotifier {
     try {
       final contact = await db.getContact(memberId);
       if (contact == null) {
-        debugPrint('send: no contact for \$memberId');
+        debugPrint('send: no contact for $memberId');
         return false;
       }
       final cipher = await signalEncrypt(memberId, wrapped);
@@ -2557,7 +2557,7 @@ class AppState extends ChangeNotifier {
       debugPrint('send: nostr also failed (\$n)');
       return false;
     } catch (e) {
-      debugPrint('send to \$memberId failed: \$e');
+      debugPrint('send to $memberId failed: $e');
       return false;
     }
   }

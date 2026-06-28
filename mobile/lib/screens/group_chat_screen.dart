@@ -46,7 +46,14 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         if (m.burnAt != null) any = true;
       }
       if (any && mounted) {
-        // grace period of 500ms so the fade-out animation finishes
+        // grace period of 500ms so the fade-out animation finishes. also
+        // delete the db row, else the message reappears on the next reload.
+        final dead = _messages
+            .where((m) => m.burnAt != null && m.burnAt! + 500 <= now)
+            .toList();
+        for (final m in dead) {
+          if (m.msgUid != null) db.deleteMessage(m.msgUid!);
+        }
         setState(() {
           _messages.removeWhere(
             (m) => m.burnAt != null && m.burnAt! + 500 <= now,
@@ -68,6 +75,13 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         .cast<String>()
         .toList();
     final reactions = await db.loadReactionsFor(uids);
+    // local nickname is the display source of truth. fall back to the 3-word
+    // id when we have no nickname for that member.
+    final nickById = <String, String>{};
+    for (final c in appState.contacts) {
+      final n = c.nickname;
+      if (n != null && n.isNotEmpty) nickById[c.haloId] = n;
+    }
     if (!mounted) return;
     setState(() {
       _groupName = (g?['name'] as String?) ?? 'group';
@@ -86,6 +100,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             }
             return _GMsg(
               sender: r['peer_id'] as String,
+              senderName: nickById[r['peer_id'] as String],
               direction: r['direction'] as String,
               text: r['plaintext'] as String,
               when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
@@ -455,6 +470,7 @@ String _fmtBurn(int s) {
 
 class _GMsg {
   final String sender;
+  final String senderName;
   final String direction;
   final String text;
   final DateTime when;
@@ -464,6 +480,7 @@ class _GMsg {
   final Map<String, String> reactions;
   _GMsg({
     required this.sender,
+    String? senderName,
     required this.direction,
     required this.text,
     required this.when,
@@ -471,7 +488,8 @@ class _GMsg {
     this.replyTo,
     this.burnAt,
     Map<String, String>? reactions,
-  }) : reactions = reactions ?? {};
+  }) : reactions = reactions ?? {},
+       senderName = senderName ?? sender;
 }
 
 // ───────── header ─────────
@@ -586,7 +604,7 @@ class _ReplyQuoteBar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'replying to ${target.direction == "out" ? "you" : target.sender}',
+                  'replying to ${target.direction == "out" ? "you" : target.senderName}',
                   style: HaloType.mono(
                     size: 9.5,
                     color: HaloColors.amber,
@@ -756,7 +774,7 @@ class _GroupBubble extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(left: 2, bottom: 3),
                         child: Text(
-                          m.sender,
+                          m.senderName,
                           style: HaloType.mono(
                             size: 9.5,
                             color: HaloColors.amber,
