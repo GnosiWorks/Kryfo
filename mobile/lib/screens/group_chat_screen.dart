@@ -30,6 +30,8 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   bool _ghost = false;
   int _burnSeconds = 300; // 5 min default, same as 1:1
   Timer? _burnTick;
+  bool _loading = false;
+  bool _reloadQueued = false;
 
   @override
   void initState() {
@@ -37,7 +39,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     currentChatPeer = 'group:${widget.groupId}';
     _load();
     appState.addListener(_onAppStateChanged);
-    _burnTick = Timer.periodic(const Duration(seconds: 1), (_) {
+    _burnTick = Timer.periodic(const Duration(milliseconds: 100), (_) {
       final now = DateTime.now().millisecondsSinceEpoch;
       bool any = false;
       for (final m in _messages) {
@@ -55,6 +57,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   }
 
   Future<void> _load() async {
+    _loading = true;
     final g = await db.getGroup(widget.groupId);
     final members = await db.getGroupMembers(widget.groupId);
     final rows = await db.loadGroupMessages(widget.groupId);
@@ -95,10 +98,23 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         );
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd());
+    _loading = false;
+    // if changes landed while we were loading, run exactly one catch-up pass.
+    if (_reloadQueued) {
+      _reloadQueued = false;
+      _load();
+    }
   }
 
   void _onAppStateChanged() {
-    // a group control or new message landed - reload to reflect changes.
+    // a group control or new message landed. guard against the reload storm:
+    // a single multicast fires notifyListeners() once per recipient, and a full
+    // _load() per fire froze the ui. if a load is already running, queue at most
+    // one follow-up instead of stacking N of them.
+    if (_loading) {
+      _reloadQueued = true;
+      return;
+    }
     _load();
   }
 
@@ -135,15 +151,21 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       _replyTo = null;
     });
     _scrollToEnd();
-    await appState.sendToGroup(
-      widget.groupId,
-      text,
-      msgUid: uid,
-      replyTo: replyToUid,
-      burnSeconds: burnSeconds,
-    );
-    if (!mounted) return;
-    setState(() => _sending = false);
+    try {
+      await appState.sendToGroup(
+        widget.groupId,
+        text,
+        msgUid: uid,
+        replyTo: replyToUid,
+        burnSeconds: burnSeconds,
+      );
+    } catch (e) {
+      debugPrint('group send failed: $e');
+    } finally {
+      // always release the composer - a throw here used to leave _sending
+      // stuck true, which silently killed every later send.
+      if (mounted) setState(() => _sending = false);
+    }
   }
 
   Future<void> _toggleReaction(_GMsg target, String emoji) async {
@@ -705,6 +727,7 @@ class _GroupBubble extends StatelessWidget {
     final fadeOut = m.burnAt != null && now > m.burnAt! - 500;
     return AnimatedOpacity(
       opacity: fadeOut ? 0 : 1,
+      curve: Curves.easeInCubic,
       duration: const Duration(milliseconds: 500),
       child: AnimatedScale(
         scale: fadeOut ? 0.88 : 1,
