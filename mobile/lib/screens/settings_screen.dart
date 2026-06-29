@@ -18,6 +18,7 @@ import 'panic_setup_screen.dart';
 import 'backup_screen.dart';
 import '../wipe.dart';
 import 'restore_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 Widget _postureLine(String label, bool on, String onText, String offText) {
   return Padding(
@@ -528,6 +529,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: Icons.info_outline,
             label: 'version',
             value: '0.1 · alpha',
+          ),
+          _Row(
+            icon: Icons.flag_outlined,
+            label: 'report an issue',
+            value: 'bug or security flaw',
+            onTap: () => launchUrl(
+              Uri.parse('mailto:gnosiworks@proton.me?subject=Halo%20report'),
+              mode: LaunchMode.externalApplication,
+            ),
           ),
           _Row(
             icon: Icons.code,
