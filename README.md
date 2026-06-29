@@ -1,69 +1,54 @@
-# halo
+# Halo
 
-*a privacy-first messenger*
+A private messenger that doesn't look like one.
 
-anonymous bip-39 identities · libsignal double ratchet · tor onion routing · sqlcipher persistence
+Most private messengers make you choose: real metadata resistance, or an interface you'd actually want to use. Halo is a bet that you can have both. Tor onion routing and gift-wrapped relay messages underneath, an editorial, considered interface on top.
 
----
+> **Pre-alpha. Unaudited. Do not trust this with anything that matters yet.**
+> The crypto is real but not independently reviewed. Treat Halo as a work in progress, not a tool to rely on.
 
-## status
+## What it is
 
-pre-alpha. solo dev, open source, taking the time to do it right. usable for technical testers; not yet ready for friends-and-family.
+- Anonymous identities — no phone number, no email. Your id is three words from a BIP-39 seed.
+- Tor onion routing by default. Direct onion-to-onion when both people are online; an encrypted relay mailbox when they're not.
+- End-to-end encryption with the Double Ratchet (libsignal), forward secrecy, per-message keys.
+- Encrypted at rest (SQLCipher).
+- Disappearing messages, message verification, panic wipe, decoy access.
+- No read receipts, no typing indicators, no analytics, no push tokens to a central server. Nothing about your activity leaves your device by default.
 
-the cryptography uses standard building blocks (libsignal, tor, sqlcipher) but this implementation has not been independently audited. trust it for trying the ideas — not for anything where a leak or compromise could put someone at real risk.
+## What it is not
 
-## what it does today
+- Not audited. No third party has reviewed the cryptography. Until one has, assume there are bugs.
+- Not anonymous against a global passive adversary. Tor and gift-wrapping resist ordinary relay-level observation; they are not mixnet-grade against someone watching the whole network. If that's your threat model, this isn't the tool.
+- Not finished. Features are landing, things break, the schema still changes.
 
-- 1:1 encrypted chat over tor onion v3 (direct p2p) or nostr relays (store-and-forward)
-- bip-39 anonymous ids ("thumb-behave-boring")
-- libsignal double ratchet end-to-end
-- in-app qr pairing
-- ghost mode (self-destructing messages, 30s/1m/5m/1h/24h)
-- reactions, reply-to
-- app lock with pin + biometric, panic pin (silent wipe)
-- procedurally generated avatars
-- editorial design language — calm, restrained, italic serif accents, no neon "encrypted!!" stickers
+## How it works
 
-## what it doesn't do
+- **Identity:** an ed25519 keypair, surfaced as a three-word id. The X25519 key doubles as the libsignal identity key and seeds per-conversation relay keys.
+- **Transport:** direct Tor onion when both peers are reachable; a Nostr relay mailbox for offline delivery. Relay messages are gift-wrapped so the relay can't see who's talking to whom.
+- **Encryption:** Double Ratchet over the established session. Messages are sealed before they ever touch the transport.
+- **Storage:** SQLCipher. The local database is encrypted.
 
-- no telemetry, crash reporting, analytics — ever
-- no phone numbers, emails, accounts
-- no google play services
-- no proprietary blobs
+There is no Halo server holding your messages or your contact graph. The relays are dumb mailboxes that see only opaque, gift-wrapped events.
 
-## stack
+## Stack
 
-- flutter (dart) — mobile ui, single codebase
-- go shared library via cgo — embedded tor + nostr transport
-- libsignal_protocol_dart — double ratchet, prekey bundles
-- sqlcipher — encrypted local storage
-- alexballas/go-libtor — embedded tor v3
+- Flutter / Dart front end
+- Go engine (libhalo) over FFI for transport and crypto plumbing
+- libsignal (Double Ratchet, X25519 identity, prekeys)
+- SQLCipher for at-rest encryption
+- Embedded Tor
+- Nostr relays for the offline mailbox
 
-android-first. ios port when a mac arrives.
+## Security
 
-## build from source
+Halo is built against the LINDDUN privacy framework and the design notes track each cell.
 
-~~~
-git clone https://github.com/<placeholder>/halo
-cd halo
-flutter build apk --debug --target-platform android-arm64,android-x64
-~~~
+- **Strong against:** relay operators learning your social graph, at-rest device seizure (encrypted storage + wipe), content interception (E2E).
+- **Unverified:** all of it, until a third-party audit.
 
-requires:
-- flutter 3.x
-- android sdk + ndk
-- go 1.21+ for the engine (cross-compiled to libhalo.so via aarch64-linux-android27-clang)
+Found a security issue? Report it privately rather than opening a public issue.
 
-## license
+## Status
 
-[GNU Affero General Public License v3.0](LICENSE)
-
-if you fork halo and run it as a hosted service, you must share your changes with users. if that doesn't work for your use case, a commercial license is available from the author.
-
-## inspiration
-
-graphene os (calm, technical, restraint over excitement). signal (the protocol). simplex (the architecture). telegram (the polish, not the politics).
-
----
-
-**author**: mario · solo · open to issues, slow with prs (single-author repo for now)
+Pre-alpha, single developer, built in the open. Expect rough edges, breaking changes, and gaps. It is not ready to be anyone's only messenger.
