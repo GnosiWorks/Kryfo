@@ -38,6 +38,8 @@ class UnwrappedMessage {
   final int? chunkIndex; // 'ci' - this chunk's position, 0-based
   final int? chunkTotal; // 'ct' - how many chunks make the whole media
   final List<String>? roster; // 'rs' - admin's full member list, self-heals
+  final List<Map<String, String>>?
+  rosterParticipants; // 'rp' - {h,o,x} keys for roster members
   UnwrappedMessage(
     this.message, {
     this.endpoint,
@@ -63,6 +65,7 @@ class UnwrappedMessage {
     this.chunkIndex,
     this.chunkTotal,
     this.roster,
+    this.rosterParticipants,
   });
 }
 
@@ -137,6 +140,7 @@ Future<String> wrapMessage(
   int? chunkIndex,
   int? chunkTotal,
   List<String>? roster,
+  List<Map<String, String>>? rosterParticipants,
 }) async {
   final mode = await loadPushMode();
   final body = <String, dynamic>{'m': plain};
@@ -159,6 +163,7 @@ Future<String> wrapMessage(
   if (chunkIndex != null) body['ci'] = chunkIndex;
   if (chunkTotal != null) body['ct'] = chunkTotal;
   if (roster != null) body['rs'] = roster;
+  if (rosterParticipants != null) body['rp'] = rosterParticipants;
 
   if (mode == PushMode.ntfy) {
     final topic = await loadNtfyTopic();
@@ -262,6 +267,12 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       chunkIndex: (json['ci'] as num?)?.toInt(),
       chunkTotal: (json['ct'] as num?)?.toInt(),
       roster: (json['rs'] as List?)?.map((e) => e.toString()).toList(),
+      rosterParticipants: (json['rp'] as List?)
+          ?.map(
+            (e) =>
+                (e as Map).map((k, v) => MapEntry(k.toString(), v.toString())),
+          )
+          .toList(),
     );
   } catch (e) {
     debugPrint(

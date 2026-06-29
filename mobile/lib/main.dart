@@ -1861,6 +1861,19 @@ class AppState extends ChangeNotifier {
       final adminId = await db.groupAdminId(env.groupId!);
       if (adminId != null && senderHaloId == adminId) {
         await db.syncGroupMembers(env.groupId!, env.roster!);
+        // create contact stubs for self-healed members so we can actually
+        // encrypt to them - ids alone aren't enough, we need their keys.
+        if (env.rosterParticipants != null) {
+          for (final p in env.rosterParticipants!) {
+            final h = p['h'];
+            final o = p['o'];
+            final x = p['x'];
+            if (h != null && o != null && x != null && h != myId) {
+              await db.upsertContactStub(h, o, x);
+            }
+          }
+          await refreshContacts();
+        }
       }
     }
     // chunked media: a big image/file arrives as several envelopes sharing one
@@ -2606,6 +2619,10 @@ class AppState extends ChangeNotifier {
     // member whose list drifted self-heals the moment they receive it.
     final adminId = await db.groupAdminId(groupId);
     final amAdmin = adminId == myId;
+    // ride the member key bundles too, not just ids - a self-healed member the
+    // receiver had no contact for would otherwise throw InvalidKeyException on
+    // encrypt. participants let the receiver upsert a stub and encrypt to them.
+    final rosterParts = amAdmin ? await _buildParticipants(members) : null;
     final wrapped = await wrapMessage(
       plain,
       msgUid: msgUid,
@@ -2613,6 +2630,7 @@ class AppState extends ChangeNotifier {
       burnSeconds: burnSeconds,
       groupId: groupId,
       roster: amAdmin ? members : null,
+      rosterParticipants: rosterParts,
       sender: _mySender(),
     );
     debugPrint(
