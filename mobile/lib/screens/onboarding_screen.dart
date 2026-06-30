@@ -699,13 +699,13 @@ class _KeepSafeScreen extends StatelessWidget {
           _rule(
             '01',
             'write your halo down',
-            'your three words are the only key. paper, password manager, anywhere safe. losing them means losing this identity for good — there\'s no recovery, by design.',
+            'your three words are the only key. paper, password manager, anywhere safe. losing them means losing this identity for good. there\'s no recovery, by design.',
           ),
           const SizedBox(height: 12),
           _rule(
             '02',
             'first connection takes a few minutes',
-            'we\'re routing through anonymous relays so no one can see your IP. it\'s slow the first time, fast after. trust the process — the wait is the privacy guarantee.',
+            'we\'re routing through anonymous relays so no one can see your IP. the first connection is slow because it\'s building your private route. quick after.',
           ),
           const SizedBox(height: 12),
           _rule(
@@ -853,7 +853,7 @@ class _StayingConnectedScreen extends StatelessWidget {
           const SizedBox(height: 12),
           _point(
             'it is safe to leave on',
-            'the notification is silent and sits at the bottom of your shade. turning it off does not make halo lighter — it just stops messages arriving until you reopen the app.',
+            'the notification is silent and sits at the bottom of your shade. turning it off does not make halo lighter, it just stops messages arriving until you reopen the app.',
           ),
           const Spacer(),
           GestureDetector(
