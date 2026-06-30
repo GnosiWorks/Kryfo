@@ -542,7 +542,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _Row(
             icon: Icons.code,
             label: 'open source',
-            value: 'github.com/halo',
+            value: 'github.com/GnosiWorks/Halo',
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(4, 10, 12, 0),
