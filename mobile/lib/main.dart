@@ -1118,8 +1118,25 @@ class HaloDb {
     final db = await open();
     return db.query(
       'messages',
+      columns: ['*', 'rowid'],
       where: 'group_id = ?',
       whereArgs: [groupId],
+      orderBy: 'sent_at ASC',
+    );
+  }
+
+  // group messages newer than a rowid, for the append-fast-path (mirrors
+  // messagesAfter but scoped to a group).
+  Future<List<Map<String, Object?>>> groupMessagesAfter(
+    String groupId,
+    int afterRowid,
+  ) async {
+    final db = await open();
+    return db.query(
+      'messages',
+      columns: ['*', 'rowid'],
+      where: 'group_id = ? AND rowid > ?',
+      whereArgs: [groupId, afterRowid],
       orderBy: 'sent_at ASC',
     );
   }
@@ -1793,10 +1810,7 @@ class AppState extends ChangeNotifier {
   Future<void> applyPushMode(PushMode m) async {
     await savePushMode(m);
     if (m == PushMode.ntfy) {
-      _ntfyListener ??= NtfyListener(
-        onPing: () => debugPrint('ntfy: wake-up received'),
-        log: (msg) => debugPrint(msg),
-      );
+      _ntfyListener ??= NtfyListener(log: (msg) => debugPrint(msg));
       await _ntfyListener!.start();
     } else {
       await _ntfyListener?.stop();
@@ -2086,10 +2100,7 @@ class AppState extends ChangeNotifier {
     await saveNtfyServer(url);
     if (_ntfyListener != null) {
       await _ntfyListener!.stop();
-      _ntfyListener = NtfyListener(
-        onPing: () => debugPrint('ntfy: wake-up received'),
-        log: (msg) => debugPrint(msg),
-      );
+      _ntfyListener = NtfyListener(log: (msg) => debugPrint(msg));
       await _ntfyListener!.start();
     }
   }
@@ -2304,10 +2315,7 @@ class AppState extends ChangeNotifier {
     // ping, the existing 1s drain loop catches up - we just log for now.
     final mode = await loadPushMode();
     if (mode == PushMode.ntfy) {
-      _ntfyListener = NtfyListener(
-        onPing: () => debugPrint('ntfy: wake-up received'),
-        log: (m) => debugPrint(m),
-      );
+      _ntfyListener = NtfyListener(log: (m) => debugPrint(m));
       _ntfyListener!.start();
     }
 
