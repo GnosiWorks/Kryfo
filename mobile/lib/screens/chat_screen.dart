@@ -1763,11 +1763,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         await Future.delayed(const Duration(milliseconds: 400));
         torWait += 400;
       }
-      debugPrint('TICK torStatus=${appState.torStatus} waited=${torWait}ms');
       if (!_torReadyToSend()) return 'error: tor not ready';
       String? tor;
       if (!_backPaired && widget.peerOnion.isNotEmpty) {
-        debugPrint('SEND route=onion tor=' + appState.torStatus.toString());
         tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
         if (tor == 'ok') return 'ok';
         debugPrint('chat send: tor direct failed (\$tor), trying nostr');
@@ -1779,7 +1777,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
       if (xpub != null) {
         _peerXPub = xpub;
-        debugPrint('SEND route=relay tor=' + appState.torStatus.toString());
         return await Future(() => engine.nostrSend(xpub!, cipher));
       }
       return tor ?? 'error: no transport';
@@ -1972,11 +1969,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         await Future.delayed(const Duration(milliseconds: 400));
         torWait += 400;
       }
-      debugPrint('TICK torStatus=${appState.torStatus} waited=${torWait}ms');
       if (!_torReadyToSend()) return 'error: tor not ready';
       String? tor;
       if (!_backPaired && widget.peerOnion.isNotEmpty) {
-        debugPrint('SEND route=onion tor=' + appState.torStatus.toString());
         tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
         if (tor == 'ok') return 'ok';
       }
@@ -1987,7 +1982,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
       if (xpub != null) {
         _peerXPub = xpub;
-        debugPrint('SEND route=relay tor=' + appState.torStatus.toString());
         return await Future(() => engine.nostrSend(xpub!, cipher));
       }
       return tor ?? 'error: no transport';
@@ -2645,7 +2639,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || _sending) return;
     final msgUid = _newMsgUid();
-    debugPrint('TEXT-SEND uid=$msgUid text="$text"');
     final replyToUid = _replyTo?.msgUid;
     final msg = _Msg(
       'out',
@@ -2723,11 +2716,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         await Future.delayed(const Duration(milliseconds: 400));
         torWait += 400;
       }
-      debugPrint('TICK torStatus=${appState.torStatus} waited=${torWait}ms');
       if (!_torReadyToSend()) return 'error: tor not ready';
       String? tor;
       if (!_backPaired && widget.peerOnion.isNotEmpty) {
-        debugPrint('SEND route=onion tor=' + appState.torStatus.toString());
         tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
         if (tor == 'ok') return 'ok';
         debugPrint('chat send: tor direct failed (\$tor), trying nostr');
@@ -2739,7 +2730,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
       if (xpub != null) {
         _peerXPub = xpub;
-        debugPrint('SEND route=relay tor=' + appState.torStatus.toString());
         return await Future(() => engine.nostrSend(xpub!, cipher));
       }
       return tor ?? 'error: no transport';
