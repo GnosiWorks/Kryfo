@@ -64,6 +64,38 @@ class WhyHaloScreen extends StatelessWidget {
                 'compare a safety number in person or over a channel you trust, '
                     'so you know no one is impersonating your contact.',
               ),
+              const SizedBox(height: 32),
+              Divider(
+                color: HaloColors.text3.withValues(alpha: 0.2),
+                height: 1,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'the honest part',
+                style: HaloType.serif(size: 16, color: HaloColors.amber),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'halo is pre-alpha and has not been audited. the crypto is real '
+                'but no outside expert has checked it yet, so treat it as a work '
+                'in progress, not something to trust with your life.',
+                style: HaloType.sans(
+                  size: 13,
+                  color: HaloColors.text2,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'tor and per-message wrapping hide who you talk to from relays and '
+                'your network. your own habits still matter as much as the app, '
+                'privacy is a practice, not just a tool.',
+                style: HaloType.sans(
+                  size: 13,
+                  color: HaloColors.text2,
+                  height: 1.5,
+                ),
+              ),
             ],
           ),
         ),
