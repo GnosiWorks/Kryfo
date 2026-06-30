@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // miui_autostart.dart - onboarding nag for xiaomi devices.
 // miui kills background apps unless autostart is enabled per-app.
 // no way to enable it programmatically, so we explain + open the right

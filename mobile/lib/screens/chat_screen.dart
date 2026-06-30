@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // chat screen. message bubbles, composer, live receive over tor.
 // matches 08_complete_spec.html "the everyday" chat tile.
 

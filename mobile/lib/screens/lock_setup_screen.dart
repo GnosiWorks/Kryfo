@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // lock_setup_screen.dart - first-time pin setup. enter pin twice, confirm.
 
 import 'package:flutter/material.dart';
@@ -41,26 +42,28 @@ class _LockSetupScreenState extends State<LockSetupScreen> {
               context: context,
               builder: (ctx) => AlertDialog(
                 backgroundColor: HaloColors.surface3,
-                title: Text('unlock with fingerprint?',
-                    style: HaloType.serif(
-                        size: 18, color: HaloColors.text)),
+                title: Text(
+                  'unlock with fingerprint?',
+                  style: HaloType.serif(size: 18, color: HaloColors.text),
+                ),
                 content: Text(
                   "you can still use your pin anytime — fingerprint is just faster.",
-                  style: HaloType.sans(
-                      size: 13, color: HaloColors.text2),
+                  style: HaloType.sans(size: 13, color: HaloColors.text2),
                 ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(ctx).pop(false),
-                    child: Text('not now',
-                        style: HaloType.sans(
-                            size: 13, color: HaloColors.text2)),
+                    child: Text(
+                      'not now',
+                      style: HaloType.sans(size: 13, color: HaloColors.text2),
+                    ),
                   ),
                   TextButton(
                     onPressed: () => Navigator.of(ctx).pop(true),
-                    child: Text('enable',
-                        style: HaloType.sans(
-                            size: 13, color: HaloColors.amber)),
+                    child: Text(
+                      'enable',
+                      style: HaloType.sans(size: 13, color: HaloColors.amber),
+                    ),
                   ),
                 ],
               ),
@@ -93,31 +96,39 @@ class _LockSetupScreenState extends State<LockSetupScreen> {
     final hint = _mismatch
         ? "didn't match — try again"
         : (_confirming
-            ? 'enter the same 4 digits'
-            : '4 digits, anything you can remember');
+              ? 'enter the same 4 digits'
+              : '4 digits, anything you can remember');
     return Scaffold(
       backgroundColor: HaloColors.ink,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: const BackButton(color: Color(0xFFAAAAAA)),
-        title: Text('app lock',
-            style: HaloType.serif(
-                size: 18, color: HaloColors.text, italic: true)),
+        title: Text(
+          'app lock',
+          style: HaloType.serif(size: 18, color: HaloColors.text, italic: true),
+        ),
       ),
       body: SafeArea(
         child: Column(
           children: [
             const SizedBox(height: 24),
-            Text(title,
-                style: HaloType.serif(
-                    size: 28, color: HaloColors.text, weight: FontWeight.w300)),
+            Text(
+              title,
+              style: HaloType.serif(
+                size: 28,
+                color: HaloColors.text,
+                weight: FontWeight.w300,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text(hint,
-                style: HaloType.sans(
-                    size: 12,
-                    color:
-                        _mismatch ? HaloColors.rose : HaloColors.text2)),
+            Text(
+              hint,
+              style: HaloType.sans(
+                size: 12,
+                color: _mismatch ? HaloColors.rose : HaloColors.text2,
+              ),
+            ),
             const SizedBox(height: 40),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -161,13 +172,19 @@ class _SetupKeypad extends StatelessWidget {
             height: 72,
             alignment: Alignment.center,
             child: isBack
-                ? const Icon(Icons.backspace_outlined,
-                    color: Color(0xFFAAAAAA), size: 22)
-                : Text(label,
+                ? const Icon(
+                    Icons.backspace_outlined,
+                    color: Color(0xFFAAAAAA),
+                    size: 22,
+                  )
+                : Text(
+                    label,
                     style: HaloType.serif(
-                        size: 30,
-                        color: HaloColors.text,
-                        weight: FontWeight.w300)),
+                      size: 30,
+                      color: HaloColors.text,
+                      weight: FontWeight.w300,
+                    ),
+                  ),
           ),
         );
 
@@ -175,20 +192,26 @@ class _SetupKeypad extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 36),
       child: Column(
         children: [
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            btn('1'), btn('2'), btn('3'),
-          ]),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            btn('4'), btn('5'), btn('6'),
-          ]),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            btn('7'), btn('8'), btn('9'),
-          ]),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            const SizedBox(width: 72, height: 72),
-            btn('0'),
-            btn('', onTap: onBack, isBack: true),
-          ]),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [btn('1'), btn('2'), btn('3')],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [btn('4'), btn('5'), btn('6')],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [btn('7'), btn('8'), btn('9')],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const SizedBox(width: 72, height: 72),
+              btn('0'),
+              btn('', onTap: onBack, isBack: true),
+            ],
+          ),
         ],
       ),
     );

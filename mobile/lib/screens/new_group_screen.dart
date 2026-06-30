@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // pick a name + members from your contacts and create a group locally.
 // fires the create-and-announce flow on submit.
 
@@ -31,9 +32,9 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
     // pop the picker, then push the group chat - the user lands inside
     // the group they just made, the way every other messenger does it.
     Navigator.of(context).pop();
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => GroupChatScreen(groupId: groupId),
-    ));
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => GroupChatScreen(groupId: groupId)),
+    );
   }
 
   @override
@@ -55,21 +56,30 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: Icon(Icons.chevron_left,
-                        color: HaloColors.text, size: 26),
+                    icon: Icon(
+                      Icons.chevron_left,
+                      color: HaloColors.text,
+                      size: 26,
+                    ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   Expanded(
-                    child: Text('new group',
-                        style: HaloType.serif(
-                          size: 18, italic: true, color: HaloColors.text,
-                        )),
+                    child: Text(
+                      'new group',
+                      style: HaloType.serif(
+                        size: 18,
+                        italic: true,
+                        color: HaloColors.text,
+                      ),
+                    ),
                   ),
                   GestureDetector(
                     onTap: _canCreate ? _create : null,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 7),
+                        horizontal: 12,
+                        vertical: 7,
+                      ),
                       decoration: BoxDecoration(
                         color: _canCreate
                             ? HaloColors.amber
@@ -79,7 +89,8 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                       child: Text(
                         _creating ? 'creating...' : 'create',
                         style: HaloType.sans(
-                          size: 12, weight: FontWeight.w500,
+                          size: 12,
+                          weight: FontWeight.w500,
                           color: _canCreate
                               ? HaloColors.onAmber
                               : HaloColors.text3,
@@ -100,7 +111,9 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                 decoration: InputDecoration(
                   hintText: 'group name',
                   hintStyle: HaloType.serif(
-                    size: 16, italic: true, color: HaloColors.text3,
+                    size: 16,
+                    italic: true,
+                    color: HaloColors.text3,
                   ),
                   filled: true,
                   fillColor: HaloColors.surface2,
@@ -109,7 +122,9 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                     borderSide: BorderSide.none,
                   ),
                   contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 14),
+                    horizontal: 14,
+                    vertical: 14,
+                  ),
                 ),
               ),
             ),
@@ -117,17 +132,23 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 6),
               child: Row(
                 children: [
-                  Text('members',
-                      style: HaloType.mono(
-                        size: 10, color: HaloColors.text3, letter: 0.14,
-                      )),
+                  Text(
+                    'members',
+                    style: HaloType.mono(
+                      size: 10,
+                      color: HaloColors.text3,
+                      letter: 0.14,
+                    ),
+                  ),
                   const Spacer(),
                   Text(
                     _selected.isEmpty
                         ? 'pick at least one'
                         : '${_selected.length} selected',
                     style: HaloType.mono(
-                      size: 10, color: HaloColors.text3, letter: 0.14,
+                      size: 10,
+                      color: HaloColors.text3,
+                      letter: 0.14,
                     ),
                   ),
                 ],
@@ -141,7 +162,10 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                         child: Text(
                           'add at least one contact first before creating a group.',
                           textAlign: TextAlign.center,
-                          style: HaloType.sans(size: 13, color: HaloColors.text2),
+                          style: HaloType.sans(
+                            size: 13,
+                            color: HaloColors.text2,
+                          ),
                         ),
                       ),
                     )
@@ -160,23 +184,27 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                           }),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 10),
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
                             child: Row(
                               children: [
                                 HaloAvatar(seed: c.avatarSeed, size: 36),
                                 const SizedBox(width: 12),
                                 Expanded(
-                                  child: Text(c.haloId,
-                                      style: HaloType.sans(
-                                        size: 14,
-                                        weight: FontWeight.w500,
-                                        color: HaloColors.text,
-                                      )),
+                                  child: Text(
+                                    c.haloId,
+                                    style: HaloType.sans(
+                                      size: 14,
+                                      weight: FontWeight.w500,
+                                      color: HaloColors.text,
+                                    ),
+                                  ),
                                 ),
                                 AnimatedContainer(
-                                  duration:
-                                      const Duration(milliseconds: 120),
-                                  width: 22, height: 22,
+                                  duration: const Duration(milliseconds: 120),
+                                  width: 22,
+                                  height: 22,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: picked
@@ -191,8 +219,11 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                                   ),
                                   alignment: Alignment.center,
                                   child: picked
-                                      ? Icon(Icons.check_rounded,
-                                          size: 14, color: HaloColors.onAmber)
+                                      ? Icon(
+                                          Icons.check_rounded,
+                                          size: 14,
+                                          color: HaloColors.onAmber,
+                                        )
                                       : null,
                                 ),
                               ],

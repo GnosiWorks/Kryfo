@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -157,11 +158,7 @@ class _MyHaloScreenState extends State<MyHaloScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Icon(
-                  Icons.copy_outlined,
-                  size: 13,
-                  color: HaloColors.amber,
-                ),
+                Icon(Icons.copy_outlined, size: 13, color: HaloColors.amber),
               ],
             ),
           ),

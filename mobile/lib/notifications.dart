@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -5,9 +6,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 final FlutterLocalNotificationsPlugin notifPlugin =
     FlutterLocalNotificationsPlugin();
 
-Future<void> initNotifications({
-  void Function(String? payload)? onTap,
-}) async {
+Future<void> initNotifications({void Function(String? payload)? onTap}) async {
   const androidInit = AndroidInitializationSettings('ic_halo_notification');
   const initSettings = InitializationSettings(android: androidInit);
   await notifPlugin.initialize(
@@ -24,7 +23,9 @@ Future<void> initNotifications({
     importance: Importance.high,
   );
   final android = notifPlugin
-      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >();
   await android?.createNotificationChannel(channel);
 }
 

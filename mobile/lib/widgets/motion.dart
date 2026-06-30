@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // halo motion library - tor warmup, send pills, typing/cursor/breath utilities.
 // matches the design language: fraunces serif, jetbrains mono, gentle curves,
 // breathing motion. one vocabulary, used throughout.

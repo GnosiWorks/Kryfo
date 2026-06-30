@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // halo design tokens. mirrors css vars in 08_complete_spec.html.
 // keep flat. one source of truth for color, type, spacing.
 

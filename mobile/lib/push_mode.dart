@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // push_mode.dart - how halo gets woken up to receive messages.
 // only PushMode.tor is fully wired today. ntfy ships in sprint 11.
 // fcm is deferred until a play-store variant.
@@ -64,6 +65,8 @@ String _generateTopic() {
 }
 
 String composeNtfyEndpoint(String server, String topic) {
-  final s = server.endsWith('/') ? server.substring(0, server.length - 1) : server;
+  final s = server.endsWith('/')
+      ? server.substring(0, server.length - 1)
+      : server;
   return '$s/$topic';
 }

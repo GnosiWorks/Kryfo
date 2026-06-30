@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // restore_screen.dart - pick a halo backup file, enter passphrase,
 // overwrites local identity + db + prefs with backup contents. asks
 // user to force-close and reopen halo afterwards (cleanest way to
@@ -65,8 +66,10 @@ class _RestoreScreenState extends State<RestoreScreen> {
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
           backgroundColor: HaloColors.surface3,
-          title: Text('restored',
-              style: HaloType.serif(size: 18, color: HaloColors.text)),
+          title: Text(
+            'restored',
+            style: HaloType.serif(size: 18, color: HaloColors.text),
+          ),
           content: Text(
             "halo will close now. tap the icon to reopen with your restored identity.",
             style: HaloType.sans(size: 13, color: HaloColors.text2),
@@ -76,11 +79,15 @@ class _RestoreScreenState extends State<RestoreScreen> {
               onPressed: () {
                 Navigator.of(ctx).pop();
                 // exit so the next launch boots fresh from restored db
-                Future.delayed(const Duration(milliseconds: 200), () => exit(0));
+                Future.delayed(
+                  const Duration(milliseconds: 200),
+                  () => exit(0),
+                );
               },
-              child: Text('reopen halo',
-                  style: HaloType.sans(
-                      size: 13, color: HaloColors.amber)),
+              child: Text(
+                'reopen halo',
+                style: HaloType.sans(size: 13, color: HaloColors.amber),
+              ),
             ),
           ],
         ),
@@ -104,9 +111,10 @@ class _RestoreScreenState extends State<RestoreScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: const BackButton(color: Color(0xFFAAAAAA)),
-        title: Text('restore halo',
-            style: HaloType.serif(
-                size: 22, color: HaloColors.text, italic: true)),
+        title: Text(
+          'restore halo',
+          style: HaloType.serif(size: 22, color: HaloColors.text, italic: true),
+        ),
       ),
       body: SafeArea(
         child: Padding(
@@ -124,7 +132,10 @@ class _RestoreScreenState extends State<RestoreScreen> {
                 child: Text(
                   'this replaces your current halo (identity, messages, contacts). cannot be undone.',
                   style: HaloType.sans(
-                      size: 12.5, color: HaloColors.rose, height: 1.45),
+                    size: 12.5,
+                    color: HaloColors.rose,
+                    height: 1.45,
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -143,8 +154,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                     _filePath == null
                         ? 'pick backup file'
                         : _filePath!.split('/').last,
-                    style: HaloType.sans(
-                        size: 13, color: HaloColors.text),
+                    style: HaloType.sans(size: 13, color: HaloColors.text),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -158,25 +168,32 @@ class _RestoreScreenState extends State<RestoreScreen> {
                   decoration: InputDecoration(
                     labelText: 'passphrase',
                     labelStyle: HaloType.sans(
-                        size: 12, color: HaloColors.text2),
+                      size: 12,
+                      color: HaloColors.text2,
+                    ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
-                          color: HaloColors.line, width: 0.5),
+                        color: HaloColors.line,
+                        width: 0.5,
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
-                          color: HaloColors.amber, width: 0.8),
+                        color: HaloColors.amber,
+                        width: 0.8,
+                      ),
                     ),
                   ),
                 ),
               ],
               const SizedBox(height: 12),
               if (_error != null)
-                Text(_error!,
-                    style:
-                        HaloType.sans(size: 12, color: HaloColors.rose)),
+                Text(
+                  _error!,
+                  style: HaloType.sans(size: 12, color: HaloColors.rose),
+                ),
               const Spacer(),
               GestureDetector(
                 onTap: _busy || _blob == null ? null : _restore,
@@ -193,11 +210,12 @@ class _RestoreScreenState extends State<RestoreScreen> {
                   child: Text(
                     _busy ? 'restoring…' : 'restore',
                     style: HaloType.sans(
-                        size: 14,
-                        color: _busy || _blob == null
-                            ? HaloColors.text2
-                            : HaloColors.onAmber,
-                        weight: FontWeight.w500),
+                      size: 14,
+                      color: _busy || _blob == null
+                          ? HaloColors.text2
+                          : HaloColors.onAmber,
+                      weight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),

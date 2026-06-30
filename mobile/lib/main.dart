@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // halo mobile - phase 1: identity persistence + ECDH + editorial UI
 
 import 'dart:async';

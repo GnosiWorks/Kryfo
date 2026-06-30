@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // backup.dart - full identity + db + prefs backup, encrypted with a
 // user passphrase. one blob, restorable on any device. uses the engine
 // for scrypt + aes-gcm (HaloEncryptBackup / HaloDecryptBackup).

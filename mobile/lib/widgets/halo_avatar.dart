@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // halo_avatar.dart - procedural avatar from a seed string.
 // gradient background, large italic serif initial, thin divider,
 // and a 3-letter mono tag below. seed-driven palette so identical

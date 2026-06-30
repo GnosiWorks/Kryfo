@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // speed & privacy modes. cosmetic in phase 1 - tor is mandatory in the engine.
 // fast mode wires up in phase 2.
 

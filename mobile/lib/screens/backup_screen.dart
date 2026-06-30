@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // backup_screen.dart - creates an encrypted backup blob and hands it
 // to the system share sheet so the user can save it to drive, email
 // it to themselves, etc.
@@ -48,7 +49,8 @@ class _BackupScreenState extends State<BackupScreen> {
         ShareParams(
           files: [XFile(path)],
           subject: 'halo backup',
-          text: 'your encrypted halo backup. keep both this file AND your passphrase safe — you need both to restore.',
+          text:
+              'your encrypted halo backup. keep both this file AND your passphrase safe — you need both to restore.',
         ),
       );
       if (mounted) Navigator.of(context).pop();
@@ -70,9 +72,10 @@ class _BackupScreenState extends State<BackupScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: const BackButton(color: Color(0xFFAAAAAA)),
-        title: Text('back up halo',
-            style: HaloType.serif(
-                size: 22, color: HaloColors.text, italic: true)),
+        title: Text(
+          'back up halo',
+          style: HaloType.serif(size: 22, color: HaloColors.text, italic: true),
+        ),
       ),
       body: SafeArea(
         child: Padding(
@@ -83,7 +86,10 @@ class _BackupScreenState extends State<BackupScreen> {
               Text(
                 'an encrypted file with your identity, messages, contacts, and settings. you need both the file and the passphrase to restore.',
                 style: HaloType.sans(
-                    size: 13.5, color: HaloColors.text2, height: 1.5),
+                  size: 13.5,
+                  color: HaloColors.text2,
+                  height: 1.5,
+                ),
               ),
               const SizedBox(height: 24),
               _PinField(label: 'passphrase', controller: _p1),
@@ -91,9 +97,10 @@ class _BackupScreenState extends State<BackupScreen> {
               _PinField(label: 'confirm passphrase', controller: _p2),
               const SizedBox(height: 12),
               if (_error != null)
-                Text(_error!,
-                    style:
-                        HaloType.sans(size: 12, color: HaloColors.rose)),
+                Text(
+                  _error!,
+                  style: HaloType.sans(size: 12, color: HaloColors.rose),
+                ),
               const Spacer(),
               GestureDetector(
                 onTap: _busy ? null : _create,
@@ -108,11 +115,10 @@ class _BackupScreenState extends State<BackupScreen> {
                   child: Text(
                     _busy ? 'creating…' : 'create backup',
                     style: HaloType.sans(
-                        size: 14,
-                        color: _busy
-                            ? HaloColors.text2
-                            : HaloColors.onAmber,
-                        weight: FontWeight.w500),
+                      size: 14,
+                      color: _busy ? HaloColors.text2 : HaloColors.onAmber,
+                      weight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
