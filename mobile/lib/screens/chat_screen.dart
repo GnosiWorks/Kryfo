@@ -1401,12 +1401,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       );
       final cipher = await signalEncrypt(widget.peerHaloId, wrapped);
       final useDirectOnion = !_backPaired || _peerXPub == null;
-      debugPrint(
-        'SEND route=' +
-            (useDirectOnion ? 'onion' : 'relay') +
-            ' tor=' +
-            appState.torStatus.toString(),
-      );
       final f = useDirectOnion
           ? Future(() => engine.sendTo(widget.peerOnion, cipher))
           : Future(() => engine.nostrSend(_peerXPub!, cipher));
@@ -1452,12 +1446,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       );
       final cipher = await signalEncrypt(widget.peerHaloId, wrapped);
       final useDirectOnion = !_backPaired || _peerXPub == null;
-      debugPrint(
-        'SEND route=' +
-            (useDirectOnion ? 'onion' : 'relay') +
-            ' tor=' +
-            appState.torStatus.toString(),
-      );
       final f = useDirectOnion
           ? Future(() => engine.sendTo(widget.peerOnion, cipher))
           : Future(() => engine.nostrSend(_peerXPub!, cipher));
