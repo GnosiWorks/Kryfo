@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -17,8 +18,11 @@ class RelayClient {
   int _backoff = 1;
   Timer? _retry;
 
-  RelayClient(
-      {required this.url, required this.myXpub, required this.onMessage});
+  RelayClient({
+    required this.url,
+    required this.myXpub,
+    required this.onMessage,
+  });
 
   Future<void> start() async {
     _closed = false;
@@ -33,10 +37,12 @@ class RelayClient {
       _ws = ws;
       _backoff = 1;
       ws.add(jsonEncode({'type': 'hello', 'key': myXpub}));
-      ws.listen(_onFrame,
-          onDone: _reconnectLater,
-          onError: (_) => _reconnectLater(),
-          cancelOnError: true);
+      ws.listen(
+        _onFrame,
+        onDone: _reconnectLater,
+        onError: (_) => _reconnectLater(),
+        cancelOnError: true,
+      );
     } catch (_) {
       _reconnectLater();
     }

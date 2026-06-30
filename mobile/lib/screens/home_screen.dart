@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // home screen. date header, hero card or empty state, nav tabs.
 // matches 08_complete_spec.html "the everyday" home tile.
 

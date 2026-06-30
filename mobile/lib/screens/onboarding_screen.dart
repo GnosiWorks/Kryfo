@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // halo onboarding flow - 5 screens shown on first launch, then never again.
 // welcome → identity reveal → keep safe → staying connected → first contact.
 

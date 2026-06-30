@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import 'onion_loader.dart';
@@ -14,9 +15,10 @@ class TorBootSplash extends StatefulWidget {
 
 class _TorBootSplashState extends State<TorBootSplash>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _c =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 3000))
-        ..repeat();
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 3000),
+  )..repeat();
 
   @override
   void dispose() {
@@ -41,22 +43,32 @@ class _TorBootSplashState extends State<TorBootSplash>
             const Spacer(),
             const OnionLoader(size: 132),
             const SizedBox(height: 26),
-            Text('no shortcuts, no traces',
-                style: HaloType.serif(
-                    size: 23,
-                    weight: FontWeight.w400,
-                    italic: true,
-                    color: HaloColors.text)),
+            Text(
+              'no shortcuts, no traces',
+              style: HaloType.serif(
+                size: 23,
+                weight: FontWeight.w400,
+                italic: true,
+                color: HaloColors.text,
+              ),
+            ),
             const SizedBox(height: 20),
-            Text('starting Tor',
-                style: HaloType.mono(size: 12, color: HaloColors.amber)),
+            Text(
+              'starting Tor',
+              style: HaloType.mono(size: 12, color: HaloColors.amber),
+            ),
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: Text('the network that keeps you private is warming up',
-                  textAlign: TextAlign.center,
-                  style:
-                      HaloType.sans(size: 12, color: HaloColors.text2, height: 1.5)),
+              child: Text(
+                'the network that keeps you private is warming up',
+                textAlign: TextAlign.center,
+                style: HaloType.sans(
+                  size: 12,
+                  color: HaloColors.text2,
+                  height: 1.5,
+                ),
+              ),
             ),
             const SizedBox(height: 22),
             AnimatedBuilder(
@@ -75,8 +87,10 @@ class _TorBootSplashState extends State<TorBootSplash>
             const Spacer(),
             Padding(
               padding: const EdgeInsets.only(bottom: 28),
-              child: Text('first launch takes a moment · only on startup',
-                  style: HaloType.mono(size: 10, color: HaloColors.text3)),
+              child: Text(
+                'first launch takes a moment · only on startup',
+                style: HaloType.mono(size: 10, color: HaloColors.text3),
+              ),
             ),
           ],
         ),
@@ -85,23 +99,27 @@ class _TorBootSplashState extends State<TorBootSplash>
   }
 
   Widget _hopDot(String label, double phase) {
-    return Column(children: [
-      Opacity(
-        opacity: _hop(phase),
-        child: Container(
-          width: 9,
-          height: 9,
-          decoration:
-              BoxDecoration(shape: BoxShape.circle, color: HaloColors.amber),
+    return Column(
+      children: [
+        Opacity(
+          opacity: _hop(phase),
+          child: Container(
+            width: 9,
+            height: 9,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: HaloColors.amber,
+            ),
+          ),
         ),
-      ),
-      const SizedBox(height: 7),
-      Text(label, style: HaloType.mono(size: 10, color: HaloColors.text2)),
-    ]);
+        const SizedBox(height: 7),
+        Text(label, style: HaloType.mono(size: 10, color: HaloColors.text2)),
+      ],
+    );
   }
 
   Widget _link() => Padding(
-        padding: const EdgeInsets.only(bottom: 18),
-        child: Container(width: 22, height: 1, color: HaloColors.line),
-      );
+    padding: const EdgeInsets.only(bottom: 18),
+    child: Container(width: 22, height: 1, color: HaloColors.line),
+  );
 }

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // wipe.dart - nukes everything on this device: db (+ sqlcipher wal/shm),
 // onion key, saved media, caches, sessions, prefs, secure storage. used
 // when the user wants to leave no trace. the app exits after, so the next

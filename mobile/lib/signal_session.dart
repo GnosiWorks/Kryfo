@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // libsignal session bootstrap. derives identity from existing X25519 keys,
 // generates signed prekey + one-time prekeys on first run.
 

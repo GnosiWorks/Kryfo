@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // lock_state.dart - pin-based app lock with auto-lock on backgrounding.
 // pin hash + salt are stored in flutter_secure_storage (Android Keystore-
 // backed), so brute force on a stolen unlocked device still needs the

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // panic_setup_screen.dart - set a panic pin distinct from the
 // normal pin. entering it on the lock screen silently wipes halo
 // and exits. for coercion scenarios where you want plausible
@@ -78,9 +79,10 @@ class _PanicSetupScreenState extends State<PanicSetupScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: const BackButton(color: Color(0xFFAAAAAA)),
-        title: Text('panic pin',
-            style: HaloType.serif(
-                size: 22, color: HaloColors.text, italic: true)),
+        title: Text(
+          'panic pin',
+          style: HaloType.serif(size: 22, color: HaloColors.text, italic: true),
+        ),
       ),
       body: SafeArea(
         child: Column(
@@ -92,13 +94,21 @@ class _PanicSetupScreenState extends State<PanicSetupScreen> {
                 "this pin will silently wipe halo when entered on the lock screen. it must be different from your normal pin.",
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
-                    size: 13, color: HaloColors.text2, height: 1.55),
+                  size: 13,
+                  color: HaloColors.text2,
+                  height: 1.55,
+                ),
               ),
             ),
             const SizedBox(height: 32),
-            Text(_confirming ? 'confirm panic pin' : 'set panic pin',
-                style: HaloType.serif(
-                    size: 16, color: HaloColors.text, italic: true)),
+            Text(
+              _confirming ? 'confirm panic pin' : 'set panic pin',
+              style: HaloType.serif(
+                size: 16,
+                color: HaloColors.text,
+                italic: true,
+              ),
+            ),
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -110,11 +120,8 @@ class _PanicSetupScreenState extends State<PanicSetupScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 8),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: filled
-                        ? HaloColors.rose
-                        : HaloColors.surface3,
-                    border: Border.all(
-                        color: HaloColors.line, width: 0.5),
+                    color: filled ? HaloColors.rose : HaloColors.surface3,
+                    border: Border.all(color: HaloColors.line, width: 0.5),
                   ),
                 );
               }),
@@ -123,10 +130,11 @@ class _PanicSetupScreenState extends State<PanicSetupScreen> {
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Text(_error!,
-                    textAlign: TextAlign.center,
-                    style:
-                        HaloType.sans(size: 12, color: HaloColors.rose)),
+                child: Text(
+                  _error!,
+                  textAlign: TextAlign.center,
+                  style: HaloType.sans(size: 12, color: HaloColors.rose),
+                ),
               ),
             const Spacer(),
             _Pad(onDigit: _onDigit, onBack: _back),
@@ -154,37 +162,50 @@ class _Pad extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 48),
       child: Column(
-        children: rows.map((r) => Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: r.map((d) {
-            if (d.isEmpty) return const SizedBox(width: 64, height: 64);
-            if (d == 'back') {
-              return SizedBox(
-                width: 64, height: 64,
-                child: InkWell(
-                  onTap: onBack,
-                  customBorder: const CircleBorder(),
-                  child: Center(
-                    child: Icon(Icons.backspace_outlined,
-                        color: HaloColors.text2, size: 22),
-                  ),
-                ),
-              );
-            }
-            return SizedBox(
-              width: 64, height: 64,
-              child: InkWell(
-                onTap: () => onDigit(d),
-                customBorder: const CircleBorder(),
-                child: Center(
-                  child: Text(d,
-                      style: HaloType.serif(
-                          size: 26, color: HaloColors.text)),
-                ),
+        children: rows
+            .map(
+              (r) => Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: r.map((d) {
+                  if (d.isEmpty) return const SizedBox(width: 64, height: 64);
+                  if (d == 'back') {
+                    return SizedBox(
+                      width: 64,
+                      height: 64,
+                      child: InkWell(
+                        onTap: onBack,
+                        customBorder: const CircleBorder(),
+                        child: Center(
+                          child: Icon(
+                            Icons.backspace_outlined,
+                            color: HaloColors.text2,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                  return SizedBox(
+                    width: 64,
+                    height: 64,
+                    child: InkWell(
+                      onTap: () => onDigit(d),
+                      customBorder: const CircleBorder(),
+                      child: Center(
+                        child: Text(
+                          d,
+                          style: HaloType.serif(
+                            size: 26,
+                            color: HaloColors.text,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
-            );
-          }).toList(),
-        )).toList(),
+            )
+            .toList(),
       ),
     );
   }

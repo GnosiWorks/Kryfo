@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // lock_screen.dart - pin entry over the entire app when locked.
 // 4-digit pin, custom keypad, no system keyboard. wrong pin shakes.
 // when biometric is enabled, auto-fires the system fingerprint prompt
@@ -85,19 +86,26 @@ class _LockScreenState extends State<LockScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(flex: 2),
-              Text('halo',
-                  style: HaloType.serif(
-                      size: 36, color: HaloColors.amber, italic: true)),
+              Text(
+                'halo',
+                style: HaloType.serif(
+                  size: 36,
+                  color: HaloColors.amber,
+                  italic: true,
+                ),
+              ),
               const SizedBox(height: 16),
-              Text('enter your pin',
-                  style: HaloType.sans(size: 13, color: HaloColors.text2)),
+              Text(
+                'enter your pin',
+                style: HaloType.sans(size: 13, color: HaloColors.text2),
+              ),
               const SizedBox(height: 36),
               AnimatedBuilder(
                 animation: _shake,
                 builder: (_, child) {
                   final dx = _wrong
                       ? (8 * (1 - _shake.value)) *
-                          (((_shake.value * 12) % 2).toInt() == 0 ? 1 : -1)
+                            (((_shake.value * 12) % 2).toInt() == 0 ? 1 : -1)
                       : 0.0;
                   return Transform.translate(
                     offset: Offset(dx, 0),
@@ -117,10 +125,7 @@ class _LockScreenState extends State<LockScreen>
                         color: filled
                             ? (_wrong ? HaloColors.rose : HaloColors.amber)
                             : Colors.transparent,
-                        border: Border.all(
-                          color: HaloColors.text3,
-                          width: 0.8,
-                        ),
+                        border: Border.all(color: HaloColors.text3, width: 0.8),
                       ),
                     );
                   }),
@@ -133,16 +138,25 @@ class _LockScreenState extends State<LockScreen>
                   behavior: HitTestBehavior.opaque,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 16),
+                      vertical: 12,
+                      horizontal: 16,
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.fingerprint,
-                            color: Color(0xFFAAAAAA), size: 20),
+                        const Icon(
+                          Icons.fingerprint,
+                          color: Color(0xFFAAAAAA),
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
-                        Text('use fingerprint',
-                            style: HaloType.sans(
-                                size: 13, color: HaloColors.text2)),
+                        Text(
+                          'use fingerprint',
+                          style: HaloType.sans(
+                            size: 13,
+                            color: HaloColors.text2,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -174,14 +188,18 @@ class _Keypad extends StatelessWidget {
           height: 72,
           alignment: Alignment.center,
           child: isBack
-              ? const Icon(Icons.backspace_outlined,
-                  color: Color(0xFFAAAAAA), size: 22)
+              ? const Icon(
+                  Icons.backspace_outlined,
+                  color: Color(0xFFAAAAAA),
+                  size: 22,
+                )
               : Text(
                   label,
                   style: HaloType.serif(
-                      size: 30,
-                      color: HaloColors.text,
-                      weight: FontWeight.w300),
+                    size: 30,
+                    color: HaloColors.text,
+                    weight: FontWeight.w300,
+                  ),
                 ),
         ),
       );
@@ -191,20 +209,26 @@ class _Keypad extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 36),
       child: Column(
         children: [
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            btn('1'), btn('2'), btn('3'),
-          ]),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            btn('4'), btn('5'), btn('6'),
-          ]),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            btn('7'), btn('8'), btn('9'),
-          ]),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            const SizedBox(width: 72, height: 72),
-            btn('0'),
-            btn('', onTap: onBack, isBack: true),
-          ]),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [btn('1'), btn('2'), btn('3')],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [btn('4'), btn('5'), btn('6')],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [btn('7'), btn('8'), btn('9')],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const SizedBox(width: 72, height: 72),
+              btn('0'),
+              btn('', onTap: onBack, isBack: true),
+            ],
+          ),
         ],
       ),
     );

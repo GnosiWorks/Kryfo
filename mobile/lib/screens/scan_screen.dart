@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // in-app QR scanner. private - never leaves the app. focus on UX:
 // dark masked viewfinder, animated scan line, success pulse on detect,
 // torch toggle for low-light, and clear feedback when a non-halo qr
@@ -106,17 +107,22 @@ class _ScanScreenState extends State<ScanScreen>
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.chevron_left,
-                          color: Colors.white, size: 28),
+                      icon: const Icon(
+                        Icons.chevron_left,
+                        color: Colors.white,
+                        size: 28,
+                      ),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                     Expanded(
-                      child: Text('scan a halo qr',
-                          style: HaloType.serif(
-                            size: 18,
-                            italic: true,
-                            color: Colors.white,
-                          )),
+                      child: Text(
+                        'scan a halo qr',
+                        style: HaloType.serif(
+                          size: 18,
+                          italic: true,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                     IconButton(
                       onPressed: () async {
@@ -127,9 +133,7 @@ class _ScanScreenState extends State<ScanScreen>
                         _torchOn
                             ? Icons.flash_on_rounded
                             : Icons.flash_off_rounded,
-                        color: _torchOn
-                            ? HaloColors.amber
-                            : Colors.white,
+                        color: _torchOn ? HaloColors.amber : Colors.white,
                       ),
                     ),
                   ],
@@ -151,7 +155,9 @@ class _ScanScreenState extends State<ScanScreen>
                   child: Container(
                     key: ValueKey(_hint ?? 'default'),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 12),
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.65),
                       borderRadius: BorderRadius.circular(14),
@@ -163,14 +169,11 @@ class _ScanScreenState extends State<ScanScreen>
                       ),
                     ),
                     child: Text(
-                      _hint ??
-                          'point at a halo qr · nothing leaves your phone',
+                      _hint ?? 'point at a halo qr · nothing leaves your phone',
                       textAlign: TextAlign.center,
                       style: HaloType.sans(
                         size: 12.5,
-                        color: _hint != null
-                            ? HaloColors.amber
-                            : Colors.white,
+                        color: _hint != null ? HaloColors.amber : Colors.white,
                       ),
                     ),
                   ),
@@ -201,8 +204,7 @@ class _MaskPainter extends CustomPainter {
     );
     final hole = Path()
       ..addRRect(RRect.fromRectAndRadius(rect, const Radius.circular(22)));
-    final combined =
-        Path.combine(PathOperation.difference, outer, hole);
+    final combined = Path.combine(PathOperation.difference, outer, hole);
     canvas.drawPath(combined, mask);
   }
 
@@ -234,10 +236,8 @@ class _Viewfinder extends StatelessWidget {
           // corner brackets - 4 L-shapes
           Positioned(left: 0, top: 0, child: _corner(accent, true, true)),
           Positioned(right: 0, top: 0, child: _corner(accent, false, true)),
-          Positioned(
-              left: 0, bottom: 0, child: _corner(accent, true, false)),
-          Positioned(
-              right: 0, bottom: 0, child: _corner(accent, false, false)),
+          Positioned(left: 0, bottom: 0, child: _corner(accent, true, false)),
+          Positioned(right: 0, bottom: 0, child: _corner(accent, false, false)),
           // scan line (hidden once success)
           if (!success)
             AnimatedBuilder(
@@ -292,8 +292,11 @@ class _Viewfinder extends StatelessWidget {
                     shape: BoxShape.circle,
                     color: HaloColors.green,
                   ),
-                  child: Icon(Icons.check_rounded,
-                      color: HaloColors.ink, size: 38),
+                  child: Icon(
+                    Icons.check_rounded,
+                    color: HaloColors.ink,
+                    size: 38,
+                  ),
                 ),
               ),
             ),
@@ -309,9 +312,7 @@ class _Viewfinder extends StatelessWidget {
     return SizedBox(
       width: len,
       height: len,
-      child: CustomPaint(
-        painter: _CornerPainter(c, isLeft, isTop, len, w),
-      ),
+      child: CustomPaint(painter: _CornerPainter(c, isLeft, isTop, len, w)),
     );
   }
 }

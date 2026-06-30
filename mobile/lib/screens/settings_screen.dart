@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // settings_screen.dart - user-facing settings, consolidated from dev.
 // reachable from the "Me" tab. tap on tab opens this, long-press still
 // opens dev for technical use.

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // group chat. supports text + reply + reactions + ghost mode. mirrors the
 // 1:1 chat ux as closely as possible so the user never has to relearn
 // gestures.
