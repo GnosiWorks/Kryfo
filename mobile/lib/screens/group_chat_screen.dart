@@ -32,6 +32,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   Timer? _burnTick;
   bool _loading = false;
   bool _reloadQueued = false;
+  bool _loaded = false; // first full load done - gates the append-fast-path
 
   @override
   void initState() {
@@ -98,22 +99,34 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                 rxMap[e.key] = e.value;
               }
             }
-            return _GMsg(
+            final dir = r['direction'] as String;
+            final m = _GMsg(
               sender: r['peer_id'] as String,
               senderName: nickById[r['peer_id'] as String],
-              direction: r['direction'] as String,
+              direction: dir,
               text: r['plaintext'] as String,
               when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+              burnAt: r['burn_at'] as int?,
               msgUid: uid,
               replyTo: r['reply_to'] as String?,
-              burnAt: r['burn_at'] as int?,
+              sending: dir == 'out' && (r['sent'] as int? ?? 1) == 0,
               reactions: rxMap,
             );
+            m.rowid = (r['rowid'] as int?) ?? 0;
+            // a reloaded sending out-message is dead - its send future didn't
+            // survive the reload. flip to failed for tap-to-retry, not a
+            // stuck sending zombie.
+            if (m.direction == 'out' && m.sending) {
+              m.sending = false;
+              m.failed = true;
+            }
+            return m;
           }),
         );
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd());
     _loading = false;
+    _loaded = true;
     // if changes landed while we were loading, run exactly one catch-up pass.
     if (_reloadQueued) {
       _reloadQueued = false;
@@ -130,7 +143,74 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       _reloadQueued = true;
       return;
     }
-    _load();
+    _tryAppendNew();
+  }
+
+  // append-fast-path: pull only rows newer than our max rowid and add the
+  // brand-new ones, instead of rebuilding the whole list on every multicast
+  // fire. falls back to a full _load when nothing is brand-new, which covers
+  // reactions/edits/burns/deletes and clock-skew.
+  Future<void> _tryAppendNew() async {
+    if (!_loaded) {
+      _load();
+      return;
+    }
+    final lastRowid = _messages.isEmpty
+        ? 0
+        : _messages.map((m) => m.rowid).reduce((a, b) => a > b ? a : b);
+    final rows = await db.groupMessagesAfter(widget.groupId, lastRowid);
+    if (!mounted) return;
+    final have = _messages.map((m) => m.msgUid).toSet();
+    final brandNew = rows
+        .where(
+          (r) =>
+              (r['msg_uid'] as String?) != null &&
+              !have.contains(r['msg_uid'] as String?),
+        )
+        .toList();
+    if (brandNew.isEmpty) {
+      _load();
+      return;
+    }
+    final nickById = <String, String>{};
+    for (final c in appState.contacts) {
+      final n = c.nickname;
+      if (n != null && n.isNotEmpty) nickById[c.haloId] = n;
+    }
+    final uids = brandNew
+        .map((r) => r['msg_uid'] as String?)
+        .where((u) => u != null && u.isNotEmpty)
+        .cast<String>()
+        .toList();
+    final reactions = await db.loadReactionsFor(uids);
+    if (!mounted) return;
+    final fresh = <_GMsg>[];
+    for (final r in brandNew) {
+      final uid = r['msg_uid'] as String?;
+      final rxMap = <String, String>{};
+      if (uid != null && reactions[uid] != null) {
+        for (final e in reactions[uid]!) {
+          rxMap[e.key] = e.value;
+        }
+      }
+      final dir = r['direction'] as String;
+      final m = _GMsg(
+        sender: r['peer_id'] as String,
+        senderName: nickById[r['peer_id'] as String],
+        direction: dir,
+        text: r['plaintext'] as String,
+        when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+        burnAt: r['burn_at'] as int?,
+        msgUid: uid,
+        replyTo: r['reply_to'] as String?,
+        sending: dir == 'out' && (r['sent'] as int? ?? 1) == 0,
+        reactions: rxMap,
+      );
+      m.rowid = (r['rowid'] as int?) ?? 0;
+      fresh.add(m);
+    }
+    setState(() => _messages.addAll(fresh));
+    _scrollToEnd();
   }
 
   void _scrollToEnd() {
@@ -157,6 +237,8 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       when: DateTime.now(),
       msgUid: uid,
       replyTo: replyToUid,
+      sending: true,
+      burnSecs: burnSeconds,
       burnAt: _ghost
           ? DateTime.now().millisecondsSinceEpoch + _burnSeconds * 1000
           : null,
@@ -166,8 +248,9 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       _replyTo = null;
     });
     _scrollToEnd();
+    var ok = false;
     try {
-      await appState.sendToGroup(
+      ok = await appState.sendToGroup(
         widget.groupId,
         text,
         msgUid: uid,
@@ -179,7 +262,43 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     } finally {
       // always release the composer - a throw here used to leave _sending
       // stuck true, which silently killed every later send.
-      if (mounted) setState(() => _sending = false);
+      if (mounted) {
+        setState(() {
+          _sending = false;
+          optimistic.sending = false;
+          // no member acknowledged - mark failed for tap-to-retry.
+          optimistic.failed = !ok;
+        });
+      }
+    }
+  }
+
+  // re-send a failed group message, reusing its uid/reply/burn so it stays
+  // the same logical message.
+  Future<void> _retryGroup(_GMsg m) async {
+    if (m.msgUid == null) return;
+    setState(() {
+      m.failed = false;
+      m.sending = true;
+    });
+    var ok = false;
+    try {
+      ok = await appState.sendToGroup(
+        widget.groupId,
+        m.text,
+        msgUid: m.msgUid,
+        replyTo: m.replyTo,
+        burnSeconds: m.burnSecs,
+      );
+    } catch (e) {
+      debugPrint('group retry failed: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          m.sending = false;
+          m.failed = !ok;
+        });
+      }
     }
   }
 
@@ -472,11 +591,15 @@ class _GMsg {
   final String sender;
   final String senderName;
   final String direction;
-  final String text;
+  String text;
   final DateTime when;
+  int? burnAt;
+  int? burnSecs; // intended burn window; lit into burnAt on delivery
   final String? msgUid;
   final String? replyTo;
-  final int? burnAt;
+  bool sending;
+  bool failed;
+  int rowid = 0; // db insertion order, for append-fast-path
   final Map<String, String> reactions;
   _GMsg({
     required this.sender,
@@ -484,9 +607,12 @@ class _GMsg {
     required this.direction,
     required this.text,
     required this.when,
+    this.burnAt,
+    this.burnSecs,
     this.msgUid,
     this.replyTo,
-    this.burnAt,
+    this.sending = false,
+    this.failed = false,
     Map<String, String>? reactions,
   }) : reactions = reactions ?? {},
        senderName = senderName ?? sender;
