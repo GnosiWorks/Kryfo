@@ -428,7 +428,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 25,
+      version: 26,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -455,7 +455,8 @@ class HaloDb {
             atmosphere TEXT,
             note TEXT,
             pinned INTEGER NOT NULL DEFAULT 0,
-            key_changed INTEGER NOT NULL DEFAULT 0
+            key_changed INTEGER NOT NULL DEFAULT 0,
+            accepted INTEGER NOT NULL DEFAULT 1
           )
         ''');
         await db.execute('''
@@ -518,6 +519,13 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 26) {
+          // message requests: existing contacts stay accepted (default 1),
+          // only new unknown senders arrive unaccepted.
+          await db.execute(
+            'ALTER TABLE contacts ADD COLUMN accepted INTEGER NOT NULL DEFAULT 1',
+          );
+        }
         if (oldV < 25) {
           await db.execute('ALTER TABLE groups ADD COLUMN admin_id TEXT');
         }
@@ -758,7 +766,11 @@ class HaloDb {
 
   Future<List<Map<String, Object?>>> contacts() async {
     final db = await open();
-    return db.query('contacts', orderBy: 'last_seen DESC');
+    return db.query(
+      'contacts',
+      where: 'accepted = 1',
+      orderBy: 'last_seen DESC',
+    );
   }
 
   Future<void> setArchived(String haloId, bool archived) async {
@@ -851,7 +863,41 @@ class HaloDb {
     );
   }
 
-  Future<void> upsertContact(String haloId, String onion, String xpub) async {
+  // unknown senders waiting for accept/block. blocked ones stay hidden.
+  Future<List<Map<String, Object?>>> pendingRequests() async {
+    final db = await open();
+    return db.query(
+      'contacts',
+      where: 'accepted = 0 AND blocked = 0',
+      orderBy: 'last_seen DESC',
+    );
+  }
+
+  Future<int> pendingRequestCount() async {
+    final db = await open();
+    final r = await db.rawQuery(
+      'SELECT COUNT(*) c FROM contacts WHERE accepted = 0 AND blocked = 0',
+    );
+    return (r.first['c'] as int?) ?? 0;
+  }
+
+  // accept a request: the stranger becomes a normal contact.
+  Future<void> acceptRequest(String haloId) async {
+    final db = await open();
+    await db.update(
+      'contacts',
+      {'accepted': 1},
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+    );
+  }
+
+  Future<void> upsertContact(
+    String haloId,
+    String onion,
+    String xpub, {
+    int accepted = 1,
+  }) async {
     final db = await open();
     final now = DateTime.now().millisecondsSinceEpoch;
     final existing = await db.query(
@@ -867,6 +913,7 @@ class HaloDb {
         'xpub': xpub,
         'first_seen': now,
         'last_seen': now,
+        'accepted': accepted,
       });
     } else {
       // xpub changed on someone we already know = they reinstalled, or its a
@@ -2130,6 +2177,7 @@ class AppState extends ChangeNotifier {
   bool _online = true;
   bool get online => _online;
   List<ContactPreview> contacts = [];
+  int pendingCount = 0;
   final Map<String, String> _xPubToHaloId = {};
 
   // when an unknown sender's PreKey message arrives via
@@ -2167,8 +2215,14 @@ class AppState extends ChangeNotifier {
       final realAddr = SignalProtocolAddress(h, 1);
       await signalSession.sessionStore.storeSession(realAddr, record);
       await signalSession.sessionStore.deleteSession(tempAddr);
-      // persist contact + nostr sub
-      await db.upsertContact(h, env.senderOnion ?? '', env.senderXPub ?? '');
+      // persist contact + nostr sub. a stranger who back-paired to us lands
+      // unaccepted - their message waits in requests until we accept.
+      await db.upsertContact(
+        h,
+        env.senderOnion ?? '',
+        env.senderXPub ?? '',
+        accepted: 0,
+      );
       if (env.senderXPub != null && env.senderXPub!.isNotEmpty) {
         _xPubToHaloId[env.senderXPub!] = h;
         engine.nostrSubscribeBg(env.senderXPub!);
@@ -2528,6 +2582,7 @@ class AppState extends ChangeNotifier {
       return (b.when ?? DateTime(0)).compareTo(a.when ?? DateTime(0));
     });
     contacts = list;
+    pendingCount = await db.pendingRequestCount();
     notifyListeners();
   }
 
@@ -2938,6 +2993,7 @@ class _RootShellState extends State<RootShell> {
     return HomeScreen(
       haloId: appState.myId,
       contacts: appState.contacts,
+      pendingCount: appState.pendingCount,
       groups: appState.groups
           .map(
             (g) => GroupSummary(

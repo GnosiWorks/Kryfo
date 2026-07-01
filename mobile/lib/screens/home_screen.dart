@@ -3,6 +3,7 @@
 // matches 08_complete_spec.html "the everyday" home tile.
 
 import 'saved_screen.dart';
+import 'requests_screen.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'donate_screen.dart';
@@ -21,6 +22,7 @@ class HomeScreen extends StatelessWidget {
   final String haloId; // "neon-tiger-saturn"
   final List<ContactPreview> contacts;
   final List<GroupSummary> groups;
+  final int pendingCount;
   final VoidCallback onAddContact;
   final VoidCallback onNewGroup;
   final VoidCallback onOpenDev;
@@ -39,6 +41,7 @@ class HomeScreen extends StatelessWidget {
     required this.onOpenDev,
     required this.onOpenSettings,
     required this.onOpenSettingsDirect,
+    this.pendingCount = 0,
     required this.onOpenChat,
     required this.onOpenGroup,
   });
@@ -71,6 +74,13 @@ class HomeScreen extends StatelessWidget {
                 context,
               ).push(MaterialPageRoute(builder: (_) => const NotesScreen())),
             ),
+            if (pendingCount > 0)
+              _RequestsPin(
+                count: pendingCount,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const RequestsScreen()),
+                ),
+              ),
             _SavedPin(
               onTap: () => Navigator.of(
                 context,
@@ -1436,6 +1446,89 @@ class _NotesPin extends StatelessWidget {
               ),
             ),
             const Icon(Icons.chevron_right, color: Color(0xFF6B625A), size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// unknown-sender requests. amber, shows a count, only rendered when > 0.
+class _RequestsPin extends StatelessWidget {
+  final int count;
+  final VoidCallback onTap;
+  const _RequestsPin({required this.count, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: HaloColors.surface2,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: HaloColors.amber.withValues(alpha: 0.35),
+            width: 0.8,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: HaloColors.amberSoft,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.mail_outline,
+                color: HaloColors.amber,
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'requests',
+                    style: HaloType.serif(
+                      size: 14,
+                      color: HaloColors.text,
+                      italic: true,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    count == 1
+                        ? '1 person wants to reach you'
+                        : '$count people want to reach you',
+                    style: HaloType.sans(size: 11, color: HaloColors.text3),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: HaloColors.amber,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '$count',
+                style: HaloType.sans(
+                  size: 12,
+                  weight: FontWeight.w700,
+                  color: const Color(0xFF1A0F04),
+                ),
+              ),
+            ),
           ],
         ),
       ),
