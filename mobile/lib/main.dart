@@ -1463,7 +1463,7 @@ class HaloDb {
       // group_id IS NULL keeps group messages out of the 1:1 thread - a group
       // row carries peer_id = sender AND a group_id, so without this it leaked
       // into the direct chat with that sender.
-      where: "peer_id = ? AND (group_id IS NULL OR group_id = '')",
+      where: 'peer_id = ?',
       whereArgs: [peerId],
       orderBy: 'sent_at ASC',
     );
@@ -1482,8 +1482,7 @@ class HaloDb {
     return db.query(
       'messages',
       columns: ['*', 'rowid'],
-      where:
-          "peer_id = ? AND rowid > ? AND (group_id IS NULL OR group_id = '')",
+      where: "peer_id = ? AND rowid > ?",
       whereArgs: [peerId, afterRowid],
       orderBy: 'rowid ASC',
     );
@@ -1498,7 +1497,7 @@ class HaloDb {
     // would otherwise never surface as the latest. rowid always climbs.
     final rows = await db.query(
       'messages',
-      where: "peer_id = ? AND (group_id IS NULL OR group_id = '')",
+      where: 'peer_id = ?',
       whereArgs: [peerId],
       orderBy: 'rowid DESC',
       limit: 1,
@@ -2278,8 +2277,6 @@ class AppState extends ChangeNotifier {
     }
     myXPub = engine.myXPubkey();
     debugPrint('BOOT identity +${_bsw.elapsedMilliseconds}ms');
-    await _bootSignal();
-    debugPrint('BOOT signal +${_bsw.elapsedMilliseconds}ms');
     _appLinks = AppLinks();
     _appLinks.uriLinkStream.listen((uri) async {
       if (uri.scheme == 'halo') {
@@ -2306,6 +2303,11 @@ class AppState extends ChangeNotifier {
     ready = true;
     debugPrint('BOOT ready +${_bsw.elapsedMilliseconds}ms');
     notifyListeners();
+    // signal prekey gen is cpu-heavy (~5s on a fresh identity) and nothing
+    // above needs it - defer it so the home paints first. tor + nostr also
+    // start after this, and both take longer to warm than the prekeys, so
+    // the session is ready well before any message can arrive.
+    _bootSignal().then((_) => debugPrint('BOOT signal (deferred) done'));
     // start tor last, after all sync identity + signal work. nothing
     // above needs it, and starting it earlier stalled the main thread
     // while tor bootstrapped.
