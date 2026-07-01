@@ -5,9 +5,11 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../main.dart' show appState, db, currentChatPeer, newMsgUid;
 import '../theme.dart';
 import '../widgets/halo_avatar.dart';
+import '../widgets/burn_fade.dart';
 import 'group_info_screen.dart';
 
 class GroupChatScreen extends StatefulWidget {
@@ -31,6 +33,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   bool _ghost = false;
   int _burnSeconds = 300; // 5 min default, same as 1:1
   Timer? _burnTick;
+  int _lastBurnSec = 0;
   bool _loading = false;
   bool _reloadQueued = false;
   bool _loaded = false; // first full load done - gates the append-fast-path
@@ -42,25 +45,34 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     _load();
     appState.addListener(_onAppStateChanged);
     _burnTick = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      if (!mounted) return;
       final now = DateTime.now().millisecondsSinceEpoch;
-      bool any = false;
-      for (final m in _messages) {
-        if (m.burnAt != null) any = true;
-      }
-      if (any && mounted) {
-        // grace period of 500ms so the fade-out animation finishes. also
-        // delete the db row, else the message reappears on the next reload.
-        final dead = _messages
-            .where((m) => m.burnAt != null && m.burnAt! + 500 <= now)
-            .toList();
-        for (final m in dead) {
+      final expired = _messages
+          .where(
+            (m) =>
+                m.burnAt != null &&
+                m.burnAt! <= now &&
+                !m.removing &&
+                !m.sending &&
+                !m.failed,
+          )
+          .toList();
+      for (final m in expired) {
+        m.removing = true;
+        // wait for the BurnFade dissolve (520ms) before pulling the row, else
+        // the animation cuts off and the message pops away.
+        Future.delayed(const Duration(milliseconds: 560), () {
+          if (mounted) setState(() => _messages.remove(m));
           if (m.msgUid != null) db.deleteMessage(m.msgUid!);
-        }
-        setState(() {
-          _messages.removeWhere(
-            (m) => m.burnAt != null && m.burnAt! + 500 <= now,
-          );
         });
+      }
+      // repaint once a second for the countdown, not every 100ms (that was jank)
+      final sec = now ~/ 1000;
+      final hasGhost = _messages.any((m) => m.burnAt != null);
+      if (expired.isNotEmpty || (hasGhost && sec != _lastBurnSec)) {
+        _lastBurnSec = sec;
+        if (expired.isNotEmpty) HapticFeedback.lightImpact();
+        setState(() {});
       }
     });
   }
@@ -546,17 +558,19 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                             quoted = orig.text;
                             quotedAuthor = orig.direction == 'out'
                                 ? 'you'
-                                : orig.sender;
+                                : orig.senderName;
                           } else {
                             quoted = 'message unavailable';
                           }
                         }
-                        return _GroupBubble(
-                          m: m,
-                          showSender: showSender,
-                          quotedText: quoted,
-                          quotedAuthor: quotedAuthor,
-                          onLongPress: (ctx) => _showEmojiPickerAt(ctx, m),
+                        return RepaintBoundary(
+                          child: _GroupBubble(
+                            m: m,
+                            showSender: showSender,
+                            quotedText: quoted,
+                            quotedAuthor: quotedAuthor,
+                            onLongPress: (ctx) => _showEmojiPickerAt(ctx, m),
+                          ),
                         );
                       },
                     ),
@@ -600,6 +614,12 @@ class _GMsg {
   final String? replyTo;
   bool sending;
   bool failed;
+  bool removing;
+  String? mediaPath;
+  String? filePath;
+  String? fileName;
+  bool voiceDisguised;
+  Map<String, String>? preview;
   int rowid = 0; // db insertion order, for append-fast-path
   final Map<String, String> reactions;
   _GMsg({
@@ -614,6 +634,12 @@ class _GMsg {
     this.replyTo,
     this.sending = false,
     this.failed = false,
+    this.removing = false,
+    this.mediaPath,
+    this.filePath,
+    this.fileName,
+    this.voiceDisguised = false,
+    this.preview,
     Map<String, String>? reactions,
   }) : reactions = reactions ?? {},
        senderName = senderName ?? sender;
@@ -850,6 +876,21 @@ class _Composer extends StatelessWidget {
 
 // ───────── bubble ─────────
 
+// stable accent per sender so each person reads as their own colour in a group.
+Color _authorColor(String id) {
+  final palette = [
+    HaloColors.green,
+    HaloColors.rose,
+    HaloColors.violet,
+    HaloColors.amber,
+  ];
+  var h = 0;
+  for (final c in id.codeUnits) {
+    h = (h * 31 + c) & 0x7fffffff;
+  }
+  return palette[h % palette.length];
+}
+
 class _GroupBubble extends StatelessWidget {
   final _GMsg m;
   final bool showSender;
@@ -867,18 +908,10 @@ class _GroupBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isOut = m.direction == 'out';
-    // burn fade-out: dim + scale toward end of life
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final fadeOut = m.burnAt != null && now > m.burnAt! - 500;
-    return AnimatedOpacity(
-      opacity: fadeOut ? 0 : 1,
-      curve: Curves.easeInCubic,
-      duration: const Duration(milliseconds: 500),
-      child: AnimatedScale(
-        scale: fadeOut ? 0.88 : 1,
-        duration: const Duration(milliseconds: 500),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 3),
+    return BurnFade(
+      active: m.removing,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 3),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisAlignment: isOut
@@ -904,7 +937,7 @@ class _GroupBubble extends StatelessWidget {
                           m.senderName,
                           style: HaloType.mono(
                             size: 9.5,
-                            color: HaloColors.amber,
+                            color: _authorColor(m.sender),
                             letter: 0.4,
                           ),
                         ),
@@ -1073,7 +1106,6 @@ class _GroupBubble extends StatelessWidget {
             ],
           ),
         ),
-      ),
     );
   }
 
@@ -1306,3 +1338,4 @@ class _ActionTapState extends State<_ActionTap> {
     );
   }
 }
+

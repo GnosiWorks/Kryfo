@@ -43,6 +43,56 @@ class _NotesScreenState extends State<NotesScreen> {
     await _load();
   }
 
+  bool _sameDay(int a, int b) {
+    if (a == 0 || b == 0) return false;
+    final da = DateTime.fromMillisecondsSinceEpoch(a);
+    final dbb = DateTime.fromMillisecondsSinceEpoch(b);
+    return da.year == dbb.year && da.month == dbb.month && da.day == dbb.day;
+  }
+
+  String _dayLabel(int ms) {
+    final d = DateTime.fromMillisecondsSinceEpoch(ms);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final that = DateTime(d.year, d.month, d.day);
+    final diff = today.difference(that).inDays;
+    if (diff == 0) return 'TODAY';
+    if (diff == 1) return 'YESTERDAY';
+    const months = [
+      'jan',
+      'feb',
+      'mar',
+      'apr',
+      'may',
+      'jun',
+      'jul',
+      'aug',
+      'sep',
+      'oct',
+      'nov',
+      'dec',
+    ];
+    return '${d.day} ${months[d.month - 1]}'.toUpperCase();
+  }
+
+  Widget _dayDivider(int ms) => Center(
+    child: Container(
+      margin: const EdgeInsets.fromLTRB(0, 8, 0, 14),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: HaloColors.surface2,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        _dayLabel(ms),
+        style: HaloType.mono(
+          size: 8.5,
+          color: HaloColors.text3,
+        ).copyWith(letterSpacing: 1.6),
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,13 +128,25 @@ class _NotesScreenState extends State<NotesScreen> {
                   ? _empty()
                   : ListView.builder(
                       controller: _scroll,
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                       itemCount: _notes.length,
                       itemBuilder: (_, i) {
                         final n = _notes[i];
                         final text = n['plaintext'] as String? ?? '';
                         final ts = n['sent_at'] as int? ?? 0;
-                        return _NoteBubble(text: text, ts: ts);
+                        final prevTs = i == 0
+                            ? 0
+                            : (_notes[i - 1]['sent_at'] as int? ?? 0);
+                        final showDay = !_sameDay(ts, prevTs);
+                        // fade older notes so the newest read brightest
+                        final fresh = i >= _notes.length - 2;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (showDay) _dayDivider(ts),
+                            _NoteBubble(text: text, ts: ts, fresh: fresh),
+                          ],
+                        );
                       },
                     ),
             ),
@@ -204,7 +266,8 @@ class _NotesScreenState extends State<NotesScreen> {
 class _NoteBubble extends StatelessWidget {
   final String text;
   final int ts;
-  const _NoteBubble({required this.text, required this.ts});
+  final bool fresh;
+  const _NoteBubble({required this.text, required this.ts, this.fresh = true});
 
   String _time() {
     if (ts == 0) return '';
@@ -217,7 +280,7 @@ class _NoteBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.only(bottom: 12),
       child: IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -225,29 +288,44 @@ class _NoteBubble extends StatelessWidget {
             Container(
               width: 3,
               decoration: BoxDecoration(
-                color: HaloColors.amber.withValues(alpha: 0.55),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    HaloColors.amber.withValues(alpha: fresh ? 1 : 0.4),
+                    HaloColors.amber.withValues(alpha: fresh ? 0.35 : 0.15),
+                  ],
+                ),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(width: 11),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    text,
-                    style: HaloType.sans(
-                      size: 14.5,
-                      color: HaloColors.text,
-                      height: 1.5,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(13, 11, 13, 11),
+                decoration: BoxDecoration(
+                  color: HaloColors.surface3,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: HaloColors.line2, width: 0.5),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      text,
+                      style: HaloType.sans(
+                        size: 14.5,
+                        color: fresh ? HaloColors.text : HaloColors.text2,
+                        height: 1.5,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    _time(),
-                    style: HaloType.mono(size: 9.5, color: HaloColors.text3),
-                  ),
-                ],
+                    const SizedBox(height: 7),
+                    Text(
+                      _time(),
+                      style: HaloType.mono(size: 9, color: HaloColors.text3),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -256,3 +334,4 @@ class _NoteBubble extends StatelessWidget {
     );
   }
 }
+
