@@ -28,6 +28,7 @@ import 'screens/scan_screen.dart';
 import 'screens/modes_screen.dart';
 import 'screens/push_settings_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/profile_screen.dart';
 import 'screens/my_halo_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'lock_state.dart';
@@ -1415,7 +1416,7 @@ class HaloDb {
       // group_id IS NULL keeps group messages out of the 1:1 thread - a group
       // row carries peer_id = sender AND a group_id, so without this it leaked
       // into the direct chat with that sender.
-      where: 'peer_id = ?',
+      where: "peer_id = ? AND (group_id IS NULL OR group_id = '')",
       whereArgs: [peerId],
       orderBy: 'sent_at ASC',
     );
@@ -1434,7 +1435,8 @@ class HaloDb {
     return db.query(
       'messages',
       columns: ['*', 'rowid'],
-      where: 'peer_id = ? AND rowid > ?',
+      where:
+          "peer_id = ? AND rowid > ? AND (group_id IS NULL OR group_id = '')",
       whereArgs: [peerId, afterRowid],
       orderBy: 'rowid ASC',
     );
@@ -1449,7 +1451,7 @@ class HaloDb {
     // would otherwise never surface as the latest. rowid always climbs.
     final rows = await db.query(
       'messages',
-      where: 'peer_id = ?',
+      where: "peer_id = ? AND (group_id IS NULL OR group_id = '')",
       whereArgs: [peerId],
       orderBy: 'rowid DESC',
       limit: 1,
@@ -2578,11 +2580,11 @@ class AppState extends ChangeNotifier {
       if (!backPaired && onion.isNotEmpty) {
         final tor = await Future(() => engine.sendTo(onion, cipher));
         if (tor == 'ok') return true;
-        debugPrint('send: tor direct failed (\$tor), trying nostr');
+        debugPrint('send: tor direct failed ($tor), trying nostr');
       }
       final n = await Future(() => engine.nostrSend(xpub, cipher));
       if (n == 'ok') return true;
-      debugPrint('send: nostr also failed (\$n)');
+      debugPrint('send: nostr also failed ($n)');
       return false;
     } catch (e) {
       debugPrint('send to $memberId failed: $e');
@@ -2718,7 +2720,7 @@ class AppState extends ChangeNotifier {
   ) async {
     final groupId = newMsgUid();
     final full = [myId, ...memberHaloIds];
-    await db.createGroup(groupId, name, full, isAdmin: true);
+    await db.createGroup(groupId, name, full, isAdmin: true, adminId: myId);
     final participants = await _buildParticipants(full);
     final gc = GroupControl(
       type: 'create',
@@ -2948,7 +2950,8 @@ class _RootShellState extends State<RootShell> {
       onAddContact: () => showAddContact(context),
       onNewGroup: () => _open(const NewGroupScreen()),
       onOpenDev: () => _open(const DevScreen()),
-      onOpenSettings: () => _open(SettingsScreen()),
+      onOpenSettings: () => _open(const ProfileScreen()),
+      onOpenSettingsDirect: () => _open(SettingsScreen()),
       onOpenChat: (id) async {
         final rows = await db.contacts();
         final matches = rows.where((r) => r['halo_id'] == id).toList();

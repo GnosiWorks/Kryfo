@@ -5,10 +5,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../main.dart' show appState, engine;
+import '../main.dart' show appState;
 import '../lock_state.dart';
 import '../widgets/motion.dart' show TorStatus;
-import 'my_halo_screen.dart';
 import 'why_halo_screen.dart';
 import '../theme.dart';
 import 'modes_screen.dart';
@@ -167,90 +166,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (ok == true) await lockState.disable();
   }
 
-  @override
-  Future<void> _editDisplayName() async {
-    final ctrl = TextEditingController(text: appState.displayName);
-    final name = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: HaloColors.surface2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          18,
-          20,
-          20 + MediaQuery.of(ctx).viewInsets.bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'display name',
-              style: HaloType.serif(size: 18, color: HaloColors.text),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'a name you choose for yourself. it is not verified and not '
-              'sent anywhere yet — for now it only shows on this phone.',
-              style: HaloType.sans(
-                size: 12,
-                color: HaloColors.text2,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: ctrl,
-              autofocus: true,
-              maxLength: 32,
-              style: HaloType.serif(
-                size: 20,
-                italic: true,
-                color: HaloColors.text,
-              ),
-              cursorColor: HaloColors.amber,
-              decoration: InputDecoration(
-                hintText: 'your name',
-                counterText: '',
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: HaloColors.line, width: 0.5),
-                ),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: HaloColors.amber, width: 0.8),
-                ),
-              ),
-              onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
-                  child: Text(
-                    'save',
-                    style: HaloType.sans(
-                      size: 14,
-                      weight: FontWeight.w600,
-                      color: HaloColors.amber,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-    if (name == null) return;
-    await appState.setDisplayName(name);
-    if (mounted) setState(() {});
-  }
-
   bool _disguise = false;
 
   @override
@@ -309,26 +224,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
           ),
-          _Section('identity'),
-          _IdentityCard(haloId: appState.myId, onion: appState.myOnion),
-          _Row(
-            accent: true,
-            label: 'my halo code',
-            value: 'show & share',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const MyHaloScreen()),
-            ),
-          ),
-          _Row(
-            icon: Icons.badge_outlined,
-            label: 'display name',
-            value: appState.displayName.isEmpty
-                ? 'not set'
-                : appState.displayName,
-            onTap: _editDisplayName,
-          ),
-          const SizedBox(height: 24),
 
           _Section('privacy'),
           _Row(
@@ -504,9 +399,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(4, 2, 12, 0),
             child: Text(
-              'shifts your pitch so your voice is harder to recognize. '
-              'not anonymous — a determined listener with samples may still '
-              'identify you.',
+              'shifts your pitch so your voice is harder to recognize.',
               style: HaloType.sans(
                 size: 12,
                 color: HaloColors.text3,
@@ -690,78 +583,6 @@ class _Row extends StatelessWidget {
             ],
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _IdentityCard extends StatelessWidget {
-  final String haloId;
-  final String onion;
-  const _IdentityCard({required this.haloId, required this.onion});
-
-  void _copy(BuildContext context, String text, String what) {
-    Clipboard.setData(ClipboardData(text: text));
-    showHaloToast(context, '$what copied');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: HaloColors.surface2,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: HaloColors.line, width: 0.5),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          GestureDetector(
-            onTap: () => _copy(context, haloId, 'halo id'),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    haloId,
-                    style: HaloType.mono(size: 16, color: HaloColors.amber),
-                  ),
-                ),
-                const Icon(
-                  Icons.copy_outlined,
-                  color: Color(0xFF6B625A),
-                  size: 14,
-                ),
-              ],
-            ),
-          ),
-          if (onion.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Divider(color: HaloColors.line, height: 1),
-            const SizedBox(height: 12),
-            GestureDetector(
-              onTap: () => _copy(context, onion, 'onion address'),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      onion,
-                      style: HaloType.mono(size: 10, color: HaloColors.text2),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(
-                    Icons.copy_outlined,
-                    color: Color(0xFF6B625A),
-                    size: 14,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
       ),
     );
   }
