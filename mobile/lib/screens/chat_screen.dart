@@ -1930,21 +1930,34 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final b64 = base64Encode(await file.readAsBytes());
     final msgUid = msg.msgUid ?? _newMsgUid();
     msg.msgUid = msgUid;
-    final String cipher;
+    // chunk like the first send. an un-chunked retry of a big image always
+    // failed the relay size cap, so retries could never succeed before.
+    const chunkSize = 30 * 1024;
+    final chunks = <String>[];
+    for (var i = 0; i < b64.length; i += chunkSize) {
+      chunks.add(b64.substring(i, math.min(i + chunkSize, b64.length)));
+    }
+    final total = chunks.length;
+    final ciphers = <String>[];
     try {
-      final wrapped = await wrapMessage(
-        '',
-        msgUid: msgUid,
-        imageB64: b64,
-        burnSeconds: msg.burnSecs,
-        sender: SenderInfo(
-          haloId: appState.myId,
-          edPub: engine.myEdPubkey(),
-          onion: appState.myOnion,
-          xPub: engine.myXPubkey(),
-        ),
-      );
-      cipher = await signalEncrypt(widget.peerHaloId, wrapped);
+      for (var i = 0; i < total; i++) {
+        final wrapped = await wrapMessage(
+          '',
+          msgUid: msgUid,
+          imageB64: chunks[i],
+          mediaId: total > 1 ? msgUid : null,
+          chunkIndex: total > 1 ? i : null,
+          chunkTotal: total > 1 ? total : null,
+          burnSeconds: i == 0 ? msg.burnSecs : null,
+          sender: SenderInfo(
+            haloId: appState.myId,
+            edPub: engine.myEdPubkey(),
+            onion: appState.myOnion,
+            xPub: engine.myXPubkey(),
+          ),
+        );
+        ciphers.add(await signalEncrypt(widget.peerHaloId, wrapped));
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -1960,21 +1973,22 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         torWait += 400;
       }
       if (!_torReadyToSend()) return 'error: tor not ready';
-      String? tor;
-      if (!_backPaired && widget.peerOnion.isNotEmpty) {
-        tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
-        if (tor == 'ok') return 'ok';
-      }
-      // peer xpub may be null on a fresh back-pair / reconnect (it's loaded
-      // once at open). re-fetch from the session before giving up, so the relay
-      // route is available instead of dead-ending on 'no transport'.
       var xpub = _peerXPub;
       xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
-      if (xpub != null) {
-        _peerXPub = xpub;
-        return await Future(() => engine.nostrSend(xpub!, cipher));
+      if (xpub != null) _peerXPub = xpub;
+      // every chunk must land. tor first if available, else relay.
+      for (final cipher in ciphers) {
+        String? res;
+        if (!_backPaired && widget.peerOnion.isNotEmpty) {
+          res = await Future(() => engine.sendTo(widget.peerOnion, cipher));
+        }
+        if (res != 'ok') {
+          if (xpub == null) return res ?? 'error: no transport';
+          res = await Future(() => engine.nostrSend(xpub!, cipher));
+        }
+        if (res != 'ok') return res ?? 'error: chunk failed';
       }
-      return tor ?? 'error: no transport';
+      return 'ok';
     });
     sendFuture.then((result) async {
       if (result == 'ok' && msg.msgUid != null) {
