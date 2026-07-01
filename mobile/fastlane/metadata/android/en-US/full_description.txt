@@ -1,0 +1,17 @@
+Halo is a private messenger built so there is almost nothing to collect.
+
+No account, no phone number, no email. Your identity is three words, derived from a key that never leaves your phone. There is no central server holding your messages or your contact list.
+
+Messages are end-to-end encrypted and routed through Tor, so neither the network nor anyone watching the relays can see who you talk to. When the other person is offline, messages wait in an encrypted mailbox until they return.
+
+What you get:
+- anonymous identity, no sign-up
+- end-to-end encryption (Double Ratchet)
+- Tor onion routing by default
+- encrypted local storage
+- disappearing messages, message verification, panic wipe
+- no read receipts, no typing indicators, no analytics, no trackers
+
+Halo is pre-alpha and has not been independently audited. The cryptography is real but no outside expert has reviewed it yet, so treat it as a work in progress, not a tool to rely on for anything that matters.
+
+Open source. The code is public so anyone can check these claims against what the app actually does.
