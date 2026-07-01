@@ -70,12 +70,23 @@ class _SavedScreenState extends State<SavedScreen> {
     return (r['plaintext'] as String?) ?? '';
   }
 
-  IconData? _glyph(Map<String, Object?> r) {
-    final fn = r['file_name'] as String?;
-    if (fn == 'voice.wav') return Icons.graphic_eq;
-    if (fn != null) return Icons.insert_drive_file_outlined;
-    if ((r['media_path'] as String?) != null) return Icons.image_outlined;
-    return null;
+  bool _isVoice(Map<String, Object?> r) => r['file_name'] == 'voice.wav';
+  bool _isPhoto(Map<String, Object?> r) =>
+      r['file_name'] == null && (r['media_path'] as String?) != null;
+
+  // stable accent per author, same palette as the group roster
+  Color _authorColor(String id) {
+    final palette = [
+      HaloColors.green,
+      HaloColors.rose,
+      HaloColors.violet,
+      HaloColors.amber,
+    ];
+    var h = 0;
+    for (final c in id.codeUnits) {
+      h = (h * 31 + c) & 0x7fffffff;
+    }
+    return palette[h % palette.length];
   }
 
   String _time(int ms) {
@@ -159,18 +170,20 @@ class _SavedScreenState extends State<SavedScreen> {
     final peer = r['peer_id'] as String? ?? '';
     final who = _names[peer] ?? peer;
     final uid = r['msg_uid'] as String?;
-    final glyph = _glyph(r);
     final ms = r['sent_at'] as int? ?? 0;
+    final accent = _authorColor(peer);
+    final isVoice = _isVoice(r);
+    final isPhoto = _isPhoto(r);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => _open(peer, uid),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 9),
-        padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.fromLTRB(14, 12, 13, 12),
         decoration: BoxDecoration(
-          color: HaloColors.surface2,
+          color: HaloColors.surface3,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: HaloColors.line, width: 0.5),
+          border: Border.all(color: HaloColors.line2, width: 0.5),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,14 +194,17 @@ class _SavedScreenState extends State<SavedScreen> {
                   width: 5,
                   height: 5,
                   decoration: BoxDecoration(
-                    color: HaloColors.amber,
+                    color: accent,
                     shape: BoxShape.circle,
                   ),
                 ),
                 const SizedBox(width: 7),
-                Text(
-                  who,
-                  style: HaloType.mono(size: 10, color: HaloColors.amber),
+                Flexible(
+                  child: Text(
+                    who,
+                    overflow: TextOverflow.ellipsis,
+                    style: HaloType.mono(size: 10, color: accent),
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -199,48 +215,38 @@ class _SavedScreenState extends State<SavedScreen> {
                 GestureDetector(
                   onTap: uid == null ? null : () => _unsave(uid),
                   behavior: HitTestBehavior.opaque,
-                  child: Icon(
-                    Icons.bookmark,
-                    size: 17,
-                    color: HaloColors.amber,
-                  ),
+                  child: Icon(Icons.bookmark, size: 17, color: HaloColors.amber),
                 ),
               ],
             ),
-            const SizedBox(height: 9),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (glyph != null) ...[
-                  Icon(glyph, size: 16, color: HaloColors.text2),
-                  const SizedBox(width: 8),
-                ],
-                Expanded(
-                  child: Text(
-                    _preview(r),
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                    style: HaloType.sans(
-                      size: 14,
-                      color: HaloColors.text,
-                      height: 1.45,
-                    ),
-                  ),
+            const SizedBox(height: 10),
+            if (isVoice)
+              _mediaRow(Icons.graphic_eq, 'voice note')
+            else if (isPhoto)
+              _photoRow()
+            else
+              Text(
+                _preview(r),
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+                style: HaloType.sans(
+                  size: 14,
+                  color: HaloColors.text,
+                  height: 1.45,
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
+              ),
+            const SizedBox(height: 11),
             Row(
               children: [
                 Icon(
                   Icons.subdirectory_arrow_right,
-                  size: 13,
+                  size: 12,
                   color: HaloColors.text3,
                 ),
                 const SizedBox(width: 5),
                 Text(
-                  'tap to view in chat',
-                  style: HaloType.mono(size: 9, color: HaloColors.text3),
+                  'view in chat',
+                  style: HaloType.mono(size: 8.5, color: HaloColors.text3),
                 ),
               ],
             ),
@@ -249,4 +255,46 @@ class _SavedScreenState extends State<SavedScreen> {
       ),
     );
   }
+
+  Widget _mediaRow(IconData glyph, String label) => Row(
+    children: [
+      Container(
+        width: 30,
+        height: 30,
+        decoration: BoxDecoration(
+          color: HaloColors.amberSoft,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        alignment: Alignment.center,
+        child: Icon(glyph, size: 15, color: HaloColors.amber),
+      ),
+      const SizedBox(width: 9),
+      Text(
+        label,
+        style: HaloType.serif(size: 14, color: HaloColors.text2, italic: true),
+      ),
+    ],
+  );
+
+  Widget _photoRow() => Row(
+    children: [
+      Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: HaloColors.surface3,
+          borderRadius: BorderRadius.circular(9),
+        ),
+        alignment: Alignment.center,
+        child: Icon(
+          Icons.image_outlined,
+          size: 18,
+          color: HaloColors.text3,
+        ),
+      ),
+      const SizedBox(width: 10),
+      Text('photo', style: HaloType.sans(size: 13, color: HaloColors.text2)),
+    ],
+  );
 }
+
