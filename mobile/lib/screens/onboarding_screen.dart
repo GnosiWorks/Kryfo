@@ -7,6 +7,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import 'restore_screen.dart';
+import 'my_halo_screen.dart';
 import '../main.dart' show appState, AppState;
 import 'scan_screen.dart';
 import '../widgets/halo_avatar.dart';
@@ -775,8 +776,8 @@ class _KeepSafeScreen extends StatelessWidget {
               Text(
                 desc,
                 style: HaloType.sans(
-                  size: 11.5,
-                  color: HaloColors.text3,
+                  size: 12.5,
+                  color: HaloColors.text2,
                   height: 1.55,
                 ),
               ),
@@ -918,8 +919,8 @@ class _StayingConnectedScreen extends StatelessWidget {
               Text(
                 desc,
                 style: HaloType.sans(
-                  size: 11.5,
-                  color: HaloColors.text3,
+                  size: 12.5,
+                  color: HaloColors.text2,
                   height: 1.55,
                 ),
               ),
@@ -978,9 +979,19 @@ class _FirstContactScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          _path('show my halo', 'share a QR code with someone next to you', () {
-            onComplete();
-          }),
+          _path(
+            'show my halo',
+            'share a QR code with someone next to you',
+            () async {
+              // open the QR screen first, then finish onboarding once it returns.
+              // completing first rebuilds the tree to home and eats the nav.
+              final nav = Navigator.of(context);
+              await nav.push(
+                MaterialPageRoute(builder: (_) => const MyHaloScreen()),
+              );
+              onComplete();
+            },
+          ),
           const SizedBox(height: 12),
           _path(
             'scan a halo',
