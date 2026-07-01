@@ -5,6 +5,7 @@
 import 'saved_screen.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'donate_screen.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../widgets/halo_avatar.dart';
@@ -24,6 +25,7 @@ class HomeScreen extends StatelessWidget {
   final VoidCallback onNewGroup;
   final VoidCallback onOpenDev;
   final VoidCallback onOpenSettings;
+  final VoidCallback onOpenSettingsDirect;
   final void Function(String halo) onOpenChat;
   final void Function(String groupId) onOpenGroup;
 
@@ -36,6 +38,7 @@ class HomeScreen extends StatelessWidget {
     required this.onNewGroup,
     required this.onOpenDev,
     required this.onOpenSettings,
+    required this.onOpenSettingsDirect,
     required this.onOpenChat,
     required this.onOpenGroup,
   });
@@ -56,7 +59,12 @@ class HomeScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            _HomeHead(now: now, haloId: haloId, onAdd: onAddContact),
+            _HomeHead(
+              now: now,
+              haloId: haloId,
+              onAdd: onAddContact,
+              onSettings: onOpenSettingsDirect,
+            ),
             const _OfflineStrip(),
             _NotesPin(
               onTap: () => Navigator.of(
@@ -91,6 +99,9 @@ class HomeScreen extends StatelessWidget {
               active: 'chats',
               onDevLongPress: onOpenDev,
               onMeTap: onOpenSettings,
+              onSupportTap: () => Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const DonateScreen())),
             ),
           ],
         ),
@@ -390,14 +401,59 @@ class _AddScanButton extends StatelessWidget {
   }
 }
 
+class _GearButton extends StatefulWidget {
+  final VoidCallback onTap;
+  const _GearButton({required this.onTap});
+  @override
+  State<_GearButton> createState() => _GearButtonState();
+}
+
+class _GearButtonState extends State<_GearButton> {
+  double _s = 1.0;
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) => setState(() => _s = 0.9),
+      onTapUp: (_) => setState(() => _s = 1.0),
+      onTapCancel: () => setState(() => _s = 1.0),
+      onTap: () {
+        HapticFeedback.selectionClick();
+        widget.onTap();
+      },
+      child: AnimatedScale(
+        scale: _s,
+        duration: const Duration(milliseconds: 110),
+        curve: Curves.easeOut,
+        child: Container(
+          width: 38,
+          height: 38,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: HaloColors.line2, width: 1.4),
+          ),
+          child: Icon(
+            Icons.settings_outlined,
+            size: 19,
+            color: HaloColors.text2,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _HomeHead extends StatelessWidget {
   final DateTime now;
   final String haloId;
   final VoidCallback onAdd;
+  final VoidCallback onSettings;
   const _HomeHead({
     required this.now,
     required this.haloId,
     required this.onAdd,
+    required this.onSettings,
   });
   @override
   Widget build(BuildContext context) {
@@ -456,6 +512,8 @@ class _HomeHead extends StatelessWidget {
               ],
             ),
           ),
+          _GearButton(onTap: onSettings),
+          const SizedBox(width: 10),
           _AddScanButton(onTap: onAdd),
           const SizedBox(width: 12),
           TorHalo(label: true),
@@ -1205,10 +1263,12 @@ class _NavTabs extends StatelessWidget {
   final String active;
   final VoidCallback onDevLongPress;
   final VoidCallback onMeTap;
+  final VoidCallback onSupportTap;
   const _NavTabs({
     required this.active,
     required this.onDevLongPress,
     required this.onMeTap,
+    required this.onSupportTap,
   });
 
   @override
@@ -1223,7 +1283,14 @@ class _NavTabs extends StatelessWidget {
         children: [
           _Tab(label: 'Chats', active: active == 'chats'),
           _Tab(label: 'Drop', active: active == 'drop'),
-          _Tab(label: 'Market', active: active == 'market'),
+          GestureDetector(
+            onTap: onSupportTap,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              child: _Tab(label: 'Support', active: active == 'support'),
+            ),
+          ),
           GestureDetector(
             onLongPress: onDevLongPress,
             onTap: onMeTap,
