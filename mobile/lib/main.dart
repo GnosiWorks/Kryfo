@@ -2050,6 +2050,18 @@ class AppState extends ChangeNotifier {
         full.write(slot[i] ?? '');
       }
       _mediaChunks.remove(mid);
+      // preview thumbnail: reassembled chunks patch onto the card of the
+      // message with this uid, not a new media bubble. update + refresh, done.
+      if (env.pvImg && env.msgUid != null) {
+        final existing = await db.getMsgPreview(env.msgUid!);
+        final pv = existing != null
+            ? Map<String, String>.from(jsonDecode(existing) as Map)
+            : <String, String>{};
+        pv['img'] = full.toString();
+        await db.setMsgPreview(env.msgUid!, jsonEncode(pv));
+        await refreshContacts();
+        return;
+      }
       // which field it belonged to: file if a name was sent, else image.
       if (env.fileName != null) {
         fileB64v = full.toString();
