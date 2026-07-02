@@ -1625,6 +1625,14 @@ Future<void> processPeerBundle(String haloId, String bundleB64) async {
   await builder.processPreKeyBundle(preKeyBundle);
 }
 
+// overwrite a byte buffer with zeros - best-effort wipe of key/plaintext
+// material from ram. dart strings cant be wiped (immutable+gc), only lists.
+void _zeroBytes(List<int> b) {
+  for (var i = 0; i < b.length; i++) {
+    b[i] = 0;
+  }
+}
+
 Future<String> signalEncrypt(String peerId, String plaintext) async {
   final addr = SignalProtocolAddress(peerId, 1);
   final cipher = SessionCipher(
@@ -1665,7 +1673,9 @@ Future<String?> signalDecrypt(
         SignalMessage.fromSerialized(body),
       );
     }
-    return utf8.decode(plain);
+    final text = utf8.decode(plain);
+    _zeroBytes(plain); // cleartext decoded out, wipe the raw buffer
+    return text;
   } on DuplicateMessageException catch (_) {
     // store-and-forward re-delivers messages - a duplicate is expected and
     // benign. the original already decrypted, so drop this one quietly.
@@ -2575,11 +2585,13 @@ class AppState extends ChangeNotifier {
   Future<void> _bootSignal() async {
     try {
       final database = await db.open();
+      final xpb = _hexDecode(engine.myXPrivkey());
       await signalSession.bootstrap(
         database: database,
         xPubBytes: _hexDecode(engine.myXPubkey()),
-        xPrivBytes: _hexDecode(engine.myXPrivkey()),
+        xPrivBytes: xpb,
       );
+      _zeroBytes(xpb); // priv bytes consumed by bootstrap, wipe from ram
     } catch (e, st) {
       debugPrint('signal bootstrap failed: $e\n$st');
     }
