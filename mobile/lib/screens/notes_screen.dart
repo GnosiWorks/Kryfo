@@ -334,4 +334,3 @@ class _NoteBubble extends StatelessWidget {
     );
   }
 }
-

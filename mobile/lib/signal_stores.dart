@@ -74,6 +74,17 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
     return IdentityKey(Curve.decodePoint(bytes, 0));
   }
 
+  // drop a peer's stored identity so a genuinely-changed key can be
+  // re-trusted. only called after the user accepts the new safety number.
+  // next isTrustedIdentity sees no row -> trust-first-use -> new session ok.
+  Future<void> removePeerIdentity(SignalProtocolAddress address) async {
+    await _db.delete(
+      'peer_identities',
+      where: 'address = ?',
+      whereArgs: [address.getName()],
+    );
+  }
+
   bool _eq(List<int> a, List<int> b) {
     if (a.length != b.length) return false;
     for (var i = 0; i < a.length; i++) if (a[i] != b[i]) return false;
