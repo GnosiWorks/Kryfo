@@ -39,6 +39,7 @@ class UnwrappedMessage {
   final String? mediaId; // 'mid' - groups chunks of one big media together
   final int? chunkIndex; // 'ci' - this chunk's position, 0-based
   final int? chunkTotal; // 'ct' - how many chunks make the whole media
+  final bool pvImg; // 'pi' - reassembled chunks are a preview thumbnail
   final List<String>? roster; // 'rs' - admin's full member list, self-heals
   final List<Map<String, String>>?
   rosterParticipants; // 'rp' - {h,o,x} keys for roster members
@@ -68,6 +69,7 @@ class UnwrappedMessage {
     this.mediaId,
     this.chunkIndex,
     this.chunkTotal,
+    this.pvImg = false,
     this.roster,
     this.rosterParticipants,
     this.powNonce,
@@ -184,6 +186,7 @@ Future<String> wrapMessage(
   String? mediaId,
   int? chunkIndex,
   int? chunkTotal,
+  bool pvImg = false,
   List<String>? roster,
   List<Map<String, String>>? rosterParticipants,
   int? powNonce,
@@ -209,6 +212,7 @@ Future<String> wrapMessage(
   if (mediaId != null) body['mid'] = mediaId;
   if (chunkIndex != null) body['ci'] = chunkIndex;
   if (chunkTotal != null) body['ct'] = chunkTotal;
+  if (pvImg) body['pi'] = 1;
   if (roster != null) body['rs'] = roster;
   if (rosterParticipants != null) body['rp'] = rosterParticipants;
   if (powNonce != null) body['pw'] = powNonce;
@@ -315,6 +319,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       mediaId: json['mid'] as String?,
       chunkIndex: (json['ci'] as num?)?.toInt(),
       chunkTotal: (json['ct'] as num?)?.toInt(),
+      pvImg: json['pi'] == 1,
       roster: (json['rs'] as List?)?.map((e) => e.toString()).toList(),
       powNonce: (json['pw'] as num?)?.toInt(),
       powBitsUsed: (json['pb'] as num?)?.toInt(),

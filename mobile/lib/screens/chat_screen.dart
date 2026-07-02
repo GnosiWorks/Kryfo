@@ -2632,28 +2632,56 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       // onto the bubble it already has instead of making a second one.
       try {
         final pvOut = Map<String, String>.from(pv);
-        // a heavy base64 image blows past the single-event transport size, so
-        // drop it from the wire copy if big - peer still gets the text card,
-        // sender keeps the full image locally.
         final img = pvOut['img'];
-        if (img != null && img.length > 80 * 1024) {
-          pvOut.remove('img');
+        // three lanes for the thumbnail: small rides the text card whole;
+        // medium gets pulled out and chunked (pvImg); huge drops to text-only.
+        const pvWhole = 80 * 1024; // fits one envelope
+        const pvChunkCap = 150 * 1024; // above this, not worth the envelopes
+        final chunkThumb =
+            img != null && img.length > pvWhole && img.length <= pvChunkCap;
+        if (img != null && img.length > pvWhole) {
+          pvOut.remove('img'); // card goes without img; chunks carry it if any
         }
         debugPrint(
-          'PREVIEW-SEND resend uid=$msgUid keys=${pvOut.keys.toList()}',
+          'PREVIEW-SEND resend uid=$msgUid keys=${pvOut.keys.toList()} chunkThumb=$chunkThumb',
         );
+        Future<void> _fire(String cipher) async {
+          final useDirectOnion = !_backPaired || _peerXPub == null;
+          final f = useDirectOnion
+              ? Future(() => engine.sendTo(widget.peerOnion, cipher))
+              : Future(() => engine.nostrSend(_peerXPub!, cipher));
+          await f;
+        }
+
+        // text card first, so the bubble patches instantly.
         final wrapped = await wrapMessage(
           msg.text,
           msgUid: msgUid,
           replyTo: msg.replyTo,
           preview: pvOut,
         );
-        final cipher = await signalEncrypt(widget.peerHaloId, wrapped);
-        final useDirectOnion = !_backPaired || _peerXPub == null;
-        final f = useDirectOnion
-            ? Future(() => engine.sendTo(widget.peerOnion, cipher))
-            : Future(() => engine.nostrSend(_peerXPub!, cipher));
-        await f;
+        await _fire(await signalEncrypt(widget.peerHaloId, wrapped));
+        // then the thumbnail as pvImg chunks, reassembled onto the card.
+        if (chunkThumb) {
+          const cs = 30 * 1024;
+          final slices = <String>[];
+          for (var i = 0; i < img!.length; i += cs) {
+            slices.add(img.substring(i, math.min(i + cs, img.length)));
+          }
+          final pvid = 'pv_$msgUid';
+          for (var i = 0; i < slices.length; i++) {
+            final w = await wrapMessage(
+              '',
+              msgUid: msgUid,
+              imageB64: slices[i],
+              mediaId: pvid,
+              chunkIndex: i,
+              chunkTotal: slices.length,
+              pvImg: true,
+            );
+            await _fire(await signalEncrypt(widget.peerHaloId, w));
+          }
+        }
       } catch (e) {}
     } catch (_) {}
   }
