@@ -1666,6 +1666,10 @@ Future<String?> signalDecrypt(
       );
     }
     return utf8.decode(plain);
+  } on DuplicateMessageException catch (_) {
+    // store-and-forward re-delivers messages - a duplicate is expected and
+    // benign. the original already decrypted, so drop this one quietly.
+    return null;
   } on UntrustedIdentityException catch (_) {
     // known peer's identity key no longer matches - reinstall or mitm.
     // only flag when the caller knows this cipher was really for this peer

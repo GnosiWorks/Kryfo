@@ -492,30 +492,27 @@ class _HomeHead extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
+                Text(
+                  'your halo',
+                  style: HaloType.mono(
+                    size: 9.5,
+                    color: HaloColors.text3,
+                    letter: 0.14,
+                  ),
+                ),
+                const SizedBox(height: 3),
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
-                  child: RichText(
+                  child: Text(
+                    haloId,
                     maxLines: 1,
                     softWrap: false,
-                    text: TextSpan(
-                      style: HaloType.mono(
-                        size: 14,
-                        color: HaloColors.text2,
-                        letter: 0.04,
-                      ),
-                      children: [
-                        const TextSpan(text: 'your halo · '),
-                        TextSpan(
-                          text: haloId,
-                          style: HaloType.mono(
-                            size: 14,
-                            color: HaloColors.amber,
-                            weight: FontWeight.w600,
-                            letter: 0.04,
-                          ),
-                        ),
-                      ],
+                    style: HaloType.mono(
+                      size: 20,
+                      color: HaloColors.amber,
+                      weight: FontWeight.w700,
+                      letter: 0.02,
                     ),
                   ),
                 ),

@@ -54,11 +54,24 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
       whereArgs: [address.getName()],
       limit: 1,
     );
+    // unknown peer: trust on first use.
     if (rows.isEmpty) return true;
-    return _eq(
+    final matches = _eq(
       rows.first['identity_key'] as Uint8List,
       identityKey.serialize(),
     );
+    if (matches) return true;
+    // key changed. deliver-and-warn: trust the new key so the message still
+    // arrives and the session re-establishes, but flag the contact so the chat
+    // shows a security-code-changed banner. reinstall or mitm looks the same
+    // here - surface it, let the user decide, never silently drop.
+    await _db.update(
+      'contacts',
+      {'key_changed': 1},
+      where: 'halo_id = ?',
+      whereArgs: [address.getName()],
+    );
+    return true;
   }
 
   @override

@@ -4,8 +4,6 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../main.dart' show db, appState;
-import '../signal_session.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 
 // safety number for a contact: a 60-digit code derived from both X25519
 // public keys, order-independent so both phones show the same number. if it
@@ -63,14 +61,11 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
   Future<void> _toggle() async {
     final next = !_verified;
     await db.setVerified(widget.peerHaloId, next);
-    // if this contact was flagged for a changed key, accepting here means
-    // the user has chosen to trust the new key. clear the flag and drop the
-    // stale identity so the next message establishes a fresh session.
+    // the new key is already trusted and the session already re-established on
+    // the inbound message (deliver-and-warn). verifying here just clears the
+    // banner - no identity/session teardown, which would break sending.
     if (next && await db.keyChanged(widget.peerHaloId)) {
       await db.clearKeyChanged(widget.peerHaloId);
-      final addr = SignalProtocolAddress(widget.peerHaloId, 1);
-      await signalSession.identityStore.removePeerIdentity(addr);
-      await signalSession.sessionStore.deleteAllSessions(widget.peerHaloId);
     }
     await appState.refreshContacts();
     if (mounted) setState(() => _verified = next);
