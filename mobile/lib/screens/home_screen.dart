@@ -500,8 +500,8 @@ class _HomeHead extends StatelessWidget {
                     softWrap: false,
                     text: TextSpan(
                       style: HaloType.mono(
-                        size: 13,
-                        color: HaloColors.text3,
+                        size: 14,
+                        color: HaloColors.text2,
                         letter: 0.04,
                       ),
                       children: [
@@ -509,8 +509,8 @@ class _HomeHead extends StatelessWidget {
                         TextSpan(
                           text: haloId,
                           style: HaloType.mono(
-                            size: 13,
-                            color: HaloColors.text,
+                            size: 14,
+                            color: HaloColors.amber,
                             weight: FontWeight.w600,
                             letter: 0.04,
                           ),

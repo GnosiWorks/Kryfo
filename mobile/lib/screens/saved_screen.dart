@@ -215,7 +215,11 @@ class _SavedScreenState extends State<SavedScreen> {
                 GestureDetector(
                   onTap: uid == null ? null : () => _unsave(uid),
                   behavior: HitTestBehavior.opaque,
-                  child: Icon(Icons.bookmark, size: 17, color: HaloColors.amber),
+                  child: Icon(
+                    Icons.bookmark,
+                    size: 17,
+                    color: HaloColors.amber,
+                  ),
                 ),
               ],
             ),
@@ -286,15 +290,10 @@ class _SavedScreenState extends State<SavedScreen> {
           borderRadius: BorderRadius.circular(9),
         ),
         alignment: Alignment.center,
-        child: Icon(
-          Icons.image_outlined,
-          size: 18,
-          color: HaloColors.text3,
-        ),
+        child: Icon(Icons.image_outlined, size: 18, color: HaloColors.text3),
       ),
       const SizedBox(width: 10),
       Text('photo', style: HaloType.sans(size: 13, color: HaloColors.text2)),
     ],
   );
 }
-

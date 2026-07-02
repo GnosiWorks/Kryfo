@@ -912,200 +912,197 @@ class _GroupBubble extends StatelessWidget {
       active: m.removing,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 3),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: isOut
-                ? MainAxisAlignment.end
-                : MainAxisAlignment.start,
-            children: [
-              if (!isOut && showSender)
-                Padding(
-                  padding: const EdgeInsets.only(right: 6, bottom: 2),
-                  child: HaloAvatar(seed: m.sender, size: 26),
-                ),
-              if (!isOut && !showSender) const SizedBox(width: 32),
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: isOut
-                      ? CrossAxisAlignment.end
-                      : CrossAxisAlignment.start,
-                  children: [
-                    if (!isOut && showSender)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 2, bottom: 3),
-                        child: Text(
-                          m.senderName,
-                          style: HaloType.mono(
-                            size: 9.5,
-                            color: _authorColor(m.sender),
-                            letter: 0.4,
-                          ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisAlignment: isOut
+              ? MainAxisAlignment.end
+              : MainAxisAlignment.start,
+          children: [
+            if (!isOut && showSender)
+              Padding(
+                padding: const EdgeInsets.only(right: 6, bottom: 2),
+                child: HaloAvatar(seed: m.sender, size: 26),
+              ),
+            if (!isOut && !showSender) const SizedBox(width: 32),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: isOut
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
+                children: [
+                  if (!isOut && showSender)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 2, bottom: 3),
+                      child: Text(
+                        m.senderName,
+                        style: HaloType.mono(
+                          size: 9.5,
+                          color: _authorColor(m.sender),
+                          letter: 0.4,
                         ),
                       ),
-                    Builder(
-                      builder: (ctx) {
-                        return GestureDetector(
-                          onLongPress: onLongPress == null
-                              ? null
-                              : () => onLongPress!(ctx),
-                          child: Container(
-                            padding: const EdgeInsets.fromLTRB(12, 8, 12, 9),
-                            decoration: BoxDecoration(
-                              color: isOut
-                                  ? HaloColors.amber
-                                  : HaloColors.surface2,
-                              borderRadius: BorderRadius.only(
-                                topLeft: const Radius.circular(14),
-                                topRight: const Radius.circular(14),
-                                bottomLeft: Radius.circular(isOut ? 14 : 4),
-                                bottomRight: Radius.circular(isOut ? 4 : 14),
-                              ),
+                    ),
+                  Builder(
+                    builder: (ctx) {
+                      return GestureDetector(
+                        onLongPress: onLongPress == null
+                            ? null
+                            : () => onLongPress!(ctx),
+                        child: Container(
+                          padding: const EdgeInsets.fromLTRB(12, 8, 12, 9),
+                          decoration: BoxDecoration(
+                            color: isOut
+                                ? HaloColors.amber
+                                : HaloColors.surface2,
+                            borderRadius: BorderRadius.only(
+                              topLeft: const Radius.circular(14),
+                              topRight: const Radius.circular(14),
+                              bottomLeft: Radius.circular(isOut ? 14 : 4),
+                              bottomRight: Radius.circular(isOut ? 4 : 14),
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (quotedText != null) ...[
-                                  Container(
-                                    margin: const EdgeInsets.only(bottom: 6),
-                                    padding: const EdgeInsets.fromLTRB(
-                                      10,
-                                      6,
-                                      10,
-                                      7,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (quotedText != null) ...[
+                                Container(
+                                  margin: const EdgeInsets.only(bottom: 6),
+                                  padding: const EdgeInsets.fromLTRB(
+                                    10,
+                                    6,
+                                    10,
+                                    7,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isOut
+                                        ? Colors.black.withOpacity(0.12)
+                                        : HaloColors.surface3,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border(
+                                      left: BorderSide(
+                                        color: isOut
+                                            ? HaloColors.onAmber.withValues(
+                                                alpha: 0.55,
+                                              )
+                                            : HaloColors.amber,
+                                        width: 2.5,
+                                      ),
                                     ),
-                                    decoration: BoxDecoration(
-                                      color: isOut
-                                          ? Colors.black.withOpacity(0.12)
-                                          : HaloColors.surface3,
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border(
-                                        left: BorderSide(
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (quotedAuthor != null)
+                                        Text(
+                                          quotedAuthor!,
+                                          style: HaloType.mono(
+                                            size: 9.5,
+                                            color: isOut
+                                                ? HaloColors.onAmber.withValues(
+                                                    alpha: 0.7,
+                                                  )
+                                                : HaloColors.amber,
+                                            letter: 0.6,
+                                          ),
+                                        ),
+                                      if (quotedAuthor != null)
+                                        const SizedBox(height: 2),
+                                      Text(
+                                        quotedText!,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: HaloType.sans(
+                                          size: 12.5,
                                           color: isOut
                                               ? HaloColors.onAmber.withValues(
-                                                  alpha: 0.55,
+                                                  alpha: 0.8,
                                                 )
+                                              : HaloColors.text2,
+                                          height: 1.3,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                              Text(
+                                m.text,
+                                style: HaloType.sans(
+                                  size: 14,
+                                  color: isOut
+                                      ? HaloColors.onAmber
+                                      : HaloColors.text,
+                                  height: 1.35,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (m.burnAt != null) ...[
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 5,
+                                        vertical: 1,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isOut
+                                            ? HaloColors.onAmber.withOpacity(
+                                                0.15,
+                                              )
+                                            : HaloColors.amberSoft,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        '🔥 ${_remaining(m.burnAt!)}',
+                                        style: HaloType.mono(
+                                          size: 9,
+                                          color: isOut
+                                              ? HaloColors.onAmber
                                               : HaloColors.amber,
-                                          width: 2.5,
+                                          letter: 0.2,
                                         ),
                                       ),
                                     ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        if (quotedAuthor != null)
-                                          Text(
-                                            quotedAuthor!,
-                                            style: HaloType.mono(
-                                              size: 9.5,
-                                              color: isOut
-                                                  ? HaloColors.onAmber
-                                                        .withValues(alpha: 0.7)
-                                                  : HaloColors.amber,
-                                              letter: 0.6,
-                                            ),
-                                          ),
-                                        if (quotedAuthor != null)
-                                          const SizedBox(height: 2),
-                                        Text(
-                                          quotedText!,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: HaloType.sans(
-                                            size: 12.5,
-                                            color: isOut
-                                                ? HaloColors.onAmber.withValues(
-                                                    alpha: 0.8,
-                                                  )
-                                                : HaloColors.text2,
-                                            height: 1.3,
-                                          ),
-                                        ),
-                                      ],
+                                    const SizedBox(width: 6),
+                                  ],
+                                  Text(
+                                    _fmtTime(m.when),
+                                    style: HaloType.mono(
+                                      size: 9.5,
+                                      color: isOut
+                                          ? HaloColors.onAmber.withOpacity(0.7)
+                                          : HaloColors.text3,
                                     ),
                                   ),
                                 ],
-                                Text(
-                                  m.text,
-                                  style: HaloType.sans(
-                                    size: 14,
-                                    color: isOut
-                                        ? HaloColors.onAmber
-                                        : HaloColors.text,
-                                    height: 1.35,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (m.burnAt != null) ...[
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 5,
-                                          vertical: 1,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: isOut
-                                              ? HaloColors.onAmber.withOpacity(
-                                                  0.15,
-                                                )
-                                              : HaloColors.amberSoft,
-                                          borderRadius: BorderRadius.circular(
-                                            4,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          '🔥 ${_remaining(m.burnAt!)}',
-                                          style: HaloType.mono(
-                                            size: 9,
-                                            color: isOut
-                                                ? HaloColors.onAmber
-                                                : HaloColors.amber,
-                                            letter: 0.2,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                    ],
-                                    Text(
-                                      _fmtTime(m.when),
-                                      style: HaloType.mono(
-                                        size: 9.5,
-                                        color: isOut
-                                            ? HaloColors.onAmber.withOpacity(
-                                                0.7,
-                                              )
-                                            : HaloColors.text3,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                    ),
-                    if (m.reactions.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 2),
-                        child: Wrap(
-                          spacing: 4,
-                          runSpacing: 4,
-                          children: _buildReactionChips(m),
                         ),
+                      );
+                    },
+                  ),
+                  if (m.reactions.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: Wrap(
+                        spacing: 4,
+                        runSpacing: 4,
+                        children: _buildReactionChips(m),
                       ),
-                    ],
+                    ),
                   ],
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
     );
   }
 
@@ -1338,4 +1335,3 @@ class _ActionTapState extends State<_ActionTap> {
     );
   }
 }
-
