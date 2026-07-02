@@ -2697,6 +2697,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _send() async {
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || _sending) return;
+    // hard stop: a stranger gets 2 messages into the request, then the chat is
+    // locked until they accept. the input bar already swaps to a locked state,
+    // this guards the send itself so nothing slips past the cap.
+    if (_requestLocked) return;
     final msgUid = _newMsgUid();
     final replyToUid = _replyTo?.msgUid;
     final msg = _Msg(

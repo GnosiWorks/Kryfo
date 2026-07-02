@@ -47,6 +47,24 @@ Future<void> maybeShowBackgroundPrompt(BuildContext context) async {
   await prefs.setBool(_battPrefKey, true);
 }
 
+// force-show the background prompt on demand (settings row). ignores the
+// seen-flag so it can be re-triggered any time, and re-checks grant state.
+Future<void> forceShowBackgroundPrompt(BuildContext context) async {
+  if (await isMiui()) {
+    if (context.mounted) await _showDialog(context);
+    return;
+  }
+  if (await Permission.ignoreBatteryOptimizations.isGranted) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('already allowed to run in background')),
+      );
+    }
+    return;
+  }
+  if (context.mounted) await _showBatteryDialog(context);
+}
+
 Future<void> _showBatteryDialog(BuildContext context) {
   return showDialog<void>(
     context: context,

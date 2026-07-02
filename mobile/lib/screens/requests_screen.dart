@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // message requests from people not in your contacts. unknown senders land
-// here instead of the main list. accept moves them in, block hides them.
+// here first. tap one to open the conversation, read what they sent, then
+// accept / decline / block from inside the chat.
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../main.dart' show db, appState;
 import '../theme.dart';
 import '../widgets/halo_avatar.dart';
+import 'chat_screen.dart';
 
 class RequestsScreen extends StatefulWidget {
   const RequestsScreen({super.key});
@@ -48,16 +49,20 @@ class _RequestsScreenState extends State<RequestsScreen> {
     });
   }
 
-  Future<void> _accept(String id) async {
-    HapticFeedback.selectionClick();
-    await db.acceptRequest(id);
-    await appState.refreshContacts();
-    await _load();
-  }
-
-  Future<void> _block(String id) async {
-    HapticFeedback.selectionClick();
-    await db.setBlocked(id, true);
+  Future<void> _open(Map<String, Object?> row) async {
+    final id = row['halo_id'] as String;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ChatScreen(
+          peerHaloId: id,
+          peerOnion: (row['onion'] as String?) ?? '',
+          peerXPub: (row['xpub'] as String?) ?? '',
+          avatarSeed: id,
+        ),
+      ),
+    );
+    // coming back: the request may have been accepted/declined/blocked in-chat,
+    // so refresh the list + the home pin count.
     await appState.refreshContacts();
     await _load();
   }
@@ -84,14 +89,14 @@ class _RequestsScreenState extends State<RequestsScreen> {
               itemCount: _pending.length,
               separatorBuilder: (_, __) => const SizedBox(height: 10),
               itemBuilder: (context, i) {
-                final id = _pending[i]['halo_id'] as String;
+                final row = _pending[i];
+                final id = row['halo_id'] as String;
                 return _RequestCard(
                   key: ValueKey('req_$id'),
                   order: i,
                   haloId: id,
                   preview: _previews[id] ?? '',
-                  onAccept: () => _accept(id),
-                  onBlock: () => _block(id),
+                  onTap: () => _open(row),
                 );
               },
             ),
@@ -128,20 +133,18 @@ class _RequestsScreenState extends State<RequestsScreen> {
   }
 }
 
-// staggered fade-and-rise as each card comes in.
+// staggered fade-and-rise as each card comes in. tap opens the conversation.
 class _RequestCard extends StatefulWidget {
   final int order;
   final String haloId;
   final String preview;
-  final VoidCallback onAccept;
-  final VoidCallback onBlock;
+  final VoidCallback onTap;
   const _RequestCard({
     super.key,
     required this.order,
     required this.haloId,
     required this.preview,
-    required this.onAccept,
-    required this.onBlock,
+    required this.onTap,
   });
   @override
   State<_RequestCard> createState() => _RequestCardState();
@@ -150,6 +153,7 @@ class _RequestCard extends StatefulWidget {
 class _RequestCardState extends State<_RequestCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _in;
+  double _s = 1.0;
 
   @override
   void initState() {
@@ -179,19 +183,25 @@ class _RequestCardState extends State<_RequestCard>
           begin: const Offset(0, 0.08),
           end: Offset.zero,
         ).animate(fade),
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: HaloColors.surface2,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: HaloColors.line, width: 0.5),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        child: GestureDetector(
+          onTapDown: (_) => setState(() => _s = 0.98),
+          onTapUp: (_) => setState(() => _s = 1.0),
+          onTapCancel: () => setState(() => _s = 1.0),
+          onTap: widget.onTap,
+          child: AnimatedScale(
+            scale: _s,
+            duration: const Duration(milliseconds: 100),
+            curve: Curves.easeOut,
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: HaloColors.surface2,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: HaloColors.line, width: 0.5),
+              ),
+              child: Row(
                 children: [
-                  HaloAvatar(seed: widget.haloId, size: 40),
+                  HaloAvatar(seed: widget.haloId, size: 44),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -220,78 +230,10 @@ class _RequestCardState extends State<_RequestCard>
                       ],
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  Icon(Icons.chevron_right, size: 20, color: HaloColors.text3),
                 ],
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _ActionButton(
-                      label: 'accept',
-                      filled: true,
-                      onTap: widget.onAccept,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _ActionButton(
-                      label: 'block',
-                      filled: false,
-                      onTap: widget.onBlock,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ActionButton extends StatefulWidget {
-  final String label;
-  final bool filled;
-  final VoidCallback onTap;
-  const _ActionButton({
-    required this.label,
-    required this.filled,
-    required this.onTap,
-  });
-  @override
-  State<_ActionButton> createState() => _ActionButtonState();
-}
-
-class _ActionButtonState extends State<_ActionButton> {
-  double _s = 1.0;
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _s = 0.95),
-      onTapUp: (_) => setState(() => _s = 1.0),
-      onTapCancel: () => setState(() => _s = 1.0),
-      onTap: widget.onTap,
-      child: AnimatedScale(
-        scale: _s,
-        duration: const Duration(milliseconds: 100),
-        curve: Curves.easeOut,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 11),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: widget.filled ? HaloColors.amber : Colors.transparent,
-            borderRadius: BorderRadius.circular(9),
-            border: widget.filled
-                ? null
-                : Border.all(color: HaloColors.line2, width: 1),
-          ),
-          child: Text(
-            widget.label,
-            style: HaloType.sans(
-              size: 13,
-              weight: FontWeight.w600,
-              color: widget.filled ? const Color(0xFF1A0F04) : HaloColors.text2,
             ),
           ),
         ),

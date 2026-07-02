@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../main.dart' show appState;
 import '../lock_state.dart';
+import '../miui_autostart.dart';
 import '../widgets/motion.dart' show TorStatus;
 import 'why_halo_screen.dart';
 import '../theme.dart';
@@ -246,6 +247,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const PushSettingsScreen()),
             ),
+          ),
+          _Row(
+            icon: Icons.battery_saver,
+            label: 'run in background',
+            value: 'so messages arrive',
+            onTap: () => forceShowBackgroundPrompt(context),
           ),
           _Row(
             icon: Icons.block,
