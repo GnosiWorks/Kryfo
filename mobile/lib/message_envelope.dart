@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 // messages pass through unchanged.
 
 import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'push_mode.dart';
 
@@ -41,6 +42,8 @@ class UnwrappedMessage {
   final List<String>? roster; // 'rs' - admin's full member list, self-heals
   final List<Map<String, String>>?
   rosterParticipants; // 'rp' - {h,o,x} keys for roster members
+  final int? powNonce; // 'pw' - proof-of-work nonce (first-contact only)
+  final int? powBitsUsed; // 'pb' - difficulty the sender solved to
   UnwrappedMessage(
     this.message, {
     this.endpoint,
@@ -67,6 +70,8 @@ class UnwrappedMessage {
     this.chunkTotal,
     this.roster,
     this.rosterParticipants,
+    this.powNonce,
+    this.powBitsUsed,
   });
 }
 
@@ -120,6 +125,45 @@ class EditFrame {
   const EditFrame({required this.targetUid, required this.newText});
 }
 
+// proof-of-work: first-contact messages carry a nonce that makes the sha256
+// of (body-without-pow + nonce) start with _powBits zero bits. ~2s to grind at
+// 20, milliseconds to verify. transport-independent - hashes the envelope, not
+// any nostr event, so it survives a transport swap.
+const int powBits = 20;
+
+int _leadingZeroBits(List<int> hash) {
+  var bits = 0;
+  for (final b in hash) {
+    if (b == 0) {
+      bits += 8;
+      continue;
+    }
+    var v = b;
+    while (v & 0x80 == 0) {
+      bits++;
+      v <<= 1;
+    }
+    break;
+  }
+  return bits;
+}
+
+// grind a nonce so sha256(seed + nonce) has >= bits leading zeros. runs on the
+// caller's isolate - callers should wrap in compute() to keep the ui smooth.
+int grindPow(String seed, int bits) {
+  var nonce = 0;
+  while (true) {
+    final h = sha256.convert(utf8.encode('$seed$nonce')).bytes;
+    if (_leadingZeroBits(h) >= bits) return nonce;
+    nonce++;
+  }
+}
+
+bool verifyPow(String seed, int nonce, int bits) {
+  final h = sha256.convert(utf8.encode('$seed$nonce')).bytes;
+  return _leadingZeroBits(h) >= bits;
+}
+
 Future<String> wrapMessage(
   String plain, {
   SenderInfo? sender,
@@ -142,6 +186,8 @@ Future<String> wrapMessage(
   int? chunkTotal,
   List<String>? roster,
   List<Map<String, String>>? rosterParticipants,
+  int? powNonce,
+  int? powBitsUsed,
 }) async {
   final mode = await loadPushMode();
   final body = <String, dynamic>{'m': plain};
@@ -165,6 +211,8 @@ Future<String> wrapMessage(
   if (chunkTotal != null) body['ct'] = chunkTotal;
   if (roster != null) body['rs'] = roster;
   if (rosterParticipants != null) body['rp'] = rosterParticipants;
+  if (powNonce != null) body['pw'] = powNonce;
+  if (powBitsUsed != null) body['pb'] = powBitsUsed;
 
   if (mode == PushMode.ntfy) {
     final topic = await loadNtfyTopic();
@@ -268,6 +316,8 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       chunkIndex: (json['ci'] as num?)?.toInt(),
       chunkTotal: (json['ct'] as num?)?.toInt(),
       roster: (json['rs'] as List?)?.map((e) => e.toString()).toList(),
+      powNonce: (json['pw'] as num?)?.toInt(),
+      powBitsUsed: (json['pb'] as num?)?.toInt(),
       rosterParticipants: (json['rp'] as List?)
           ?.map(
             (e) =>
