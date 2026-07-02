@@ -8,6 +8,15 @@ import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'signal_stores.dart';
 
+// overwrite a mutable byte buffer with zeros. best-effort defence so raw
+// key material doesn't linger in ram longer than needed. note: dart
+// strings can't be wiped this way (immutable + gc), only Uint8List.
+void _zero(Uint8List b) {
+  for (var i = 0; i < b.length; i++) {
+    b[i] = 0;
+  }
+}
+
 class SignalSession {
   late HaloIdentityKeyStore identityStore;
   late HaloPreKeyStore preKeyStore;
@@ -32,6 +41,7 @@ class SignalSession {
     clamped[31] |= 0x40;
     final pub = Curve.decodePoint(Uint8List.fromList([0x05, ...xPubBytes]), 0);
     final priv = Curve.decodePrivatePoint(clamped);
+    _zero(clamped); // scalar consumed, wipe it from memory
     identityKeyPair = IdentityKeyPair(IdentityKey(pub), priv);
 
     registrationId = await _loadOrGenRegId(database);
