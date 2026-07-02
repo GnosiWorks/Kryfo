@@ -8,6 +8,7 @@ import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -20,7 +21,14 @@ import 'dart:convert';
 import 'key_verification_screen.dart';
 import '../signal_session.dart';
 import '../message_envelope.dart'
-    show wrapMessage, SenderInfo, ReactionFrame, EditFrame, loadPeerEndpoint;
+    show
+        wrapMessage,
+        SenderInfo,
+        ReactionFrame,
+        EditFrame,
+        loadPeerEndpoint,
+        grindPow,
+        powBits;
 import '../theme.dart';
 import '../widgets/halo_avatar.dart';
 import '../main.dart'
@@ -287,6 +295,9 @@ String _fmtBurn(int burnAtMs) {
 }
 
 // last-used ghost settings, remembered for the session
+// isolate entrypoint for compute() - grinds first-contact pow.
+int _grindPowTask(String seed) => grindPow(seed, powBits);
+
 int _lastBurnSeconds = 300;
 bool _lastGhost = false;
 
@@ -342,6 +353,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool _blocked = false;
   bool _muted = false;
   bool _verified = false;
+  bool _keyChanged = false;
+  // request-lock state: a stranger we haven't accepted, capped at 2 sent msgs.
+  bool _accepted = true; // assume ok until loaded, so normal chats don't flash
+  bool _peerEngaged = false; // they've replied/back-paired -> lock lifts
+  int _sentCount = 0;
+  int _recvCount =
+      0; // messages they've sent us; >0 + unaccepted = a request TO us
+  // sender-side lock: messaging a stranger who hasn't accepted, past the cap.
+  // once they engage (reply/back-pair) or we accept them, it clears.
+  bool get _requestPending => !_accepted && !_peerEngaged && _recvCount == 0;
+  bool get _requestLocked => _requestPending && _sentCount >= 2;
+  // receiver-side: a stranger has messaged us and we haven't accepted yet.
+  bool get _incomingRequest => !_accepted && _recvCount > 0;
   bool _showScrollDown = false;
   int _seenCount = 0;
   String? _rippleUid;
@@ -404,6 +428,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     db.isBackPaired(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _backPaired = v);
     });
+    db.keyChanged(widget.peerHaloId).then((v) {
+      if (mounted) setState(() => _keyChanged = v);
+    });
     db.isBlocked(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _blocked = v);
     });
@@ -412,6 +439,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
     db.isVerified(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _verified = v);
+    });
+    // request lock: are they an accepted contact, have they engaged, and how
+    // many messages have we already sent while unaccepted.
+    db.isAccepted(widget.peerHaloId).then((v) {
+      if (mounted) setState(() => _accepted = v);
+    });
+    db.isBackPaired(widget.peerHaloId).then((v) {
+      if (mounted) setState(() => _peerEngaged = v);
+    });
+    db.countMessagesTo(widget.peerHaloId).then((v) {
+      if (mounted) setState(() => _sentCount = v);
+    });
+    db.countMessagesFrom(widget.peerHaloId).then((v) {
+      if (mounted) setState(() => _recvCount = v);
     });
     _scrollCtrl.addListener(_onScroll);
     _scrollCtrl.addListener(_updateSticky);
@@ -1758,7 +1799,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (!_backPaired && widget.peerOnion.isNotEmpty) {
         tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
         if (tor == 'ok') return 'ok';
-        debugPrint('chat send: tor direct failed (\$tor), trying nostr');
+        debugPrint('chat send: tor direct failed ($tor), trying nostr');
       }
       // peer xpub may be null on a fresh back-pair / reconnect (it's loaded
       // once at open). re-fetch from the session before giving up, so the relay
@@ -1930,34 +1971,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final b64 = base64Encode(await file.readAsBytes());
     final msgUid = msg.msgUid ?? _newMsgUid();
     msg.msgUid = msgUid;
-    // chunk like the first send. an un-chunked retry of a big image always
-    // failed the relay size cap, so retries could never succeed before.
-    const chunkSize = 30 * 1024;
-    final chunks = <String>[];
-    for (var i = 0; i < b64.length; i += chunkSize) {
-      chunks.add(b64.substring(i, math.min(i + chunkSize, b64.length)));
-    }
-    final total = chunks.length;
-    final ciphers = <String>[];
+    final String cipher;
     try {
-      for (var i = 0; i < total; i++) {
-        final wrapped = await wrapMessage(
-          '',
-          msgUid: msgUid,
-          imageB64: chunks[i],
-          mediaId: total > 1 ? msgUid : null,
-          chunkIndex: total > 1 ? i : null,
-          chunkTotal: total > 1 ? total : null,
-          burnSeconds: i == 0 ? msg.burnSecs : null,
-          sender: SenderInfo(
-            haloId: appState.myId,
-            edPub: engine.myEdPubkey(),
-            onion: appState.myOnion,
-            xPub: engine.myXPubkey(),
-          ),
-        );
-        ciphers.add(await signalEncrypt(widget.peerHaloId, wrapped));
-      }
+      final wrapped = await wrapMessage(
+        '',
+        msgUid: msgUid,
+        imageB64: b64,
+        burnSeconds: msg.burnSecs,
+        sender: SenderInfo(
+          haloId: appState.myId,
+          edPub: engine.myEdPubkey(),
+          onion: appState.myOnion,
+          xPub: engine.myXPubkey(),
+        ),
+      );
+      cipher = await signalEncrypt(widget.peerHaloId, wrapped);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -1973,22 +2001,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         torWait += 400;
       }
       if (!_torReadyToSend()) return 'error: tor not ready';
+      String? tor;
+      if (!_backPaired && widget.peerOnion.isNotEmpty) {
+        tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
+        if (tor == 'ok') return 'ok';
+      }
+      // peer xpub may be null on a fresh back-pair / reconnect (it's loaded
+      // once at open). re-fetch from the session before giving up, so the relay
+      // route is available instead of dead-ending on 'no transport'.
       var xpub = _peerXPub;
       xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
-      if (xpub != null) _peerXPub = xpub;
-      // every chunk must land. tor first if available, else relay.
-      for (final cipher in ciphers) {
-        String? res;
-        if (!_backPaired && widget.peerOnion.isNotEmpty) {
-          res = await Future(() => engine.sendTo(widget.peerOnion, cipher));
-        }
-        if (res != 'ok') {
-          if (xpub == null) return res ?? 'error: no transport';
-          res = await Future(() => engine.nostrSend(xpub!, cipher));
-        }
-        if (res != 'ok') return res ?? 'error: chunk failed';
+      if (xpub != null) {
+        _peerXPub = xpub;
+        return await Future(() => engine.nostrSend(xpub!, cipher));
       }
-      return 'ok';
+      return tor ?? 'error: no transport';
     });
     sendFuture.then((result) async {
       if (result == 'ok' && msg.msgUid != null) {
@@ -2678,10 +2705,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (url != null) {
       unawaited(_enrichPreview(msg, url, msgUid));
     }
+    // first-contact proof-of-work: if this peer hasn't accepted us, grind a
+    // nonce (~2s) in a background isolate so the ui stays smooth. accepted
+    // contacts skip it entirely. seed is the text - matches the receiver check.
+    int? powNonce;
+    if (!_accepted) {
+      powNonce = await compute(_grindPowTask, text);
+    }
     final String cipher;
     try {
       final wrapped = await wrapMessage(
         text,
+        powNonce: powNonce,
+        powBitsUsed: powNonce == null ? null : powBits,
         burnSeconds: _ghost ? _burnSeconds : null,
         msgUid: msgUid,
         replyTo: replyToUid,
@@ -2707,6 +2743,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     setState(() {
       _sending = false;
       _status = '';
+      if (_requestPending) _sentCount++;
     });
     // before the peer back-pairs with us, force direct-onion so their
     // drain triggers the back-pair flow. nostr would dead-end because
@@ -2725,7 +2762,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (!_backPaired && widget.peerOnion.isNotEmpty) {
         tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
         if (tor == 'ok') return 'ok';
-        debugPrint('chat send: tor direct failed (\$tor), trying nostr');
+        debugPrint('chat send: tor direct failed ($tor), trying nostr');
       }
       // peer xpub may be null on a fresh back-pair / reconnect (it's loaded
       // once at open). re-fetch from the session before giving up, so the relay
@@ -3434,6 +3471,27 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (mounted) setState(() => _blocked = false);
   }
 
+  Future<void> _acceptRequestPeer() async {
+    HapticFeedback.selectionClick();
+    await db.acceptRequest(widget.peerHaloId);
+    await appState.refreshContacts();
+    if (mounted) setState(() => _accepted = true);
+  }
+
+  Future<void> _declineRequestPeer() async {
+    HapticFeedback.selectionClick();
+    await db.declineRequest(widget.peerHaloId);
+    await appState.refreshContacts();
+    if (mounted) Navigator.pop(context);
+  }
+
+  Future<void> _blockRequestPeer() async {
+    HapticFeedback.selectionClick();
+    await db.setBlocked(widget.peerHaloId, true);
+    await appState.refreshContacts();
+    if (mounted) Navigator.pop(context);
+  }
+
   Future<void> _toggleSaved(_Msg m) async {
     if (m.msgUid == null) return;
     final next = !m.saved;
@@ -3770,6 +3828,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 message: _messages.lastWhere((m) => m.pinned),
                 onTap: () =>
                     _scrollToMessage(_messages.lastWhere((m) => m.pinned)),
+              ),
+            if (_requestPending) const _RequestBanner(),
+            if (_keyChanged)
+              _KeyChangedBanner(
+                peerName: _nickname ?? widget.peerHaloId,
+                onTap: _openKeyVerification,
               ),
             Expanded(
               child: Stack(
@@ -4127,6 +4191,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             ),
             _blocked
                 ? _BlockedBar(onUnblock: _unblockContact)
+                : _incomingRequest
+                ? _AcceptRequestBar(
+                    onAccept: _acceptRequestPeer,
+                    onDecline: _declineRequestPeer,
+                    onBlock: _blockRequestPeer,
+                  )
+                : _requestLocked
+                ? const _RequestLockBar()
                 : _Composer(
                     onAttach: _showAttachSheet,
                     ghost: _ghost,
@@ -4146,6 +4218,178 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// shown at the bottom of a chat when a stranger has messaged us and we
+// haven't accepted them yet. accept opens the chat; decline dismisses quietly.
+class _AcceptRequestBar extends StatelessWidget {
+  final VoidCallback onAccept;
+  final VoidCallback onDecline;
+  final VoidCallback onBlock;
+  const _AcceptRequestBar({
+    required this.onAccept,
+    required this.onDecline,
+    required this.onBlock,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 13, 14, 16),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            'accept to reply — they can\'t message again until you do.',
+            textAlign: TextAlign.center,
+            style: HaloType.sans(
+              size: 12.5,
+              color: HaloColors.text2,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 11),
+          Row(
+            children: [
+              Expanded(
+                child: _reqBtn(
+                  'block',
+                  HaloColors.rose,
+                  HaloColors.surface2,
+                  onBlock,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _reqBtn(
+                  'decline',
+                  HaloColors.text,
+                  HaloColors.surface2,
+                  onDecline,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 14,
+                child: _reqBtn(
+                  'accept',
+                  HaloColors.onAmber,
+                  HaloColors.amber,
+                  onAccept,
+                  bold: true,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _reqBtn(
+    String label,
+    Color fg,
+    Color bg,
+    VoidCallback onTap, {
+    bool bold = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 11),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(12),
+          border: bg == HaloColors.surface2
+              ? Border.all(color: HaloColors.line, width: 0.5)
+              : null,
+        ),
+        child: Text(
+          label,
+          style: HaloType.sans(
+            size: 13,
+            color: fg,
+          ).copyWith(fontWeight: bold ? FontWeight.w600 : FontWeight.w400),
+        ),
+      ),
+    );
+  }
+}
+
+// shown above the thread when we're messaging someone who hasn't accepted us.
+class _RequestBanner extends StatelessWidget {
+  const _RequestBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.fromLTRB(13, 10, 13, 11),
+      decoration: BoxDecoration(
+        color: HaloColors.amber.withValues(alpha: 0.08),
+        border: Border.all(color: HaloColors.amber.withValues(alpha: 0.25)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.schedule, size: 13, color: HaloColors.amber),
+              const SizedBox(width: 7),
+              Text(
+                'message request',
+                style: HaloType.serif(size: 13, color: HaloColors.text),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Text(
+            'they need to accept before you can keep chatting.',
+            style: HaloType.sans(
+              size: 12.5,
+              color: HaloColors.text2,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// replaces the composer once we've hit the 2-message request cap.
+class _RequestLockBar extends StatelessWidget {
+  const _RequestLockBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Icon(Icons.lock_outline, size: 15, color: HaloColors.amber),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Text(
+                  'waiting for them to accept your request',
+                  style: HaloType.sans(size: 13, color: HaloColors.text2),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -7077,3 +7321,87 @@ PrivacyMode _pmFrom(String m) => m == 'fast'
     : m == 'normal'
     ? PrivacyMode.normal
     : PrivacyMode.private;
+
+// shown at the top of a chat when a known contact's identity key changed.
+// tappable -> opens key verification so the user can compare the new safety
+// number before trusting. calm tone: a reinstall looks the same as an attack,
+// so we prompt to verify, not alarm.
+class _KeyChangedBanner extends StatefulWidget {
+  final String peerName;
+  final VoidCallback onTap;
+  const _KeyChangedBanner({required this.peerName, required this.onTap});
+  @override
+  State<_KeyChangedBanner> createState() => _KeyChangedBannerState();
+}
+
+class _KeyChangedBannerState extends State<_KeyChangedBanner> {
+  double _s = 1.0;
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _s = 0.98),
+      onTapUp: (_) => setState(() => _s = 1.0),
+      onTapCancel: () => setState(() => _s = 1.0),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _s,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeOut,
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          padding: const EdgeInsets.fromLTRB(13, 11, 13, 12),
+          decoration: BoxDecoration(
+            color: HaloColors.amber.withValues(alpha: 0.10),
+            border: Border.all(color: HaloColors.amber.withValues(alpha: 0.45)),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.gpp_maybe_outlined,
+                    size: 15,
+                    color: HaloColors.amber,
+                  ),
+                  const SizedBox(width: 7),
+                  Text(
+                    'security code changed',
+                    style: HaloType.serif(size: 13, color: HaloColors.text),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 5),
+              Text(
+                '${widget.peerName}\u2019s key is different than before. this happens '
+                'when someone reinstalls, but it can also mean someone is in the '
+                'middle. tap to verify before trusting.',
+                style: HaloType.sans(
+                  size: 12.5,
+                  color: HaloColors.text2,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Text(
+                    'verify now',
+                    style: HaloType.sans(
+                      size: 12.5,
+                      weight: FontWeight.w600,
+                      color: HaloColors.amber,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(Icons.arrow_forward, size: 13, color: HaloColors.amber),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

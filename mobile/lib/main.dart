@@ -754,6 +754,18 @@ class HaloDb {
     return (rows.first['key_changed'] as int? ?? 0) == 1;
   }
 
+  // flag that a known peer's identity key changed (reinstall or mitm).
+  // the chat surfaces this so the user verifies before trusting.
+  Future<void> setKeyChanged(String haloId, bool changed) async {
+    final db = await open();
+    await db.update(
+      'contacts',
+      {'key_changed': changed ? 1 : 0},
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+    );
+  }
+
   Future<void> clearKeyChanged(String haloId) async {
     final db = await open();
     await db.update(
@@ -852,6 +864,40 @@ class HaloDb {
     return (rows.first['blocked'] as int? ?? 0) == 1;
   }
 
+  // true only when we've accepted this sender. unknown senders read false.
+  Future<bool> isAccepted(String haloId) async {
+    final db = await open();
+    final rows = await db.query(
+      'contacts',
+      columns: ['accepted'],
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return false;
+    return (rows.first['accepted'] as int? ?? 0) == 1;
+  }
+
+  // how many messages we already hold from a sender - caps strangers.
+  Future<int> countMessagesFrom(String peerId) async {
+    final db = await open();
+    final r = await db.rawQuery(
+      'SELECT COUNT(*) c FROM messages WHERE peer_id = ? AND direction = ?',
+      [peerId, 'in'],
+    );
+    return (r.first['c'] as int?) ?? 0;
+  }
+
+  // how many messages we've sent a peer - caps our own request messages.
+  Future<int> countMessagesTo(String peerId) async {
+    final db = await open();
+    final r = await db.rawQuery(
+      'SELECT COUNT(*) c FROM messages WHERE peer_id = ? AND direction = ?',
+      [peerId, 'out'],
+    );
+    return (r.first['c'] as int?) ?? 0;
+  }
+
   Future<void> setNickname(String haloId, String? name) async {
     final db = await open();
     final v = (name == null || name.trim().isEmpty) ? null : name.trim();
@@ -890,6 +936,14 @@ class HaloDb {
       where: 'halo_id = ?',
       whereArgs: [haloId],
     );
+  }
+
+  // quietly dismiss a request: drop the stranger's row and pending messages.
+  // not a block - they can reach us again later.
+  Future<void> declineRequest(String haloId) async {
+    final db = await open();
+    await db.delete('contacts', where: 'halo_id = ?', whereArgs: [haloId]);
+    await db.delete('messages', where: 'peer_id = ?', whereArgs: [haloId]);
   }
 
   Future<void> upsertContact(
@@ -1585,7 +1639,11 @@ Future<String> signalEncrypt(String peerId, String plaintext) async {
   return base64Encode(wire);
 }
 
-Future<String?> signalDecrypt(String peerId, String wireB64) async {
+Future<String?> signalDecrypt(
+  String peerId,
+  String wireB64, {
+  bool flagKeyChange = false,
+}) async {
   try {
     final wire = base64Decode(wireB64);
     if (wire.isEmpty) return null;
@@ -1608,6 +1666,16 @@ Future<String?> signalDecrypt(String peerId, String wireB64) async {
       );
     }
     return utf8.decode(plain);
+  } on UntrustedIdentityException catch (_) {
+    // known peer's identity key no longer matches - reinstall or mitm.
+    // only flag when the caller knows this cipher was really for this peer
+    // (targeted decrypt). trial-decrypt callers pass flagKeyChange:false so a
+    // normal no-match against the wrong contact never sets the flag.
+    if (flagKeyChange) {
+      await db.setKeyChanged(peerId, true);
+      appState.notifyListeners();
+    }
+    return null;
   } catch (e) {
     debugPrint('signalDecrypt: $e');
     return null;
@@ -1637,7 +1705,8 @@ Future<String> saveFileBytes(List<int> bytes, String uid, String name) async {
   final dir = await getApplicationDocumentsDirectory();
   final mediaDir = Directory('${dir.path}/media');
   if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
-  final file = File('${mediaDir.path}/f_${uid}_\$safe');
+  final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+  final file = File('${mediaDir.path}/f_${uid}_$safe');
   await file.writeAsBytes(bytes);
   return file.path;
 }
@@ -1646,7 +1715,8 @@ Future<String> saveMediaBytes(List<int> bytes, String name) async {
   final dir = await getApplicationDocumentsDirectory();
   final mediaDir = Directory('${dir.path}/media');
   if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
-  final file = File('${mediaDir.path}/$name.jpg');
+  final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+  final file = File('${mediaDir.path}/$safe.jpg');
   await file.writeAsBytes(bytes);
   return file.path;
 }
@@ -1881,7 +1951,7 @@ class AppState extends ChangeNotifier {
     UnwrappedMessage env,
   ) async {
     debugPrint(
-      'INCOMING msg="${env.message}" hasPreview=${env.preview != null} pvKeys=${env.preview?.keys.toList()} uid=${env.msgUid}',
+      'INCOMING len=${env.message.length} hasPreview=${env.preview != null} uid=${env.msgUid}',
     );
     if (await db.isBlocked(senderHaloId)) return;
     // 1) group control
@@ -1940,6 +2010,24 @@ class AppState extends ChangeNotifier {
           }
           await refreshContacts();
         }
+      }
+    }
+    // stranger lock + proof-of-work gate (1:1 only, unaccepted senders).
+    if (!isGroup && !await db.isAccepted(senderHaloId)) {
+      // pow: first-contact messages must carry a valid nonce. drop silently if
+      // missing/weak - the spammer learns nothing, and this runs before media
+      // decode so a bad sender can't burn our cpu on an attachment we'll toss.
+      if (env.powNonce == null ||
+          !verifyPow(env.message, env.powNonce!, powBits)) {
+        debugPrint('pow: dropping first-contact from $senderHaloId (bad pow)');
+        return;
+      }
+      // 2-message cap: a stranger gets 2 into requests, then the chat is locked
+      // until we accept them. drop past the cap - no receipt.
+      final have = await db.countMessagesFrom(senderHaloId);
+      if (have >= 2) {
+        debugPrint('stranger lock: dropping from $senderHaloId (cap hit)');
+        return;
       }
     }
     // chunked media: a big image/file arrives as several envelopes sharing one
@@ -2418,7 +2506,7 @@ class AppState extends ChangeNotifier {
         var haloId = _xPubToHaloId[m.peer];
         String? wrapped = haloId == null
             ? null
-            : await signalDecrypt(haloId, m.cipher);
+            : await signalDecrypt(haloId, m.cipher, flagKeyChange: true);
         // fallback: xpub not mapped yet (or it decrypted wrong) - trial
         // against known contacts like the direct path, then remember it.
         if (wrapped == null) {
