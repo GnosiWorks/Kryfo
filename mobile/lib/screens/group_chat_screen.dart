@@ -428,7 +428,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             Positioned.fill(
               child: GestureDetector(
                 onTap: dismiss,
-                child: Container(color: Colors.black.withOpacity(0.18)),
+                child: Container(color: Colors.black.withValues(alpha: 0.18)),
               ),
             ),
             Positioned(
@@ -684,7 +684,7 @@ class _Header extends StatelessWidget {
                         color: HaloColors.amberSoft,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: HaloColors.amber.withOpacity(0.35),
+                          color: HaloColors.amber.withValues(alpha: 0.35),
                           width: 0.6,
                         ),
                       ),
@@ -830,7 +830,7 @@ class _Composer extends StatelessWidget {
                 color: HaloColors.surface2,
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(
-                  color: HaloColors.amber.withOpacity(0.4),
+                  color: HaloColors.amber.withValues(alpha: 0.4),
                   width: 0.6,
                 ),
               ),
@@ -988,7 +988,7 @@ class _GroupBubble extends StatelessWidget {
                                   ),
                                   decoration: BoxDecoration(
                                     color: isOut
-                                        ? Colors.black.withOpacity(0.12)
+                                        ? Colors.black.withValues(alpha: 0.12)
                                         : HaloColors.surface3,
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border(
@@ -1062,7 +1062,7 @@ class _GroupBubble extends StatelessWidget {
                                       ),
                                       decoration: BoxDecoration(
                                         color: isOut
-                                            ? HaloColors.onAmber.withOpacity(
+                                            ? HaloColors.onAmber.withValues(alpha: 
                                                 0.15,
                                               )
                                             : HaloColors.amberSoft,
@@ -1086,7 +1086,7 @@ class _GroupBubble extends StatelessWidget {
                                     style: HaloType.mono(
                                       size: 9.5,
                                       color: isOut
-                                          ? HaloColors.onAmber.withOpacity(0.7)
+                                          ? HaloColors.onAmber.withValues(alpha: 0.7)
                                           : HaloColors.text3,
                                     ),
                                   ),
@@ -1230,7 +1230,7 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
               border: Border.all(color: HaloColors.line, width: 0.5),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withValues(alpha: 0.5),
                   blurRadius: 28,
                   offset: const Offset(0, 10),
                 ),

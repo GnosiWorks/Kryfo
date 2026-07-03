@@ -318,7 +318,7 @@ class _ConnectionHaloState extends State<_ConnectionHalo>
                 color: dot,
                 boxShadow: [
                   BoxShadow(
-                    color: dot.withOpacity(glow),
+                    color: dot.withValues(alpha: glow),
                     blurRadius: reachable ? 5 : (3 + 5 * t),
                     spreadRadius: spread,
                   ),
@@ -954,7 +954,7 @@ class _GroupRow extends StatelessWidget {
                 color: HaloColors.amberSoft,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: HaloColors.amber.withOpacity(0.35),
+                  color: HaloColors.amber.withValues(alpha: 0.35),
                   width: 0.6,
                 ),
               ),
@@ -1052,7 +1052,7 @@ class _HeroCard extends StatelessWidget {
                             Icon(
                               Icons.notifications_off_outlined,
                               size: 12,
-                              color: HaloColors.onAmber.withOpacity(0.7),
+                              color: HaloColors.onAmber.withValues(alpha: 0.7),
                             ),
                             const SizedBox(width: 4),
                           ],
@@ -1060,7 +1060,7 @@ class _HeroCard extends StatelessWidget {
                             (c.blocked ? 'blocked' : _relTime(c.when)),
                             style: HaloType.mono(
                               size: 11,
-                              color: HaloColors.onAmber.withOpacity(0.7),
+                              color: HaloColors.onAmber.withValues(alpha: 0.7),
                             ),
                           ),
                         ],

@@ -1094,7 +1094,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               borderRadius: BorderRadius.circular(999),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.5),
+                                  color: Colors.black.withValues(alpha: 0.5),
                                   blurRadius: 20,
                                   offset: const Offset(0, 6),
                                 ),
@@ -3249,7 +3249,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: HaloColors.amber.withOpacity(0.12),
+                    color: HaloColors.amber.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -4866,7 +4866,7 @@ class _NavBtn extends StatelessWidget {
           borderRadius: BorderRadius.circular(7),
           border: Border.all(
             color: enabled
-                ? HaloColors.amber.withOpacity(0.45)
+                ? HaloColors.amber.withValues(alpha: 0.45)
                 : HaloColors.line2,
             width: 0.5,
           ),
@@ -5231,7 +5231,7 @@ class _Bubble extends StatelessWidget {
                             boxShadow: isCurrentMatch
                                 ? [
                                     BoxShadow(
-                                      color: HaloColors.amber.withOpacity(0.28),
+                                      color: HaloColors.amber.withValues(alpha: 0.28),
                                       blurRadius: 22,
                                       spreadRadius: -4,
                                       offset: const Offset(0, 6),
@@ -5546,7 +5546,7 @@ class _Bubble extends StatelessWidget {
                                               color: (isOut && !isImage)
                                                   ? HaloColors.onAmber
                                                   : HaloColors.amber
-                                                        .withOpacity(0.75),
+                                                        .withValues(alpha: 0.75),
                                             ),
                                             const SizedBox(width: 4),
                                             Text(
@@ -5556,7 +5556,7 @@ class _Bubble extends StatelessWidget {
                                                 color: (isOut && !isImage)
                                                     ? HaloColors.onAmber
                                                     : HaloColors.amber
-                                                          .withOpacity(0.75),
+                                                          .withValues(alpha: 0.75),
                                                 weight: FontWeight.w600,
                                               ).copyWith(letterSpacing: 0.3),
                                             ),
@@ -6022,7 +6022,7 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withValues(alpha: 0.5),
                   blurRadius: 28,
                   offset: const Offset(0, 10),
                 ),
@@ -6211,12 +6211,12 @@ class _EmptyConversation extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: HaloColors.amberSoft,
                   border: Border.all(
-                    color: HaloColors.amber.withOpacity(0.3),
+                    color: HaloColors.amber.withValues(alpha: 0.3),
                     width: 0.5,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: HaloColors.amber.withOpacity(0.18),
+                      color: HaloColors.amber.withValues(alpha: 0.18),
                       blurRadius: 28,
                       spreadRadius: 2,
                     ),
@@ -6792,7 +6792,7 @@ class _Composer extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
-            color: ghost ? HaloColors.amber.withOpacity(0.6) : HaloColors.line,
+            color: ghost ? HaloColors.amber.withValues(alpha: 0.6) : HaloColors.line,
             width: ghost ? 0.8 : 0.5,
           ),
         ),
@@ -6862,7 +6862,7 @@ class _Composer extends StatelessWidget {
                     boxShadow: ghost
                         ? [
                             BoxShadow(
-                              color: HaloColors.amber.withOpacity(0.45),
+                              color: HaloColors.amber.withValues(alpha: 0.45),
                               blurRadius: 12,
                               spreadRadius: 1,
                             ),
@@ -6976,7 +6976,7 @@ class _Composer extends StatelessWidget {
                           boxShadow: canSend
                               ? [
                                   BoxShadow(
-                                    color: HaloColors.amber.withOpacity(0.35),
+                                    color: HaloColors.amber.withValues(alpha: 0.35),
                                     blurRadius: 12,
                                     spreadRadius: -1,
                                   ),
