@@ -4,6 +4,7 @@
 // gestures.
 
 import 'dart:async';
+import '../widgets/press_scale.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../main.dart' show appState, db, currentChatPeer, newMsgUid;
@@ -851,19 +852,30 @@ class _Composer extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          GestureDetector(
+          PressScale(
             onTap: sending ? null : onSend,
-            child: Container(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOut,
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: HaloColors.amber,
+                color: sending ? HaloColors.surface3 : HaloColors.amber,
                 shape: BoxShape.circle,
+                boxShadow: sending
+                    ? null
+                    : [
+                        BoxShadow(
+                          color: HaloColors.amber.withValues(alpha: 0.35),
+                          blurRadius: 12,
+                          spreadRadius: -1,
+                        ),
+                      ],
               ),
               alignment: Alignment.center,
               child: Icon(
                 Icons.arrow_upward_rounded,
-                color: HaloColors.onAmber,
+                color: sending ? HaloColors.text3 : HaloColors.onAmber,
                 size: 20,
               ),
             ),
