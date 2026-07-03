@@ -328,6 +328,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool _reloadPending = false;
   Timer? _pollTimer;
   bool _sending = false;
+  // serialize signal encryption across sends. a fast burst must not encrypt
+  // every message against the same pre-session state, or they all come out as
+  // prekey messages fighting over one one-time key and only the first lands.
+  Future<void> _encryptGate = Future.value();
   String? _peerXPub;
   bool _backPaired = false;
   // the message we're currently replying to, or null. set by tapping
@@ -2737,11 +2741,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (url != null) {
       unawaited(_enrichPreview(msg, url, msgUid));
     }
-    // first-contact proof-of-work: if this peer hasn't accepted us, grind a
-    // nonce (~2s) in a background isolate so the ui stays smooth. accepted
-    // contacts skip it entirely. seed is the text - matches the receiver check.
+    // first-contact proof-of-work: grind a nonce (~2s, off the ui thread) while
+    // the peer hasn't back-paired with us. until they reply they still see us as
+    // a stranger and their gate requires the pow. once _peerEngaged flips we stop.
+    // keyed off _peerEngaged not _accepted: _accepted defaults true (avoids a
+    // banner flash) and races the db load, so it would skip the grind on a fast
+    // first send. seed is the raw text - matches the receiver's verifyPow.
     int? powNonce;
-    if (!_accepted) {
+    if (!_peerEngaged) {
       powNonce = await compute(_grindPowTask, text);
     }
     final String cipher;
@@ -2760,7 +2767,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           xPub: engine.myXPubkey(),
         ),
       );
-      cipher = await signalEncrypt(widget.peerHaloId, wrapped);
+      final prev = _encryptGate;
+      final gate = Completer<void>();
+      _encryptGate = gate.future;
+      try {
+        await prev;
+        cipher = await signalEncrypt(widget.peerHaloId, wrapped);
+      } finally {
+        gate.complete();
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {

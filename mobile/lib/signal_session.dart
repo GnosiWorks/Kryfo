@@ -8,15 +8,6 @@ import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'signal_stores.dart';
 
-// overwrite a mutable byte buffer with zeros. best-effort defence so raw
-// key material doesn't linger in ram longer than needed. note: dart
-// strings can't be wiped this way (immutable + gc), only Uint8List.
-void _zero(Uint8List b) {
-  for (var i = 0; i < b.length; i++) {
-    b[i] = 0;
-  }
-}
-
 class SignalSession {
   late HaloIdentityKeyStore identityStore;
   late HaloPreKeyStore preKeyStore;
@@ -41,7 +32,10 @@ class SignalSession {
     clamped[31] |= 0x40;
     final pub = Curve.decodePoint(Uint8List.fromList([0x05, ...xPubBytes]), 0);
     final priv = Curve.decodePrivatePoint(clamped);
-    _zero(clamped); // scalar consumed, wipe it from memory
+    // do NOT zero `clamped` here: decodePrivatePoint keeps a reference to this
+    // buffer, and the identity private key must live for the whole session.
+    // wiping it corrupts every signature this identity makes. transient
+    // plaintext buffers are the right place to zeroize, not the identity.
     identityKeyPair = IdentityKeyPair(IdentityKey(pub), priv);
 
     registrationId = await _loadOrGenRegId(database);
@@ -85,14 +79,21 @@ class SignalSession {
       );
     }
 
-    final pkRows = await database.query('prekeys');
-    if (pkRows.length < 10) {
-      final start = pkRows.length;
-      final keys = generatePreKeys(start, 10 - start);
-      for (final k in keys) {
+    // keep prekeys 0-9 topped up. check which ids are actually present and
+    // fill the gaps - counting by length breaks once any prekey is consumed
+    // (a gap at id 0 means an incoming first message can't find its key).
+    final pkRows = await database.query('prekeys', columns: ['id']);
+    final have = pkRows.map((r) => r['id'] as int).toSet();
+    final missing = [
+      for (var i = 0; i < 10; i++)
+        if (!have.contains(i)) i,
+    ];
+    if (missing.isNotEmpty) {
+      for (final id in missing) {
+        final k = generatePreKeys(id, 1).first;
         await preKeyStore.storePreKey(k.id, k);
       }
-      debugPrint('signal: generated ${keys.length} one-time prekeys');
+      debugPrint('signal: filled prekey ids=$missing');
     }
 
     _ready = true;
