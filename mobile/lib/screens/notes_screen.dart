@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
+import '../widgets/stagger_in.dart';
 import '../main.dart';
 import '../theme.dart';
 
@@ -140,12 +141,15 @@ class _NotesScreenState extends State<NotesScreen> {
                         final showDay = !_sameDay(ts, prevTs);
                         // fade older notes so the newest read brightest
                         final fresh = i >= _notes.length - 2;
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (showDay) _dayDivider(ts),
-                            _NoteBubble(text: text, ts: ts, fresh: fresh),
-                          ],
+                        return StaggerIn(
+                          index: i,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              if (showDay) _dayDivider(ts),
+                              _NoteBubble(text: text, ts: ts, fresh: fresh),
+                            ],
+                          ),
                         );
                       },
                     ),

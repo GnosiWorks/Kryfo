@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
+import '../widgets/stagger_in.dart';
+import '../widgets/press_scale.dart';
 import '../main.dart';
 import '../theme.dart';
 import 'chat_screen.dart';
@@ -118,7 +120,10 @@ class _SavedScreenState extends State<SavedScreen> {
             : ListView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                 itemCount: _rows.length,
-                itemBuilder: (_, i) => _card(_rows[i]),
+                itemBuilder: (_, i) => StaggerIn(
+                  index: i,
+                  child: _card(_rows[i]),
+                ),
               ),
       ),
     );
@@ -174,8 +179,7 @@ class _SavedScreenState extends State<SavedScreen> {
     final accent = _authorColor(peer);
     final isVoice = _isVoice(r);
     final isPhoto = _isPhoto(r);
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    return PressScale(
       onTap: () => _open(peer, uid),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
@@ -297,3 +301,5 @@ class _SavedScreenState extends State<SavedScreen> {
     ],
   );
 }
+
+// one-time fade + slide-up entrance. delay scales with list index (capped) so
