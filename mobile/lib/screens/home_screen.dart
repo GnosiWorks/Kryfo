@@ -3,6 +3,7 @@
 // matches 08_complete_spec.html "the everyday" home tile.
 
 import 'saved_screen.dart';
+import '../widgets/press_scale.dart';
 import 'requests_screen.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -118,6 +119,31 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+Route<void> _archivedRoute() {
+  return PageRouteBuilder<void>(
+    transitionDuration: const Duration(milliseconds: 340),
+    reverseTransitionDuration: const Duration(milliseconds: 260),
+    pageBuilder: (_, __, ___) => const ArchivedScreen(),
+    transitionsBuilder: (_, anim, __, child) {
+      final curved = CurvedAnimation(
+        parent: anim,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      );
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween(
+            begin: const Offset(0, 0.06),
+            end: Offset.zero,
+          ).animate(curved),
+          child: child,
+        ),
+      );
+    },
+  );
 }
 
 class ContactPreview {
@@ -388,12 +414,8 @@ class _AddScanButton extends StatelessWidget {
   const _AddScanButton({required this.onTap});
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
+    return PressScale(
+      onTap: onTap,
       child: Container(
         width: 38,
         height: 38,
@@ -586,9 +608,32 @@ class _OfflineStrip extends StatelessWidget {
   }
 }
 
-class _EmptyState extends StatelessWidget {
+class _EmptyState extends StatefulWidget {
   final VoidCallback onAdd;
   const _EmptyState({required this.onAdd});
+  @override
+  State<_EmptyState> createState() => _EmptyStateState();
+}
+
+class _EmptyStateState extends State<_EmptyState>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2600),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -597,24 +642,50 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: HaloColors.amberSoft,
-                border: Border.all(
-                  color: HaloColors.amber.withOpacity(0.3),
-                  width: 0.5,
-                ),
-              ),
-              child: Icon(
-                Icons.qr_code_2_rounded,
-                color: HaloColors.amber,
-                size: 26,
+            SizedBox(
+              width: 88,
+              height: 88,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // soft amber ring breathing outward - the app quietly waiting.
+                  AnimatedBuilder(
+                    animation: _pulse,
+                    builder: (_, __) {
+                      final t = Curves.easeOut.transform(_pulse.value);
+                      return Container(
+                        width: 56 + 22 * t,
+                        height: 56 + 22 * t,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: HaloColors.amber.withValues(
+                            alpha: 0.10 * (1 - t),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: HaloColors.amberSoft,
+                      border: Border.all(
+                        color: HaloColors.amber.withValues(alpha: 0.3),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.qr_code_2_rounded,
+                      color: HaloColors.amber,
+                      size: 26,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 14),
             Text(
               'no halos yet.',
               textAlign: TextAlign.center,
@@ -632,8 +703,8 @@ class _EmptyState extends StatelessWidget {
               style: HaloType.sans(size: 13, color: HaloColors.text2),
             ),
             const SizedBox(height: 22),
-            GestureDetector(
-              onTap: onAdd,
+            PressScale(
+              onTap: widget.onAdd,
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 18,
@@ -659,33 +730,6 @@ class _EmptyState extends StatelessWidget {
       ),
     );
   }
-}
-
-// ───────── contact list (used once contacts exist) ─────────
-
-Route<void> _archivedRoute() {
-  return PageRouteBuilder<void>(
-    transitionDuration: const Duration(milliseconds: 340),
-    reverseTransitionDuration: const Duration(milliseconds: 260),
-    pageBuilder: (_, __, ___) => const ArchivedScreen(),
-    transitionsBuilder: (_, anim, __, child) {
-      final curved = CurvedAnimation(
-        parent: anim,
-        curve: Curves.easeOutCubic,
-        reverseCurve: Curves.easeInCubic,
-      );
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween(
-            begin: const Offset(0, 0.06),
-            end: Offset.zero,
-          ).animate(curved),
-          child: child,
-        ),
-      );
-    },
-  );
 }
 
 class _ArchivedPin extends StatelessWidget {
