@@ -1690,6 +1690,16 @@ Future<String?> signalDecrypt(
       appState.notifyListeners();
     }
     return null;
+  } on InvalidKeyIdException catch (_) {
+    // one-time prekey already used up. if a session with this peer
+    // exists, an earlier copy set it up (tor+nostr both delivered, or a
+    // retry) so this is a duplicate - drop quietly. no session = can't
+    // read this one.
+    final addr = SignalProtocolAddress(peerId, 1);
+    if (await signalSession.sessionStore.containsSession(addr)) {
+      return null;
+    }
+    return null;
   } catch (e) {
     debugPrint('signalDecrypt: $e');
     return null;
