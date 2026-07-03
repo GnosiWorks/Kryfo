@@ -499,7 +499,7 @@ class _Section extends StatelessWidget {
   }
 }
 
-class _Row extends StatelessWidget {
+class _Row extends StatefulWidget {
   final String label;
   final String? value;
   final VoidCallback? onTap;
@@ -514,7 +514,37 @@ class _Row extends StatelessWidget {
   });
 
   @override
+  State<_Row> createState() => _RowState();
+}
+
+class _RowState extends State<_Row> {
+  bool _down = false;
+  String get label => widget.label;
+  String? get value => widget.value;
+  VoidCallback? get onTap => widget.onTap;
+  bool get accent => widget.accent;
+  IconData? get icon => widget.icon;
+
+  void _set(bool v) {
+    if (onTap != null && _down != v) setState(() => _down = v);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _set(true),
+      onTapUp: (_) => _set(false),
+      onTapCancel: () => _set(false),
+      child: AnimatedScale(
+        scale: _down ? 0.97 : 1,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: _body(context),
+      ),
+    );
+  }
+
+  Widget _body(BuildContext context) {
     if (accent) {
       return InkWell(
         onTap: onTap,

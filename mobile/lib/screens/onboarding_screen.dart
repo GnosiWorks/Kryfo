@@ -5,6 +5,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import '../widgets/press_scale.dart';
 import '../theme.dart';
 import 'restore_screen.dart';
 import 'my_halo_screen.dart';
@@ -1049,7 +1050,7 @@ class _FirstContactScreen extends StatelessWidget {
   }
 
   Widget _path(String title, String desc, VoidCallback onTap) {
-    return GestureDetector(
+    return PressScale(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
