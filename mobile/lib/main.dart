@@ -4,6 +4,7 @@
 import 'dart:async';
 import 'widgets/tor_boot_splash.dart';
 import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:typed_data';
@@ -428,7 +429,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 26,
+      version: 27,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -516,9 +517,23 @@ class HaloDb {
             FOREIGN KEY (group_id) REFERENCES groups(group_id) ON DELETE CASCADE
           )
         ''');
+        await db.execute('''
+          CREATE TABLE seen_msgs (
+            hash TEXT PRIMARY KEY,
+            ts INTEGER NOT NULL
+          )
+        ''');
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 27) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS seen_msgs (
+              hash TEXT PRIMARY KEY,
+              ts INTEGER NOT NULL
+            )
+          ''');
+        }
         if (oldV < 26) {
           // message requests: existing contacts stay accepted (default 1),
           // only new unknown senders arrive unaccepted.
@@ -1037,6 +1052,32 @@ class HaloDb {
         whereArgs: [peerId],
       );
     }
+  }
+
+  // dedup: skip a message we've already handled. duplicates arrive because
+  // tor times out and the same msg comes via nostr too (plus retries). the
+  // first copy sets up the session; a duplicate crashes on the used-up
+  // prekey, so drop it before any decrypt.
+  Future<bool> alreadySeen(String hash) async {
+    final db = await open();
+    final rows = await db.query(
+      'seen_msgs',
+      where: 'hash = ?',
+      whereArgs: [hash],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
+  }
+
+  Future<void> markSeen(String hash) async {
+    final db = await open();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.insert('seen_msgs', {
+      'hash': hash,
+      'ts': now,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    // prune anything older than a day so the table stays tiny
+    await db.delete('seen_msgs', where: 'ts < ?', whereArgs: [now - 86400000]);
   }
 
   // load back_paired for a contact. true = peer has confirmed they know us
@@ -2515,6 +2556,12 @@ class AppState extends ChangeNotifier {
       final ciphers = engine.drainInbox();
       if (ciphers.isEmpty) return;
       for (final cipher in ciphers) {
+        // dedup: same msg can arrive twice (tor late + nostr, or a retry).
+        // the first copy consumes the one-time prekey; a duplicate would
+        // crash on it, so skip anything we've already handled.
+        final h = sha256.convert(utf8.encode(cipher)).toString();
+        if (await db.alreadySeen(h)) continue;
+        await db.markSeen(h);
         var handled = false;
         for (final c in contacts) {
           final plain = await signalDecrypt(c.haloId, cipher);
@@ -2539,6 +2586,10 @@ class AppState extends ChangeNotifier {
       final msgs = engine.nostrPoll();
       if (msgs.isEmpty) return;
       for (final m in msgs) {
+        // dedup: skip a message we've already handled (see direct-onion note).
+        final h = sha256.convert(utf8.encode(m.cipher)).toString();
+        if (await db.alreadySeen(h)) continue;
+        await db.markSeen(h);
         var haloId = _xPubToHaloId[m.peer];
         String? wrapped = haloId == null
             ? null

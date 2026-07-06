@@ -135,7 +135,7 @@ func nostrPublishMulti(ctx context.Context, ev nostr.Event) (ok int) {
 	result := make(chan bool, len(urls))
 for _, url := range urls {
 go func(u string) {
-rctx, cancel := context.WithTimeout(ctx, 8*time.Second)
+rctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 defer cancel()
 client, err := torNostrClient()
 if err != nil {
@@ -303,7 +303,7 @@ func HaloNostrSend(cPeerXPubHex, cMsg *C.char) *C.char {
 	}
 	ev.Sign(sk)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
 	defer cancel()
 	ok := nostrPublishMulti(ctx, ev)
 	if ok == 0 {

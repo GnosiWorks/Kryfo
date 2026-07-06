@@ -62,16 +62,8 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   void _copy(String text, String what) {
     Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '$what copied',
-          style: HaloType.sans(size: 13, color: const Color(0xFF1A0F04)),
-        ),
-        backgroundColor: HaloColors.amber,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    HapticFeedback.selectionClick();
+    showHaloToast(context, '$what copied');
   }
 
   // a child that fades + slides up, delayed by [order] so sections stagger.
