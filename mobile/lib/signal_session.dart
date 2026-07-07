@@ -67,7 +67,11 @@ class SignalSession {
       }
     }
     if (spk == null) {
-      final fresh = generateSignedPreKey(identityKeyPair, 1);
+      final freshBytes = await compute(
+        _genSignedPreKeyTask,
+        identityKeyPair.serialize(),
+      );
+      final fresh = SignedPreKeyRecord.fromSerialized(freshBytes);
       await signedPreKeyStore.storeSignedPreKey(fresh.id, fresh);
       final ok = Curve.verifySignature(
         identityKeyPair.getPublicKey().publicKey,
@@ -89,8 +93,9 @@ class SignalSession {
         if (!have.contains(i)) i,
     ];
     if (missing.isNotEmpty) {
-      for (final id in missing) {
-        final k = generatePreKeys(id, 1).first;
+      final blobs = await compute(_genPreKeysTask, missing);
+      for (final blob in blobs) {
+        final k = PreKeyRecord.fromBuffer(blob);
         await preKeyStore.storePreKey(k.id, k);
       }
       debugPrint('signal: filled prekey ids=$missing');
@@ -126,6 +131,17 @@ class SignalSession {
       return null;
     }
   }
+}
+
+// prekey generation is heavy curve math - a fresh identity took long enough
+// on weak phones that android called the app dead. run it off the ui thread.
+Uint8List _genSignedPreKeyTask(Uint8List idPairBytes) {
+  final pair = IdentityKeyPair.fromSerialized(idPairBytes);
+  return generateSignedPreKey(pair, 1).serialize();
+}
+
+List<Uint8List> _genPreKeysTask(List<int> ids) {
+  return [for (final id in ids) generatePreKeys(id, 1).first.serialize()];
 }
 
 final signalSession = SignalSession();
