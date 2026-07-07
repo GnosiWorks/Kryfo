@@ -2498,6 +2498,10 @@ class AppState extends ChangeNotifier {
   Future<void> boot() async {
     final _bsw = Stopwatch()..start();
     if (ready) return;
+    // let the splash paint one frame before any heavy native call. sqlcipher
+    // key derivation + the first go ffi hop block the ui thread long enough
+    // that android's anr watchdog fired on weak phones during cold start.
+    await Future.delayed(const Duration(milliseconds: 16));
     final docsDir = await getApplicationDocumentsDirectory();
     final saved = await db.loadIdentity();
     if (saved != null) {
@@ -3244,7 +3248,10 @@ class _RootShellState extends State<RootShell> {
   void initState() {
     super.initState();
     appState.addListener(_onChange);
-    appState.boot();
+    // boot after the first frame is on screen. loading libhalo.so pulls in the
+    // whole go runtime + embedded tor and blocks briefly; doing it before the
+    // first paint let android's anr watchdog kill a cold start on weak phones.
+    WidgetsBinding.instance.addPostFrameCallback((_) => appState.boot());
   }
 
   void _onChange() => setState(() {});
