@@ -514,10 +514,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
   }
 
+  int _lastRev = -1;
+
   void _onAppStateChanged() {
     if (!mounted) return;
     _retryFailedOnReconnect();
-    _tryAppendNew();
+    // only touch the message list when this thread actually changed -
+    // reloading on every app notify was a lag spike in long chats.
+    final rev = appState.chatRevOf(widget.peerHaloId);
+    if (rev != _lastRev) {
+      _lastRev = rev;
+      _tryAppendNew();
+    }
     _refreshRequestState();
   }
 
@@ -648,6 +656,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (uid != null) _seenUids.add(uid);
     }
     setState(() => _messages.addAll(fresh));
+    // a message landing while we're inside this chat left the home badge lit.
+    if (fresh.any((m) => m.direction != 'out')) {
+      unawaited(db.clearUnread(widget.peerHaloId));
+      unawaited(appState.refreshContacts());
+    }
     _scrollToEnd();
   }
 

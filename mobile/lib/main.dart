@@ -2039,6 +2039,7 @@ class AppState extends ChangeNotifier {
     String senderHaloId,
     UnwrappedMessage env,
   ) async {
+    _bumpChatRev(senderHaloId);
     debugPrint(
       'INCOMING len=${env.message.length} hasPreview=${env.preview != null} uid=${env.msgUid}',
     );
@@ -2360,6 +2361,14 @@ class AppState extends ChangeNotifier {
   bool restored = false;
   bool ready = false;
   // live tor state; the home halo breathes off this.
+  // bumped whenever something changes for a peer's thread. open chats
+  // compare against this instead of reloading on every notify.
+  final Map<String, int> _chatRev = {};
+  int chatRevOf(String haloId) => _chatRev[haloId] ?? 0;
+  void _bumpChatRev(String haloId) {
+    _chatRev[haloId] = (_chatRev[haloId] ?? 0) + 1;
+  }
+
   TorStatus _torStatus = TorStatus.off;
   int _bootstrapPct = 0;
   TorStatus get torStatus => _torStatus;
