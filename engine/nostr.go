@@ -25,13 +25,13 @@ import "C"
 
 import (
 	"context"
-	"io"
-	"net/http"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -48,6 +48,7 @@ var (
 	nostrRelays  []string
 	nostrSubs    = map[string]context.CancelFunc{}
 	nostrInbox   []string
+	nostrSentIDs = map[string]bool{}
 )
 
 // ---------- key derivation (mirrors probe) ----------
@@ -90,7 +91,7 @@ func nostrDeriveKeys(peerXPub [32]byte) (sk nostr.SecretKey, pk nostr.PubKey, er
 // torNostrClient builds an http.Client whose dials route through the engine's
 // running tor SOCKS proxy. returns error if tor isn't ready.
 var (
-	cachedNostrClient *http.Client
+	cachedNostrClient   *http.Client
 	cachedNostrClientMu sync.Mutex
 )
 
@@ -126,45 +127,44 @@ func torNostrClient() (*http.Client, error) {
 	return cachedNostrClient, nil
 }
 
-
 func nostrPublishMulti(ctx context.Context, ev nostr.Event) (ok int) {
 	nostrMu.Lock()
 	urls := append([]string(nil), nostrRelays...)
 	nostrMu.Unlock()
 
 	result := make(chan bool, len(urls))
-for _, url := range urls {
-go func(u string) {
-rctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-defer cancel()
-client, err := torNostrClient()
-if err != nil {
-log.Printf("nostr: tor not ready, skipping publish to %s: %v", u, err)
-result <- false
-return
-}
-r := nostr.NewRelay(rctx, u, nostr.RelayOptions{})
-if err := r.ConnectWithClient(rctx, client); err != nil {
-log.Printf("nostr: connect %s: %v", u, err)
-result <- false
-return
-}
-defer r.Close()
-if err := r.Publish(rctx, ev); err != nil {
-log.Printf("nostr: publish %s: %v", u, err)
-result <- false
-return
-}
-log.Printf("nostr: published to %s ok", u)
-result <- true
-}(url)
-}
-for i := 0; i < len(urls); i++ {
-if <-result {
-return 1
-}
-}
-return 0
+	for _, url := range urls {
+		go func(u string) {
+			rctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+			defer cancel()
+			client, err := torNostrClient()
+			if err != nil {
+				log.Printf("nostr: tor not ready, skipping publish to %s: %v", u, err)
+				result <- false
+				return
+			}
+			r := nostr.NewRelay(rctx, u, nostr.RelayOptions{})
+			if err := r.ConnectWithClient(rctx, client); err != nil {
+				log.Printf("nostr: connect %s: %v", u, err)
+				result <- false
+				return
+			}
+			defer r.Close()
+			if err := r.Publish(rctx, ev); err != nil {
+				log.Printf("nostr: publish %s: %v", u, err)
+				result <- false
+				return
+			}
+			log.Printf("nostr: published to %s ok", u)
+			result <- true
+		}(url)
+	}
+	for i := 0; i < len(urls); i++ {
+		if <-result {
+			return 1
+		}
+	}
+	return 0
 }
 
 // run a long-lived subscription against all configured relays for events from `pk`.
@@ -179,6 +179,12 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, pk nostr.PubK
 
 	dispatch := func(ev nostr.Event) {
 		id := ev.ID.Hex()
+		nostrMu.Lock()
+		mine := nostrSentIDs[id]
+		nostrMu.Unlock()
+		if mine {
+			return
+		}
 		seenMu.Lock()
 		dup := seen[id]
 		seen[id] = true
@@ -194,6 +200,7 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, pk nostr.PubK
 
 	for _, url := range urls {
 		go func(u string) {
+			var last nostr.Timestamp
 			for {
 				select {
 				case <-ctx.Done():
@@ -217,6 +224,11 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, pk nostr.PubK
 					Kinds:   []nostr.Kind{haloNostrKind},
 					Limit:   100,
 				}
+				// after the first connect only ask for what we missed - refetching
+				// 100 old events over tor on every reconnect was pure waste.
+				if last > 0 {
+					f.Since = last + 1
+				}
 				sub, err := r.Subscribe(ctx, f, nostr.SubscriptionOptions{})
 				if err != nil {
 					log.Printf("nostr: subscribe %s: %v", u, err)
@@ -232,6 +244,9 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, pk nostr.PubK
 							goto reconnect
 						}
 						if ev.ID.Hex() != "" {
+							if ev.CreatedAt > last {
+								last = ev.CreatedAt
+							}
 							dispatch(ev)
 						}
 					case <-ctx.Done():
@@ -298,10 +313,17 @@ func HaloNostrSend(cPeerXPubHex, cMsg *C.char) *C.char {
 		Tags: nostr.Tags{
 			{"d", hex.EncodeToString(convID)},
 			{"halo", "v1"},
+			{"expiration", fmt.Sprintf("%d", time.Now().Add(30*24*time.Hour).Unix())},
 		},
 		Content: msg,
 	}
 	ev.Sign(sk)
+	nostrMu.Lock()
+	nostrSentIDs[ev.ID.Hex()] = true
+	if len(nostrSentIDs) > 4096 {
+		nostrSentIDs = map[string]bool{}
+	}
+	nostrMu.Unlock()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
 	defer cancel()
@@ -354,110 +376,113 @@ func HaloNostrPoll() *C.char {
 	return C.CString(out)
 }
 
-//export HaloNtfyPing
 // posts a wake-up trigger to the peer's ntfy endpoint via tor. fire-and-
 // forget from dart's perspective. message body is a fixed string; ntfy
 // only cares that *something* arrived to wake subscribers.
+//
+//export HaloNtfyPing
 func HaloNtfyPing(cEndpoint *C.char) *C.char {
-endpoint := C.GoString(cEndpoint)
-if endpoint == "" {
-return C.CString("error: empty endpoint")
-}
-client, err := torNostrClient()
-if err != nil {
-return C.CString(fmt.Sprintf("error: tor client: %v", err))
-}
-ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-defer cancel()
-req, err := http.NewRequestWithContext(ctx, "POST", endpoint, strings.NewReader("halo"))
-if err != nil {
-return C.CString(fmt.Sprintf("error: req: %v", err))
-}
-req.Header.Set("Content-Type", "text/plain")
-req.Header.Set("Title", "halo")
-req.Header.Set("Priority", "high")
-resp, err := client.Do(req)
-if err != nil {
-return C.CString(fmt.Sprintf("error: post: %v", err))
-}
-defer resp.Body.Close()
-if resp.StatusCode >= 400 {
-return C.CString(fmt.Sprintf("error: status %d", resp.StatusCode))
-}
-log.Printf("ntfy: pinged %s -> %d", endpoint, resp.StatusCode)
-return C.CString("ok")
+	endpoint := C.GoString(cEndpoint)
+	if endpoint == "" {
+		return C.CString("error: empty endpoint")
+	}
+	client, err := torNostrClient()
+	if err != nil {
+		return C.CString(fmt.Sprintf("error: tor client: %v", err))
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, "POST", endpoint, strings.NewReader("halo"))
+	if err != nil {
+		return C.CString(fmt.Sprintf("error: req: %v", err))
+	}
+	req.Header.Set("Content-Type", "text/plain")
+	req.Header.Set("Title", "halo")
+	req.Header.Set("Priority", "high")
+	resp, err := client.Do(req)
+	if err != nil {
+		return C.CString(fmt.Sprintf("error: post: %v", err))
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		return C.CString(fmt.Sprintf("error: status %d", resp.StatusCode))
+	}
+	log.Printf("ntfy: pinged %s -> %d", endpoint, resp.StatusCode)
+	return C.CString("ok")
 }
 
-//export HaloTorGet
 // fetch a url over the tor http client and return the html body (capped).
 // used for sender-side link previews so the receiver never has to fetch and
 // leak their ip. best-effort: returns "error: ..." on any failure, caller skips.
+//
+//export HaloTorGet
 func HaloTorGet(cUrl *C.char) *C.char {
-url := C.GoString(cUrl)
-if url == "" {
-return C.CString("error: empty url")
-}
-client, err := torNostrClient()
-if err != nil {
-return C.CString(fmt.Sprintf("error: tor client: %v", err))
-}
-req, err := http.NewRequest("GET", url, nil)
-if err != nil {
-return C.CString(fmt.Sprintf("error: req: %v", err))
-}
-req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; halo-preview)")
-ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-defer cancel()
-resp, err := client.Do(req.WithContext(ctx))
-if err != nil {
-return C.CString(fmt.Sprintf("error: get: %v", err))
-}
-defer resp.Body.Close()
-if resp.StatusCode != 200 {
-return C.CString(fmt.Sprintf("error: status %d", resp.StatusCode))
-}
-// cap at 256kb — the og tags live in <head>, no need for the whole page.
-limited := io.LimitReader(resp.Body, 256*1024)
-body, err := io.ReadAll(limited)
-if err != nil {
-return C.CString(fmt.Sprintf("error: read: %v", err))
-}
-return C.CString(string(body))
+	url := C.GoString(cUrl)
+	if url == "" {
+		return C.CString("error: empty url")
+	}
+	client, err := torNostrClient()
+	if err != nil {
+		return C.CString(fmt.Sprintf("error: tor client: %v", err))
+	}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return C.CString(fmt.Sprintf("error: req: %v", err))
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; halo-preview)")
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	resp, err := client.Do(req.WithContext(ctx))
+	if err != nil {
+		return C.CString(fmt.Sprintf("error: get: %v", err))
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return C.CString(fmt.Sprintf("error: status %d", resp.StatusCode))
+	}
+	// cap at 256kb — the og tags live in <head>, no need for the whole page.
+	limited := io.LimitReader(resp.Body, 256*1024)
+	body, err := io.ReadAll(limited)
+	if err != nil {
+		return C.CString(fmt.Sprintf("error: read: %v", err))
+	}
+	return C.CString(string(body))
 }
 
-//export HaloTorGetB64
 // like HaloTorGet but returns the body base64-encoded, for binary content
 // (link-preview images). fetched over tor so the receiver never loads the
 // image from the origin and leaks their ip. capped larger than html.
+//
+//export HaloTorGetB64
 func HaloTorGetB64(cUrl *C.char) *C.char {
-url := C.GoString(cUrl)
-if url == "" {
-return C.CString("error: empty url")
-}
-client, err := torNostrClient()
-if err != nil {
-return C.CString(fmt.Sprintf("error: tor client: %v", err))
-}
-req, err := http.NewRequest("GET", url, nil)
-if err != nil {
-return C.CString(fmt.Sprintf("error: req: %v", err))
-}
-req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; halo-preview)")
-ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
-defer cancel()
-resp, err := client.Do(req.WithContext(ctx))
-if err != nil {
-return C.CString(fmt.Sprintf("error: get: %v", err))
-}
-defer resp.Body.Close()
-if resp.StatusCode != 200 {
-return C.CString(fmt.Sprintf("error: status %d", resp.StatusCode))
-}
-// cap at 1mb — preview thumbnails, not full-res.
-limited := io.LimitReader(resp.Body, 1024*1024)
-body, err := io.ReadAll(limited)
-if err != nil {
-return C.CString(fmt.Sprintf("error: read: %v", err))
-}
-return C.CString("ok:" + base64.StdEncoding.EncodeToString(body))
+	url := C.GoString(cUrl)
+	if url == "" {
+		return C.CString("error: empty url")
+	}
+	client, err := torNostrClient()
+	if err != nil {
+		return C.CString(fmt.Sprintf("error: tor client: %v", err))
+	}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return C.CString(fmt.Sprintf("error: req: %v", err))
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; halo-preview)")
+	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
+	defer cancel()
+	resp, err := client.Do(req.WithContext(ctx))
+	if err != nil {
+		return C.CString(fmt.Sprintf("error: get: %v", err))
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return C.CString(fmt.Sprintf("error: status %d", resp.StatusCode))
+	}
+	// cap at 1mb — preview thumbnails, not full-res.
+	limited := io.LimitReader(resp.Body, 1024*1024)
+	body, err := io.ReadAll(limited)
+	if err != nil {
+		return C.CString(fmt.Sprintf("error: read: %v", err))
+	}
+	return C.CString("ok:" + base64.StdEncoding.EncodeToString(body))
 }
