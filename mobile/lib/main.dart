@@ -2507,7 +2507,15 @@ class AppState extends ChangeNotifier {
       // it so the ui-thread open right after returns instantly. the raw load
       // (go runtime + embedded tor) took seconds on weak phones and froze
       // the splash mid-animation.
-      await Isolate.run(() => DynamicLibrary.open('libhalo.so'));
+      try {
+        await Isolate.run(() {
+          DynamicLibrary.open('libhalo.so');
+          // returns nothing on purpose - a DynamicLibrary can't cross
+          // isolates, and returning it killed boot silently.
+        });
+      } catch (e) {
+        debugPrint('warm load failed: $e');
+      }
     }
     final docsDir = await getApplicationDocumentsDirectory();
     final saved = await db.loadIdentity();
