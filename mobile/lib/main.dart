@@ -1708,7 +1708,30 @@ Future<String?> signalDecrypt(
     );
     Uint8List plain;
     if (type == CiphertextMessage.prekeyType) {
-      plain = await cipher.decrypt(PreKeySignalMessage(body));
+      final pkm = PreKeySignalMessage(body);
+      if (await signalSession.sessionStore.containsSession(addr)) {
+        // session exists - use it. rebuilding from the prekey record here is
+        // wrong when the slot was refilled with a fresh key (old bundle refs
+        // would bad-mac the rebuilt session).
+        try {
+          plain = await cipher.decryptFromSignal(pkm.getWhisperMessage());
+        } catch (e) {
+          debugPrint(
+            'signalDecrypt: session path failed ($e), prekey fallback',
+          );
+          plain = await cipher.decrypt(pkm);
+        }
+      } else {
+        final pkId = pkm.getPreKeyId();
+        final havePk =
+            !pkId.isPresent ||
+            await signalSession.preKeyStore.containsPreKey(pkId.value);
+        if (!havePk) {
+          debugPrint('signalDecrypt: prekey gone, no session for $peerId');
+          return null;
+        }
+        plain = await cipher.decrypt(pkm);
+      }
     } else {
       plain = await cipher.decryptFromSignal(
         SignalMessage.fromSerialized(body),
@@ -1718,6 +1741,7 @@ Future<String?> signalDecrypt(
     _zeroBytes(plain); // cleartext decoded out, wipe the raw buffer
     return text;
   } on DuplicateMessageException catch (_) {
+    debugPrint('signalDecrypt: duplicate from $peerId, dropped');
     // store-and-forward re-delivers messages - a duplicate is expected and
     // benign. the original already decrypted, so drop this one quietly.
     return null;
@@ -2084,7 +2108,9 @@ class AppState extends ChangeNotifier {
       // decode so a bad sender can't burn our cpu on an attachment we'll toss.
       if (env.powNonce == null ||
           !verifyPow(env.message, env.powNonce!, powBits)) {
-        debugPrint('pow: dropping first-contact from $senderHaloId (bad pow)');
+        debugPrint(
+          'pow: dropping first-contact from $senderHaloId (nonce=${env.powNonce} bits=${env.powBitsUsed})',
+        );
         return;
       }
       // 2-message cap: a stranger gets 2 into requests, then the chat is locked
@@ -2577,6 +2603,21 @@ class AppState extends ChangeNotifier {
           }
         }
         if (!handled) {
+          // request contacts sit outside the accepted list - try them before
+          // treating this as a brand new stranger.
+          for (final r in await db.pendingRequests()) {
+            final id = r['halo_id'] as String;
+            final plain = await signalDecrypt(id, cipher);
+            if (plain != null) {
+              final env = unwrapMessage(plain);
+              await _applyIncomingPayload(id, env);
+              notifyListeners();
+              handled = true;
+              break;
+            }
+          }
+        }
+        if (!handled) {
           await backPairFromCipher(cipher);
         }
       }
@@ -2604,6 +2645,18 @@ class AppState extends ChangeNotifier {
               wrapped = p;
               haloId = c.haloId;
               _xPubToHaloId[m.peer] = c.haloId;
+              break;
+            }
+          }
+        }
+        if (wrapped == null) {
+          for (final r in await db.pendingRequests()) {
+            final id = r['halo_id'] as String;
+            final p = await signalDecrypt(id, m.cipher);
+            if (p != null) {
+              wrapped = p;
+              haloId = id;
+              _xPubToHaloId[m.peer] = id;
               break;
             }
           }
@@ -2823,6 +2876,18 @@ class AppState extends ChangeNotifier {
     } catch (e) {
       debugPrint('send to $memberId failed: $e');
       return false;
+    }
+  }
+
+  // tells a just-accepted stranger they're in. the empty frame flips their
+  // back_paired on arrival, which melts their request lock without waiting
+  // for our first reply.
+  Future<void> sendAcceptAck(String haloId) async {
+    try {
+      final wrapped = await wrapMessage('', sender: _mySender());
+      await _sendOneEnvelope(haloId, wrapped);
+    } catch (e) {
+      debugPrint('accept ack failed: $e');
     }
   }
 
