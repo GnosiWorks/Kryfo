@@ -366,7 +366,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       0; // messages they've sent us; >0 + unaccepted = a request TO us
   // sender-side lock: messaging a stranger who hasn't accepted, past the cap.
   // once they engage (reply/back-pair) or we accept them, it clears.
-  bool get _requestPending => !_accepted && !_peerEngaged && _recvCount == 0;
+  bool get _requestPending => !_peerEngaged && _recvCount == 0;
   bool get _requestLocked => _requestPending && _sentCount >= 2;
   // receiver-side: a stranger has messaged us and we haven't accepted yet.
   bool get _incomingRequest => !_accepted && _recvCount > 0;
@@ -518,6 +518,22 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (!mounted) return;
     _retryFailedOnReconnect();
     _tryAppendNew();
+    _refreshRequestState();
+  }
+
+  // lock state loads once on open, so a reply landing while the sender sits
+  // in the locked chat never flipped it. re-check whenever something arrives.
+  void _refreshRequestState() {
+    if (_accepted && _peerEngaged && _recvCount > 0) return;
+    db.isAccepted(widget.peerHaloId).then((v) {
+      if (mounted && v != _accepted) setState(() => _accepted = v);
+    });
+    db.isBackPaired(widget.peerHaloId).then((v) {
+      if (mounted && v != _peerEngaged) setState(() => _peerEngaged = v);
+    });
+    db.countMessagesFrom(widget.peerHaloId).then((v) {
+      if (mounted && v != _recvCount) setState(() => _recvCount = v);
+    });
   }
 
   // when tor comes back (down -> reachable), re-fire anything that failed while
@@ -2748,8 +2764,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // banner flash) and races the db load, so it would skip the grind on a fast
     // first send. seed is the raw text - matches the receiver's verifyPow.
     int? powNonce;
-    if (!_peerEngaged) {
+    if (_recvCount == 0) {
       powNonce = await compute(_grindPowTask, text);
+      debugPrint('pow: ground nonce=$powNonce len=${text.length}');
     }
     final String cipher;
     try {
@@ -3523,6 +3540,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     await db.acceptRequest(widget.peerHaloId);
     await appState.refreshContacts();
     if (mounted) setState(() => _accepted = true);
+    unawaited(appState.sendAcceptAck(widget.peerHaloId));
   }
 
   Future<void> _declineRequestPeer() async {
@@ -3876,7 +3894,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 onTap: () =>
                     _scrollToMessage(_messages.lastWhere((m) => m.pinned)),
               ),
-            if (_requestPending) const _RequestBanner(),
+            if (_requestPending && _sentCount > 0) const _RequestBanner(),
             if (_keyChanged)
               _KeyChangedBanner(
                 peerName: _nickname ?? widget.peerHaloId,
@@ -4303,26 +4321,16 @@ class _AcceptRequestBar extends StatelessWidget {
           const SizedBox(height: 11),
           Row(
             children: [
-              Expanded(
-                child: _reqBtn(
-                  'block',
-                  HaloColors.rose,
-                  HaloColors.surface2,
-                  onBlock,
-                ),
+              _reqBtn('block', HaloColors.rose, HaloColors.surface2, onBlock),
+              const SizedBox(width: 8),
+              _reqBtn(
+                'decline',
+                HaloColors.text,
+                HaloColors.surface2,
+                onDecline,
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: _reqBtn(
-                  'decline',
-                  HaloColors.text,
-                  HaloColors.surface2,
-                  onDecline,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 14,
                 child: _reqBtn(
                   'accept',
                   HaloColors.onAmber,
@@ -4348,7 +4356,7 @@ class _AcceptRequestBar extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 11),
+        padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 18),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: bg,
@@ -5231,7 +5239,9 @@ class _Bubble extends StatelessWidget {
                             boxShadow: isCurrentMatch
                                 ? [
                                     BoxShadow(
-                                      color: HaloColors.amber.withValues(alpha: 0.28),
+                                      color: HaloColors.amber.withValues(
+                                        alpha: 0.28,
+                                      ),
                                       blurRadius: 22,
                                       spreadRadius: -4,
                                       offset: const Offset(0, 6),
@@ -5545,8 +5555,9 @@ class _Bubble extends StatelessWidget {
                                               size: 11,
                                               color: (isOut && !isImage)
                                                   ? HaloColors.onAmber
-                                                  : HaloColors.amber
-                                                        .withValues(alpha: 0.75),
+                                                  : HaloColors.amber.withValues(
+                                                      alpha: 0.75,
+                                                    ),
                                             ),
                                             const SizedBox(width: 4),
                                             Text(
@@ -5556,7 +5567,9 @@ class _Bubble extends StatelessWidget {
                                                 color: (isOut && !isImage)
                                                     ? HaloColors.onAmber
                                                     : HaloColors.amber
-                                                          .withValues(alpha: 0.75),
+                                                          .withValues(
+                                                            alpha: 0.75,
+                                                          ),
                                                 weight: FontWeight.w600,
                                               ).copyWith(letterSpacing: 0.3),
                                             ),
@@ -6792,7 +6805,9 @@ class _Composer extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
-            color: ghost ? HaloColors.amber.withValues(alpha: 0.6) : HaloColors.line,
+            color: ghost
+                ? HaloColors.amber.withValues(alpha: 0.6)
+                : HaloColors.line,
             width: ghost ? 0.8 : 0.5,
           ),
         ),
@@ -6976,7 +6991,9 @@ class _Composer extends StatelessWidget {
                           boxShadow: canSend
                               ? [
                                   BoxShadow(
-                                    color: HaloColors.amber.withValues(alpha: 0.35),
+                                    color: HaloColors.amber.withValues(
+                                      alpha: 0.35,
+                                    ),
                                     blurRadius: 12,
                                     spreadRadius: -1,
                                   ),
