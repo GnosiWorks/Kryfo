@@ -1626,8 +1626,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // tap-to-retry instead of a permanent '3 hops' zombie. runs every load,
     // not just first, so old stuck messages always become retryable. live
     // sends from THIS session aren't in `loaded` yet, so they're untouched.
+    final staleCutoff = DateTime.now().subtract(const Duration(seconds: 60));
     for (final m in loaded) {
-      if (m.direction == 'out' && m.sending) {
+      // under a minute old the send future may still be running in the
+      // background - marking it failed here caused dup resends.
+      if (m.direction == 'out' && m.sending && m.when.isBefore(staleCutoff)) {
         m.sending = false;
         m.failed = true;
       }
