@@ -2502,6 +2502,13 @@ class AppState extends ChangeNotifier {
     // key derivation + the first go ffi hop block the ui thread long enough
     // that android's anr watchdog fired on weak phones during cold start.
     await Future.delayed(const Duration(milliseconds: 16));
+    if (Platform.isAndroid) {
+      // dlopen is process-wide: loading the go lib on a worker isolate warms
+      // it so the ui-thread open right after returns instantly. the raw load
+      // (go runtime + embedded tor) took seconds on weak phones and froze
+      // the splash mid-animation.
+      await Isolate.run(() => DynamicLibrary.open('libhalo.so'));
+    }
     final docsDir = await getApplicationDocumentsDirectory();
     final saved = await db.loadIdentity();
     if (saved != null) {
