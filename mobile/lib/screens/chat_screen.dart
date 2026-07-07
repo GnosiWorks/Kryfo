@@ -4257,35 +4257,85 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     )
                   : const SizedBox.shrink(),
             ),
-            _blocked
-                ? _BlockedBar(onUnblock: _unblockContact)
-                : _incomingRequest
-                ? _AcceptRequestBar(
-                    onAccept: _acceptRequestPeer,
-                    onDecline: _declineRequestPeer,
-                    onBlock: _blockRequestPeer,
-                  )
-                : _requestLocked
-                ? const _RequestLockBar()
-                : _Composer(
-                    onAttach: _showAttachSheet,
-                    ghost: _ghost,
-                    onToggleGhost: () => setState(() {
-                      _ghost = !_ghost;
-                      _lastGhost = _ghost;
-                      appState.saveGhostPref(_ghost, _burnSeconds);
-                    }),
-                    onPickBurn: _pickBurnDuration,
-                    burnSeconds: _burnSeconds,
-                    controller: _msgCtrl,
-                    sending: _sending,
-                    onSend: _send,
-                    disguise: _disguise,
-                    onToggleDisguise: _toggleDisguise,
-                    onVoiceComplete: _onVoiceComplete,
-                  ),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 260),
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeIn,
+              transitionBuilder: (child, anim) => SizeTransition(
+                sizeFactor: anim,
+                axisAlignment: -1,
+                child: FadeTransition(opacity: anim, child: child),
+              ),
+              child: KeyedSubtree(
+                key: ValueKey(
+                  _blocked
+                      ? 'bar_blocked'
+                      : _incomingRequest
+                      ? 'bar_request'
+                      : _requestLocked
+                      ? 'bar_locked'
+                      : 'bar_composer',
+                ),
+                child: _blocked
+                    ? _BlockedBar(onUnblock: _unblockContact)
+                    : _incomingRequest
+                    ? _AcceptRequestBar(
+                        onAccept: _acceptRequestPeer,
+                        onDecline: _declineRequestPeer,
+                        onBlock: _blockRequestPeer,
+                      )
+                    : _requestLocked
+                    ? const _RequestLockBar()
+                    : _Composer(
+                        onAttach: _showAttachSheet,
+                        ghost: _ghost,
+                        onToggleGhost: () => setState(() {
+                          _ghost = !_ghost;
+                          _lastGhost = _ghost;
+                          appState.saveGhostPref(_ghost, _burnSeconds);
+                        }),
+                        onPickBurn: _pickBurnDuration,
+                        burnSeconds: _burnSeconds,
+                        controller: _msgCtrl,
+                        sending: _sending,
+                        onSend: _send,
+                        disguise: _disguise,
+                        onToggleDisguise: _toggleDisguise,
+                        onVoiceComplete: _onVoiceComplete,
+                      ),
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// quick press-down scale for the request buttons.
+class _ScaleTap extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  const _ScaleTap({required this.child, required this.onTap});
+  @override
+  State<_ScaleTap> createState() => _ScaleTapState();
+}
+
+class _ScaleTapState extends State<_ScaleTap> {
+  bool _down = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _down = true),
+      onTapCancel: () => setState(() => _down = false),
+      onTapUp: (_) => setState(() => _down = false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _down ? 0.96 : 1.0,
+        duration: const Duration(milliseconds: 90),
+        curve: Curves.easeOut,
+        child: widget.child,
       ),
     );
   }
@@ -4356,7 +4406,7 @@ class _AcceptRequestBar extends StatelessWidget {
     VoidCallback onTap, {
     bool bold = false,
   }) {
-    return GestureDetector(
+    return _ScaleTap(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 18),

@@ -2513,7 +2513,6 @@ class AppState extends ChangeNotifier {
       final raw = engine.getStatus();
       final st = parseTorStatus(raw);
       final pct = parseBootstrapPct(raw);
-      debugPrint('TOR_RAW: "$raw" st=$st pct=$pct');
       if (st != _torStatus || pct != _bootstrapPct) {
         _torStatus = st;
         _bootstrapPct = pct;
