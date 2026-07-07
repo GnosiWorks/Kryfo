@@ -1100,6 +1100,16 @@ class HaloDb {
     );
   }
 
+  Future<void> markBackPaired(String peerId) async {
+    final d = await open();
+    await d.update(
+      'contacts',
+      {'back_paired': 1},
+      where: 'halo_id = ?',
+      whereArgs: [peerId],
+    );
+  }
+
   Future<bool> isBackPaired(String peerId) async {
     final db = await open();
     final rows = await db.query(
@@ -1558,10 +1568,31 @@ class HaloDb {
       // group_id IS NULL keeps group messages out of the 1:1 thread - a group
       // row carries peer_id = sender AND a group_id, so without this it leaked
       // into the direct chat with that sender.
-      where: 'peer_id = ?',
+      where: 'peer_id = ? AND group_id IS NULL',
       whereArgs: [peerId],
       orderBy: 'sent_at ASC',
     );
+  }
+
+  // newest page of a 1:1 thread. beforeRowid pages older on scroll-up so a
+  // 5000-message chat doesn't parse the world on open.
+  Future<List<Map<String, Object?>>> messagesPage(
+    String peerId, {
+    int? beforeRowid,
+    int limit = 60,
+  }) async {
+    final db = await open();
+    final rows = await db.query(
+      'messages',
+      columns: ['*', 'rowid'],
+      where: beforeRowid == null
+          ? 'peer_id = ? AND group_id IS NULL'
+          : 'peer_id = ? AND group_id IS NULL AND rowid < ?',
+      whereArgs: beforeRowid == null ? [peerId] : [peerId, beforeRowid],
+      orderBy: 'rowid DESC',
+      limit: limit,
+    );
+    return rows.reversed.toList();
   }
 
   // only messages newer than a timestamp, oldest-first. used by the chat's
@@ -1577,7 +1608,7 @@ class HaloDb {
     return db.query(
       'messages',
       columns: ['*', 'rowid'],
-      where: "peer_id = ? AND rowid > ?",
+      where: "peer_id = ? AND group_id IS NULL AND rowid > ?",
       whereArgs: [peerId, afterRowid],
       orderBy: 'rowid ASC',
     );
@@ -2040,6 +2071,7 @@ class AppState extends ChangeNotifier {
     UnwrappedMessage env,
   ) async {
     _bumpChatRev(senderHaloId);
+    await db.markBackPaired(senderHaloId);
     debugPrint(
       'INCOMING len=${env.message.length} hasPreview=${env.preview != null} uid=${env.msgUid}',
     );

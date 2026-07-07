@@ -312,6 +312,81 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Timer? _burnTick;
   int _lastBurnSec = 0;
   final _scrollCtrl = ScrollController();
+  static const _pageSize = 60;
+  bool _hasMore = false;
+  bool _loadingOlder = false;
+  // set once the user paged deep or jumped - reloads keep the full thread
+  // so their scroll position doesn't collapse back to one page.
+  bool _pagedOut = false;
+
+  Future<void> _loadOlder() async {
+    if (_loadingOlder || !_hasMore) return;
+    _loadingOlder = true;
+    try {
+      final oldest = _messages.isEmpty ? null : _messages.first.rowid;
+      final rows = await db.messagesPage(
+        widget.peerHaloId,
+        beforeRowid: oldest,
+        limit: _pageSize + 1,
+      );
+      if (!mounted) return;
+      _hasMore = rows.length > _pageSize;
+      if (_hasMore) rows.removeAt(0);
+      if (!_hasMore) _pagedOut = true;
+      final older = <_Msg>[];
+      final uids = <String>[];
+      for (final r in rows) {
+        final uid = r['msg_uid'] as String?;
+        final m = _Msg(
+          r['direction'] as String,
+          r['plaintext'] as String,
+          DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+          burnAt: r['burn_at'] as int?,
+          msgUid: uid,
+          replyTo: r['reply_to'] as String?,
+          edited: (r['edited'] as int? ?? 0) == 1,
+          pinned: (r['pinned'] as int? ?? 0) == 1,
+          mediaPath: r['media_path'] as String?,
+          filePath: r['file_path'] as String?,
+          fileName: r['file_name'] as String?,
+          voiceDisguised: (r['voice_disguised'] as int? ?? 0) == 1,
+          saved: (r['saved'] as int? ?? 0) == 1,
+        );
+        m.rowid = (r['rowid'] as int?) ?? 0;
+        final pvRaw = r['preview'] as String?;
+        if (pvRaw != null && pvRaw.isNotEmpty) {
+          try {
+            final dd = jsonDecode(pvRaw) as Map<String, dynamic>;
+            m.preview = dd.map((k, v) => MapEntry(k, v.toString()));
+          } catch (_) {}
+        }
+        if (uid != null) {
+          uids.add(uid);
+          _seenUids.add(uid);
+        }
+        older.add(m);
+      }
+      final reactionMap = await db.loadReactionsFor(uids);
+      for (final m in older) {
+        final entries = reactionMap[m.msgUid];
+        if (entries == null) continue;
+        for (final en in entries) {
+          m.reactions[en.key] = en.value;
+        }
+      }
+      if (!mounted || older.isEmpty) return;
+      setState(() => _messages.insertAll(0, older));
+    } finally {
+      _loadingOlder = false;
+    }
+  }
+
+  void _onScrollPage() {
+    if (!_hasMore || !_scrollCtrl.hasClients) return;
+    final p = _scrollCtrl.position;
+    if (p.pixels > p.maxScrollExtent - 600) _loadOlder();
+  }
+
   final Map<int, GlobalKey> _dayKeys = {};
   final GlobalKey _listKey = GlobalKey();
   final ValueNotifier<String?> _stickyLabel = ValueNotifier(null);
@@ -358,6 +433,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool _muted = false;
   bool _verified = false;
   bool _keyChanged = false;
+
+  Future<void> _dismissKeyChanged() async {
+    await db.setKeyChanged(widget.peerHaloId, false);
+    if (mounted) setState(() => _keyChanged = false);
+  }
+
   // request-lock state: a stranger we haven't accepted, capped at 2 sent msgs.
   bool _accepted = true; // assume ok until loaded, so normal chats don't flash
   bool _peerEngaged = false; // they've replied/back-paired -> lock lifts
@@ -435,6 +516,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     db.keyChanged(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _keyChanged = v);
     });
+    _scrollCtrl.addListener(_onScrollPage);
     db.isBlocked(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _blocked = v);
     });
@@ -1561,7 +1643,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     db.isMuted(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _muted = v);
     });
-    final rows = await db.messagesFor(widget.peerHaloId);
+    final wantAll = _searching || widget.jumpToUid != null || _pagedOut;
+    final rows = wantAll
+        ? await db.messagesFor(widget.peerHaloId)
+        : await db.messagesPage(widget.peerHaloId, limit: _pageSize + 1);
+    _hasMore = !wantAll && rows.length > _pageSize;
+    if (_hasMore) rows.removeAt(0);
+    if (wantAll) _hasMore = false;
     if (!mounted) return;
     // collect msg_uids first, batch-load reactions, then setState.
     final loaded = <_Msg>[];
@@ -1595,6 +1683,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           loaded.last.preview = d.map((k, v) => MapEntry(k, v.toString()));
         } catch (_) {}
       }
+      loaded.last.rowid = (r['rowid'] as int?) ?? 0;
       if (uid != null) uids.add(uid);
     }
     final reactionMap = await db.loadReactionsFor(uids);
@@ -3914,7 +4003,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             if (_keyChanged)
               _KeyChangedBanner(
                 peerName: _nickname ?? widget.peerHaloId,
-                onTap: _openKeyVerification,
+                onVerify: _openKeyVerification,
+                onDismiss: _dismissKeyChanged,
               ),
             Expanded(
               child: Stack(
@@ -7453,84 +7543,99 @@ PrivacyMode _pmFrom(String m) => m == 'fast'
     : PrivacyMode.private;
 
 // shown at the top of a chat when a known contact's identity key changed.
-// tappable -> opens key verification so the user can compare the new safety
-// number before trusting. calm tone: a reinstall looks the same as an attack,
-// so we prompt to verify, not alarm.
-class _KeyChangedBanner extends StatefulWidget {
+// a reinstall looks the same as an attack, so we prompt to verify instead
+// of alarming. ok dismisses until the key changes again.
+class _KeyChangedBanner extends StatelessWidget {
   final String peerName;
-  final VoidCallback onTap;
-  const _KeyChangedBanner({required this.peerName, required this.onTap});
-  @override
-  State<_KeyChangedBanner> createState() => _KeyChangedBannerState();
-}
+  final VoidCallback onVerify;
+  final VoidCallback onDismiss;
+  const _KeyChangedBanner({
+    required this.peerName,
+    required this.onVerify,
+    required this.onDismiss,
+  });
 
-class _KeyChangedBannerState extends State<_KeyChangedBanner> {
-  double _s = 1.0;
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _s = 0.98),
-      onTapUp: (_) => setState(() => _s = 1.0),
-      onTapCancel: () => setState(() => _s = 1.0),
-      onTap: widget.onTap,
-      child: AnimatedScale(
-        scale: _s,
-        duration: const Duration(milliseconds: 100),
-        curve: Curves.easeOut,
-        child: Container(
-          margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-          padding: const EdgeInsets.fromLTRB(13, 11, 13, 12),
-          decoration: BoxDecoration(
-            color: HaloColors.amber.withValues(alpha: 0.10),
-            border: Border.all(color: HaloColors.amber.withValues(alpha: 0.45)),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.fromLTRB(13, 11, 13, 12),
+      decoration: BoxDecoration(
+        color: HaloColors.amber.withValues(alpha: 0.10),
+        border: Border.all(color: HaloColors.amber.withValues(alpha: 0.45)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.gpp_maybe_outlined,
-                    size: 15,
-                    color: HaloColors.amber,
-                  ),
-                  const SizedBox(width: 7),
-                  Text(
-                    'security code changed',
-                    style: HaloType.serif(size: 13, color: HaloColors.text),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 5),
+              Icon(Icons.gpp_maybe_outlined, size: 15, color: HaloColors.amber),
+              const SizedBox(width: 7),
               Text(
-                '${widget.peerName}\u2019s key is different than before. this happens '
-                'when someone reinstalls, but it can also mean someone is in the '
-                'middle. tap to verify before trusting.',
-                style: HaloType.sans(
-                  size: 12.5,
-                  color: HaloColors.text2,
-                  height: 1.5,
+                'security code changed',
+                style: TextStyle(
+                  color: HaloColors.amber,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
                 ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Text(
-                    'verify now',
-                    style: HaloType.sans(
-                      size: 12.5,
-                      weight: FontWeight.w600,
-                      color: HaloColors.amber,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(Icons.arrow_forward, size: 13, color: HaloColors.amber),
-                ],
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 5),
+          Text(
+            '$peerName may have reinstalled, or someone could be impersonating them. compare safety numbers to be sure.',
+            style: TextStyle(
+              color: HaloColors.text.withValues(alpha: 0.8),
+              fontSize: 12,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              _ScaleTap(
+                onTap: onDismiss,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 7,
+                    horizontal: 16,
+                  ),
+                  decoration: BoxDecoration(
+                    color: HaloColors.surface2,
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: Text(
+                    'ok',
+                    style: TextStyle(color: HaloColors.text, fontSize: 12.5),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _ScaleTap(
+                  onTap: onVerify,
+                  child: Container(
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.symmetric(vertical: 7),
+                    decoration: BoxDecoration(
+                      color: HaloColors.amber,
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: Text(
+                      'verify',
+                      style: TextStyle(
+                        color: HaloColors.ink,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
