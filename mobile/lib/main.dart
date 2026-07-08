@@ -2502,21 +2502,6 @@ class AppState extends ChangeNotifier {
     // key derivation + the first go ffi hop block the ui thread long enough
     // that android's anr watchdog fired on weak phones during cold start.
     await Future.delayed(const Duration(milliseconds: 16));
-    if (Platform.isAndroid) {
-      // dlopen is process-wide: loading the go lib on a worker isolate warms
-      // it so the ui-thread open right after returns instantly. the raw load
-      // (go runtime + embedded tor) took seconds on weak phones and froze
-      // the splash mid-animation.
-      try {
-        await Isolate.run(() {
-          DynamicLibrary.open('libhalo.so');
-          // returns nothing on purpose - a DynamicLibrary can't cross
-          // isolates, and returning it killed boot silently.
-        });
-      } catch (e) {
-        debugPrint('warm load failed: $e');
-      }
-    }
     final docsDir = await getApplicationDocumentsDirectory();
     final saved = await db.loadIdentity();
     if (saved != null) {
