@@ -3579,7 +3579,10 @@ class _DevScreenState extends State<DevScreen> {
   Future<void> _startListener() async {
     setState(() => _status = 'starting tor (~30s)...');
     final docsDir = await getApplicationDocumentsDirectory();
-    final addr = await Future(() => engine.startListener(docsDir.path));
+    // must run off the ui thread - starting tor blocks on socket i/o long
+    // enough that android anr'd the onboarding page. isolate twin already
+    // used on the main boot path.
+    final addr = await _startListenerOnIsolate(docsDir.path);
     setState(() {
       if (addr.startsWith('error')) {
         _status = addr;
