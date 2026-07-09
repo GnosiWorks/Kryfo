@@ -120,10 +120,8 @@ class _SavedScreenState extends State<SavedScreen> {
             : ListView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                 itemCount: _rows.length,
-                itemBuilder: (_, i) => StaggerIn(
-                  index: i,
-                  child: _card(_rows[i]),
-                ),
+                itemBuilder: (_, i) =>
+                    StaggerIn(index: i, child: _card(_rows[i])),
               ),
       ),
     );

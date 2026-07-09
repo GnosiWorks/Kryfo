@@ -231,7 +231,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                       color: HaloColors.amberSoft,
                       borderRadius: BorderRadius.circular(18),
                       border: Border.all(
-                        color: HaloColors.amber.withOpacity(0.45),
+                        color: HaloColors.amber.withValues(alpha: 0.45),
                         width: 0.8,
                       ),
                     ),
@@ -402,7 +402,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                     color: HaloColors.surface2,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: HaloColors.rose.withOpacity(0.4),
+                      color: HaloColors.rose.withValues(alpha: 0.4),
                       width: 0.6,
                     ),
                   ),

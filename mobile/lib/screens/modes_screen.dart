@@ -171,7 +171,7 @@ class _ModeCard extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: active
-                ? HaloColors.amber.withOpacity(0.10)
+                ? HaloColors.amber.withValues(alpha: 0.10)
                 : HaloColors.surface,
             border: Border.all(
               color: active ? HaloColors.amber : HaloColors.line,
@@ -274,9 +274,9 @@ class _ModeCard extends StatelessWidget {
                     vertical: 7,
                   ),
                   decoration: BoxDecoration(
-                    color: HaloColors.rose.withOpacity(0.10),
+                    color: HaloColors.rose.withValues(alpha: 0.10),
                     border: Border.all(
-                      color: HaloColors.rose.withOpacity(0.3),
+                      color: HaloColors.rose.withValues(alpha: 0.3),
                       width: 0.5,
                     ),
                     borderRadius: BorderRadius.circular(8),

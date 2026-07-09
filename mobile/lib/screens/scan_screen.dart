@@ -159,12 +159,12 @@ class _ScanScreenState extends State<ScanScreen>
                       vertical: 12,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.65),
+                      color: Colors.black.withValues(alpha: 0.65),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: _hint != null
-                            ? HaloColors.amber.withOpacity(0.6)
-                            : Colors.white.withOpacity(0.08),
+                            ? HaloColors.amber.withValues(alpha: 0.6)
+                            : Colors.white.withValues(alpha: 0.08),
                         width: 0.7,
                       ),
                     ),
@@ -195,7 +195,7 @@ class _MaskPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final mask = Paint()..color = Colors.black.withOpacity(0.62);
+    final mask = Paint()..color = Colors.black.withValues(alpha: 0.62);
     final outer = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
     final rect = Rect.fromCenter(
       center: Offset(size.width / 2, size.height / 2),
@@ -253,14 +253,14 @@ class _Viewfinder extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          accent.withOpacity(0),
-                          accent.withOpacity(0.95),
-                          accent.withOpacity(0),
+                          accent.withValues(alpha: 0),
+                          accent.withValues(alpha: 0.95),
+                          accent.withValues(alpha: 0),
                         ],
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: accent.withOpacity(0.45),
+                          color: accent.withValues(alpha: 0.45),
                           blurRadius: 14,
                           spreadRadius: 1,
                         ),
@@ -276,7 +276,7 @@ class _Viewfinder extends StatelessWidget {
             duration: const Duration(milliseconds: 260),
             child: Container(
               decoration: BoxDecoration(
-                color: HaloColors.green.withOpacity(0.18),
+                color: HaloColors.green.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(color: HaloColors.green, width: 2),
               ),

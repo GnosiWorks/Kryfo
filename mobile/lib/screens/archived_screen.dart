@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../widgets/halo_avatar.dart';
+import '../widgets/stagger_in.dart';
 import '../main.dart' show appState;
 
 // chats you have archived. they are hidden from the main list but still
@@ -58,61 +59,68 @@ class ArchivedScreen extends StatelessWidget {
                   return ListView(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     children: [
-                      for (final c in archived)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          child: Row(
-                            children: [
-                              Opacity(
-                                opacity: 0.85,
-                                child: HaloAvatar(seed: c.avatarSeed, size: 36),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      c.nickname ?? c.haloId,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: HaloType.sans(
-                                        size: 14,
-                                        weight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    if (c.preview != null &&
-                                        c.preview!.isNotEmpty) ...[
-                                      const SizedBox(height: 2),
+                      for (final (i, c) in archived.indexed)
+                        StaggerIn(
+                          index: i,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            child: Row(
+                              children: [
+                                Opacity(
+                                  opacity: 0.85,
+                                  child: HaloAvatar(
+                                    seed: c.avatarSeed,
+                                    size: 36,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
                                       Text(
-                                        c.preview!,
+                                        c.nickname ?? c.haloId,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: HaloType.sans(
-                                          size: 12,
-                                          color: HaloColors.text2,
+                                          size: 14,
+                                          weight: FontWeight.w500,
                                         ),
                                       ),
+                                      if (c.preview != null &&
+                                          c.preview!.isNotEmpty) ...[
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          c.preview!,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: HaloType.sans(
+                                            size: 12,
+                                            color: HaloColors.text2,
+                                          ),
+                                        ),
+                                      ],
                                     ],
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              TextButton(
-                                onPressed: () => appState.unarchive(c.haloId),
-                                child: Text(
-                                  'unarchive',
-                                  style: HaloType.sans(
-                                    size: 12.5,
-                                    weight: FontWeight.w500,
-                                    color: HaloColors.amber,
                                   ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 8),
+                                TextButton(
+                                  onPressed: () => appState.unarchive(c.haloId),
+                                  child: Text(
+                                    'unarchive',
+                                    style: HaloType.sans(
+                                      size: 12.5,
+                                      weight: FontWeight.w500,
+                                      color: HaloColors.amber,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                     ],

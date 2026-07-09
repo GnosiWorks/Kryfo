@@ -1062,8 +1062,8 @@ class _GroupBubble extends StatelessWidget {
                                       ),
                                       decoration: BoxDecoration(
                                         color: isOut
-                                            ? HaloColors.onAmber.withValues(alpha: 
-                                                0.15,
+                                            ? HaloColors.onAmber.withValues(
+                                                alpha: 0.15,
                                               )
                                             : HaloColors.amberSoft,
                                         borderRadius: BorderRadius.circular(4),
@@ -1086,7 +1086,9 @@ class _GroupBubble extends StatelessWidget {
                                     style: HaloType.mono(
                                       size: 9.5,
                                       color: isOut
-                                          ? HaloColors.onAmber.withValues(alpha: 0.7)
+                                          ? HaloColors.onAmber.withValues(
+                                              alpha: 0.7,
+                                            )
                                           : HaloColors.text3,
                                     ),
                                   ),

@@ -3702,7 +3702,7 @@ class _DevScreenState extends State<DevScreen> {
                 constraints: const BoxConstraints(maxWidth: 280),
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: HaloColors.amber.withOpacity(0.08),
+                  color: HaloColors.amber.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: SelectableText(
