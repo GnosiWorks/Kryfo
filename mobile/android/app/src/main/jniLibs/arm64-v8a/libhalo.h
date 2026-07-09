@@ -104,6 +104,7 @@ extern char* HaloIdFromPubkey(char* cHex);
 extern char* HaloEncryptFor(char* cPeerPub, char* cPlain);
 extern char* HaloDecryptFrom(char* cPeerPub, char* cB64);
 extern char* HaloStartListener(char* cDataDir);
+extern void HaloShutdown(void);
 extern char* HaloGetStatus(void);
 extern char* HaloDrainInbox(void);
 extern char* HaloSendTo(char* cAddr, char* cMsg);
