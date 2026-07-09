@@ -2628,6 +2628,7 @@ class AppState extends ChangeNotifier {
       // reentrancy guard: the ffi drain + decrypt can outrun the 1s tick
       // while tor is still warming, and stacked calls pinned the main
       // thread hard enough to anr on weak phones. skip if one's running.
+      if (_torStatus != TorStatus.reachable) return;
       if (_draining) return;
       _draining = true;
       try {
@@ -2679,6 +2680,7 @@ class AppState extends ChangeNotifier {
     });
 
     Timer.periodic(const Duration(seconds: 1), (_) async {
+      if (_torStatus != TorStatus.reachable) return;
       if (_polling) return;
       _polling = true;
       try {
