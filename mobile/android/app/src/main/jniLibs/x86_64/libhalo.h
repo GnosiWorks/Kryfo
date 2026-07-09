@@ -89,6 +89,7 @@ extern char* HaloGenerateIdentity(void);
 
 // restores identity from hex-encoded ed25519 priv (64 bytes hex = 128 chars) +
 // X25519 priv (32 bytes hex = 64 chars). recomputes pubkeys + halo_id.
+//
 extern char* HaloRestoreIdentity(char* cEdPriv, char* cXPriv);
 extern char* HaloMyId(void);
 extern char* HaloMyEdPubkey(void);
@@ -96,6 +97,7 @@ extern char* HaloMyXPubkey(void);
 
 // exports private keys so the dart side can persist them encrypted.
 // only call this once after generation; do NOT log or transmit.
+//
 extern char* HaloMyEdPrivkey(void);
 extern char* HaloMyXPrivkey(void);
 extern char* HaloIdFromPubkey(char* cHex);
@@ -109,16 +111,19 @@ extern char* HaloSendTo(char* cAddr, char* cMsg);
 // derives the 3-word BIP-39 halo id from an ed25519 public key hex string.
 // used during back-pair when a stranger's first message arrives and we need
 // to compute their halo id from the identity key in the libsignal envelope.
+//
 extern char* HaloIdFromEdPub(char* cHexPub);
 
 // encrypts a UTF-8 plaintext payload (typically a JSON blob containing
 // the user's identity keys + db + prefs) with a passphrase using scrypt
 // (32768 / 8 / 1) + AES-256-GCM. returns "halo-backup:v1:" + base64
 // (salt || nonce || ciphertext+tag). returns "error: ..." on failure.
+//
 extern char* HaloEncryptBackup(char* cPlain, char* cPassphrase);
 
 // inverse of HaloEncryptBackup. returns plaintext on success or
 // "error: wrong passphrase or corrupt" on auth failure.
+//
 extern char* HaloDecryptBackup(char* cBlob, char* cPassphrase);
 extern char* HaloNostrInit(char* cRelaysCSV);
 extern char* HaloNostrSend(char* cPeerXPubHex, char* cMsg);
@@ -128,16 +133,19 @@ extern char* HaloNostrPoll(void);
 // posts a wake-up trigger to the peer's ntfy endpoint via tor. fire-and-
 // forget from dart's perspective. message body is a fixed string; ntfy
 // only cares that *something* arrived to wake subscribers.
+//
 extern char* HaloNtfyPing(char* cEndpoint);
 
 // fetch a url over the tor http client and return the html body (capped).
 // used for sender-side link previews so the receiver never has to fetch and
 // leak their ip. best-effort: returns "error: ..." on any failure, caller skips.
+//
 extern char* HaloTorGet(char* cUrl);
 
 // like HaloTorGet but returns the body base64-encoded, for binary content
 // (link-preview images). fetched over tor so the receiver never loads the
 // image from the origin and leaks their ip. capped larger than html.
+//
 extern char* HaloTorGetB64(char* cUrl);
 
 #ifdef __cplusplus
