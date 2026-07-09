@@ -2401,6 +2401,8 @@ class AppState extends ChangeNotifier {
     _chatRev[haloId] = (_chatRev[haloId] ?? 0) + 1;
   }
 
+  bool _draining = false;
+  bool _polling = false;
   TorStatus _torStatus = TorStatus.off;
   int _bootstrapPct = 0;
   TorStatus get torStatus => _torStatus;
@@ -2623,98 +2625,113 @@ class AppState extends ChangeNotifier {
     // pair from strangers + falls back to trial-decrypt against known
     // contacts for in-session direct-onion messages.
     Timer.periodic(const Duration(seconds: 1), (_) async {
-      final ciphers = engine.drainInbox();
-      if (ciphers.isEmpty) return;
-      for (final cipher in ciphers) {
-        // dedup: same msg can arrive twice (tor late + nostr, or a retry).
-        // the first copy consumes the one-time prekey; a duplicate would
-        // crash on it, so skip anything we've already handled.
-        final h = sha256.convert(utf8.encode(cipher)).toString();
-        if (await db.alreadySeen(h)) continue;
-        await db.markSeen(h);
-        var handled = false;
-        for (final c in contacts) {
-          final plain = await signalDecrypt(c.haloId, cipher);
-          if (plain != null) {
-            final env = unwrapMessage(plain);
-            if (env.endpoint != null) {
-              await savePeerEndpoint(c.haloId, env.endpoint!);
-            }
-            await _applyIncomingPayload(c.haloId, env);
-            notifyListeners();
-            handled = true;
-            break;
-          }
-        }
-        if (!handled) {
-          // request contacts sit outside the accepted list - try them before
-          // treating this as a brand new stranger.
-          for (final r in await db.pendingRequests()) {
-            final id = r['halo_id'] as String;
-            final plain = await signalDecrypt(id, cipher);
+      // reentrancy guard: the ffi drain + decrypt can outrun the 1s tick
+      // while tor is still warming, and stacked calls pinned the main
+      // thread hard enough to anr on weak phones. skip if one's running.
+      if (_draining) return;
+      _draining = true;
+      try {
+        final ciphers = engine.drainInbox();
+        if (ciphers.isEmpty) return;
+        for (final cipher in ciphers) {
+          // dedup: same msg can arrive twice (tor late + nostr, or a retry).
+          // the first copy consumes the one-time prekey; a duplicate would
+          // crash on it, so skip anything we've already handled.
+          final h = sha256.convert(utf8.encode(cipher)).toString();
+          if (await db.alreadySeen(h)) continue;
+          await db.markSeen(h);
+          var handled = false;
+          for (final c in contacts) {
+            final plain = await signalDecrypt(c.haloId, cipher);
             if (plain != null) {
               final env = unwrapMessage(plain);
-              await _applyIncomingPayload(id, env);
+              if (env.endpoint != null) {
+                await savePeerEndpoint(c.haloId, env.endpoint!);
+              }
+              await _applyIncomingPayload(c.haloId, env);
               notifyListeners();
               handled = true;
               break;
             }
           }
+          if (!handled) {
+            // request contacts sit outside the accepted list - try them before
+            // treating this as a brand new stranger.
+            for (final r in await db.pendingRequests()) {
+              final id = r['halo_id'] as String;
+              final plain = await signalDecrypt(id, cipher);
+              if (plain != null) {
+                final env = unwrapMessage(plain);
+                await _applyIncomingPayload(id, env);
+                notifyListeners();
+                handled = true;
+                break;
+              }
+            }
+          }
+          if (!handled) {
+            await backPairFromCipher(cipher);
+          }
         }
-        if (!handled) {
-          await backPairFromCipher(cipher);
-        }
+      } finally {
+        _draining = false;
       }
     });
 
     Timer.periodic(const Duration(seconds: 1), (_) async {
-      final msgs = engine.nostrPoll();
-      if (msgs.isEmpty) return;
-      for (final m in msgs) {
-        // dedup: skip a message we've already handled (see direct-onion note).
-        final h = sha256.convert(utf8.encode(m.cipher)).toString();
-        if (await db.alreadySeen(h)) continue;
-        await db.markSeen(h);
-        var haloId = _xPubToHaloId[m.peer];
-        String? wrapped = haloId == null
-            ? null
-            : await signalDecrypt(haloId, m.cipher, flagKeyChange: true);
-        // fallback: xpub not mapped yet (or it decrypted wrong) - trial
-        // against known contacts like the direct path, then remember it.
-        if (wrapped == null) {
-          for (final c in contacts) {
-            if (c.haloId == haloId) continue;
-            final p = await signalDecrypt(c.haloId, m.cipher);
-            if (p != null) {
-              wrapped = p;
-              haloId = c.haloId;
-              _xPubToHaloId[m.peer] = c.haloId;
-              break;
+      if (_polling) return;
+      _polling = true;
+      try {
+        final msgs = engine.nostrPoll();
+        if (msgs.isEmpty) return;
+        for (final m in msgs) {
+          // dedup: skip a message we've already handled (see direct-onion note).
+          final h = sha256.convert(utf8.encode(m.cipher)).toString();
+          if (await db.alreadySeen(h)) continue;
+          await db.markSeen(h);
+          var haloId = _xPubToHaloId[m.peer];
+          String? wrapped = haloId == null
+              ? null
+              : await signalDecrypt(haloId, m.cipher, flagKeyChange: true);
+          // fallback: xpub not mapped yet (or it decrypted wrong) - trial
+          // against known contacts like the direct path, then remember it.
+          if (wrapped == null) {
+            for (final c in contacts) {
+              if (c.haloId == haloId) continue;
+              final p = await signalDecrypt(c.haloId, m.cipher);
+              if (p != null) {
+                wrapped = p;
+                haloId = c.haloId;
+                _xPubToHaloId[m.peer] = c.haloId;
+                break;
+              }
             }
           }
-        }
-        if (wrapped == null) {
-          for (final r in await db.pendingRequests()) {
-            final id = r['halo_id'] as String;
-            final p = await signalDecrypt(id, m.cipher);
-            if (p != null) {
-              wrapped = p;
-              haloId = id;
-              _xPubToHaloId[m.peer] = id;
-              break;
+          if (wrapped == null) {
+            for (final r in await db.pendingRequests()) {
+              final id = r['halo_id'] as String;
+              final p = await signalDecrypt(id, m.cipher);
+              if (p != null) {
+                wrapped = p;
+                haloId = id;
+                _xPubToHaloId[m.peer] = id;
+                break;
+              }
             }
           }
+          if (wrapped == null) {
+            debugPrint('  nostr: no known contact could decrypt');
+            continue;
+          }
+          final env = unwrapMessage(wrapped);
+          if (env.endpoint != null) {
+            await savePeerEndpoint(haloId!, env.endpoint!);
+          }
+          await _applyIncomingPayload(haloId!, env);
+          notifyListeners();
         }
-        if (wrapped == null) {
-          debugPrint('  nostr: no known contact could decrypt');
-          continue;
-        }
-        final env = unwrapMessage(wrapped);
-        if (env.endpoint != null) {
-          await savePeerEndpoint(haloId!, env.endpoint!);
-        }
-        await _applyIncomingPayload(haloId!, env);
-        notifyListeners();
+      } finally {
+        _polling = false;
       }
     });
     final _stored = await const FlutterSecureStorage().read(
