@@ -44,6 +44,8 @@ import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
 import 'dart:isolate';
 
+typedef VoidFn = Void Function();
+typedef VoidFnDart = void Function();
 typedef CStrFn = Pointer<Utf8> Function();
 typedef CStrFnDart = Pointer<Utf8> Function();
 typedef OneArgFn = Pointer<Utf8> Function(Pointer<Utf8>);
@@ -65,6 +67,7 @@ class HaloEngine {
   late final TwoArgFnDart _decryptFrom;
   late final Pointer<Utf8> Function(Pointer<Utf8>) _start;
   late final CStrFnDart _drainInbox;
+  late final VoidFnDart _shutdown;
   late final CStrFnDart _getStatus;
   late final TwoArgFnDart _send;
   late final OneArgFnDart _nostrInit;
@@ -104,6 +107,7 @@ class HaloEngine {
           Pointer<Utf8> Function(Pointer<Utf8>)
         >('HaloStartListener');
     _drainInbox = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloDrainInbox');
+    _shutdown = _lib.lookupFunction<VoidFn, VoidFnDart>('HaloShutdown');
     _getStatus = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloGetStatus');
     _send = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloSendTo');
     _nostrInit = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrInit');
@@ -141,6 +145,8 @@ class HaloEngine {
       malloc.free(ptr);
     }
   }
+
+  void shutdown() => _shutdown();
 
   List<String> drainInbox() {
     final raw = _drainInbox().toDartString();
@@ -4107,6 +4113,13 @@ class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.detached) {
+      // app is being killed - stop tor so its lock releases before a fast
+      // relaunch, which otherwise raced the dying process and anr'd.
+      try {
+        engine.shutdown();
+      } catch (_) {}
+    }
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden ||
         state == AppLifecycleState.inactive) {
