@@ -4113,13 +4113,6 @@ class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.detached) {
-      // app is being killed - stop tor so its lock releases before a fast
-      // relaunch, which otherwise raced the dying process and anr'd.
-      try {
-        engine.shutdown();
-      } catch (_) {}
-    }
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden ||
         state == AppLifecycleState.inactive) {
