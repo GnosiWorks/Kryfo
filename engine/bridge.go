@@ -34,6 +34,7 @@ import (
 
 var (
 	mu       sync.Mutex
+	startMu  sync.Mutex
 	torNode  *tor.Tor
 	listener net.Listener
 	myAddr   string
@@ -362,6 +363,24 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 
 	log.Printf("halo: listening on %s", myAddr)
 	return C.CString(myAddr)
+}
+
+//export HaloShutdown
+func HaloShutdown() {
+	// stop tor cleanly so its data dir lock is released. without this a fast
+	// relaunch raced the dying process for the dir and blocked the new ui
+	// thread long enough to anr.
+	startMu.Lock()
+	defer startMu.Unlock()
+	mu.Lock()
+	t := torNode
+	torNode = nil
+	listener = nil
+	myAddr = ""
+	mu.Unlock()
+	if t != nil {
+		t.Close()
+	}
 }
 
 func acceptLoop(l net.Listener) {
