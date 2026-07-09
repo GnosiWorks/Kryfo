@@ -6,6 +6,12 @@ plugins {
 }
 
 android {
+    lint {
+        // release lint pulls its own dependency tree, useless for us and it
+        // was the last thing standing between the offline cache and a build
+        checkReleaseBuilds = false
+    }
+
     namespace = "com.halo.halo_app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
