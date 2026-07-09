@@ -286,6 +286,11 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 		return C.CString(fmt.Sprintf("error: mkdir tor: %v", err))
 	}
 
+	// a hard-killed previous process can leave tor's lock behind, which blocks
+	// this start and froze a fast relaunch. tor is single-instance per data dir
+	// and we hold startMu, so removing a stale lock here is safe.
+	os.Remove(torDataDir + "/lock")
+
 	setStatus("starting")
 	log.Println("halo: starting embedded tor...")
 	t, err := tor.Start(nil, &tor.StartConf{
