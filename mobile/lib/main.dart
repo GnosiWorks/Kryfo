@@ -4062,11 +4062,19 @@ class _OnboardingGate extends StatefulWidget {
 }
 
 class _OnboardingGateState extends State<_OnboardingGate> {
+  // boot is ~450ms now, the onion was gone before it registered. hold the
+  // splash a beat on cold start so it gets seen. warm reopens skip it.
+  bool _hold = false;
+
   @override
   void initState() {
     super.initState();
     if (!appState.ready) {
       appState.boot();
+      _hold = true;
+      Future.delayed(const Duration(milliseconds: 2500), () {
+        if (mounted) setState(() => _hold = false);
+      });
     }
   }
 
@@ -4075,7 +4083,7 @@ class _OnboardingGateState extends State<_OnboardingGate> {
     return ListenableBuilder(
       listenable: appState,
       builder: (context, _) {
-        if (!appState.ready) {
+        if (!appState.ready || _hold) {
           return const TorBootSplash();
         }
         if (!appState.onboardingComplete) {
