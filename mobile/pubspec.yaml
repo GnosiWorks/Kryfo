@@ -38,8 +38,6 @@ dependencies:
   sqflite_sqlcipher: ^3.4.0
   qr_flutter: ^4.1.0
   mobile_scanner: ^7.2.0
-  flutter_riverpod: ^3.3.1
-  cryptography: ^2.9.0
   ffi: ^2.2.0
   flutter_local_notifications: ^21.0.0
   file_picker: ^11.0.2
@@ -48,7 +46,6 @@ dependencies:
   record: ^6.2.0
   just_audio: ^0.10.5
   image_picker: ^1.2.1
-  cached_network_image: ^3.4.1
   flutter_secure_storage: ^10.0.0
   url_launcher: ^6.3.2
   permission_handler: ^12.0.1
