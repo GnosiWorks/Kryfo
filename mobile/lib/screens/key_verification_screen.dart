@@ -2,7 +2,10 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme.dart';
+import '../widgets/stagger_in.dart';
+import '../widgets/press_scale.dart';
 import '../main.dart' show db, appState;
 
 // safety number for a contact: a 60-digit code derived from both X25519
@@ -68,6 +71,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
       await db.clearKeyChanged(widget.peerHaloId);
     }
     await appState.refreshContacts();
+    if (next) HapticFeedback.mediumImpact();
     if (mounted) setState(() => _verified = next);
   }
 
@@ -103,49 +107,66 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
                 children: [
-                  Text(
-                    'with ${widget.peerName}',
-                    style: HaloType.sans(size: 14, color: HaloColors.text2),
+                  StaggerIn(
+                    index: 0,
+                    child: Text(
+                      'with ${widget.peerName}',
+                      style: HaloType.sans(size: 14, color: HaloColors.text2),
+                    ),
                   ),
                   const SizedBox(height: 24),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 24,
-                    ),
-                    decoration: BoxDecoration(
-                      color: HaloColors.surface2,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: HaloColors.line, width: 0.5),
-                    ),
-                    child: Wrap(
-                      spacing: 18,
-                      runSpacing: 14,
-                      alignment: WrapAlignment.center,
-                      children: [
-                        for (final g in groups)
-                          Text(
-                            g,
-                            style: HaloType.mono(
-                              size: 18,
-                              color: HaloColors.text,
-                              letter: 1.0,
+                  StaggerIn(
+                    index: 1,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 24,
+                      ),
+                      decoration: BoxDecoration(
+                        color: HaloColors.surface2,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: HaloColors.line, width: 0.5),
+                      ),
+                      child: Wrap(
+                        spacing: 18,
+                        runSpacing: 14,
+                        alignment: WrapAlignment.center,
+                        children: [
+                          // each group lands a beat after the last, so the
+                          // number assembles instead of popping in
+                          for (var i = 0; i < groups.length; i++)
+                            StaggerIn(
+                              index: i + 2,
+                              child: Text(
+                                groups[i],
+                                style: HaloType.mono(
+                                  size: 18,
+                                  color: HaloColors.text,
+                                  letter: 1.0,
+                                ),
+                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  Text(
-                    'if ${widget.peerName} sees the same number, your messages are private to just the two of you. comparing in person or over a call you trust is the surest way to be sure — but it is optional, never required to chat.',
-                    style: HaloType.sans(
-                      size: 13,
-                      color: HaloColors.text2,
-                      height: 1.5,
+                  StaggerIn(
+                    index: 4,
+                    child: Text(
+                      'if ${widget.peerName} sees the same number, your messages are private to just the two of you. comparing in person or over a call you trust is the surest way to be sure — but it is optional, never required to chat.',
+                      style: HaloType.sans(
+                        size: 13,
+                        color: HaloColors.text2,
+                        height: 1.5,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 28),
-                  _VerifyButton(verified: _verified, onTap: _toggle),
+                  StaggerIn(
+                    index: 6,
+                    child: _VerifyButton(verified: _verified, onTap: _toggle),
+                  ),
                 ],
               ),
             ),
@@ -163,44 +184,47 @@ class _VerifyButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
+    return PressScale(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 340),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: verified ? HaloColors.greenSoft : HaloColors.surface2,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
             color: verified
-                ? HaloColors.amber.withOpacity(0.12)
-                : HaloColors.surface2,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: verified
-                  ? HaloColors.amber.withOpacity(0.5)
-                  : HaloColors.line,
-              width: 0.5,
-            ),
+                ? HaloColors.green.withValues(alpha: 0.55)
+                : HaloColors.line,
+            width: 0.5,
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 260),
+              transitionBuilder: (child, anim) =>
+                  ScaleTransition(scale: anim, child: child),
+              child: Icon(
                 verified ? Icons.verified_user : Icons.verified_user_outlined,
+                key: ValueKey(verified),
                 size: 18,
-                color: verified ? HaloColors.amber : HaloColors.text2,
+                color: verified ? HaloColors.green : HaloColors.text2,
               ),
-              const SizedBox(width: 10),
-              Text(
-                verified ? 'verified' : 'mark as verified',
-                style: HaloType.sans(
-                  size: 14,
-                  weight: FontWeight.w500,
-                  color: verified ? HaloColors.amber : HaloColors.text,
-                ),
+            ),
+            const SizedBox(width: 10),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 260),
+              style: HaloType.sans(
+                size: 14,
+                weight: FontWeight.w500,
+                color: verified ? HaloColors.green : HaloColors.text,
               ),
-            ],
-          ),
+              child: Text(verified ? 'verified' : 'mark as verified'),
+            ),
+          ],
         ),
       ),
     );

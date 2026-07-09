@@ -145,7 +145,7 @@ class _MyHaloScreenState extends State<MyHaloScreen> {
             constraints: const BoxConstraints(maxWidth: 300),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: HaloColors.amber.withOpacity(0.08),
+              color: HaloColors.amber.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(

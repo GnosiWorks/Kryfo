@@ -110,7 +110,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.inbox_outlined, size: 40, color: HaloColors.text3),
+            const _BreathingInbox(),
             const SizedBox(height: 14),
             Text(
               'no requests',
@@ -237,6 +237,66 @@ class _RequestCardState extends State<_RequestCard>
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// soft amber ring breathing behind the empty inbox - same quiet-waiting
+// feel as the home empty state.
+class _BreathingInbox extends StatefulWidget {
+  const _BreathingInbox();
+
+  @override
+  State<_BreathingInbox> createState() => _BreathingInboxState();
+}
+
+class _BreathingInboxState extends State<_BreathingInbox>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2600),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 72,
+      height: 72,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          AnimatedBuilder(
+            animation: _pulse,
+            builder: (_, __) {
+              final t = Curves.easeOut.transform(_pulse.value);
+              return Container(
+                width: 46 + 20 * t,
+                height: 46 + 20 * t,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: HaloColors.amber.withValues(alpha: 0.30 * (1 - t)),
+                    width: 1.2,
+                  ),
+                ),
+              );
+            },
+          ),
+          Icon(Icons.inbox_outlined, size: 34, color: HaloColors.text3),
+        ],
       ),
     );
   }

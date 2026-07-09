@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import '../theme.dart';
+import '../widgets/stagger_in.dart';
 import '../main.dart' show appState;
 
 // lists contacts you have blocked. unblock restores them to your chats and
@@ -81,49 +82,52 @@ class _BlockedScreenState extends State<BlockedScreen> {
                   : ListView(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       children: [
-                        for (final c in _blocked)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        c.nickname ?? c.haloId,
-                                        style: HaloType.sans(
-                                          size: 14,
-                                          weight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      if (c.nickname != null)
+                        for (final (i, c) in _blocked.indexed)
+                          StaggerIn(
+                            index: i,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
                                         Text(
-                                          c.haloId,
-                                          style: HaloType.mono(
-                                            size: 10,
-                                            color: HaloColors.text3,
+                                          c.nickname ?? c.haloId,
+                                          style: HaloType.sans(
+                                            size: 14,
+                                            weight: FontWeight.w500,
                                           ),
                                         ),
-                                    ],
-                                  ),
-                                ),
-                                TextButton(
-                                  onPressed: () => _unblock(c.haloId),
-                                  child: Text(
-                                    'unblock',
-                                    style: HaloType.sans(
-                                      size: 13,
-                                      weight: FontWeight.w500,
-                                      color: HaloColors.amber,
+                                        if (c.nickname != null)
+                                          Text(
+                                            c.haloId,
+                                            style: HaloType.mono(
+                                              size: 10,
+                                              color: HaloColors.text3,
+                                            ),
+                                          ),
+                                      ],
                                     ),
                                   ),
-                                ),
-                              ],
+                                  TextButton(
+                                    onPressed: () => _unblock(c.haloId),
+                                    child: Text(
+                                      'unblock',
+                                      style: HaloType.sans(
+                                        size: 13,
+                                        weight: FontWeight.w500,
+                                        color: HaloColors.amber,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                       ],

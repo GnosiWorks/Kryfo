@@ -246,7 +246,7 @@ class _PushCard extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: active
-                ? HaloColors.amber.withOpacity(0.10)
+                ? HaloColors.amber.withValues(alpha: 0.10)
                 : HaloColors.surface,
             border: Border.all(
               color: active ? HaloColors.amber : HaloColors.line,

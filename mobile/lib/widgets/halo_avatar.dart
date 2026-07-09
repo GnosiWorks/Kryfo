@@ -68,7 +68,7 @@ class HaloAvatar extends StatelessWidget {
                 child: Container(
                   width: size * 0.30,
                   height: 0.7,
-                  color: palette.mark.withOpacity(0.7),
+                  color: palette.mark.withValues(alpha: 0.7),
                 ),
               ),
               Positioned(
