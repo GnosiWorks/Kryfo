@@ -67,7 +67,7 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
     // here - surface it, let the user decide, never silently drop.
     await _db.update(
       'contacts',
-      {'key_changed': 1},
+      {'key_changed': 1, 'verified': 0},
       where: 'halo_id = ?',
       whereArgs: [address.getName()],
     );

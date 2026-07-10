@@ -4,6 +4,7 @@
 import 'dart:async';
 import 'widgets/tor_boot_splash.dart';
 import 'dart:convert';
+import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'dart:ffi';
 import 'dart:io';
@@ -418,13 +419,12 @@ class HaloDb {
   }
 
   String _randomPassphrase() {
-    final r = DateTime.now().microsecondsSinceEpoch.toString();
-    final chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    var out = StringBuffer(r);
-    for (var i = 0; i < 32; i++) {
-      out.write(chars[(r.codeUnitAt(i % r.length) + i) % chars.length]);
-    }
-    return out.toString();
+    // 32 bytes from the platform csprng, hex. the old version derived the
+    // key from the launch timestamp - brute-forceable offline down to the
+    // microsecond the app first opened.
+    final rnd = Random.secure();
+    final bytes = List<int>.generate(32, (_) => rnd.nextInt(256));
+    return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
   }
 
   Future<Database> open() async {
@@ -2398,6 +2398,7 @@ class AppState extends ChangeNotifier {
   String myXPub = '';
   bool restored = false;
   bool ready = false;
+  bool _booting = false;
   // live tor state; the home halo breathes off this.
   // bumped whenever something changes for a peer's thread. open chats
   // compare against this instead of reloading on every notify.
@@ -2505,7 +2506,11 @@ class AppState extends ChangeNotifier {
 
   Future<void> boot() async {
     final _bsw = Stopwatch()..start();
-    if (ready) return;
+    // both _OnboardingGate and _RootShell call boot() on cold start, before
+    // ready flips. without this guard they raced through generateIdentity +
+    // db open together and froze a fresh-wipe launch solid.
+    if (ready || _booting) return;
+    _booting = true;
     // let the splash paint one frame before any heavy native call. sqlcipher
     // key derivation + the first go ffi hop block the ui thread long enough
     // that android's anr watchdog fired on weak phones during cold start.
