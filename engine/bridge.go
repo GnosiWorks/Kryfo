@@ -70,7 +70,7 @@ func HaloPing() *C.char {
 
 //export HaloVersion
 func HaloVersion() *C.char {
-	return C.CString("halo-engine v0.1.3")
+	return C.CString("halo-engine v0.1.4")
 }
 
 //export HaloGenerateIdentity
@@ -270,12 +270,19 @@ func HaloDecryptFrom(cPeerPub *C.char, cB64 *C.char) *C.char {
 
 //export HaloStartListener
 func HaloStartListener(cDataDir *C.char) *C.char {
-	mu.Lock()
-	defer mu.Unlock()
+	// startMu serializes start against shutdown. mu is only taken around
+	// the shared vars so other ffi calls don't freeze for the seconds tor
+	// takes to come up.
+	startMu.Lock()
+	defer startMu.Unlock()
 
+	mu.Lock()
 	if myAddr != "" {
-		return C.CString(myAddr)
+		addr := myAddr
+		mu.Unlock()
+		return C.CString(addr)
 	}
+	mu.Unlock()
 
 	dataDir := C.GoString(cDataDir)
 	if dataDir == "" {
@@ -301,7 +308,9 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: tor start: %v", err))
 	}
+	mu.Lock()
 	torNode = t
+	mu.Unlock()
 	setStatus("bootstrapped")
 	go watchBootstrap(t)
 
@@ -349,8 +358,11 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 		return C.CString(fmt.Sprintf("error: listen: %v", err))
 	}
 	log.Printf("halo: listen returned in %.0fs", time.Since(listenStart).Seconds())
+	mu.Lock()
 	listener = onion
 	myAddr = fmt.Sprintf("%s.onion", onion.ID)
+	addr := myAddr
+	mu.Unlock()
 
 	go func() {
 		watchHSDirUpload(t, hsCh, hsSubbed, onion.ID)
@@ -371,8 +383,8 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 
 	go acceptLoop(onion)
 
-	log.Printf("halo: listening on %s", myAddr)
-	return C.CString(myAddr)
+	log.Printf("halo: listening on %s", addr)
+	return C.CString(addr)
 }
 
 //export HaloShutdown
@@ -388,6 +400,7 @@ func HaloShutdown() {
 	listener = nil
 	myAddr = ""
 	mu.Unlock()
+	nostrResetClient()
 	if t != nil {
 		t.Close()
 	}
@@ -407,7 +420,10 @@ func acceptLoop(l net.Listener) {
 
 func handleConn(conn net.Conn) {
 	defer conn.Close()
-	r := bufio.NewReader(conn)
+	// cap the line and the wait - an unbounded ReadString from a hostile
+	// peer was an easy oom, and an idle conn held a goroutine forever.
+	conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+	r := bufio.NewReader(io.LimitReader(conn, 512*1024))
 	line, err := r.ReadString('\n')
 	if err != nil && err != io.EOF {
 		log.Printf("halo: read err: %v", err)
@@ -471,6 +487,11 @@ func HaloSendTo(cAddr *C.char, cMsg *C.char) *C.char {
 	_, err = conn.Write([]byte(msg + "\n"))
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: write: %v", err))
+	}
+
+	conn.SetReadDeadline(time.Now().Add(15 * time.Second))
+	if _, err := bufio.NewReader(conn).ReadString('\n'); err != nil {
+		return C.CString(fmt.Sprintf("error: no ack: %v", err))
 	}
 
 	log.Printf("halo: sent %d bytes to %s", len(msg), addr)
@@ -576,7 +597,7 @@ func HaloDecryptBackup(cBlob, cPassphrase *C.char) *C.char {
 // heuristic — most networks UPLOAD within 5-15 seconds.
 func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID string) {
 	if t == nil || t.Control == nil || !subbed {
-		time.Sleep(45 * time.Second)
+		time.Sleep(120 * time.Second)
 		return
 	}
 	defer t.Control.RemoveEventListener(ch, control.EventCodeHSDesc)

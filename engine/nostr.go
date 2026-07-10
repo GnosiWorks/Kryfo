@@ -78,6 +78,15 @@ var (
 	cachedNostrClientMu sync.Mutex
 )
 
+// called from shutdown. the cached client pins the old tor's socks
+// dialer; without this every publish after a restart-in-process talked
+// to a dead port.
+func nostrResetClient() {
+	cachedNostrClientMu.Lock()
+	cachedNostrClient = nil
+	cachedNostrClientMu.Unlock()
+}
+
 func torNostrClient() (*http.Client, error) {
 	cachedNostrClientMu.Lock()
 	defer cachedNostrClientMu.Unlock()
