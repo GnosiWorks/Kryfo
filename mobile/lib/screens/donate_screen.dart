@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../supporter.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import '../widgets/press_scale.dart';
+import '../widgets/motion.dart' show haloRoute;
 
 class DonateScreen extends StatefulWidget {
   const DonateScreen({super.key});
@@ -198,9 +200,11 @@ class _DonateScreenState extends State<DonateScreen> {
   ) {
     final sel = _amount == amt && _customCtl.text.isEmpty;
     return Expanded(
-      child: GestureDetector(
+      child: PressScale(
         onTap: () => _pickTier(amt),
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
           padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 6),
           decoration: BoxDecoration(
             color: sel ? const Color(0x24F59E0B) : HaloColors.surface,
@@ -289,9 +293,11 @@ class _DonateScreenState extends State<DonateScreen> {
 
   Widget _tab(String label, bool sel, VoidCallback onTap) {
     return Expanded(
-      child: GestureDetector(
+      child: PressScale(
         onTap: onTap,
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
           padding: const EdgeInsets.symmetric(vertical: 10),
           alignment: Alignment.center,
           decoration: BoxDecoration(
@@ -339,9 +345,11 @@ class _DonateScreenState extends State<DonateScreen> {
   Widget _coinCard(_Coin c) {
     final sel = _coin == c.key;
     return Expanded(
-      child: GestureDetector(
+      child: PressScale(
         onTap: () => setState(() => _coin = c.key),
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: HaloColors.surface,
@@ -393,18 +401,14 @@ class _DonateScreenState extends State<DonateScreen> {
   Future<void> _onSentIt() async {
     final tier = _tierFor(_amount);
     if (tier == SupporterTier.none) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => const _ThankYouScreen(tier: SupporterTier.none),
-        ),
-      );
+      Navigator.of(
+        context,
+      ).push(haloRoute(const _ThankYouScreen(tier: SupporterTier.none)));
       return;
     }
     await _confirmPaid(tier);
     if (!mounted) return;
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => _ThankYouScreen(tier: tier)));
+    Navigator.of(context).push(haloRoute(_ThankYouScreen(tier: tier)));
   }
 
   // the one seam BTCPay plugs into. today it just trusts the tap and

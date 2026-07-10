@@ -41,3 +41,6 @@ CONTEXT*.md
 Halo.html
 *.log
 patch_*.py
+patch*.py
+polish*.py
+dmrelay/

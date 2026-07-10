@@ -2672,9 +2672,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (!mounted) return;
     // preview the photo and let the user add a caption before it sends.
     // back = cancel; the send button returns the caption (may be empty).
-    final caption = await Navigator.of(context).push<String?>(
-      MaterialPageRoute(builder: (_) => _ImageCaptionScreen(bytes: bytes)),
-    );
+    final caption = await Navigator.of(
+      context,
+    ).push<String?>(haloRoute<String?>(_ImageCaptionScreen(bytes: bytes)));
     if (caption == null) return;
     await _sendOneImage(bytes, caption);
   }
@@ -3035,8 +3035,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
     if (!mounted) return;
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => _MediaGalleryScreen(
+      haloRoute(
+        _MediaGalleryScreen(
           paths: paths.reversed.toList(),
           title: _nickname ?? widget.peerHaloId,
         ),
@@ -3545,8 +3545,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   void _openKeyVerification() {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => KeyVerificationScreen(
+      haloRoute(
+        KeyVerificationScreen(
           peerHaloId: widget.peerHaloId,
           peerName: _nickname ?? widget.peerHaloId,
           myXpub: engine.myXPubkey(),
@@ -3748,8 +3748,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final row = await db.getContact(haloId);
     if (row == null || !mounted) return;
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ChatScreen(
+      haloRoute(
+        ChatScreen(
           peerHaloId: haloId,
           peerOnion: (row['onion'] as String?) ?? '',
           peerXPub: (row['xpub'] as String?) ?? '',

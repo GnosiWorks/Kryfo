@@ -8,7 +8,7 @@ import 'package:flutter/services.dart';
 import '../main.dart' show appState;
 import '../lock_state.dart';
 import '../miui_autostart.dart';
-import '../widgets/motion.dart' show TorStatus;
+import '../widgets/motion.dart' show TorStatus, haloRoute;
 import 'why_halo_screen.dart';
 import '../theme.dart';
 import 'modes_screen.dart';
@@ -234,9 +234,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ? 'fast · direct'
                 : 'private · 3 hops',
             onTap: () async {
-              await Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const ModesScreen()));
+              await Navigator.of(context).push(haloRoute(const ModesScreen()));
               if (mounted) setState(() {});
             },
           ),
@@ -244,9 +242,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: Icons.notifications_none,
             label: 'notifications',
             value: 'tor only',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const PushSettingsScreen()),
-            ),
+            onTap: () => Navigator.of(
+              context,
+            ).push(haloRoute(const PushSettingsScreen())),
           ),
           _Row(
             icon: Icons.battery_saver,
@@ -257,9 +255,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _Row(
             icon: Icons.block,
             label: 'blocked',
-            onTap: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const BlockedScreen())),
+            onTap: () =>
+                Navigator.of(context).push(haloRoute(const BlockedScreen())),
           ),
           const SizedBox(height: 24),
 
@@ -294,11 +291,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     if (lockState.enabled) {
                       await _confirmDisableLock();
                     } else {
-                      await Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const LockSetupScreen(),
-                        ),
-                      );
+                      await Navigator.of(
+                        context,
+                      ).push(haloRoute(const LockSetupScreen()));
                       setState(() {});
                     }
                   },
@@ -363,9 +358,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           await lockState.disablePanicPin();
                         }
                       } else {
-                        await Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => PanicSetupScreen()),
-                        );
+                        await Navigator.of(
+                          context,
+                        ).push(haloRoute(PanicSetupScreen()));
                       }
                     },
                   ),
@@ -379,17 +374,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: Icons.save_alt,
             label: 'back up identity',
             value: 'encrypted file',
-            onTap: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const BackupScreen())),
+            onTap: () =>
+                Navigator.of(context).push(haloRoute(const BackupScreen())),
           ),
           _Row(
             icon: Icons.restore,
             label: 'restore from backup',
             value: 'replace current',
-            onTap: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const RestoreScreen())),
+            onTap: () =>
+                Navigator.of(context).push(haloRoute(const RestoreScreen())),
           ),
           const SizedBox(height: 24),
 
@@ -421,10 +414,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: Icons.help_outline,
             label: 'why halo',
             value: 'how it protects you',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const WhyHaloScreen()),
-            ),
+            onTap: () =>
+                Navigator.push(context, haloRoute(const WhyHaloScreen())),
           ),
           _Row(
             icon: Icons.info_outline,

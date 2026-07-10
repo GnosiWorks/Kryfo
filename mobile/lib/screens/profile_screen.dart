@@ -11,6 +11,7 @@ import '../widgets/halo_avatar.dart';
 import 'settings_screen.dart';
 import 'donate_screen.dart';
 import 'my_halo_screen.dart';
+import '../widgets/motion.dart' show haloRoute;
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -187,9 +188,8 @@ class _ProfileScreenState extends State<ProfileScreen>
         actions: [
           IconButton(
             icon: Icon(Icons.settings_outlined, color: HaloColors.text2),
-            onPressed: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => SettingsScreen())),
+            onPressed: () =>
+                Navigator.of(context).push(haloRoute(SettingsScreen())),
           ),
         ],
       ),
@@ -378,9 +378,9 @@ class _ProfileScreenState extends State<ProfileScreen>
               _reveal(
                 3,
                 _PressRow(
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const MyHaloScreen()),
-                  ),
+                  onTap: () => Navigator.of(
+                    context,
+                  ).push(haloRoute(const MyHaloScreen())),
                   child: Container(
                     decoration: BoxDecoration(
                       color: HaloColors.surface2,
@@ -459,9 +459,9 @@ class _ProfileScreenState extends State<ProfileScreen>
               _reveal(
                 3,
                 _PressRow(
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const DonateScreen()),
-                  ),
+                  onTap: () => Navigator.of(
+                    context,
+                  ).push(haloRoute(const DonateScreen())),
                   child: Container(
                     decoration: BoxDecoration(
                       color: HaloColors.surface2,

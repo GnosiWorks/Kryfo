@@ -7,6 +7,7 @@ import '../main.dart' show db, appState;
 import '../theme.dart';
 import '../widgets/halo_avatar.dart';
 import 'chat_screen.dart';
+import '../widgets/motion.dart' show haloRoute;
 
 class RequestsScreen extends StatefulWidget {
   const RequestsScreen({super.key});
@@ -52,8 +53,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
   Future<void> _open(Map<String, Object?> row) async {
     final id = row['halo_id'] as String;
     await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ChatScreen(
+      haloRoute(
+        ChatScreen(
           peerHaloId: id,
           peerOnion: (row['onion'] as String?) ?? '',
           peerXPub: (row['xpub'] as String?) ?? '',

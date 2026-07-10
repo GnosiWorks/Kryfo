@@ -3516,9 +3516,7 @@ Future<void> showAddContact(BuildContext context) async {
   );
   if (action == null) return;
   if (action == 'mine') {
-    await Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const MyHaloScreen()));
+    await Navigator.of(context).push(haloRoute(const MyHaloScreen()));
     return;
   }
 
@@ -3526,7 +3524,7 @@ Future<void> showAddContact(BuildContext context) async {
   if (action == 'scan') {
     final result = await Navigator.of(
       context,
-    ).push<String>(MaterialPageRoute(builder: (_) => const ScanScreen()));
+    ).push<String>(haloRoute<String>(const ScanScreen()));
     if (result == null) return;
     uri = result;
   } else {
@@ -3796,7 +3794,7 @@ class _DevScreenState extends State<DevScreen> {
     if (action == 'scan') {
       final result = await Navigator.of(
         context,
-      ).push<String>(MaterialPageRoute(builder: (_) => const ScanScreen()));
+      ).push<String>(haloRoute<String>(const ScanScreen()));
       if (result == null) return;
       uri = result;
     } else {
@@ -3969,9 +3967,8 @@ class _DevScreenState extends State<DevScreen> {
                 ),
               const SizedBox(height: 24),
               GestureDetector(
-                onTap: () => Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const ModesScreen())),
+                onTap: () =>
+                    Navigator.of(context).push(haloRoute(const ModesScreen())),
                 child: Text(
                   'speed & privacy →',
                   style: HaloType.mono(size: 11, color: HaloColors.amber),
@@ -3979,9 +3976,9 @@ class _DevScreenState extends State<DevScreen> {
               ),
               const SizedBox(height: 8),
               GestureDetector(
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const PushSettingsScreen()),
-                ),
+                onTap: () => Navigator.of(
+                  context,
+                ).push(haloRoute(const PushSettingsScreen())),
                 child: Text(
                   'notifications →',
                   style: HaloType.mono(size: 11, color: HaloColors.amber),
@@ -4035,11 +4032,9 @@ class _DevScreenState extends State<DevScreen> {
                     );
                     if (ok == true) await lockState.disable();
                   } else {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const LockSetupScreen(),
-                      ),
-                    );
+                    Navigator.of(
+                      context,
+                    ).push(haloRoute(const LockSetupScreen()));
                   }
                 },
                 child: AnimatedBuilder(
