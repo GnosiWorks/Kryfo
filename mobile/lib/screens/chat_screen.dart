@@ -2542,7 +2542,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // ~60kb slices that the receiver reassembles by mediaId.
     // 30kb keeps each chunk + envelope overhead under the public relay event
     // size limit (many cap ~32-64kb). bigger chunks got 'no relays accepted'.
-    const chunkSize = 30 * 1024;
+    // gift wrap doubles the payload on the wire - 16k keeps the wrapped
+    // event under relay size caps.
+    const chunkSize = 16 * 1024;
     final chunks = <String>[];
     for (var i = 0; i < b64.length; i += chunkSize) {
       chunks.add(b64.substring(i, math.min(i + chunkSize, b64.length)));
@@ -2788,7 +2790,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         await _fire(await signalEncrypt(widget.peerHaloId, wrapped));
         // then the thumbnail as pvImg chunks, reassembled onto the card.
         if (chunkThumb) {
-          const cs = 30 * 1024;
+          const cs = 16 * 1024;
           final slices = <String>[];
           for (var i = 0; i < img!.length; i += cs) {
             slices.add(img.substring(i, math.min(i + cs, img.length)));
