@@ -37,11 +37,10 @@ import (
 	"time"
 
 	"fiatjaf.com/nostr"
-	"golang.org/x/crypto/curve25519"
+	"github.com/mailru/easyjson"
+	nostr2 "github.com/nbd-wtf/go-nostr"
 	"golang.org/x/crypto/hkdf"
 )
-
-const haloNostrKind = 30078
 
 var (
 	nostrMu      sync.Mutex
@@ -69,22 +68,6 @@ func nostrHkdf(secret, salt, info []byte, length int) []byte {
 	out := make([]byte, length)
 	r.Read(out)
 	return out
-}
-
-// derive the deterministic ephemeral nostr keypair for conversation with peer.
-// both peers compute the same keypair from their shared ECDH secret -> they read/write the same address.
-func nostrDeriveKeys(peerXPub [32]byte) (sk nostr.SecretKey, pk nostr.PubKey, err error) {
-	shared, e := curve25519.X25519(myXPriv[:], peerXPub[:])
-	if e != nil {
-		return sk, pk, e
-	}
-	convID := nostrConversationID(myXPub, peerXPub)
-	seed := nostrHkdf(shared, convID, []byte("halo-nostr-key-v1"), 32)
-	var seedArr [32]byte
-	copy(seedArr[:], seed)
-	sk = nostr.SecretKey(seedArr)
-	pk = sk.Public()
-	return
 }
 
 // ---------- relay pool ----------
@@ -169,7 +152,7 @@ func nostrPublishMulti(ctx context.Context, ev nostr.Event) (ok int) {
 
 // run a long-lived subscription against all configured relays for events from `pk`.
 // dedupes across relays. exits when ctx is cancelled.
-func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, pk nostr.PubKey) {
+func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]byte, rcvPk string) {
 	nostrMu.Lock()
 	urls := append([]string(nil), nostrRelays...)
 	nostrMu.Unlock()
@@ -192,8 +175,18 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, pk nostr.PubK
 		if dup {
 			return
 		}
+		var gw nostr2.Event
+		if err := easyjson.Unmarshal([]byte(ev.String()), &gw); err != nil {
+			log.Printf("nostr: wrap parse failed: %v", err)
+			return
+		}
+		content, err := nip17Unwrap(peerArr, gw)
+		if err != nil {
+			log.Printf("nostr: unwrap dropped one: %v", err)
+			return
+		}
 		nostrMu.Lock()
-		nostrInbox = append(nostrInbox, peerXPubHex+"|"+ev.Content)
+		nostrInbox = append(nostrInbox, peerXPubHex+"|"+content)
 		nostrMu.Unlock()
 		log.Printf("nostr: received event %s for peer %s...", id[:12], peerXPubHex[:12])
 	}
@@ -220,14 +213,20 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, pk nostr.PubK
 					continue
 				}
 				f := nostr.Filter{
-					Authors: []nostr.PubKey{pk},
-					Kinds:   []nostr.Kind{haloNostrKind},
-					Limit:   100,
+					Kinds: []nostr.Kind{1059},
+					Tags:  nostr.TagMap{"p": []string{rcvPk}},
+					Limit: 100,
 				}
 				// after the first connect only ask for what we missed - refetching
 				// 100 old events over tor on every reconnect was pure waste.
 				if last > 0 {
-					f.Since = last + 1
+					// wraps carry timestamps jittered up to ~10h into the past,
+					// so pull the window back or a late-stamped fresh wrap gets
+					// filtered out. the dedup layers eat the refetch.
+					since := last - nostr.Timestamp(12*3600)
+					if since > 0 {
+						f.Since = since
+					}
 				}
 				sub, err := r.Subscribe(ctx, f, nostr.SubscriptionOptions{})
 				if err != nil {
@@ -300,24 +299,16 @@ func HaloNostrSend(cPeerXPubHex, cMsg *C.char) *C.char {
 	var peerArr [32]byte
 	copy(peerArr[:], peerBytes)
 
-	sk, pk, err := nostrDeriveKeys(peerArr)
+	gw, err := nip17Wrap(peerArr, msg)
 	if err != nil {
-		return C.CString(fmt.Sprintf("error: derive: %v", err))
+		return C.CString(fmt.Sprintf("error: wrap: %v", err))
 	}
-
-	convID := nostrConversationID(myXPub, peerArr)
-	ev := nostr.Event{
-		PubKey:    pk,
-		CreatedAt: nostr.Now(),
-		Kind:      haloNostrKind,
-		Tags: nostr.Tags{
-			{"d", hex.EncodeToString(convID)},
-			{"halo", "v1"},
-			{"expiration", fmt.Sprintf("%d", time.Now().Add(30*24*time.Hour).Unix())},
-		},
-		Content: msg,
+	// the wrap is built with the nip59 lib's event type; cross into the relay
+	// lib as plain json. id and sig survive verbatim, both speak nip-01.
+	var ev nostr.Event
+	if err := easyjson.Unmarshal([]byte(gw.String()), &ev); err != nil {
+		return C.CString(fmt.Sprintf("error: wrap convert: %v", err))
 	}
-	ev.Sign(sk)
 	nostrMu.Lock()
 	nostrSentIDs[ev.ID.Hex()] = true
 	if len(nostrSentIDs) > 4096 {
@@ -345,7 +336,7 @@ func HaloNostrSubscribe(cPeerXPubHex *C.char) *C.char {
 	var peerArr [32]byte
 	copy(peerArr[:], peerBytes)
 
-	_, pk, err := nostrDeriveKeys(peerArr)
+	_, rcvPk, err := nip17RcvAddress(peerArr)
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: derive: %v", err))
 	}
@@ -359,8 +350,8 @@ func HaloNostrSubscribe(cPeerXPubHex *C.char) *C.char {
 	nostrSubs[peerHex] = cancel
 	nostrMu.Unlock()
 
-	go nostrSubscribeRunner(ctx, peerHex, pk)
-	log.Printf("nostr: subscribed for peer %s... at ephemeral %s...", peerHex[:12], pk.Hex()[:12])
+	go nostrSubscribeRunner(ctx, peerHex, peerArr, rcvPk)
+	log.Printf("nostr: subscribed for peer %s... at addr %s...", peerHex[:12], rcvPk[:12])
 	return C.CString("ok")
 }
 
