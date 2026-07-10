@@ -339,6 +339,7 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 	}
 	listenStart := time.Now()
 	onion, err := t.Listen(ctx, &tor.ListenConf{
+		NoWait:      true,
 		Version3:    true,
 		RemotePorts: []int{80},
 		Key:         key,
@@ -580,13 +581,16 @@ func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID st
 	}
 	defer t.Control.RemoveEventListener(ch, control.EventCodeHSDesc)
 
-	timeout := time.After(45 * time.Second)
+	timeout := time.After(120 * time.Second)
 	for {
 		select {
 		case ev := <-ch:
 			hs, ok := ev.(*control.HSDescEvent)
 			if !ok {
 				continue
+			}
+			if hs.Action == "FAILED" && (hs.Address == onionID || hs.Address == onionID+".onion") {
+				log.Printf("halo: HS_DESC FAILED via %s reason=%s", hs.HSDir, hs.Reason)
 			}
 			if hs.Action == "UPLOADED" && (hs.Address == onionID || hs.Address == onionID+".onion") {
 				log.Printf("halo: HS_DESC UPLOADED received for %s", onionID)
