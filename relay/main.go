@@ -1,15 +1,15 @@
 package main
 
 import (
-go.mod "crypto/tls"
-go.mod "encoding/json"
-go.mod "flag"
-go.mod "log"
-go.mod "net/http"
-go.mod "sync"
-go.mod "time"
+	"crypto/tls"
+	"encoding/json"
+	"flag"
+	"log"
+	"net/http"
+	"sync"
+	"time"
 
-go.mod "github.com/gorilla/websocket"
+	"github.com/gorilla/websocket"
 )
 
 // halo fast relay — forwards opaque, end-to-end-encrypted blobs between two
@@ -27,210 +27,210 @@ go.mod "github.com/gorilla/websocket"
 // unreadable, but this must be closed before any public use. see README.
 
 var (
-go.mod addr     = flag.String("addr", ":8443", "listen address")
-go.mod certFile = flag.String("cert", "", "TLS cert file (plain ws if empty — dev only)")
-go.mod keyFile  = flag.String("key", "", "TLS key file")
+	addr     = flag.String("addr", ":8443", "listen address")
+	certFile = flag.String("cert", "", "TLS cert file (plain ws if empty — dev only)")
+	keyFile  = flag.String("key", "", "TLS key file")
 )
 
 const (
-go.mod writeWait   = 10 * time.Second
-go.mod pongWait    = 60 * time.Second
-go.mod pingPeriod  = 50 * time.Second
-go.mod maxMsgBytes = 256 * 1024
-go.mod queueTTL    = 24 * time.Hour
-go.mod maxQueued   = 200
+	writeWait   = 10 * time.Second
+	pongWait    = 60 * time.Second
+	pingPeriod  = 50 * time.Second
+	maxMsgBytes = 256 * 1024
+	queueTTL    = 24 * time.Hour
+	maxQueued   = 200
 )
 
 type frame struct {
-go.mod Type    string `json:"type"`              // hello | send | (out: msg)
-go.mod Key     string `json:"key,omitempty"`     // hello: my key. out: sender key.
-go.mod To      string `json:"to,omitempty"`      // send: recipient key
-go.mod Payload string `json:"payload,omitempty"` // base64 ciphertext, opaque to us
+	Type    string `json:"type"`              // hello | send | (out: msg)
+	Key     string `json:"key,omitempty"`     // hello: my key. out: sender key.
+	To      string `json:"to,omitempty"`      // send: recipient key
+	Payload string `json:"payload,omitempty"` // base64 ciphertext, opaque to us
 }
 
 type client struct {
-go.mod key  string
-go.mod conn *websocket.Conn
-go.mod out  chan []byte
+	key  string
+	conn *websocket.Conn
+	out  chan []byte
 }
 
 type queued struct {
-go.mod data []byte
-go.mod at   time.Time
+	data []byte
+	at   time.Time
 }
 
 type hub struct {
-go.mod mu      sync.Mutex
-go.mod clients map[string]*client
-go.mod queue   map[string][]queued
+	mu      sync.Mutex
+	clients map[string]*client
+	queue   map[string][]queued
 }
 
 func newHub() *hub {
-go.mod return &hub{clients: map[string]*client{}, queue: map[string][]queued{}}
+	return &hub{clients: map[string]*client{}, queue: map[string][]queued{}}
 }
 
 func (h *hub) register(c *client) {
-go.mod h.mu.Lock()
-go.mod if old := h.clients[c.key]; old != nil && old != c {
-go.mod go.mod close(old.out)
-go.mod }
-go.mod h.clients[c.key] = c
-go.mod pending := h.queue[c.key]
-go.mod delete(h.queue, c.key)
-go.mod h.mu.Unlock()
+	h.mu.Lock()
+	if old := h.clients[c.key]; old != nil && old != c {
+		close(old.out)
+	}
+	h.clients[c.key] = c
+	pending := h.queue[c.key]
+	delete(h.queue, c.key)
+	h.mu.Unlock()
 
-go.mod cutoff := time.Now().Add(-queueTTL)
-go.mod for _, q := range pending {
-go.mod go.mod if q.at.Before(cutoff) {
-go.mod go.mod go.mod continue
-go.mod go.mod }
-go.mod go.mod select {
-go.mod go.mod case c.out <- q.data:
-go.mod go.mod default:
-go.mod go.mod }
-go.mod }
+	cutoff := time.Now().Add(-queueTTL)
+	for _, q := range pending {
+		if q.at.Before(cutoff) {
+			continue
+		}
+		select {
+		case c.out <- q.data:
+		default:
+		}
+	}
 }
 
 func (h *hub) unregister(c *client) {
-go.mod h.mu.Lock()
-go.mod if h.clients[c.key] == c {
-go.mod go.mod delete(h.clients, c.key)
-go.mod }
-go.mod h.mu.Unlock()
+	h.mu.Lock()
+	if h.clients[c.key] == c {
+		delete(h.clients, c.key)
+	}
+	h.mu.Unlock()
 }
 
 func (h *hub) route(to string, data []byte) {
-go.mod h.mu.Lock()
-go.mod defer h.mu.Unlock()
-go.mod if c := h.clients[to]; c != nil {
-go.mod go.mod select {
-go.mod go.mod case c.out <- data:
-go.mod go.mod go.mod return
-go.mod go.mod default:
-go.mod go.mod }
-go.mod }
-go.mod q := append(h.queue[to], queued{data: data, at: time.Now()})
-go.mod if len(q) > maxQueued {
-go.mod go.mod q = q[len(q)-maxQueued:]
-go.mod }
-go.mod h.queue[to] = q
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if c := h.clients[to]; c != nil {
+		select {
+		case c.out <- data:
+			return
+		default:
+		}
+	}
+	q := append(h.queue[to], queued{data: data, at: time.Now()})
+	if len(q) > maxQueued {
+		q = q[len(q)-maxQueued:]
+	}
+	h.queue[to] = q
 }
 
 var upgrader = websocket.Upgrader{
-go.mod ReadBufferSize:  4096,
-go.mod WriteBufferSize: 4096,
-go.mod CheckOrigin:     func(*http.Request) bool { return true },
+	ReadBufferSize:  4096,
+	WriteBufferSize: 4096,
+	CheckOrigin:     func(*http.Request) bool { return true },
 }
 
 func (h *hub) serveWS(w http.ResponseWriter, r *http.Request) {
-go.mod conn, err := upgrader.Upgrade(w, r, nil)
-go.mod if err != nil {
-go.mod go.mod return
-go.mod }
-go.mod c := &client{conn: conn, out: make(chan []byte, 32)}
-go.mod go c.writePump()
-go.mod c.readPump(h)
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
+	}
+	c := &client{conn: conn, out: make(chan []byte, 32)}
+	go c.writePump()
+	c.readPump(h)
 }
 
 func (c *client) readPump(h *hub) {
-go.mod defer func() {
-go.mod go.mod h.unregister(c)
-go.mod go.mod c.conn.Close()
-go.mod }()
-go.mod c.conn.SetReadLimit(maxMsgBytes)
-go.mod c.conn.SetReadDeadline(time.Now().Add(pongWait))
-go.mod c.conn.SetPongHandler(func(string) error {
-go.mod go.mod c.conn.SetReadDeadline(time.Now().Add(pongWait))
-go.mod go.mod return nil
-go.mod })
-go.mod for {
-go.mod go.mod _, raw, err := c.conn.ReadMessage()
-go.mod go.mod if err != nil {
-go.mod go.mod go.mod return
-go.mod go.mod }
-go.mod go.mod var f frame
-go.mod go.mod if json.Unmarshal(raw, &f) != nil {
-go.mod go.mod go.mod continue
-go.mod go.mod }
-go.mod go.mod switch f.Type {
-go.mod go.mod case "hello":
-go.mod go.mod go.mod if f.Key == "" {
-go.mod go.mod go.mod go.mod return
-go.mod go.mod go.mod }
-go.mod go.mod go.mod c.key = f.Key
-go.mod go.mod go.mod h.register(c)
-go.mod go.mod case "send":
-go.mod go.mod go.mod if c.key == "" || f.To == "" {
-go.mod go.mod go.mod go.mod continue
-go.mod go.mod go.mod }
-go.mod go.mod go.mod out, _ := json.Marshal(frame{Type: "msg", Key: c.key, Payload: f.Payload})
-go.mod go.mod go.mod h.route(f.To, out)
-go.mod go.mod }
-go.mod }
+	defer func() {
+		h.unregister(c)
+		c.conn.Close()
+	}()
+	c.conn.SetReadLimit(maxMsgBytes)
+	c.conn.SetReadDeadline(time.Now().Add(pongWait))
+	c.conn.SetPongHandler(func(string) error {
+		c.conn.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
+	for {
+		_, raw, err := c.conn.ReadMessage()
+		if err != nil {
+			return
+		}
+		var f frame
+		if json.Unmarshal(raw, &f) != nil {
+			continue
+		}
+		switch f.Type {
+		case "hello":
+			if f.Key == "" {
+				return
+			}
+			c.key = f.Key
+			h.register(c)
+		case "send":
+			if c.key == "" || f.To == "" {
+				continue
+			}
+			out, _ := json.Marshal(frame{Type: "msg", Key: c.key, Payload: f.Payload})
+			h.route(f.To, out)
+		}
+	}
 }
 
 func (c *client) writePump() {
-go.mod ticker := time.NewTicker(pingPeriod)
-go.mod defer func() {
-go.mod go.mod ticker.Stop()
-go.mod go.mod c.conn.Close()
-go.mod }()
-go.mod for {
-go.mod go.mod select {
-go.mod go.mod case data, ok := <-c.out:
-go.mod go.mod go.mod c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-go.mod go.mod go.mod if !ok {
-go.mod go.mod go.mod go.mod c.conn.WriteMessage(websocket.CloseMessage, nil)
-go.mod go.mod go.mod go.mod return
-go.mod go.mod go.mod }
-go.mod go.mod go.mod if err := c.conn.WriteMessage(websocket.TextMessage, data); err != nil {
-go.mod go.mod go.mod go.mod return
-go.mod go.mod go.mod }
-go.mod go.mod case <-ticker.C:
-go.mod go.mod go.mod c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-go.mod go.mod go.mod if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-go.mod go.mod go.mod go.mod return
-go.mod go.mod go.mod }
-go.mod go.mod }
-go.mod }
+	ticker := time.NewTicker(pingPeriod)
+	defer func() {
+		ticker.Stop()
+		c.conn.Close()
+	}()
+	for {
+		select {
+		case data, ok := <-c.out:
+			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if !ok {
+				c.conn.WriteMessage(websocket.CloseMessage, nil)
+				return
+			}
+			if err := c.conn.WriteMessage(websocket.TextMessage, data); err != nil {
+				return
+			}
+		case <-ticker.C:
+			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				return
+			}
+		}
+	}
 }
 
 func (h *hub) reaper() {
-go.mod for range time.Tick(time.Hour) {
-go.mod go.mod cutoff := time.Now().Add(-queueTTL)
-go.mod go.mod h.mu.Lock()
-go.mod go.mod for k, qs := range h.queue {
-go.mod go.mod go.mod kept := qs[:0]
-go.mod go.mod go.mod for _, q := range qs {
-go.mod go.mod go.mod go.mod if q.at.After(cutoff) {
-go.mod go.mod go.mod go.mod go.mod kept = append(kept, q)
-go.mod go.mod go.mod go.mod }
-go.mod go.mod go.mod }
-go.mod go.mod go.mod if len(kept) == 0 {
-go.mod go.mod go.mod go.mod delete(h.queue, k)
-go.mod go.mod go.mod } else {
-go.mod go.mod go.mod go.mod h.queue[k] = kept
-go.mod go.mod go.mod }
-go.mod go.mod }
-go.mod go.mod h.mu.Unlock()
-go.mod }
+	for range time.Tick(time.Hour) {
+		cutoff := time.Now().Add(-queueTTL)
+		h.mu.Lock()
+		for k, qs := range h.queue {
+			kept := qs[:0]
+			for _, q := range qs {
+				if q.at.After(cutoff) {
+					kept = append(kept, q)
+				}
+			}
+			if len(kept) == 0 {
+				delete(h.queue, k)
+			} else {
+				h.queue[k] = kept
+			}
+		}
+		h.mu.Unlock()
+	}
 }
 
 func main() {
-go.mod flag.Parse()
-go.mod h := newHub()
-go.mod go h.reaper()
+	flag.Parse()
+	h := newHub()
+	go h.reaper()
 
-go.mod mux := http.NewServeMux()
-go.mod mux.HandleFunc("/ws", h.serveWS)
-go.mod mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte("ok")) })
+	mux := http.NewServeMux()
+	mux.HandleFunc("/ws", h.serveWS)
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte("ok")) })
 
-go.mod srv := &http.Server{Addr: *addr, Handler: mux}
-go.mod if *certFile != "" && *keyFile != "" {
-go.mod go.mod srv.TLSConfig = &tls.Config{MinVersion: tls.VersionTLS12}
-go.mod go.mod log.Printf("halo relay (wss) on %s", *addr)
-go.mod go.mod log.Fatal(srv.ListenAndServeTLS(*certFile, *keyFile))
-go.mod }
-go.mod log.Printf("halo relay (ws, NO TLS — dev only) on %s", *addr)
-go.mod log.Fatal(srv.ListenAndServe())
+	srv := &http.Server{Addr: *addr, Handler: mux}
+	if *certFile != "" && *keyFile != "" {
+		srv.TLSConfig = &tls.Config{MinVersion: tls.VersionTLS12}
+		log.Printf("halo relay (wss) on %s", *addr)
+		log.Fatal(srv.ListenAndServeTLS(*certFile, *keyFile))
+	}
+	log.Printf("halo relay (ws, NO TLS — dev only) on %s", *addr)
+	log.Fatal(srv.ListenAndServe())
 }
