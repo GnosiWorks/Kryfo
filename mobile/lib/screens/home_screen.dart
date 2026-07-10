@@ -71,21 +71,19 @@ class HomeScreen extends StatelessWidget {
             ),
             const _OfflineStrip(),
             _NotesPin(
-              onTap: () => Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const NotesScreen())),
+              onTap: () =>
+                  Navigator.of(context).push(haloRoute(const NotesScreen())),
             ),
             if (pendingCount > 0)
               _RequestsPin(
                 count: pendingCount,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const RequestsScreen()),
-                ),
+                onTap: () => Navigator.of(
+                  context,
+                ).push(haloRoute(const RequestsScreen())),
               ),
             _SavedPin(
-              onTap: () => Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const SavedScreen())),
+              onTap: () =>
+                  Navigator.of(context).push(haloRoute(const SavedScreen())),
             ),
             if (hasArchived)
               _ArchivedPin(
@@ -110,9 +108,8 @@ class HomeScreen extends StatelessWidget {
               active: 'chats',
               onDevLongPress: onOpenDev,
               onMeTap: onOpenSettings,
-              onSupportTap: () => Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const DonateScreen())),
+              onSupportTap: () =>
+                  Navigator.of(context).push(haloRoute(const DonateScreen())),
             ),
           ],
         ),

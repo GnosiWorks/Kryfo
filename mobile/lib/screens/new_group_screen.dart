@@ -7,6 +7,7 @@ import '../main.dart' show appState;
 import '../theme.dart';
 import '../widgets/halo_avatar.dart';
 import 'group_chat_screen.dart';
+import '../widgets/motion.dart' show haloRoute;
 
 class NewGroupScreen extends StatefulWidget {
   const NewGroupScreen({super.key});
@@ -32,9 +33,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
     // pop the picker, then push the group chat - the user lands inside
     // the group they just made, the way every other messenger does it.
     Navigator.of(context).pop();
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => GroupChatScreen(groupId: groupId)),
-    );
+    Navigator.of(context).push(haloRoute(GroupChatScreen(groupId: groupId)));
   }
 
   @override

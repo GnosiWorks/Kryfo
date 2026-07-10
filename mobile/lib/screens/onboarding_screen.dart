@@ -12,6 +12,7 @@ import 'my_halo_screen.dart';
 import '../main.dart' show appState, AppState;
 import 'scan_screen.dart';
 import '../widgets/halo_avatar.dart';
+import '../widgets/motion.dart' show haloRoute;
 
 class OnboardingScreen extends StatefulWidget {
   final AppState appState;
@@ -190,9 +191,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
           Center(
             child: GestureDetector(
               onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const RestoreScreen()),
-                );
+                Navigator.of(context).push(haloRoute(const RestoreScreen()));
               },
               child: Text(
                 'have a backup? restore →',
@@ -987,9 +986,7 @@ class _FirstContactScreen extends StatelessWidget {
               // open the QR screen first, then finish onboarding once it returns.
               // completing first rebuilds the tree to home and eats the nav.
               final nav = Navigator.of(context);
-              await nav.push(
-                MaterialPageRoute(builder: (_) => const MyHaloScreen()),
-              );
+              await nav.push(haloRoute(const MyHaloScreen()));
               onComplete();
             },
           ),
@@ -1002,9 +999,7 @@ class _FirstContactScreen extends StatelessWidget {
               // marking onboarding done first rebuilt the tree to home and ate the
               // navigation, dropping the user on home with no camera.
               final nav = Navigator.of(context);
-              await nav.push(
-                MaterialPageRoute(builder: (_) => const ScanScreen()),
-              );
+              await nav.push(haloRoute(const ScanScreen()));
               onComplete();
             },
           ),

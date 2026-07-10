@@ -12,6 +12,7 @@ import '../theme.dart';
 import '../widgets/halo_avatar.dart';
 import '../widgets/burn_fade.dart';
 import 'group_info_screen.dart';
+import '../widgets/motion.dart' show haloRoute;
 
 class GroupChatScreen extends StatefulWidget {
   final String groupId;
@@ -479,11 +480,9 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               memberCount: _memberCount,
               onBack: () => Navigator.of(context).pop(),
               onTapInfo: () async {
-                await Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => GroupInfoScreen(groupId: widget.groupId),
-                  ),
-                );
+                await Navigator.of(
+                  context,
+                ).push(haloRoute(GroupInfoScreen(groupId: widget.groupId)));
                 _load();
               },
             ),

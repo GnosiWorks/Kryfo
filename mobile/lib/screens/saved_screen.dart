@@ -5,6 +5,7 @@ import '../widgets/press_scale.dart';
 import '../main.dart';
 import '../theme.dart';
 import 'chat_screen.dart';
+import '../widgets/motion.dart' show haloRoute;
 
 // every saved message across all chats, newest first. tap a card to jump to
 // that message in its chat; tap the bookmark to unsave.
@@ -47,8 +48,8 @@ class _SavedScreenState extends State<SavedScreen> {
     if (match.isEmpty || !mounted) return;
     final r = match.first;
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ChatScreen(
+      haloRoute(
+        ChatScreen(
           peerHaloId: peerId,
           peerOnion: (r['onion'] as String?) ?? '',
           peerXPub: (r['xpub'] as String?) ?? '',
