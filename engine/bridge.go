@@ -296,13 +296,14 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 	t, err := tor.Start(nil, &tor.StartConf{
 		ProcessCreator: libtor.Creator,
 		DataDir:        torDataDir,
-		DebugWriter:    os.Stderr,
+		DebugWriter:    log.Writer(),
 	})
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: tor start: %v", err))
 	}
 	torNode = t
 	setStatus("bootstrapped")
+	go watchBootstrap(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
@@ -336,14 +337,17 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 			log.Printf("halo: HSDesc subscribe failed: %v", aerr)
 		}
 	}
+	listenStart := time.Now()
 	onion, err := t.Listen(ctx, &tor.ListenConf{
 		Version3:    true,
 		RemotePorts: []int{80},
 		Key:         key,
 	})
 	if err != nil {
+		log.Printf("halo: listen failed after %.0fs: %v", time.Since(listenStart).Seconds(), err)
 		return C.CString(fmt.Sprintf("error: listen: %v", err))
 	}
+	log.Printf("halo: listen returned in %.0fs", time.Since(listenStart).Seconds())
 	listener = onion
 	myAddr = fmt.Sprintf("%s.onion", onion.ID)
 
@@ -593,4 +597,47 @@ func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID st
 			return
 		}
 	}
+}
+
+// polls tor for real bootstrap progress. tor.Start only means the process
+// is up; the network comes alive inside Listen, so this is the only true
+// progress signal. self-terminates at 100% or after ~5 min.
+func watchBootstrap(t *tor.Tor) {
+	lastPct := -1
+	for i := 0; i < 150; i++ {
+		if t == nil || t.Control == nil {
+			return
+		}
+		kv, err := t.Control.GetInfo("status/bootstrap-phase")
+		if err == nil && len(kv) > 0 {
+			pct := parseBootstrapPct(kv[0].Val)
+			if pct != lastPct {
+				lastPct = pct
+				statusMu.Lock()
+				bootstrapPct = pct
+				statusMu.Unlock()
+				log.Printf("halo: tor bootstrap %d%%", pct)
+			}
+			if pct >= 100 {
+				return
+			}
+		}
+		time.Sleep(2 * time.Second)
+	}
+}
+
+func parseBootstrapPct(v string) int {
+	i := strings.Index(v, "PROGRESS=")
+	if i < 0 {
+		return 0
+	}
+	v = v[i+len("PROGRESS="):]
+	n := 0
+	for _, c := range v {
+		if c < '0' || c > '9' {
+			break
+		}
+		n = n*10 + int(c-'0')
+	}
+	return n
 }
