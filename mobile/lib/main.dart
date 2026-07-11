@@ -46,6 +46,8 @@ import 'signal_session.dart';
 import 'dart:isolate';
 
 typedef VoidFn = Void Function();
+typedef IntArgFn = Void Function(Int32);
+typedef IntArgFnDart = void Function(int);
 typedef VoidFnDart = void Function();
 typedef CStrFn = Pointer<Utf8> Function();
 typedef CStrFnDart = Pointer<Utf8> Function();
@@ -69,6 +71,7 @@ class HaloEngine {
   late final Pointer<Utf8> Function(Pointer<Utf8>) _start;
   late final CStrFnDart _drainInbox;
   late final VoidFnDart _shutdown;
+  late final IntArgFnDart _setDebug;
   late final CStrFnDart _getStatus;
   late final TwoArgFnDart _send;
   late final OneArgFnDart _nostrInit;
@@ -129,6 +132,10 @@ class HaloEngine {
     _decryptBackup = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>(
       'HaloDecryptBackup',
     );
+    _setDebug = _lib.lookupFunction<IntArgFn, IntArgFnDart>('HaloSetDebug');
+    // engine logs to logcat only in debug. release builds stay silent so no
+    // onion address, peer id, or tor timing ever lands in the log.
+    _setDebug(kDebugMode ? 1 : 0);
   }
 
   String version() => _version().toDartString();

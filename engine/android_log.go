@@ -16,6 +16,7 @@ import "C"
 
 import (
 	"log"
+	"sync/atomic"
 	"unsafe"
 )
 
@@ -27,8 +28,13 @@ func init() {
 type androidLogWriter struct{}
 
 func (w *androidLogWriter) Write(p []byte) (int, error) {
-	// every log line used to leak two C strings. with tor debug output
-	// now routed here that adds up fast, so free them.
+	// silent unless debug is on, so a release build leaks nothing to logcat -
+	// no onion address, no peer ids, no tor timing.
+	if atomic.LoadInt32(&debugOn) == 0 {
+		return len(p), nil
+	}
+	// both C strings get freed - with tor's debug output routed here the
+	// leak added up fast.
 	tag := C.CString("halo-engine")
 	msg := C.CString(string(p))
 	C.log_to_android(tag, msg)
