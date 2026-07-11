@@ -23,6 +23,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	libtor "github.com/alexballas/go-libtor"
@@ -53,6 +54,38 @@ var (
 	bootstrapPct = 0
 	hsdirUploads = 0
 )
+
+// debugOn gates every engine log line (see androidLogWriter). off by default
+// so release builds stay silent; dart flips it on in debug via HaloSetDebug.
+var debugOn int32
+
+//export HaloSetDebug
+func HaloSetDebug(on C.int) {
+	v := int32(0)
+	if on != 0 {
+		v = 1
+	}
+	atomic.StoreInt32(&debugOn, v)
+	mu.Lock()
+	dbg := debugTorWriter
+	mu.Unlock()
+	if dbg != nil {
+		atomic.StoreInt32(&dbg.on, v)
+	}
+}
+
+// gatedWriter feeds tor's DebugWriter. when off it discards everything so
+// tor's circuit/HSDir chatter never reaches release logcat.
+type gatedWriter struct{ on int32 }
+
+func (g *gatedWriter) Write(p []byte) (int, error) {
+	if atomic.LoadInt32(&g.on) == 0 {
+		return len(p), nil
+	}
+	return log.Writer().Write(p)
+}
+
+var debugTorWriter *gatedWriter
 
 func setStatus(s string) {
 	statusMu.Lock()
@@ -303,7 +336,7 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 	t, err := tor.Start(nil, &tor.StartConf{
 		ProcessCreator: libtor.Creator,
 		DataDir:        torDataDir,
-		DebugWriter:    log.Writer(),
+		DebugWriter:    newTorDebugWriter(),
 	})
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: tor start: %v", err))
@@ -404,6 +437,13 @@ func HaloShutdown() {
 	if t != nil {
 		t.Close()
 	}
+}
+
+func newTorDebugWriter() *gatedWriter {
+	mu.Lock()
+	defer mu.Unlock()
+	debugTorWriter = &gatedWriter{on: atomic.LoadInt32(&debugOn)}
+	return debugTorWriter
 }
 
 func acceptLoop(l net.Listener) {
