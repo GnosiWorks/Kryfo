@@ -244,6 +244,7 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 					time.Sleep(10 * time.Second)
 					continue
 				}
+				log.Printf("nostr: listening on %s for addr %s...", u, rcvPk[:12])
 				for {
 					select {
 					case ev, alive := <-sub.Events:
@@ -331,7 +332,15 @@ func HaloNostrSend(cPeerXPubHex, cMsg *C.char) *C.char {
 	if ok == 0 {
 		return C.CString("error: no relays accepted")
 	}
-	log.Printf("nostr: sent event %s to %d/%d relays", ev.ID.Hex()[:12], ok, len(nostrRelays))
+	// log the drop-box we published to. if a peer isn't receiving, compare this
+	// against the "at addr" in their subscribe line - a mismatch means the two
+	// sides derived different addresses and nothing will ever arrive.
+	_, dst, derr := nip17DeriveRole(peerArr, nip17RcvInfo, hex.EncodeToString(peerArr[:]))
+	if derr == nil {
+		log.Printf("nostr: sent event %s to %d/%d relays, addr %s...", ev.ID.Hex()[:12], ok, len(nostrRelays), dst[:12])
+	} else {
+		log.Printf("nostr: sent event %s to %d/%d relays", ev.ID.Hex()[:12], ok, len(nostrRelays))
+	}
 	return C.CString("ok")
 }
 
