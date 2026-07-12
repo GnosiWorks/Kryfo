@@ -289,15 +289,32 @@ class _ConnectionHaloState extends State<_ConnectionHalo>
     super.dispose();
   }
 
+  // bootstrapped means tor's client side is up: messages send and arrive over
+  // relays with full 3-hop privacy. the extra wait after that is only for
+  // publishing our own onion so peers can dial us directly. saying
+  // "connecting" through all of it made a usable app look broken.
   String _label() {
-    if (widget.status == TorStatus.reachable) return 'connected';
-    return _peak > 0 ? 'connecting $_peak%' : 'connecting';
+    switch (widget.status) {
+      case TorStatus.reachable:
+        return 'connected';
+      case TorStatus.bootstrapped:
+      case TorStatus.publishing:
+        return 'ready to send';
+      case TorStatus.off:
+      case TorStatus.starting:
+        return _peak > 0 ? 'connecting $_peak%' : 'connecting';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final reachable = widget.status == TorStatus.reachable;
-    final dot = reachable ? HaloColors.green : HaloColors.amber;
+    final usable =
+        widget.status == TorStatus.bootstrapped ||
+        widget.status == TorStatus.publishing;
+    final dot = reachable
+        ? HaloColors.green
+        : (usable ? HaloColors.violet : HaloColors.amber);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

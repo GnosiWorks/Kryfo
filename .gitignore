@@ -49,3 +49,7 @@ chatfix.py
 fix2.py
 onionfix.py
 apply_all.py
+diag_engine.py
+statusfix.py
+burnfix_*.py
+pillfix.py
