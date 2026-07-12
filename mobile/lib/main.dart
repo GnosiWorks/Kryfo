@@ -2602,34 +2602,24 @@ class AppState extends ChangeNotifier {
     // crypto entirely; only uncached contacts hit the heavy lookup.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.delayed(const Duration(milliseconds: 300));
-      final currentIds = {for (final c in contacts) c.haloId};
-      final cache = await _loadXPubCache();
-      final knownIds = <String>{};
+      // subscribe off the xpub stored on the contact row - the same key the
+      // send path uses. the old version asked the signal store for it, which
+      // returns null until a session exists, so the side that got *scanned*
+      // never subscribed and could never receive the first message that
+      // would have created the session. deadlock. (the store
+      // does eventually hold the right x25519 key - halo derives the signal
+      // identity from it - but not until that first message exists.)
+      final rows = await db.contacts();
       final fresh = <String, String>{};
-      var changed = false;
-      cache.forEach((xPub, haloId) {
-        if (!currentIds.contains(haloId)) {
-          changed = true;
-          return;
-        }
-        fresh[xPub] = haloId;
+      for (final r in rows) {
+        final haloId = r['halo_id'] as String?;
+        final xPub = r['xpub'] as String?;
+        if (haloId == null || xPub == null || xPub.isEmpty) continue;
         _xPubToHaloId[xPub] = haloId;
         engine.nostrSubscribeBg(xPub);
-        knownIds.add(haloId);
-      });
-      for (final c in contacts) {
-        if (knownIds.contains(c.haloId)) continue;
-        await Future.delayed(Duration.zero);
-        final xPub = await signalSession.peerXPubHex(c.haloId);
-        if (xPub != null) {
-          _xPubToHaloId[xPub] = c.haloId;
-          engine.nostrSubscribeBg(xPub);
-          fresh[xPub] = c.haloId;
-          knownIds.add(c.haloId);
-          changed = true;
-        }
+        fresh[xPub] = haloId;
       }
-      if (changed) await _saveXPubCache(fresh);
+      await _saveXPubCache(fresh);
     });
     // open ntfy websocket when push mode is ntfy. on incoming
     // ping, the existing 1s drain loop catches up - we just log for now.
@@ -3218,10 +3208,16 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> subscribePeer(String haloId) async {
-    final xPub = await signalSession.peerXPubHex(haloId);
-    if (xPub != null) {
+    // same story as the boot loop: the xpub lives on the contact row, not in
+    // the signal store, which has nothing until a session exists.
+    final rows = await db.contacts();
+    for (final r in rows) {
+      if (r['halo_id'] != haloId) continue;
+      final xPub = r['xpub'] as String?;
+      if (xPub == null || xPub.isEmpty) return;
       _xPubToHaloId[xPub] = haloId;
       engine.nostrSubscribeBg(xPub);
+      return;
     }
   }
 
