@@ -83,6 +83,7 @@ typedef struct { void *data; GoInt len; GoInt cap; } GoSlice;
 extern "C" {
 #endif
 
+extern void HaloSetDebug(int on);
 extern char* HaloPing(void);
 extern char* HaloVersion(void);
 extern char* HaloGenerateIdentity(void);

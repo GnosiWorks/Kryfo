@@ -44,3 +44,8 @@ patch_*.py
 patch*.py
 polish*.py
 dmrelay/
+subfix.py
+chatfix.py
+fix2.py
+onionfix.py
+apply_all.py
