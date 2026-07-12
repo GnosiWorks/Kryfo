@@ -379,6 +379,13 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 			log.Printf("halo: HSDesc subscribe failed: %v", aerr)
 		}
 	}
+	// tor starts with the network off. bine normally turns it on inside
+	// Listen, but only on the branch we skip with NoWait - so the onion got
+	// created and never published. turn it on ourselves before listening.
+	if eerr := t.EnableNetwork(ctx, false); eerr != nil {
+		log.Printf("halo: enable network: %v", eerr)
+	}
+
 	listenStart := time.Now()
 	onion, err := t.Listen(ctx, &tor.ListenConf{
 		NoWait:      true,
@@ -658,7 +665,7 @@ func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID st
 				return
 			}
 		case <-timeout:
-			log.Printf("halo: HSDesc event timed out, falling back")
+			log.Printf("halo: WARN no HSDir upload confirmed in 120s - the onion may not be dialable yet")
 			return
 		}
 	}

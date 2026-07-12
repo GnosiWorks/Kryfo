@@ -804,6 +804,31 @@ class HaloDb {
     );
   }
 
+  Future<String?> contactXPub(String haloId) async {
+    final db = await open();
+    final rows = await db.query(
+      'contacts',
+      columns: ['xpub'],
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return rows.first['xpub'] as String?;
+  }
+
+  // backfill the xpub a v2 pair left empty. plain write, no key-change check:
+  // upsertContact would read an empty prior as a change and raise the flag.
+  Future<void> setContactXPub(String haloId, String xpub) async {
+    final db = await open();
+    await db.update(
+      'contacts',
+      {'xpub': xpub},
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+    );
+  }
+
   Future<List<Map<String, Object?>>> contacts() async {
     final db = await open();
     return db.query(
@@ -2613,8 +2638,19 @@ class AppState extends ChangeNotifier {
       final fresh = <String, String>{};
       for (final r in rows) {
         final haloId = r['halo_id'] as String?;
-        final xPub = r['xpub'] as String?;
-        if (haloId == null || xPub == null || xPub.isEmpty) continue;
+        if (haloId == null) continue;
+        var xPub = r['xpub'] as String?;
+        // v2 bundle pairing stores an empty xpub on the row - the key only
+        // lands in the signal store, which processPeerBundle fills at pair
+        // time. v1 stores it on the row and has no session yet. take
+        // whichever exists, then backfill the row so the next boot is cheap.
+        if (xPub == null || xPub.isEmpty) {
+          xPub = await signalSession.peerXPubHex(haloId);
+          if (xPub != null && xPub.isNotEmpty) {
+            await db.setContactXPub(haloId, xPub);
+          }
+        }
+        if (xPub == null || xPub.isEmpty) continue;
         _xPubToHaloId[xPub] = haloId;
         engine.nostrSubscribeBg(xPub);
         fresh[xPub] = haloId;
@@ -3208,17 +3244,19 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> subscribePeer(String haloId) async {
-    // same story as the boot loop: the xpub lives on the contact row, not in
-    // the signal store, which has nothing until a session exists.
-    final rows = await db.contacts();
-    for (final r in rows) {
-      if (r['halo_id'] != haloId) continue;
-      final xPub = r['xpub'] as String?;
-      if (xPub == null || xPub.isEmpty) return;
-      _xPubToHaloId[xPub] = haloId;
-      engine.nostrSubscribeBg(xPub);
-      return;
+    // the row xpub is set by v1 pairing and is there before any session
+    // exists; v2 bundle pairing leaves it empty and puts the key in the
+    // signal store instead. try both, backfill the row when we learn it.
+    var xPub = await db.contactXPub(haloId);
+    if (xPub == null || xPub.isEmpty) {
+      xPub = await signalSession.peerXPubHex(haloId);
+      if (xPub != null && xPub.isNotEmpty) {
+        await db.setContactXPub(haloId, xPub);
+      }
     }
+    if (xPub == null || xPub.isEmpty) return;
+    _xPubToHaloId[xPub] = haloId;
+    engine.nostrSubscribeBg(xPub);
   }
 
   Future<void> markOnboardingComplete() async {
