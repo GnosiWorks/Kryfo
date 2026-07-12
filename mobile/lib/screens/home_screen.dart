@@ -380,7 +380,11 @@ void _showConnectionSheet(BuildContext context) {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  reachable ? 'connected over tor' : 'connecting over tor',
+                  reachable
+                      ? 'connected over tor'
+                      : usable
+                      ? 'ready to send over tor'
+                      : 'connecting over tor',
                   style: HaloType.mono(
                     size: 11,
                     color: reachable ? HaloColors.green : HaloColors.amber,

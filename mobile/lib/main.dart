@@ -4267,12 +4267,17 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
         builder: (context, _) {
           final s = appState.torStatus;
           final pct = appState.bootstrapPct;
+          // bootstrapped and publishing both mean tor's client side is live:
+          // messages send and arrive over relays, full 3 hops. the remaining
+          // wait only publishes our own address so peers can dial us direct.
           final line = s == TorStatus.off
               ? 'tor is off'
               : s == TorStatus.reachable
               ? 'connected · routed through 3 relays'
               : s == TorStatus.publishing
-              ? 'connecting · publishing your route'
+              ? 'ready to send · publishing your address'
+              : s == TorStatus.bootstrapped
+              ? 'ready to send · finishing setup'
               : 'connecting · $pct%';
           return Padding(
             padding: const EdgeInsets.fromLTRB(22, 18, 22, 16),
@@ -4383,10 +4388,15 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
           if (!widget.label) {
             return SizedBox(width: 20, height: 20, child: Center(child: dot));
           }
+          final st = appState.torStatus;
+          final usable =
+              st == TorStatus.bootstrapped || st == TorStatus.publishing;
           final txt = off
               ? 'tor off'
               : secured
               ? 'connected'
+              : usable
+              ? 'ready to send'
               : 'connecting';
           return Row(
             mainAxisSize: MainAxisSize.min,
