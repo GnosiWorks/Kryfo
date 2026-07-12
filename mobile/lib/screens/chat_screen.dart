@@ -2397,7 +2397,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final data = res.files.first.bytes;
     final name = res.files.first.name;
     if (data == null) return;
-    if (data.length > 10 * 1024 * 1024) {
+    if (data.length > 8 * 1024 * 1024) {
       if (mounted) showHaloToast(context, 'file too big · 10 mb max');
       return;
     }
