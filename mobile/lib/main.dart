@@ -2622,7 +2622,18 @@ class AppState extends ChangeNotifier {
       if (st == TorStatus.reachable) t.cancel();
     });
     _initConnectivity();
-    _nostrInitOnIsolate('wss://relay.damus.io,wss://nos.lol');
+    // more relays than we need on purpose. damus alone has been refusing
+    // connections for days, and with only two configured that left a single
+    // live relay holding every offline message. publish succeeds if any one
+    // accepts, and the subscription dedups, so extra relays only buy odds.
+    _nostrInitOnIsolate(
+      'wss://relay.damus.io,'
+      'wss://nos.lol,'
+      'wss://relay.primal.net,'
+      'wss://nostr.mom,'
+      'wss://relay.nostr.band,'
+      'wss://offchain.pub',
+    );
     await loadDisplayName();
     await loadScreenshotPref();
     await initNotifications(onTap: openChatForHalo);
@@ -2735,7 +2746,15 @@ class AppState extends ChangeNotifier {
     });
 
     Timer.periodic(const Duration(seconds: 1), (_) async {
-      if (_torStatus != TorStatus.reachable) return;
+      // reading mail off a relay only needs tor's client side, which is up at
+      // bootstrapped. this used to wait for `reachable` - our own onion being
+      // published - which is a different thing entirely and minutes later.
+      // queued messages just sat there while the app looked connected.
+      if (_torStatus != TorStatus.reachable &&
+          _torStatus != TorStatus.bootstrapped &&
+          _torStatus != TorStatus.publishing) {
+        return;
+      }
       if (_polling) return;
       _polling = true;
       try {
