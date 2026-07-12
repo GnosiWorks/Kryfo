@@ -1736,10 +1736,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // not just first, so old stuck messages always become retryable. live
     // sends from THIS session aren't in `loaded` yet, so they're untouched.
     final staleCutoff = DateTime.now().subtract(const Duration(seconds: 60));
+    // while tor is still warming, a pending send isn't dead - it's queued, and
+    // the reconnect retry fires it the moment tor lands. calling it failed here
+    // killed the send pill mid-warmup and made a working send look broken.
+    final torUp = appState.torStatus == TorStatus.reachable;
     for (final m in loaded) {
       // under a minute old the send future may still be running in the
       // background - marking it failed here caused dup resends.
-      if (m.direction == 'out' && m.sending && m.when.isBefore(staleCutoff)) {
+      if (torUp &&
+          m.direction == 'out' &&
+          m.sending &&
+          m.when.isBefore(staleCutoff)) {
         m.sending = false;
         m.failed = true;
       }
