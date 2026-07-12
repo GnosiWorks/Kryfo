@@ -407,7 +407,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // every message against the same pre-session state, or they all come out as
   // prekey messages fighting over one one-time key and only the first lands.
   Future<void> _encryptGate = Future.value();
-  String? _peerXPub;
+  // seed from the qr/contact key so the relay path works on the first send,
+  // even on the scanned side before any session exists. the session lookup in
+  // initState only refreshes it; it must not be the sole source.
+  late String? _peerXPub = widget.peerXPub.isEmpty ? null : widget.peerXPub;
   bool _backPaired = false;
   // the message we're currently replying to, or null. set by tapping
   // 'reply' on the long-press picker, cleared after send or by the X
@@ -508,7 +511,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (mounted) setState(() => _atmosphere = _atmoFromName(a));
     });
     signalSession.peerXPubHex(widget.peerHaloId).then((v) {
-      if (mounted) setState(() => _peerXPub = v);
+      // only adopt the session value if we don't already have the widget key;
+      // never clobber a good key with a null the store hasn't filled yet.
+      if (mounted && v != null && v.isNotEmpty) {
+        setState(() => _peerXPub = v);
+      }
     });
     db.isBackPaired(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _backPaired = v);
@@ -1930,6 +1937,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       // once at open). re-fetch from the session before giving up, so the relay
       // route is available instead of dead-ending on 'no transport'.
       var xpub = _peerXPub;
+      xpub ??= widget.peerXPub.isEmpty ? null : widget.peerXPub;
       xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
       if (xpub != null) {
         _peerXPub = xpub;
@@ -2135,6 +2143,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       // once at open). re-fetch from the session before giving up, so the relay
       // route is available instead of dead-ending on 'no transport'.
       var xpub = _peerXPub;
+      xpub ??= widget.peerXPub.isEmpty ? null : widget.peerXPub;
       xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
       if (xpub != null) {
         _peerXPub = xpub;
@@ -2939,6 +2948,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       // once at open). re-fetch from the session before giving up, so the relay
       // route is available instead of dead-ending on 'no transport'.
       var xpub = _peerXPub;
+      xpub ??= widget.peerXPub.isEmpty ? null : widget.peerXPub;
       xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
       if (xpub != null) {
         _peerXPub = xpub;
