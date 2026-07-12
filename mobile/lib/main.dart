@@ -1980,6 +1980,8 @@ class AppState extends ChangeNotifier {
   // incoming media chunks buffered by mediaId until all arrive, then
   // reassembled into the full base64. single-chunk media skips this.
   final Map<String, Map<int, String>> _mediaChunks = {};
+  // burn seconds for media still arriving in slices, keyed by mediaId.
+  final Map<String, int> _mediaBurn = {};
   // global send-privacy mode: 'fast' | 'normal' | 'private'. cosmetic for now -
   // every message routes over full tor until fast/hop modes wire up (phase 2).
   String _sendMode = 'private';
@@ -2197,11 +2199,19 @@ class AppState extends ChangeNotifier {
     // full base64. single-chunk (or unchunked) media skips this entirely.
     String? imgB64 = env.imageB64;
     String? fileB64v = env.fileB64;
+    // burn seconds can ride on any slice (older senders only put it on the
+    // first). hold onto whichever one carried it so the rebuilt message keeps
+    // its timer instead of landing permanent on the receiver.
+    int? chunkBurn = env.burnSeconds;
     if (env.mediaId != null && env.chunkTotal != null && env.chunkTotal! > 1) {
       final mid = env.mediaId!;
       final slot = _mediaChunks.putIfAbsent(mid, () => <int, String>{});
       final slice = (env.imageB64 ?? env.fileB64) ?? '';
       slot[env.chunkIndex ?? 0] = slice;
+      if (env.burnSeconds != null && env.burnSeconds! > 0) {
+        _mediaBurn[mid] = env.burnSeconds!;
+      }
+      chunkBurn = _mediaBurn[mid] ?? chunkBurn;
       if (slot.length < env.chunkTotal!) {
         // still waiting on more pieces - nothing to show yet.
         return;
@@ -2212,6 +2222,7 @@ class AppState extends ChangeNotifier {
         full.write(slot[i] ?? '');
       }
       _mediaChunks.remove(mid);
+      _mediaBurn.remove(mid);
       // preview thumbnail: reassembled chunks patch onto the card of the
       // message with this uid, not a new media bubble. update + refresh, done.
       if (env.pvImg && env.msgUid != null) {
@@ -2272,8 +2283,8 @@ class AppState extends ChangeNotifier {
       senderHaloId,
       'in',
       env.message,
-      burnAt: env.burnSeconds != null && env.burnSeconds! > 0
-          ? DateTime.now().millisecondsSinceEpoch + env.burnSeconds! * 1000
+      burnAt: chunkBurn != null && chunkBurn > 0
+          ? DateTime.now().millisecondsSinceEpoch + chunkBurn * 1000
           : null,
       msgUid: env.msgUid,
       replyTo: env.replyTo,

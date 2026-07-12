@@ -2578,7 +2578,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             mediaId: total > 1 ? msgUid : null,
             chunkIndex: total > 1 ? i : null,
             chunkTotal: total > 1 ? total : null,
-            burnSeconds: i == 0 && _ghost ? _burnSeconds : null,
+            // every chunk carries the burn, not just the first: the receiver
+            // rebuilds off the last slice to land, and that one used to arrive
+            // with no burn at all, so ghost images never expired on their side.
+            burnSeconds: _ghost ? _burnSeconds : null,
             sender: SenderInfo(
               haloId: appState.myId,
               edPub: engine.myEdPubkey(),
