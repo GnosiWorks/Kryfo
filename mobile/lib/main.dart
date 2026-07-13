@@ -2279,11 +2279,15 @@ class AppState extends ChangeNotifier {
       }
       _inflightUids.add(uid);
     }
+    // a stranger doesn't get to set disappearing rules in the inbox: burned
+    // rows refund the 2-message cap and can vanish before the request is even
+    // seen. burn only counts once they're accepted.
+    final burnOk = isGroup || await db.isAccepted(senderHaloId);
     await db.saveMessage(
       senderHaloId,
       'in',
       env.message,
-      burnAt: chunkBurn != null && chunkBurn > 0
+      burnAt: burnOk && chunkBurn != null && chunkBurn > 0
           ? DateTime.now().millisecondsSinceEpoch + chunkBurn * 1000
           : null,
       msgUid: env.msgUid,
