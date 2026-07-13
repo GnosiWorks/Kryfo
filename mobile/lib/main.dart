@@ -1791,7 +1791,7 @@ Future<String?> signalDecrypt(
       // new keys. refuse so the caller falls through to back-pair and it
       // arrives as a new person, id matching key. targeted decrypts (a real
       // reply, flagKeyChange) skip this and keep deliver-and-warn for mitm.
-      if (!flagKeyChange) {
+      if (!flagKeyChange && peerId != '_pending_back_pair_') {
         final known = await signalSession.identityStore.getIdentity(addr);
         if (known != null &&
             !_eqBytes(known.serialize(), pkm.getIdentityKey().serialize())) {
@@ -2495,9 +2495,10 @@ class AppState extends ChangeNotifier {
     const tempPeer = '_pending_back_pair_';
     final tempAddr = SignalProtocolAddress(tempPeer, 1);
     try {
-      // always start clean: a leftover temp session from a prior failed
-      // attempt would poison this prekey decrypt.
+      // always start clean: a leftover temp session or parked identity from
+      // a prior pairing would poison this prekey decrypt.
       await signalSession.sessionStore.deleteSession(tempAddr);
+      await signalSession.identityStore.removePeerIdentity(tempAddr);
       final plain = await signalDecrypt(tempPeer, cipher);
       if (plain == null) {
         await signalSession.sessionStore.deleteSession(tempAddr);
@@ -2762,6 +2763,9 @@ class AppState extends ChangeNotifier {
           if (!handled) {
             final paired = await backPairFromCipher(cipher);
             handled = paired != null;
+            debugPrint(
+              'drain: back-pair ${paired != null ? "ok $paired" : "failed"}',
+            );
           }
           // only now is it safe to burn the dedup hash: the prekey is spent
           // and the message is filed. an unhandled cipher stays un-seen so a
