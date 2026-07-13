@@ -405,7 +405,22 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 	mu.Unlock()
 
 	go func() {
-		watchHSDirUpload(t, hsCh, hsSubbed, onion.ID)
+		if hsSubbed {
+			defer t.Control.RemoveEventListener(hsCh, control.EventCodeHSDesc)
+		}
+		for {
+			if watchHSDirUpload(t, hsCh, hsSubbed, onion.ID) {
+				break
+			}
+			statusMu.RLock()
+			stillPub := torStatus == "publishing"
+			statusMu.RUnlock()
+			if !stillPub {
+				return
+			}
+			// no confirmed upload yet - the same listener stays live, loop
+			// and wait for a late descriptor instead of lying reachable.
+		}
 		statusMu.Lock()
 		if torStatus == "publishing" {
 			log.Println("halo: status publishing -> reachable (HSDir uploaded)")
@@ -642,12 +657,11 @@ func HaloDecryptBackup(cBlob, cPassphrase *C.char) *C.char {
 // soon as an UPLOADED action is reported for our onion id, or after
 // 60s as a fallback. without this we'd just wait the full 60s
 // heuristic — most networks UPLOAD within 5-15 seconds.
-func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID string) {
+func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID string) bool {
 	if t == nil || t.Control == nil || !subbed {
 		time.Sleep(120 * time.Second)
-		return
+		return false
 	}
-	defer t.Control.RemoveEventListener(ch, control.EventCodeHSDesc)
 
 	timeout := time.After(120 * time.Second)
 	for {
@@ -662,11 +676,11 @@ func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID st
 			}
 			if hs.Action == "UPLOADED" && (hs.Address == onionID || hs.Address == onionID+".onion") {
 				log.Printf("halo: HS_DESC UPLOADED received for %s", onionID)
-				return
+				return true
 			}
 		case <-timeout:
-			log.Printf("halo: WARN no HSDir upload confirmed in 120s - the onion may not be dialable yet")
-			return
+			log.Printf("halo: WARN no HSDir upload confirmed in 120s - staying in publishing, still trying")
+			return false
 		}
 	}
 }
