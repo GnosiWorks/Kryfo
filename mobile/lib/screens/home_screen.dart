@@ -1163,19 +1163,145 @@ class _SwipeRow extends StatelessWidget {
         }
         return false;
       },
-      child: _Row(c: c, onTap: onTap),
+      child: _Row(c: c, onTap: onTap, onLongPress: () => _chatMenu(context, c)),
     );
   }
+}
+
+void _chatMenu(BuildContext context, ContactPreview c) {
+  HapticFeedback.mediumImpact();
+  showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: HaloColors.surface2,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (sheetCtx) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 8),
+          Container(
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(
+              color: HaloColors.text3.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 14),
+          ListTile(
+            leading: Icon(
+              c.muted
+                  ? Icons.notifications_active_outlined
+                  : Icons.notifications_off_outlined,
+              color: HaloColors.text2,
+              size: 22,
+            ),
+            title: Text(
+              c.muted ? 'unmute' : 'mute',
+              style: HaloType.sans(size: 15, color: HaloColors.text),
+            ),
+            onTap: () {
+              Navigator.pop(sheetCtx);
+              c.muted ? appState.unmute(c.haloId) : appState.mute(c.haloId);
+            },
+          ),
+          ListTile(
+            leading: Icon(
+              Icons.archive_outlined,
+              color: HaloColors.amber,
+              size: 22,
+            ),
+            title: Text(
+              'archive',
+              style: HaloType.sans(size: 15, color: HaloColors.text),
+            ),
+            onTap: () {
+              Navigator.pop(sheetCtx);
+              appState.archive(c.haloId);
+            },
+          ),
+          ListTile(
+            leading: Icon(
+              Icons.delete_outline_rounded,
+              color: HaloColors.rose,
+              size: 22,
+            ),
+            title: Text(
+              'delete chat',
+              style: HaloType.sans(size: 15, color: HaloColors.rose),
+            ),
+            subtitle: Text(
+              'messages and contact, gone from this phone',
+              style: HaloType.mono(size: 11, color: HaloColors.text3),
+            ),
+            onTap: () {
+              Navigator.pop(sheetCtx);
+              _confirmDelete(context, c);
+            },
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    ),
+  );
+}
+
+void _confirmDelete(BuildContext context, ContactPreview c) {
+  showDialog<void>(
+    context: context,
+    builder: (dctx) => AlertDialog(
+      backgroundColor: HaloColors.surface2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      title: Text(
+        'delete this chat?',
+        style: HaloType.serif(size: 19, color: HaloColors.text),
+      ),
+      content: Text(
+        'every message with ${c.nickname ?? c.haloId} goes, and they stop '
+        'being a contact. it only clears this phone - their copy stays with '
+        'them. if they message again it lands in requests.',
+        style: HaloType.sans(size: 14, color: HaloColors.text2),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dctx),
+          child: Text(
+            'keep',
+            style: HaloType.sans(size: 14, color: HaloColors.text2),
+          ),
+        ),
+        TextButton(
+          onPressed: () async {
+            Navigator.pop(dctx);
+            HapticFeedback.heavyImpact();
+            await appState.deleteConversation(c.haloId);
+          },
+          child: Text(
+            'delete',
+            style: HaloType.sans(
+              size: 14,
+              color: HaloColors.rose,
+              weight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _Row extends StatelessWidget {
   final ContactPreview c;
   final VoidCallback onTap;
-  const _Row({required this.c, required this.onTap});
+  final VoidCallback? onLongPress;
+  const _Row({required this.c, required this.onTap, this.onLongPress});
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
+      onLongPress: onLongPress,
       child: Container(
         decoration: c.unread > 0
             ? BoxDecoration(

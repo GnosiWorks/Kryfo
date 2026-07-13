@@ -838,6 +838,26 @@ class HaloDb {
     );
   }
 
+  Future<void> deleteConversation(String haloId) async {
+    final d = await open();
+    await d.transaction((t) async {
+      final rows = await t.query(
+        'messages',
+        columns: ['msg_uid'],
+        where: 'peer_id = ?',
+        whereArgs: [haloId],
+      );
+      for (final r in rows) {
+        final uid = r['msg_uid'] as String?;
+        if (uid != null) {
+          await t.delete('reactions', where: 'msg_uid = ?', whereArgs: [uid]);
+        }
+      }
+      await t.delete('messages', where: 'peer_id = ?', whereArgs: [haloId]);
+      await t.delete('contacts', where: 'halo_id = ?', whereArgs: [haloId]);
+    });
+  }
+
   Future<void> setArchived(String haloId, bool archived) async {
     final db = await open();
     await db.update(
@@ -2796,7 +2816,6 @@ class AppState extends ChangeNotifier {
           // dedup: skip a message we've already handled (see direct-onion note).
           final h = sha256.convert(utf8.encode(m.cipher)).toString();
           if (await db.alreadySeen(h)) continue;
-          await db.markSeen(h);
           var haloId = _xPubToHaloId[m.peer];
           String? wrapped = haloId == null
               ? null
@@ -2828,7 +2847,14 @@ class AppState extends ChangeNotifier {
             }
           }
           if (wrapped == null) {
-            debugPrint('  nostr: no known contact could decrypt');
+            final paired = await backPairFromCipher(m.cipher);
+            debugPrint(
+              'nostr: back-pair ${paired != null ? "ok $paired" : "failed"}',
+            );
+            if (paired != null) {
+              _xPubToHaloId[m.peer] = paired;
+              await db.markSeen(h);
+            }
             continue;
           }
           final env = unwrapMessage(wrapped);
@@ -2836,6 +2862,7 @@ class AppState extends ChangeNotifier {
             await savePeerEndpoint(haloId!, env.endpoint!);
           }
           await _applyIncomingPayload(haloId!, env);
+          await db.markSeen(h);
           notifyListeners();
         }
       } finally {
@@ -2886,6 +2913,24 @@ class AppState extends ChangeNotifier {
       bytes[i] = int.parse(s.substring(i * 2, i * 2 + 2), radix: 16);
     }
     return bytes;
+  }
+
+  // wipe a conversation end to end: messages, the contact row, and the
+  // signal session. they become a stranger again - a later message from
+  // them back-pairs into requests like anyone else.
+  Future<void> deleteConversation(String haloId) async {
+    await db.deleteConversation(haloId);
+    try {
+      await signalSession.sessionStore.deleteSession(
+        SignalProtocolAddress(haloId, 1),
+      );
+      await signalSession.identityStore.removePeerIdentity(
+        SignalProtocolAddress(haloId, 1),
+      );
+    } catch (_) {}
+    _xPubToHaloId.removeWhere((_, v) => v == haloId);
+    await refreshContacts();
+    notifyListeners();
   }
 
   Future<void> archive(String haloId) async {
