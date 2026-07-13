@@ -4346,11 +4346,15 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
           final off = s == TorStatus.off;
           final secured = s == TorStatus.reachable;
           final connecting = !off && !secured;
+          final usable =
+              s == TorStatus.bootstrapped || s == TorStatus.publishing;
           const torGreen = Color(0xFF34D399);
           final accent = off
               ? HaloColors.text3
               : secured
               ? torGreen
+              : usable
+              ? HaloColors.violet
               : HaloColors.amber;
           final t = _c.value;
           final dot = SizedBox(
@@ -4364,7 +4368,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                     scale: 0.5 + t,
                     child: Opacity(
                       opacity: (1 - t) * 0.7,
-                      child: _ring(12, HaloColors.amber, 1.4),
+                      child: _ring(12, accent, 1.4),
                     ),
                   ),
                 _ring(
@@ -4388,9 +4392,6 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
           if (!widget.label) {
             return SizedBox(width: 20, height: 20, child: Center(child: dot));
           }
-          final st = appState.torStatus;
-          final usable =
-              st == TorStatus.bootstrapped || st == TorStatus.publishing;
           final txt = off
               ? 'tor off'
               : secured

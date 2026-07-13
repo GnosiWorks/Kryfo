@@ -646,6 +646,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         if (m.direction == 'out' && m.failed && m.msgUid != null) {
           if (m.mediaPath != null) {
             _retryImage(m);
+          } else if (m.filePath != null) {
+            _retryMedia(m);
           } else {
             _retry(m);
           }
@@ -2111,78 +2113,37 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final b64 = base64Encode(await file.readAsBytes());
     final msgUid = msg.msgUid ?? _newMsgUid();
     msg.msgUid = msgUid;
-    final String cipher;
-    try {
-      final wrapped = await wrapMessage(
-        '',
-        msgUid: msgUid,
-        imageB64: b64,
-        burnSeconds: msg.burnSecs,
-        sender: SenderInfo(
-          haloId: appState.myId,
-          edPub: engine.myEdPubkey(),
-          onion: appState.myOnion,
-          xPub: engine.myXPubkey(),
-        ),
-      );
-      cipher = await signalEncrypt(widget.peerHaloId, wrapped);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        msg.sending = false;
-        msg.failed = true;
-      });
+    _sendChunkedMedia(
+      b64: b64,
+      msgUid: msgUid,
+      burnSeconds: msg.burnSecs,
+    ).then((result) => _finishMediaSend(msg, result));
+  }
+
+  // resend failed voice / file the same way - re-read from disk, chunk, go.
+  Future<void> _retryMedia(_Msg msg) async {
+    final path = msg.filePath;
+    if (path == null || msg.fileName == null) return;
+    final file = File(path);
+    if (!await file.exists()) {
+      setState(() => msg.failed = true);
       return;
     }
-    final sendFuture = Future<String>(() async {
-      var torWait = 0;
-      while (!_torReadyToSend() && torWait < 30000) {
-        await Future.delayed(const Duration(milliseconds: 400));
-        torWait += 400;
-      }
-      if (!_torReadyToSend()) return 'error: tor not ready';
-      String? tor;
-      if (!_backPaired && widget.peerOnion.isNotEmpty) {
-        tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
-        if (tor == 'ok') return 'ok';
-      }
-      // peer xpub may be null on a fresh back-pair / reconnect (it's loaded
-      // once at open). re-fetch from the session before giving up, so the relay
-      // route is available instead of dead-ending on 'no transport'.
-      var xpub = _peerXPub;
-      xpub ??= widget.peerXPub.isEmpty ? null : widget.peerXPub;
-      xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
-      if (xpub != null) {
-        _peerXPub = xpub;
-        return await Future(() => engine.nostrSend(xpub!, cipher));
-      }
-      return tor ?? 'error: no transport';
+    setState(() {
+      msg.failed = false;
+      msg.sending = true;
     });
-    sendFuture.then((result) async {
-      if (result == 'ok' && msg.msgUid != null) {
-        await db.markSent(msg.msgUid!);
-      }
-      if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
-        final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
-        await db.setMsgBurnAt(msg.msgUid!, ba);
-        msg.burnAt = ba;
-      }
-      if (!mounted) return;
-      if (result == 'ok') {
-        setState(() {
-          msg.sending = false;
-          if (msg.burnSecs != null) {
-            msg.burnAt =
-                DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
-          }
-        });
-      } else {
-        setState(() {
-          msg.sending = false;
-          msg.failed = true;
-        });
-      }
-    });
+    final b64 = base64Encode(await file.readAsBytes());
+    final msgUid = msg.msgUid ?? _newMsgUid();
+    msg.msgUid = msgUid;
+    _sendChunkedMedia(
+      b64: b64,
+      msgUid: msgUid,
+      fileName: msg.fileName!,
+      voice: msg.fileName == 'voice.wav',
+      voiceDisguised: msg.voiceDisguised,
+      burnSeconds: msg.burnSecs,
+    ).then((result) => _finishMediaSend(msg, result));
   }
 
   // bottom sheet: camera or gallery, instead of jumping straight to gallery.
@@ -2330,65 +2291,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       burnAt: msg.burnAt,
       sent: 0,
     );
-    final String cipher;
-    try {
-      final wrapped = await wrapMessage(
-        '',
-        msgUid: msgUid,
-        fileB64: b64,
-        fileName: 'voice.wav',
-        voice: true,
-        voiceDisguised: _disguise,
-        burnSeconds: _ghost ? _burnSeconds : null,
-        sender: SenderInfo(
-          haloId: appState.myId,
-          edPub: engine.myEdPubkey(),
-          onion: appState.myOnion,
-          xPub: engine.myXPubkey(),
-        ),
-      );
-      cipher = await signalEncrypt(widget.peerHaloId, wrapped);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        msg.sending = false;
-        msg.failed = true;
-      });
-      return;
-    }
-    final sendFuture = Future<String>(() async {
-      var torWait = 0;
-      while (!_torReadyToSend() && torWait < 30000) {
-        await Future.delayed(const Duration(milliseconds: 400));
-        torWait += 400;
-      }
-      if (!_torReadyToSend()) return 'error: tor not ready';
-      String? tor;
-      if (!_backPaired && widget.peerOnion.isNotEmpty) {
-        tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
-        if (tor == 'ok') return 'ok';
-      }
-      if (_peerXPub != null) {
-        return await Future(() => engine.nostrSend(_peerXPub!, cipher));
-      }
-      return tor ?? 'error: no transport';
-    });
-    sendFuture.then((result) async {
-      if (result == 'ok' && msg.msgUid != null) await db.markSent(msg.msgUid!);
-      if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
-        final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
-        await db.setMsgBurnAt(msg.msgUid!, ba);
-        msg.burnAt = ba;
-      }
-      if (!mounted) return;
-      setState(() {
-        msg.sending = false;
-        if (result != 'ok') {
-          msg.failed = true;
-          _status = result;
-        }
-      });
-    });
+    _sendChunkedMedia(
+      b64: b64,
+      msgUid: msgUid,
+      fileName: 'voice.wav',
+      voice: true,
+      voiceDisguised: _disguise,
+      burnSeconds: _ghost ? _burnSeconds : null,
+    ).then((result) => _finishMediaSend(msg, result));
   }
 
   Future<void> _pickAndSendFile() async {
@@ -2398,7 +2308,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final name = res.files.first.name;
     if (data == null) return;
     if (data.length > 8 * 1024 * 1024) {
-      if (mounted) showHaloToast(context, 'file too big · 10 mb max');
+      if (mounted) showHaloToast(context, 'file too big · 8 mb max');
       return;
     }
     final msgUid = _newMsgUid();
@@ -2437,62 +2347,125 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       burnAt: msg.burnAt,
       sent: 0,
     );
-    final String cipher;
-    try {
-      final wrapped = await wrapMessage(
-        '',
-        msgUid: msgUid,
-        fileB64: b64,
-        fileName: name,
-        burnSeconds: _ghost ? _burnSeconds : null,
-        sender: SenderInfo(
-          haloId: appState.myId,
-          edPub: engine.myEdPubkey(),
-          onion: appState.myOnion,
-          xPub: engine.myXPubkey(),
-        ),
-      );
-      cipher = await signalEncrypt(widget.peerHaloId, wrapped);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        msg.sending = false;
-        msg.failed = true;
-      });
-      return;
+    _sendChunkedMedia(
+      b64: b64,
+      msgUid: msgUid,
+      fileName: name,
+      burnSeconds: _ghost ? _burnSeconds : null,
+    ).then((result) => _finishMediaSend(msg, result));
+  }
+
+  // voice + files went out as one giant envelope - a 5s wav is ~200kb of b64,
+  // over every public relay's event cap, so they bounced. this is the same
+  // 16kb slicing + per-chunk retries + xpub re-fetch the image path uses.
+  // fileName == null means image lane (imageB64), else file lane (fileB64).
+  Future<String> _sendChunkedMedia({
+    required String b64,
+    required String msgUid,
+    String caption = '',
+    String? fileName,
+    bool voice = false,
+    bool voiceDisguised = false,
+    int? burnSeconds,
+  }) async {
+    var torWait = 0;
+    while (!_torReadyToSend() && torWait < 30000) {
+      await Future.delayed(const Duration(milliseconds: 400));
+      torWait += 400;
     }
-    final sendFuture = Future<String>(() async {
-      var torWait = 0;
-      while (!_torReadyToSend() && torWait < 30000) {
-        await Future.delayed(const Duration(milliseconds: 400));
-        torWait += 400;
+    if (!_torReadyToSend()) return 'error: tor not ready';
+    const chunkSize = 16 * 1024;
+    final chunks = <String>[];
+    for (var i = 0; i < b64.length; i += chunkSize) {
+      chunks.add(b64.substring(i, math.min(i + chunkSize, b64.length)));
+    }
+    final total = chunks.length;
+    // stranger gate wants pow on every envelope. two grinds max: one for the
+    // chunk-0 payload, one for the '' the rest carry.
+    int? powCap;
+    int? powRest;
+    if (_recvCount == 0) {
+      powCap = await compute(_grindPowTask, caption);
+      powRest = caption.isEmpty ? powCap : await compute(_grindPowTask, '');
+    }
+    for (var i = 0; i < total; i++) {
+      final String cipher;
+      try {
+        // name + voice flags ride every slice: the receiver rebuilds off
+        // whichever chunk lands last, and that one decides file vs image.
+        final wrapped = await wrapMessage(
+          i == 0 ? caption : '',
+          msgUid: msgUid,
+          imageB64: fileName == null ? chunks[i] : null,
+          fileB64: fileName != null ? chunks[i] : null,
+          fileName: fileName,
+          voice: voice,
+          voiceDisguised: voiceDisguised,
+          mediaId: total > 1 ? msgUid : null,
+          chunkIndex: total > 1 ? i : null,
+          chunkTotal: total > 1 ? total : null,
+          burnSeconds: burnSeconds,
+          powNonce: i == 0 ? powCap : powRest,
+          powBitsUsed: (i == 0 ? powCap : powRest) == null ? null : powBits,
+          sender: SenderInfo(
+            haloId: appState.myId,
+            edPub: engine.myEdPubkey(),
+            onion: appState.myOnion,
+            xPub: engine.myXPubkey(),
+          ),
+        );
+        cipher = await signalEncrypt(widget.peerHaloId, wrapped);
+      } catch (e) {
+        return 'error: encrypt';
       }
-      if (!_torReadyToSend()) return 'error: tor not ready';
-      String? tor;
-      if (!_backPaired && widget.peerOnion.isNotEmpty) {
-        tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
-        if (tor == 'ok') return 'ok';
-      }
-      if (_peerXPub != null) {
-        return await Future(() => engine.nostrSend(_peerXPub!, cipher));
-      }
-      return tor ?? 'error: no transport';
-    });
-    sendFuture.then((result) async {
-      if (result == 'ok' && msg.msgUid != null) await db.markSent(msg.msgUid!);
-      if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
-        final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
-        await db.setMsgBurnAt(msg.msgUid!, ba);
-        msg.burnAt = ba;
-      }
-      if (!mounted) return;
-      setState(() {
-        msg.sending = false;
-        if (result != 'ok') {
-          msg.failed = true;
-          _status = result;
+      var sent = false;
+      String lastErr = 'error: no transport';
+      for (var attempt = 0; attempt < 3 && !sent; attempt++) {
+        String? tor;
+        if (!_backPaired && widget.peerOnion.isNotEmpty) {
+          tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
+          if (tor == 'ok') {
+            sent = true;
+            break;
+          }
+          if (tor != null) lastErr = tor;
         }
-      });
+        var xpub = _peerXPub;
+        xpub ??= widget.peerXPub.isEmpty ? null : widget.peerXPub;
+        xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
+        if (xpub != null) {
+          _peerXPub = xpub;
+          final r = await Future(() => engine.nostrSend(xpub!, cipher));
+          if (r == 'ok') {
+            sent = true;
+            break;
+          }
+          lastErr = r;
+        }
+        if (!sent) await Future.delayed(const Duration(milliseconds: 600));
+      }
+      if (!sent) {
+        debugPrint('MEDIA CHUNK $i/$total failed: $lastErr');
+        return lastErr;
+      }
+    }
+    return 'ok';
+  }
+
+  Future<void> _finishMediaSend(_Msg msg, String result) async {
+    if (result == 'ok' && msg.msgUid != null) await db.markSent(msg.msgUid!);
+    if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
+      final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
+      await db.setMsgBurnAt(msg.msgUid!, ba);
+      msg.burnAt = ba;
+    }
+    if (!mounted) return;
+    setState(() {
+      msg.sending = false;
+      if (result != 'ok') {
+        msg.failed = true;
+        _status = result;
+      }
     });
   }
 
@@ -2672,6 +2645,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       imageQuality: 70,
     );
     if (picked.isEmpty) return;
+    // one photo picked: same preview + caption screen the camera path gets.
+    if (picked.length == 1) {
+      final bytes = await picked.first.readAsBytes();
+      if (!mounted) return;
+      final caption = await Navigator.of(
+        context,
+      ).push<String?>(haloRoute<String?>(_ImageCaptionScreen(bytes: bytes)));
+      if (caption == null) return;
+      await _sendOneImage(bytes, caption);
+      return;
+    }
     for (final x in picked) {
       final bytes = await x.readAsBytes();
       if (!mounted) return;
@@ -4069,6 +4053,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                 quotedAuthor = original.direction == 'out'
                                     ? 'you'
                                     : 'them';
+                              } else if (original.mediaPath != null) {
+                                quoted = 'photo';
+                                quotedAuthor = original.direction == 'out'
+                                    ? 'you'
+                                    : 'them';
+                              } else if (original.fileName == 'voice.wav') {
+                                quoted = 'voice message';
+                                quotedAuthor = original.direction == 'out'
+                                    ? 'you'
+                                    : 'them';
+                              } else if (original.fileName != null) {
+                                quoted = original.fileName;
+                                quotedAuthor = original.direction == 'out'
+                                    ? 'you'
+                                    : 'them';
                               } else {
                                 quoted = 'message unavailable';
                               }
@@ -4173,6 +4172,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                               onRetry: (m) =>
                                                   m.mediaPath != null
                                                   ? _retryImage(m)
+                                                  : m.filePath != null
+                                                  ? _retryMedia(m)
                                                   : _retry(m),
                                               onLongPress: (ctx) =>
                                                   _showEmojiPickerAt(ctx, m),
@@ -5431,7 +5432,9 @@ class _Bubble extends StatelessWidget {
                             ? Clip.antiAlias
                             : Clip.none,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                          crossAxisAlignment: isOut
+                              ? CrossAxisAlignment.end
+                              : CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             if (quotedText != null)
@@ -5439,7 +5442,7 @@ class _Bubble extends StatelessWidget {
                                 behavior: HitTestBehavior.opaque,
                                 onTap: onQuoteTap,
                                 child: Container(
-                                  margin: const EdgeInsets.only(bottom: 6),
+                                  margin: const EdgeInsets.only(bottom: 4),
                                   clipBehavior: Clip.antiAlias,
                                   decoration: BoxDecoration(
                                     color: isOut
@@ -6727,6 +6730,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
   bool _willCancel = false;
   double _dragDx = 0;
   bool _busy = false;
+  bool _live = false;
   String? _path;
   double _bottomInset = 0;
 
@@ -6744,6 +6748,13 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
     if (!await _rec.hasPermission()) {
       _busy = false;
       if (mounted) showHaloToast(context, 'mic permission needed');
+      return;
+    }
+    // the permission prompt eats the long-press: by the time the user grants,
+    // the finger is gone and nothing would ever stop the recording. bail out
+    // and let them hold again.
+    if (!_live) {
+      _busy = false;
       return;
     }
     final dir = await getTemporaryDirectory();
@@ -6792,6 +6803,13 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
     }
     HapticFeedback.mediumImpact();
     widget.onComplete(path ?? _path ?? '', ms, false);
+  }
+
+  // kill the recording from the bar itself - covers any state where the
+  // finger isn't down anymore but the mic is still going.
+  void _abort() {
+    _willCancel = true;
+    _end();
   }
 
   String get _time {
@@ -6910,6 +6928,18 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
                           ),
                         ),
                 ),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _abort,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Icon(
+                      Icons.close_rounded,
+                      size: 20,
+                      color: HaloColors.text2,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -6922,7 +6952,10 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onLongPressStart: (_) => _start(),
+      onLongPressStart: (_) {
+        _live = true;
+        _start();
+      },
       onLongPressMoveUpdate: (d) {
         _dragDx = d.offsetFromOrigin.dx.clamp(-160.0, 0.0);
         final wc = d.offsetFromOrigin.dx < -90;
@@ -6932,7 +6965,10 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
         }
         _overlay?.markNeedsBuild();
       },
-      onLongPressEnd: (_) => _end(),
+      onLongPressEnd: (_) {
+        _live = false;
+        _end();
+      },
       child: Icon(Icons.mic_none_rounded, size: 22, color: HaloColors.text2),
     );
   }
