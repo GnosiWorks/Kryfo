@@ -1757,6 +1757,14 @@ Future<String> signalEncrypt(String peerId, String plaintext) async {
   return base64Encode(wire);
 }
 
+bool _eqBytes(List<int> a, List<int> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
+}
+
 Future<String?> signalDecrypt(
   String peerId,
   String wireB64, {
@@ -1778,6 +1786,18 @@ Future<String?> signalDecrypt(
     Uint8List plain;
     if (type == CiphertextMessage.prekeyType) {
       final pkm = PreKeySignalMessage(body);
+      // trial decrypt: if this prekey carries a different identity than the
+      // one on file for this contact, it's not them - it's a wiped peer with
+      // new keys. refuse so the caller falls through to back-pair and it
+      // arrives as a new person, id matching key. targeted decrypts (a real
+      // reply, flagKeyChange) skip this and keep deliver-and-warn for mitm.
+      if (!flagKeyChange) {
+        final known = await signalSession.identityStore.getIdentity(addr);
+        if (known != null &&
+            !_eqBytes(known.serialize(), pkm.getIdentityKey().serialize())) {
+          return null;
+        }
+      }
       if (await signalSession.sessionStore.containsSession(addr)) {
         // session exists - use it. rebuilding from the prekey record here is
         // wrong when the slot was refilled with a fresh key (old bundle refs
