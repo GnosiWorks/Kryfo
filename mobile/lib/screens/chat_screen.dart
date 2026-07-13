@@ -5644,27 +5644,7 @@ class _Bubble extends StatelessWidget {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   if (msg.text.isNotEmpty)
-                                    msg.mediaPath != null
-                                        ? Container(
-                                            margin: const EdgeInsets.only(
-                                              top: 2,
-                                            ),
-                                            padding: const EdgeInsets.only(
-                                              left: 9,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              border: Border(
-                                                left: BorderSide(
-                                                  color: isOut
-                                                      ? HaloColors.onAmber
-                                                      : HaloColors.amber,
-                                                  width: 2.5,
-                                                ),
-                                              ),
-                                            ),
-                                            child: _body(isOut, image: true),
-                                          )
-                                        : _body(isOut, image: false),
+                                    _body(isOut, image: msg.mediaPath != null),
                                   if (msg.preview != null) ...[
                                     const SizedBox(height: 6),
                                     _LinkPreviewCard(
@@ -5733,13 +5713,15 @@ class _Bubble extends StatelessWidget {
                                   if (!isOut &&
                                       msg.edited &&
                                       msg.mediaPath == null) ...[
-                                    const SizedBox(height: 4),
+                                    const SizedBox(height: 2),
                                     Text(
                                       'edited',
                                       style: TextStyle(
                                         fontFamily: 'JetBrains Mono',
                                         fontSize: 9,
-                                        color: metaColor,
+                                        color: HaloColors.amber.withValues(
+                                          alpha: 0.55,
+                                        ),
                                         fontStyle: FontStyle.italic,
                                         letterSpacing: 0.4,
                                       ),
