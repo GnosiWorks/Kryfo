@@ -2495,9 +2495,9 @@ class AppState extends ChangeNotifier {
     const tempPeer = '_pending_back_pair_';
     final tempAddr = SignalProtocolAddress(tempPeer, 1);
     try {
-      if (await signalSession.sessionStore.containsSession(tempAddr)) {
-        await signalSession.sessionStore.deleteSession(tempAddr);
-      }
+      // always start clean: a leftover temp session from a prior failed
+      // attempt would poison this prekey decrypt.
+      await signalSession.sessionStore.deleteSession(tempAddr);
       final plain = await signalDecrypt(tempPeer, cipher);
       if (plain == null) {
         await signalSession.sessionStore.deleteSession(tempAddr);
@@ -2730,7 +2730,6 @@ class AppState extends ChangeNotifier {
           // crash on it, so skip anything we've already handled.
           final h = sha256.convert(utf8.encode(cipher)).toString();
           if (await db.alreadySeen(h)) continue;
-          await db.markSeen(h);
           var handled = false;
           for (final c in contacts) {
             final plain = await signalDecrypt(c.haloId, cipher);
@@ -2761,8 +2760,13 @@ class AppState extends ChangeNotifier {
             }
           }
           if (!handled) {
-            await backPairFromCipher(cipher);
+            final paired = await backPairFromCipher(cipher);
+            handled = paired != null;
           }
+          // only now is it safe to burn the dedup hash: the prekey is spent
+          // and the message is filed. an unhandled cipher stays un-seen so a
+          // later pass (or the relay replay) can still land it.
+          if (handled) await db.markSeen(h);
         }
       } finally {
         _draining = false;
