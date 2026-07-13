@@ -2386,7 +2386,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     int? powRest;
     if (_recvCount == 0) {
       powCap = await compute(_grindPowTask, caption);
-      powRest = caption.isEmpty ? powCap : await compute(_grindPowTask, '');
+      powRest = powCap; // caption rides every chunk, one seed fits all
     }
     for (var i = 0; i < total; i++) {
       final String cipher;
@@ -2394,7 +2394,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         // name + voice flags ride every slice: the receiver rebuilds off
         // whichever chunk lands last, and that one decides file vs image.
         final wrapped = await wrapMessage(
-          i == 0 ? caption : '',
+          caption,
           msgUid: msgUid,
           imageB64: fileName == null ? chunks[i] : null,
           fileB64: fileName != null ? chunks[i] : null,
@@ -2552,7 +2552,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         final String cipher;
         try {
           final wrapped = await wrapMessage(
-            i == 0 ? caption : '',
+            caption,
             msgUid: msgUid,
             imageB64: chunks[i],
             mediaId: total > 1 ? msgUid : null,
@@ -5709,11 +5709,46 @@ class _Bubble extends StatelessWidget {
                                             height: 1,
                                           ),
                                         ),
+                                        if (msg.burnAt != null) ...[
+                                          const SizedBox(width: 6),
+                                          Icon(
+                                            Icons
+                                                .local_fire_department_outlined,
+                                            size: 11,
+                                            color: metaColor,
+                                          ),
+                                          const SizedBox(width: 2),
+                                          Text(
+                                            _fmtBurn(msg.burnAt!),
+                                            style: HaloType.mono(
+                                              size: 9.5,
+                                              color: metaColor,
+                                              weight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
                                       ],
                                     ),
                                   ],
+                                  if (!isOut &&
+                                      msg.edited &&
+                                      msg.mediaPath == null) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'edited',
+                                      style: TextStyle(
+                                        fontFamily: 'JetBrains Mono',
+                                        fontSize: 9,
+                                        color: metaColor,
+                                        fontStyle: FontStyle.italic,
+                                        letterSpacing: 0.4,
+                                      ),
+                                    ),
+                                  ],
 
-                                  if (msg.burnAt != null && !msg.sending) ...[
+                                  if (msg.burnAt != null &&
+                                      !msg.sending &&
+                                      !showMeta) ...[
                                     const SizedBox(height: 4),
                                     Padding(
                                       padding: const EdgeInsets.symmetric(
