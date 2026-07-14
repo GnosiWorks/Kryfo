@@ -2930,6 +2930,35 @@ class AppState extends ChangeNotifier {
             }
           }
           if (wrapped == null) {
+            // a peer we deleted keeps its session but loses its contact row.
+            // their next message is a plain whisper, so back-pair can't help -
+            // try every sessioned address that isn't a live contact and re-file
+            // them as a fresh request.
+            final liveIds = contacts.map((c) => c.haloId).toSet();
+            for (final addr
+                in await signalSession.sessionStore.allSessionAddresses()) {
+              if (liveIds.contains(addr) || addr == '_pending_back_pair_') {
+                continue;
+              }
+              final p = await signalDecrypt(addr, m.cipher);
+              if (p != null) {
+                wrapped = p;
+                haloId = addr;
+                _xPubToHaloId[m.peer] = addr;
+                final env0 = unwrapMessage(p);
+                await db.upsertContact(
+                  addr,
+                  env0.senderOnion ?? '',
+                  env0.senderXPub ?? '',
+                  accepted: 0,
+                );
+                await refreshContacts();
+                debugPrint('relay: recovered deleted peer $addr into requests');
+                break;
+              }
+            }
+          }
+          if (wrapped == null) {
             // only a prekey can bootstrap a new session. a whisper nothing
             // could decrypt is undeliverable - drop it without the noise.
             if (_isPreKeyWire(m.cipher)) {
