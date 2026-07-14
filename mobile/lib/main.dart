@@ -2212,8 +2212,9 @@ class AppState extends ChangeNotifier {
   // nostr poll) so the routing rules live in exactly one place.
   Future<void> _applyIncomingPayload(
     String senderHaloId,
-    UnwrappedMessage env,
-  ) async {
+    UnwrappedMessage env, {
+    bool fromBackPair = false,
+  }) async {
     _bumpChatRev(senderHaloId);
     await db.markBackPaired(senderHaloId);
     debugPrint(
@@ -2280,11 +2281,14 @@ class AppState extends ChangeNotifier {
     }
     // stranger lock + proof-of-work gate (1:1 only, unaccepted senders).
     if (!isGroup && !await db.isAccepted(senderHaloId)) {
-      // pow: first-contact messages must carry a valid nonce. drop silently if
-      // missing/weak - the spammer learns nothing, and this runs before media
-      // decode so a bad sender can't burn our cpu on an attachment we'll toss.
-      if (env.powNonce == null ||
-          !verifyPow(env.message, env.powNonce!, powBits)) {
+      // pow: only the back-pair message (true first contact) must carry a
+      // valid nonce - that's the one lane a cold stranger can arrive on. a
+      // whisper through an existing session already paid pow once, and a
+      // deleted peer's client has no idea it needs to grind again. drop
+      // silently - the spammer learns nothing.
+      if (fromBackPair &&
+          (env.powNonce == null ||
+              !verifyPow(env.message, env.powNonce!, powBits))) {
         debugPrint(
           'pow: dropping first-contact from $senderHaloId (nonce=${env.powNonce} bits=${env.powBitsUsed})',
         );
@@ -2624,7 +2628,7 @@ class AppState extends ChangeNotifier {
       if (env.endpoint != null) {
         await savePeerEndpoint(h, env.endpoint!);
       }
-      await _applyIncomingPayload(h, env);
+      await _applyIncomingPayload(h, env, fromBackPair: true);
       await refreshContacts();
       notifyListeners();
       debugPrint('back-pair: created contact via direct onion');
