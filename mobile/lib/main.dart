@@ -2802,6 +2802,38 @@ class AppState extends ChangeNotifier {
             }
           }
           if (!handled) {
+            // a peer we deleted keeps its session but loses its contact row,
+            // so the loops above skip it. their next msg is a plain whisper
+            // back-pair can't rebuild - try any sessioned address that isn't
+            // a live contact, and re-file it as a fresh request.
+            final liveIds = contacts.map((c) => c.haloId).toSet();
+            for (final addr
+                in await signalSession.sessionStore.allSessionAddresses()) {
+              if (liveIds.contains(addr) || addr == '_pending_back_pair_') {
+                continue;
+              }
+              final plain = await signalDecrypt(addr, cipher);
+              if (plain != null) {
+                final env = unwrapMessage(plain);
+                await db.upsertContact(
+                  addr,
+                  env.senderOnion ?? '',
+                  env.senderXPub ?? '',
+                  accepted: 0,
+                );
+                if (env.senderXPub != null && env.senderXPub!.isNotEmpty) {
+                  _xPubToHaloId[env.senderXPub!] = addr;
+                }
+                await _applyIncomingPayload(addr, env);
+                await refreshContacts();
+                notifyListeners();
+                handled = true;
+                debugPrint('drain: recovered deleted peer $addr into requests');
+                break;
+              }
+            }
+          }
+          if (!handled) {
             final paired = await backPairFromCipher(cipher);
             handled = paired != null;
             debugPrint(
