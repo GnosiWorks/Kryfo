@@ -1051,12 +1051,17 @@ class HaloDb {
           priorX.isNotEmpty &&
           xpub.isNotEmpty &&
           priorX != xpub;
+      // only ever raise accepted (0->1 on an explicit re-pair), never lower
+      // it: a back-pair passing accepted:0 must not demote a real contact.
+      final priorAccepted = (existing.first['accepted'] as int?) ?? 0;
+      final nextAccepted = accepted == 1 ? 1 : priorAccepted;
       await db.update(
         'contacts',
         {
           'onion': onion,
           'xpub': xpub,
           'last_seen': now,
+          'accepted': nextAccepted,
           if (changed) 'key_changed': 1,
           if (changed) 'verified': 0,
         },
