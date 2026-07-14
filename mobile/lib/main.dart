@@ -854,8 +854,38 @@ class HaloDb {
         }
       }
       await t.delete('messages', where: 'peer_id = ?', whereArgs: [haloId]);
-      await t.delete('contacts', where: 'halo_id = ?', whereArgs: [haloId]);
+      // the row stays: it carries the xpub our nostr subscription is built
+      // from. archived + unaccepted = invisible everywhere until they write.
+      await t.update(
+        'contacts',
+        {'accepted': 0, 'archived': 1, 'unread': 0},
+        where: 'halo_id = ?',
+        whereArgs: [haloId],
+      );
     });
+  }
+
+  // they wrote after we deleted them: bring the row back as a request.
+  Future<void> unparkIfArchived(String haloId) async {
+    final d = await open();
+    final r = await d.query(
+      'contacts',
+      columns: ['archived', 'accepted'],
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+      limit: 1,
+    );
+    if (r.isEmpty) return;
+    final arch = (r.first['archived'] as int?) ?? 0;
+    final acc = (r.first['accepted'] as int?) ?? 0;
+    if (arch == 1 && acc == 0) {
+      await d.update(
+        'contacts',
+        {'archived': 0},
+        where: 'halo_id = ?',
+        whereArgs: [haloId],
+      );
+    }
   }
 
   Future<void> setArchived(String haloId, bool archived) async {
@@ -987,7 +1017,7 @@ class HaloDb {
     final db = await open();
     return db.query(
       'contacts',
-      where: 'accepted = 0 AND blocked = 0',
+      where: 'accepted = 0 AND blocked = 0 AND archived = 0',
       orderBy: 'last_seen DESC',
     );
   }
@@ -995,7 +1025,7 @@ class HaloDb {
   Future<int> pendingRequestCount() async {
     final db = await open();
     final r = await db.rawQuery(
-      'SELECT COUNT(*) c FROM contacts WHERE accepted = 0 AND blocked = 0',
+      'SELECT COUNT(*) c FROM contacts WHERE accepted = 0 AND blocked = 0 AND archived = 0',
     );
     return (r.first['c'] as int?) ?? 0;
   }
@@ -2349,6 +2379,8 @@ class AppState extends ChangeNotifier {
     // a stranger doesn't get to set disappearing rules in the inbox: burned
     // rows refund the 2-message cap and can vanish before the request is even
     // seen. burn only counts once they're accepted.
+    // a deleted (parked) peer writing again surfaces as a fresh request.
+    if (!isGroup) await db.unparkIfArchived(senderHaloId);
     final burnOk = isGroup || await db.isAccepted(senderHaloId);
     await db.saveMessage(
       senderHaloId,
@@ -3040,7 +3072,8 @@ class AppState extends ChangeNotifier {
     // back-pair (prekey-only) can't rebuild. keeping the session lets it
     // decrypt, find no contact, and land in requests like a new stranger.
     await db.deleteConversation(haloId);
-    _xPubToHaloId.removeWhere((_, v) => v == haloId);
+    // keep _xPubToHaloId: the row and subscription both survive so they can
+    // still reach us - they just land in requests instead of a live chat.
     await refreshContacts();
     notifyListeners();
   }
