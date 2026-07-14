@@ -2636,6 +2636,22 @@ class AppState extends ChangeNotifier {
         notifyListeners();
       }
     });
+    // the stream only fires while we're already running. a link tapped with
+    // halo closed cold-starts the app and would otherwise be dropped.
+    unawaited(
+      _appLinks
+          .getInitialLink()
+          .then((uri) async {
+            if (uri == null || uri.scheme != 'halo') return;
+            final result = await handleHaloUri(uri.toString());
+            debugPrint('deep link (cold start): $result');
+            await refreshContacts();
+            notifyListeners();
+          })
+          .catchError((Object e) {
+            debugPrint('deep link (cold start) failed: $e');
+          }),
+    );
 
     await refreshContacts();
     debugPrint('BOOT contacts +${_bsw.elapsedMilliseconds}ms');
