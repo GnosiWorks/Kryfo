@@ -102,21 +102,38 @@ func torNostrClient() (*http.Client, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	log.Printf("nostr: building cached http.Client via t.Dialer (once)")
-	dialer, err := t.Dialer(ctx, nil)
-	log.Printf("nostr: t.Dialer returned err=%v", err)
-	if err != nil {
-		return nil, fmt.Errorf("tor dialer: %v", err)
+	// t.Dialer can wedge on a busy control conn mid-bootstrap and it does not
+	// honor ctx. run it off to the side so a hang can't hold the client mutex
+	// forever - every send in the app queues behind that lock.
+	built := make(chan *http.Client, 1)
+	fail := make(chan error, 1)
+	go func() {
+		d, e := t.Dialer(ctx, nil)
+		if e != nil {
+			fail <- e
+			return
+		}
+		built <- &http.Client{
+			Transport: &http.Transport{
+				DialContext:           d.DialContext,
+				TLSHandshakeTimeout:   10 * time.Second,
+				ResponseHeaderTimeout: 10 * time.Second,
+			},
+			Timeout: 60 * time.Second,
+		}
+	}()
+	select {
+	case c := <-built:
+		log.Printf("nostr: cached http.Client built")
+		cachedNostrClient = c
+		return cachedNostrClient, nil
+	case e := <-fail:
+		log.Printf("nostr: t.Dialer returned err=%v", e)
+		return nil, fmt.Errorf("tor dialer: %v", e)
+	case <-ctx.Done():
+		log.Printf("nostr: t.Dialer hung, giving up this round")
+		return nil, fmt.Errorf("tor dialer hung")
 	}
-	cachedNostrClient = &http.Client{
-		Transport: &http.Transport{
-			DialContext:           dialer.DialContext,
-			TLSHandshakeTimeout:   10 * time.Second,
-			ResponseHeaderTimeout: 10 * time.Second,
-		},
-		Timeout: 60 * time.Second,
-	}
-	log.Printf("nostr: cached http.Client built")
-	return cachedNostrClient, nil
 }
 
 func nostrPublishMulti(ctx context.Context, ev nostr.Event) (ok int) {
@@ -151,12 +168,22 @@ func nostrPublishMulti(ctx context.Context, ev nostr.Event) (ok int) {
 			result <- true
 		}(url)
 	}
+	accepted := 0
 	for i := 0; i < len(urls); i++ {
-		if <-result {
-			return 1
+		select {
+		case r := <-result:
+			if r {
+				accepted++
+				if accepted >= 2 {
+					return accepted
+				}
+			}
+		case <-ctx.Done():
+			log.Printf("nostr: publish gave up waiting on relays")
+			return accepted
 		}
 	}
-	return 0
+	return accepted
 }
 
 // run a long-lived subscription against all configured relays for events from `pk`.
