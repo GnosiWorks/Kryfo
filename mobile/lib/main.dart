@@ -1803,6 +1803,15 @@ bool _eqBytes(List<int> a, List<int> b) {
   return true;
 }
 
+bool _isPreKeyWire(String wireB64) {
+  try {
+    final w = base64Decode(wireB64);
+    return w.isNotEmpty && w[0] == CiphertextMessage.prekeyType;
+  } catch (_) {
+    return false;
+  }
+}
+
 Future<String?> signalDecrypt(
   String peerId,
   String wireB64, {
@@ -2854,7 +2863,7 @@ class AppState extends ChangeNotifier {
               }
             }
           }
-          if (!handled) {
+          if (!handled && _isPreKeyWire(cipher)) {
             final paired = await backPairFromCipher(cipher);
             handled = paired != null;
             debugPrint(
@@ -2921,13 +2930,17 @@ class AppState extends ChangeNotifier {
             }
           }
           if (wrapped == null) {
-            final paired = await backPairFromCipher(m.cipher);
-            debugPrint(
-              'nostr: back-pair ${paired != null ? "ok $paired" : "failed"}',
-            );
-            if (paired != null) {
-              _xPubToHaloId[m.peer] = paired;
-              await db.markSeen(h);
+            // only a prekey can bootstrap a new session. a whisper nothing
+            // could decrypt is undeliverable - drop it without the noise.
+            if (_isPreKeyWire(m.cipher)) {
+              final paired = await backPairFromCipher(m.cipher);
+              debugPrint(
+                'nostr: back-pair ${paired != null ? "ok $paired" : "failed"}',
+              );
+              if (paired != null) {
+                _xPubToHaloId[m.peer] = paired;
+                await db.markSeen(h);
+              }
             }
             continue;
           }
