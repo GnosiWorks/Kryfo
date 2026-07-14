@@ -167,7 +167,12 @@ class _MyHaloScreenState extends State<MyHaloScreen> {
         const SizedBox(height: 12),
         GestureDetector(
           onTap: () {
-            Share.share(_uri!, subject: 'add me on halo');
+            Share.share(
+              "add me on halo. my id is ${appState.myId}\n\n"
+              "tap to add me:\n$_uri\n\n"
+              "halo is a private messenger. no phone number, no email.",
+              subject: 'add me on halo',
+            );
           },
           child: Container(
             constraints: const BoxConstraints(maxWidth: 300),
