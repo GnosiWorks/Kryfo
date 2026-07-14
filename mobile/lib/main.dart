@@ -2739,7 +2739,15 @@ class AppState extends ChangeNotifier {
       // reentrancy guard: the ffi drain + decrypt can outrun the 1s tick
       // while tor is still warming, and stacked calls pinned the main
       // thread hard enough to anr on weak phones. skip if one's running.
-      if (_torStatus != TorStatus.reachable) return;
+      // draining our own onion inbox only needs tor's client side (up at
+      // bootstrapped) - the bytes are already sitting in the go inbox. it
+      // does NOT need our own onion published, so don't wait for reachable
+      // or a message that landed while still publishing sits unread.
+      if (_torStatus != TorStatus.reachable &&
+          _torStatus != TorStatus.bootstrapped &&
+          _torStatus != TorStatus.publishing) {
+        return;
+      }
       if (_draining) return;
       _draining = true;
       try {
