@@ -464,6 +464,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _reconcileSending();
     appState.loadGhostPref().then((p) {
       if (mounted) {
         setState(() {
@@ -2999,6 +3000,29 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         );
       }
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _reconcileSending();
+  }
+
+  // a send that finished while we were backgrounded may have marked the db
+  // sent without clearing the in-memory spinner (the !mounted guard skips the
+  // setState). on resume, sync stuck spinners back from the db.
+  Future<void> _reconcileSending() async {
+    final stuck = _messages
+        .where((m) => m.direction == 'out' && m.sending && m.msgUid != null)
+        .toList();
+    if (stuck.isEmpty) return;
+    var changed = false;
+    for (final m in stuck) {
+      if (await db.isSent(m.msgUid!)) {
+        m.sending = false;
+        changed = true;
+      }
+    }
+    if (changed && mounted) setState(() {});
   }
 
   @override

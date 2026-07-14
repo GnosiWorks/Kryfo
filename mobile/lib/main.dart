@@ -1608,6 +1608,19 @@ class HaloDb {
     return n;
   }
 
+  Future<bool> isSent(String msgUid) async {
+    final db = await open();
+    final r = await db.query(
+      'messages',
+      columns: ['sent'],
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+      limit: 1,
+    );
+    if (r.isEmpty) return false;
+    return (r.first['sent'] as int? ?? 0) == 1;
+  }
+
   Future<void> markSent(String msgUid) async {
     final db = await open();
     await db.update(
@@ -2927,15 +2940,11 @@ class AppState extends ChangeNotifier {
   // signal session. they become a stranger again - a later message from
   // them back-pairs into requests like anyone else.
   Future<void> deleteConversation(String haloId) async {
+    // messages + contact row only. the signal session stays: the peer still
+    // holds a live session and their next message is a plain whisper, which
+    // back-pair (prekey-only) can't rebuild. keeping the session lets it
+    // decrypt, find no contact, and land in requests like a new stranger.
     await db.deleteConversation(haloId);
-    try {
-      await signalSession.sessionStore.deleteSession(
-        SignalProtocolAddress(haloId, 1),
-      );
-      await signalSession.identityStore.removePeerIdentity(
-        SignalProtocolAddress(haloId, 1),
-      );
-    } catch (_) {}
     _xPubToHaloId.removeWhere((_, v) => v == haloId);
     await refreshContacts();
     notifyListeners();
