@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:share_plus/share_plus.dart';
 import '../main.dart' show appState, buildHaloUriV2;
 import '../theme.dart';
 
@@ -159,6 +160,40 @@ class _MyHaloScreenState extends State<MyHaloScreen> {
                 ),
                 const SizedBox(width: 8),
                 Icon(Icons.copy_outlined, size: 13, color: HaloColors.amber),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        GestureDetector(
+          onTap: () {
+            Share.share(_uri!, subject: 'add me on halo');
+          },
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 300),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: HaloColors.amber,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.ios_share_rounded,
+                  size: 16,
+                  color: HaloColors.onAmber,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'share invite',
+                  style: HaloType.sans(
+                    size: 14,
+                    color: HaloColors.onAmber,
+                    weight: FontWeight.w700,
+                  ),
+                ),
               ],
             ),
           ),

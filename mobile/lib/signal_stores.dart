@@ -163,6 +163,14 @@ class HaloSessionStore implements SessionStore {
   }
 
   @override
+  // every address we hold a session with, contact or not. lets the drain
+  // loop try a peer we deleted (session kept) whose next whisper needs
+  // decrypting before it can be re-filed as a request.
+  Future<List<String>> allSessionAddresses() async {
+    final rows = await _db.query('sessions', columns: ['address']);
+    return rows.map((r) => r['address'] as String).toSet().toList();
+  }
+
   Future<List<int>> getSubDeviceSessions(String name) async {
     final rows = await _db.query(
       'sessions',
