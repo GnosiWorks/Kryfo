@@ -1017,7 +1017,7 @@ class HaloDb {
     final db = await open();
     return db.query(
       'contacts',
-      where: 'accepted = 0 AND blocked = 0 AND archived = 0',
+      where: 'accepted = 0 AND blocked = 0 AND IFNULL(archived, 0) = 0',
       orderBy: 'last_seen DESC',
     );
   }
@@ -1025,7 +1025,7 @@ class HaloDb {
   Future<int> pendingRequestCount() async {
     final db = await open();
     final r = await db.rawQuery(
-      'SELECT COUNT(*) c FROM contacts WHERE accepted = 0 AND blocked = 0 AND archived = 0',
+      'SELECT COUNT(*) c FROM contacts WHERE accepted = 0 AND blocked = 0 AND IFNULL(archived, 0) = 0',
     );
     return (r.first['c'] as int?) ?? 0;
   }
@@ -1085,6 +1085,12 @@ class HaloDb {
       // it: a back-pair passing accepted:0 must not demote a real contact.
       final priorAccepted = (existing.first['accepted'] as int?) ?? 0;
       final nextAccepted = accepted == 1 ? 1 : priorAccepted;
+      // parked = deleted (archived AND unaccepted). a real archived chat is
+      // still accepted, so this can't un-archive one the user archived on
+      // purpose. any touch on a parked row brings it back as a request.
+      final wasParked =
+          ((existing.first['archived'] as int?) ?? 0) == 1 &&
+          priorAccepted == 0;
       await db.update(
         'contacts',
         {
@@ -1092,6 +1098,7 @@ class HaloDb {
           'xpub': xpub,
           'last_seen': now,
           'accepted': nextAccepted,
+          if (wasParked) 'archived': 0,
           if (changed) 'key_changed': 1,
           if (changed) 'verified': 0,
         },
