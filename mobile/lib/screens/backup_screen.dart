@@ -5,6 +5,7 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -45,14 +46,31 @@ class _BackupScreenState extends State<BackupScreen> {
       final path = p.join(tempDir.path, 'halo-backup-$ts.txt');
       await File(path).writeAsString(blob, flush: true);
       if (!mounted) return;
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(path)],
-          subject: 'halo backup',
-          text:
-              'your encrypted halo backup. keep both this file AND your passphrase safe — you need both to restore.',
-        ),
-      );
+      final bytes = await File(path).readAsBytes();
+      String? saved;
+      try {
+        saved = await FilePicker.saveFile(
+          dialogTitle: 'save your halo backup',
+          fileName: 'halo-backup-$ts.txt',
+          bytes: bytes,
+        );
+      } catch (_) {
+        saved = null;
+      }
+      if (!mounted) return;
+      if (saved == null) {
+        // no save picker, or they backed out - share sheet still gets it out.
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [XFile(path)],
+            subject: 'halo backup',
+            text:
+                'your encrypted halo backup. keep both this file AND your passphrase safe — you need both to restore.',
+          ),
+        );
+      } else {
+        showHaloToast(context, 'backup saved · keep the passphrase safe');
+      }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
