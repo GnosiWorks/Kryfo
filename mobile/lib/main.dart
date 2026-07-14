@@ -2762,7 +2762,7 @@ class AppState extends ChangeNotifier {
       'wss://nos.lol,'
       'wss://relay.primal.net,'
       'wss://nostr.mom,'
-      'wss://relay.nostr.band,'
+      'wss://relay.snort.social,'
       'wss://offchain.pub',
     );
     await loadDisplayName();

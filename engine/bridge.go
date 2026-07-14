@@ -344,7 +344,8 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 	mu.Lock()
 	torNode = t
 	mu.Unlock()
-	setStatus("bootstrapped")
+	// stay "starting" - tor.Start returns before any circuit exists. the
+	// bootstrap watcher owns the flip at a real 100%.
 	go watchBootstrap(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
@@ -367,7 +368,8 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 		}
 	}
 
-	setStatus("publishing")
+	// no status flip here - publishing means nothing while bootstrap is at
+	// 50%. the watcher sets it when tor is actually there.
 	// subscribe before Listen - the first UPLOADED can fire while Listen is
 	// still blocking, and missing it meant sitting out the full fallback.
 	hsCh := make(chan control.Event, 16)
@@ -690,7 +692,7 @@ func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID st
 // progress signal. self-terminates at 100% or after ~5 min.
 func watchBootstrap(t *tor.Tor) {
 	lastPct := -1
-	for i := 0; i < 150; i++ {
+	for i := 0; i < 300; i++ {
 		if t == nil || t.Control == nil {
 			return
 		}
@@ -705,6 +707,12 @@ func watchBootstrap(t *tor.Tor) {
 				log.Printf("halo: tor bootstrap %d%%", pct)
 			}
 			if pct >= 100 {
+				statusMu.Lock()
+				cur := torStatus
+				statusMu.Unlock()
+				if cur != "reachable" {
+					setStatus("publishing")
+				}
 				return
 			}
 		}
