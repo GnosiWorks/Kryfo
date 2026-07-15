@@ -639,7 +639,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // 'sending' (those have a live future). fires once per reconnect via the
   // _wasReachable edge, so a stream of status ticks won't spam resends.
   void _retryFailedOnReconnect() {
-    final reachable = appState.torStatus == TorStatus.reachable;
+    final reachable = _torReadyToSend();
     if (reachable && !_wasReachable) {
       // clear any stale send error - we're reconnected and about to resend.
       if (_status.isNotEmpty) setState(() => _status = '');
@@ -1932,7 +1932,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // on tor failure / timeout, fall back to nostr store-and-forward.
     final sendFuture = Future<String>(() async {
       var torWait = 0;
-      while (!_torReadyToSend() && torWait < 30000) {
+      while (!_torReadyToSend() && torWait < 300000) {
         await Future.delayed(const Duration(milliseconds: 400));
         torWait += 400;
       }
@@ -2370,7 +2370,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     int? burnSeconds,
   }) async {
     var torWait = 0;
-    while (!_torReadyToSend() && torWait < 30000) {
+    while (!_torReadyToSend() && torWait < 300000) {
       await Future.delayed(const Duration(milliseconds: 400));
       torWait += 400;
     }
@@ -2542,7 +2542,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final total = chunks.length;
     final sendFuture = Future<String>(() async {
       var torWait = 0;
-      while (!_torReadyToSend() && torWait < 30000) {
+      while (!_torReadyToSend() && torWait < 300000) {
         await Future.delayed(const Duration(milliseconds: 400));
         torWait += 400;
       }
@@ -2928,7 +2928,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // on tor failure / timeout, fall back to nostr store-and-forward.
     final sendFuture = Future<String>(() async {
       var torWait = 0;
-      while (!_torReadyToSend() && torWait < 30000) {
+      while (!_torReadyToSend() && torWait < 300000) {
         await Future.delayed(const Duration(milliseconds: 400));
         torWait += 400;
       }
