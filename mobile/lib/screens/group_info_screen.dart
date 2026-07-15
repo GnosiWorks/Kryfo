@@ -97,7 +97,15 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       builder: (c) => _AddMemberSheet(available: available),
     );
     if (picked != null && picked.isNotEmpty) {
-      await appState.addMembersToGroup(widget.groupId, picked.toList());
+      try {
+        await appState.addMembersToGroup(widget.groupId, picked.toList());
+      } catch (e) {
+        // group full toast
+        if (mounted) {
+          showHaloToast(context, e is StateError ? e.message : 'could not add');
+        }
+        return;
+      }
       await _load();
     }
   }

@@ -25,10 +25,23 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
 
   Future<void> _create() async {
     setState(() => _creating = true);
-    final groupId = await appState.createGroupAndAnnounce(
-      _nameCtrl.text.trim(),
-      _selected.toList(),
-    );
+    final String groupId;
+    try {
+      groupId = await appState.createGroupAndAnnounce(
+        _nameCtrl.text.trim(),
+        _selected.toList(),
+      );
+    } catch (e) {
+      // group full toast - cap hit, let the user trim the list
+      if (mounted) {
+        setState(() => _creating = false);
+        showHaloToast(
+          context,
+          e is StateError ? e.message : 'could not create',
+        );
+      }
+      return;
+    }
     if (!mounted) return;
     // pop the picker, then push the group chat - the user lands inside
     // the group they just made, the way every other messenger does it.
