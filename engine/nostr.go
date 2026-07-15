@@ -272,10 +272,16 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 					continue
 				}
 				log.Printf("nostr: listening on %s for addr %s...", u, rcvPk[:12])
+				// a dead tor circuit leaves the websocket open but mute - no
+				// error, no channel close, this select just goes deaf forever
+				// while messages slide past. quiet too long = assume dead and
+				// reconnect; the since window refetches whatever we missed.
+				idle := time.NewTimer(4 * time.Minute)
 				for {
 					select {
 					case ev, alive := <-sub.Events:
 						if !alive {
+							idle.Stop()
 							r.Close()
 							goto reconnect
 						}
@@ -285,7 +291,19 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 							}
 							dispatch(ev)
 						}
+						if !idle.Stop() {
+							select {
+							case <-idle.C:
+							default:
+							}
+						}
+						idle.Reset(4 * time.Minute)
+					case <-idle.C:
+						log.Printf("nostr: %s quiet 4m, cycling the sub", u)
+						r.Close()
+						goto reconnect
 					case <-ctx.Done():
+						idle.Stop()
 						r.Close()
 						return
 					}

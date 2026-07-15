@@ -1044,9 +1044,31 @@ class HaloDb {
   // quietly dismiss a request: drop the stranger's row and pending messages.
   // not a block - they can reach us again later.
   Future<void> declineRequest(String haloId) async {
-    final db = await open();
-    await db.delete('contacts', where: 'halo_id = ?', whereArgs: [haloId]);
-    await db.delete('messages', where: 'peer_id = ?', whereArgs: [haloId]);
+    final d = await open();
+    await d.transaction((t) async {
+      final rows = await t.query(
+        'messages',
+        columns: ['msg_uid'],
+        where: 'peer_id = ?',
+        whereArgs: [haloId],
+      );
+      for (final r in rows) {
+        final uid = r['msg_uid'] as String?;
+        if (uid != null) {
+          await t.delete('reactions', where: 'msg_uid = ?', whereArgs: [uid]);
+        }
+      }
+      await t.delete('messages', where: 'peer_id = ?', whereArgs: [haloId]);
+      // park, don't delete - the row carries the xpub the relay subscription
+      // is built from. wiping it left a declined peer with nowhere to land.
+      // they write again -> unparkIfArchived surfaces them as a new request.
+      await t.update(
+        'contacts',
+        {'accepted': 0, 'archived': 1, 'unread': 0},
+        where: 'halo_id = ?',
+        whereArgs: [haloId],
+      );
+    });
   }
 
   Future<void> upsertContact(
@@ -1095,7 +1117,8 @@ class HaloDb {
         'contacts',
         {
           'onion': onion,
-          'xpub': xpub,
+          // v2 links pass '' here - never wipe a key we already learned
+          if (xpub.isNotEmpty) 'xpub': xpub,
           'last_seen': now,
           'accepted': nextAccepted,
           if (wasParked) 'archived': 0,
@@ -2763,7 +2786,7 @@ class AppState extends ChangeNotifier {
       'wss://relay.primal.net,'
       'wss://nostr.mom,'
       'wss://relay.snort.social,'
-      'wss://offchain.pub',
+      'wss://nostr.oxtr.dev',
     );
     await loadDisplayName();
     await loadScreenshotPref();
