@@ -368,9 +368,7 @@ void _showConnectionSheet(BuildContext context) {
         listenable: appState,
         builder: (ctx, _) {
           final reachable = appState.torStatus == TorStatus.reachable;
-          final usable =
-              appState.torStatus == TorStatus.bootstrapped ||
-              appState.torStatus == TorStatus.publishing;
+          final usable = appState.torStatus == TorStatus.publishing;
           return SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(24, 22, 24, 26),
             child: Column(
