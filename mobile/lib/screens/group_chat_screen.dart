@@ -4,7 +4,16 @@
 // gestures.
 
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/media_bubbles.dart';
+import 'chat_screen.dart' show disguiseWav;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../main.dart' show appState, db, currentChatPeer, newMsgUid;
@@ -33,6 +42,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   // ghost mode - per-session, not persisted. when on, new messages carry a
   // burn timer; receivers compute the burn deadline locally.
   bool _ghost = false;
+  bool _disguise = false;
   int _burnSeconds = 300; // 5 min default, same as 1:1
   Timer? _burnTick;
   int _lastBurnSec = 0;
@@ -45,6 +55,9 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     super.initState();
     currentChatPeer = 'group:${widget.groupId}';
     _load();
+    appState.loadDisguisePref().then((d) {
+      if (mounted) setState(() => _disguise = d);
+    });
     appState.addListener(_onAppStateChanged);
     _burnTick = Timer.periodic(const Duration(milliseconds: 100), (_) {
       if (!mounted) return;
@@ -124,6 +137,10 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               burnAt: r['burn_at'] as int?,
               msgUid: uid,
               replyTo: r['reply_to'] as String?,
+              mediaPath: r['media_path'] as String?,
+              filePath: r['file_path'] as String?,
+              fileName: r['file_name'] as String?,
+              voiceDisguised: ((r['voice_disguised'] as int?) ?? 0) == 1,
               sending: dir == 'out' && (r['sent'] as int? ?? 1) == 0,
               reactions: rxMap,
             );
@@ -218,6 +235,10 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         burnAt: r['burn_at'] as int?,
         msgUid: uid,
         replyTo: r['reply_to'] as String?,
+        mediaPath: r['media_path'] as String?,
+        filePath: r['file_path'] as String?,
+        fileName: r['file_name'] as String?,
+        voiceDisguised: ((r['voice_disguised'] as int?) ?? 0) == 1,
         sending: dir == 'out' && (r['sent'] as int? ?? 1) == 0,
         reactions: rxMap,
       );
@@ -289,13 +310,45 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   }
 
   // re-send a failed group message, reusing its uid/reply/burn so it stays
-  // the same logical message.
+  // the same logical message. media rows re-read their saved file and go
+  // back through the chunked multicast.
   Future<void> _retryGroup(_GMsg m) async {
     if (m.msgUid == null) return;
     setState(() {
       m.failed = false;
       m.sending = true;
     });
+    final mediaSrc = m.mediaPath ?? m.filePath;
+    if (mediaSrc != null) {
+      final f = File(mediaSrc);
+      if (!await f.exists()) {
+        if (mounted) {
+          setState(() {
+            m.sending = false;
+            m.failed = true;
+          });
+        }
+        return;
+      }
+      final b64 = base64Encode(await f.readAsBytes());
+      String r;
+      try {
+        r = await appState.sendMediaToGroup(
+          widget.groupId,
+          b64,
+          msgUid: m.msgUid!,
+          caption: m.text,
+          fileName: m.mediaPath != null ? null : m.fileName,
+          voice: m.fileName == 'voice.wav',
+          voiceDisguised: m.voiceDisguised,
+          burnSeconds: m.burnSecs,
+        );
+      } catch (e) {
+        r = 'error: $e';
+      }
+      await _finishGroupMediaSend(m, r);
+      return;
+    }
     var ok = false;
     try {
       ok = await appState.sendToGroup(
@@ -315,6 +368,293 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         });
       }
     }
+  }
+
+  void _toggleDisguise() {
+    setState(() => _disguise = !_disguise);
+    appState.saveDisguisePref(_disguise);
+    HapticFeedback.selectionClick();
+  }
+
+  void _onVoiceComplete(String path, int ms, bool cancelled) {
+    if (cancelled || path.isEmpty) return;
+    _sendGroupVoice(path, ms);
+  }
+
+  void _showAttachSheet() {
+    HapticFeedback.selectionClick();
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: HaloColors.surface2,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) {
+        Widget tile(IconData icon, String label, VoidCallback go) {
+          return ListTile(
+            leading: Icon(icon, color: HaloColors.amber, size: 22),
+            title: Text(
+              label,
+              style: HaloType.sans(size: 15, color: HaloColors.text),
+            ),
+            onTap: () {
+              Navigator.of(sheetCtx).pop();
+              go();
+            },
+          );
+        }
+
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 10),
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: HaloColors.line,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 6),
+              tile(
+                Icons.photo_camera_outlined,
+                'camera',
+                () => _pickGroupImage(ImageSource.camera),
+              ),
+              tile(Icons.photo_library_outlined, 'gallery', _pickGroupMultiple),
+              tile(Icons.gif_box_outlined, 'gif from phone', _pickGroupGif),
+              tile(Icons.attach_file, 'file', _pickGroupFile),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickGroupImage(ImageSource source) async {
+    final picked = await ImagePicker().pickImage(
+      source: source,
+      maxWidth: 1280,
+      maxHeight: 1280,
+      imageQuality: 70,
+    );
+    if (picked == null) return;
+    final bytes = await picked.readAsBytes();
+    if (!mounted) return;
+    final caption = await Navigator.of(
+      context,
+    ).push<String?>(haloRoute<String?>(ImageCaptionScreen(bytes: bytes)));
+    if (caption == null) return;
+    await _sendGroupImage(bytes, caption);
+  }
+
+  Future<void> _pickGroupMultiple() async {
+    final picked = await ImagePicker().pickMultiImage(
+      maxWidth: 1280,
+      maxHeight: 1280,
+      imageQuality: 70,
+    );
+    if (picked.isEmpty) return;
+    if (picked.length == 1) {
+      final bytes = await picked.first.readAsBytes();
+      if (!mounted) return;
+      final caption = await Navigator.of(
+        context,
+      ).push<String?>(haloRoute<String?>(ImageCaptionScreen(bytes: bytes)));
+      if (caption == null) return;
+      await _sendGroupImage(bytes, caption);
+      return;
+    }
+    for (final x in picked) {
+      final bytes = await x.readAsBytes();
+      if (!mounted) return;
+      await _sendGroupImage(bytes, '');
+    }
+  }
+
+  Future<void> _pickGroupGif() async {
+    final res = await FilePicker.pickFiles(
+      withData: true,
+      type: FileType.custom,
+      allowedExtensions: ['gif'],
+    );
+    if (res == null || res.files.isEmpty) return;
+    final data = res.files.first.bytes;
+    if (data == null) return;
+    if (data.length > 8 * 1024 * 1024) {
+      if (mounted) showHaloToast(context, 'gif too big · 8 mb max');
+      return;
+    }
+    // raw bytes through the image lane - re-encoding kills the animation.
+    await _sendGroupImage(data, '');
+  }
+
+  Future<void> _sendGroupImage(Uint8List bytes, String caption) async {
+    final uid = newMsgUid();
+    final dir = await getApplicationDocumentsDirectory();
+    final mediaDir = Directory('${dir.path}/media');
+    if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
+    final f = File('${mediaDir.path}/$uid.jpg');
+    await f.writeAsBytes(bytes);
+    final b64 = base64Encode(bytes);
+    final burn = _ghost ? _burnSeconds : null;
+    final m = _GMsg(
+      sender: appState.myId,
+      direction: 'out',
+      text: caption,
+      when: DateTime.now(),
+      msgUid: uid,
+      sending: true,
+      mediaPath: f.path,
+      burnSecs: burn,
+    );
+    setState(() => _messages.add(m));
+    _scrollToEnd();
+    HapticFeedback.lightImpact();
+    await db.saveMessage(
+      appState.myId,
+      'out',
+      caption,
+      groupId: widget.groupId,
+      msgUid: uid,
+      mediaPath: f.path,
+      sent: 0,
+    );
+    appState
+        .sendMediaToGroup(
+          widget.groupId,
+          b64,
+          msgUid: uid,
+          caption: caption,
+          burnSeconds: burn,
+        )
+        .then((r) => _finishGroupMediaSend(m, r));
+  }
+
+  Future<void> _sendGroupVoice(String srcPath, int ms) async {
+    final src = File(srcPath);
+    if (!await src.exists()) return;
+    var bytes = await src.readAsBytes();
+    if (_disguise) bytes = disguiseWav(bytes);
+    final uid = newMsgUid();
+    final dir = await getApplicationDocumentsDirectory();
+    final mediaDir = Directory('${dir.path}/media');
+    if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
+    final dest = File('${mediaDir.path}/vn_$uid.wav');
+    await dest.writeAsBytes(bytes);
+    final b64 = base64Encode(bytes);
+    final burn = _ghost ? _burnSeconds : null;
+    final m = _GMsg(
+      sender: appState.myId,
+      direction: 'out',
+      text: '',
+      when: DateTime.now(),
+      msgUid: uid,
+      sending: true,
+      filePath: dest.path,
+      fileName: 'voice.wav',
+      voiceDisguised: _disguise,
+      burnSecs: burn,
+    );
+    setState(() => _messages.add(m));
+    _scrollToEnd();
+    HapticFeedback.lightImpact();
+    await db.saveMessage(
+      appState.myId,
+      'out',
+      '',
+      groupId: widget.groupId,
+      msgUid: uid,
+      filePath: dest.path,
+      fileName: 'voice.wav',
+      voiceDisguised: _disguise,
+      sent: 0,
+    );
+    appState
+        .sendMediaToGroup(
+          widget.groupId,
+          b64,
+          msgUid: uid,
+          fileName: 'voice.wav',
+          voice: true,
+          voiceDisguised: _disguise,
+          burnSeconds: burn,
+        )
+        .then((r) => _finishGroupMediaSend(m, r));
+  }
+
+  Future<void> _pickGroupFile() async {
+    final res = await FilePicker.pickFiles(withData: true);
+    if (res == null || res.files.isEmpty) return;
+    final data = res.files.first.bytes;
+    final name = res.files.first.name;
+    if (data == null) return;
+    if (data.length > 8 * 1024 * 1024) {
+      if (mounted) showHaloToast(context, 'file too big · 8 mb max');
+      return;
+    }
+    final uid = newMsgUid();
+    final dir = await getApplicationDocumentsDirectory();
+    final mediaDir = Directory('${dir.path}/media');
+    if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
+    final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+    final dest = File('${mediaDir.path}/f_${uid}_$safe');
+    await dest.writeAsBytes(data);
+    final b64 = base64Encode(data);
+    final burn = _ghost ? _burnSeconds : null;
+    final m = _GMsg(
+      sender: appState.myId,
+      direction: 'out',
+      text: '',
+      when: DateTime.now(),
+      msgUid: uid,
+      sending: true,
+      filePath: dest.path,
+      fileName: name,
+      burnSecs: burn,
+    );
+    setState(() => _messages.add(m));
+    _scrollToEnd();
+    HapticFeedback.lightImpact();
+    await db.saveMessage(
+      appState.myId,
+      'out',
+      '',
+      groupId: widget.groupId,
+      msgUid: uid,
+      filePath: dest.path,
+      fileName: name,
+      sent: 0,
+    );
+    appState
+        .sendMediaToGroup(
+          widget.groupId,
+          b64,
+          msgUid: uid,
+          fileName: name,
+          burnSeconds: burn,
+        )
+        .then((r) => _finishGroupMediaSend(m, r));
+  }
+
+  Future<void> _finishGroupMediaSend(_GMsg m, String result) async {
+    final ok = result == 'ok';
+    if (ok && m.msgUid != null) await db.markSent(m.msgUid!);
+    // ghost media lights its burn on delivery, not compose - same rule the
+    // 1:1 path settled on after the vanishing-before-send bug.
+    if (ok && m.burnSecs != null && m.msgUid != null) {
+      final ba = DateTime.now().millisecondsSinceEpoch + m.burnSecs! * 1000;
+      await db.setMsgBurnAt(m.msgUid!, ba);
+      m.burnAt = ba;
+    }
+    if (!mounted) return;
+    setState(() {
+      m.sending = false;
+      m.failed = !ok;
+    });
   }
 
   Future<void> _toggleReaction(_GMsg target, String emoji) async {
@@ -554,13 +894,22 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                               when: DateTime.now(),
                             ),
                           );
-                          if (orig.text.isNotEmpty) {
-                            quoted = orig.text;
+                          if (orig.direction.isNotEmpty) {
                             quotedAuthor = orig.direction == 'out'
                                 ? 'you'
                                 : orig.senderName;
+                          }
+                          if (orig.text.isNotEmpty) {
+                            quoted = orig.text;
+                          } else if (orig.mediaPath != null) {
+                            quoted = 'photo';
+                          } else if (orig.fileName == 'voice.wav') {
+                            quoted = 'voice message';
+                          } else if (orig.fileName != null) {
+                            quoted = orig.fileName;
                           } else {
                             quoted = 'message unavailable';
+                            quotedAuthor = null;
                           }
                         }
                         return RepaintBoundary(
@@ -570,6 +919,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                             quotedText: quoted,
                             quotedAuthor: quotedAuthor,
                             onLongPress: (ctx) => _showEmojiPickerAt(ctx, m),
+                            onRetry: m.failed ? () => _retryGroup(m) : null,
                           ),
                         );
                       },
@@ -584,9 +934,13 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               controller: _msgCtrl,
               sending: _sending,
               ghost: _ghost,
+              disguise: _disguise,
               onToggleGhost: () => setState(() => _ghost = !_ghost),
               onLongPressGhost: _showBurnPicker,
               onSend: _send,
+              onAttach: _showAttachSheet,
+              onToggleDisguise: _toggleDisguise,
+              onVoiceComplete: _onVoiceComplete,
             ),
           ],
         ),
@@ -788,16 +1142,24 @@ class _Composer extends StatelessWidget {
   final TextEditingController controller;
   final bool sending;
   final bool ghost;
+  final bool disguise;
   final VoidCallback onToggleGhost;
   final VoidCallback onLongPressGhost;
   final VoidCallback onSend;
+  final VoidCallback onAttach;
+  final VoidCallback onToggleDisguise;
+  final void Function(String path, int ms, bool cancelled) onVoiceComplete;
   const _Composer({
     required this.controller,
     required this.sending,
     required this.ghost,
+    required this.disguise,
     required this.onToggleGhost,
     required this.onLongPressGhost,
     required this.onSend,
+    required this.onAttach,
+    required this.onToggleDisguise,
+    required this.onVoiceComplete,
   });
   @override
   Widget build(BuildContext context) {
@@ -819,6 +1181,18 @@ class _Composer extends StatelessWidget {
                 Icons.local_fire_department_rounded,
                 color: ghost ? HaloColors.amber : HaloColors.text3,
                 size: 22,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: onAttach,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: Icon(
+                Icons.add_photo_alternate_outlined,
+                size: 22,
+                color: HaloColors.text2,
               ),
             ),
           ),
@@ -851,33 +1225,67 @@ class _Composer extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          PressScale(
-            onTap: sending ? null : onSend,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOut,
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: sending ? HaloColors.surface3 : HaloColors.amber,
-                shape: BoxShape.circle,
-                boxShadow: sending
-                    ? null
-                    : [
-                        BoxShadow(
-                          color: HaloColors.amber.withValues(alpha: 0.35),
-                          blurRadius: 12,
-                          spreadRadius: -1,
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: controller,
+            builder: (context, value, _) {
+              final hasText = value.text.trim().isNotEmpty;
+              // empty field: voice lane. text: the send pill.
+              if (!hasText && !sending) {
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
+                      onTap: onToggleDisguise,
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: Icon(
+                          disguise
+                              ? Icons.record_voice_over
+                              : Icons.voice_over_off,
+                          size: 20,
+                          color: disguise ? HaloColors.amber : HaloColors.text3,
                         ),
-                      ],
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.arrow_upward_rounded,
-                color: sending ? HaloColors.text3 : HaloColors.onAmber,
-                size: 20,
-              ),
-            ),
+                      ),
+                    ),
+                    HoldToTalkMic(
+                      disguise: disguise,
+                      onToggleDisguise: onToggleDisguise,
+                      onComplete: onVoiceComplete,
+                    ),
+                  ],
+                );
+              }
+              final canSend = !sending && hasText;
+              return PressScale(
+                onTap: canSend ? onSend : null,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOut,
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: canSend ? HaloColors.amber : HaloColors.surface3,
+                    shape: BoxShape.circle,
+                    boxShadow: canSend
+                        ? [
+                            BoxShadow(
+                              color: HaloColors.amber.withValues(alpha: 0.35),
+                              blurRadius: 12,
+                              spreadRadius: -1,
+                            ),
+                          ]
+                        : null,
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Icons.arrow_upward_rounded,
+                    color: canSend ? HaloColors.onAmber : HaloColors.text3,
+                    size: 20,
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -908,12 +1316,14 @@ class _GroupBubble extends StatelessWidget {
   final String? quotedText;
   final String? quotedAuthor;
   final void Function(BuildContext)? onLongPress;
+  final VoidCallback? onRetry;
   const _GroupBubble({
     required this.m,
     required this.showSender,
     this.quotedText,
     this.quotedAuthor,
     this.onLongPress,
+    this.onRetry,
   });
 
   @override
@@ -956,6 +1366,7 @@ class _GroupBubble extends StatelessWidget {
                   Builder(
                     builder: (ctx) {
                       return GestureDetector(
+                        onTap: m.failed ? onRetry : null,
                         onLongPress: onLongPress == null
                             ? null
                             : () => onLongPress!(ctx),
@@ -1039,16 +1450,77 @@ class _GroupBubble extends StatelessWidget {
                                   ),
                                 ),
                               ],
-                              Text(
-                                m.text,
-                                style: HaloType.sans(
-                                  size: 14,
-                                  color: isOut
-                                      ? HaloColors.onAmber
-                                      : HaloColors.text,
-                                  height: 1.35,
+                              if (m.fileName == 'voice.wav' &&
+                                  m.filePath != null)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 2,
+                                  ),
+                                  child: VoiceBubble(
+                                    key: ValueKey('gvb_${m.filePath}'),
+                                    path: m.filePath!,
+                                    isOut: isOut,
+                                    disguised: m.voiceDisguised,
+                                  ),
+                                )
+                              else if (m.fileName != null)
+                                GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () {
+                                    if (m.filePath != null) {
+                                      Share.shareXFiles([XFile(m.filePath!)]);
+                                    }
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 2,
+                                    ),
+                                    child: fileCard(
+                                      m.filePath,
+                                      m.fileName,
+                                      isOut,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                              if (m.mediaPath != null)
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                    bottom: m.text.isNotEmpty ? 6 : 0,
+                                  ),
+                                  child: GestureDetector(
+                                    onTap: () =>
+                                        openFullImage(context, m.mediaPath!),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: ConstrainedBox(
+                                        constraints: const BoxConstraints(
+                                          maxHeight: 280,
+                                          maxWidth: 240,
+                                        ),
+                                        child: Image.file(
+                                          File(m.mediaPath!),
+                                          cacheWidth: 1080,
+                                          gaplessPlayback: true,
+                                          filterQuality: FilterQuality.medium,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) =>
+                                              const SizedBox.shrink(),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              if (m.text.isNotEmpty)
+                                Text(
+                                  m.text,
+                                  style: HaloType.sans(
+                                    size: 14,
+                                    color: isOut
+                                        ? HaloColors.onAmber
+                                        : HaloColors.text,
+                                    height: 1.35,
+                                  ),
+                                ),
                               const SizedBox(height: 2),
                               Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -1091,6 +1563,18 @@ class _GroupBubble extends StatelessWidget {
                                           : HaloColors.text3,
                                     ),
                                   ),
+                                  if (m.failed) ...[
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '! tap to retry',
+                                      style: HaloType.mono(
+                                        size: 9,
+                                        color: isOut
+                                            ? HaloColors.onAmber
+                                            : HaloColors.rose,
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
                             ],
