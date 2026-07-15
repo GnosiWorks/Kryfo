@@ -3331,6 +3331,64 @@ class AppState extends ChangeNotifier {
     return anyOk;
   }
 
+  // chunked media multicast for groups. mirrors the 1:1 chunk engine but fans
+  // every 16k slice out to each member. the local row is saved by the caller;
+  // this only puts bytes on the wire. returns 'ok' or an error string.
+  Future<String> sendMediaToGroup(
+    String groupId,
+    String b64, {
+    required String msgUid,
+    String caption = '',
+    String? fileName,
+    bool voice = false,
+    bool voiceDisguised = false,
+    int? burnSeconds,
+  }) async {
+    const chunkSize = 16 * 1024;
+    final chunks = <String>[];
+    for (var i = 0; i < b64.length; i += chunkSize) {
+      chunks.add(
+        b64.substring(
+          i,
+          i + chunkSize > b64.length ? b64.length : i + chunkSize,
+        ),
+      );
+    }
+    final total = chunks.length;
+    final members = await db.getGroupMembers(groupId);
+    final adminId = await db.groupAdminId(groupId);
+    final amAdmin = adminId == myId;
+    final rosterParts = amAdmin ? await _buildParticipants(members) : null;
+    for (var i = 0; i < total; i++) {
+      final wrapped = await wrapMessage(
+        caption,
+        msgUid: msgUid,
+        imageB64: fileName == null && !voice ? chunks[i] : null,
+        fileB64: fileName != null || voice ? chunks[i] : null,
+        fileName: fileName,
+        voice: voice,
+        voiceDisguised: voiceDisguised,
+        mediaId: total > 1 ? msgUid : null,
+        chunkIndex: total > 1 ? i : null,
+        chunkTotal: total > 1 ? total : null,
+        burnSeconds: burnSeconds,
+        groupId: groupId,
+        roster: amAdmin ? members : null,
+        rosterParticipants: rosterParts,
+        sender: _mySender(),
+      );
+      final results = await Future.wait([
+        for (final memberId in members)
+          if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
+      ]);
+      if (!results.any((ok) => ok)) {
+        debugPrint('GRP MEDIA chunk $i/$total failed');
+        return 'error: no member reachable';
+      }
+    }
+    return 'ok';
+  }
+
   // pairwise reaction multicast for group messages.
   Future<void> reactInGroup(
     String groupId,
@@ -3383,12 +3441,19 @@ class AppState extends ChangeNotifier {
   // create a group locally and announce it to invited members. memberHaloIds
   // is the set of OTHER members (caller's halo id is added automatically).
   // returns the new group id.
+  // phase-3 cap. small groups on purpose - keeps multicast cheap and dodges
+  // the moderation trap big rooms bring.
+  static const int kGroupMemberCap = 50;
+
   Future<String> createGroupAndAnnounce(
     String name,
     List<String> memberHaloIds,
   ) async {
     final groupId = newMsgUid();
     final full = [myId, ...memberHaloIds];
+    if (full.length > kGroupMemberCap) {
+      throw StateError('a group can hold up to \$kGroupMemberCap people.');
+    }
     await db.createGroup(groupId, name, full, isAdmin: true, adminId: myId);
     final participants = await _buildParticipants(full);
     final gc = GroupControl(
@@ -3413,6 +3478,9 @@ class AppState extends ChangeNotifier {
     if (group == null) return;
     if ((group['is_admin'] as int? ?? 0) != 1) return;
     final existingMembers = await db.getGroupMembers(groupId);
+    if (existingMembers.length + newHaloIds.length > kGroupMemberCap) {
+      throw StateError('a group can hold up to \$kGroupMemberCap people.');
+    }
     for (final h in newHaloIds) {
       await db.addGroupMember(groupId, h);
     }
