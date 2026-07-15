@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // donate screen. badge hero + tiers + custom amount + crypto addresses + card stub.
-// addresses are placeholders - swap real wallets in _addrs before shipping.
-// payments are off-device; this shows where to send + lets you opt into a badge.
+// real wallets in _addrs. payments are off-device; this shows where to send.
+// badge unlock is honor-system until btcpay watches the chain (needs the vps).
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';

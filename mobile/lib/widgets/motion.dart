@@ -782,6 +782,9 @@ class _OnionSpinPainter extends CustomPainter {
 }
 
 // === TYPING DOTS ===
+// unused on purpose. halo sends NO typing signal over the wire (privacy: the
+// why_halo screen promises exactly that). kept only as a local building block
+// if a same-device demo ever needs it. do not wire this to the transport.
 class TypingDots extends StatefulWidget {
   const TypingDots({super.key});
   @override
