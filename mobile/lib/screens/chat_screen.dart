@@ -2813,7 +2813,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             await _fire(await signalEncrypt(widget.peerHaloId, w));
           }
         }
-      } catch (e) {}
+      } catch (_) {}
     } catch (_) {}
   }
 
