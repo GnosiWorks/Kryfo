@@ -216,7 +216,7 @@ class HaloEngine {
   // offloaded to a background isolate so a slow relay never freezes the ui.
   Future<String> nostrSend(String peerXPubHex, String b64Cipher) =>
       _sendOnIsolate((nostr: true, a: peerXPubHex, b: b64Cipher)).timeout(
-        const Duration(seconds: 30),
+        const Duration(seconds: 60),
         onTimeout: () => 'error: relay timeout',
       );
 
