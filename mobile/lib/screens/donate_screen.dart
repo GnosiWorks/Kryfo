@@ -150,7 +150,7 @@ class _DonateScreenState extends State<DonateScreen> {
         Text(
           'no ads, no investors, nothing to sell. it runs on what people give.',
           textAlign: TextAlign.center,
-          style: HaloType.sans(size: 13, color: HaloColors.text2, height: 1.5),
+          style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.5),
         ),
         const SizedBox(height: 12),
         Container(
@@ -160,10 +160,18 @@ class _DonateScreenState extends State<DonateScreen> {
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: HaloColors.line),
           ),
-          child: Text(
-            'anonymous by default. badge opt-in. privacy is never behind a paywall.',
+          child: Text.rich(
+            TextSpan(
+              children: [
+                const TextSpan(text: 'anonymous by default. badge opt-in.\n'),
+                TextSpan(
+                  text: 'privacy is never behind a paywall.',
+                  style: HaloType.mono(size: 11, color: HaloColors.amber),
+                ),
+              ],
+            ),
             textAlign: TextAlign.center,
-            style: HaloType.mono(size: 11, color: HaloColors.text3),
+            style: HaloType.mono(size: 11, color: HaloColors.text2),
           ),
         ),
       ],
