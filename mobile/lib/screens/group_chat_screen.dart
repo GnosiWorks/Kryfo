@@ -210,7 +210,14 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         )
         .toList();
     if (brandNew.isEmpty) {
-      _load();
+      // no new message rows. this fires for reactions/edits/unsends/burns,
+      // which need a full reload to show - EXCEPT while one of our own sends
+      // is still in flight: a reload there rebuilds _messages with new objects
+      // and orphans the optimistic one, freezing its send pill forever. so
+      // defer the reload until the send settles; the completion handler
+      // re-finds the live object and a later change will reload cleanly.
+      final sendInFlight = _messages.any((m) => m.sending);
+      if (!sendInFlight) _load();
       return;
     }
     final nickById = <String, String>{};
@@ -312,12 +319,17 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       // always release the composer - a throw here used to leave _sending
       // stuck true, which silently killed every later send.
       if (mounted) {
+        // re-find the live object; the notifyListeners at the end of
+        // sendToGroup can trigger a reload that replaces `optimistic`,
+        // and mutating the orphan left the send pill stuck forever.
+        final live = _liveMsg(uid) ?? optimistic;
         setState(() {
           _sending = false;
-          optimistic.sending = false;
-          // no member acknowledged - mark failed for tap-to-retry.
-          optimistic.failed = !ok;
+          live.sending = false;
+          live.failed = !ok; // no member acknowledged -> tap-to-retry
         });
+        // catch up any change deferred while this send was in flight.
+        if (!_messages.any((x) => x.sending)) _tryAppendNew();
       }
     }
   }
@@ -362,6 +374,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       await _finishGroupMediaSend(m, r);
       return;
     }
+    final uid = m.msgUid;
     var ok = false;
     try {
       ok = await appState.sendToGroup(
@@ -375,10 +388,12 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
       debugPrint('group retry failed: $e');
     } finally {
       if (mounted) {
+        final live = _liveMsg(uid) ?? m;
         setState(() {
-          m.sending = false;
-          m.failed = !ok;
+          live.sending = false;
+          live.failed = !ok;
         });
+        if (!_messages.any((x) => x.sending)) _tryAppendNew();
       }
     }
   }
@@ -656,21 +671,37 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         .then((r) => _finishGroupMediaSend(m, r));
   }
 
+  // after a send completes, the optimistic object may have been replaced by
+  // a reload (notifyListeners -> _tryAppendNew). always re-find the live one
+  // by uid so we mutate what's actually on screen, never an orphan.
+  _GMsg? _liveMsg(String? uid) {
+    if (uid == null) return null;
+    for (final m in _messages) {
+      if (m.msgUid == uid) return m;
+    }
+    return null;
+  }
+
   Future<void> _finishGroupMediaSend(_GMsg m, String result) async {
     final ok = result == 'ok';
-    if (ok && m.msgUid != null) await db.markSent(m.msgUid!);
-    // ghost media lights its burn on delivery, not compose - same rule the
-    // 1:1 path settled on after the vanishing-before-send bug.
-    if (ok && m.burnSecs != null && m.msgUid != null) {
-      final ba = DateTime.now().millisecondsSinceEpoch + m.burnSecs! * 1000;
-      await db.setMsgBurnAt(m.msgUid!, ba);
-      m.burnAt = ba;
+    final uid = m.msgUid;
+    if (ok && uid != null) await db.markSent(uid);
+    int? ba;
+    if (ok && m.burnSecs != null && uid != null) {
+      ba = DateTime.now().millisecondsSinceEpoch + m.burnSecs! * 1000;
+      await db.setMsgBurnAt(uid, ba);
     }
     if (!mounted) return;
+    // re-find the on-screen object; a reload may have replaced m.
+    final live = _liveMsg(uid) ?? m;
     setState(() {
-      m.sending = false;
-      m.failed = !ok;
+      if (ba != null) live.burnAt = ba;
+      live.sending = false;
+      live.failed = !ok;
     });
+    // a reaction/edit may have arrived while this was in flight (its reload
+    // was deferred to protect the pill). catch it up now the send settled.
+    if (!_messages.any((x) => x.sending)) _tryAppendNew();
   }
 
   Future<void> _toggleReaction(_GMsg target, String emoji) async {
