@@ -3253,36 +3253,35 @@ class AppState extends ChangeNotifier {
   // pairwise envelope send. wraps libsignal encrypt + transport choice
   // (direct-onion if peer hasn't back-paired yet, nostr otherwise).
   Future<bool> _sendOneEnvelope(String memberId, String wrapped) async {
-    // up to 3 attempts with backoff, same as the 1:1 media path. a single
-    // flaky relay moment or a transient signal miss used to fail the whole
-    // chunk and force a manual resend.
-    for (var attempt = 0; attempt < 3; attempt++) {
-      try {
-        final contact = await db.getContact(memberId);
-        if (contact == null) {
-          debugPrint('send: no contact for $memberId');
-          return false;
-        }
-        final cipher = await signalEncrypt(memberId, wrapped);
-        final backPaired = await db.isBackPaired(memberId);
-        final xpub = contact['xpub'] as String;
-        final onion = contact['onion'] as String;
-        if (!backPaired && onion.isNotEmpty) {
-          final tor = await Future(() => engine.sendTo(onion, cipher));
-          if (tor == 'ok') return true;
-          debugPrint('send: tor direct failed ($tor), trying nostr');
-        }
-        final n = await Future(() => engine.nostrSend(xpub, cipher));
-        if (n == 'ok') return true;
-        debugPrint('send: nostr failed ($n), attempt ${attempt + 1}/3');
-      } catch (e) {
-        debugPrint('send to $memberId failed: $e (attempt ${attempt + 1}/3)');
+    // one honest attempt. the engine calls already carry their own timeouts
+    // (onion 15s, relay 60s), so retrying here just stacks those timeouts -
+    // 3x turned a slow member into a ~4min hang that froze the send pill for
+    // the whole group. a permanent InvalidKeyException can never succeed on
+    // retry either. if this send fails the message is marked failed and the
+    // user gets tap-to-retry, which is the right place for a human decision.
+    try {
+      final contact = await db.getContact(memberId);
+      if (contact == null) {
+        debugPrint('send: no contact for $memberId');
+        return false;
       }
-      if (attempt < 2) {
-        await Future.delayed(const Duration(milliseconds: 600));
+      final cipher = await signalEncrypt(memberId, wrapped);
+      final backPaired = await db.isBackPaired(memberId);
+      final xpub = contact['xpub'] as String;
+      final onion = contact['onion'] as String;
+      if (!backPaired && onion.isNotEmpty) {
+        final tor = await Future(() => engine.sendTo(onion, cipher));
+        if (tor == 'ok') return true;
+        debugPrint('send: tor direct failed ($tor), trying nostr');
       }
+      final n = await Future(() => engine.nostrSend(xpub, cipher));
+      if (n == 'ok') return true;
+      debugPrint('send: nostr failed ($n)');
+      return false;
+    } catch (e) {
+      debugPrint('send to $memberId failed: $e');
+      return false;
     }
-    return false;
   }
 
   // tells a just-accepted stranger they're in. the empty frame flips their
