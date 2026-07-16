@@ -2262,6 +2262,7 @@ class AppState extends ChangeNotifier {
     // 2.5) edit - swap the text of an existing message
     if (env.edit != null) {
       await db.editMessage(env.edit!.targetUid, env.edit!.newText);
+      notifyListeners();
       return;
     }
     // 2.6) unsend - sender recalled a message; delete our copy
@@ -2451,7 +2452,14 @@ class AppState extends ChangeNotifier {
     if (isGroup) {
       final g = await db.getGroup(env.groupId!);
       notifTitle = (g?['name'] as String?) ?? 'group';
-      notifBody = '$senderHaloId: ${env.message}';
+      final gBody = env.message.isNotEmpty
+          ? env.message
+          : (fileName == 'voice.wav'
+                ? 'voice message'
+                : fileName != null
+                ? fileName
+                : (mediaPath != null ? 'photo' : ''));
+      notifBody = '$senderHaloId: $gBody';
       notifPayload = 'group:${env.groupId}';
       suppress = currentChatPeer == notifPayload;
     } else {
@@ -3245,31 +3253,36 @@ class AppState extends ChangeNotifier {
   // pairwise envelope send. wraps libsignal encrypt + transport choice
   // (direct-onion if peer hasn't back-paired yet, nostr otherwise).
   Future<bool> _sendOneEnvelope(String memberId, String wrapped) async {
-    try {
-      final contact = await db.getContact(memberId);
-      if (contact == null) {
-        debugPrint('send: no contact for $memberId');
-        return false;
+    // up to 3 attempts with backoff, same as the 1:1 media path. a single
+    // flaky relay moment or a transient signal miss used to fail the whole
+    // chunk and force a manual resend.
+    for (var attempt = 0; attempt < 3; attempt++) {
+      try {
+        final contact = await db.getContact(memberId);
+        if (contact == null) {
+          debugPrint('send: no contact for $memberId');
+          return false;
+        }
+        final cipher = await signalEncrypt(memberId, wrapped);
+        final backPaired = await db.isBackPaired(memberId);
+        final xpub = contact['xpub'] as String;
+        final onion = contact['onion'] as String;
+        if (!backPaired && onion.isNotEmpty) {
+          final tor = await Future(() => engine.sendTo(onion, cipher));
+          if (tor == 'ok') return true;
+          debugPrint('send: tor direct failed ($tor), trying nostr');
+        }
+        final n = await Future(() => engine.nostrSend(xpub, cipher));
+        if (n == 'ok') return true;
+        debugPrint('send: nostr failed ($n), attempt ${attempt + 1}/3');
+      } catch (e) {
+        debugPrint('send to $memberId failed: $e (attempt ${attempt + 1}/3)');
       }
-      final cipher = await signalEncrypt(memberId, wrapped);
-      final backPaired = await db.isBackPaired(memberId);
-      final xpub = contact['xpub'] as String;
-      final onion = contact['onion'] as String;
-      // try direct tor first only when peer hasn't back-paired and we have
-      // their onion. on timeout / failure, fall back to nostr store-and-forward.
-      if (!backPaired && onion.isNotEmpty) {
-        final tor = await Future(() => engine.sendTo(onion, cipher));
-        if (tor == 'ok') return true;
-        debugPrint('send: tor direct failed ($tor), trying nostr');
+      if (attempt < 2) {
+        await Future.delayed(const Duration(milliseconds: 600));
       }
-      final n = await Future(() => engine.nostrSend(xpub, cipher));
-      if (n == 'ok') return true;
-      debugPrint('send: nostr also failed ($n)');
-      return false;
-    } catch (e) {
-      debugPrint('send to $memberId failed: $e');
-      return false;
     }
+    return false;
   }
 
   // tells a just-accepted stranger they're in. the empty frame flips their
@@ -3408,6 +3421,10 @@ class AppState extends ChangeNotifier {
         debugPrint('GRP MEDIA chunk $i/$total failed');
         return 'error: no member reachable';
       }
+      // let the circuit breathe between chunks - flooding drops them.
+      if (total > 1 && i < total - 1) {
+        await Future.delayed(const Duration(milliseconds: 400));
+      }
     }
     return 'ok';
   }
@@ -3427,6 +3444,45 @@ class AppState extends ChangeNotifier {
       '',
       groupId: groupId,
       reaction: ReactionFrame(targetUid: targetMsgUid, emoji: emoji),
+      sender: _mySender(),
+    );
+    final members = await db.getGroupMembers(groupId);
+    await Future.wait([
+      for (final memberId in members)
+        if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
+    ]);
+    notifyListeners();
+  }
+
+  // recall a group message everywhere: delete locally, tell every member.
+  // receiver handles 'un' group-agnostically (deletes by uid).
+  Future<void> unsendInGroup(String groupId, String targetMsgUid) async {
+    await db.deleteMessage(targetMsgUid);
+    final wrapped = await wrapMessage(
+      '',
+      groupId: groupId,
+      unsend: targetMsgUid,
+      sender: _mySender(),
+    );
+    final members = await db.getGroupMembers(groupId);
+    await Future.wait([
+      for (final memberId in members)
+        if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
+    ]);
+    notifyListeners();
+  }
+
+  // edit a group message everywhere: swap text locally, tell every member.
+  Future<void> editInGroup(
+    String groupId,
+    String targetMsgUid,
+    String newText,
+  ) async {
+    await db.editMessage(targetMsgUid, newText);
+    final wrapped = await wrapMessage(
+      '',
+      groupId: groupId,
+      edit: EditFrame(targetUid: targetMsgUid, newText: newText),
       sender: _mySender(),
     );
     final members = await db.getGroupMembers(groupId);
@@ -3475,7 +3531,7 @@ class AppState extends ChangeNotifier {
     final groupId = newMsgUid();
     final full = [myId, ...memberHaloIds];
     if (full.length > kGroupMemberCap) {
-      throw StateError('a group can hold up to \$kGroupMemberCap people.');
+      throw StateError('a group can hold up to $kGroupMemberCap people.');
     }
     await db.createGroup(groupId, name, full, isAdmin: true, adminId: myId);
     final participants = await _buildParticipants(full);
@@ -3502,7 +3558,7 @@ class AppState extends ChangeNotifier {
     if ((group['is_admin'] as int? ?? 0) != 1) return;
     final existingMembers = await db.getGroupMembers(groupId);
     if (existingMembers.length + newHaloIds.length > kGroupMemberCap) {
-      throw StateError('a group can hold up to \$kGroupMemberCap people.');
+      throw StateError('a group can hold up to $kGroupMemberCap people.');
     }
     for (final h in newHaloIds) {
       await db.addGroupMember(groupId, h);
