@@ -76,6 +76,8 @@ func nostrHkdf(secret, salt, info []byte, length int) []byte {
 var (
 	cachedNostrClient   *http.Client
 	cachedNostrClientMu sync.Mutex
+	dialerHangs         int
+	dialerHealing       bool
 )
 
 // called from shutdown. the cached client pins the old tor's socks
@@ -126,14 +128,81 @@ func torNostrClient() (*http.Client, error) {
 	case c := <-built:
 		log.Printf("nostr: cached http.Client built")
 		cachedNostrClient = c
+		dialerHangs = 0
+		restoreReachableIfHealed()
 		return cachedNostrClient, nil
 	case e := <-fail:
 		log.Printf("nostr: t.Dialer returned err=%v", e)
 		return nil, fmt.Errorf("tor dialer: %v", e)
 	case <-ctx.Done():
-		log.Printf("nostr: t.Dialer hung, giving up this round")
+		dialerHangs++
+		log.Printf("nostr: t.Dialer hung (%d in a row), giving up this round", dialerHangs)
+		// a wedged control conn never recovers on its own - every retry
+		// re-hangs. after a few, bounce tor's network to rebuild it, and
+		// stop the status dot lying green while nothing can send.
+		if dialerHangs >= 3 {
+			demoteFromReachable()
+			go healWedgedTor()
+		}
 		return nil, fmt.Errorf("tor dialer hung")
 	}
+}
+
+// bounce DisableNetwork off/on to force tor to rebuild circuits and free a
+// wedged control connection. guarded so only one heal runs at a time.
+func healWedgedTor() {
+	cachedNostrClientMu.Lock()
+	if dialerHealing {
+		cachedNostrClientMu.Unlock()
+		return
+	}
+	dialerHealing = true
+	cachedNostrClient = nil // drop the poisoned client
+	cachedNostrClientMu.Unlock()
+	defer func() {
+		cachedNostrClientMu.Lock()
+		dialerHealing = false
+		cachedNostrClientMu.Unlock()
+	}()
+
+	mu.Lock()
+	t := torNode
+	mu.Unlock()
+	if t == nil || t.Control == nil {
+		return
+	}
+	log.Printf("nostr: dialer wedged, bouncing tor network to heal")
+	if _, err := t.Control.SendRequest("SETCONF DisableNetwork=1"); err != nil {
+		log.Printf("nostr: heal DisableNetwork=1 failed: %v", err)
+		return
+	}
+	time.Sleep(2 * time.Second)
+	if _, err := t.Control.SendRequest("SETCONF DisableNetwork=0"); err != nil {
+		log.Printf("nostr: heal DisableNetwork=0 failed: %v", err)
+		return
+	}
+	log.Printf("nostr: tor network bounced, circuits rebuilding")
+}
+
+// the dot must not read reachable while the dialer is provably dead.
+func demoteFromReachable() {
+	statusMu.Lock()
+	if torStatus == "reachable" {
+		log.Println("nostr: dialer dead, status reachable -> publishing (was lying green)")
+		torStatus = "publishing"
+	}
+	statusMu.Unlock()
+}
+
+func restoreReachableIfHealed() {
+	statusMu.Lock()
+	// only lift back to reachable if we'd demoted (hs is up, we just lost the
+	// dialer). hsdirUploads > 0 means the descriptor was published earlier.
+	if torStatus == "publishing" && hsdirUploads > 0 {
+		log.Println("nostr: dialer alive again, status publishing -> reachable")
+		torStatus = "reachable"
+	}
+	statusMu.Unlock()
 }
 
 func nostrPublishMulti(ctx context.Context, ev nostr.Event) (ok int) {
