@@ -165,7 +165,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
           }),
         );
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd());
+    _scrollToEnd(instant: true);
     _loading = false;
     _loaded = true;
     // if changes landed while we were loading, run exactly one catch-up pass.
@@ -269,13 +269,33 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     _scrollToEnd();
   }
 
-  void _scrollToEnd() {
-    if (!_scrollCtrl.hasClients) return;
-    _scrollCtrl.animateTo(
-      _scrollCtrl.position.maxScrollExtent,
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOut,
-    );
+  void _scrollToEnd({bool instant = false}) {
+    // on first open the list isn't laid out yet, so maxScrollExtent is 0 and a
+    // plain animateTo leaves us pinned at the top. jump after the frame, and if
+    // extent is still growing (images sizing in), snap once more.
+    void go() {
+      if (!_scrollCtrl.hasClients) return;
+      final max = _scrollCtrl.position.maxScrollExtent;
+      if (instant) {
+        _scrollCtrl.jumpTo(max);
+      } else {
+        _scrollCtrl.animateTo(
+          max,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+        );
+      }
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      go();
+      // a second pass after media/layout settles catches the real bottom.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollCtrl.hasClients) {
+          _scrollCtrl.jumpTo(_scrollCtrl.position.maxScrollExtent);
+        }
+      });
+    });
   }
 
   Future<void> _send() async {
@@ -802,10 +822,12 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     if (renderBox == null) return;
     final pos = renderBox.localToGlobal(Offset.zero);
     final size = renderBox.size;
-    final showAbove = pos.dy > 260;
     final isOut = target.direction == 'out';
-    final screenW = MediaQuery.of(context).size.width;
     final screenH = MediaQuery.of(context).size.height;
+    // anchor the menu just below the bubble, but if that would run off the
+    // bottom, put it above. never off-screen.
+    final belowTop = pos.dy + size.height + 8;
+    final showAbove = belowTop > screenH - 220;
     final overlay = Overlay.of(context);
     late OverlayEntry entry;
     void dismiss() {
@@ -823,9 +845,9 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               ),
             ),
             Positioned(
-              left: isOut ? null : pos.dx,
-              right: isOut ? (screenW - pos.dx - size.width) : null,
-              top: showAbove ? null : pos.dy + size.height + 8,
+              left: isOut ? null : 12,
+              right: isOut ? 12 : null,
+              top: showAbove ? null : belowTop.clamp(80.0, screenH - 240),
               bottom: showAbove ? (screenH - pos.dy + 8) : null,
               child: Material(
                 color: Colors.transparent,
@@ -1874,11 +1896,17 @@ class _GroupBubble extends StatelessWidget {
                                 ? null
                                 : () => onLongPress!(ctx),
                             child: Container(
-                              padding: const EdgeInsets.fromLTRB(12, 8, 12, 9),
+                              padding: m.mediaPath != null
+                                  ? EdgeInsets.zero
+                                  : const EdgeInsets.fromLTRB(12, 8, 12, 9),
                               decoration: BoxDecoration(
-                                color: isOut
-                                    ? HaloColors.amber
-                                    : HaloColors.surface2,
+                                // any photo goes edge-to-edge, no bubble fill,
+                                // so there's no amber/grey frame (1:1 look).
+                                color: m.mediaPath != null
+                                    ? Colors.transparent
+                                    : (isOut
+                                          ? HaloColors.amber
+                                          : HaloColors.surface2),
                                 borderRadius: BorderRadius.only(
                                   topLeft: const Radius.circular(14),
                                   topRight: const Radius.circular(14),
@@ -1886,6 +1914,9 @@ class _GroupBubble extends StatelessWidget {
                                   bottomRight: Radius.circular(isOut ? 4 : 14),
                                 ),
                               ),
+                              clipBehavior: m.mediaPath != null
+                                  ? Clip.antiAlias
+                                  : Clip.none,
                               child: Column(
                                 crossAxisAlignment: isOut
                                     ? CrossAxisAlignment.end
@@ -2025,14 +2056,24 @@ class _GroupBubble extends StatelessWidget {
                                       ),
                                     ),
                                   if (m.text.isNotEmpty)
-                                    Text(
-                                      m.text,
-                                      style: HaloType.sans(
-                                        size: 14,
-                                        color: isOut
-                                            ? HaloColors.onAmber
-                                            : HaloColors.text,
-                                        height: 1.35,
+                                    Padding(
+                                      padding: m.mediaPath != null
+                                          ? const EdgeInsets.fromLTRB(
+                                              4,
+                                              6,
+                                              4,
+                                              0,
+                                            )
+                                          : EdgeInsets.zero,
+                                      child: Text(
+                                        m.text,
+                                        style: HaloType.sans(
+                                          size: 14,
+                                          color: isOut
+                                              ? HaloColors.onAmber
+                                              : HaloColors.text,
+                                          height: 1.35,
+                                        ),
                                       ),
                                     ),
                                   const SizedBox(height: 2),
@@ -2157,27 +2198,24 @@ class _GroupBubble extends StatelessWidget {
     final selfEmoji = m.reactions[''];
     return counts.entries.map<Widget>((e) {
       final isSelf = e.key == selfEmoji;
+      // solid ink pill, no border - same as 1:1, reads as a tab under the bubble.
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
         decoration: BoxDecoration(
-          color: isSelf ? HaloColors.amberSoft : HaloColors.surface3,
-          border: Border.all(
-            color: isSelf ? HaloColors.amber : HaloColors.line2,
-            width: 0.6,
-          ),
-          borderRadius: BorderRadius.circular(10),
+          color: HaloColors.ink,
+          borderRadius: BorderRadius.circular(11),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(e.key, style: const TextStyle(fontSize: 12)),
+            Text(e.key, style: const TextStyle(fontSize: 13, height: 1.2)),
             if (e.value > 1) ...[
               const SizedBox(width: 3),
               Text(
                 '${e.value}',
                 style: HaloType.mono(
                   size: 9.5,
-                  color: isSelf ? HaloColors.amber : HaloColors.text3,
+                  color: isSelf ? HaloColors.amber : HaloColors.text2,
                 ),
               ),
             ],
