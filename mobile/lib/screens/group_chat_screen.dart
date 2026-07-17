@@ -1863,250 +1863,270 @@ class _GroupBubble extends StatelessWidget {
                         ),
                       ),
                     ),
-                  Builder(
-                    builder: (ctx) {
-                      return GestureDetector(
-                        onTap: m.failed ? onRetry : null,
-                        onLongPress: onLongPress == null
-                            ? null
-                            : () => onLongPress!(ctx),
-                        child: Container(
-                          padding: const EdgeInsets.fromLTRB(12, 8, 12, 9),
-                          decoration: BoxDecoration(
-                            color: isOut
-                                ? HaloColors.amber
-                                : HaloColors.surface2,
-                            borderRadius: BorderRadius.only(
-                              topLeft: const Radius.circular(14),
-                              topRight: const Radius.circular(14),
-                              bottomLeft: Radius.circular(isOut ? 14 : 4),
-                              bottomRight: Radius.circular(isOut ? 4 : 14),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (quotedText != null) ...[
-                                Container(
-                                  margin: const EdgeInsets.only(bottom: 6),
-                                  padding: const EdgeInsets.fromLTRB(
-                                    10,
-                                    6,
-                                    10,
-                                    7,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isOut
-                                        ? Colors.black.withValues(alpha: 0.12)
-                                        : HaloColors.surface3,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border(
-                                      left: BorderSide(
-                                        color: isOut
-                                            ? HaloColors.onAmber.withValues(
-                                                alpha: 0.55,
-                                              )
-                                            : HaloColors.amber,
-                                        width: 2.5,
-                                      ),
-                                    ),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      if (quotedAuthor != null)
-                                        Text(
-                                          quotedAuthor!,
-                                          style: HaloType.mono(
-                                            size: 9.5,
-                                            color: isOut
-                                                ? HaloColors.onAmber.withValues(
-                                                    alpha: 0.7,
-                                                  )
-                                                : HaloColors.amber,
-                                            letter: 0.6,
-                                          ),
-                                        ),
-                                      if (quotedAuthor != null)
-                                        const SizedBox(height: 2),
-                                      Text(
-                                        quotedText!,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: HaloType.sans(
-                                          size: 12.5,
-                                          color: isOut
-                                              ? HaloColors.onAmber.withValues(
-                                                  alpha: 0.8,
-                                                )
-                                              : HaloColors.text2,
-                                          height: 1.3,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Builder(
+                        builder: (ctx) {
+                          return GestureDetector(
+                            onTap: m.failed ? onRetry : null,
+                            onLongPress: onLongPress == null
+                                ? null
+                                : () => onLongPress!(ctx),
+                            child: Container(
+                              padding: const EdgeInsets.fromLTRB(12, 8, 12, 9),
+                              decoration: BoxDecoration(
+                                color: isOut
+                                    ? HaloColors.amber
+                                    : HaloColors.surface2,
+                                borderRadius: BorderRadius.only(
+                                  topLeft: const Radius.circular(14),
+                                  topRight: const Radius.circular(14),
+                                  bottomLeft: Radius.circular(isOut ? 14 : 4),
+                                  bottomRight: Radius.circular(isOut ? 4 : 14),
                                 ),
-                              ],
-                              if (m.fileName == 'voice.wav' &&
-                                  m.filePath != null)
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 2,
-                                  ),
-                                  child: VoiceBubble(
-                                    key: ValueKey('gvb_${m.filePath}'),
-                                    path: m.filePath!,
-                                    isOut: isOut,
-                                    disguised: m.voiceDisguised,
-                                  ),
-                                )
-                              else if (m.fileName != null)
-                                GestureDetector(
-                                  behavior: HitTestBehavior.opaque,
-                                  onTap: () {
-                                    if (m.filePath != null) {
-                                      Share.shareXFiles([XFile(m.filePath!)]);
-                                    }
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 2,
-                                    ),
-                                    child: fileCard(
-                                      m.filePath,
-                                      m.fileName,
-                                      isOut,
-                                    ),
-                                  ),
-                                ),
-                              if (m.mediaPath != null)
-                                Padding(
-                                  padding: EdgeInsets.only(
-                                    bottom: m.text.isNotEmpty ? 6 : 0,
-                                  ),
-                                  child: GestureDetector(
-                                    onTap: () =>
-                                        openFullImage(context, m.mediaPath!),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(10),
-                                      child: ConstrainedBox(
-                                        constraints: const BoxConstraints(
-                                          maxHeight: 280,
-                                          maxWidth: 240,
-                                        ),
-                                        child: Image.file(
-                                          File(m.mediaPath!),
-                                          cacheWidth: 1080,
-                                          gaplessPlayback: true,
-                                          filterQuality: FilterQuality.medium,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) =>
-                                              const SizedBox.shrink(),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              if (m.text.isNotEmpty)
-                                Text(
-                                  m.text,
-                                  style: HaloType.sans(
-                                    size: 14,
-                                    color: isOut
-                                        ? HaloColors.onAmber
-                                        : HaloColors.text,
-                                    height: 1.35,
-                                  ),
-                                ),
-                              const SizedBox(height: 2),
-                              Row(
+                              ),
+                              child: Column(
+                                crossAxisAlignment: isOut
+                                    ? CrossAxisAlignment.end
+                                    : CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  if (m.burnAt != null) ...[
+                                  if (quotedText != null) ...[
                                     Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 5,
-                                        vertical: 1,
+                                      margin: const EdgeInsets.only(bottom: 6),
+                                      padding: const EdgeInsets.fromLTRB(
+                                        10,
+                                        6,
+                                        10,
+                                        7,
                                       ),
                                       decoration: BoxDecoration(
                                         color: isOut
-                                            ? HaloColors.onAmber.withValues(
-                                                alpha: 0.15,
+                                            ? Colors.black.withValues(
+                                                alpha: 0.12,
                                               )
-                                            : HaloColors.amberSoft,
-                                        borderRadius: BorderRadius.circular(4),
+                                            : HaloColors.surface3,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border(
+                                          left: BorderSide(
+                                            color: isOut
+                                                ? HaloColors.onAmber.withValues(
+                                                    alpha: 0.55,
+                                                  )
+                                                : HaloColors.amber,
+                                            width: 2.5,
+                                          ),
+                                        ),
                                       ),
-                                      child: Text(
-                                        '🔥 ${_remaining(m.burnAt!)}',
-                                        style: HaloType.mono(
-                                          size: 9,
-                                          color: isOut
-                                              ? HaloColors.onAmber
-                                              : HaloColors.amber,
-                                          letter: 0.2,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          if (quotedAuthor != null)
+                                            Text(
+                                              quotedAuthor!,
+                                              style: HaloType.mono(
+                                                size: 9.5,
+                                                color: isOut
+                                                    ? HaloColors.onAmber
+                                                          .withValues(
+                                                            alpha: 0.7,
+                                                          )
+                                                    : HaloColors.amber,
+                                                letter: 0.6,
+                                              ),
+                                            ),
+                                          if (quotedAuthor != null)
+                                            const SizedBox(height: 2),
+                                          Text(
+                                            quotedText!,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: HaloType.sans(
+                                              size: 12.5,
+                                              color: isOut
+                                                  ? HaloColors.onAmber
+                                                        .withValues(alpha: 0.8)
+                                                  : HaloColors.text2,
+                                              height: 1.3,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                  if (m.fileName == 'voice.wav' &&
+                                      m.filePath != null)
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 2,
+                                      ),
+                                      child: VoiceBubble(
+                                        key: ValueKey('gvb_${m.filePath}'),
+                                        path: m.filePath!,
+                                        isOut: isOut,
+                                        disguised: m.voiceDisguised,
+                                      ),
+                                    )
+                                  else if (m.fileName != null)
+                                    GestureDetector(
+                                      behavior: HitTestBehavior.opaque,
+                                      onTap: () {
+                                        if (m.filePath != null) {
+                                          Share.shareXFiles([
+                                            XFile(m.filePath!),
+                                          ]);
+                                        }
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 2,
+                                        ),
+                                        child: fileCard(
+                                          m.filePath,
+                                          m.fileName,
+                                          isOut,
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(width: 6),
-                                  ],
-                                  if (m.edited) ...[
-                                    Text(
-                                      'edited ',
-                                      style: HaloType.mono(
-                                        size: 9,
-                                        color: isOut
-                                            ? HaloColors.onAmber.withValues(
-                                                alpha: 0.6,
-                                              )
-                                            : HaloColors.text3,
+                                  if (m.mediaPath != null)
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                        bottom: m.text.isNotEmpty ? 6 : 0,
+                                      ),
+                                      child: GestureDetector(
+                                        onTap: () => openFullImage(
+                                          context,
+                                          m.mediaPath!,
+                                        ),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                          child: ConstrainedBox(
+                                            constraints: const BoxConstraints(
+                                              maxHeight: 280,
+                                              maxWidth: 240,
+                                            ),
+                                            child: Image.file(
+                                              File(m.mediaPath!),
+                                              cacheWidth: 1080,
+                                              gaplessPlayback: true,
+                                              filterQuality:
+                                                  FilterQuality.medium,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) =>
+                                                  const SizedBox.shrink(),
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                  ],
-                                  Text(
-                                    _fmtTime(m.when),
-                                    style: HaloType.mono(
-                                      size: 9.5,
-                                      color: isOut
-                                          ? HaloColors.onAmber.withValues(
-                                              alpha: 0.7,
-                                            )
-                                          : HaloColors.text3,
-                                    ),
-                                  ),
-                                  if (m.failed) ...[
-                                    const SizedBox(width: 6),
+                                  if (m.text.isNotEmpty)
                                     Text(
-                                      '! tap to retry',
-                                      style: HaloType.mono(
-                                        size: 9,
+                                      m.text,
+                                      style: HaloType.sans(
+                                        size: 14,
                                         color: isOut
                                             ? HaloColors.onAmber
-                                            : HaloColors.rose,
+                                            : HaloColors.text,
+                                        height: 1.35,
                                       ),
                                     ),
-                                  ],
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (m.burnAt != null) ...[
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 5,
+                                            vertical: 1,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: isOut
+                                                ? HaloColors.onAmber.withValues(
+                                                    alpha: 0.15,
+                                                  )
+                                                : HaloColors.amberSoft,
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            '🔥 ${_remaining(m.burnAt!)}',
+                                            style: HaloType.mono(
+                                              size: 9,
+                                              color: isOut
+                                                  ? HaloColors.onAmber
+                                                  : HaloColors.amber,
+                                              letter: 0.2,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                      ],
+                                      if (m.edited) ...[
+                                        Text(
+                                          'edited ',
+                                          style: HaloType.mono(
+                                            size: 9,
+                                            color: isOut
+                                                ? HaloColors.onAmber.withValues(
+                                                    alpha: 0.6,
+                                                  )
+                                                : HaloColors.text3,
+                                          ),
+                                        ),
+                                      ],
+                                      Text(
+                                        _fmtTime(m.when),
+                                        style: HaloType.mono(
+                                          size: 9.5,
+                                          color: isOut
+                                              ? HaloColors.onAmber.withValues(
+                                                  alpha: 0.7,
+                                                )
+                                              : HaloColors.text3,
+                                        ),
+                                      ),
+                                      if (m.failed) ...[
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          '! tap to retry',
+                                          style: HaloType.mono(
+                                            size: 9,
+                                            color: isOut
+                                                ? HaloColors.onAmber
+                                                : HaloColors.rose,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
                                 ],
                               ),
-                            ],
+                            ),
+                          );
+                        },
+                      ),
+                      if (m.reactions.isNotEmpty)
+                        Positioned(
+                          // ig-style: hangs at the bubble's bottom edge on the
+                          // sender's side, same as 1:1. keys off direction.
+                          bottom: -13,
+                          right: isOut ? 10 : null,
+                          left: isOut ? null : 10,
+                          child: Wrap(
+                            spacing: 3,
+                            children: _buildReactionChips(m),
                           ),
                         ),
-                      );
-                    },
+                    ],
                   ),
-                  if (m.reactions.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      child: Wrap(
-                        spacing: 4,
-                        runSpacing: 4,
-                        children: _buildReactionChips(m),
-                      ),
-                    ),
-                  ],
+                  if (m.reactions.isNotEmpty) const SizedBox(height: 10),
                   if (isOut && m.sending) ...[
                     const SizedBox(height: 4),
                     Padding(
