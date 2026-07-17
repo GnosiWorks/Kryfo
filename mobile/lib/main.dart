@@ -3452,6 +3452,8 @@ class AppState extends ChangeNotifier {
     } else {
       await db.addReaction(targetMsgUid, '', emoji);
     }
+    // show it instantly - don't wait on the tor multicast to update the ui.
+    notifyListeners();
     final wrapped = await wrapMessage(
       '',
       groupId: groupId,
@@ -3459,11 +3461,13 @@ class AppState extends ChangeNotifier {
       sender: _mySender(),
     );
     final members = await db.getGroupMembers(groupId);
-    await Future.wait([
-      for (final memberId in members)
-        if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
-    ]);
-    notifyListeners();
+    // fan out in the background; the reaction is already on screen.
+    unawaited(
+      Future.wait([
+        for (final memberId in members)
+          if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
+      ]),
+    );
   }
 
   // recall a group message everywhere: delete locally, tell every member.
