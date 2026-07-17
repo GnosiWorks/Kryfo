@@ -2028,10 +2028,12 @@ class _GroupBubble extends StatelessWidget {
                                         bottom: m.text.isNotEmpty ? 6 : 0,
                                       ),
                                       child: GestureDetector(
-                                        onTap: () => openFullImage(
-                                          context,
-                                          m.mediaPath!,
-                                        ),
+                                        onTap: m.failed
+                                            ? onRetry
+                                            : () => openFullImage(
+                                                context,
+                                                m.mediaPath!,
+                                              ),
                                         child: ClipRRect(
                                           borderRadius: BorderRadius.circular(
                                             10,
