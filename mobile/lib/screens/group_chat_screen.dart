@@ -55,6 +55,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   void initState() {
     super.initState();
     currentChatPeer = 'group:${widget.groupId}';
+    db.clearGroupUnread(widget.groupId).then((_) => appState.refreshGroups());
     _load();
     appState.loadDisguisePref().then((d) {
       if (mounted) setState(() => _disguise = d);
@@ -729,8 +730,16 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     final current = target.reactions[''];
     final isUnreact = current == emoji;
     final newEmoji = isUnreact ? '' : emoji;
+    // land the chip on screen now - don't wait for the db write + tor multicast
+    // to round-trip back through a full reload. '' is our own reaction slot.
+    setState(() {
+      if (newEmoji.isEmpty) {
+        target.reactions.remove('');
+      } else {
+        target.reactions[''] = newEmoji;
+      }
+    });
     await appState.reactInGroup(widget.groupId, target.msgUid!, newEmoji);
-    // local state update happens via appState listener reload.
   }
 
   void _showBurnPicker() {
@@ -2038,21 +2047,62 @@ class _GroupBubble extends StatelessWidget {
                                           borderRadius: BorderRadius.circular(
                                             10,
                                           ),
-                                          child: ConstrainedBox(
-                                            constraints: const BoxConstraints(
-                                              maxHeight: 280,
-                                              maxWidth: 240,
-                                            ),
-                                            child: Image.file(
-                                              File(m.mediaPath!),
-                                              cacheWidth: 1080,
-                                              gaplessPlayback: true,
-                                              filterQuality:
-                                                  FilterQuality.medium,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (_, __, ___) =>
-                                                  const SizedBox.shrink(),
-                                            ),
+                                          child: Stack(
+                                            children: [
+                                              ConstrainedBox(
+                                                constraints:
+                                                    const BoxConstraints(
+                                                      maxHeight: 280,
+                                                      maxWidth: 240,
+                                                    ),
+                                                child: Image.file(
+                                                  File(m.mediaPath!),
+                                                  cacheWidth: 1080,
+                                                  gaplessPlayback: true,
+                                                  filterQuality:
+                                                      FilterQuality.medium,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (_, __, ___) =>
+                                                      const SizedBox.shrink(),
+                                                ),
+                                              ),
+                                              // caption-less photo: float the
+                                              // time in a pill on the corner,
+                                              // same as 1:1. captioned photos
+                                              // keep the time in the row below.
+                                              if (m.text.isEmpty && !m.failed)
+                                                Positioned(
+                                                  right: 8,
+                                                  bottom: 8,
+                                                  child: Container(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 7,
+                                                          vertical: 3,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.black
+                                                          .withValues(
+                                                            alpha: 0.45,
+                                                          ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            10,
+                                                          ),
+                                                    ),
+                                                    child: Text(
+                                                      _fmtTime(m.when),
+                                                      style: const TextStyle(
+                                                        fontFamily:
+                                                            'JetBrains Mono',
+                                                        fontSize: 9,
+                                                        color: Colors.white,
+                                                        letterSpacing: 0.4,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                            ],
                                           ),
                                         ),
                                       ),
@@ -2124,17 +2174,23 @@ class _GroupBubble extends StatelessWidget {
                                           ),
                                         ),
                                       ],
-                                      Text(
-                                        _fmtTime(m.when),
-                                        style: HaloType.mono(
-                                          size: 9.5,
-                                          color: isOut
-                                              ? HaloColors.onAmber.withValues(
-                                                  alpha: 0.7,
-                                                )
-                                              : HaloColors.text3,
+                                      // caption-less photo shows its time on the
+                                      // image overlay, so skip it here to avoid
+                                      // a doubled timestamp.
+                                      if (!(m.mediaPath != null &&
+                                          m.text.isEmpty &&
+                                          !m.failed))
+                                        Text(
+                                          _fmtTime(m.when),
+                                          style: HaloType.mono(
+                                            size: 9.5,
+                                            color: isOut
+                                                ? HaloColors.onAmber.withValues(
+                                                    alpha: 0.7,
+                                                  )
+                                                : HaloColors.text3,
+                                          ),
                                         ),
-                                      ),
                                       if (m.failed) ...[
                                         const SizedBox(width: 6),
                                         Text(
