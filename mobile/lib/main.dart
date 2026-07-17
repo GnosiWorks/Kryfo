@@ -3419,10 +3419,11 @@ class AppState extends ChangeNotifier {
     bool voiceDisguised = false,
     int? burnSeconds,
   }) async {
-    // 48k chunks (vs 16k): a 235kb file drops from ~20 chunks to ~7, and each
-    // extra chunk is another chance for a tor blip to lose one and stall the
-    // whole reassembly. still well under the relay event-size ceiling.
-    const chunkSize = 48 * 1024;
+    // 16k chunks: bigger chunks (48k) tripped nip-44's 64kB plaintext ceiling
+    // once wrapped in the envelope + gift wrap, so every chunk failed. 16k
+    // matches 1:1 and stays safely under the limit. the own relay makes the
+    // extra chunk count cheap.
+    const chunkSize = 16 * 1024;
     final chunks = <String>[];
     for (var i = 0; i < b64.length; i += chunkSize) {
       chunks.add(
