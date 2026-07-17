@@ -2473,8 +2473,10 @@ class AppState extends ChangeNotifier {
       final openGroup = 'group:${env.groupId}';
       if (currentChatPeer != openGroup) {
         await db.bumpGroupUnread(env.groupId!);
+        debugPrint('GRPUNREAD bump ${env.groupId} cur=$currentChatPeer');
       } else {
         await db.clearGroupUnread(env.groupId!);
+        debugPrint('GRPUNREAD clear ${env.groupId} (open)');
       }
     }
     // a message landed: rebuild the contact list so the home shows the
