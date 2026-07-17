@@ -11,9 +11,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/media_bubbles.dart';
-import 'chat_screen.dart' show disguiseWav, ChatScreen;
+import 'chat_screen.dart' show disguiseWav, ChatScreen, LinkPreviewCard;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../main.dart' show appState, db, currentChatPeer, newMsgUid;
@@ -24,6 +25,8 @@ import 'group_info_screen.dart';
 import '../widgets/motion.dart'
     show haloRoute, SendPill, PrivacyMode, TorStatus;
 
+final Map<String, String> _draftPerGroup = {};
+
 class GroupChatScreen extends StatefulWidget {
   final String groupId;
   const GroupChatScreen({super.key, required this.groupId});
@@ -31,7 +34,8 @@ class GroupChatScreen extends StatefulWidget {
   State<GroupChatScreen> createState() => _GroupChatScreenState();
 }
 
-class _GroupChatScreenState extends State<GroupChatScreen> {
+class _GroupChatScreenState extends State<GroupChatScreen>
+    with WidgetsBindingObserver {
   final _msgCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
   final List<_GMsg> _messages = [];
@@ -55,7 +59,20 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   void initState() {
     super.initState();
     currentChatPeer = 'group:${widget.groupId}';
+    WidgetsBinding.instance.addObserver(this);
     db.clearGroupUnread(widget.groupId).then((_) => appState.refreshGroups());
+    // restore a draft left behind last time this group was open.
+    _msgCtrl.text = _draftPerGroup[widget.groupId] ?? '';
+    // save it live on every keystroke so it survives leaving regardless of
+    // when dispose runs.
+    _msgCtrl.addListener(() {
+      final t = _msgCtrl.text;
+      if (t.trim().isEmpty) {
+        _draftPerGroup.remove(widget.groupId);
+      } else {
+        _draftPerGroup[widget.groupId] = t;
+      }
+    });
     _load();
     appState.loadDisguisePref().then((d) {
       if (mounted) setState(() => _disguise = d);
@@ -1170,7 +1187,29 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // backgrounded with the group open: drop the "open" marker so incoming
+    // messages bump the unread badge instead of being treated as read.
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.inactive) {
+      if (currentChatPeer == 'group:${widget.groupId}') currentChatPeer = null;
+    } else if (state == AppLifecycleState.resumed) {
+      currentChatPeer = 'group:${widget.groupId}';
+      db.clearGroupUnread(widget.groupId).then((_) => appState.refreshGroups());
+    }
+  }
+
+  @override
   void dispose() {
+    // persist the draft one more time on the way out.
+    final draft = _msgCtrl.text;
+    if (draft.trim().isEmpty) {
+      _draftPerGroup.remove(widget.groupId);
+    } else {
+      _draftPerGroup[widget.groupId] = draft;
+    }
+    WidgetsBinding.instance.removeObserver(this);
     if (currentChatPeer == 'group:${widget.groupId}') currentChatPeer = null;
     appState.removeListener(_onAppStateChanged);
     _burnTick?.cancel();
@@ -2132,6 +2171,13 @@ class _GroupBubble extends StatelessWidget {
                                         ),
                                       ),
                                     ),
+                                  if (m.preview != null) ...[
+                                    const SizedBox(height: 6),
+                                    LinkPreviewCard(
+                                      preview: m.preview!,
+                                      isOut: isOut,
+                                    ),
+                                  ],
                                   const SizedBox(height: 2),
                                   Row(
                                     mainAxisSize: MainAxisSize.min,

@@ -5671,7 +5671,7 @@ class _Bubble extends StatelessWidget {
                                     _body(isOut, image: msg.mediaPath != null),
                                   if (msg.preview != null) ...[
                                     const SizedBox(height: 6),
-                                    _LinkPreviewCard(
+                                    LinkPreviewCard(
                                       preview: msg.preview!,
                                       isOut: isOut,
                                     ),
@@ -7519,10 +7519,14 @@ Widget _bubbleEntrance({
 // edge while sparks peel off the burn line. one tween drives both.
 // link preview card. data is fetched sender-side over tor and embedded, so
 // rendering never makes a network request - the receiver's ip stays private.
-class _LinkPreviewCard extends StatelessWidget {
+class LinkPreviewCard extends StatelessWidget {
   final Map<String, String> preview;
   final bool isOut;
-  const _LinkPreviewCard({required this.preview, required this.isOut});
+  const LinkPreviewCard({
+    super.key,
+    required this.preview,
+    required this.isOut,
+  });
 
   // decode each preview image once and keep the bytes, so list repaints (burn
   // ticks, scroll) don't re-decode base64 every frame and make the card blink.
