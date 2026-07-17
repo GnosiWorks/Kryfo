@@ -442,7 +442,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 27,
+      version: 28,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -518,7 +518,8 @@ class HaloDb {
             description TEXT,
             created_at INTEGER NOT NULL,
             is_admin INTEGER NOT NULL DEFAULT 0,
-            admin_id TEXT
+            admin_id TEXT,
+            unread INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute('''
@@ -539,6 +540,11 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 28) {
+          await db.execute(
+            'ALTER TABLE groups ADD COLUMN unread INTEGER NOT NULL DEFAULT 0',
+          );
+        }
         if (oldV < 27) {
           await db.execute('''
             CREATE TABLE IF NOT EXISTS seen_msgs (
@@ -1515,6 +1521,24 @@ class HaloDb {
     );
   }
 
+  Future<void> bumpGroupUnread(String groupId) async {
+    final db = await open();
+    await db.rawUpdate(
+      'UPDATE groups SET unread = unread + 1 WHERE group_id = ?',
+      [groupId],
+    );
+  }
+
+  Future<void> clearGroupUnread(String groupId) async {
+    final db = await open();
+    await db.update(
+      'groups',
+      {'unread': 0},
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+    );
+  }
+
   Future<void> setAtmosphere(String peerId, String atmosphere) async {
     final db = await open();
     await db.update(
@@ -2093,12 +2117,14 @@ class GroupPreview {
   final int memberCount;
   final bool isAdmin;
   final DateTime createdAt;
+  final int unread;
   const GroupPreview({
     required this.groupId,
     required this.name,
     required this.memberCount,
     required this.isAdmin,
     required this.createdAt,
+    this.unread = 0,
   });
 }
 
@@ -2443,10 +2469,18 @@ class AppState extends ChangeNotifier {
     } else if (!isGroup && currentChatPeer == senderHaloId) {
       // already reading this chat - clear any stale badge instead of leaving it.
       await db.clearUnread(senderHaloId);
+    } else if (isGroup && env.groupId != null) {
+      final openGroup = 'group:${env.groupId}';
+      if (currentChatPeer != openGroup) {
+        await db.bumpGroupUnread(env.groupId!);
+      } else {
+        await db.clearGroupUnread(env.groupId!);
+      }
     }
     // a message landed: rebuild the contact list so the home shows the
     // new preview, time and unread dot without needing the chat opened.
     await refreshContacts();
+    if (isGroup) await refreshGroups();
     final String notifTitle;
     final String notifBody;
     final String notifPayload;
@@ -2791,6 +2825,9 @@ class AppState extends ChangeNotifier {
     // live relay holding every offline message. publish succeeds if any one
     // accepts, and the subscription dedups, so extra relays only buy odds.
     _nostrInitOnIsolate(
+      // our own relay first (tor onion, always awake) - public relays fall back.
+      // the engine dials every relay through tor, so ws:// over the onion is fine.
+      'ws://z4waup3c6j6gknkjba72cqjjuffhgg6gtgqfu3vetzcvgoluvr42srid.onion,'
       'wss://relay.damus.io,'
       'wss://nos.lol,'
       'wss://relay.primal.net,'
@@ -3238,6 +3275,7 @@ class AppState extends ChangeNotifier {
           createdAt: DateTime.fromMillisecondsSinceEpoch(
             r['created_at'] as int,
           ),
+          unread: (r['unread'] as int? ?? 0),
         ),
       );
     }
@@ -3788,6 +3826,7 @@ class _RootShellState extends State<RootShell> {
               groupId: g.groupId,
               name: g.name,
               memberCount: g.memberCount,
+              unread: g.unread,
             ),
           )
           .toList(),

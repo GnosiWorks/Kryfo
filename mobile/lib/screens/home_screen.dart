@@ -176,10 +176,12 @@ class GroupSummary {
   final String groupId;
   final String name;
   final int memberCount;
+  final int unread;
   const GroupSummary({
     required this.groupId,
     required this.name,
     required this.memberCount,
+    this.unread = 0,
   });
 }
 
@@ -1010,6 +1012,26 @@ class _GroupRow extends StatelessWidget {
                 ],
               ),
             ),
+            if (g.unread > 0) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                constraints: const BoxConstraints(minWidth: 18),
+                decoration: BoxDecoration(
+                  color: HaloColors.amber,
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Text(
+                  g.unread > 99 ? '99+' : '${g.unread}',
+                  textAlign: TextAlign.center,
+                  style: HaloType.sans(
+                    size: 10,
+                    weight: FontWeight.w600,
+                    color: HaloColors.onAmber,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
