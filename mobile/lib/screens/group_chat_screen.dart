@@ -2121,7 +2121,11 @@ class _GroupBubble extends StatelessWidget {
                                         m.text,
                                         style: HaloType.sans(
                                           size: 14,
-                                          color: isOut
+                                          // a photo caption sits on a transparent
+                                          // bubble (no amber), so onAmber would be
+                                          // invisible - use the readable color.
+                                          // text-only out messages keep onAmber.
+                                          color: (isOut && m.mediaPath == null)
                                               ? HaloColors.onAmber
                                               : HaloColors.text,
                                           height: 1.35,
