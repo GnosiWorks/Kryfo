@@ -2195,6 +2195,32 @@ class _GroupBubble extends StatelessWidget {
                                                 : HaloColors.text3,
                                           ),
                                         ),
+                                      // sent tick, matching 1:1: outgoing +
+                                      // delivered, only where the row-time shows
+                                      // (skip caption-less photos, time's on the
+                                      // image there). photo bubble is
+                                      // transparent so use a readable color.
+                                      if (isOut &&
+                                          !m.sending &&
+                                          !m.failed &&
+                                          !(m.mediaPath != null &&
+                                              m.text.isEmpty)) ...[
+                                        const SizedBox(width: 3),
+                                        Text(
+                                          '✓',
+                                          style: TextStyle(
+                                            fontFamily: 'JetBrains Mono',
+                                            fontSize: 11,
+                                            color: m.mediaPath != null
+                                                ? HaloColors.text3
+                                                : HaloColors.onAmber.withValues(
+                                                    alpha: 0.7,
+                                                  ),
+                                            fontWeight: FontWeight.w700,
+                                            height: 1,
+                                          ),
+                                        ),
+                                      ],
                                       if (m.failed) ...[
                                         const SizedBox(width: 6),
                                         Text(
