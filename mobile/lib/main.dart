@@ -1757,9 +1757,11 @@ class HaloDb {
     // order by rowid (insertion order), not sent_at - a received note can carry
     // a sent_at older than our local newest (clock skew between phones) and
     // would otherwise never surface as the latest. rowid always climbs.
+    // group_id IS NULL: a group message is stored under the sender's peer_id
+    // too, and without this filter it leaked into their 1:1 preview + unread.
     final rows = await db.query(
       'messages',
-      where: 'peer_id = ?',
+      where: 'peer_id = ? AND group_id IS NULL',
       whereArgs: [peerId],
       orderBy: 'rowid DESC',
       limit: 1,
@@ -3379,7 +3381,10 @@ class AppState extends ChangeNotifier {
     bool voiceDisguised = false,
     int? burnSeconds,
   }) async {
-    const chunkSize = 16 * 1024;
+    // 48k chunks (vs 16k): a 235kb file drops from ~20 chunks to ~7, and each
+    // extra chunk is another chance for a tor blip to lose one and stall the
+    // whole reassembly. still well under the relay event-size ceiling.
+    const chunkSize = 48 * 1024;
     final chunks = <String>[];
     for (var i = 0; i < b64.length; i += chunkSize) {
       chunks.add(
@@ -3412,13 +3417,21 @@ class AppState extends ChangeNotifier {
         rosterParticipants: rosterParts,
         sender: _mySender(),
       );
-      final results = await Future.wait([
-        for (final memberId in members)
-          if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
-      ]);
-      if (!results.any((ok) => ok)) {
-        debugPrint('GRP MEDIA chunk $i/$total failed');
-        return 'error: no member reachable';
+      var chunkOk = false;
+      for (var tryN = 0; tryN < 3 && !chunkOk; tryN++) {
+        final results = await Future.wait([
+          for (final memberId in members)
+            if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
+        ]);
+        chunkOk = results.any((ok) => ok);
+        if (!chunkOk) {
+          debugPrint('GRP MEDIA chunk $i/$total try ${tryN + 1} failed');
+          if (tryN < 2) await Future.delayed(const Duration(seconds: 1));
+        }
+      }
+      if (!chunkOk) {
+        debugPrint('GRP MEDIA chunk $i/$total gave up');
+        return 'error: chunk $i undeliverable';
       }
       // let the circuit breathe between chunks - flooding drops them.
       if (total > 1 && i < total - 1) {
