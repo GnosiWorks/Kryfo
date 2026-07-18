@@ -14,10 +14,27 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/media_bubbles.dart';
-import 'chat_screen.dart' show disguiseWav, ChatScreen, LinkPreviewCard;
+import 'chat_screen.dart'
+    show
+        disguiseWav,
+        ChatScreen,
+        LinkPreviewCard,
+        SearchHead,
+        Atmo,
+        AtmosphereWash,
+        atmoFromName,
+        firstUrl,
+        unescapeHtml;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../main.dart' show appState, db, currentChatPeer, newMsgUid;
+import '../main.dart'
+    show
+        appState,
+        db,
+        currentChatPeer,
+        newMsgUid,
+        torGetOnIsolate,
+        torGetB64OnIsolate;
 import '../theme.dart';
 import '../widgets/halo_avatar.dart';
 import '../widgets/burn_fade.dart';
@@ -49,6 +66,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   int? _jumpIndex;
   String? _rippleUid;
   final Map<int, GlobalKey> _dayKeys = {};
+  final Map<int, int> _dayAt = {};
   final GlobalKey _listKey = GlobalKey();
   final ValueNotifier<String?> _stickyLabel = ValueNotifier(null);
   final ValueNotifier<bool> _stickyShown = ValueNotifier(false);
@@ -56,6 +74,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   Timer? _stickyHideTimer;
   bool _suppressSticky = true;
   DateTime _lastSticky = DateTime.fromMillisecondsSinceEpoch(0);
+  bool _searching = false;
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+  List<int> _matches = [];
+  int _matchPos = 0;
+  Atmo _atmosphere = Atmo.none;
+  static const _pageSize = 60;
+  bool _hasMore = true;
+  bool _loadingOlder = false;
+  bool _pagedOut = false;
   // ghost mode - per-session, not persisted. when on, new messages carry a
   // burn timer; receivers compute the burn deadline locally.
   bool _ghost = false;
@@ -86,6 +114,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       }
     });
     _scrollCtrl.addListener(_updateSticky);
+    _scrollCtrl.addListener(_onGroupScroll);
     Future.delayed(const Duration(milliseconds: 1200), () {
       if (mounted) _suppressSticky = false;
     });
@@ -127,11 +156,122 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
   }
 
+  void _onGroupScroll() {
+    if (!_scrollCtrl.hasClients) return;
+    if (_scrollCtrl.position.pixels < 400) _loadOlder();
+  }
+
+  Future<void> _loadOlder() async {
+    if (_loadingOlder || !_hasMore || _searching) return;
+    _loadingOlder = true;
+    try {
+      final oldestRowid = _messages.isEmpty ? null : _messages.first.rowid;
+      final rows = await db.groupMessagesPage(
+        widget.groupId,
+        beforeRowid: oldestRowid,
+        limit: _pageSize + 1,
+      );
+      if (!mounted) return;
+      _hasMore = rows.length > _pageSize;
+      if (_hasMore) rows.removeAt(0);
+      if (!_hasMore) _pagedOut = true;
+      if (rows.isEmpty) return;
+      final uids = rows
+          .map((r) => r['msg_uid'] as String?)
+          .where((u) => u != null && u.isNotEmpty)
+          .cast<String>()
+          .toList();
+      final reactions = await db.loadReactionsFor(uids);
+      if (!mounted) return;
+      final nickById = <String, String>{};
+      for (final c in appState.contacts) {
+        final n = c.nickname;
+        if (n != null && n.isNotEmpty) nickById[c.haloId] = n;
+      }
+      final older = <_GMsg>[];
+      for (final r in rows) {
+        final uid = r['msg_uid'] as String?;
+        final rxMap = <String, String>{};
+        if (uid != null && reactions[uid] != null) {
+          for (final e in reactions[uid]!) {
+            rxMap[e.key] = e.value;
+          }
+        }
+        final dir = r['direction'] as String;
+        final m = _GMsg(
+          sender: r['peer_id'] as String,
+          senderName: nickById[r['peer_id'] as String],
+          direction: dir,
+          text: r['plaintext'] as String,
+          when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+          burnAt: r['burn_at'] as int?,
+          msgUid: uid,
+          replyTo: r['reply_to'] as String?,
+          mediaPath: r['media_path'] as String?,
+          filePath: r['file_path'] as String?,
+          fileName: r['file_name'] as String?,
+          voiceDisguised: ((r['voice_disguised'] as int?) ?? 0) == 1,
+          pinned: ((r['pinned'] as int?) ?? 0) == 1,
+          saved: ((r['saved'] as int?) ?? 0) == 1,
+          edited: ((r['edited'] as int?) ?? 0) == 1,
+          reactions: rxMap,
+        );
+        m.preview = _decodePv(r['preview'] as String?);
+        m.rowid = (r['rowid'] as int?) ?? 0;
+        older.add(m);
+      }
+      // indices shift after the prepend, so the index-keyed divider maps are
+      // stale. they repopulate on build.
+      _dayKeys.clear();
+      _dayAt.clear();
+      setState(() => _messages.insertAll(0, older));
+      // anchor: pull the previous top message back to the top of the view so
+      // the prepend doesn't yank the scroll.
+      setState(() => _jumpIndex = older.length);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final ctx = _jumpKey.currentContext;
+        if (ctx != null) {
+          Scrollable.ensureVisible(
+            ctx,
+            duration: Duration.zero,
+            alignment: 0.0,
+          );
+        }
+        _jumpIndex = null;
+      });
+    } finally {
+      _loadingOlder = false;
+    }
+  }
+
+  Map<String, String>? _decodePv(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final d = jsonDecode(raw) as Map<String, dynamic>;
+      return d.map((k, v) => MapEntry(k, v.toString()));
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _load() async {
     _loading = true;
+    _dayKeys.clear();
+    _dayAt.clear();
+    db.getGroupAtmosphere(widget.groupId).then((a) {
+      if (mounted) setState(() => _atmosphere = atmoFromName(a));
+    });
     final g = await db.getGroup(widget.groupId);
     final members = await db.getGroupMembers(widget.groupId);
-    final rows = await db.loadGroupMessages(widget.groupId);
+    final wantAll = _searching || _pagedOut;
+    final rows = wantAll
+        ? await db.loadGroupMessages(widget.groupId)
+        : await db.groupMessagesPage(widget.groupId, limit: _pageSize + 1);
+    if (!wantAll) {
+      _hasMore = rows.length > _pageSize;
+      if (_hasMore) rows.removeAt(0);
+      if (!_hasMore) _pagedOut = true;
+    }
     // gather reactions for every uid we have
     final uids = rows
         .map((r) => r['msg_uid'] as String?)
@@ -182,6 +322,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               sending: dir == 'out' && (r['sent'] as int? ?? 1) == 0,
               reactions: rxMap,
             );
+            m.preview = _decodePv(r['preview'] as String?);
             m.rowid = (r['rowid'] as int?) ?? 0;
             // only a STALE sending out-message is dead. a live send (<60s old,
             // future still running) must keep its pill or a working media send
@@ -295,6 +436,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         sending: dir == 'out' && (r['sent'] as int? ?? 1) == 0,
         reactions: rxMap,
       );
+      m.preview = _decodePv(r['preview'] as String?);
       m.rowid = (r['rowid'] as int?) ?? 0;
       if (dir == 'in') m.fresh = true;
       fresh.add(m);
@@ -330,6 +472,54 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         }
       });
     });
+  }
+
+  Future<void> _enrichGroupPreview(_GMsg msg, String url, String msgUid) async {
+    try {
+      final html = await torGetOnIsolate(url);
+      if (html.startsWith('error:') || html.isEmpty) return;
+      String? grab(String prop) {
+        final re = RegExp(
+          '<meta[^>]+(?:property|name)=["\']' +
+              RegExp.escape(prop) +
+              '["\'][^>]+content=["\']([^"\']+)',
+          caseSensitive: false,
+        );
+        return re.firstMatch(html)?.group(1);
+      }
+
+      var title = grab('og:title') ?? grab('twitter:title');
+      if (title == null) {
+        final t = RegExp(
+          r'<title[^>]*>([^<]+)',
+          caseSensitive: false,
+        ).firstMatch(html);
+        title = t?.group(1)?.trim();
+      }
+      final image = grab('og:image') ?? grab('twitter:image');
+      final site = grab('og:site_name');
+      if (title == null && image == null) return;
+      String? imageData;
+      if (image != null) {
+        try {
+          final raw = await torGetB64OnIsolate(image);
+          if (raw.startsWith('ok:')) imageData = raw.substring(3);
+        } catch (_) {}
+      }
+      // small thumb rides whole, big one drops. no chunked lane here, the
+      // card still shows title/site.
+      if (imageData != null && imageData.length > 80 * 1024) imageData = null;
+      final pv = <String, String>{
+        'url': url,
+        if (title != null) 'title': unescapeHtml(title),
+        if (imageData != null) 'img': imageData,
+        if (site != null) 'site': unescapeHtml(site),
+      };
+      if (!mounted) return;
+      setState(() => msg.preview = pv);
+      await db.setMsgPreview(msgUid, jsonEncode(pv));
+      await appState.sendGroupPreview(widget.groupId, msgUid, pv);
+    } catch (_) {}
   }
 
   Future<void> _send() async {
@@ -377,6 +567,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         // sendToGroup can trigger a reload that replaces `optimistic`,
         // and mutating the orphan left the send pill stuck forever.
         final live = _liveMsg(uid) ?? optimistic;
+        if (ok) {
+          final url = firstUrl(text);
+          if (url != null) {
+            unawaited(_enrichGroupPreview(live, url, uid));
+          }
+        }
         setState(() {
           _sending = false;
           live.sending = false;
@@ -981,13 +1177,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     return label;
   }
 
-  Widget _dateDivider(DateTime when) {
+  Widget _dateDivider(DateTime when, int i) {
     final dayMs = DateTime(
       when.year,
       when.month,
       when.day,
     ).millisecondsSinceEpoch;
-    final key = _dayKeys.putIfAbsent(dayMs, () => GlobalKey());
+    final key = _dayKeys.putIfAbsent(i, () => GlobalKey());
+    _dayAt[i] = dayMs;
     return Padding(
       key: key,
       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -1017,13 +1214,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final top = listObj.localToGlobal(Offset.zero).dy;
     int? best;
     double bestDy = -1e9;
-    _dayKeys.forEach((dayMs, key) {
+    _dayKeys.forEach((i, key) {
       final obj = key.currentContext?.findRenderObject();
       if (obj is! RenderBox) return;
       final dy = obj.localToGlobal(Offset.zero).dy;
       if (dy <= top + 6 && dy > bestDy) {
         bestDy = dy;
-        best = dayMs;
+        best = _dayAt[i];
       }
     });
     if (best != null) _stickyDayMs = best;
@@ -1040,12 +1237,58 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     );
   }
 
-  void _scrollToGroupMessage(_GMsg m) {
-    final idx = _messages.indexOf(m);
-    if (idx < 0 || !_scrollCtrl.hasClients) return;
+  void _openSearch() {
+    setState(() => _searching = true);
+    // matches should cover the whole chat, not just the loaded window.
+    if (_hasMore) _load();
+  }
+
+  void _closeSearch() {
+    setState(() {
+      _searching = false;
+      _query = '';
+      _searchCtrl.clear();
+      _matches = [];
+      _matchPos = 0;
+    });
+  }
+
+  void _onQueryChanged(String q) {
+    final query = q.trim();
+    final matches = <int>[];
+    if (query.isNotEmpty) {
+      final lower = query.toLowerCase();
+      for (var i = 0; i < _messages.length; i++) {
+        if (_messages[i].text.toLowerCase().contains(lower)) {
+          matches.add(i);
+        }
+      }
+    }
+    setState(() {
+      _query = query;
+      _matches = matches;
+      _matchPos = matches.isEmpty ? 0 : matches.length - 1;
+    });
+    if (matches.isNotEmpty) _scrollToIndex(matches[_matchPos]);
+  }
+
+  void _gotoMatch(int delta) {
+    if (_matches.isEmpty) return;
+    setState(() {
+      _matchPos = (_matchPos + delta) % _matches.length;
+      if (_matchPos < 0) _matchPos += _matches.length;
+    });
+    _scrollToIndex(_matches[_matchPos]);
+  }
+
+  // rough-jump so the target gets built, then ensureVisible lands it. this
+  // list is NOT reversed (unlike 1:1), older sits near offset 0.
+  void _scrollToIndex(int idx) {
+    if (idx < 0 || idx >= _messages.length || !_scrollCtrl.hasClients) return;
+    final m = _messages[idx];
     setState(() => _jumpIndex = idx);
     final max = _scrollCtrl.position.maxScrollExtent;
-    final frac = (_messages.length - 1 - idx) / _messages.length;
+    final frac = idx / _messages.length;
     final approx = (frac * max - _scrollCtrl.position.viewportDimension * 0.3)
         .clamp(0.0, max);
     _scrollCtrl.jumpTo(approx.clamp(0.0, max));
@@ -1069,6 +1312,92 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         });
       }
     });
+  }
+
+  void _scrollToGroupMessage(_GMsg m) {
+    _scrollToIndex(_messages.indexOf(m));
+  }
+
+  Future<void> _showGroupPinnedSheet() async {
+    final pinned = _messages.where((m) => m.pinned).toList();
+    if (pinned.isEmpty) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: HaloColors.surface2,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              child: Text(
+                'pinned messages',
+                style: HaloType.mono(
+                  size: 11,
+                  color: HaloColors.text3,
+                  letter: 0.14,
+                ),
+              ),
+            ),
+            for (final m in pinned)
+              InkWell(
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _scrollToGroupMessage(m);
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.push_pin_outlined,
+                        size: 14,
+                        color: HaloColors.amber,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          m.text.isEmpty ? 'photo' : m.text,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: HaloType.sans(
+                            size: 14,
+                            color: HaloColors.text,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      InkWell(
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _togglePinGroup(m);
+                        },
+                        borderRadius: BorderRadius.circular(999),
+                        child: Padding(
+                          padding: EdgeInsets.all(4),
+                          child: Icon(
+                            Icons.close,
+                            size: 16,
+                            color: HaloColors.text3,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _togglePinGroup(_GMsg m) async {
@@ -1348,6 +1677,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
     if (_menuEntry?.mounted ?? false) _menuEntry!.remove();
     _menuEntry = null;
+    _searchCtrl.dispose();
+    _scrollCtrl.removeListener(_onGroupScroll);
     _scrollCtrl.removeListener(_updateSticky);
     _stickyHideTimer?.cancel();
     _stickyLabel.dispose();
@@ -1368,17 +1699,36 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       body: SafeArea(
         child: Column(
           children: [
-            _Header(
-              name: _groupName,
-              memberCount: _memberCount,
-              onBack: () => Navigator.of(context).pop(),
-              onTapInfo: () async {
-                await Navigator.of(
-                  context,
-                ).push(haloRoute(GroupInfoScreen(groupId: widget.groupId)));
-                _load();
-              },
-            ),
+            _searching
+                ? SearchHead(
+                    controller: _searchCtrl,
+                    matchCount: _matches.length,
+                    matchPos: _matches.isEmpty ? 0 : _matchPos + 1,
+                    onChanged: _onQueryChanged,
+                    onPrev: () => _gotoMatch(-1),
+                    onNext: () => _gotoMatch(1),
+                    onClose: _closeSearch,
+                  )
+                : _Header(
+                    name: _groupName,
+                    memberCount: _memberCount,
+                    onBack: () => Navigator.of(context).pop(),
+                    onSearch: _openSearch,
+                    pinnedCount: _messages.where((m) => m.pinned).length,
+                    onPinned: _showGroupPinnedSheet,
+                    onTapInfo: () async {
+                      await Navigator.of(context).push(
+                        haloRoute(GroupInfoScreen(groupId: widget.groupId)),
+                      );
+                      _load();
+                    },
+                  ),
+            if (_messages.any((m) => m.pinned))
+              _GroupPinnedBar(
+                message: _messages.lastWhere((m) => m.pinned),
+                onTap: () =>
+                    _scrollToGroupMessage(_messages.lastWhere((m) => m.pinned)),
+              ),
             if (_ghost)
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -1422,6 +1772,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     )
                   : Stack(
                       children: [
+                        if (_atmosphere != Atmo.none)
+                          Positioned.fill(child: AtmosphereWash(_atmosphere)),
                         ListView.builder(
                           key: _listKey,
                           controller: _scrollCtrl,
@@ -1476,7 +1828,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                             return Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                if (showDate) _dateDivider(m.when),
+                                if (showDate) _dateDivider(m.when, i),
                                 RepaintBoundary(
                                   key: i == _jumpIndex ? _jumpKey : null,
                                   child: _groupBubbleEntrance(
@@ -1648,16 +2000,85 @@ class _GMsg {
 
 // ───────── header ─────────
 
+class _GroupPinnedBar extends StatelessWidget {
+  final _GMsg message;
+  final VoidCallback onTap;
+  const _GroupPinnedBar({required this.message, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final preview = message.text.isEmpty ? 'photo' : message.text;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          decoration: BoxDecoration(
+            color: HaloColors.surface2,
+            border: Border(
+              bottom: BorderSide(color: HaloColors.line, width: 0.5),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 2.5,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: HaloColors.amber,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'pinned',
+                      style: HaloType.mono(
+                        size: 9.5,
+                        color: HaloColors.amber,
+                        letter: 0.6,
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      preview,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: HaloType.sans(size: 13, color: HaloColors.text),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.push_pin, size: 14, color: HaloColors.amber),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _Header extends StatelessWidget {
   final String name;
   final int memberCount;
   final VoidCallback onBack;
   final VoidCallback onTapInfo;
+  final VoidCallback? onSearch;
+  final int pinnedCount;
+  final VoidCallback? onPinned;
   const _Header({
     required this.name,
     required this.memberCount,
     required this.onBack,
     required this.onTapInfo,
+    this.onSearch,
+    this.pinnedCount = 0,
+    this.onPinned,
   });
   @override
   Widget build(BuildContext context) {
@@ -1728,6 +2149,29 @@ class _Header extends StatelessWidget {
               ),
             ),
           ),
+          if (pinnedCount > 0)
+            InkWell(
+              onTap: onPinned,
+              borderRadius: BorderRadius.circular(999),
+              child: Padding(
+                padding: const EdgeInsets.all(6),
+                child: Row(
+                  children: [
+                    Icon(Icons.push_pin, size: 14, color: HaloColors.amber),
+                    const SizedBox(width: 2),
+                    Text(
+                      '$pinnedCount',
+                      style: HaloType.mono(size: 10.5, color: HaloColors.amber),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          if (onSearch != null)
+            IconButton(
+              icon: Icon(Icons.search, color: HaloColors.text2, size: 21),
+              onPressed: onSearch,
+            ),
         ],
       ),
     );
