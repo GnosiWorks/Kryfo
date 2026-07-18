@@ -1579,6 +1579,23 @@ class HaloDb {
     await _scrubMedia(media);
   }
 
+  Future<void> clearGroupConversation(String groupId) async {
+    final db = await open();
+    final media = await db.query(
+      'messages',
+      columns: ['media_path'],
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+    );
+    await db.rawDelete(
+      'DELETE FROM reactions WHERE msg_uid IN '
+      '(SELECT msg_uid FROM messages WHERE group_id = ? AND msg_uid IS NOT NULL)',
+      [groupId],
+    );
+    await db.delete('messages', where: 'group_id = ?', whereArgs: [groupId]);
+    await _scrubMedia(media);
+  }
+
   Future<void> editMessage(String msgUid, String newText) async {
     final db = await open();
     await db.update(
