@@ -44,6 +44,18 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   bool _isAdmin = false;
   bool _sending = false;
   _GMsg? _replyTo;
+  OverlayEntry? _menuEntry;
+  final GlobalKey _jumpKey = GlobalKey();
+  int? _jumpIndex;
+  String? _rippleUid;
+  final Map<int, GlobalKey> _dayKeys = {};
+  final GlobalKey _listKey = GlobalKey();
+  final ValueNotifier<String?> _stickyLabel = ValueNotifier(null);
+  final ValueNotifier<bool> _stickyShown = ValueNotifier(false);
+  int? _stickyDayMs;
+  Timer? _stickyHideTimer;
+  bool _suppressSticky = true;
+  DateTime _lastSticky = DateTime.fromMillisecondsSinceEpoch(0);
   // ghost mode - per-session, not persisted. when on, new messages carry a
   // burn timer; receivers compute the burn deadline locally.
   bool _ghost = false;
@@ -72,6 +84,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       } else {
         _draftPerGroup[widget.groupId] = t;
       }
+    });
+    _scrollCtrl.addListener(_updateSticky);
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      if (mounted) _suppressSticky = false;
     });
     _load();
     appState.loadDisguisePref().then((d) {
@@ -857,7 +873,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final overlay = Overlay.of(context);
     late OverlayEntry entry;
     void dismiss() {
-      entry.remove();
+      if (entry.mounted) entry.remove();
+      _menuEntry = null;
     }
 
     entry = OverlayEntry(
@@ -932,6 +949,126 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       },
     );
     overlay.insert(entry);
+    _menuEntry = entry;
+  }
+
+  bool _sameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  String _dayLabel(DateTime when) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final d = DateTime(when.year, when.month, when.day);
+    final diff = today.difference(d).inDays;
+    if (diff == 0) return 'today';
+    if (diff == 1) return 'yesterday';
+    const months = [
+      'jan',
+      'feb',
+      'mar',
+      'apr',
+      'may',
+      'jun',
+      'jul',
+      'aug',
+      'sep',
+      'oct',
+      'nov',
+      'dec',
+    ];
+    var label = '${when.day} ${months[when.month - 1]}';
+    if (when.year != now.year) label = '$label ${when.year}';
+    return label;
+  }
+
+  Widget _dateDivider(DateTime when) {
+    final dayMs = DateTime(
+      when.year,
+      when.month,
+      when.day,
+    ).millisecondsSinceEpoch;
+    final key = _dayKeys.putIfAbsent(dayMs, () => GlobalKey());
+    return Padding(
+      key: key,
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Center(
+        child: Text(
+          _dayLabel(when),
+          style: HaloType.serif(
+            size: 12.5,
+            italic: true,
+            color: HaloColors.text3,
+            weight: FontWeight.w300,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _updateSticky() {
+    if (_suppressSticky || !_scrollCtrl.hasClients) return;
+    if (_scrollCtrl.position.maxScrollExtent <= 0) return;
+    // throttle, the raw scroll stream fires many times a frame.
+    final now = DateTime.now();
+    if (now.difference(_lastSticky).inMilliseconds < 100) return;
+    _lastSticky = now;
+    final listObj = _listKey.currentContext?.findRenderObject();
+    if (listObj is! RenderBox) return;
+    final top = listObj.localToGlobal(Offset.zero).dy;
+    int? best;
+    double bestDy = -1e9;
+    _dayKeys.forEach((dayMs, key) {
+      final obj = key.currentContext?.findRenderObject();
+      if (obj is! RenderBox) return;
+      final dy = obj.localToGlobal(Offset.zero).dy;
+      if (dy <= top + 6 && dy > bestDy) {
+        bestDy = dy;
+        best = dayMs;
+      }
+    });
+    if (best != null) _stickyDayMs = best;
+    if (_stickyDayMs != null) {
+      _stickyLabel.value = _dayLabel(
+        DateTime.fromMillisecondsSinceEpoch(_stickyDayMs!),
+      );
+    }
+    _stickyShown.value = true;
+    _stickyHideTimer?.cancel();
+    _stickyHideTimer = Timer(
+      const Duration(milliseconds: 900),
+      () => _stickyShown.value = false,
+    );
+  }
+
+  void _scrollToGroupMessage(_GMsg m) {
+    final idx = _messages.indexOf(m);
+    if (idx < 0 || !_scrollCtrl.hasClients) return;
+    setState(() => _jumpIndex = idx);
+    final max = _scrollCtrl.position.maxScrollExtent;
+    final frac = (_messages.length - 1 - idx) / _messages.length;
+    final approx = (frac * max - _scrollCtrl.position.viewportDimension * 0.3)
+        .clamp(0.0, max);
+    _scrollCtrl.jumpTo(approx.clamp(0.0, max));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _jumpKey.currentContext;
+      if (ctx != null) {
+        Scrollable.ensureVisible(
+          ctx,
+          duration: Duration.zero,
+          curve: Curves.easeOut,
+          alignment: 0.3,
+        );
+      }
+      _jumpIndex = null;
+      if (m.msgUid != null) {
+        setState(() => _rippleUid = m.msgUid);
+        Future.delayed(const Duration(milliseconds: 1300), () {
+          if (mounted && _rippleUid == m.msgUid) {
+            setState(() => _rippleUid = null);
+          }
+        });
+      }
+    });
   }
 
   Future<void> _togglePinGroup(_GMsg m) async {
@@ -1209,6 +1346,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     } else {
       _draftPerGroup[widget.groupId] = draft;
     }
+    if (_menuEntry?.mounted ?? false) _menuEntry!.remove();
+    _menuEntry = null;
+    _scrollCtrl.removeListener(_updateSticky);
+    _stickyHideTimer?.cancel();
+    _stickyLabel.dispose();
+    _stickyShown.dispose();
     WidgetsBinding.instance.removeObserver(this);
     if (currentChatPeer == 'group:${widget.groupId}') currentChatPeer = null;
     appState.removeListener(_onAppStateChanged);
@@ -1277,72 +1420,149 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         ),
                       ),
                     )
-                  : ListView.builder(
-                      controller: _scrollCtrl,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                      itemCount: _messages.length,
-                      itemBuilder: (_, i) {
-                        final m = _messages[i];
-                        final prev = i > 0 ? _messages[i - 1] : null;
-                        final showSender =
-                            m.direction == 'in' &&
-                            (prev == null ||
-                                prev.sender != m.sender ||
-                                prev.direction != 'in');
-                        String? quoted;
-                        String? quotedAuthor;
-                        if (m.replyTo != null) {
-                          final orig = _messages.firstWhere(
-                            (x) => x.msgUid == m.replyTo,
-                            orElse: () => _GMsg(
-                              sender: '',
-                              direction: '',
-                              text: '',
-                              when: DateTime.now(),
-                            ),
-                          );
-                          if (orig.direction.isNotEmpty) {
-                            quotedAuthor = orig.direction == 'out'
-                                ? 'you'
-                                : orig.senderName;
-                          }
-                          if (orig.text.isNotEmpty) {
-                            quoted = orig.text;
-                          } else if (orig.mediaPath != null) {
-                            quoted = 'photo';
-                          } else if (orig.fileName == 'voice.wav') {
-                            quoted = 'voice message';
-                          } else if (orig.fileName != null) {
-                            quoted = orig.fileName;
-                          } else {
-                            quoted = 'message unavailable';
-                            quotedAuthor = null;
-                          }
-                        }
-                        final animateIn = m.fresh;
-                        m.fresh = false;
-                        return RepaintBoundary(
-                          child: _groupBubbleEntrance(
-                            isOut: m.direction == 'out',
-                            active: animateIn,
-                            child: _GroupSwipeToReply(
-                              onReply: () => setState(() => _replyTo = m),
-                              child: _GroupBubble(
-                                m: m,
-                                showSender: showSender,
-                                quotedText: quoted,
-                                quotedAuthor: quotedAuthor,
-                                onLongPress: (ctx) =>
-                                    _showEmojiPickerAt(ctx, m),
-                                onRetry: m.failed ? () => _retryGroup(m) : null,
+                  : Stack(
+                      children: [
+                        ListView.builder(
+                          key: _listKey,
+                          controller: _scrollCtrl,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          itemCount: _messages.length,
+                          itemBuilder: (_, i) {
+                            final m = _messages[i];
+                            final prev = i > 0 ? _messages[i - 1] : null;
+                            final showSender =
+                                m.direction == 'in' &&
+                                (prev == null ||
+                                    prev.sender != m.sender ||
+                                    prev.direction != 'in');
+                            String? quoted;
+                            String? quotedAuthor;
+                            if (m.replyTo != null) {
+                              final orig = _messages.firstWhere(
+                                (x) => x.msgUid == m.replyTo,
+                                orElse: () => _GMsg(
+                                  sender: '',
+                                  direction: '',
+                                  text: '',
+                                  when: DateTime.now(),
+                                ),
+                              );
+                              if (orig.direction.isNotEmpty) {
+                                quotedAuthor = orig.direction == 'out'
+                                    ? 'you'
+                                    : orig.senderName;
+                              }
+                              if (orig.text.isNotEmpty) {
+                                quoted = orig.text;
+                              } else if (orig.mediaPath != null) {
+                                quoted = 'photo';
+                              } else if (orig.fileName == 'voice.wav') {
+                                quoted = 'voice message';
+                              } else if (orig.fileName != null) {
+                                quoted = orig.fileName;
+                              } else {
+                                quoted = 'message unavailable';
+                                quotedAuthor = null;
+                              }
+                            }
+                            final animateIn = m.fresh;
+                            m.fresh = false;
+                            final showDate =
+                                i == 0 ||
+                                (prev != null && !_sameDay(prev.when, m.when));
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (showDate) _dateDivider(m.when),
+                                RepaintBoundary(
+                                  key: i == _jumpIndex ? _jumpKey : null,
+                                  child: _groupBubbleEntrance(
+                                    isOut: m.direction == 'out',
+                                    active: animateIn,
+                                    child: _GroupSwipeToReply(
+                                      onReply: () =>
+                                          setState(() => _replyTo = m),
+                                      child: _GroupBubble(
+                                        m: m,
+                                        showSender: showSender,
+                                        quotedText: quoted,
+                                        quotedAuthor: quotedAuthor,
+                                        onLongPress: (ctx) =>
+                                            _showEmojiPickerAt(ctx, m),
+                                        onRetry: m.failed
+                                            ? () => _retryGroup(m)
+                                            : null,
+                                        ripple:
+                                            m.msgUid != null &&
+                                            m.msgUid == _rippleUid,
+                                        onReplyTap: m.replyTo == null
+                                            ? null
+                                            : () {
+                                                for (final x in _messages) {
+                                                  if (x.msgUid != null &&
+                                                      x.msgUid == m.replyTo) {
+                                                    _scrollToGroupMessage(x);
+                                                    break;
+                                                  }
+                                                }
+                                              },
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                        Positioned(
+                          top: 8,
+                          left: 0,
+                          right: 0,
+                          child: IgnorePointer(
+                            child: Center(
+                              child: ValueListenableBuilder<bool>(
+                                valueListenable: _stickyShown,
+                                builder: (_, shown, __) => AnimatedOpacity(
+                                  duration: const Duration(milliseconds: 220),
+                                  opacity: shown ? 1.0 : 0.0,
+                                  child: ValueListenableBuilder<String?>(
+                                    valueListenable: _stickyLabel,
+                                    builder: (_, label, __) => label == null
+                                        ? const SizedBox.shrink()
+                                        : Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 5,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: HaloColors.surface2
+                                                  .withValues(alpha: 0.92),
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                              border: Border.all(
+                                                color: HaloColors.line,
+                                              ),
+                                            ),
+                                            child: Text(
+                                              label,
+                                              style: HaloType.serif(
+                                                size: 12,
+                                                italic: true,
+                                                color: HaloColors.text2,
+                                                weight: FontWeight.w300,
+                                              ),
+                                            ),
+                                          ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        );
-                      },
+                        ),
+                      ],
                     ),
             ),
             if (_replyTo != null)
@@ -1887,6 +2107,8 @@ class _GroupBubble extends StatelessWidget {
   final String? quotedAuthor;
   final void Function(BuildContext)? onLongPress;
   final VoidCallback? onRetry;
+  final bool ripple;
+  final VoidCallback? onReplyTap;
   const _GroupBubble({
     required this.m,
     required this.showSender,
@@ -1894,6 +2116,8 @@ class _GroupBubble extends StatelessWidget {
     this.quotedAuthor,
     this.onLongPress,
     this.onRetry,
+    this.ripple = false,
+    this.onReplyTap,
   });
 
   @override
@@ -1972,67 +2196,76 @@ class _GroupBubble extends StatelessWidget {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   if (quotedText != null) ...[
-                                    Container(
-                                      margin: const EdgeInsets.only(bottom: 6),
-                                      padding: const EdgeInsets.fromLTRB(
-                                        10,
-                                        6,
-                                        10,
-                                        7,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: isOut
-                                            ? Colors.black.withValues(
-                                                alpha: 0.12,
-                                              )
-                                            : HaloColors.surface3,
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border(
-                                          left: BorderSide(
-                                            color: isOut
-                                                ? HaloColors.onAmber.withValues(
-                                                    alpha: 0.55,
-                                                  )
-                                                : HaloColors.amber,
-                                            width: 2.5,
+                                    GestureDetector(
+                                      onTap: onReplyTap,
+                                      behavior: HitTestBehavior.opaque,
+                                      child: Container(
+                                        margin: const EdgeInsets.only(
+                                          bottom: 6,
+                                        ),
+                                        padding: const EdgeInsets.fromLTRB(
+                                          10,
+                                          6,
+                                          10,
+                                          7,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isOut
+                                              ? Colors.black.withValues(
+                                                  alpha: 0.12,
+                                                )
+                                              : HaloColors.surface3,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          border: Border(
+                                            left: BorderSide(
+                                              color: isOut
+                                                  ? HaloColors.onAmber
+                                                        .withValues(alpha: 0.55)
+                                                  : HaloColors.amber,
+                                              width: 2.5,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          if (quotedAuthor != null)
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            if (quotedAuthor != null)
+                                              Text(
+                                                quotedAuthor!,
+                                                style: HaloType.mono(
+                                                  size: 9.5,
+                                                  color: isOut
+                                                      ? HaloColors.onAmber
+                                                            .withValues(
+                                                              alpha: 0.7,
+                                                            )
+                                                      : HaloColors.amber,
+                                                  letter: 0.6,
+                                                ),
+                                              ),
+                                            if (quotedAuthor != null)
+                                              const SizedBox(height: 2),
                                             Text(
-                                              quotedAuthor!,
-                                              style: HaloType.mono(
-                                                size: 9.5,
+                                              quotedText!,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: HaloType.sans(
+                                                size: 12.5,
                                                 color: isOut
                                                     ? HaloColors.onAmber
                                                           .withValues(
-                                                            alpha: 0.7,
+                                                            alpha: 0.8,
                                                           )
-                                                    : HaloColors.amber,
-                                                letter: 0.6,
+                                                    : HaloColors.text2,
+                                                height: 1.3,
                                               ),
                                             ),
-                                          if (quotedAuthor != null)
-                                            const SizedBox(height: 2),
-                                          Text(
-                                            quotedText!,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: HaloType.sans(
-                                              size: 12.5,
-                                              color: isOut
-                                                  ? HaloColors.onAmber
-                                                        .withValues(alpha: 0.8)
-                                                  : HaloColors.text2,
-                                              height: 1.3,
-                                            ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -2297,6 +2530,40 @@ class _GroupBubble extends StatelessWidget {
                           child: Wrap(
                             spacing: 3,
                             children: _buildReactionChips(m),
+                          ),
+                        ),
+                      if (ripple)
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            child: TweenAnimationBuilder<double>(
+                              tween: Tween(begin: 0.0, end: 1.0),
+                              duration: const Duration(milliseconds: 820),
+                              curve: Curves.easeOut,
+                              builder: (context, t, child) => Opacity(
+                                opacity: (1 - t) * 0.92,
+                                child: Transform.scale(
+                                  scale: 1 + t * 0.16,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: const Radius.circular(14),
+                                        topRight: const Radius.circular(14),
+                                        bottomLeft: Radius.circular(
+                                          isOut ? 14 : 4,
+                                        ),
+                                        bottomRight: Radius.circular(
+                                          isOut ? 4 : 14,
+                                        ),
+                                      ),
+                                      border: Border.all(
+                                        color: HaloColors.amber,
+                                        width: 2,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                     ],

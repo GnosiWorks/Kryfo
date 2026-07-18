@@ -147,6 +147,45 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     }
   }
 
+  Future<void> _confirmClear() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        backgroundColor: HaloColors.surface2,
+        title: Text(
+          'clear this conversation?',
+          style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
+        ),
+        content: Text(
+          'every message here is erased from this phone. this only clears '
+          'your copy, other members keep theirs.',
+          style: HaloType.sans(size: 13, color: HaloColors.text2),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: Text(
+              'cancel',
+              style: HaloType.sans(size: 13, color: HaloColors.text2),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(c, true),
+            child: Text(
+              'clear',
+              style: HaloType.sans(size: 13, color: HaloColors.rose),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) {
+      await db.clearGroupConversation(widget.groupId);
+      if (!mounted) return;
+      showHaloToast(context, 'conversation cleared');
+    }
+  }
+
   Future<void> _confirmLeave() async {
     final ok = await showDialog<bool>(
       context: context,
@@ -396,6 +435,29 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                     ),
                   );
                 },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: GestureDetector(
+                onTap: _confirmClear,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: HaloColors.surface2,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    'clear conversation',
+                    style: HaloType.sans(
+                      size: 14,
+                      weight: FontWeight.w500,
+                      color: HaloColors.text2,
+                    ),
+                  ),
+                ),
               ),
             ),
             // leave (everyone)
