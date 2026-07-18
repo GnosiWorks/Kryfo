@@ -963,76 +963,91 @@ class _GroupRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Row(
-          children: [
-            // group avatar: square tile in amberSoft with the first letter
-            // of the group name in italic serif. distinct from contact
-            // avatars (circular) so groups feel different at a glance.
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: HaloColors.amberSoft,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: HaloColors.amber.withValues(alpha: 0.35),
-                  width: 0.6,
+      child: Container(
+        decoration: g.unread > 0
+            ? BoxDecoration(
+                color: HaloColors.amber.withValues(alpha: 0.06),
+                border: Border(
+                  left: BorderSide(color: HaloColors.amber, width: 2),
+                ),
+              )
+            : null,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            children: [
+              // group avatar: square tile in amberSoft with the first letter
+              // of the group name in italic serif. distinct from contact
+              // avatars (circular) so groups feel different at a glance.
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: HaloColors.amberSoft,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: HaloColors.amber.withValues(alpha: 0.35),
+                    width: 0.6,
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  g.name.isEmpty ? '·' : g.name.characters.first.toUpperCase(),
+                  style: HaloType.serif(
+                    size: 18,
+                    italic: true,
+                    color: HaloColors.amber,
+                  ),
                 ),
               ),
-              alignment: Alignment.center,
-              child: Text(
-                g.name.isEmpty ? '·' : g.name.characters.first.toUpperCase(),
-                style: HaloType.serif(
-                  size: 18,
-                  italic: true,
-                  color: HaloColors.amber,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      g.name,
+                      style: HaloType.sans(
+                        size: 14,
+                        weight: g.unread > 0
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                        color: HaloColors.text,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${g.memberCount} members',
+                      style: HaloType.mono(size: 10, color: HaloColors.text3),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    g.name,
+              if (g.unread > 0) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 1,
+                  ),
+                  constraints: const BoxConstraints(minWidth: 18),
+                  decoration: BoxDecoration(
+                    color: HaloColors.amber,
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: Text(
+                    g.unread > 99 ? '99+' : '${g.unread}',
+                    textAlign: TextAlign.center,
                     style: HaloType.sans(
-                      size: 14,
-                      weight: FontWeight.w500,
-                      color: HaloColors.text,
+                      size: 10,
+                      weight: FontWeight.w600,
+                      color: HaloColors.onAmber,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${g.memberCount} members',
-                    style: HaloType.mono(size: 10, color: HaloColors.text3),
-                  ),
-                ],
-              ),
-            ),
-            if (g.unread > 0) ...[
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                constraints: const BoxConstraints(minWidth: 18),
-                decoration: BoxDecoration(
-                  color: HaloColors.amber,
-                  borderRadius: BorderRadius.circular(9),
                 ),
-                child: Text(
-                  g.unread > 99 ? '99+' : '${g.unread}',
-                  textAlign: TextAlign.center,
-                  style: HaloType.sans(
-                    size: 10,
-                    weight: FontWeight.w600,
-                    color: HaloColors.onAmber,
-                  ),
-                ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

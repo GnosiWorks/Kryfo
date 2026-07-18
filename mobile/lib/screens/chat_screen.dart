@@ -397,7 +397,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool _suppressSticky = true;
   final List<_Msg> _messages = [];
   bool _loaded = false;
-  _Atmo _atmosphere = _Atmo.none;
+  Atmo _atmosphere = Atmo.none;
   String _status = '';
   bool _loading = false;
   bool _reloadPending = false;
@@ -509,7 +509,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
     });
     db.getAtmosphere(widget.peerHaloId).then((a) {
-      if (mounted) setState(() => _atmosphere = _atmoFromName(a));
+      if (mounted) setState(() => _atmosphere = atmoFromName(a));
     });
     signalSession.peerXPubHex(widget.peerHaloId).then((v) {
       // only adopt the session value if we don't already have the widget key;
@@ -671,7 +671,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _refreshPreviews() async {
     if (!_loaded) return;
     final pending = _messages
-        .where((m) => m.preview == null && _firstUrl(m.text) != null)
+        .where((m) => m.preview == null && firstUrl(m.text) != null)
         .toList();
     if (pending.isEmpty) return;
     var changed = false;
@@ -1975,7 +1975,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         });
         // preview was lost when the first send failed; re-fetch off-thread so
         // the card comes back on a successful retry.
-        final retryUrl = _firstUrl(msg.text);
+        final retryUrl = firstUrl(msg.text);
         if (retryUrl != null && msg.preview == null && msg.msgUid != null) {
           unawaited(_enrichPreview(msg, retryUrl, msg.msgUid!));
         }
@@ -2691,10 +2691,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   // pull the first http(s) url out of a message, or null.
-  String? _firstUrl(String text) {
-    final m = RegExp(r'https?://[^\s]+').firstMatch(text);
-    return m?.group(0);
-  }
 
   // fetch a link preview over tor (sender-side, so the receiver never has to
   // fetch and leak their ip). best-effort: any failure just means no card.
@@ -2742,9 +2738,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
       final pv = <String, String>{
         'url': url,
-        if (title != null) 'title': _unescape(title),
+        if (title != null) 'title': unescapeHtml(title),
         if (imageData != null) 'img': imageData,
-        if (site != null) 'site': _unescape(site),
+        if (site != null) 'site': unescapeHtml(site),
       };
       if (!mounted) return;
       // show the full card (with image) live on the sender.
@@ -2818,12 +2814,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   // minimal html entity cleanup for preview text.
-  String _unescape(String s) => s
-      .replaceAll('&amp;', '&')
-      .replaceAll('&quot;', '"')
-      .replaceAll('&#39;', "'")
-      .replaceAll('&lt;', '<')
-      .replaceAll('&gt;', '>');
 
   Future<void> _send() async {
     final text = _msgCtrl.text.trim();
@@ -2864,7 +2854,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
     // best-effort link preview over tor, fire-and-forget so it never delays
     // the send. pops the card in when (if) it resolves.
-    final url = _firstUrl(text);
+    final url = firstUrl(text);
     if (url != null) {
       unawaited(_enrichPreview(msg, url, msgUid));
     }
@@ -3064,7 +3054,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (!mounted) return;
     Navigator.of(context).push(
       haloRoute(
-        _MediaGalleryScreen(
+        MediaGalleryScreen(
           paths: paths.reversed.toList(),
           title: _nickname ?? widget.peerHaloId,
         ),
@@ -3422,7 +3412,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _pickAtmosphere() async {
-    final picked = await showModalBottomSheet<_Atmo>(
+    final picked = await showModalBottomSheet<Atmo>(
       context: context,
       backgroundColor: HaloColors.surface2,
       shape: const RoundedRectangleBorder(
@@ -3448,9 +3438,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               Wrap(
                 spacing: 16,
                 runSpacing: 14,
-                children: _Atmo.values.map((a) {
+                children: Atmo.values.map((a) {
                   final sel = a == _atmosphere;
-                  final accent = _atmoAccent(a);
+                  final accent = atmoAccent(a);
                   return GestureDetector(
                     onTap: () => Navigator.pop(ctx, a),
                     child: Column(
@@ -3461,7 +3451,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           height: 46,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: a == _Atmo.none
+                            color: a == Atmo.none
                                 ? HaloColors.surface3
                                 : accent.withValues(alpha: 0.18),
                             border: Border.all(
@@ -3470,7 +3460,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             ),
                           ),
                           alignment: Alignment.center,
-                          child: a == _Atmo.none
+                          child: a == Atmo.none
                               ? Icon(
                                   Icons.not_interested,
                                   size: 16,
@@ -3480,7 +3470,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          _atmoLabel(a),
+                          atmoLabel(a),
                           style: HaloType.mono(
                             size: 10,
                             color: sel ? HaloColors.amber : HaloColors.text3,
@@ -4001,7 +3991,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         child: Column(
           children: [
             _searching
-                ? _SearchHead(
+                ? SearchHead(
                     controller: _searchCtrl,
                     matchCount: _matches.length,
                     matchPos: _matches.isEmpty ? 0 : _matchPos + 1,
@@ -4040,8 +4030,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               child: Stack(
                 key: _listKey,
                 children: [
-                  if (_atmosphere != _Atmo.none)
-                    Positioned.fill(child: _AtmosphereWash(_atmosphere)),
+                  if (_atmosphere != Atmo.none)
+                    Positioned.fill(child: AtmosphereWash(_atmosphere)),
                   !_loaded
                       ? const SizedBox.shrink()
                       : _messages.isEmpty
@@ -4867,7 +4857,7 @@ class _ChatHead extends StatelessWidget {
 // search bar that replaces the chat header when search is active. slides
 // + fades in. magnifier glyph, italic-serif hint, mono match counter, and
 // up/down chevrons to jump between hits. matches the search_mockup spec.
-class _SearchHead extends StatefulWidget {
+class SearchHead extends StatefulWidget {
   final TextEditingController controller;
   final int matchCount;
   final int matchPos; // 1-based; 0 when no matches
@@ -4875,7 +4865,7 @@ class _SearchHead extends StatefulWidget {
   final VoidCallback onPrev;
   final VoidCallback onNext;
   final VoidCallback onClose;
-  const _SearchHead({
+  const SearchHead({
     required this.controller,
     required this.matchCount,
     required this.matchPos,
@@ -4886,10 +4876,10 @@ class _SearchHead extends StatefulWidget {
   });
 
   @override
-  State<_SearchHead> createState() => _SearchHeadState();
+  State<SearchHead> createState() => _SearchHeadState();
 }
 
-class _SearchHeadState extends State<_SearchHead> {
+class _SearchHeadState extends State<SearchHead> {
   final _focus = FocusNode();
 
   @override
@@ -6335,39 +6325,39 @@ class _ActionTapState extends State<_ActionTap> {
   }
 }
 
-enum _Atmo { none, ember, dusk, moss, rose }
+enum Atmo { none, ember, dusk, moss, rose }
 
-_Atmo _atmoFromName(String? n) => switch (n) {
-  'ember' => _Atmo.ember,
-  'dusk' => _Atmo.dusk,
-  'moss' => _Atmo.moss,
-  'rose' => _Atmo.rose,
-  _ => _Atmo.none,
+Atmo atmoFromName(String? n) => switch (n) {
+  'ember' => Atmo.ember,
+  'dusk' => Atmo.dusk,
+  'moss' => Atmo.moss,
+  'rose' => Atmo.rose,
+  _ => Atmo.none,
 };
 
-Color _atmoAccent(_Atmo a) => switch (a) {
-  _Atmo.ember => HaloColors.amber,
-  _Atmo.dusk => HaloColors.violet,
-  _Atmo.moss => HaloColors.green,
-  _Atmo.rose => HaloColors.rose,
-  _Atmo.none => HaloColors.surface,
+Color atmoAccent(Atmo a) => switch (a) {
+  Atmo.ember => HaloColors.amber,
+  Atmo.dusk => HaloColors.violet,
+  Atmo.moss => HaloColors.green,
+  Atmo.rose => HaloColors.rose,
+  Atmo.none => HaloColors.surface,
 };
 
-String _atmoLabel(_Atmo a) => switch (a) {
-  _Atmo.none => 'none',
-  _Atmo.ember => 'ember',
-  _Atmo.dusk => 'dusk',
-  _Atmo.moss => 'moss',
-  _Atmo.rose => 'rose',
+String atmoLabel(Atmo a) => switch (a) {
+  Atmo.none => 'none',
+  Atmo.ember => 'ember',
+  Atmo.dusk => 'dusk',
+  Atmo.moss => 'moss',
+  Atmo.rose => 'rose',
 };
 
-class _AtmosphereWash extends StatelessWidget {
-  final _Atmo atmo;
-  const _AtmosphereWash(this.atmo);
+class AtmosphereWash extends StatelessWidget {
+  final Atmo atmo;
+  const AtmosphereWash(this.atmo);
   @override
   Widget build(BuildContext context) {
-    if (atmo == _Atmo.none) return const SizedBox.shrink();
-    final accent = _atmoAccent(atmo);
+    if (atmo == Atmo.none) return const SizedBox.shrink();
+    final accent = atmoAccent(atmo);
     final deep = Color.lerp(accent, HaloColors.ink, 0.55)!;
     return IgnorePointer(
       child: Stack(
@@ -7268,10 +7258,14 @@ class _Composer extends StatelessWidget {
 
 // full-screen preview shown after picking a photo: the image plus a caption
 // field. pops the caption on send, or null on back (cancel).
-class _MediaGalleryScreen extends StatelessWidget {
+class MediaGalleryScreen extends StatelessWidget {
   final List<String> paths;
   final String title;
-  const _MediaGalleryScreen({required this.paths, required this.title});
+  const MediaGalleryScreen({
+    super.key,
+    required this.paths,
+    required this.title,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -7733,3 +7727,15 @@ class _KeyChangedBanner extends StatelessWidget {
     );
   }
 }
+
+String? firstUrl(String text) {
+  final m = RegExp(r'https?://[^\s]+').firstMatch(text);
+  return m?.group(0);
+}
+
+String unescapeHtml(String s) => s
+    .replaceAll('&amp;', '&')
+    .replaceAll('&quot;', '"')
+    .replaceAll('&#39;', "'")
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>');

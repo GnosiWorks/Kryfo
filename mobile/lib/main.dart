@@ -442,7 +442,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 28,
+      version: 29,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -519,7 +519,8 @@ class HaloDb {
             created_at INTEGER NOT NULL,
             is_admin INTEGER NOT NULL DEFAULT 0,
             admin_id TEXT,
-            unread INTEGER NOT NULL DEFAULT 0
+            unread INTEGER NOT NULL DEFAULT 0,
+            atmosphere TEXT
           )
         ''');
         await db.execute('''
@@ -540,6 +541,9 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 29) {
+          await db.execute('ALTER TABLE groups ADD COLUMN atmosphere TEXT');
+        }
         if (oldV < 28) {
           await db.execute(
             'ALTER TABLE groups ADD COLUMN unread INTEGER NOT NULL DEFAULT 0',
@@ -1410,6 +1414,25 @@ class HaloDb {
 
   // group messages newer than a rowid, for the append-fast-path (mirrors
   // messagesAfter but scoped to a group).
+  Future<List<Map<String, Object?>>> groupMessagesPage(
+    String groupId, {
+    int? beforeRowid,
+    int limit = 60,
+  }) async {
+    final db = await open();
+    final rows = await db.query(
+      'messages',
+      columns: ['*', 'rowid'],
+      where: beforeRowid == null
+          ? 'group_id = ?'
+          : 'group_id = ? AND rowid < ?',
+      whereArgs: beforeRowid == null ? [groupId] : [groupId, beforeRowid],
+      orderBy: 'rowid DESC',
+      limit: limit,
+    );
+    return rows.reversed.toList();
+  }
+
   Future<List<Map<String, Object?>>> groupMessagesAfter(
     String groupId,
     int afterRowid,
@@ -1537,6 +1560,28 @@ class HaloDb {
       where: 'group_id = ?',
       whereArgs: [groupId],
     );
+  }
+
+  Future<void> setGroupAtmosphere(String groupId, String atmosphere) async {
+    final db = await open();
+    await db.update(
+      'groups',
+      {'atmosphere': atmosphere},
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+    );
+  }
+
+  Future<String?> getGroupAtmosphere(String groupId) async {
+    final db = await open();
+    final rows = await db.query(
+      'groups',
+      columns: ['atmosphere'],
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+    );
+    if (rows.isEmpty) return null;
+    return rows.first['atmosphere'] as String?;
   }
 
   Future<void> setAtmosphere(String peerId, String atmosphere) async {
@@ -2490,10 +2535,8 @@ class AppState extends ChangeNotifier {
       final openGroup = 'group:${env.groupId}';
       if (currentChatPeer != openGroup) {
         await db.bumpGroupUnread(env.groupId!);
-        debugPrint('GRPUNREAD bump ${env.groupId} cur=$currentChatPeer');
       } else {
         await db.clearGroupUnread(env.groupId!);
-        debugPrint('GRPUNREAD clear ${env.groupId} (open)');
       }
     }
     // a message landed: rebuild the contact list so the home shows the
@@ -3457,7 +3500,7 @@ class AppState extends ChangeNotifier {
     final adminId = await db.groupAdminId(groupId);
     final amAdmin = adminId == myId;
     final rosterParts = amAdmin ? await _buildParticipants(members) : null;
-    for (var i = 0; i < total; i++) {
+    Future<bool> sendChunk(int i) async {
       final wrapped = await wrapMessage(
         caption,
         msgUid: msgUid,
@@ -3487,13 +3530,24 @@ class AppState extends ChangeNotifier {
           if (tryN < 2) await Future.delayed(const Duration(seconds: 1));
         }
       }
-      if (!chunkOk) {
-        debugPrint('GRP MEDIA chunk $i/$total gave up');
-        return 'error: chunk $i undeliverable';
+      if (!chunkOk) debugPrint('GRP MEDIA chunk $i/$total gave up');
+      return chunkOk;
+    }
+
+    // waves of 4: one-at-a-time was ~1s+400ms per chunk (a 13-chunk photo
+    // took ~15s), flat-out flooding drops chunks on the circuit. waves keep
+    // the rate sane and cut the wall time to about a quarter.
+    const wave = 4;
+    for (var w = 0; w < total; w += wave) {
+      final end = (w + wave > total) ? total : w + wave;
+      final oks = await Future.wait([
+        for (var i = w; i < end; i++) sendChunk(i),
+      ]);
+      for (var j = 0; j < oks.length; j++) {
+        if (!oks[j]) return 'error: chunk ${w + j} undeliverable';
       }
-      // let the circuit breathe between chunks - flooding drops them.
-      if (total > 1 && i < total - 1) {
-        await Future.delayed(const Duration(milliseconds: 400));
+      if (end < total) {
+        await Future.delayed(const Duration(milliseconds: 300));
       }
     }
     return 'ok';
@@ -3565,6 +3619,28 @@ class AppState extends ChangeNotifier {
         if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
     ]);
     notifyListeners();
+  }
+
+  // re-multicast a resolved link preview onto an already-sent group message.
+  // same uid: every receiver takes the known-uid update path and patches the
+  // card onto the bubble it already has.
+  Future<void> sendGroupPreview(
+    String groupId,
+    String targetMsgUid,
+    Map<String, String> pv,
+  ) async {
+    final wrapped = await wrapMessage(
+      '',
+      groupId: groupId,
+      msgUid: targetMsgUid,
+      preview: pv,
+      sender: _mySender(),
+    );
+    final members = await db.getGroupMembers(groupId);
+    await Future.wait([
+      for (final memberId in members)
+        if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
+    ]);
   }
 
   // build participant info {h,o,x} for each halo_id we have as a contact

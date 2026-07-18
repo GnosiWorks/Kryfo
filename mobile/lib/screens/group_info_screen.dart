@@ -2,10 +2,15 @@
 // group info / settings. shows: name (edit if admin), member list, add
 // member (admin), remove member (admin), leave group (everyone).
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../main.dart' show appState, db;
 import '../theme.dart';
 import '../widgets/halo_avatar.dart';
+import '../widgets/motion.dart' show haloRoute;
+import 'package:flutter/services.dart';
+import 'chat_screen.dart'
+    show MediaGalleryScreen, Atmo, atmoFromName, atmoAccent, atmoLabel;
 
 class GroupInfoScreen extends StatefulWidget {
   final String groupId;
@@ -145,6 +150,105 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       await appState.removeMembersFromGroup(widget.groupId, [haloId]);
       await _load();
     }
+  }
+
+  Future<void> _pickAtmosphere() async {
+    final current = atmoFromName(await db.getGroupAtmosphere(widget.groupId));
+    if (!mounted) return;
+    final picked = await showModalBottomSheet<Atmo>(
+      context: context,
+      backgroundColor: HaloColors.surface2,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'atmosphere',
+                style: HaloType.serif(size: 18, color: HaloColors.text),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'a quiet wash behind this group. yours only.',
+                style: HaloType.sans(size: 12, color: HaloColors.text2),
+              ),
+              const SizedBox(height: 18),
+              Wrap(
+                spacing: 16,
+                runSpacing: 14,
+                children: Atmo.values.map((a) {
+                  final sel = a == current;
+                  final accent = atmoAccent(a);
+                  return GestureDetector(
+                    onTap: () => Navigator.pop(ctx, a),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 46,
+                          height: 46,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: a == Atmo.none
+                                ? HaloColors.surface3
+                                : accent.withValues(alpha: 0.18),
+                            border: Border.all(
+                              color: sel ? HaloColors.amber : HaloColors.line,
+                              width: sel ? 1.5 : 0.5,
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: a == Atmo.none
+                              ? Icon(
+                                  Icons.not_interested,
+                                  size: 16,
+                                  color: HaloColors.text3,
+                                )
+                              : null,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          atmoLabel(a),
+                          style: HaloType.mono(
+                            size: 10,
+                            color: sel ? HaloColors.amber : HaloColors.text3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (picked == null) return;
+    HapticFeedback.selectionClick();
+    await db.setGroupAtmosphere(widget.groupId, picked.name);
+  }
+
+  Future<void> _openSharedMedia() async {
+    final rows = await db.loadGroupMessages(widget.groupId);
+    final paths = <String>[];
+    for (final r in rows) {
+      final mp = r['media_path'] as String?;
+      if (mp != null && mp.isNotEmpty && await File(mp).exists()) {
+        paths.add(mp);
+      }
+    }
+    if (!mounted) return;
+    Navigator.of(context).push(
+      haloRoute(
+        MediaGalleryScreen(paths: paths.reversed.toList(), title: _name),
+      ),
+    );
   }
 
   Future<void> _confirmClear() async {
@@ -435,6 +539,52 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                     ),
                   );
                 },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: GestureDetector(
+                onTap: _pickAtmosphere,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: HaloColors.surface2,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    'atmosphere',
+                    style: HaloType.sans(
+                      size: 14,
+                      weight: FontWeight.w500,
+                      color: HaloColors.text2,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: GestureDetector(
+                onTap: _openSharedMedia,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: HaloColors.surface2,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    'shared media',
+                    style: HaloType.sans(
+                      size: 14,
+                      weight: FontWeight.w500,
+                      color: HaloColors.text2,
+                    ),
+                  ),
+                ),
               ),
             ),
             Padding(
