@@ -39,6 +39,7 @@ var (
 	torNode  *tor.Tor
 	listener net.Listener
 	myAddr   string
+	savedDataDir string // kept so the dialer watchdog can relaunch tor
 	inbox    []string
 
 	myEdPriv ed25519.PrivateKey
@@ -325,6 +326,9 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 	if err := os.MkdirAll(torDataDir, 0700); err != nil {
 		return C.CString(fmt.Sprintf("error: mkdir tor: %v", err))
 	}
+	mu.Lock()
+	savedDataDir = dataDir
+	mu.Unlock()
 
 	// a hard-killed previous process can leave tor's lock behind, which blocks
 	// this start and froze a fast relaunch. tor is single-instance per data dir
@@ -442,6 +446,93 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 
 	log.Printf("halo: listening on %s", addr)
 	return C.CString(addr)
+}
+
+// restartTor tears down the wedged tor and brings a fresh one up on the same
+// data dir + onion key. triggered by the dialer watchdog when the control
+// conn is provably dead. serialized on startMu against Start/Shutdown so two
+// restarts (or a restart racing shutdown) can't overlap.
+var torRestarting int32
+
+func restartTor() {
+	// collapse concurrent triggers - only one restart at a time.
+	if !atomic.CompareAndSwapInt32(&torRestarting, 0, 1) {
+		return
+	}
+	defer atomic.StoreInt32(&torRestarting, 0)
+
+	startMu.Lock()
+	defer startMu.Unlock()
+
+	mu.Lock()
+	old := torNode
+	dir := savedDataDir
+	mu.Unlock()
+	if dir == "" {
+		log.Println("halo: restartTor skipped - no saved data dir")
+		return
+	}
+	log.Println("halo: restarting embedded tor (dialer wedged)")
+	setStatus("starting")
+
+	// drop the old node + cached client so nothing keeps dialing the dead one.
+	mu.Lock()
+	torNode = nil
+	listener = nil
+	myAddr = ""
+	mu.Unlock()
+	nostrResetClient()
+	if old != nil {
+		old.Close()
+	}
+
+	torDataDir := dir + "/tor"
+	os.Remove(torDataDir + "/lock")
+	t, err := tor.Start(nil, &tor.StartConf{
+		ProcessCreator: libtor.Creator,
+		DataDir:        torDataDir,
+		DebugWriter:    newTorDebugWriter(),
+	})
+	if err != nil {
+		log.Printf("halo: restartTor tor.Start failed: %v", err)
+		setStatus("off")
+		return
+	}
+	mu.Lock()
+	torNode = t
+	mu.Unlock()
+	go watchBootstrap(t)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	keyPath := dir + "/onion.key"
+	var key ed25519.PrivateKey
+	if data, rerr := os.ReadFile(keyPath); rerr == nil && len(data) == ed25519.PrivateKeySize {
+		key = ed25519.PrivateKey(data)
+	} else {
+		log.Println("halo: restartTor WARN missing onion key, address will change")
+	}
+
+	if eerr := t.EnableNetwork(ctx, false); eerr != nil {
+		log.Printf("halo: restartTor enable network: %v", eerr)
+	}
+	onion, lerr := t.Listen(ctx, &tor.ListenConf{
+		NoWait:      true,
+		Version3:    true,
+		RemotePorts: []int{80},
+		Key:         key,
+	})
+	if lerr != nil {
+		log.Printf("halo: restartTor listen failed: %v", lerr)
+		return
+	}
+	mu.Lock()
+	listener = onion
+	myAddr = fmt.Sprintf("%s.onion", onion.ID)
+	mu.Unlock()
+	go acceptLoop(onion)
+	log.Printf("halo: tor restarted, listening on %s.onion", onion.ID)
 }
 
 //export HaloShutdown

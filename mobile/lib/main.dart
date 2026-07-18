@@ -442,7 +442,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 29,
+      version: 30,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -470,6 +470,7 @@ class HaloDb {
             note TEXT,
             pinned INTEGER NOT NULL DEFAULT 0,
             key_changed INTEGER NOT NULL DEFAULT 0,
+            peer_bundle TEXT,
             accepted INTEGER NOT NULL DEFAULT 1
           )
         ''');
@@ -541,6 +542,9 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 30) {
+          await db.execute('ALTER TABLE contacts ADD COLUMN peer_bundle TEXT');
+        }
         if (oldV < 29) {
           await db.execute('ALTER TABLE groups ADD COLUMN atmosphere TEXT');
         }
@@ -737,6 +741,16 @@ class HaloDb {
     await db.update(
       'contacts',
       {'pinned': pinned ? 1 : 0},
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+    );
+  }
+
+  Future<void> setPeerBundle(String haloId, String bundleB64) async {
+    final db = await open();
+    await db.update(
+      'contacts',
+      {'peer_bundle': bundleB64},
       where: 'halo_id = ?',
       whereArgs: [haloId],
     );
@@ -2065,6 +2079,7 @@ Future<String> handleHaloUri(String raw) async {
       return 'bundle error: $e';
     }
     await db.upsertContact(parsed['id']!, parsed['onion']!, '');
+    await db.setPeerBundle(parsed['id']!, parsed['bundle']!);
     await appState.subscribePeer(parsed['id']!);
     return 'signal session built: ${parsed['id']}';
   } else {
@@ -3360,6 +3375,25 @@ class AppState extends ChangeNotifier {
 
   // pairwise envelope send. wraps libsignal encrypt + transport choice
   // (direct-onion if peer hasn't back-paired yet, nostr otherwise).
+  // wipe a corrupt outbound session and rebuild it from the peer's stored
+  // prekey bundle. returns false if we never kept a bundle (paired by a path
+  // that didn't save one) - caller then surfaces the original failure.
+  Future<bool> _healSession(String memberId) async {
+    final c = await db.getContact(memberId);
+    final bundle = c?['peer_bundle'] as String?;
+    if (bundle == null || bundle.isEmpty) return false;
+    try {
+      final addr = SignalProtocolAddress(memberId, 1);
+      await signalSession.sessionStore.deleteSession(addr);
+      await processPeerBundle(memberId, bundle);
+      debugPrint('healed session for $memberId');
+      return true;
+    } catch (e) {
+      debugPrint('heal session failed for $memberId: $e');
+      return false;
+    }
+  }
+
   Future<bool> _sendOneEnvelope(String memberId, String wrapped) async {
     // one honest attempt. the engine calls already carry their own timeouts
     // (onion 15s, relay 60s), so retrying here just stacks those timeouts -
@@ -3373,7 +3407,17 @@ class AppState extends ChangeNotifier {
         debugPrint('send: no contact for $memberId');
         return false;
       }
-      final cipher = await signalEncrypt(memberId, wrapped);
+      String cipher;
+      try {
+        cipher = await signalEncrypt(memberId, wrapped);
+      } catch (e) {
+        // a corrupt session (InvalidKeyException / bad state from heavy
+        // reinstall testing) can't encrypt. if we kept the peer's bundle at
+        // pairing, wipe the broken session and rebuild it, then try once more.
+        final healed = await _healSession(memberId);
+        if (!healed) rethrow;
+        cipher = await signalEncrypt(memberId, wrapped);
+      }
       final backPaired = await db.isBackPaired(memberId);
       final xpub = contact['xpub'] as String;
       final onion = contact['onion'] as String;

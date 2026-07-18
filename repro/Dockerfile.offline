@@ -1,0 +1,39 @@
+# offline twin of Dockerfile. same pinned toolchain, but go + ndk come from
+# local files in dl/ instead of the network. run ./prep-offline.sh once to
+# fetch + repack + fill the hashes below, then this builds with zero network
+# beyond the ~30mb base pull (which resumes per-layer if the line dies).
+FROM debian:bookworm-20250630-slim
+
+ENV GO_VERSION=1.25.0
+ENV GO_SHA256=FILL_ME_PREP_OFFLINE
+ENV NDK_VERSION=r28b
+ENV NDK_TGZ_SHA256=FILL_ME_PREP_OFFLINE
+
+# go toolchain from local tarball, checksum-verified
+COPY dl/go${GO_VERSION}.linux-amd64.tar.gz /tmp/go.tgz
+RUN echo "${GO_SHA256}  /tmp/go.tgz" | sha256sum -c - \
+    && tar -C /usr/local -xzf /tmp/go.tgz \
+    && rm /tmp/go.tgz
+ENV PATH=/usr/local/go/bin:$PATH
+
+# ndk repacked as tgz on the host (slim image has no unzip, and installing
+# one would need apt = network). hash is of the repack; the original zip's
+# sha1 got checked against google's published value in prep-offline.sh.
+COPY dl/android-ndk-${NDK_VERSION}.tgz /tmp/ndk.tgz
+RUN echo "${NDK_TGZ_SHA256}  /tmp/ndk.tgz" | sha256sum -c - \
+    && tar -C /opt -xzf /tmp/ndk.tgz \
+    && rm /tmp/ndk.tgz
+ENV NDK=/opt/android-ndk-${NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64/bin
+
+WORKDIR /build
+
+ENV CGO_ENABLED=1
+ENV GOFLAGS=-trimpath
+ENV SOURCE_DATE_EPOCH=1700000000
+# modules come from the mounted cache, never the net
+ENV GOPROXY=off
+ENV GOMODCACHE=/gomod
+
+COPY build-repro.sh /usr/local/bin/build-repro.sh
+RUN chmod +x /usr/local/bin/build-repro.sh
+ENTRYPOINT ["/usr/local/bin/build-repro.sh"]

@@ -148,6 +148,13 @@ func torNostrClient() (*http.Client, error) {
 		if dialerHangs >= 3 {
 			demoteFromReachable()
 		}
+		// dropping the client alone never heals a wedged control conn - the
+		// rebuild just re-hangs. past a higher bar the process itself is gone,
+		// so relaunch tor (async, it takes seconds and holds startMu).
+		if dialerHangs >= 5 {
+			dialerHangs = 0
+			go restartTor()
+		}
 		return nil, fmt.Errorf("tor dialer hung")
 	}
 }
