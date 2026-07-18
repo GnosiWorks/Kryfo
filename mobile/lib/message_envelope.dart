@@ -24,6 +24,7 @@ class UnwrappedMessage {
   final int? burnSeconds; // 'b' field — seconds-from-receive
   final String? msgUid; // 'u' field — stable cross-device message id
   final ReactionFrame? reaction; // 'r' field — present on reaction control msgs
+  final PinFrame? pin; // 'pn' field — shared pin/unpin control msgs
   final EditFrame? edit; // 'ed' field — present on edit control msgs
   final String? replyTo; // 'q' field — msg_uid this message replies to
   final String? groupId; // 'g' field — present for group messages
@@ -57,6 +58,7 @@ class UnwrappedMessage {
     this.reaction,
     this.edit,
     this.replyTo,
+    this.pin,
     this.groupId,
     this.groupControl,
     this.imageB64,
@@ -104,6 +106,12 @@ class ReactionFrame {
   final String targetUid; // the msg_uid this reaction applies to
   final String emoji; // '' means remove the reactor's reaction
   const ReactionFrame({required this.targetUid, required this.emoji});
+}
+
+class PinFrame {
+  final String targetUid;
+  final bool pinned;
+  const PinFrame({required this.targetUid, required this.pinned});
 }
 
 class SenderInfo {
@@ -178,6 +186,7 @@ Future<String> wrapMessage(
   GroupControl? groupControl,
   String? imageB64,
   String? unsend,
+  PinFrame? pin,
   String? fileB64,
   String? fileName,
   bool voice = false,
@@ -197,6 +206,9 @@ Future<String> wrapMessage(
   if (msgUid != null) body['u'] = msgUid;
   if (reaction != null) {
     body['r'] = {'u': reaction.targetUid, 'e': reaction.emoji};
+  }
+  if (pin != null) {
+    body['pn'] = {'u': pin.targetUid, 'p': pin.pinned ? 1 : 0};
   }
   if (edit != null) {
     body['ed'] = {'u': edit.targetUid, 'm': edit.newText};
@@ -259,6 +271,14 @@ UnwrappedMessage unwrapMessage(String wrapped) {
         emoji: (rRaw['e'] as String?) ?? '',
       );
     }
+    PinFrame? pin;
+    final pnRaw = json['pn'];
+    if (pnRaw is Map) {
+      pin = PinFrame(
+        targetUid: (pnRaw['u'] as String?) ?? '',
+        pinned: (pnRaw['p'] as int? ?? 0) == 1,
+      );
+    }
     EditFrame? edit;
     final edRaw = json['ed'];
     if (edRaw is Map) {
@@ -305,6 +325,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       burnSeconds: (json['b'] as num?)?.toInt(),
       msgUid: json['u'] as String?,
       reaction: reaction,
+      pin: pin,
       edit: edit,
       replyTo: json['q'] as String?,
       groupId: json['g'] as String?,

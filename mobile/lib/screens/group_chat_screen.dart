@@ -62,7 +62,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   bool _sending = false;
   _GMsg? _replyTo;
   OverlayEntry? _menuEntry;
-  final GlobalKey _jumpKey = GlobalKey();
+  final Map<int, GlobalKey> _jumpKeys = {};
   int? _jumpIndex;
   String? _rippleUid;
   final Map<int, GlobalKey> _dayKeys = {};
@@ -158,6 +158,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   void _onGroupScroll() {
     if (!_scrollCtrl.hasClients) return;
+    // the settle window also stops a stray pre-jump scroll event on open
+    // from loading older and anchoring the view at the top.
+    if (_suppressSticky) return;
     if (_scrollCtrl.position.pixels < 400) _loadOlder();
   }
 
@@ -224,12 +227,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       // stale. they repopulate on build.
       _dayKeys.clear();
       _dayAt.clear();
+      _jumpKeys.clear();
       setState(() => _messages.insertAll(0, older));
       // anchor: pull the previous top message back to the top of the view so
       // the prepend doesn't yank the scroll.
+      final ak = _jumpKeys.putIfAbsent(older.length, () => GlobalKey());
       setState(() => _jumpIndex = older.length);
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final ctx = _jumpKey.currentContext;
+        final ctx = ak.currentContext;
         if (ctx != null) {
           Scrollable.ensureVisible(
             ctx,
@@ -258,12 +263,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     _loading = true;
     _dayKeys.clear();
     _dayAt.clear();
+    _jumpKeys.clear();
     db.getGroupAtmosphere(widget.groupId).then((a) {
       if (mounted) setState(() => _atmosphere = atmoFromName(a));
     });
     final g = await db.getGroup(widget.groupId);
     final members = await db.getGroupMembers(widget.groupId);
-    final wantAll = _searching || _pagedOut;
+    // keep whatever window the user has expanded to - a mid-scroll reaction
+    // used to collapse the list back to one page and yank the view.
+    final wantAll = _searching || _pagedOut || _messages.length > _pageSize;
     final rows = wantAll
         ? await db.loadGroupMessages(widget.groupId)
         : await db.groupMessagesPage(widget.groupId, limit: _pageSize + 1);
@@ -1286,6 +1294,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   void _scrollToIndex(int idx) {
     if (idx < 0 || idx >= _messages.length || !_scrollCtrl.hasClients) return;
     final m = _messages[idx];
+    final jk = _jumpKeys.putIfAbsent(idx, () => GlobalKey());
     setState(() => _jumpIndex = idx);
     final max = _scrollCtrl.position.maxScrollExtent;
     final frac = idx / _messages.length;
@@ -1293,7 +1302,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         .clamp(0.0, max);
     _scrollCtrl.jumpTo(approx.clamp(0.0, max));
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final ctx = _jumpKey.currentContext;
+      final ctx = jk.currentContext;
       if (ctx != null) {
         Scrollable.ensureVisible(
           ctx,
@@ -1409,8 +1418,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         return;
       }
     }
-    await db.setPinned(m.msgUid!, !m.pinned);
-    if (mounted) setState(() => m.pinned = !m.pinned);
+    final next = !m.pinned;
+    if (mounted) setState(() => m.pinned = next);
+    await appState.pinInGroup(widget.groupId, m.msgUid!, next);
   }
 
   Future<void> _toggleSavedGroup(_GMsg m) async {
@@ -1830,7 +1840,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                               children: [
                                 if (showDate) _dateDivider(m.when, i),
                                 RepaintBoundary(
-                                  key: i == _jumpIndex ? _jumpKey : null,
+                                  key: i == _jumpIndex ? _jumpKeys[i] : null,
                                   child: _groupBubbleEntrance(
                                     isOut: m.direction == 'out',
                                     active: animateIn,
@@ -2853,6 +2863,7 @@ class _GroupBubble extends StatelessWidget {
                                     LinkPreviewCard(
                                       preview: m.preview!,
                                       isOut: isOut,
+                                      fill: true,
                                     ),
                                   ],
                                   const SizedBox(height: 2),

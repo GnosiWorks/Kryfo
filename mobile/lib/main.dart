@@ -2339,6 +2339,12 @@ class AppState extends ChangeNotifier {
       await _applyGroupControl(senderHaloId, env);
       return;
     }
+    // shared pin - every member mirrors it
+    if (env.pin != null) {
+      await db.setPinned(env.pin!.targetUid, env.pin!.pinned);
+      notifyListeners();
+      return;
+    }
     // 2) reaction
     if (env.reaction != null) {
       final r = env.reaction!;
@@ -3534,23 +3540,39 @@ class AppState extends ChangeNotifier {
       return chunkOk;
     }
 
-    // waves of 4: one-at-a-time was ~1s+400ms per chunk (a 13-chunk photo
-    // took ~15s), flat-out flooding drops chunks on the circuit. waves keep
-    // the rate sane and cut the wall time to about a quarter.
-    const wave = 4;
-    for (var w = 0; w < total; w += wave) {
-      final end = (w + wave > total) ? total : w + wave;
-      final oks = await Future.wait([
-        for (var i = w; i < end; i++) sendChunk(i),
-      ]);
-      for (var j = 0; j < oks.length; j++) {
-        if (!oks[j]) return 'error: chunk ${w + j} undeliverable';
-      }
-      if (end < total) {
-        await Future.delayed(const Duration(milliseconds: 300));
+    // sequential on purpose: parallel waves dropped chunks on the circuit
+    // (receiver got the row but never the full file). the breather is down
+    // from 400ms to 150ms which is all the safe speedup there is dart-side;
+    // the real fix is batched publish in the engine.
+    for (var i = 0; i < total; i++) {
+      final chunkOk = await sendChunk(i);
+      if (!chunkOk) return 'error: chunk $i undeliverable';
+      if (total > 1 && i < total - 1) {
+        await Future.delayed(const Duration(milliseconds: 150));
       }
     }
     return 'ok';
+  }
+
+  // discord-style shared pin: everyone in the group sees the same pins.
+  Future<void> pinInGroup(
+    String groupId,
+    String targetMsgUid,
+    bool pinned,
+  ) async {
+    await db.setPinned(targetMsgUid, pinned);
+    notifyListeners();
+    final wrapped = await wrapMessage(
+      '',
+      groupId: groupId,
+      pin: PinFrame(targetUid: targetMsgUid, pinned: pinned),
+      sender: _mySender(),
+    );
+    final members = await db.getGroupMembers(groupId);
+    await Future.wait([
+      for (final memberId in members)
+        if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
+    ]);
   }
 
   // pairwise reaction multicast for group messages.
