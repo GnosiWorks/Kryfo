@@ -1202,8 +1202,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           style: HaloType.serif(
             size: 12.5,
             italic: true,
-            color: HaloColors.text3,
-            weight: FontWeight.w300,
+            color: HaloColors.text,
+            weight: FontWeight.w400,
           ),
         ),
       ),
@@ -1921,8 +1921,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                                               style: HaloType.serif(
                                                 size: 12,
                                                 italic: true,
-                                                color: HaloColors.text2,
-                                                weight: FontWeight.w300,
+                                                color: HaloColors.text,
+                                                weight: FontWeight.w400,
                                               ),
                                             ),
                                           ),
@@ -2806,7 +2806,11 @@ class _GroupBubble extends StatelessWidget {
                                               // keep the time in the row below.
                                               if (m.text.isEmpty && !m.failed)
                                                 Positioned(
-                                                  right: 8,
+                                                  // chip hangs right on out,
+                                                  // left on in - time takes
+                                                  // the free corner.
+                                                  right: isOut ? null : 8,
+                                                  left: isOut ? 8 : null,
                                                   bottom: 8,
                                                   child: Container(
                                                     padding:
