@@ -62,8 +62,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   bool _sending = false;
   _GMsg? _replyTo;
   OverlayEntry? _menuEntry;
-  final Map<int, GlobalKey> _jumpKeys = {};
-  int? _jumpIndex;
+  final GlobalKey _jumpKey = GlobalKey();
+  String? _jumpUid;
   String? _rippleUid;
   final Map<int, GlobalKey> _dayKeys = {};
   final Map<int, int> _dayAt = {};
@@ -227,14 +227,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       // stale. they repopulate on build.
       _dayKeys.clear();
       _dayAt.clear();
-      _jumpKeys.clear();
       setState(() => _messages.insertAll(0, older));
       // anchor: pull the previous top message back to the top of the view so
       // the prepend doesn't yank the scroll.
-      final ak = _jumpKeys.putIfAbsent(older.length, () => GlobalKey());
-      setState(() => _jumpIndex = older.length);
+      final anchorUid = _messages[older.length].msgUid;
+      setState(() => _jumpUid = anchorUid);
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final ctx = ak.currentContext;
+        final ctx = _jumpKey.currentContext;
         if (ctx != null) {
           Scrollable.ensureVisible(
             ctx,
@@ -242,7 +241,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             alignment: 0.0,
           );
         }
-        _jumpIndex = null;
+        if (mounted && _jumpUid == anchorUid) {
+          setState(() => _jumpUid = null);
+        }
       });
     } finally {
       _loadingOlder = false;
@@ -263,7 +264,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     _loading = true;
     _dayKeys.clear();
     _dayAt.clear();
-    _jumpKeys.clear();
     db.getGroupAtmosphere(widget.groupId).then((a) {
       if (mounted) setState(() => _atmosphere = atmoFromName(a));
     });
@@ -1294,15 +1294,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   void _scrollToIndex(int idx) {
     if (idx < 0 || idx >= _messages.length || !_scrollCtrl.hasClients) return;
     final m = _messages[idx];
-    final jk = _jumpKeys.putIfAbsent(idx, () => GlobalKey());
-    setState(() => _jumpIndex = idx);
+    setState(() => _jumpUid = m.msgUid);
     final max = _scrollCtrl.position.maxScrollExtent;
     final frac = idx / _messages.length;
     final approx = (frac * max - _scrollCtrl.position.viewportDimension * 0.3)
         .clamp(0.0, max);
     _scrollCtrl.jumpTo(approx.clamp(0.0, max));
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final ctx = jk.currentContext;
+      final ctx = _jumpKey.currentContext;
       if (ctx != null) {
         Scrollable.ensureVisible(
           ctx,
@@ -1311,7 +1310,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           alignment: 0.3,
         );
       }
-      _jumpIndex = null;
       if (m.msgUid != null) {
         setState(() => _rippleUid = m.msgUid);
         Future.delayed(const Duration(milliseconds: 1300), () {
@@ -1320,6 +1318,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           }
         });
       }
+      // clear the jump target once the ripple settles so the key frees up.
+      Future.delayed(const Duration(milliseconds: 1300), () {
+        if (mounted && _jumpUid == m.msgUid) {
+          setState(() => _jumpUid = null);
+        }
+      });
     });
   }
 
@@ -1836,11 +1840,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                                 i == 0 ||
                                 (prev != null && !_sameDay(prev.when, m.when));
                             return Column(
+                              key: ValueKey(m.msgUid ?? 'row$i'),
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (showDate) _dateDivider(m.when, i),
                                 RepaintBoundary(
-                                  key: i == _jumpIndex ? _jumpKeys[i] : null,
+                                  key:
+                                      (m.msgUid != null && m.msgUid == _jumpUid)
+                                      ? _jumpKey
+                                      : null,
                                   child: _groupBubbleEntrance(
                                     isOut: m.direction == 'out',
                                     active: animateIn,
