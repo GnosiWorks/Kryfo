@@ -7516,10 +7516,12 @@ Widget _bubbleEntrance({
 class LinkPreviewCard extends StatelessWidget {
   final Map<String, String> preview;
   final bool isOut;
+  final bool fill;
   const LinkPreviewCard({
     super.key,
     required this.preview,
     required this.isOut,
+    this.fill = false,
   });
 
   // decode each preview image once and keep the bytes, so list repaints (burn
@@ -7559,7 +7561,8 @@ class LinkPreviewCard extends StatelessWidget {
           : () =>
                 launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 240),
+        width: fill ? double.infinity : null,
+        constraints: fill ? null : const BoxConstraints(maxWidth: 240),
         decoration: BoxDecoration(
           border: Border.all(color: line, width: 0.75),
           borderRadius: BorderRadius.circular(10),
