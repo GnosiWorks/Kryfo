@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
 // nip17 gift-wrap layer. the old transport signed every message of a
