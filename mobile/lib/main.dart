@@ -3647,6 +3647,9 @@ class AppState extends ChangeNotifier {
         msgUid: msgUid,
         replyTo: replyTo,
         burnAt: burnAt,
+        // born UNSENT: the default sent=1 made a dead send reload as a
+        // ticked message nobody ever received. media already does this.
+        sent: 0,
       );
     }
     final members = await db.getGroupMembers(groupId);
@@ -3676,6 +3679,9 @@ class AppState extends ChangeNotifier {
         if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
     ]);
     final anyOk = results.any((ok) => ok);
+    // the tick is earned, not assumed: only a delivery to at least one
+    // member flips the row to sent.
+    if (anyOk) await db.markSent(msgUid);
     notifyListeners();
     return anyOk;
   }
