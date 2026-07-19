@@ -3559,6 +3559,16 @@ class AppState extends ChangeNotifier {
         return false;
       }
       String cipher;
+      // a member with no session AND no stored bundle can't be reached
+      // (e.g. a dead identity still in the roster). don't burn a relay
+      // timeout on it every send - skip fast so live members deliver now.
+      if (!await signalSession.sessionStore.containsSession(
+            SignalProtocolAddress(memberId, 1),
+          ) &&
+          (await db.getContact(memberId))?['peer_bundle'] == null) {
+        debugPrint('send: $memberId unreachable (no session/bundle), skipping');
+        return false;
+      }
       try {
         cipher = await signalEncrypt(memberId, wrapped);
       } catch (e) {
