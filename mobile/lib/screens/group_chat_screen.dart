@@ -26,6 +26,7 @@ import 'chat_screen.dart'
         firstUrl,
         unescapeHtml;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import '../main.dart'
     show
@@ -266,99 +267,115 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   Future<void> _load() async {
     _loading = true;
-    _dayKeys.clear();
-    _dayMsOf.clear();
-    db.getGroupAtmosphere(widget.groupId).then((a) {
-      if (mounted) setState(() => _atmosphere = atmoFromName(a));
-    });
-    final g = await db.getGroup(widget.groupId);
-    final members = await db.getGroupMembers(widget.groupId);
-    // keep whatever window the user has expanded to - a mid-scroll reaction
-    // used to collapse the list back to one page and yank the view.
-    final wantAll = _searching || _pagedOut || _messages.length > _pageSize;
-    final rows = wantAll
-        ? await db.loadGroupMessages(widget.groupId)
-        : await db.groupMessagesPage(widget.groupId, limit: _pageSize + 1);
-    if (!wantAll) {
-      _hasMore = rows.length > _pageSize;
-      if (_hasMore) rows.removeAt(0);
-      if (!_hasMore) _pagedOut = true;
-    }
-    // gather reactions for every uid we have
-    final uids = rows
-        .map((r) => r['msg_uid'] as String?)
-        .where((u) => u != null && u.isNotEmpty)
-        .cast<String>()
-        .toList();
-    final reactions = await db.loadReactionsFor(uids);
-    // local nickname is the display source of truth. fall back to the 3-word
-    // id when we have no nickname for that member.
-    final nickById = <String, String>{};
-    for (final c in appState.contacts) {
-      final n = c.nickname;
-      if (n != null && n.isNotEmpty) nickById[c.haloId] = n;
-    }
-    if (!mounted) return;
-    setState(() {
-      _groupName = (g?['name'] as String?) ?? 'group';
-      _memberCount = members.length;
-      _isAdmin = ((g?['is_admin'] as int?) ?? 0) == 1;
-      _messages
-        ..clear()
-        ..addAll(
-          rows.map((r) {
-            final uid = r['msg_uid'] as String?;
-            final rxMap = <String, String>{};
-            if (uid != null && reactions[uid] != null) {
-              for (final e in reactions[uid]!) {
-                rxMap[e.key] = e.value;
+    try {
+      _dayKeys.clear();
+      _dayMsOf.clear();
+      db.getGroupAtmosphere(widget.groupId).then((a) {
+        if (mounted) setState(() => _atmosphere = atmoFromName(a));
+      });
+      final g = await db.getGroup(widget.groupId);
+      final members = await db.getGroupMembers(widget.groupId);
+      // keep whatever window the user has expanded to - a mid-scroll reaction
+      // used to collapse the list back to one page and yank the view.
+      final wantAll = _searching || _pagedOut || _messages.length > _pageSize;
+      final rows = wantAll
+          ? await db.loadGroupMessages(widget.groupId)
+          : await db.groupMessagesPage(widget.groupId, limit: _pageSize + 1);
+      if (!wantAll) {
+        _hasMore = rows.length > _pageSize;
+        if (_hasMore) rows.removeAt(0);
+        if (!_hasMore) _pagedOut = true;
+      }
+      // gather reactions for every uid we have
+      final uids = rows
+          .map((r) => r['msg_uid'] as String?)
+          .where((u) => u != null && u.isNotEmpty)
+          .cast<String>()
+          .toList();
+      final reactions = await db.loadReactionsFor(uids);
+      // local nickname is the display source of truth. fall back to the 3-word
+      // id when we have no nickname for that member.
+      final nickById = <String, String>{};
+      for (final c in appState.contacts) {
+        final n = c.nickname;
+        if (n != null && n.isNotEmpty) nickById[c.haloId] = n;
+      }
+      if (!mounted) return;
+      setState(() {
+        _groupName = (g?['name'] as String?) ?? 'group';
+        _memberCount = members.length;
+        _isAdmin = ((g?['is_admin'] as int?) ?? 0) == 1;
+        _messages
+          ..clear()
+          ..addAll(
+            rows.map((r) {
+              final uid = r['msg_uid'] as String?;
+              final rxMap = <String, String>{};
+              if (uid != null && reactions[uid] != null) {
+                for (final e in reactions[uid]!) {
+                  rxMap[e.key] = e.value;
+                }
               }
-            }
-            final dir = r['direction'] as String;
-            final m = _GMsg(
-              sender: r['peer_id'] as String,
-              senderName: nickById[r['peer_id'] as String],
-              direction: dir,
-              text: r['plaintext'] as String,
-              when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
-              burnAt: r['burn_at'] as int?,
-              msgUid: uid,
-              replyTo: r['reply_to'] as String?,
-              mediaPath: r['media_path'] as String?,
-              filePath: r['file_path'] as String?,
-              fileName: r['file_name'] as String?,
-              voiceDisguised: ((r['voice_disguised'] as int?) ?? 0) == 1,
-              pinned: ((r['pinned'] as int?) ?? 0) == 1,
-              saved: ((r['saved'] as int?) ?? 0) == 1,
-              edited: ((r['edited'] as int?) ?? 0) == 1,
-              sending: dir == 'out' && (r['sent'] as int? ?? 1) == 0,
-              reactions: rxMap,
-            );
-            m.preview = _decodePv(r['preview'] as String?);
-            m.rowid = (r['rowid'] as int?) ?? 0;
-            // only a STALE sending out-message is dead. a live send (<60s old,
-            // future still running) must keep its pill or a working media send
-            // flips to failed mid-flight - the "had to retry 2-3 times" bug.
-            // also hold off while tor is warming: the send is queued, not dead.
-            final torUp = appState.torStatus == TorStatus.reachable;
-            final stale = m.when.isBefore(
-              DateTime.now().subtract(const Duration(seconds: 60)),
-            );
-            if (torUp && m.direction == 'out' && m.sending && stale) {
-              m.sending = false;
-              m.failed = true;
-            }
-            return m;
-          }),
-        );
-    });
-    _scrollToEnd(instant: true);
-    _loading = false;
-    _loaded = true;
-    // if changes landed while we were loading, run exactly one catch-up pass.
-    if (_reloadQueued) {
-      _reloadQueued = false;
-      _load();
+              final dir = r['direction'] as String;
+              final m = _GMsg(
+                sender: r['peer_id'] as String,
+                senderName: nickById[r['peer_id'] as String],
+                direction: dir,
+                text: r['plaintext'] as String,
+                when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+                burnAt: r['burn_at'] as int?,
+                msgUid: uid,
+                replyTo: r['reply_to'] as String?,
+                mediaPath: r['media_path'] as String?,
+                filePath: r['file_path'] as String?,
+                fileName: r['file_name'] as String?,
+                voiceDisguised: ((r['voice_disguised'] as int?) ?? 0) == 1,
+                pinned: ((r['pinned'] as int?) ?? 0) == 1,
+                saved: ((r['saved'] as int?) ?? 0) == 1,
+                edited: ((r['edited'] as int?) ?? 0) == 1,
+                sending: dir == 'out' && (r['sent'] as int? ?? 1) == 0,
+                reactions: rxMap,
+              );
+              m.preview = _decodePv(r['preview'] as String?);
+              m.rowid = (r['rowid'] as int?) ?? 0;
+              // only a STALE sending out-message is dead. a live send (<60s old,
+              // future still running) must keep its pill or a working media send
+              // flips to failed mid-flight - the "had to retry 2-3 times" bug.
+              // also hold off while tor is warming: the send is queued, not dead.
+              final torUp = appState.torStatus == TorStatus.reachable;
+              final stale = m.when.isBefore(
+                DateTime.now().subtract(const Duration(seconds: 60)),
+              );
+              if (torUp && m.direction == 'out' && m.sending && stale) {
+                m.sending = false;
+                m.failed = true;
+              }
+              return m;
+            }),
+          );
+      });
+      // only snap to the tail on first load or when the user is already
+      // reading it. a background reload (reaction, preview, burn) yanking
+      // the view to the bottom is what kept throwing pin jumps and
+      // scrollback to the end of the chat.
+      final nearEnd =
+          !_scrollCtrl.hasClients ||
+          _scrollCtrl.position.maxScrollExtent - _scrollCtrl.position.pixels <
+              240;
+      if (!_loaded || (nearEnd && _jumpUid == null)) {
+        _scrollToEnd(instant: true);
+      }
+      _loaded = true;
+    } finally {
+      // a crash mid-load used to leave _loading stuck true, silently
+      // freezing every later refresh: previews only appeared after
+      // re-entering, pins went stale. reset no matter what.
+      _loading = false;
+      // if changes landed while we were loading, run exactly one catch-up.
+      if (_reloadQueued) {
+        _reloadQueued = false;
+        _load();
+      }
     }
   }
 
@@ -494,7 +511,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   ]) async {
     try {
       final html = await torGetOnIsolate(url);
-      if (html.startsWith('error:') || html.isEmpty) return;
+      if (html.startsWith('error:') || html.isEmpty) {
+        debugPrint(
+          'preview: fetch failed for $url -> '
+          '${html.isEmpty ? 'empty' : html.substring(0, html.length > 80 ? 80 : html.length)}',
+        );
+        return;
+      }
       String? grab(String prop) {
         final re = RegExp(
           '<meta[^>]+(?:property|name)=["\']' +
@@ -515,7 +538,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       }
       final image = grab('og:image') ?? grab('twitter:image');
       final site = grab('og:site_name');
-      if (title == null && image == null) return;
+      if (title == null && image == null) {
+        debugPrint('preview: no og tags at $url');
+        return;
+      }
       String? imageData;
       if (image != null) {
         try {
@@ -1319,18 +1345,25 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   void _settleJump(int attempt) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      if (!_scrollCtrl.hasClients) return;
       final ctx = _jumpKey.currentContext;
-      if (ctx != null && ctx.mounted) {
+      final ro = ctx == null || !ctx.mounted ? null : ctx.findRenderObject();
+      if (ro != null && ro.attached) {
         try {
-          Scrollable.ensureVisible(
-            ctx,
-            duration: Duration.zero,
-            curve: Curves.easeOut,
-            alignment: 0.3,
-          );
+          // ensureVisible asserts if the viewport is mid-update (the
+          // viewport.dart red screen). computing the reveal offset and
+          // jumping is the safe equivalent.
+          final vp = RenderAbstractViewport.of(ro);
+          final want = vp
+              .getOffsetToReveal(ro, 0.3)
+              .offset
+              .clamp(0.0, _scrollCtrl.position.maxScrollExtent)
+              .toDouble();
+          if ((want - _scrollCtrl.position.pixels).abs() > 4) {
+            _scrollCtrl.jumpTo(want);
+          }
         } catch (_) {
-          // a reload can swap the element out between frames - the next
-          // settle pass picks up the fresh one.
+          // element swapped by a reload mid-settle - next pass re-finds it.
         }
         if (attempt < 4) _settleJump(attempt + 1);
       } else if (attempt < 10) {
@@ -1370,7 +1403,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   void _scrollToGroupMessage(_GMsg m) {
-    _scrollToIndex(_messages.indexOf(m));
+    var idx = _messages.indexOf(m);
+    if (idx < 0 && m.msgUid != null) {
+      // a reload swapped the list objects since this reference was taken -
+      // the identity lookup fails and the tap used to just do nothing.
+      idx = _messages.indexWhere((x) => x.msgUid == m.msgUid);
+    }
+    _scrollToIndex(idx);
   }
 
   Future<void> _showGroupPinnedSheet() async {
