@@ -2726,6 +2726,27 @@ class AppState extends ChangeNotifier {
   List<ContactPreview> contacts = [];
   int pendingCount = 0;
   final Map<String, String> _xPubToHaloId = {};
+  // bundle-exchange heal state: peers we asked for a fresh bundle, ctl
+  // rate-limit stamps, and per-cipher decrypt-failure strikes so relay
+  // backlog replays get buried instead of bad-mac spamming forever.
+  final Set<String> _healPending = {};
+  final Map<String, int> _bundleCtlSentAt = {};
+  final Map<String, int> _decryptFails = {};
+
+  // relay backlog replays any cipher we can't land on every reconnect. give
+  // it 3 lifetime chances (a session may still be forming), then mark it
+  // seen so it stops bad-mac spamming every contact on every poll.
+  void _strikeUndecryptable(String h, String lane) {
+    final tries = (_decryptFails[h] ?? 0) + 1;
+    _decryptFails[h] = tries;
+    if (tries >= 3) {
+      _decryptFails.remove(h);
+      unawaited(db.markSeen(h));
+      debugPrint('$lane: buried undecryptable after $tries tries');
+    } else if (_decryptFails.length > 512) {
+      _decryptFails.clear();
+    }
+  }
 
   // when an unknown sender's PreKey message arrives via
   // direct onion, decrypt under a placeholder peerId, then verify the
@@ -2998,6 +3019,12 @@ class AppState extends ChangeNotifier {
           // crash on it, so skip anything we've already handled.
           final h = sha256.convert(utf8.encode(cipher)).toString();
           if (await db.alreadySeen(h)) continue;
+          if (cipher.startsWith('{')) {
+            // ctl frames only ride the authenticated relay lane. raw json
+            // in the onion inbox is junk - bury it without trial decrypts.
+            _strikeUndecryptable(h, 'drain');
+            continue;
+          }
           var handled = false;
           for (final c in contacts) {
             final plain = await signalDecrypt(c.haloId, cipher);
@@ -3069,7 +3096,11 @@ class AppState extends ChangeNotifier {
           // only now is it safe to burn the dedup hash: the prekey is spent
           // and the message is filed. an unhandled cipher stays un-seen so a
           // later pass (or the relay replay) can still land it.
-          if (handled) await db.markSeen(h);
+          if (handled) {
+            await db.markSeen(h);
+          } else {
+            _strikeUndecryptable(h, 'drain');
+          }
         }
       } finally {
         _draining = false;
@@ -3095,6 +3126,12 @@ class AppState extends ChangeNotifier {
           // dedup: skip a message we've already handled (see direct-onion note).
           final h = sha256.convert(utf8.encode(m.cipher)).toString();
           if (await db.alreadySeen(h)) continue;
+          if (m.cipher.startsWith('{')) {
+            // control frame riding the transport outside signal (bundle
+            // exchange). signal wire is base64 - never starts with '{'.
+            await _handleBundleCtl(m.peer, m.cipher, h);
+            continue;
+          }
           var haloId = _xPubToHaloId[m.peer];
           String? wrapped = haloId == null
               ? null
@@ -3157,6 +3194,7 @@ class AppState extends ChangeNotifier {
           if (wrapped == null) {
             // only a prekey can bootstrap a new session. a whisper nothing
             // could decrypt is undeliverable - drop it without the noise.
+            var landed = false;
             if (_isPreKeyWire(m.cipher)) {
               final paired = await backPairFromCipher(m.cipher);
               debugPrint(
@@ -3165,8 +3203,10 @@ class AppState extends ChangeNotifier {
               if (paired != null) {
                 _xPubToHaloId[m.peer] = paired;
                 await db.markSeen(h);
+                landed = true;
               }
             }
+            if (!landed) _strikeUndecryptable(h, 'nostr');
             continue;
           }
           final env = unwrapMessage(wrapped);
@@ -3394,6 +3434,75 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // ship our prekey bundle to a peer over the gift-wrap transport - no
+  // signal session needed, which is the point: ours to them is broken.
+  // want=true asks them to reset their session with us and send theirs back.
+  Future<void> _sendBundleCtl(String memberId, {required bool want}) async {
+    final key = '$memberId:$want';
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now - (_bundleCtlSentAt[key] ?? 0) < 60000)
+      return; // 1/min, not 1/chunk
+    _bundleCtlSentAt[key] = now;
+    try {
+      final contact = await db.getContact(memberId);
+      if (contact == null) return;
+      final xpub = contact['xpub'] as String? ?? '';
+      if (xpub.isEmpty) return;
+      final payload = jsonEncode({
+        'halo_ctl': 'bundle',
+        'from': myId,
+        'bundle': await makePreKeyBundleB64(),
+        'want': want,
+      });
+      final r = await Future(() => engine.nostrSend(xpub, payload));
+      debugPrint('bundle ctl (want=$want) to $memberId: $r');
+    } catch (e) {
+      debugPrint('bundle ctl to $memberId failed: $e');
+    }
+  }
+
+  // a bundle ctl frame arrived off the relay. peerXPub is transport-
+  // authenticated by the nip17 seal, so it must match the claimed sender's
+  // stored xpub, and the bundle's identity key must match the pinned signal
+  // identity. a valid frame backfills peer_bundle (pre-v30 pairings) and
+  // rebuilds the corrupt session, so both sides converge without re-pairing.
+  Future<void> _handleBundleCtl(String peerXPub, String raw, String h) async {
+    try {
+      final j = jsonDecode(raw);
+      if (j is! Map || j['halo_ctl'] != 'bundle') return;
+      final from = j['from'] as String?;
+      final bundle = j['bundle'] as String?;
+      final want = j['want'] == true;
+      if (from == null || bundle == null) return;
+      final contact = await db.getContact(from);
+      if (contact == null) return;
+      if ((contact['xpub'] as String? ?? '') != peerXPub) {
+        debugPrint('bundle ctl: xpub mismatch for $from, dropped');
+        return;
+      }
+      final bj =
+          jsonDecode(utf8.decode(base64Decode(bundle))) as Map<String, dynamic>;
+      final claimed = base64Decode(bj['identityKey'] as String);
+      final addr = SignalProtocolAddress(from, 1);
+      final known = await signalSession.identityStore.getIdentity(addr);
+      if (known != null && !_eqBytes(known.serialize(), claimed)) {
+        debugPrint('bundle ctl: identity mismatch for $from, dropped');
+        return;
+      }
+      await db.setPeerBundle(from, bundle);
+      if (want || _healPending.remove(from)) {
+        await signalSession.sessionStore.deleteSession(addr);
+        await processPeerBundle(from, bundle);
+        debugPrint('healed session for $from (bundle exchange)');
+      }
+      if (want) unawaited(_sendBundleCtl(from, want: false));
+    } catch (e) {
+      debugPrint('bundle ctl handle failed: $e');
+    } finally {
+      await db.markSeen(h);
+    }
+  }
+
   Future<bool> _sendOneEnvelope(String memberId, String wrapped) async {
     // one honest attempt. the engine calls already carry their own timeouts
     // (onion 15s, relay 60s), so retrying here just stacks those timeouts -
@@ -3415,7 +3524,14 @@ class AppState extends ChangeNotifier {
         // reinstall testing) can't encrypt. if we kept the peer's bundle at
         // pairing, wipe the broken session and rebuild it, then try once more.
         final healed = await _healSession(memberId);
-        if (!healed) rethrow;
+        if (!healed) {
+          // no stored bundle (paired before v30 kept them). ask the peer
+          // for a fresh one over the gift-wrap transport - the reply heals
+          // the session and the user's tap-to-retry then goes through.
+          _healPending.add(memberId);
+          unawaited(_sendBundleCtl(memberId, want: true));
+          rethrow;
+        }
         cipher = await signalEncrypt(memberId, wrapped);
       }
       final backPaired = await db.isBackPaired(memberId);
