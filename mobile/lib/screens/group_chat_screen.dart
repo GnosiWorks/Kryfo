@@ -561,18 +561,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       // wait for the send verdict before showing/announcing - a preview for
       // a message nobody got would confuse receivers.
       if (sendOk != null && !(await sendOk)) return;
-      // persist + announce FIRST: these must not depend on the screen still
-      // being alive. bailing on !mounted here is what silently killed the
-      // card for both sides whenever the chat was left (or crashed) inside
-      // the ~7s tor fetch.
+      // paint locally FIRST - the announce is a full tor multicast and made
+      // the sender's own card trail the receiver's by seconds. then persist
+      // and announce, neither depending on the screen still being alive.
+      if (mounted) {
+        // re-find by uid: a reload during the tor fetch replaces the list
+        // objects; painting the orphan showed nothing until a restart.
+        final live = _liveMsg(msgUid) ?? msg;
+        setState(() => live.preview = pv);
+      }
       await db.setMsgPreview(msgUid, jsonEncode(pv));
       await appState.sendGroupPreview(widget.groupId, msgUid, pv);
-      if (!mounted) return;
-      // re-find by uid: a reload during the tor fetch replaces the list
-      // objects, and painting the orphan is why the sender never saw the
-      // card until a restart.
-      final live = _liveMsg(msgUid) ?? msg;
-      setState(() => live.preview = pv);
     } catch (e) {
       debugPrint('preview enrich failed: $e');
     }
@@ -718,6 +717,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   void _showAttachSheet() {
+    FocusManager.instance.primaryFocus?.unfocus();
     HapticFeedback.selectionClick();
     showModalBottomSheet<void>(
       context: context,
@@ -1030,6 +1030,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   void _showBurnPicker() {
+    FocusManager.instance.primaryFocus?.unfocus();
     showModalBottomSheet(
       context: context,
       backgroundColor: HaloColors.surface2,
@@ -1113,6 +1114,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   Future<void> _showEmojiPickerAt(BuildContext bubbleCtx, _GMsg target) async {
+    // drop composer focus BEFORE anything opens: routes capture the focused
+    // node at open and restore it at close, which is what kept yanking the
+    // keyboard up after unsend/edit/forward. captured nothing = restores
+    // nothing, for every action reached from this menu.
+    FocusManager.instance.primaryFocus?.unfocus();
     if (target.msgUid == null) return;
     final renderBox = bubbleCtx.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
