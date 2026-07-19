@@ -83,6 +83,13 @@ class _BackupScreenState extends State<BackupScreen> {
   }
 
   @override
+  void dispose() {
+    _p1.dispose();
+    _p2.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: HaloColors.surface,

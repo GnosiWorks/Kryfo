@@ -25,6 +25,13 @@ class _NotesScreenState extends State<NotesScreen> {
     _load();
   }
 
+  @override
+  void dispose() {
+    _input.dispose();
+    _scroll.dispose();
+    super.dispose();
+  }
+
   Future<void> _load() async {
     final rows = await db.messagesFor(kNotesPeerId);
     if (!mounted) return;

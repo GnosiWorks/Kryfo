@@ -104,6 +104,12 @@ class _RestoreScreenState extends State<RestoreScreen> {
   }
 
   @override
+  void dispose() {
+    _passCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: HaloColors.surface,
