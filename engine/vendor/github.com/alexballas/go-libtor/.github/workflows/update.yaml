@@ -1,0 +1,147 @@
+name: Update Libs
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/update.yaml'
+      - 'build/**'
+      - 'config/**'
+  pull_request:
+    paths:
+      - '.github/workflows/update.yaml'
+      - 'build/**'
+      - 'config/**'
+
+jobs:
+  AutoLinux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.14
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 # otherwise, push refs to dest repo will fail
+
+      - name: Do Build
+        run: build/linux.sh
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: go-libtor-linux
+          path: /tmp/go-libtor.tar
+          if-no-files-found: error
+
+  AutoDarwin:
+    runs-on: macos-latest
+    needs: AutoLinux
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.14
+
+      - name: Download the previous build
+        uses: actions/download-artifact@v2
+        with:
+          name: go-libtor-linux
+          path: .
+
+      - name: Run Script
+        env:
+          OUTDIR: ${{ github.workspace }}
+        run: |
+          tar xf go-libtor.tar
+          cd go-libtor
+          build/darwin.sh
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: go-libtor-darwin
+          # Can't place it to /tmp/, for unknown reasons he don't want to upload it.
+          path: ${{ github.workspace }}/go-libtor.tar
+          if-no-files-found: error
+
+  TestLinux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        openssl: [ "dyn", "sta" ]
+        libevent: [ "dyn", "sta" ]
+        zlib: [ "dyn", "sta" ]
+    needs: AutoDarwin
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.14
+
+      - name: Download the last build
+        uses: actions/download-artifact@v2
+        with:
+          name: go-libtor-darwin
+          path: .
+
+      - name: Building
+        env:
+          OPENSSL_TYPE: ${{ matrix.openssl }}
+          LIBEVENT_TYPE: ${{ matrix.libevent }}
+          ZLIB_TYPE: ${{ matrix.zlib }}
+        run: |
+          if [ "$OPENSSL_TYPE" == "dyn" ] || [ "$LIBEVENT_TYPE" == "dyn" ] || [ "$ZLIB_TYPE" == "dyn" ]; then
+            sudo apt update
+            sudo apt install -y $(if [ "$LIBEVENT_TYPE" == "dyn" ]; then echo -n "libevent-dev"; fi) $(if [ "$OPENSSL_TYPE" == "dyn" ]; then echo -n "libssl-dev"; fi) $(if [ "$ZLIB_TYPE" == "dyn" ]; then echo -n "zlib1g-dev"; fi)
+          fi
+          tar xf go-libtor.tar
+          cd go-libtor
+          go build -tags="$(if [ "$LIBEVENT_TYPE" == "sta" ]; then echo -n "staticLibevent"; fi),$(if [ "$OPENSSL_TYPE" == "sta" ]; then echo -n "staticOpenssl"; fi),$(if [ "$ZLIB_TYPE" == "sta" ]; then echo -n "staticZlib"; fi)" .
+
+  TestMacos:
+    runs-on: macos-latest
+    needs: AutoDarwin
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.14
+
+      - name: Download the last build
+        uses: actions/download-artifact@v2
+        with:
+          name: go-libtor-darwin
+          path: .
+
+      - name: Building
+        run: |
+          tar xf go-libtor.tar
+          cd go-libtor
+          source build/setup-darwin.sh
+          go build .
+
+  TestIOS:
+    runs-on: macos-latest
+    needs: AutoDarwin
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.15.3
+
+      - name: Download the last build
+        uses: actions/download-artifact@v2
+        with:
+          name: go-libtor-darwin
+          path: .
+
+      - name: Building
+        run: |
+          go get -u golang.org/x/mobile/cmd/gomobile
+          gomobile init
+          tar xf go-libtor.tar
+          cd go-libtor
+          gomobile bind -target=ios .

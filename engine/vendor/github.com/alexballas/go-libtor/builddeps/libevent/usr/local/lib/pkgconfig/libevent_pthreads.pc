@@ -1,0 +1,14 @@
+#libevent pkg-config source file
+
+prefix=/usr/local
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libevent_pthreads
+Description: libevent_pthreads adds pthreads-based threading support to libevent
+Version: 2.2.1-alpha-dev
+Requires: libevent_core
+Libs: -L${libdir} -levent_pthreads@CMAKE_DEBUG_POSTFIX@
+Libs.private: @CMAKE_THREAD_LIBS_INIT@ 
+Cflags: -I${includedir}
