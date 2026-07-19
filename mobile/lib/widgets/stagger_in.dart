@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // one-time fade + slide-up entrance for list items. delay scales with index
 // (capped) so a list assembles gracefully instead of popping in at once.
 import 'package:flutter/material.dart';

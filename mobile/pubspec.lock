@@ -81,6 +81,41 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.2"
+  camera:
+    dependency: "direct main"
+    description:
+      path: "third_party/camera/camera"
+      relative: true
+    source: path
+    version: "0.11.4"
+  camera_android_camerax:
+    dependency: "direct overridden"
+    description:
+      path: "third_party/camera/camera_android_camerax"
+      relative: true
+    source: path
+    version: "0.7.0+1"
+  camera_avfoundation:
+    dependency: "direct overridden"
+    description:
+      path: "third_party/camera/camera_avfoundation"
+      relative: true
+    source: path
+    version: "0.10.0+2"
+  camera_platform_interface:
+    dependency: "direct overridden"
+    description:
+      path: "third_party/camera/camera_platform_interface"
+      relative: true
+    source: path
+    version: "2.12.0"
+  camera_web:
+    dependency: "direct overridden"
+    description:
+      path: "third_party/camera/camera_web"
+      relative: true
+    source: path
+    version: "0.3.5+3"
   characters:
     dependency: transitive
     description:
@@ -400,6 +435,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_zxing:
+    dependency: "direct main"
+    description:
+      path: "third_party/flutter_zxing"
+      relative: true
+    source: path
+    version: "2.1.0"
   glob:
     dependency: transitive
     description:
@@ -688,14 +730,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
-  mobile_scanner:
-    dependency: "direct main"
-    description:
-      name: mobile_scanner
-      sha256: c92c26bf2231695b6d3477c8dcf435f51e28f87b1745966b1fe4c47a286171ce
-      url: "https://pub.dev"
-    source: hosted
-    version: "7.2.0"
   native_toolchain_c:
     dependency: transitive
     description:
@@ -1125,6 +1159,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.4"
+  stream_transform:
+    dependency: transitive
+    description:
+      name: stream_transform
+      sha256: ad47125e588cfd37a9a7f86c7d6356dde8dfe89d071d293f80ca9e9273a33871
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.1"
   string_scanner:
     dependency: transitive
     description:

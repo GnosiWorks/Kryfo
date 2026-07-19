@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // shared press-scale wrapper. gently shrinks on tap-down for tactile feel.
 // used across screens so buttons and rows feel consistent instead of dead.
 import 'package:flutter/material.dart';
