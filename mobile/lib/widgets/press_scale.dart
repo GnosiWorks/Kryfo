@@ -13,7 +13,7 @@ class PressScale extends StatefulWidget {
     super.key,
     required this.child,
     this.onTap,
-    this.scale = 0.97,
+    this.scale = 0.95,
     this.haptic = true,
   });
 

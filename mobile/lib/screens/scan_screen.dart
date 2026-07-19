@@ -84,6 +84,14 @@ class _ScanScreenState extends State<ScanScreen>
             showFlashlight: false,
             showGallery: false,
             showToggleCamera: false,
+            // decode almost the whole frame (default crops to 50%, so a QR
+            // that fills the screen spilled outside the box and wouldn't
+            // lock without zooming out). tryHarder/tryInverted read it on
+            // the first pass in poorer light.
+            cropPercent: 0.9,
+            tryHarder: true,
+            tryInverted: true,
+            scanDelay: const Duration(milliseconds: 500),
           ),
           // dim mask with a transparent cutout - uses a CustomPaint with
           // even-odd fill for the hole. saturated/dimmed outside the
