@@ -1444,6 +1444,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         ),
       ),
     );
+    // the sheet restores focus to the composer when it pops (that's what
+    // kept yanking the keyboard up) - drop focus after it has closed.
+    if (mounted) FocusManager.instance.primaryFocus?.unfocus();
   }
 
   Future<void> _togglePinGroup(_GMsg m) async {

@@ -442,7 +442,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 30,
+      version: 31,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -542,6 +542,17 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 31) {
+          // group retries used to INSERT the local row again; duplicate
+          // msg_uids blow up every uid-keyed widget key (red screens).
+          // keep the original row per uid, drop the copies.
+          await db.execute('''
+            DELETE FROM messages WHERE msg_uid IS NOT NULL AND id NOT IN (
+              SELECT MIN(id) FROM messages WHERE msg_uid IS NOT NULL
+              GROUP BY msg_uid
+            )
+          ''');
+        }
         if (oldV < 30) {
           await db.execute('ALTER TABLE contacts ADD COLUMN peer_bundle TEXT');
         }
@@ -3624,16 +3635,20 @@ class AppState extends ChangeNotifier {
         ? DateTime.now().millisecondsSinceEpoch + burnSeconds * 1000
         : null;
     // save the local row up-front so the chat list shows it immediately.
-    // peer_id = self so we render it as outgoing.
-    await db.saveMessage(
-      myId,
-      'out',
-      plain,
-      groupId: groupId,
-      msgUid: msgUid,
-      replyTo: replyTo,
-      burnAt: burnAt,
-    );
+    // peer_id = self so we render it as outgoing. a RETRY passes the same
+    // uid - inserting again duplicated the row and blew up every uid-keyed
+    // widget key. one row per uid, ever.
+    if (!await db.messageExists(msgUid)) {
+      await db.saveMessage(
+        myId,
+        'out',
+        plain,
+        groupId: groupId,
+        msgUid: msgUid,
+        replyTo: replyTo,
+        burnAt: burnAt,
+      );
+    }
     final members = await db.getGroupMembers(groupId);
     // if we are the group admin, ride the full roster on the message so any
     // member whose list drifted self-heals the moment they receive it.
