@@ -5,7 +5,8 @@
 // is in frame.
 
 import 'package:flutter/material.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:camera/camera.dart';
+import 'package:flutter_zxing/flutter_zxing.dart';
 import '../theme.dart';
 
 class ScanScreen extends StatefulWidget {
@@ -17,10 +18,9 @@ class ScanScreen extends StatefulWidget {
 
 class _ScanScreenState extends State<ScanScreen>
     with SingleTickerProviderStateMixin {
-  final MobileScannerController _ctrl = MobileScannerController(
-    detectionSpeed: DetectionSpeed.noDuplicates,
-    facing: CameraFacing.back,
-  );
+  // zxing-cpp under the hood (FOSS) - the camera controller arrives via
+  // onControllerCreated and is only used for the torch.
+  CameraController? _cam;
   bool _handled = false;
   bool _torchOn = false;
   bool _detectedSuccess = false;
@@ -37,10 +37,10 @@ class _ScanScreenState extends State<ScanScreen>
     )..repeat(reverse: true);
   }
 
-  void _onDetect(BarcodeCapture capture) {
+  void _onScan(Code code) {
     if (_handled) return;
-    final raw = capture.barcodes.firstOrNull?.rawValue;
-    if (raw == null) return;
+    final raw = code.text;
+    if (raw == null || raw.isEmpty) return;
     if (!raw.startsWith('halo://')) {
       // brief hint and keep scanning. dedupe by time so the user isn't
       // spammed if many non-halo codes are in frame.
@@ -66,7 +66,6 @@ class _ScanScreenState extends State<ScanScreen>
   @override
   void dispose() {
     _scanAnim.dispose();
-    _ctrl.dispose();
     super.dispose();
   }
 
@@ -78,7 +77,14 @@ class _ScanScreenState extends State<ScanScreen>
       backgroundColor: HaloColors.ink,
       body: Stack(
         children: [
-          MobileScanner(controller: _ctrl, onDetect: _onDetect),
+          ReaderWidget(
+            onScan: _onScan,
+            onControllerCreated: (controller, error) => _cam = controller,
+            showScannerOverlay: false,
+            showFlashlight: false,
+            showGallery: false,
+            showToggleCamera: false,
+          ),
           // dim mask with a transparent cutout - uses a CustomPaint with
           // even-odd fill for the hole. saturated/dimmed outside the
           // viewfinder so the user's eye is drawn to the right area.
@@ -126,8 +132,17 @@ class _ScanScreenState extends State<ScanScreen>
                     ),
                     IconButton(
                       onPressed: () async {
-                        await _ctrl.toggleTorch();
-                        setState(() => _torchOn = !_torchOn);
+                        final cam = _cam;
+                        if (cam == null) return;
+                        final on = !_torchOn;
+                        try {
+                          await cam.setFlashMode(
+                            on ? FlashMode.torch : FlashMode.off,
+                          );
+                          setState(() => _torchOn = on);
+                        } catch (_) {
+                          // no flash unit - leave the icon as-is
+                        }
                       },
                       icon: Icon(
                         _torchOn

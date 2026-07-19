@@ -1,5 +1,6 @@
 allprojects {
     repositories {
+        maven(url = "file:///home/mario/m2repo")
         mavenLocal()
         google()
         mavenCentral()

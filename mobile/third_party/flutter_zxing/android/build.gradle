@@ -1,0 +1,38 @@
+group 'com.markosyan.flutter_zxing'
+version '1.0'
+
+// buildscript block removed: the app's AGP 8.11.1 builds this plugin;
+// pulling a second toolchain (7.4.1 + ~100MB of jars) was pure waste.
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    // Conditional for compatibility with AGP <4.2.
+    if (project.android.hasProperty("namespace")) {
+        namespace 'com.markosyan.flutter_zxing'
+    }
+    compileSdk 34
+    ndkVersion "28.2.13676358"
+
+    externalNativeBuild {
+        cmake {
+            path "../src/CMakeLists.txt"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    defaultConfig {
+        minSdkVersion 21
+    }
+}
