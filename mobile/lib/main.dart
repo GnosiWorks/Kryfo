@@ -1227,6 +1227,18 @@ class HaloDb {
     await db.delete('seen_msgs', where: 'ts < ?', whereArgs: [now - 86400000]);
   }
 
+  // like markSeen but stamped a month ahead of the daily prune: buried
+  // undecryptable ciphers must STAY buried - a pruned hash resurrects the
+  // whole bad-mac replay the next day. relays age the events out well
+  // before the month is up.
+  Future<void> markSeenLong(String hash) async {
+    final db = await open();
+    await db.insert('seen_msgs', {
+      'hash': hash,
+      'ts': DateTime.now().millisecondsSinceEpoch + 30 * 86400000,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
   // load back_paired for a contact. true = peer has confirmed they know us
   // (via a received message). false = we should still use direct-onion to
   // give them a chance to back-pair.
@@ -2209,6 +2221,9 @@ class AppState extends ChangeNotifier {
   // uids being processed right now, to dedup near-simultaneous arrivals
   // (preview re-send racing a manual retry) before the db write lands.
   final Set<String> _inflightUids = <String>{};
+  // previews that arrived before their message (fetch runs parallel to the
+  // send now, so the frames can race). patched on right after the row saves.
+  final Map<String, String> _pendingPreviews = {};
   // incoming media chunks buffered by mediaId until all arrive, then
   // reassembled into the full base64. single-chunk media skips this.
   final Map<String, Map<int, String>> _mediaChunks = {};
@@ -2513,6 +2528,17 @@ class AppState extends ChangeNotifier {
     final uid = env.msgUid;
     if (uid != null) {
       final known = _inflightUids.contains(uid) || await db.messageExists(uid);
+      // preview-only frame that beat its message here: saving it as a row
+      // would swallow the real text when it lands. stash and patch later.
+      final previewOnly =
+          env.preview != null &&
+          env.message.isEmpty &&
+          env.imageB64 == null &&
+          env.fileB64 == null;
+      if (previewOnly && !known) {
+        _pendingPreviews[uid] = jsonEncode(env.preview);
+        return;
+      }
       if (known) {
         if (env.preview != null) {
           await db.setMsgPreview(uid, jsonEncode(env.preview));
@@ -2544,6 +2570,11 @@ class AppState extends ChangeNotifier {
       fileName: fileName,
       preview: env.preview != null ? jsonEncode(env.preview) : null,
     );
+    // a preview that raced ahead of this message was stashed - patch it on.
+    if (uid != null) {
+      final pending = _pendingPreviews.remove(uid);
+      if (pending != null) await db.setMsgPreview(uid, pending);
+    }
     // notification context - for groups, title = group name and body
     // prefixes the sender. payload uses "group:<id>" so tap-to-open can
     // route to the right screen.
@@ -2741,7 +2772,7 @@ class AppState extends ChangeNotifier {
     _decryptFails[h] = tries;
     if (tries >= 3) {
       _decryptFails.remove(h);
-      unawaited(db.markSeen(h));
+      unawaited(db.markSeenLong(h));
       debugPrint('$lane: buried undecryptable after $tries tries');
     } else if (_decryptFails.length > 512) {
       _decryptFails.clear();

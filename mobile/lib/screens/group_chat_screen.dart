@@ -65,10 +65,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   final GlobalKey _jumpKey = GlobalKey();
   String? _jumpUid;
   String? _rippleUid;
-  // keyed by dayMs, NOT list index: rows shift when a ghost message burns
-  // away, and an index-keyed GlobalKey then reparents across positions in
-  // the same sliver pass - that's the red-screen assertion during search.
-  final Map<int, GlobalKey> _dayKeys = {};
+  // keyed by the uid of the row each divider precedes. index keys reparent
+  // when rows shift (burns), and dayMs keys duplicate when a late-arriving
+  // older message splits a day into two runs - two dividers, one GlobalKey,
+  // framework red screen. the anchor uid is unique per divider and stable.
+  final Map<String, GlobalKey> _dayKeys = {};
+  final Map<String, int> _dayMsOf = {};
   final GlobalKey _listKey = GlobalKey();
   final ValueNotifier<String?> _stickyLabel = ValueNotifier(null);
   final ValueNotifier<bool> _stickyShown = ValueNotifier(false);
@@ -225,9 +227,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         m.rowid = (r['rowid'] as int?) ?? 0;
         older.add(m);
       }
-      // indices shift after the prepend, so the index-keyed divider maps are
-      // stale. they repopulate on build.
+      // divider anchors change after the prepend (day boundaries move), so
+      // drop the maps - they repopulate on build.
       _dayKeys.clear();
+      _dayMsOf.clear();
       setState(() => _messages.insertAll(0, older));
       // anchor: pull the previous top message back to the top of the view so
       // the prepend doesn't yank the scroll.
@@ -264,6 +267,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   Future<void> _load() async {
     _loading = true;
     _dayKeys.clear();
+    _dayMsOf.clear();
     db.getGroupAtmosphere(widget.groupId).then((a) {
       if (mounted) setState(() => _atmosphere = atmoFromName(a));
     });
@@ -1199,13 +1203,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     return label;
   }
 
-  Widget _dateDivider(DateTime when, int i) {
+  Widget _dateDivider(DateTime when, String anchor) {
     final dayMs = DateTime(
       when.year,
       when.month,
       when.day,
     ).millisecondsSinceEpoch;
-    final key = _dayKeys.putIfAbsent(dayMs, () => GlobalKey());
+    final key = _dayKeys.putIfAbsent(anchor, () => GlobalKey());
+    _dayMsOf[anchor] = dayMs;
     return Padding(
       key: key,
       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -1235,13 +1240,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final top = listObj.localToGlobal(Offset.zero).dy;
     int? best;
     double bestDy = -1e9;
-    _dayKeys.forEach((dayMs, key) {
+    _dayKeys.forEach((anchor, key) {
       final obj = key.currentContext?.findRenderObject();
       if (obj is! RenderBox) return;
       final dy = obj.localToGlobal(Offset.zero).dy;
       if (dy <= top + 6 && dy > bestDy) {
         bestDy = dy;
-        best = dayMs;
+        best = _dayMsOf[anchor];
       }
     });
     if (best != null) _stickyDayMs = best;
@@ -1302,6 +1307,27 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     _scrollToIndex(_matches[_matchPos]);
   }
 
+  // after the rough jump, rows above the target keep resizing as images and
+  // previews build in, so one ensureVisible often left us shy or past the
+  // pin. re-align over a few frames until the target stops moving.
+  void _settleJump(int attempt) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final ctx = _jumpKey.currentContext;
+      if (ctx != null) {
+        Scrollable.ensureVisible(
+          ctx,
+          duration: Duration.zero,
+          curve: Curves.easeOut,
+          alignment: 0.3,
+        );
+        if (attempt < 4) _settleJump(attempt + 1);
+      } else if (attempt < 10) {
+        _settleJump(attempt + 1);
+      }
+    });
+  }
+
   // rough-jump so the target gets built, then ensureVisible lands it. this
   // list is NOT reversed (unlike 1:1), older sits near offset 0.
   void _scrollToIndex(int idx) {
@@ -1313,16 +1339,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final approx = (frac * max - _scrollCtrl.position.viewportDimension * 0.3)
         .clamp(0.0, max);
     _scrollCtrl.jumpTo(approx.clamp(0.0, max));
+    _settleJump(0);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final ctx = _jumpKey.currentContext;
-      if (ctx != null) {
-        Scrollable.ensureVisible(
-          ctx,
-          duration: Duration.zero,
-          curve: Curves.easeOut,
-          alignment: 0.3,
-        );
-      }
       if (m.msgUid != null) {
         setState(() => _rippleUid = m.msgUid);
         Future.delayed(const Duration(milliseconds: 1300), () {
@@ -1372,6 +1390,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             for (final m in pinned)
               InkWell(
                 onTap: () {
+                  FocusManager.instance.primaryFocus?.unfocus();
                   Navigator.pop(ctx);
                   _scrollToGroupMessage(m);
                 },
@@ -1402,6 +1421,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       const SizedBox(width: 12),
                       InkWell(
                         onTap: () {
+                          FocusManager.instance.primaryFocus?.unfocus();
                           Navigator.pop(ctx);
                           _togglePinGroup(m);
                         },
@@ -1856,7 +1876,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                               key: ValueKey(m.msgUid ?? 'row$i'),
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                if (showDate) _dateDivider(m.when, i),
+                                if (showDate)
+                                  _dateDivider(m.when, m.msgUid ?? 'row$i'),
                                 RepaintBoundary(
                                   key:
                                       (m.msgUid != null && m.msgUid == _jumpUid)
@@ -2875,7 +2896,7 @@ class _GroupBubble extends StatelessWidget {
                                           // captions get a touch more weight
                                           // so they read over busy images.
                                           weight: m.mediaPath != null
-                                              ? FontWeight.w500
+                                              ? FontWeight.w600
                                               : FontWeight.w400,
                                           // a photo caption sits on a transparent
                                           // bubble (no amber), so onAmber would be
@@ -2940,10 +2961,13 @@ class _GroupBubble extends StatelessWidget {
                                           'edited ',
                                           style: HaloType.mono(
                                             size: 9,
-                                            color: isOut
+                                            color:
+                                                (isOut && m.mediaPath == null)
                                                 ? HaloColors.onAmber.withValues(
                                                     alpha: 0.6,
                                                   )
+                                                : isOut
+                                                ? HaloColors.text2
                                                 : HaloColors.text3,
                                           ),
                                         ),
@@ -2958,10 +2982,15 @@ class _GroupBubble extends StatelessWidget {
                                           _fmtTime(m.when),
                                           style: HaloType.mono(
                                             size: 9.5,
-                                            color: isOut
+                                            // out photo bubble is transparent:
+                                            // onAmber (dark) vanished there.
+                                            color:
+                                                (isOut && m.mediaPath == null)
                                                 ? HaloColors.onAmber.withValues(
                                                     alpha: 0.7,
                                                   )
+                                                : isOut
+                                                ? HaloColors.text2
                                                 : HaloColors.text3,
                                           ),
                                         ),
@@ -2982,7 +3011,7 @@ class _GroupBubble extends StatelessWidget {
                                             fontFamily: 'JetBrains Mono',
                                             fontSize: 11,
                                             color: m.mediaPath != null
-                                                ? HaloColors.text3
+                                                ? HaloColors.text2
                                                 : HaloColors.onAmber.withValues(
                                                     alpha: 0.7,
                                                   ),
