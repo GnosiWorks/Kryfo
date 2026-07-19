@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // halo nostr layer — store-and-forward messaging via public relays.
 // phase 1.6 sprint 5+6: integration into engine.
 //
@@ -34,6 +35,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"fiatjaf.com/nostr"
@@ -185,25 +187,37 @@ func nostrPublishMulti(ctx context.Context, ev nostr.Event) (ok int) {
 	urls := append([]string(nil), nostrRelays...)
 	nostrMu.Unlock()
 
+	// publishes run on a context detached from the caller's: HaloNostrSend
+	// does `defer cancel()`, so once we return the request ctx dies. we
+	// want the SLOWER relays to keep landing for redundancy after we've
+	// already returned on the first success - hence background + our own
+	// timeout, not a child of ctx.
+	bg, bgCancel := context.WithTimeout(context.Background(), 30*time.Second)
+
 	result := make(chan bool, len(urls))
+	var pending int32 = int32(len(urls))
 	for _, url := range urls {
 		go func(u string) {
-			rctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-			defer cancel()
+			// last publisher out turns off the lights (frees bg).
+			defer func() {
+				if atomic.AddInt32(&pending, -1) == 0 {
+					bgCancel()
+				}
+			}()
 			client, err := torNostrClient()
 			if err != nil {
 				log.Printf("nostr: tor not ready, skipping publish to %s: %v", u, err)
 				result <- false
 				return
 			}
-			r := nostr.NewRelay(rctx, u, nostr.RelayOptions{})
-			if err := r.ConnectWithClient(rctx, client); err != nil {
+			r := nostr.NewRelay(bg, u, nostr.RelayOptions{})
+			if err := r.ConnectWithClient(bg, client); err != nil {
 				log.Printf("nostr: connect %s: %v", u, err)
 				result <- false
 				return
 			}
 			defer r.Close()
-			if err := r.Publish(rctx, ev); err != nil {
+			if err := r.Publish(bg, ev); err != nil {
 				log.Printf("nostr: publish %s: %v", u, err)
 				result <- false
 				return
@@ -212,18 +226,23 @@ func nostrPublishMulti(ctx context.Context, ev nostr.Event) (ok int) {
 			result <- true
 		}(url)
 	}
+
+	// return the instant ONE relay accepts - delivery no longer waits on the
+	// second-fastest (usually a flaky public relay). the rest keep going on
+	// bg for redundancy. if the caller's ctx dies first, we still leave the
+	// background publishes running and report what landed so far.
 	accepted := 0
 	for i := 0; i < len(urls); i++ {
 		select {
 		case r := <-result:
 			if r {
 				accepted++
-				if accepted >= 2 {
+				if accepted >= 1 {
 					return accepted
 				}
 			}
 		case <-ctx.Done():
-			log.Printf("nostr: publish gave up waiting on relays")
+			log.Printf("nostr: caller ctx done, %d relays in ok so far (rest continue in bg)", accepted)
 			return accepted
 		}
 	}

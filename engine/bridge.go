@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // halo engine — ffi bridge for flutter
 // phase 1 stage C-prep: identity + tor onion + ECDH + key export/restore for persistence.
 
