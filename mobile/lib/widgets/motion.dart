@@ -28,8 +28,8 @@ enum PrivacyMode { fast, normal, private }
 // shared screen transition - a calm rise-and-fade, one way in across the app.
 Route<T> haloRoute<T>(Widget page) {
   return PageRouteBuilder<T>(
-    transitionDuration: const Duration(milliseconds: 340),
-    reverseTransitionDuration: const Duration(milliseconds: 260),
+    transitionDuration: const Duration(milliseconds: 360),
+    reverseTransitionDuration: const Duration(milliseconds: 280),
     pageBuilder: (_, __, ___) => page,
     transitionsBuilder: (_, anim, __, child) {
       final curved = CurvedAnimation(
@@ -41,7 +41,7 @@ Route<T> haloRoute<T>(Widget page) {
         opacity: curved,
         child: SlideTransition(
           position: Tween(
-            begin: const Offset(0, 0.06),
+            begin: const Offset(0, 0.035),
             end: Offset.zero,
           ).animate(curved),
           child: child,
