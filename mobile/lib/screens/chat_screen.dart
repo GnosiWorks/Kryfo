@@ -7550,7 +7550,9 @@ class LinkPreviewCard extends StatelessWidget {
     final fg = isOut ? HaloColors.onAmber : HaloColors.text;
     final sub = isOut
         ? HaloColors.onAmber.withValues(alpha: 0.7)
-        : HaloColors.text3;
+        // text3 sank into the card - one step brighter reads without
+        // stealing weight from the title.
+        : HaloColors.text2;
     final line = isOut
         ? HaloColors.onAmber.withValues(alpha: 0.25)
         : HaloColors.line;

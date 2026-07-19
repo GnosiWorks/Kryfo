@@ -65,8 +65,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   final GlobalKey _jumpKey = GlobalKey();
   String? _jumpUid;
   String? _rippleUid;
+  // keyed by dayMs, NOT list index: rows shift when a ghost message burns
+  // away, and an index-keyed GlobalKey then reparents across positions in
+  // the same sliver pass - that's the red-screen assertion during search.
   final Map<int, GlobalKey> _dayKeys = {};
-  final Map<int, int> _dayAt = {};
   final GlobalKey _listKey = GlobalKey();
   final ValueNotifier<String?> _stickyLabel = ValueNotifier(null);
   final ValueNotifier<bool> _stickyShown = ValueNotifier(false);
@@ -226,7 +228,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       // indices shift after the prepend, so the index-keyed divider maps are
       // stale. they repopulate on build.
       _dayKeys.clear();
-      _dayAt.clear();
       setState(() => _messages.insertAll(0, older));
       // anchor: pull the previous top message back to the top of the view so
       // the prepend doesn't yank the scroll.
@@ -263,7 +264,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   Future<void> _load() async {
     _loading = true;
     _dayKeys.clear();
-    _dayAt.clear();
     db.getGroupAtmosphere(widget.groupId).then((a) {
       if (mounted) setState(() => _atmosphere = atmoFromName(a));
     });
@@ -482,7 +482,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
   }
 
-  Future<void> _enrichGroupPreview(_GMsg msg, String url, String msgUid) async {
+  Future<void> _enrichGroupPreview(
+    _GMsg msg,
+    String url,
+    String msgUid, [
+    Future<bool>? sendOk,
+  ]) async {
     try {
       final html = await torGetOnIsolate(url);
       if (html.startsWith('error:') || html.isEmpty) return;
@@ -523,8 +528,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         if (imageData != null) 'img': imageData,
         if (site != null) 'site': unescapeHtml(site),
       };
+      // wait for the send verdict before showing/announcing - a preview for
+      // a message nobody got would confuse receivers.
+      if (sendOk != null && !(await sendOk)) return;
       if (!mounted) return;
-      setState(() => msg.preview = pv);
+      // re-find by uid: a reload during the tor fetch replaces the list
+      // objects, and painting the orphan is why the sender never saw the
+      // card until a restart.
+      final live = _liveMsg(msgUid) ?? msg;
+      setState(() => live.preview = pv);
       await db.setMsgPreview(msgUid, jsonEncode(pv));
       await appState.sendGroupPreview(widget.groupId, msgUid, pv);
     } catch (_) {}
@@ -557,14 +569,22 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
     _scrollToEnd();
     var ok = false;
+    final sendFut = appState.sendToGroup(
+      widget.groupId,
+      text,
+      msgUid: uid,
+      replyTo: replyToUid,
+      burnSeconds: burnSeconds,
+    );
+    // fetch the preview while the send is in flight - the tor page fetch
+    // dominates the wait, so stacking it after the send doubled the delay.
+    // the card is only shown/announced once the send confirms ok.
+    final url = firstUrl(text);
+    if (url != null) {
+      unawaited(_enrichGroupPreview(optimistic, url, uid, sendFut));
+    }
     try {
-      ok = await appState.sendToGroup(
-        widget.groupId,
-        text,
-        msgUid: uid,
-        replyTo: replyToUid,
-        burnSeconds: burnSeconds,
-      );
+      ok = await sendFut;
     } catch (e) {
       debugPrint('group send failed: $e');
     } finally {
@@ -575,12 +595,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         // sendToGroup can trigger a reload that replaces `optimistic`,
         // and mutating the orphan left the send pill stuck forever.
         final live = _liveMsg(uid) ?? optimistic;
-        if (ok) {
-          final url = firstUrl(text);
-          if (url != null) {
-            unawaited(_enrichGroupPreview(live, url, uid));
-          }
-        }
         setState(() {
           _sending = false;
           live.sending = false;
@@ -1191,8 +1205,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       when.month,
       when.day,
     ).millisecondsSinceEpoch;
-    final key = _dayKeys.putIfAbsent(i, () => GlobalKey());
-    _dayAt[i] = dayMs;
+    final key = _dayKeys.putIfAbsent(dayMs, () => GlobalKey());
     return Padding(
       key: key,
       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -1222,13 +1235,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final top = listObj.localToGlobal(Offset.zero).dy;
     int? best;
     double bestDy = -1e9;
-    _dayKeys.forEach((i, key) {
+    _dayKeys.forEach((dayMs, key) {
       final obj = key.currentContext?.findRenderObject();
       if (obj is! RenderBox) return;
       final dy = obj.localToGlobal(Offset.zero).dy;
       if (dy <= top + 6 && dy > bestDy) {
         bestDy = dy;
-        best = _dayAt[i];
+        best = dayMs;
       }
     });
     if (best != null) _stickyDayMs = best;
@@ -2859,6 +2872,11 @@ class _GroupBubble extends StatelessWidget {
                                         m.text,
                                         style: HaloType.sans(
                                           size: 14,
+                                          // captions get a touch more weight
+                                          // so they read over busy images.
+                                          weight: m.mediaPath != null
+                                              ? FontWeight.w500
+                                              : FontWeight.w400,
                                           // a photo caption sits on a transparent
                                           // bubble (no amber), so onAmber would be
                                           // invisible - use the readable color.
@@ -2889,7 +2907,12 @@ class _GroupBubble extends StatelessWidget {
                                             vertical: 1,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: isOut
+                                            // an outgoing photo sits on a
+                                            // transparent bubble, so onAmber
+                                            // (dark) was invisible there -
+                                            // media rows take the amber look.
+                                            color:
+                                                (isOut && m.mediaPath == null)
                                                 ? HaloColors.onAmber.withValues(
                                                     alpha: 0.15,
                                                   )
@@ -2902,7 +2925,8 @@ class _GroupBubble extends StatelessWidget {
                                             '🔥 ${_remaining(m.burnAt!)}',
                                             style: HaloType.mono(
                                               size: 9,
-                                              color: isOut
+                                              color:
+                                                  (isOut && m.mediaPath == null)
                                                   ? HaloColors.onAmber
                                                   : HaloColors.amber,
                                               letter: 0.2,
