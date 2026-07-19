@@ -130,6 +130,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
+    confirmCtrl.dispose();
     if (ok == true) await wipeHalo();
   }
 
