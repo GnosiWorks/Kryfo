@@ -3589,15 +3589,40 @@ class AppState extends ChangeNotifier {
       final backPaired = await db.isBackPaired(memberId);
       final xpub = contact['xpub'] as String;
       final onion = contact['onion'] as String;
-      if (!backPaired && onion.isNotEmpty) {
-        final tor = await Future(() => engine.sendTo(onion, cipher));
-        if (tor == 'ok') return true;
-        debugPrint('send: tor direct failed ($tor), trying nostr');
+
+      // back-paired: onion-only, already fast and leaks the least.
+      if (backPaired || onion.isEmpty) {
+        final n = await Future(() => engine.nostrSend(xpub, cipher));
+        if (n == 'ok') return true;
+        debugPrint('send: nostr failed ($n)');
+        return false;
       }
-      final n = await Future(() => engine.nostrSend(xpub, cipher));
-      if (n == 'ok') return true;
-      debugPrint('send: nostr failed ($n)');
-      return false;
+
+      // not back-paired: RACE onion and relay instead of waiting out the
+      // onion timeout before trying relays. delivery = whichever lands
+      // first, so a slow/dead onion no longer costs the full 15s.
+      final done = Completer<bool>();
+      var pending = 2;
+      void settle(String tag, String r) {
+        if (r == 'ok') {
+          if (!done.isCompleted) done.complete(true);
+        } else {
+          debugPrint('send: $tag failed ($r)');
+          if (--pending == 0 && !done.isCompleted) done.complete(false);
+        }
+      }
+
+      unawaited(
+        Future(() => engine.sendTo(onion, cipher))
+            .then((r) => settle('onion', r))
+            .catchError((_) => settle('onion', 'err')),
+      );
+      unawaited(
+        Future(() => engine.nostrSend(xpub, cipher))
+            .then((r) => settle('nostr', r))
+            .catchError((_) => settle('nostr', 'err')),
+      );
+      return done.future;
     } catch (e) {
       debugPrint('send to $memberId failed: $e');
       return false;
@@ -4106,10 +4131,24 @@ class HaloApp extends StatelessWidget {
         navigatorKey: rootNavKey,
         title: 'Halo',
         theme: buildHaloTheme(),
+        // one scroll feel everywhere: ios-style rubber-band on every
+        // platform, no stretch-glow. the single biggest "premium" tell,
+        // and it was unset so android fell back to the clamp+glow default.
+        scrollBehavior: const _HaloScrollBehavior(),
         home: _LockGate(child: _OnboardingGate(child: RootShell())),
       ),
     );
   }
+}
+
+class _HaloScrollBehavior extends ScrollBehavior {
+  const _HaloScrollBehavior();
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) =>
+      const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
+  @override
+  Widget buildOverscrollIndicator(BuildContext context, Widget child, _) =>
+      child; // no glow - the bounce is the feedback
 }
 
 class RootShell extends StatefulWidget {
