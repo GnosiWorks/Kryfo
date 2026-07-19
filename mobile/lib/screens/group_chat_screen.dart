@@ -535,15 +535,21 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       // wait for the send verdict before showing/announcing - a preview for
       // a message nobody got would confuse receivers.
       if (sendOk != null && !(await sendOk)) return;
+      // persist + announce FIRST: these must not depend on the screen still
+      // being alive. bailing on !mounted here is what silently killed the
+      // card for both sides whenever the chat was left (or crashed) inside
+      // the ~7s tor fetch.
+      await db.setMsgPreview(msgUid, jsonEncode(pv));
+      await appState.sendGroupPreview(widget.groupId, msgUid, pv);
       if (!mounted) return;
       // re-find by uid: a reload during the tor fetch replaces the list
       // objects, and painting the orphan is why the sender never saw the
       // card until a restart.
       final live = _liveMsg(msgUid) ?? msg;
       setState(() => live.preview = pv);
-      await db.setMsgPreview(msgUid, jsonEncode(pv));
-      await appState.sendGroupPreview(widget.groupId, msgUid, pv);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('preview enrich failed: $e');
+    }
   }
 
   Future<void> _send() async {
@@ -1314,13 +1320,18 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final ctx = _jumpKey.currentContext;
-      if (ctx != null) {
-        Scrollable.ensureVisible(
-          ctx,
-          duration: Duration.zero,
-          curve: Curves.easeOut,
-          alignment: 0.3,
-        );
+      if (ctx != null && ctx.mounted) {
+        try {
+          Scrollable.ensureVisible(
+            ctx,
+            duration: Duration.zero,
+            curve: Curves.easeOut,
+            alignment: 0.3,
+          );
+        } catch (_) {
+          // a reload can swap the element out between frames - the next
+          // settle pass picks up the fresh one.
+        }
         if (attempt < 4) _settleJump(attempt + 1);
       } else if (attempt < 10) {
         _settleJump(attempt + 1);
@@ -1876,11 +1887,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                                 i == 0 ||
                                 (prev != null && !_sameDay(prev.when, m.when));
                             return Column(
-                              key: ValueKey(m.msgUid ?? 'row$i'),
+                              key: ValueKey(m.msgUid ?? 'r${m.rowid}'),
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (showDate)
-                                  _dateDivider(m.when, m.msgUid ?? 'row$i'),
+                                  _dateDivider(
+                                    m.when,
+                                    m.msgUid ?? 'r${m.rowid}',
+                                  ),
                                 RepaintBoundary(
                                   key:
                                       (m.msgUid != null && m.msgUid == _jumpUid)
