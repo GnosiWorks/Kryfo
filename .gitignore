@@ -57,3 +57,8 @@ pillfix.py
 mobile/android/key.properties
 *.jks
 *.keystore
+
+# signing — never commit
+mobile/android/key.properties
+*.jks
+*.keystore
