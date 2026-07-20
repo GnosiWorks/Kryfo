@@ -704,6 +704,8 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
   _Phase _phase = _Phase.loading;
   BadgeInvoice? _inv;
   Timer? _poll;
+  Timer? _tick;
+  int _secsLeft = 15 * 60;
   late final AnimationController _pulse;
 
   @override
@@ -719,6 +721,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
   @override
   void dispose() {
     _poll?.cancel();
+    _tick?.cancel();
     _pulse.dispose();
     super.dispose();
   }
@@ -736,6 +739,24 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
     setState(() {
       _inv = inv;
       _phase = _Phase.invoice;
+    });
+    _secsLeft = 15 * 60;
+    _tick?.cancel();
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      // never override a payment that already confirmed
+      if (_phase != _Phase.invoice) {
+        _tick?.cancel();
+        return;
+      }
+      setState(() {
+        _secsLeft--;
+        if (_secsLeft <= 0) {
+          _tick?.cancel();
+          _poll?.cancel();
+          _phase = _Phase.expired;
+        }
+      });
     });
     _poll = Timer.periodic(const Duration(seconds: 6), (_) => _check());
     _check();
@@ -815,6 +836,12 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
   }
 
   // ── loading ──
+  String _fmtLeft() {
+    final m = _secsLeft ~/ 60;
+    final sec = _secsLeft % 60;
+    return '$m:${sec.toString().padLeft(2, '0')}';
+  }
+
   Widget _loadingView() {
     return Center(
       key: const ValueKey('load'),
@@ -903,7 +930,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           const SizedBox(height: 2),
           Center(
             child: Text(
-              'send exactly this amount',
+              'send exactly this amount \u00b7 expires in ${_fmtLeft()}',
               style: HaloType.mono(size: 10, color: HaloColors.text3),
             ),
           ),
