@@ -1,6 +1,0 @@
-module ZXingCpp {
-    umbrella header "UmbrellaHeader.h"
-    export *
-    module * { export * }
-}
-
