@@ -53,3 +53,8 @@ diag_engine.py
 statusfix.py
 burnfix_*.py
 pillfix.py
+
+# signing — never commit
+mobile/android/key.properties
+*.jks
+*.keystore
