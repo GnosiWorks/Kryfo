@@ -4,10 +4,10 @@
 # beyond the ~30mb base pull (which resumes per-layer if the line dies).
 FROM debian:bookworm-20250630-slim
 
-ENV GO_VERSION=1.25.0
-ENV GO_SHA256=FILL_ME_PREP_OFFLINE
-ENV NDK_VERSION=r28b
-ENV NDK_TGZ_SHA256=FILL_ME_PREP_OFFLINE
+ENV GO_VERSION=1.23.4
+ENV GO_SHA256=45f853e8a918281f5069fcf7d864c4e8c3487b37486a5461b94dd8f9595c382e
+ENV NDK_VERSION=r28c
+ENV NDK_TGZ_SHA256=58c7fdf41a4b9177e0fcbe3fbb2f5ab1bb0d85ba26f35028c5a86fabbe2785f6
 
 # go toolchain from local tarball, checksum-verified
 COPY dl/go${GO_VERSION}.linux-amd64.tar.gz /tmp/go.tgz

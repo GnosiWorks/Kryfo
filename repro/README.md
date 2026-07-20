@@ -6,8 +6,8 @@ binary shipped in the apk matches the public source. no trust required.
 
 ## pinned
 
-- go 1.25.0
-- android ndk r28b (28.2.13676358)
+- go 1.23.4
+- android ndk r28c (28.2.13676358)
 - debian bookworm (snapshot-tagged)
 
 all three are checksum-verified during the image build, so the toolchain
