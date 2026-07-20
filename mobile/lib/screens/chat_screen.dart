@@ -4401,6 +4401,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     )
                   : const SizedBox.shrink(),
             ),
+            IncomingMediaBanner(chatKey: widget.peerHaloId),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 260),
               switchInCurve: Curves.easeOut,
@@ -5882,10 +5883,8 @@ class _Bubble extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (msg.msgUid != null &&
-                          mediaSendProgress[msg.msgUid] != null) ...[
-                        SendProgressLabel(
-                          notifier: mediaSendProgress[msg.msgUid]!,
-                        ),
+                          (msg.mediaPath != null || msg.filePath != null)) ...[
+                        SendProgressLabel(msgUid: msg.msgUid!),
                         const SizedBox(width: 6),
                       ],
                       SendPill(mode: _pmFrom(appState.sendMode)),

@@ -2507,6 +2507,7 @@ class AppState extends ChangeNotifier {
     int? chunkBurn = env.burnSeconds;
     if (env.mediaId != null && env.chunkTotal != null && env.chunkTotal! > 1) {
       final mid = env.mediaId!;
+      final progressKey = isGroup ? env.groupId! : senderHaloId;
       final slot = _mediaChunks.putIfAbsent(mid, () => <int, String>{});
       final slice = (env.imageB64 ?? env.fileB64) ?? '';
       slot[env.chunkIndex ?? 0] = slice;
@@ -2515,7 +2516,8 @@ class AppState extends ChangeNotifier {
       }
       chunkBurn = _mediaBurn[mid] ?? chunkBurn;
       if (slot.length < env.chunkTotal!) {
-        // still waiting on more pieces - nothing to show yet.
+        // still waiting on more pieces - surface how far along we are.
+        incomingMediaUpdate(progressKey, slot.length, env.chunkTotal!);
         return;
       }
       // all pieces in: stitch them back in index order.
@@ -2525,6 +2527,7 @@ class AppState extends ChangeNotifier {
       }
       _mediaChunks.remove(mid);
       _mediaBurn.remove(mid);
+      incomingMediaDone(progressKey);
       // preview thumbnail: reassembled chunks patch onto the card of the
       // message with this uid, not a new media bubble. update + refresh, done.
       if (env.pvImg && env.msgUid != null) {

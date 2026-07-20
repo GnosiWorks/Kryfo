@@ -2038,6 +2038,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 target: _replyTo!,
                 onCancel: () => setState(() => _replyTo = null),
               ),
+            IncomingMediaBanner(chatKey: widget.groupId),
             _Composer(
               controller: _msgCtrl,
               sending: _sending,
@@ -3161,10 +3162,8 @@ class _GroupBubble extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (m.msgUid != null &&
-                              mediaSendProgress[m.msgUid] != null) ...[
-                            SendProgressLabel(
-                              notifier: mediaSendProgress[m.msgUid]!,
-                            ),
+                              (m.mediaPath != null || m.filePath != null)) ...[
+                            SendProgressLabel(msgUid: m.msgUid!),
                             const SizedBox(width: 6),
                           ],
                           SendPill(mode: _groupSendMode()),
