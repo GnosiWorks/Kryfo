@@ -27,13 +27,12 @@ upgrade.
 
 ## building
 
-the flutter app builds with the standard toolchain. the go engine
-(libhalo.so) has a reproducible build so anyone can confirm the binary in a
-release matches this source:
+see BUILDING.md for the full toolchain and steps. in short: build the go
+engine (`cd engine && ./build.sh`), then the flutter app (`cd mobile &&
+flutter build apk --release --target-platform android-arm64`).
 
-    cd repro && ./fill-checksums.sh && ./verify.sh path/to.apk
-
-see repro/README.md for detail.
+the go engine (libhalo.so) has a reproducible build so anyone can confirm the
+binary in a release matches this source; see repro/README.md.
 
 ## layout
 
