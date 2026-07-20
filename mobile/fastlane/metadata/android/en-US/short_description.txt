@@ -1,1 +1,1 @@
-Private messaging over Tor. No phone number, no servers, no metadata.
+private messages over tor. no phone number, no account, no metadata trail.

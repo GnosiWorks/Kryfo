@@ -1,52 +1,38 @@
-# F-Droid build recipe for Halo
-#
-# WHERE THIS GOES
-#   fdroiddata/metadata/<applicationId>.yml
-#   the FILENAME must be exactly your applicationId, e.g.
-#   metadata/com.halo.halo_app.yml — so this file gets renamed once the
-#   final app name / applicationId is decided.
-#
-# BEFORE SUBMITTING, replace every FILL_ME below.
+# f-droid build recipe.
+# goes in fdroiddata as metadata/<applicationId>.yml - rename this file once
+# the final applicationId is decided. replace every FILL_ME first.
 
 Categories:
   - Internet
   - Security
 License: GPL-3.0-or-later
 AuthorName: FILL_ME
-SourceCode: FILL_ME            # e.g. https://github.com/you/halo
-IssueTracker: FILL_ME          # e.g. https://github.com/you/halo/issues
-# Donate/Bitcoin are optional; the app's own screen already handles this.
-# Bitcoin: FILL_ME_xpub_derived_address
+SourceCode: FILL_ME
+IssueTracker: FILL_ME
 
 RepoType: git
-Repo: FILL_ME                  # e.g. https://github.com/you/halo.git
+Repo: FILL_ME
 
 Builds:
   - versionName: 0.1.0-alpha
     versionCode: 1
-    commit: FILL_ME            # a TAG, not a branch: e.g. v0.1.0-alpha
+    commit: FILL_ME            # a tag, not a branch
     subdir: mobile
 
-    # ── go toolchain, pinned to the version the binary was built with ──
-    # the sha256 is NOT guessed here: get it with
-    #   curl -sL https://go.dev/dl/go1.23.4.linux-amd64.tar.gz.sha256
-    # and paste the result over FILL_ME_GO_SHA256.
+    # go, pinned to the version the shipped binary was built with.
+    # sha256: curl -sL https://go.dev/dl/go1.23.4.linux-amd64.tar.gz.sha256
     sudo:
       - curl -sLo /tmp/go.tgz https://go.dev/dl/go1.23.4.linux-amd64.tar.gz
       - echo "FILL_ME_GO_SHA256  /tmp/go.tgz" | sha256sum -c -
       - tar -C /usr/local -xzf /tmp/go.tgz
       - rm -f /tmp/go.tgz
 
-    # ── flutter, pinned to the exact sdk used for the signed apk ──
-    # if 3.41.7 isn't in fdroiddata's flutter srclib yet, it has to be added
-    # there first (a small PR to srclibs/flutter.yml) — reproducibility means
-    # f-droid must build with the SAME sdk, not merely a compatible one.
+    # exact flutter sdk. if 3.41.7 is missing from the srclib it needs a
+    # small pr to fdroiddata srclibs/flutter.yml first.
     srclibs:
       - flutter@3.41.7
 
-    # ── build the go engine from source (no prebuilt .so is committed) ──
-    # build.sh discovers the ndk from ANDROID_NDK_HOME and writes jniLibs
-    # relative to itself, so it works unmodified on the buildserver.
+    # the engine builds from source; no prebuilt .so is committed.
     prebuild:
       - pushd ../engine
       - PATH=/usr/local/go/bin:$PATH ANDROID_NDK_HOME=$$NDK$$ ./build.sh
@@ -58,16 +44,10 @@ Builds:
       - $$flutter$$/bin/flutter build apk --release --target-platform android-arm64
 
     output: build/app/outputs/flutter-apk/app-release.apk
-
-    # the app ships arm64 only (the go engine targets arm64 + x86_64; there is
-    # no 32-bit build), so the apk is restricted to match.
     ndk: 28.2.13676358
 
-# ── reproducible builds ──
-# this is what makes f-droid distribute YOUR signed apk after verifying their
-# build matches it byte for byte. get the value with:
-#   apksigner verify --print-certs app-release.apk | grep -i 'SHA-256 digest'
-# use the CERTIFICATE digest, lowercase, no colons.
+# cert sha-256 of the release keystore, lowercase, no colons.
+# apksigner verify --print-certs app-release.apk
 AllowedAPKSigningKeys: FILL_ME_CERT_SHA256
 
 AutoUpdateMode: None
