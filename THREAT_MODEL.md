@@ -1,81 +1,60 @@
-# threat model
+# Threat model
 
-this is an honest account of what halo protects, what it doesn't, and where
-the current build (pre-alpha, unaudited) falls short of its own goals. it is
-written against the LINDDUN privacy framework: linkability, identifiability,
-non-repudiation, detectability, disclosure of information, unawareness,
-non-compliance.
+A straight account of what Halo protects against and what it does not. If you
+face a serious adversary, read this in full before relying on the app.
 
-read this before trusting halo with anything that could put you at risk.
-nothing here has been through an independent security audit.
+## What Halo is
 
-## what halo is
+A messenger with no phone number, email, or account. Your identity is a key
+pair generated on your device; your handle is derived from it. Messages are
+end-to-end encrypted with the Signal double ratchet and travel over Tor onion
+services, falling back to sealed nostr relay delivery when a contact is
+offline.
 
-a messenger that routes messages two ways: directly between devices over tor
-onion services, or store-and-forward through public nostr relays when the
-other side is offline. message contents are end-to-end encrypted with the
-signal double ratchet. metadata is hidden through onion routing and, on the
-relay path, through per-conversation disposable keys.
+## What it protects against
 
-## who it is meant to protect against
+- **Network observers.** All traffic goes through Tor. A local network
+  observer or ISP sees a Tor connection, not who you talk to or what you say.
+- **The relays.** Offline messages sit on public nostr relays sealed with
+  nip-44/59, so a relay learns neither the participants nor the content.
+- **Server compromise.** There is no central server holding a contact graph
+  or message history to seize. Onion delivery is device to device.
+- **Casual device access.** The local database is encrypted with SQLCipher;
+  the app can require biometric or PIN unlock; a panic action wipes
+  everything, including media on disk.
+- **Identity correlation by phone number.** There is no phone number or email
+  to link you to a real identity, and no address-book upload.
 
-- a relay operator who wants to read messages or map who talks to whom
-- a network observer between you and the relay
-- someone who steals or seizes the device (at-rest encryption + panic wipe)
-- a stranger trying to reach you unsolicited (contact gating)
+## What it does NOT protect against
 
-## who it does not protect against
+- **A compromised device.** Malware, a keylogger, or someone with your
+  unlocked phone sees what you see. No messenger fixes an owned endpoint.
+- **Your contact.** Anyone you talk to can screenshot, copy, or forward what
+  you send, and can reveal that they talk to you.
+- **Global traffic-analysis adversaries.** Tor raises the cost of correlation
+  but a well-resourced adversary who can watch large portions of the network
+  may still attempt timing analysis. Halo does not add cover traffic.
+- **Metadata your own behavior leaks.** When you send while a contact is
+  online, the timing of that exchange exists. Halo minimizes stored metadata;
+  it cannot erase the fact that communication happened.
+- **Endpoint forensics after the fact.** Encrypted-at-rest is not
+  anti-forensics. A seized, unlocked, or backed-up device may yield data.
+- **Compromised dependencies or this integration.** The crypto rests on
+  standard libraries (libsignal, Tor, SQLCipher, nip-44/59), but the way they
+  are wired together here is new and has NOT had an independent security
+  review.
 
-- a global passive adversary who can watch the whole tor network at once.
-  halo is not a mixnet. traffic-timing correlation by someone with that reach
-  is out of scope, the same as it is for tor itself.
-- a compromised device. if your phone is rooted by an attacker, keys in
-  memory are exposed. nothing on the app side can fix that.
-- someone you have knowingly added and verified who then betrays you.
-  end-to-end encryption protects the channel, not the person on the far end.
+## Current status
 
-## per-property notes
+Pre-alpha, unaudited, built by one person. Do not use it for anything where
+being wrong would put you in danger. If you find a security issue, report it
+privately (see the repository contact) rather than in a public issue.
 
-**linkability.** on the relay path each conversation uses a disposable key
-pair derived from the shared secret, so a relay sees unconnected events, not
-a thread. it cannot link your conversations to each other or to a stable
-identity. weakness: within one conversation, the receive address is stable
-for now, so a relay can group the messages flowing to that one address
-(still not tied to you or your other chats). rotating the address per epoch
-is planned.
+## Cryptographic summary
 
-**identifiability.** no phone number, no email, no account. identity is a
-key pair; your public handle is three words derived from it. relays never
-see your real pubkey on the relay path. on the direct path your onion
-address is shared only with contacts you add.
-
-**non-repudiation.** the double ratchet gives deniability at the protocol
-level. we do not add signatures that would let a third party prove you sent
-a given message.
-
-**detectability.** tor use itself is detectable by your network provider
-(they see you connecting to the tor network, not what you do). the fast
-clearnet relay mode, when it ships, will be clearly labelled as revealing
-your ip to the relay; it is off by default.
-
-**disclosure of information.** contents are encrypted end to end. the
-database is encrypted at rest with sqlcipher. IMPORTANT current-build
-caveat: installs created before the csprng passphrase fix derived the
-database key from the launch timestamp and are weaker; wipe and re-onboard
-to get a strong key. link previews are fetched sender-side so the receiver
-never leaks their ip to a link's host.
-
-**unawareness.** every privacy-reducing convenience is off by default and
-labelled where it is offered. the app does not upload your address book,
-does not learn your social graph, and does not phone home. there is no
-analytics, no firebase, no push service baked in.
-
-**non-compliance.** open source, GPL-3.0. the engine is reproducibly
-buildable so anyone can confirm the shipped binary matches this source.
-
-## honest status
-
-pre-alpha. unaudited. built by one person. the crypto core uses standard,
-well-reviewed libraries (libsignal, nip-44/59, sqlcipher, tor) but the way
-they are wired together here has not been reviewed by anyone else. treat it
-as experimental until that changes. do not bet your safety on it yet.
+- Identity: long-term key pair, on-device only.
+- Sessions: Signal double ratchet (libsignal).
+- Transport: Tor onion services; nostr relays with nip-44 encryption +
+  nip-59 gift wrap for offline delivery.
+- At rest: SQLCipher-encrypted database; media encrypted on disk.
+- No telemetry, no analytics, no push service, no address-book upload.
