@@ -1,63 +1,51 @@
-# Submitting Halo to F-Droid — checklist
+# submitting to f-droid
 
-## Order of operations
+## order
 
-1. **Decide the app name → applicationId.** It is permanent. It sets:
-   - `mobile/android/app/build.gradle.kts` → `applicationId` + `namespace`
-   - the metadata filename → `metadata/<applicationId>.yml`
-   - `fastlane/.../title.txt`
-   Do this BEFORE tagging a release.
+1. decide the app name and applicationId. it is permanent. it sets
+   mobile/android/app/build.gradle.kts (applicationId + namespace), the
+   metadata filename (metadata/<applicationId>.yml), and fastlane title.txt.
+   do this before tagging.
 
-2. **Tag the release.** F-Droid builds from a tag, never a branch:
-   ```
-   git tag -a v0.1.0-alpha -m "first release"
-   git push origin v0.1.0-alpha
-   ```
+2. tag the release. f-droid builds from a tag, not a branch:
 
-3. **Publish the repo.** It must be publicly cloneable (GitHub/GitLab/Codeberg).
-   Confirm `git clone <url>` works from a machine that has never seen it.
+       git tag -a v0.1.0-alpha -m "first release"
+       git push origin v0.1.0-alpha
 
-4. **Build the signed release APK from the tagged commit**, and record its
-   certificate digest:
-   ```
-   cd mobile/android && ./gradlew assembleRelease -Ptarget-platform=android-arm64
-   apksigner verify --print-certs ../build/app/outputs/flutter-apk/app-release.apk
-   ```
-   Take the **certificate SHA-256**, lowercase, colons removed →
-   `AllowedAPKSigningKeys`.
+3. publish the repo. it must clone cleanly from a machine that has never
+   seen it.
 
-5. **Fill in every FILL_ME in halo.yml**, rename it to
-   `<applicationId>.yml`, and open a merge request against
-   https://gitlab.com/fdroid/fdroiddata
+4. build the signed release apk from the tagged commit and record the cert
+   digest:
 
-## Known risks, honestly
+       cd mobile/android && ./gradlew assembleRelease -Ptarget-platform=android-arm64
+       apksigner verify --print-certs ../build/app/outputs/flutter-apk/app-release.apk
 
-- **Flutter SDK pin.** Reproducible builds require F-Droid to use the *exact*
-  Flutter 3.41.7. If their `flutter` srclib doesn't carry that version, it must
-  be added there first. This is the single most likely thing to stall the MR.
+   take the certificate sha-256, lowercase, colons removed. that goes in
+   AllowedAPKSigningKeys.
 
-- **Full-APK reproducibility is unproven.** `repro/` currently reproduces
-  `libhalo.so` only. The Dart/Flutter half (gradle, R8/dexing, asset ordering,
-  zip timestamps) has not been verified to produce byte-identical output yet.
-  If F-Droid's build doesn't match your APK, the fallback is to drop
-  `AllowedAPKSigningKeys` and let F-Droid sign it instead — that still gets the
-  app published, just without the verified-binary claim.
+5. fill every FILL_ME in halo.yml, rename it to <applicationId>.yml, open a
+   merge request against https://gitlab.com/fdroid/fdroiddata
 
-- **NDK availability.** The recipe asks for 28.2.13676358 (r28c). If the
-  buildserver lacks it, either add a `sudo` step to install it via sdkmanager
-  or move to an NDK version they already provide (and re-pin `repro/` to match,
-  or reproducibility breaks again).
+## what can go wrong
 
-- **`flutter pub get --offline`** assumes the vendored `third_party/` packages
-  resolve without network. If the buildserver disallows any fetch and something
-  still reaches out, drop `--offline` — F-Droid permits pub.dev fetches.
+- the flutter srclib may not carry 3.41.7 yet. reproducible builds need the
+  exact sdk, so it may need adding there first. most likely stall.
+- full-apk reproducibility is unproven. repro/ covers libhalo.so; the
+  dart/gradle/r8 half has not been verified byte for byte. if f-droid's
+  build does not match, drop AllowedAPKSigningKeys and let them sign. still
+  publishes, loses the verified-binary claim.
+- the buildserver may lack ndk 28.2.13676358. either add a sudo step to
+  install it or move to one they ship, and re-pin repro/ to match.
+- flutter pub get --offline assumes the vendored third_party packages
+  resolve without network. if not, drop --offline. f-droid allows pub.dev.
 
-## What's already handled
+## already handled
 
-- No prebuilt binaries in the repo (verified: no .so/.jar/.aar/.zip/.dex)
-- No proprietary dependencies (MLKit scanner replaced with FOSS zxing-cpp)
-- No analytics, telemetry, or tracking of any kind
-- All fonts ship their OFL licenses
-- SPDX headers across Dart and Go sources
-- Fastlane metadata (title, descriptions, changelog) in place
-- Engine builds from source with a portable, path-discovering script
+- no prebuilt binaries in the repo (no .so/.jar/.aar/.zip/.dex tracked)
+- no proprietary deps (mlkit scanner replaced with zxing-cpp)
+- no analytics or telemetry
+- fonts ship their ofl licenses
+- spdx headers on dart and go sources
+- fastlane metadata and screenshots in place
+- engine builds from source with a path-discovering build.sh

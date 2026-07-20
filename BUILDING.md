@@ -1,48 +1,37 @@
-# Building Halo
+# building
 
-Two parts build in sequence: the Go engine (produces `libhalo.so`), then the
-Flutter app that bundles it.
+two parts: the go engine (libhalo.so), then the flutter app that bundles it.
 
-## Toolchain
+## toolchain
 
-- Flutter 3.41.7 (stable), Dart 3.11.5
-- Go 1.23.4
-- Android NDK r28c (28.2.13676358)
-- Android SDK with platform-tools
+- flutter 3.41.7 stable (dart 3.11.5)
+- go 1.23.4
+- android ndk r28c (28.2.13676358)
 
-The exact Go and NDK versions matter for a reproducible build — see `repro/`.
+the exact go and ndk versions matter for the reproducible build, see repro/.
 
-## 1. Build the engine
+## engine
 
     cd engine
     ./build.sh
 
-`build.sh` finds the NDK from `ANDROID_NDK_HOME` (or `$ANDROID_HOME/ndk/`),
-builds `libhalo.so` for arm64 and x86_64, and writes them into the app's
-`jniLibs`. It is fully offline: dependencies are vendored under
-`engine/vendor/` and the Tor/OpenSSL C objects are cached in `engine/.gocache`,
-so only the first build pays the native compile.
+finds the ndk from ANDROID_NDK_HOME or $ANDROID_HOME/ndk, builds arm64 and
+x86_64, writes them into the app's jniLibs. fully offline: deps are vendored
+and the tor/openssl objects cache in engine/.gocache, so only the first build
+pays the native compile.
 
-## 2. Build the app
+## app
 
     cd mobile
     flutter pub get --offline
     flutter build apk --release --target-platform android-arm64
 
-The app ships arm64 only, matching the engine. A debug build for a connected
-device:
+arm64 only, matching the engine. debug build for a connected device:
 
     cd mobile/android
     ./gradlew --offline assembleDebug -Ptarget-platform=android-arm64
 
-## Reproducible build
+## signing
 
-The engine has a reproducible build so anyone can confirm the `libhalo.so` in
-a release matches this source. See `repro/README.md`. The toolchain there is
-pinned to the versions listed above.
-
-## Signing
-
-Release builds are signed with a keystore that is not in this repository
-(`key.properties` and `*.jks` are gitignored). Contributors build debug
-APKs, which are signed with the standard Android debug key automatically.
+release signing uses a keystore that is not in this repo (key.properties and
+*.jks are gitignored). debug builds sign with the standard debug key.
