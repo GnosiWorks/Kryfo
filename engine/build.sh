@@ -1,25 +1,52 @@
 #!/bin/bash
-# build-offline.sh - drop-in replacement for build.sh, fully offline after
-# make-engine-offline.sh has been run once.
-#   - -mod=vendor: use engine/vendor/, never the network
-#   - GOCACHE=engine/.gocache: reuse compiled tor/openssl C objects between
-#     builds so only the first build pays the ~700MB compile
-#   - GOPROXY=off: hard guarantee nothing reaches out
+# builds libhalo.so for android. fully offline: deps come from ./vendor and
+# the compiled tor/openssl objects are cached in ./.gocache, so only the
+# first build pays the c compile.
+#
+# paths are discovered, not hardcoded, so this works on a dev box and on
+# f-droid's build server alike:
+#   NDK   - ANDROID_NDK_HOME | ANDROID_NDK_ROOT | NDK_HOME | newest in $ANDROID_HOME/ndk
+#   JNI   - relative to this script, so any clone location works
 set -e
-NDK=$HOME/android-sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/linux-x86_64/bin
-JNI=$HOME/halo/mobile/android/app/src/main/jniLibs
 cd "$(dirname "$0")"
+ENGINE_DIR="$(pwd)"
 
-export GOFLAGS=-mod=vendor
+# ── locate the ndk ──
+NDK_ROOT="${ANDROID_NDK_HOME:-${ANDROID_NDK_ROOT:-${NDK_HOME:-}}}"
+if [ -z "$NDK_ROOT" ]; then
+  SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/android-sdk}}"
+  if [ -d "$SDK/ndk" ]; then
+    # highest version present
+    NDK_ROOT="$SDK/ndk/$(ls "$SDK/ndk" | sort -V | tail -1)"
+  fi
+fi
+if [ ! -d "$NDK_ROOT" ]; then
+  echo "error: android ndk not found."
+  echo "set ANDROID_NDK_HOME, or install the ndk under \$ANDROID_HOME/ndk/"
+  exit 1
+fi
+NDK="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
+[ -d "$NDK" ] || { echo "error: no linux-x86_64 toolchain in $NDK_ROOT"; exit 1; }
+
+# ── output dir, relative to this script ──
+JNI="${JNI_LIBS_DIR:-$ENGINE_DIR/../mobile/android/app/src/main/jniLibs}"
+mkdir -p "$JNI/arm64-v8a" "$JNI/x86_64"
+
+# ── offline, reproducible-ish flags ──
+export GOFLAGS="-mod=vendor -trimpath"
 export GOPROXY=off
-export GOCACHE="$(pwd)/.gocache"
+export GOCACHE="${GOCACHE:-$ENGINE_DIR/.gocache}"
+export CGO_ENABLED=1
+
+echo "ndk: $NDK_ROOT"
+echo "out: $JNI"
 
 echo "→ arm64 (phone)…"
-CC=$NDK/aarch64-linux-android27-clang CGO_ENABLED=1 GOOS=android GOARCH=arm64 \
+CC="$NDK/aarch64-linux-android27-clang" GOOS=android GOARCH=arm64 \
   go build -buildmode=c-shared -o "$JNI/arm64-v8a/libhalo.so" .
 
 echo "→ x86_64 (emulator)…"
-CC=$NDK/x86_64-linux-android24-clang CGO_ENABLED=1 GOOS=android GOARCH=amd64 \
+CC="$NDK/x86_64-linux-android24-clang" GOOS=android GOARCH=amd64 \
   go build -buildmode=c-shared -o "$JNI/x86_64/libhalo.so" .
 
 ls -la "$JNI"/*/libhalo.so
