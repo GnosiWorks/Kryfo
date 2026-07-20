@@ -31,10 +31,10 @@ void _bump() => mediaProgressTick.value++;
 // a sender dying mid-transfer would leave the banner up forever; sweep
 // entries that haven't seen a chunk in 2 minutes.
 void _ensureSweeper() {
-  _sweeper ??= Timer.periodic(const Duration(seconds: 30), (_) {
+  _sweeper ??= Timer.periodic(const Duration(seconds: 15), (_) {
     final now = DateTime.now().millisecondsSinceEpoch;
     final stale = _incomingTouch.entries
-        .where((e) => now - e.value > 120000)
+        .where((e) => now - e.value > 75000)
         .map((e) => e.key)
         .toList();
     if (stale.isEmpty) return;
@@ -90,7 +90,11 @@ class SendProgressLabel extends StatelessWidget {
           padding: const EdgeInsets.only(right: 6),
           child: Text(
             '${(v * 100).round()}%',
-            style: HaloType.mono(size: 9.5, color: HaloColors.text3),
+            style: HaloType.mono(
+              size: 10.5,
+              weight: FontWeight.w700,
+              color: HaloColors.amber,
+            ),
           ),
         );
       },
@@ -117,7 +121,9 @@ class IncomingMediaBanner extends StatelessWidget {
             decoration: BoxDecoration(
               color: HaloColors.surface,
               borderRadius: BorderRadius.circular(9),
-              border: Border.all(color: HaloColors.line),
+              border: Border.all(
+                color: HaloColors.amber.withValues(alpha: 0.35),
+              ),
             ),
             child: Row(
               children: [
@@ -134,7 +140,7 @@ class IncomingMediaBanner extends StatelessWidget {
                 const SizedBox(width: 9),
                 Text(
                   'receiving media \u00b7 ${(v * 100).round()}%',
-                  style: HaloType.mono(size: 10, color: HaloColors.text2),
+                  style: HaloType.mono(size: 10.5, color: HaloColors.amber),
                 ),
               ],
             ),
