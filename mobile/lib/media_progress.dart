@@ -23,6 +23,10 @@ final Map<String, double> mediaSendProgress = {};
 final Map<String, double> incomingMediaProgress = {};
 final Map<String, int> _incomingTouch = {};
 
+/// which chat an outgoing send belongs to (msgUid -> chatKey), so the
+/// banner can show sender-side progress too.
+final Map<String, String> _sendChat = {};
+
 final ValueNotifier<int> mediaProgressTick = ValueNotifier(0);
 Timer? _sweeper;
 
@@ -46,8 +50,9 @@ void _ensureSweeper() {
   });
 }
 
-void mediaProgressStart(String msgUid) {
+void mediaProgressStart(String msgUid, {String? chatKey}) {
   mediaSendProgress.putIfAbsent(msgUid, () => 0);
+  if (chatKey != null) _sendChat[msgUid] = chatKey;
   _bump();
 }
 
@@ -57,6 +62,7 @@ void mediaProgressUpdate(String msgUid, double v) {
 }
 
 void mediaProgressEnd(String msgUid) {
+  _sendChat.remove(msgUid);
   if (mediaSendProgress.remove(msgUid) != null) _bump();
 }
 
@@ -112,8 +118,18 @@ class IncomingMediaBanner extends StatelessWidget {
     return ValueListenableBuilder<int>(
       valueListenable: mediaProgressTick,
       builder: (_, __, ___) {
-        final v = incomingMediaProgress[chatKey];
+        // an outgoing send for this chat takes precedence: that's the
+        // one where the user can still ruin it by leaving.
+        double? outV;
+        for (final e in _sendChat.entries) {
+          if (e.value == chatKey) {
+            outV = mediaSendProgress[e.key];
+            if (outV != null) break;
+          }
+        }
+        final v = outV ?? incomingMediaProgress[chatKey];
         if (v == null) return const SizedBox.shrink();
+        final sending = outV != null;
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
           child: Container(
@@ -139,7 +155,9 @@ class IncomingMediaBanner extends StatelessWidget {
                 ),
                 const SizedBox(width: 9),
                 Text(
-                  'receiving media \u00b7 ${(v * 100).round()}%',
+                  sending
+                      ? 'sending \u00b7 ${(v * 100).round()}% \u00b7 keep the app open'
+                      : 'receiving media \u00b7 ${(v * 100).round()}%',
                   style: HaloType.mono(size: 10.5, color: HaloColors.amber),
                 ),
               ],

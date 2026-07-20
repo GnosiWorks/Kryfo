@@ -2382,7 +2382,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       chunks.add(b64.substring(i, math.min(i + chunkSize, b64.length)));
     }
     final total = chunks.length;
-    if (total > 3) mediaProgressStart(msgUid);
+    if (total > 3) mediaProgressStart(msgUid, chatKey: widget.peerHaloId);
     // stranger gate wants pow on every envelope. two grinds max: one for the
     // chunk-0 payload, one for the '' the rest carry.
     int? powCap;
