@@ -30,6 +30,7 @@ import '../message_envelope.dart'
         grindPow,
         powBits;
 import '../theme.dart';
+import '../media_progress.dart';
 import '../widgets/halo_avatar.dart';
 import '../main.dart'
     show
@@ -2381,6 +2382,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       chunks.add(b64.substring(i, math.min(i + chunkSize, b64.length)));
     }
     final total = chunks.length;
+    if (total > 3) mediaProgressStart(msgUid);
     // stranger gate wants pow on every envelope. two grinds max: one for the
     // chunk-0 payload, one for the '' the rest carry.
     int? powCap;
@@ -2449,11 +2451,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         debugPrint('MEDIA CHUNK $i/$total failed: $lastErr');
         return lastErr;
       }
+      mediaProgressUpdate(msgUid, (i + 1) / total);
     }
     return 'ok';
   }
 
   Future<void> _finishMediaSend(_Msg msg, String result) async {
+    if (msg.msgUid != null) mediaProgressEnd(msg.msgUid!);
     if (result == 'ok' && msg.msgUid != null) await db.markSent(msg.msgUid!);
     if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
       final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
@@ -5874,7 +5878,19 @@ class _Bubble extends StatelessWidget {
                 const SizedBox(height: 4),
                 Padding(
                   padding: const EdgeInsets.only(right: 4),
-                  child: SendPill(mode: _pmFrom(appState.sendMode)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (msg.msgUid != null &&
+                          mediaSendProgress[msg.msgUid] != null) ...[
+                        SendProgressLabel(
+                          notifier: mediaSendProgress[msg.msgUid]!,
+                        ),
+                        const SizedBox(width: 6),
+                      ],
+                      SendPill(mode: _pmFrom(appState.sendMode)),
+                    ],
+                  ),
                 ),
               ],
             ],

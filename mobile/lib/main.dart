@@ -21,6 +21,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'theme.dart';
+import 'media_progress.dart';
 import 'screens/home_screen.dart';
 import 'screens/new_group_screen.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -1537,7 +1538,12 @@ class HaloDb {
   // so the saved screen can show who it's from.
   Future<List<Map<String, Object?>>> savedMessages() async {
     final db = await open();
-    return db.query('messages', where: 'saved = 1', orderBy: 'sent_at DESC');
+    return db.query(
+      'messages',
+      where: 'saved = 1',
+      orderBy: 'sent_at DESC',
+      limit: 500,
+    );
   }
 
   // kill the jpgs too, not just the rows. otherwise a burned photo is still
@@ -3776,6 +3782,7 @@ class AppState extends ChangeNotifier {
       );
     }
     final total = chunks.length;
+    if (total > 3) mediaProgressStart(msgUid);
     final members = await db.getGroupMembers(groupId);
     final adminId = await db.groupAdminId(groupId);
     final amAdmin = adminId == myId;
@@ -3821,6 +3828,7 @@ class AppState extends ChangeNotifier {
     for (var i = 0; i < total; i++) {
       final chunkOk = await sendChunk(i);
       if (!chunkOk) return 'error: chunk $i undeliverable';
+      mediaProgressUpdate(msgUid, (i + 1) / total);
       if (total > 1 && i < total - 1) {
         await Future.delayed(const Duration(milliseconds: 150));
       }

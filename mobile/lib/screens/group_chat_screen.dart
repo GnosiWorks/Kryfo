@@ -37,6 +37,7 @@ import '../main.dart'
         torGetOnIsolate,
         torGetB64OnIsolate;
 import '../theme.dart';
+import '../media_progress.dart';
 import '../widgets/halo_avatar.dart';
 import '../widgets/burn_fade.dart';
 import 'group_info_screen.dart';
@@ -991,6 +992,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   Future<void> _finishGroupMediaSend(_GMsg m, String result) async {
+    if (m.msgUid != null) mediaProgressEnd(m.msgUid!);
     final ok = result == 'ok';
     final uid = m.msgUid;
     if (ok && uid != null) await db.markSent(uid);
@@ -3155,7 +3157,19 @@ class _GroupBubble extends StatelessWidget {
                     const SizedBox(height: 4),
                     Padding(
                       padding: const EdgeInsets.only(right: 4),
-                      child: SendPill(mode: _groupSendMode()),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (m.msgUid != null &&
+                              mediaSendProgress[m.msgUid] != null) ...[
+                            SendProgressLabel(
+                              notifier: mediaSendProgress[m.msgUid]!,
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          SendPill(mode: _groupSendMode()),
+                        ],
+                      ),
                     ),
                   ],
                 ],
