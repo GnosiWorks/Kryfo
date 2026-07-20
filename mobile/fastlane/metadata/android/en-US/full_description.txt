@@ -1,17 +1,34 @@
-Halo is a private messenger built so there is almost nothing to collect.
+Halo is a private messenger built for people who don't want to be counted,
+profiled, or looked up.
 
-No account, no phone number, no email. Your identity is three words, derived from a key that never leaves your phone. There is no central server holding your messages or your contact list.
+There is no phone number, no email, no account. You are a random ID and a
+key pair, generated on your device. Nobody — including us — can search for
+you, list you, or connect your conversations to a real identity.
 
-Messages are end-to-end encrypted and routed through Tor, so neither the network nor anyone watching the relays can see who you talk to. When the other person is offline, messages wait in an encrypted mailbox until they return.
+Every message travels through Tor. Content is end-to-end encrypted with the
+Signal protocol, and the transport is designed so the network itself learns
+as little as possible: no central server holds your contact graph, delivery
+falls back across relays and onion routes, and there is no address book
+upload, ever.
 
-What you get:
-- anonymous identity, no sign-up
-- end-to-end encryption (Double Ratchet)
-- Tor onion routing by default
-- encrypted local storage
-- disappearing messages, message verification, panic wipe
-- no read receipts, no typing indicators, no analytics, no trackers
+FEATURES
 
-Halo is pre-alpha and has not been independently audited. The cryptography is real but no outside expert has reviewed it yet, so treat it as a work in progress, not a tool to rely on for anything that matters.
+* No phone number or email to sign up
+* End-to-end encryption (Signal protocol) with self-healing sessions
+* All traffic routed through an embedded Tor client
+* Direct onion delivery, with relay fallback when a peer is offline
+* Group chats with photos, files, voice messages, replies, reactions and pins
+* Ghost mode: messages that burn after a set time
+* Link previews fetched by the sender, so the receiver never touches the origin
+* Encrypted local database and encrypted backups
+* App lock with biometrics or PIN
+* Panic wipe that removes everything, including media on disk
+* No analytics, no crash reporting, no telemetry of any kind
+* No ads, no investors, nothing to sell
 
-Open source. The code is public so anyone can check these claims against what the app actually does.
+FUNDING
+
+Halo takes no venture money and shows no ads. It is funded entirely by the
+people who use it. Backing is optional, anonymous, and never required —
+every feature works the same whether you give anything or not. Privacy is
+not behind a paywall.

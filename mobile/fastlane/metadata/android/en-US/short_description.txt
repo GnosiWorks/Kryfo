@@ -1,1 +1,1 @@
-Private messenger. No phone number, no servers, routed through Tor.
+Private messaging over Tor. No phone number, no servers, no metadata.
