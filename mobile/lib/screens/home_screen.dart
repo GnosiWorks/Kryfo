@@ -1513,26 +1513,48 @@ class _NavTabs extends StatelessWidget {
         border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),
       ),
       padding: const EdgeInsets.fromLTRB(0, 10, 0, 14),
+      // every tab gets the SAME padding and an equal share of the row.
+      // before, only Support/Me were padded, so the gaps were visibly
+      // uneven. 'Drop' is gone - it had no handler and did nothing.
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _Tab(label: 'Chats', active: active == 'chats'),
-          _Tab(label: 'Drop', active: active == 'drop'),
-          GestureDetector(
-            onTap: onSupportTap,
-            behavior: HitTestBehavior.opaque,
+          Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              child: _Tab(label: 'Support', active: active == 'support'),
+              child: Center(
+                child: _Tab(label: 'Chats', active: active == 'chats'),
+              ),
             ),
           ),
-          GestureDetector(
-            onLongPress: onDevLongPress,
-            onTap: onMeTap,
-            behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              child: _Tab(label: 'Me', active: active == 'me'),
+          Expanded(
+            child: GestureDetector(
+              onTap: onSupportTap,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
+                child: Center(
+                  child: _Tab(label: 'Support', active: active == 'support'),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onLongPress: onDevLongPress,
+              onTap: onMeTap,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
+                child: Center(
+                  child: _Tab(label: 'Me', active: active == 'me'),
+                ),
+              ),
             ),
           ),
         ],
