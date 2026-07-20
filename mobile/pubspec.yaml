@@ -55,6 +55,7 @@ dependencies:
   connectivity_plus: ^7.1.1
   app_links: ^7.0.0
   crypto: ^3.0.7
+  ed25519_edwards: ^0.3.1
   local_auth: ^3.0.1
   share_plus: ^12.0.2
   flutter_zxing:

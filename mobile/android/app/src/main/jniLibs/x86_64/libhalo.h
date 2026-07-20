@@ -144,6 +144,17 @@ extern char* HaloNtfyPing(char* cEndpoint);
 //
 extern char* HaloTorGet(char* cUrl);
 
+// POST json over tor, returning the response body. used for the badge
+// service (creating a donation invoice) so the donor's ip never touches
+// anything. any non-2xx comes back as "error: ..." for the caller to skip.
+//
+extern char* HaloTorPost(char* cUrl, char* cBody);
+
+// GET over tor that keeps the body for ANY 2xx - the badge service answers
+// 202 while a payment is still pending, which HaloTorGet would reject.
+//
+extern char* HaloTorGetJSON(char* cUrl);
+
 // like HaloTorGet but returns the body base64-encoded, for binary content
 // (link-preview images). fetched over tor so the receiver never loads the
 // image from the origin and leaks their ip. capped larger than html.

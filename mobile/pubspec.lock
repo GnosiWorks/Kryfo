@@ -237,7 +237,7 @@ packages:
     source: hosted
     version: "7.0.3"
   ed25519_edwards:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: ed25519_edwards
       sha256: "6ce0112d131327ec6d42beede1e5dfd526069b18ad45dcf654f15074ad9276cd"

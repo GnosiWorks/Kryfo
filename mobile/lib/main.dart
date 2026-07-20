@@ -80,6 +80,8 @@ class HaloEngine {
   late final CStrFnDart _nostrPoll;
   late final OneArgFnDart _ntfyPing;
   late final OneArgFnDart _torGet;
+  late final OneArgFnDart _torGetJson;
+  late final TwoArgFnDart _torPost;
   late final OneArgFnDart _torGetB64;
   late final OneArgFnDart _idFromEdPub;
   late final TwoArgFnDart _encryptBackup;
@@ -122,6 +124,8 @@ class HaloEngine {
     _nostrPoll = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloNostrPoll');
     _ntfyPing = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNtfyPing');
     _torGet = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGet');
+    _torGetJson = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetJSON');
+    _torPost = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloTorPost');
     _torGetB64 = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetB64');
     _idFromEdPub = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
       'HaloIdFromEdPub',
@@ -235,6 +239,29 @@ class HaloEngine {
 
   // fetch a url's html over tor (for sender-side link previews). slow + can
   // fail - caller treats anything starting 'error:' as no-preview.
+  // POST json over tor (badge invoices). keeps 2xx bodies, unlike torGet.
+  String torPost(String url, String body) {
+    final u = url.toNativeUtf8();
+    final b = body.toNativeUtf8();
+    try {
+      return _torPost(u, b).toDartString();
+    } finally {
+      calloc.free(u);
+      calloc.free(b);
+    }
+  }
+
+  // GET over tor that accepts any 2xx - the badge service replies 202 while
+  // a donation is still unconfirmed.
+  String torGetJson(String url) {
+    final ptr = url.toNativeUtf8();
+    try {
+      return _torGetJson(ptr).toDartString();
+    } finally {
+      calloc.free(ptr);
+    }
+  }
+
   String torGet(String url) {
     final ptr = url.toNativeUtf8();
     try {

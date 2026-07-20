@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// donate screen. badge hero + tiers + custom amount + crypto addresses + card stub.
+// backing screen. badge hero + tiers + custom amount + crypto addresses + card stub.
 // real wallets in _addrs. payments are off-device; this shows where to send.
 // badge unlock is honor-system until btcpay watches the chain (needs the vps).
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../supporter.dart';
+import '../badge_client.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/motion.dart' show haloRoute;
 
@@ -22,14 +25,23 @@ class _Coin {
   const _Coin(this.key, this.name, this.sym, this.note, this.tint);
 }
 
+// only bitcoin can unlock a badge: it's the chain we verify ourselves with
+// our own node. checking the others would mean asking a third-party api and
+// leaking the payer's ip - not worth it for a cosmetic badge.
 const _coins = [
-  _Coin('btc', 'Bitcoin', '\u20BF', '', Color(0xFFF7931A)),
-  _Coin('xmr', 'Monero', '\u0271', 'most private', Color(0xFFFF6600)),
-  _Coin('sol', 'Solana', '\u25CE', '', Color(0xFF9945FF)),
-  _Coin('eth', 'Ethereum', '\u039E', '', Color(0xFF8AA0F0)),
+  _Coin('btc', 'Bitcoin', '\u20BF', 'badge unlocks', Color(0xFFF7931A)),
+  _Coin('xmr', 'Monero', '\u0271', 'manual \u00B7 no badge', Color(0xFFFF6600)),
+  _Coin('sol', 'Solana', '\u25CE', 'manual \u00B7 no badge', Color(0xFF9945FF)),
+  _Coin(
+    'eth',
+    'Ethereum',
+    '\u039E',
+    'manual \u00B7 no badge',
+    Color(0xFF8AA0F0),
+  ),
 ];
 
-// real donation wallets. verified against wallet screenshots.
+// real backing wallets. verified against wallet screenshots.
 const _addrs = {
   'btc': 'bc1qdewmhrwkh8elts8ldehfq5qaj68ymexfnzkk7j',
   'xmr':
@@ -148,7 +160,7 @@ class _DonateScreenState extends State<DonateScreen> {
         ),
         const SizedBox(height: 6),
         Text(
-          'no ads, no investors, nothing to sell. it runs on what people give.',
+          'no ads, no investors, nothing to sell. it runs on what backers give.',
           textAlign: TextAlign.center,
           style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.5),
         ),
@@ -163,7 +175,7 @@ class _DonateScreenState extends State<DonateScreen> {
           child: Text.rich(
             TextSpan(
               children: [
-                const TextSpan(text: 'anonymous by default. badge opt-in.\n'),
+                const TextSpan(text: 'back it anonymously. badge opt-in.\n'),
                 TextSpan(
                   text: 'privacy is never behind a paywall.',
                   style: HaloType.mono(size: 11, color: HaloColors.amber),
@@ -403,27 +415,30 @@ class _DonateScreenState extends State<DonateScreen> {
     );
   }
 
-  // honor-system for now: tapping 'i've sent it' unlocks the tier.
-  // TODO: BTCPay webhook verification replaces this - only unlock when
-  // the server confirms the payment landed. see _confirmPaid seam below.
+  // BTC opens the live, verified invoice flow. the badge is granted only
+  // when a signed receipt checks out (inside _InvoiceScreen) - no more
+  // trusting the tap. the static-address fallback lives in there too, so a
+  // donor whose tor can't reach the service can still pay manually.
   Future<void> _onSentIt() async {
     final tier = _tierFor(_amount);
-    if (tier == SupporterTier.none) {
+    final tierKey = tier == SupporterTier.none ? 'supporter' : tierName(tier);
+    // non-btc chains have no verification path, so they keep the plain
+    // thank-you rather than pretending to watch for a payment.
+    if (_coin != 'btc') {
       Navigator.of(
         context,
       ).push(haloRoute(const _ThankYouScreen(tier: SupporterTier.none)));
       return;
     }
-    await _confirmPaid(tier);
-    if (!mounted) return;
-    Navigator.of(context).push(haloRoute(_ThankYouScreen(tier: tier)));
-  }
-
-  // the one seam BTCPay plugs into. today it just trusts the tap and
-  // writes the tier locally. later: verify a signed receipt from the
-  // payment webhook before calling saveSupporterTier.
-  Future<void> _confirmPaid(SupporterTier tier) async {
-    await saveSupporterTier(tier);
+    Navigator.of(context).push(
+      haloRoute(
+        _InvoiceScreen(
+          tier: tier,
+          tierKey: tierKey,
+          fallbackAddress: _addrs['btc'] ?? '',
+        ),
+      ),
+    );
   }
 
   Widget _addressBox() {
@@ -512,6 +527,24 @@ class _DonateScreenState extends State<DonateScreen> {
             ),
           ),
           const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+            decoration: BoxDecoration(
+              color: HaloColors.ink,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: HaloColors.line),
+            ),
+            child: Text(
+              _coin == 'btc'
+                  ? 'bitcoin is verified by our own node, so your badge '
+                        'unlocks by itself once the payment lands.'
+                  : "we can't verify this chain without asking an outside "
+                        'service about you, so we don\'t. send it manually if '
+                        'you like \u2014 it just won\'t unlock a badge.',
+              style: HaloType.mono(size: 9.5, color: HaloColors.text3),
+            ),
+          ),
+          const SizedBox(height: 10),
           GestureDetector(
             onTap: _onSentIt,
             child: Container(
@@ -522,7 +555,9 @@ class _DonateScreenState extends State<DonateScreen> {
                 border: Border.all(color: HaloColors.amber, width: 1),
               ),
               child: Text(
-                "i've sent it  \u2192",
+                _coin == 'btc'
+                    ? 'pay with bitcoin  \u2192'
+                    : "i've sent it  \u2192",
                 style: HaloType.sans(
                   size: 13,
                   weight: FontWeight.w600,
@@ -646,6 +681,686 @@ class _DonateScreenState extends State<DonateScreen> {
 
 // the thank-you moment after someone gives. glowing badge, warm line,
 // then the choice: wear the badge or stay quiet about it.
+
+// ─────────────────────── live bitcoin invoice flow ───────────────────────
+
+enum _Phase { loading, unreachable, invoice, confirmed, expired }
+
+class _InvoiceScreen extends StatefulWidget {
+  final SupporterTier tier;
+  final String tierKey;
+  final String fallbackAddress;
+  const _InvoiceScreen({
+    required this.tier,
+    required this.tierKey,
+    required this.fallbackAddress,
+  });
+  @override
+  State<_InvoiceScreen> createState() => _InvoiceScreenState();
+}
+
+class _InvoiceScreenState extends State<_InvoiceScreen>
+    with TickerProviderStateMixin {
+  _Phase _phase = _Phase.loading;
+  BadgeInvoice? _inv;
+  Timer? _poll;
+  late final AnimationController _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      duration: const Duration(milliseconds: 1600),
+      vsync: this,
+    )..repeat(reverse: true);
+    _start();
+  }
+
+  @override
+  void dispose() {
+    _poll?.cancel();
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  Future<void> _start() async {
+    setState(() => _phase = _Phase.loading);
+    final inv = await createInvoice(widget.tierKey);
+    if (!mounted) return;
+    if (inv == null) {
+      // tor or the badge service is unreachable - fall back to the static
+      // address so a donation is still possible (no badge auto-grant then).
+      setState(() => _phase = _Phase.unreachable);
+      return;
+    }
+    setState(() {
+      _inv = inv;
+      _phase = _Phase.invoice;
+    });
+    _poll = Timer.periodic(const Duration(seconds: 6), (_) => _check());
+    _check();
+  }
+
+  Future<void> _check() async {
+    final inv = _inv;
+    if (inv == null) return;
+    final r = await fetchReceipt(inv.id);
+    if (!mounted) return;
+    switch (r.state) {
+      case ReceiptState.paid:
+        _poll?.cancel();
+        // signature already verified inside fetchReceipt. grant the tier.
+        if (widget.tier != SupporterTier.none) {
+          await saveSupporterTier(widget.tier);
+        }
+        if (!mounted) return;
+        setState(() => _phase = _Phase.confirmed);
+        break;
+      case ReceiptState.expired:
+        _poll?.cancel();
+        setState(() => _phase = _Phase.expired);
+        break;
+      default:
+        break; // pending - keep polling
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: HaloColors.ink,
+      appBar: AppBar(
+        backgroundColor: HaloColors.ink,
+        elevation: 0,
+        iconTheme: IconThemeData(color: HaloColors.text2),
+        title: Text(
+          'bitcoin',
+          style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
+        ),
+      ),
+      body: SafeArea(
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 320),
+          switchInCurve: Curves.easeOut,
+          switchOutCurve: Curves.easeIn,
+          transitionBuilder: (child, anim) => FadeTransition(
+            opacity: anim,
+            child: SlideTransition(
+              position: Tween(
+                begin: const Offset(0, 0.02),
+                end: Offset.zero,
+              ).animate(anim),
+              child: child,
+            ),
+          ),
+          child: _body(),
+        ),
+      ),
+    );
+  }
+
+  Widget _body() {
+    switch (_phase) {
+      case _Phase.loading:
+        return _loadingView();
+      case _Phase.unreachable:
+        return _unreachableView();
+      case _Phase.invoice:
+        return _invoiceView();
+      case _Phase.confirmed:
+        return _ConfirmedView(tier: widget.tier);
+      case _Phase.expired:
+        return _expiredView();
+    }
+  }
+
+  // ── loading ──
+  Widget _loadingView() {
+    return Center(
+      key: const ValueKey('load'),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedBuilder(
+            animation: _pulse,
+            builder: (_, __) => Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(3, (i) {
+                final t = (_pulse.value + i * 0.25) % 1.0;
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  width: 9,
+                  height: 9,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: HaloColors.amber.withValues(alpha: 0.3 + t * 0.6),
+                  ),
+                );
+              }),
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            'reaching the payment service over tor…',
+            style: HaloType.mono(size: 11, color: HaloColors.text3),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── unreachable → static fallback ──
+  Widget _unreachableView() {
+    final addr = widget.fallbackAddress;
+    return SingleChildScrollView(
+      key: const ValueKey('unreach'),
+      padding: const EdgeInsets.fromLTRB(22, 16, 22, 40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: HaloColors.surface,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: HaloColors.line),
+            ),
+            child: Text(
+              "couldn't reach the payment service over tor right now. you can "
+              "still donate to the address below — your badge just won't unlock "
+              "automatically. try again later for the badge.",
+              style: HaloType.sans(
+                size: 12.5,
+                color: HaloColors.text2,
+                height: 1.5,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (addr.isNotEmpty) _StaticAddress(address: addr),
+          const SizedBox(height: 14),
+          _ghostButton('try again', _start),
+        ],
+      ),
+    );
+  }
+
+  // ── live invoice ──
+  Widget _invoiceView() {
+    final inv = _inv!;
+    return SingleChildScrollView(
+      key: const ValueKey('inv'),
+      padding: const EdgeInsets.fromLTRB(22, 10, 22, 40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Text(
+              '${inv.btc} BTC',
+              style: HaloType.serif(size: 26, color: HaloColors.text),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Center(
+            child: Text(
+              'send exactly this amount',
+              style: HaloType.mono(size: 10, color: HaloColors.text3),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Center(
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: QrImageView(
+                data: inv.uri,
+                version: QrVersions.auto,
+                size: 190,
+                backgroundColor: Colors.white,
+                eyeStyle: const QrEyeStyle(
+                  eyeShape: QrEyeShape.square,
+                  color: Color(0xFF0D0B09),
+                ),
+                dataModuleStyle: const QrDataModuleStyle(
+                  dataModuleShape: QrDataModuleShape.square,
+                  color: Color(0xFF0D0B09),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          _copyRow('address', inv.address),
+          const SizedBox(height: 14),
+          _watchingPill(),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _fillButton('open wallet', () async {
+                  final uri = Uri.parse(inv.uri);
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                }),
+              ),
+              const SizedBox(width: 10),
+              Expanded(child: _ghostButton('copy', () => _copy(inv.address))),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Center(
+            child: Text(
+              'this screen updates itself the moment your payment is seen.\n'
+              'keep it open — nothing is stored, nothing identifies you.',
+              textAlign: TextAlign.center,
+              style: HaloType.mono(size: 9.5, color: HaloColors.text3),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _watchingPill() {
+    return AnimatedBuilder(
+      animation: _pulse,
+      builder: (_, __) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 14),
+        decoration: BoxDecoration(
+          color: HaloColors.surface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: HaloColors.line),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: HaloColors.amber.withValues(
+                  alpha: 0.35 + _pulse.value * 0.55,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'watching the chain for your payment',
+              style: HaloType.mono(size: 11, color: HaloColors.text2),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── expired ──
+  Widget _expiredView() {
+    return Center(
+      key: const ValueKey('exp'),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'this invoice expired',
+              style: HaloType.serif(size: 22, color: HaloColors.text),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'no worries — bitcoin invoices time out for your privacy. '
+              'start a fresh one whenever you like.',
+              textAlign: TextAlign.center,
+              style: HaloType.sans(
+                size: 13,
+                color: HaloColors.text2,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            _fillButton('new invoice', _start),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── shared bits ──
+  Widget _copyRow(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: HaloColors.surface2,
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(color: HaloColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(label, style: HaloType.mono(size: 10, color: HaloColors.text3)),
+          const SizedBox(height: 6),
+          Text(value, style: HaloType.mono(size: 11, color: HaloColors.amber)),
+        ],
+      ),
+    );
+  }
+
+  void _copy(String v) {
+    Clipboard.setData(ClipboardData(text: v));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'copied',
+          style: HaloType.sans(size: 13, color: const Color(0xFF1A0F04)),
+        ),
+        backgroundColor: HaloColors.amber,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Widget _fillButton(String label, VoidCallback onTap) {
+    return PressScale(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 13),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: HaloColors.amber,
+          borderRadius: BorderRadius.circular(9),
+        ),
+        child: Text(
+          label,
+          style: HaloType.sans(
+            size: 13,
+            weight: FontWeight.w600,
+            color: const Color(0xFF1A0F04),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _ghostButton(String label, VoidCallback onTap) {
+    return PressScale(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 13),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(9),
+          border: Border.all(color: HaloColors.amber),
+        ),
+        child: Text(
+          label,
+          style: HaloType.sans(
+            size: 13,
+            weight: FontWeight.w600,
+            color: HaloColors.amber,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// static copy-address block reused by the unreachable fallback.
+class _StaticAddress extends StatelessWidget {
+  final String address;
+  const _StaticAddress({required this.address});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: HaloColors.surface2,
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(color: HaloColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: QrImageView(
+                data: address,
+                version: QrVersions.auto,
+                size: 168,
+                backgroundColor: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            address,
+            style: HaloType.mono(size: 11, color: HaloColors.amber),
+          ),
+          const SizedBox(height: 10),
+          PressScale(
+            onTap: () {
+              Clipboard.setData(ClipboardData(text: address));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'address copied',
+                    style: HaloType.sans(
+                      size: 13,
+                      color: const Color(0xFF1A0F04),
+                    ),
+                  ),
+                  backgroundColor: HaloColors.amber,
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 11),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: HaloColors.amber,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'copy address',
+                style: HaloType.mono(size: 12, color: const Color(0xFF1A0F04)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// confirmed: animated check that draws itself, then rolls into badge opt-in.
+class _ConfirmedView extends StatefulWidget {
+  final SupporterTier tier;
+  const _ConfirmedView({required this.tier});
+  @override
+  State<_ConfirmedView> createState() => _ConfirmedViewState();
+}
+
+class _ConfirmedViewState extends State<_ConfirmedView>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c;
+  bool _showBadge = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _c = AnimationController(
+      duration: const Duration(milliseconds: 900),
+      vsync: this,
+    )..forward();
+    _c.addStatusListener((s) {
+      if (s == AnimationStatus.completed && mounted) {
+        setState(() => _showBadge = true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  Future<void> _choose(bool show) async {
+    if (show) await saveShowBadgeSelf(true);
+    if (!mounted) return;
+    Navigator.of(context).popUntil((r) => r.isFirst);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = widget.tier;
+    return Center(
+      key: const ValueKey('ok'),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 96,
+              height: 96,
+              child: AnimatedBuilder(
+                animation: _c,
+                builder: (_, __) => CustomPaint(
+                  painter: _CheckPainter(_c.value, HaloColors.amber),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'payment confirmed',
+              textAlign: TextAlign.center,
+              style: HaloType.serif(size: 24, color: HaloColors.text),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              t == SupporterTier.none
+                  ? 'thank you for keeping halo independent.'
+                  : "verified on-chain — you're a ${tierName(t)} now. "
+                        'no one can take that off you.',
+              textAlign: TextAlign.center,
+              style: HaloType.sans(
+                size: 13.5,
+                color: HaloColors.text2,
+                height: 1.55,
+              ),
+            ),
+            const SizedBox(height: 32),
+            AnimatedOpacity(
+              opacity: _showBadge ? 1 : 0,
+              duration: const Duration(milliseconds: 400),
+              child: t == SupporterTier.none
+                  ? _fill('done', () => _choose(false))
+                  : Column(
+                      children: [
+                        _fill('wear my badge', () => _choose(true)),
+                        const SizedBox(height: 10),
+                        PressScale(
+                          onTap: () => _choose(false),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            alignment: Alignment.center,
+                            child: Text(
+                              'just glad to help',
+                              style: HaloType.sans(
+                                size: 14,
+                                color: HaloColors.text2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _fill(String label, VoidCallback onTap) {
+    return PressScale(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: HaloColors.amber,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          label,
+          style: HaloType.sans(
+            size: 14,
+            weight: FontWeight.w600,
+            color: const Color(0xFF1A0F04),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// a checkmark that draws its circle then its tick as t goes 0..1.
+class _CheckPainter extends CustomPainter {
+  final double t;
+  final Color color;
+  _CheckPainter(this.t, this.color);
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 3;
+    final ring = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round
+      ..color = color;
+    final circleT = (t / 0.6).clamp(0.0, 1.0);
+    canvas.drawArc(
+      Rect.fromCircle(center: c, radius: r),
+      -1.5708,
+      6.2832 * circleT,
+      false,
+      ring,
+    );
+    if (t > 0.6) {
+      final tickT = ((t - 0.6) / 0.4).clamp(0.0, 1.0);
+      final p1 = Offset(size.width * 0.30, size.height * 0.52);
+      final p2 = Offset(size.width * 0.44, size.height * 0.66);
+      final p3 = Offset(size.width * 0.72, size.height * 0.36);
+      final path = Path()..moveTo(p1.dx, p1.dy);
+      if (tickT < 0.5) {
+        final k = tickT / 0.5;
+        path.lineTo(p1.dx + (p2.dx - p1.dx) * k, p1.dy + (p2.dy - p1.dy) * k);
+      } else {
+        path.lineTo(p2.dx, p2.dy);
+        final k = (tickT - 0.5) / 0.5;
+        path.lineTo(p2.dx + (p3.dx - p2.dx) * k, p2.dy + (p3.dy - p2.dy) * k);
+      }
+      canvas.drawPath(path, ring);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CheckPainter old) => old.t != t;
+}
+
 class _ThankYouScreen extends StatefulWidget {
   final SupporterTier tier;
   const _ThankYouScreen({required this.tier});
