@@ -70,14 +70,13 @@ Future<void> showMessageNotification({
     category: AndroidNotificationCategory.message,
     icon: 'ic_halo_notification',
     color: const Color(0xFFF59E0B),
-    // bundle all halo notifications visually
-    groupKey: 'com.halo.halo_app.messages',
     // show the full message body when expanded instead of truncating
     styleInformation: BigTextStyleInformation(body),
   );
-  // stable per-sender id: new messages from the same peer REPLACE the
-  // existing notification instead of stacking. positive 31-bit int.
-  final id = (payload ?? title).hashCode & 0x7fffffff;
+  // unique per message. a stable per-sender id meant the second message
+  // only UPDATED the first notification, and android never re-alerts for an
+  // update - so the badge moved but no banner ever appeared.
+  final id = DateTime.now().microsecondsSinceEpoch & 0x7fffffff;
   await notifPlugin.show(
     id: id,
     title: title,
