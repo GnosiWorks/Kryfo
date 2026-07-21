@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -15,6 +16,7 @@ import android.provider.Settings
 import android.view.WindowManager
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterFragmentActivity() {
@@ -22,6 +24,14 @@ class MainActivity : FlutterFragmentActivity() {
         private const val NOTIF_PERM_REQUEST = 1001
         private const val PERIODIC_JOB_ID = 2001
     }
+
+    // use the process-wide engine so it survives this screen going away
+    override fun provideFlutterEngine(context: Context): FlutterEngine? =
+        FlutterEngineCache.getInstance().get(HaloApplication.ENGINE_ID)
+            ?: super.provideFlutterEngine(context)
+
+    // never tear the engine down with the activity - that was the bug
+    override fun shouldDestroyEngineWithHost(): Boolean = false
 
     override fun onResume() {
         super.onResume()
@@ -78,10 +88,15 @@ class MainActivity : FlutterFragmentActivity() {
                     }
                     "setSecure" -> {
                         val on = call.argument<Boolean>("on") ?: false
-                        if (on) {
-                            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-                        } else {
-                            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                        // engine outlives the window now, so this can be
+                        // called with nothing attached
+                        try {
+                            if (on) {
+                                window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                            } else {
+                                window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                            }
+                        } catch (e: Exception) {
                         }
                         result.success(null)
                     }

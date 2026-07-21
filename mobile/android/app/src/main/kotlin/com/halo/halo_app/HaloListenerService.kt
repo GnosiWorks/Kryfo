@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
@@ -40,7 +41,18 @@ class HaloListenerService : Service() {
             .setContentIntent(pendingIntent)
             .setShowWhen(false)
             .build()
-        startForeground(NOTIFICATION_ID, notification)
+        // android 14+ refuses a typed foreground service unless the type
+        // is passed here too. without it the service dies on start and the
+        // process gets frozen again.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(
+                NOTIFICATION_ID,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            )
+        } else {
+            startForeground(NOTIFICATION_ID, notification)
+        }
         return START_STICKY
     }
 
