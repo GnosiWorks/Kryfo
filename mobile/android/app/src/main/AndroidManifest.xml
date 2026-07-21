@@ -11,7 +11,7 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <application
         android:label="Halo"
-        android:name="${applicationName}"
+        android:name=".HaloApplication"
         android:icon="@mipmap/launcher_icon">
         <activity
             android:name=".MainActivity"
