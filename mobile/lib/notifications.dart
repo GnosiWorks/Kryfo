@@ -27,6 +27,9 @@ Future<void> initNotifications({void Function(String? payload)? onTap}) async {
         AndroidFlutterLocalNotificationsPlugin
       >();
   await android?.createNotificationChannel(channel);
+  // android 13+ denies notifications until asked. without this the channel
+  // exists but nothing is ever delivered, silently.
+  await android?.requestNotificationsPermission();
 }
 
 const _hideContentKey = 'notif_hide_content';
