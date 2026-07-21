@@ -16,16 +16,23 @@ Future<void> initNotifications({void Function(String? payload)? onTap}) async {
     },
   );
 
-  const channel = AndroidNotificationChannel(
-    'halo_messages',
-    'halo messages',
-    description: 'new encrypted messages from your contacts',
-    importance: Importance.high,
-  );
   final android = notifPlugin
       .resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin
       >();
+  // android freezes a channel's importance at creation. the old
+  // 'halo_messages' channel was stuck below heads-up level, so bumping
+  // importance in code did nothing. drop it and make a fresh v2 channel that
+  // registers at max - that's the only way to get the banner back.
+  await android?.deleteNotificationChannel(channelId: 'halo_messages');
+  const channel = AndroidNotificationChannel(
+    'halo_messages_v2',
+    'messages',
+    description: 'new encrypted messages from your contacts',
+    importance: Importance.max,
+    playSound: true,
+    enableVibration: true,
+  );
   await android?.createNotificationChannel(channel);
   // android 13+ denies notifications until asked. without this the channel
   // exists but nothing is ever delivered, silently.
@@ -54,11 +61,13 @@ Future<void> showMessageNotification({
     body = 'new message';
   }
   final details = AndroidNotificationDetails(
-    'halo_messages',
-    'halo messages',
+    'halo_messages_v2',
+    'messages',
     channelDescription: 'new encrypted messages from your contacts',
-    importance: Importance.high,
+    importance: Importance.max,
     priority: Priority.high,
+    fullScreenIntent: false,
+    category: AndroidNotificationCategory.message,
     icon: 'ic_halo_notification',
     color: const Color(0xFFF59E0B),
     // bundle all halo notifications visually
