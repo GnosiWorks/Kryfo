@@ -3787,7 +3787,7 @@ class AppState extends ChangeNotifier {
       );
     }
     final total = chunks.length;
-    if (total > 3) mediaProgressStart(msgUid, chatKey: groupId);
+    if (total > 1) mediaProgressStart(msgUid, chatKey: groupId);
     final members = await db.getGroupMembers(groupId);
     final adminId = await db.groupAdminId(groupId);
     final amAdmin = adminId == myId;
