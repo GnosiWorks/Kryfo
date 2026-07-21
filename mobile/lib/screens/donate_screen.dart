@@ -770,9 +770,13 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
     switch (r.state) {
       case ReceiptState.paid:
         _poll?.cancel();
-        // signature already verified inside fetchReceipt. grant the tier.
+        // signature already verified inside fetchReceipt. grant the tier and
+        // keep the receipt so the badge stays provable without the network.
         if (widget.tier != SupporterTier.none) {
           await saveSupporterTier(widget.tier);
+          if (r.payload != null && r.sig != null) {
+            await saveBadgeReceipt(r.payload!, r.sig!);
+          }
         }
         if (!mounted) return;
         setState(() => _phase = _Phase.confirmed);
