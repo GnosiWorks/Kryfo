@@ -58,6 +58,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   final _msgCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
   final List<_GMsg> _messages = [];
+  bool _showScrollDown = false;
+  int _seenCount = 0;
   String _groupName = '';
   int _memberCount = 0;
   bool _isAdmin = false;
@@ -162,12 +164,110 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
   }
 
+  // jump to newest, same control as 1:1
+  Widget _scrollDownButton() {
+    final unread = _messages.length - _seenCount;
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 12,
+      child: IgnorePointer(
+        ignoring: !_showScrollDown,
+        child: AnimatedScale(
+          scale: _showScrollDown ? 1.0 : 0.6,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutBack,
+          child: AnimatedOpacity(
+            opacity: _showScrollDown ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 180),
+            child: Center(
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      setState(() => _seenCount = _messages.length);
+                      _scrollToEnd();
+                    },
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: HaloColors.surface2,
+                        border: Border.all(
+                          color: HaloColors.amber.withValues(alpha: 0.5),
+                          width: 0.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: HaloColors.amber.withValues(alpha: 0.18),
+                            blurRadius: 14,
+                            spreadRadius: -2,
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: HaloColors.amber,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                  if (unread > 0)
+                    Positioned(
+                      top: -3,
+                      right: -3,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 1,
+                        ),
+                        constraints: const BoxConstraints(minWidth: 17),
+                        decoration: BoxDecoration(
+                          color: HaloColors.amber,
+                          borderRadius: BorderRadius.circular(9),
+                          border: Border.all(
+                            color: HaloColors.surface,
+                            width: 1.5,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '$unread',
+                          style: HaloType.mono(
+                            size: 9,
+                            color: HaloColors.onAmber,
+                          ).copyWith(fontWeight: FontWeight.w700, height: 1.2),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _onGroupScroll() {
     if (!_scrollCtrl.hasClients) return;
+    // not reversed here, unlike 1:1 - the newest message lives at
+    // maxScrollExtent, so distance from the bottom is the gap to it.
+    final pos = _scrollCtrl.position;
+    final fromBottom = pos.maxScrollExtent - pos.pixels;
+    final show = fromBottom > 240;
+    if (!show) _seenCount = _messages.length;
+    if (show != _showScrollDown && mounted) {
+      setState(() => _showScrollDown = show);
+    }
     // the settle window also stops a stray pre-jump scroll event on open
     // from loading older and anchoring the view at the top.
     if (_suppressSticky) return;
-    if (_scrollCtrl.position.pixels < 400) _loadOlder();
+    if (pos.pixels < 400) _loadOlder();
   }
 
   Future<void> _loadOlder() async {
@@ -1882,6 +1982,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       children: [
                         if (_atmosphere != Atmo.none)
                           Positioned.fill(child: AtmosphereWash(_atmosphere)),
+                        _scrollDownButton(),
                         ListView.builder(
                           key: _listKey,
                           controller: _scrollCtrl,
