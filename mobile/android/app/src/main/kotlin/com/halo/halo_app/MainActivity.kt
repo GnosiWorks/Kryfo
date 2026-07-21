@@ -23,14 +23,20 @@ class MainActivity : FlutterFragmentActivity() {
     companion object {
         private const val NOTIF_PERM_REQUEST = 1001
         private const val PERIODIC_JOB_ID = 2001
+        // the one engine we keep across activity teardown
+        const val ENGINE_ID = "halo_engine"
     }
 
-    // use the process-wide engine so it survives this screen going away
-    override fun provideFlutterEngine(context: Context): FlutterEngine? =
-        FlutterEngineCache.getInstance().get(HaloApplication.ENGINE_ID)
-            ?: super.provideFlutterEngine(context)
+    // reuse the cached engine if we already have one. returning null on the
+    // very first launch is deliberate: the activity then builds an engine the
+    // normal way (attached to native properly), and configureFlutterEngine
+    // below puts it in the cache for next time. this is the hook a
+    // FlutterFragmentActivity actually honours.
+    override fun getCachedEngineId(): String? =
+        if (FlutterEngineCache.getInstance().contains(ENGINE_ID)) ENGINE_ID else null
 
-    // never tear the engine down with the activity - that was the bug
+    // keep the engine when this screen goes away, so the dart isolate and the
+    // nostr poll timer keep running in the background
     override fun shouldDestroyEngineWithHost(): Boolean = false
 
     override fun onResume() {
@@ -78,6 +84,8 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        // hold on to it so the next activity attaches to this same engine
+        FlutterEngineCache.getInstance().put(ENGINE_ID, flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "halo/platform")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
