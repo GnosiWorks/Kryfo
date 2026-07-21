@@ -3770,13 +3770,13 @@ class AppState extends ChangeNotifier {
     bool voiceDisguised = false,
     int? burnSeconds,
   }) async {
-    // 24k chunks: 48k tripped nip-44's 64kB plaintext ceiling once wrapped
-    // (envelope + signal + gift wrap ~= x1.8 growth -> ~87k, every chunk
-    // died). 24k wraps to ~45k - comfortable margin - and cuts chunk count
-    // (= transfer time over tor) by a third vs the old 16k. receivers
-    // reassemble by index/total and never assume a size, so this is
-    // backward compatible.
-    const chunkSize = 24 * 1024;
+    // 16k chunks. bigger sizes trip nip-44's 65535 plaintext ceiling once
+    // base64'd + double-wrapped (envelope + signal + gift wrap ~= x2.4):
+    // 24k measured at 66-77k on the wire and public relays rejected it
+    // ("event too large"), so delivery only worked through our own
+    // uncapped onion relay. 16k lands ~38-51k, safe on every relay.
+    // receivers reassemble by index/total, so chunk size is free to change.
+    const chunkSize = 16 * 1024;
     final chunks = <String>[];
     for (var i = 0; i < b64.length; i += chunkSize) {
       chunks.add(

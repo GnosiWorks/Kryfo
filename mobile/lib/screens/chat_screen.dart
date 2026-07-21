@@ -2376,7 +2376,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       torWait += 400;
     }
     if (!_torReadyToSend()) return 'error: tor not ready';
-    const chunkSize = 24 * 1024;
+    const chunkSize = 16 * 1024;
     final chunks = <String>[];
     for (var i = 0; i < b64.length; i += chunkSize) {
       chunks.add(b64.substring(i, math.min(i + chunkSize, b64.length)));
@@ -2538,7 +2538,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // size limit (many cap ~32-64kb). bigger chunks got 'no relays accepted'.
     // gift wrap doubles the payload on the wire - 16k keeps the wrapped
     // event under relay size caps.
-    const chunkSize = 24 * 1024;
+    const chunkSize = 16 * 1024;
     final chunks = <String>[];
     for (var i = 0; i < b64.length; i += chunkSize) {
       chunks.add(b64.substring(i, math.min(i + chunkSize, b64.length)));
