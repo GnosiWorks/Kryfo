@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:typed_data';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -56,7 +58,8 @@ Future<void> showMessageNotification({
   required String body,
   String? payload,
 }) async {
-  if (await loadHideNotifContent()) {
+  final hidden = await loadHideNotifContent();
+  if (hidden) {
     title = 'halo';
     body = 'new message';
   }
@@ -70,8 +73,24 @@ Future<void> showMessageNotification({
     category: AndroidNotificationCategory.message,
     icon: 'ic_halo_notification',
     color: const Color(0xFFF59E0B),
-    // show the full message body when expanded instead of truncating
-    styleInformation: BigTextStyleInformation(body),
+    // locked screen never shows content, unlocked does. the toggle above
+    // decides whether it shows even then.
+    visibility: NotificationVisibility.private,
+    // two short taps reads as a message, not an alarm
+    vibrationPattern: Int64List.fromList(<int>[0, 120, 90, 120]),
+    enableLights: true,
+    ledColor: const Color(0xFFF59E0B),
+    ledOnMs: 600,
+    ledOffMs: 2000,
+    ticker: hidden ? 'new message' : '$title: $body',
+    autoCancel: true,
+    when: DateTime.now().millisecondsSinceEpoch,
+    // sender on top, message underneath, expands for long text
+    styleInformation: BigTextStyleInformation(
+      body,
+      contentTitle: title,
+      summaryText: hidden ? null : 'encrypted',
+    ),
   );
   // unique per message. a stable per-sender id meant the second message
   // only UPDATED the first notification, and android never re-alerts for an
