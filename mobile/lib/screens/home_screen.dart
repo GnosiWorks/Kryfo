@@ -1406,6 +1406,10 @@ class _Row extends StatelessWidget {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          if (c.supporterBadge != null) ...[
+                            _supporterPill(),
+                            const SizedBox(width: 5),
+                          ],
                           if (c.pinned) ...[
                             Icon(
                               Icons.push_pin,

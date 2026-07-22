@@ -3000,7 +3000,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _reconcileSending();
+    // mirror groups: when we leave the app, this chat is no longer the
+    // one being read, so incoming messages must bump the unread dot
+    // instead of being silently marked read. dispose() alone missed
+    // this because leaving to home doesn't dispose the chat.
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.inactive) {
+      if (currentChatPeer == widget.peerHaloId) currentChatPeer = null;
+    } else if (state == AppLifecycleState.resumed) {
+      currentChatPeer = widget.peerHaloId;
+      db.clearUnread(widget.peerHaloId).then((_) => appState.refreshContacts());
+      _reconcileSending();
+    }
   }
 
   // a send that finished while we were backgrounded may have marked the db
