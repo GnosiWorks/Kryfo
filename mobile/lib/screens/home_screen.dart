@@ -1394,28 +1394,35 @@ class _Row extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Flexible(
-                        child: Text(
-                          c.nickname ?? c.haloId,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: HaloType.sans(
-                            size: 14,
-                            weight: c.unread > 0
-                                ? FontWeight.w600
-                                : FontWeight.w500,
-                            color: c.blocked
-                                ? HaloColors.text3
-                                : HaloColors.text,
-                          ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                c.nickname ?? c.haloId,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: HaloType.sans(
+                                  size: 14,
+                                  weight: c.unread > 0
+                                      ? FontWeight.w600
+                                      : FontWeight.w500,
+                                  color: c.blocked
+                                      ? HaloColors.text3
+                                      : HaloColors.text,
+                                ),
+                              ),
+                            ),
+                            if (c.supporterBadge != null) ...[
+                              const SizedBox(width: 6),
+                              _supporterPill(),
+                            ],
+                          ],
                         ),
                       ),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (c.supporterBadge != null) ...[
-                            _supporterPill(),
-                            const SizedBox(width: 5),
-                          ],
                           if (c.pinned) ...[
                             Icon(
                               Icons.push_pin,
