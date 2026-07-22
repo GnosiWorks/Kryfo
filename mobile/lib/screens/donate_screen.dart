@@ -105,7 +105,6 @@ class _DonateScreenState extends State<DonateScreen> {
               const SizedBox(height: 14),
               if (!_card) _cryptoPane() else _cardPane(),
               const SizedBox(height: 26),
-              _badgeRow(),
             ],
           ),
         ),
@@ -255,7 +254,7 @@ class _DonateScreenState extends State<DonateScreen> {
                 name,
                 style: HaloType.mono(
                   size: 8,
-                  color: sel ? HaloColors.amber : HaloColors.text3,
+                  color: sel ? HaloColors.amber : HaloColors.text2,
                 ),
               ),
             ],
@@ -275,7 +274,7 @@ class _DonateScreenState extends State<DonateScreen> {
       ),
       child: Row(
         children: [
-          Text('\$', style: HaloType.serif(size: 17, color: HaloColors.text3)),
+          Text('\$', style: HaloType.serif(size: 17, color: HaloColors.text2)),
           const SizedBox(width: 8),
           Expanded(
             child: TextField(
@@ -288,7 +287,7 @@ class _DonateScreenState extends State<DonateScreen> {
                 contentPadding: const EdgeInsets.symmetric(vertical: 14),
                 border: InputBorder.none,
                 hintText: 'other amount',
-                hintStyle: HaloType.serif(size: 16, color: HaloColors.text3),
+                hintStyle: HaloType.serif(size: 16, color: HaloColors.text2),
               ),
               onChanged: (v) {
                 final n = int.tryParse(v) ?? 0;
@@ -329,7 +328,7 @@ class _DonateScreenState extends State<DonateScreen> {
             label,
             style: HaloType.mono(
               size: 12,
-              color: sel ? const Color(0xFF1A0F04) : HaloColors.text3,
+              color: sel ? const Color(0xFF1A0F04) : HaloColors.text2,
             ),
           ),
         ),
@@ -403,7 +402,7 @@ class _DonateScreenState extends State<DonateScreen> {
                     if (c.note.isNotEmpty)
                       Text(
                         c.note,
-                        style: HaloType.mono(size: 8, color: HaloColors.text3),
+                        style: HaloType.mono(size: 8, color: HaloColors.text2),
                       ),
                   ],
                 ),
@@ -480,7 +479,7 @@ class _DonateScreenState extends State<DonateScreen> {
           const SizedBox(height: 12),
           Text(
             '${coin.name} address',
-            style: HaloType.mono(size: 10, color: HaloColors.text3),
+            style: HaloType.mono(size: 10, color: HaloColors.text2),
           ),
           const SizedBox(height: 8),
           Container(
@@ -541,7 +540,7 @@ class _DonateScreenState extends State<DonateScreen> {
                   : "we can't verify this chain without asking an outside "
                         'service about you, so we don\'t. send it manually if '
                         'you like \u2014 it just won\'t unlock a badge.',
-              style: HaloType.mono(size: 9.5, color: HaloColors.text3),
+              style: HaloType.mono(size: 9.5, color: HaloColors.text2),
             ),
           ),
           const SizedBox(height: 10),
@@ -608,73 +607,9 @@ class _DonateScreenState extends State<DonateScreen> {
         Text(
           'a card is not anonymous. use crypto, monero especially, if that matters to you.',
           textAlign: TextAlign.center,
-          style: HaloType.mono(size: 11, color: HaloColors.text3),
+          style: HaloType.mono(size: 11, color: HaloColors.text2),
         ),
       ],
-    );
-  }
-
-  Widget _badgeRow() {
-    final tier = _tierFor(_amount);
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: HaloColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: HaloColors.line),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'after you give',
-            style: HaloType.mono(size: 10, color: HaloColors.text3),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'turn on a ${tierName(tier).isEmpty ? "supporter" : tierName(tier)} badge by your name if you want one. it stays on your phone unless you choose to show contacts. you can remove it anytime.',
-            style: HaloType.sans(
-              size: 13,
-              color: HaloColors.text2,
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 12),
-          GestureDetector(
-            onTap: () async {
-              await saveSupporterTier(tier);
-              await saveShowBadgeSelf(true);
-              if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'badge on. halo runs because of you.',
-                    style: HaloType.sans(
-                      size: 13,
-                      color: const Color(0xFF1A0F04),
-                    ),
-                  ),
-                  backgroundColor: HaloColors.amber,
-                  duration: const Duration(seconds: 3),
-                ),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: HaloColors.amber),
-              ),
-              child: Text(
-                'i gave, turn on my badge',
-                style: HaloType.mono(size: 12, color: HaloColors.amber),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -873,7 +808,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           const SizedBox(height: 18),
           Text(
             'reaching the payment service over tor…',
-            style: HaloType.mono(size: 11, color: HaloColors.text3),
+            style: HaloType.mono(size: 11, color: HaloColors.text2),
           ),
         ],
       ),
@@ -935,7 +870,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           Center(
             child: Text(
               'send exactly this amount \u00b7 expires in ${_fmtLeft()}',
-              style: HaloType.mono(size: 10, color: HaloColors.text3),
+              style: HaloType.mono(size: 10, color: HaloColors.text2),
             ),
           ),
           const SizedBox(height: 16),
@@ -987,7 +922,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
               'this screen updates itself the moment your payment is seen.\n'
               'keep it open — nothing is stored, nothing identifies you.',
               textAlign: TextAlign.center,
-              style: HaloType.mono(size: 9.5, color: HaloColors.text3),
+              style: HaloType.mono(size: 9.5, color: HaloColors.text2),
             ),
           ),
         ],
@@ -1073,7 +1008,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(label, style: HaloType.mono(size: 10, color: HaloColors.text3)),
+          Text(label, style: HaloType.mono(size: 10, color: HaloColors.text2)),
           const SizedBox(height: 6),
           Text(value, style: HaloType.mono(size: 11, color: HaloColors.amber)),
         ],
