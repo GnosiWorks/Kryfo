@@ -290,9 +290,19 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 		log.Printf("nostr: received event %s for peer %s...", id[:12], peerXPubHex[:12])
 	}
 
-	for _, url := range urls {
+	for i, url := range urls {
+		// first relay is our own - it carries the traffic, heal it hard
+		own := i == 0
 		go func(u string) {
 			var last nostr.Timestamp
+			retry := 10 * time.Second
+			rejoin := 5 * time.Second
+			deaf := 4 * time.Minute
+			if own {
+				retry = 3 * time.Second
+				rejoin = 2 * time.Second
+				deaf = 75 * time.Second
+			}
 			for {
 				select {
 				case <-ctx.Done():
@@ -315,7 +325,7 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 				r := nostr.NewRelay(ctx, u, nostr.RelayOptions{})
 				if err := r.ConnectWithClient(ctx, client); err != nil {
 					log.Printf("nostr: subscribe-connect %s: %v", u, err)
-					time.Sleep(10 * time.Second)
+					time.Sleep(retry)
 					continue
 				}
 				f := nostr.Filter{
@@ -338,7 +348,7 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 				if err != nil {
 					log.Printf("nostr: subscribe %s: %v", u, err)
 					r.Close()
-					time.Sleep(10 * time.Second)
+					time.Sleep(retry)
 					continue
 				}
 				log.Printf("nostr: listening on %s for addr %s...", u, rcvPk[:12])
@@ -346,7 +356,7 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 				// error, no channel close, this select just goes deaf forever
 				// while messages slide past. quiet too long = assume dead and
 				// reconnect; the since window refetches whatever we missed.
-				idle := time.NewTimer(4 * time.Minute)
+				idle := time.NewTimer(deaf)
 				for {
 					select {
 					case ev, alive := <-sub.Events:
@@ -367,9 +377,9 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 							default:
 							}
 						}
-						idle.Reset(4 * time.Minute)
+						idle.Reset(deaf)
 					case <-idle.C:
-						log.Printf("nostr: %s quiet 4m, cycling the sub", u)
+						log.Printf("nostr: %s quiet %s, cycling the sub", u, deaf)
 						r.Close()
 						goto reconnect
 					case <-ctx.Done():
@@ -379,7 +389,7 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 					}
 				}
 			reconnect:
-				time.Sleep(5 * time.Second)
+				time.Sleep(rejoin)
 			}
 		}(url)
 	}

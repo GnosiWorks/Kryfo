@@ -1393,14 +1393,20 @@ class _Row extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        c.nickname ?? c.haloId,
-                        style: HaloType.sans(
-                          size: 14,
-                          weight: c.unread > 0
-                              ? FontWeight.w600
-                              : FontWeight.w500,
-                          color: c.blocked ? HaloColors.text3 : HaloColors.text,
+                      Flexible(
+                        child: Text(
+                          c.nickname ?? c.haloId,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: HaloType.sans(
+                            size: 14,
+                            weight: c.unread > 0
+                                ? FontWeight.w600
+                                : FontWeight.w500,
+                            color: c.blocked
+                                ? HaloColors.text3
+                                : HaloColors.text,
+                          ),
                         ),
                       ),
                       Row(
