@@ -502,11 +502,29 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // brand-new ones, instead of rebuilding the whole list on every multicast
   // fire. falls back to a full _load when nothing is brand-new, which covers
   // reactions/edits/burns/deletes and clock-skew.
+  bool _appending = false;
   Future<void> _tryAppendNew() async {
     if (!_loaded) {
       _load();
       return;
     }
+    if (_appending) {
+      _reloadQueued = true;
+      return;
+    }
+    _appending = true;
+    try {
+      await _appendNewInner();
+    } finally {
+      _appending = false;
+      if (_reloadQueued && mounted) {
+        _reloadQueued = false;
+        _tryAppendNew();
+      }
+    }
+  }
+
+  Future<void> _appendNewInner() async {
     final lastRowid = _messages.isEmpty
         ? 0
         : _messages.map((m) => m.rowid).reduce((a, b) => a > b ? a : b);
@@ -577,6 +595,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (dir == 'in') m.fresh = true;
       fresh.add(m);
     }
+    final nowHave = _messages.map((m) => m.msgUid).toSet();
+    fresh.removeWhere((m) => m.msgUid != null && nowHave.contains(m.msgUid));
+    if (fresh.isEmpty) return;
     setState(() => _messages.addAll(fresh));
     _scrollToEnd();
   }
