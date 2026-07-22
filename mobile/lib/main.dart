@@ -38,6 +38,7 @@ import 'lock_state.dart';
 import 'screens/lock_screen.dart';
 import 'screens/lock_setup_screen.dart';
 import 'push_mode.dart';
+import 'supporter.dart';
 import 'ntfy_listener.dart';
 import 'message_envelope.dart';
 import 'widgets/motion.dart';
@@ -470,7 +471,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 31,
+      version: 32,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -499,7 +500,8 @@ class HaloDb {
             pinned INTEGER NOT NULL DEFAULT 0,
             key_changed INTEGER NOT NULL DEFAULT 0,
             peer_bundle TEXT,
-            accepted INTEGER NOT NULL DEFAULT 1
+            accepted INTEGER NOT NULL DEFAULT 1,
+            supporter_badge TEXT
           )
         ''');
         await db.execute('''
@@ -570,6 +572,11 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 32) {
+          await db.execute(
+            'ALTER TABLE contacts ADD COLUMN supporter_badge TEXT',
+          );
+        }
         if (oldV < 31) {
           // group retries used to INSERT the local row again; duplicate
           // msg_uids blow up every uid-keyed widget key (red screens).
@@ -882,6 +889,16 @@ class HaloDb {
 
   // backfill the xpub a v2 pair left empty. plain write, no key-change check:
   // upsertContact would read an empty prior as a change and raise the flag.
+  Future<void> setContactBadge(String haloId, String? tier) async {
+    final d = await open();
+    await d.update(
+      'contacts',
+      {'supporter_badge': tier},
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+    );
+  }
+
   Future<void> setContactXPub(String haloId, String xpub) async {
     final db = await open();
     await db.update(
@@ -2408,6 +2425,8 @@ class AppState extends ChangeNotifier {
       'INCOMING len=${env.message.length} hasPreview=${env.preview != null} uid=${env.msgUid}',
     );
     if (await db.isBlocked(senderHaloId)) return;
+    // supporter badge the sender shared (null clears it if they turned it off)
+    await db.setContactBadge(senderHaloId, env.supporterBadge);
     // 1) group control
     if (env.groupControl != null) {
       await _applyGroupControl(senderHaloId, env);
@@ -3446,6 +3465,7 @@ class AppState extends ChangeNotifier {
           verified: (r['verified'] as int? ?? 0) == 1,
           unread: (r['unread'] as int? ?? 0),
           pinned: (r['pinned'] as int? ?? 0) == 1,
+          supporterBadge: r['supporter_badge'] as String?,
         ),
       );
     }
@@ -3482,6 +3502,14 @@ class AppState extends ChangeNotifier {
     }
     groups = list;
     notifyListeners();
+  }
+
+  // the tier to advertise to contacts, or null when sharing is off.
+  Future<String?> sharedBadge() async {
+    if (!await loadShareBadge()) return null;
+    final t = await loadSupporterTier();
+    if (t == SupporterTier.none) return null;
+    return t.name;
   }
 
   SenderInfo _mySender() => SenderInfo(
