@@ -113,7 +113,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             ),
             const SizedBox(height: 6),
             Text(
-              'a name you choose for yourself. not verified, not sent anywhere yet. for now it only shows on this phone.',
+              'a name you choose for yourself. it never leaves this phone - contacts always see the name they gave you, never this one. that way nobody can impersonate someone just by renaming themselves.',
               style: HaloType.sans(
                 size: 12,
                 color: HaloColors.text2,
