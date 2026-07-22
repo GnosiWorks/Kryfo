@@ -436,6 +436,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool _blocked = false;
   bool _muted = false;
   bool _verified = false;
+  String? _peerBadge;
   bool _keyChanged = false;
 
   Future<void> _dismissKeyChanged() async {
@@ -534,6 +535,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
     db.isVerified(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _verified = v);
+    });
+    db.getContact(widget.peerHaloId).then((c) {
+      if (mounted) {
+        setState(() => _peerBadge = c?['supporter_badge'] as String?);
+      }
     });
     // request lock: are they an accepted contact, have they engaged, and how
     // many messages have we already sent while unaccepted.
@@ -4025,6 +4031,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     nickname: _nickname,
                     note: _note,
                     verified: _verified,
+                    supporterBadge: _peerBadge,
                     onBlock: _chatActions,
                     avatarSeed: widget.avatarSeed,
                     onBack: () => Navigator.pop(context),
@@ -4718,6 +4725,7 @@ class _ChatHead extends StatelessWidget {
   final VoidCallback onPinned;
   final bool verified;
   final String? note;
+  final String? supporterBadge;
   const _ChatHead({
     required this.haloId,
     this.nickname,
@@ -4730,6 +4738,7 @@ class _ChatHead extends StatelessWidget {
     required this.onPinned,
     this.verified = false,
     this.note,
+    this.supporterBadge,
   });
 
   @override
@@ -4791,6 +4800,29 @@ class _ChatHead extends StatelessWidget {
                           Icons.verified_user,
                           size: 13,
                           color: HaloColors.amber,
+                        ),
+                      ],
+                      if (supporterBadge != null) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: HaloColors.amber.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(5),
+                            border: Border.all(
+                              color: HaloColors.amber.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: Text(
+                            'supporter',
+                            style: HaloType.mono(
+                              size: 7.5,
+                              color: HaloColors.amber,
+                            ),
+                          ),
                         ),
                       ],
                     ],
