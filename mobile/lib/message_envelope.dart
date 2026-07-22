@@ -46,6 +46,7 @@ class UnwrappedMessage {
   rosterParticipants; // 'rp' - {h,o,x} keys for roster members
   final int? powNonce; // 'pw' - proof-of-work nonce (first-contact only)
   final int? powBitsUsed; // 'pb' - difficulty the sender solved to
+  final String? supporterBadge; // 'bg' - sender's shared supporter tier
   UnwrappedMessage(
     this.message, {
     this.endpoint,
@@ -76,6 +77,7 @@ class UnwrappedMessage {
     this.rosterParticipants,
     this.powNonce,
     this.powBitsUsed,
+    this.supporterBadge,
   });
 }
 
@@ -200,6 +202,7 @@ Future<String> wrapMessage(
   List<Map<String, String>>? rosterParticipants,
   int? powNonce,
   int? powBitsUsed,
+  String? supporterBadge,
 }) async {
   final mode = await loadPushMode();
   final body = <String, dynamic>{'m': plain};
@@ -229,6 +232,7 @@ Future<String> wrapMessage(
   if (rosterParticipants != null) body['rp'] = rosterParticipants;
   if (powNonce != null) body['pw'] = powNonce;
   if (powBitsUsed != null) body['pb'] = powBitsUsed;
+  if (supporterBadge != null) body['bg'] = supporterBadge;
 
   if (mode == PushMode.ntfy) {
     final topic = await loadNtfyTopic();
@@ -343,6 +347,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       pvImg: json['pi'] == 1,
       roster: (json['rs'] as List?)?.map((e) => e.toString()).toList(),
       powNonce: (json['pw'] as num?)?.toInt(),
+      supporterBadge: json['bg'] as String?,
       powBitsUsed: (json['pb'] as num?)?.toInt(),
       rosterParticipants: (json['rp'] as List?)
           ?.map(

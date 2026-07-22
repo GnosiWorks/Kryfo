@@ -1907,6 +1907,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         msgUid: msg.msgUid,
         replyTo: msg.replyTo,
         burnSeconds: msg.burnSecs,
+        supporterBadge: await appState.sharedBadge(),
         sender: SenderInfo(
           haloId: appState.myId,
           edPub: engine.myEdPubkey(),
@@ -2410,6 +2411,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           burnSeconds: burnSeconds,
           powNonce: i == 0 ? powCap : powRest,
           powBitsUsed: (i == 0 ? powCap : powRest) == null ? null : powBits,
+          supporterBadge: await appState.sharedBadge(),
           sender: SenderInfo(
             haloId: appState.myId,
             edPub: engine.myEdPubkey(),

@@ -155,6 +155,7 @@ class ContactPreview {
   final bool verified;
   final int unread;
   final bool pinned;
+  final String? supporterBadge;
   ContactPreview({
     required this.haloId,
     this.nickname,
@@ -167,6 +168,7 @@ class ContactPreview {
     this.verified = false,
     this.unread = 0,
     this.pinned = false,
+    this.supporterBadge,
   });
 }
 
@@ -1106,6 +1108,10 @@ class _HeroCard extends StatelessWidget {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          if (c.supporterBadge != null) ...[
+                            _supporterPill(),
+                            const SizedBox(width: 6),
+                          ],
                           if (c.muted) ...[
                             Icon(
                               Icons.notifications_off_outlined,
@@ -1142,6 +1148,21 @@ class _HeroCard extends StatelessWidget {
       ),
     );
   }
+}
+
+Widget _supporterPill() {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+    decoration: BoxDecoration(
+      color: HaloColors.amber.withValues(alpha: 0.18),
+      borderRadius: BorderRadius.circular(6),
+      border: Border.all(color: HaloColors.amber.withValues(alpha: 0.4)),
+    ),
+    child: Text(
+      'supporter',
+      style: HaloType.mono(size: 8, color: HaloColors.amber),
+    ),
+  );
 }
 
 Widget _verifiedTick({required bool onAmber}) {
