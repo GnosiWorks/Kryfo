@@ -33,6 +33,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -259,6 +261,63 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 	seen := map[string]bool{}
 	var seenMu sync.Mutex
 
+	// restarts used to refetch the whole 12h window and shove every old
+	// wrap back through decrypt. remember ids + high-water timestamp on
+	// disk so a relaunch picks up where it left off.
+	seenPath := ""
+	lastPath := ""
+	var lastSaved int64
+	if savedDataDir != "" {
+		tag := rcvPk
+		if len(tag) > 16 {
+			tag = tag[:16]
+		}
+		seenPath = savedDataDir + "/nostr_seen_" + tag
+		lastPath = savedDataDir + "/nostr_last_" + tag
+		if b, err := os.ReadFile(seenPath); err == nil {
+			lines := strings.Split(string(b), "\n")
+			// keep the file from growing forever - old ids age out of the
+			// relay window anyway
+			if len(lines) > 4000 {
+				lines = lines[len(lines)-2000:]
+				os.WriteFile(seenPath, []byte(strings.Join(lines, "\n")), 0600)
+			}
+			for _, line := range lines {
+				if line != "" {
+					seen[line] = true
+				}
+			}
+		}
+		if b, err := os.ReadFile(lastPath); err == nil {
+			if v, perr := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64); perr == nil {
+				lastSaved = v
+			}
+		}
+	}
+	saveSeen := func(id string) {
+		if seenPath == "" {
+			return
+		}
+		f, err := os.OpenFile(seenPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+		if err != nil {
+			return
+		}
+		f.WriteString(id + "\n")
+		f.Close()
+	}
+	saveLast := func(ts int64) {
+		seenMu.Lock()
+		stale := ts <= lastSaved
+		if !stale {
+			lastSaved = ts
+		}
+		seenMu.Unlock()
+		if stale || lastPath == "" {
+			return
+		}
+		os.WriteFile(lastPath, []byte(strconv.FormatInt(ts, 10)), 0600)
+	}
+
 	dispatch := func(ev nostr.Event) {
 		id := ev.ID.Hex()
 		nostrMu.Lock()
@@ -274,6 +333,7 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 		if dup {
 			return
 		}
+		saveSeen(id)
 		var gw nostr2.Event
 		if err := easyjson.Unmarshal([]byte(ev.String()), &gw); err != nil {
 			log.Printf("nostr: wrap parse failed: %v", err)
@@ -294,7 +354,7 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 		// first relay is our own - it carries the traffic, heal it hard
 		own := i == 0
 		go func(u string) {
-			var last nostr.Timestamp
+			last := nostr.Timestamp(lastSaved)
 			retry := 10 * time.Second
 			rejoin := 5 * time.Second
 			deaf := 4 * time.Minute
@@ -368,6 +428,7 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 						if ev.ID.Hex() != "" {
 							if ev.CreatedAt > last {
 								last = ev.CreatedAt
+								saveLast(int64(ev.CreatedAt))
 							}
 							dispatch(ev)
 						}
