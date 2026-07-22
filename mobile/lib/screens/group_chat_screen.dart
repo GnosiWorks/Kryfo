@@ -102,6 +102,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   bool _loading = false;
   bool _reloadQueued = false;
   bool _loaded = false; // first full load done - gates the append-fast-path
+  int _seenRev = -1; // last group rev we reloaded for
 
   @override
   void initState() {
@@ -481,6 +482,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   void _onAppStateChanged() {
+    // only react to our own group's traffic. a 1:1 message landing used
+    // to full-reload this screen and churn every photo bubble.
+    final rev = appState.chatRevOf('group:${widget.groupId}');
+    if (rev == _seenRev) return;
+    _seenRev = rev;
     // a group control or new message landed. guard against the reload storm:
     // a single multicast fires notifyListeners() once per recipient, and a full
     // _load() per fire froze the ui. if a load is already running, queue at most

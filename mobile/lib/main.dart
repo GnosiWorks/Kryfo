@@ -2420,6 +2420,7 @@ class AppState extends ChangeNotifier {
     bool fromBackPair = false,
   }) async {
     _bumpChatRev(senderHaloId);
+    if (env.groupId != null) _bumpChatRev('group:${env.groupId}');
     await db.markBackPaired(senderHaloId);
     debugPrint(
       'INCOMING len=${env.message.length} hasPreview=${env.preview != null} uid=${env.msgUid}',
