@@ -3019,6 +3019,10 @@ class AppState extends ChangeNotifier {
       }
     });
     // poll bootstrap so the halo can breathe while the listener warms up.
+    // this used to cancel itself once tor went green - which meant a tor
+    // death later on had no witness and no comeback. now it runs for the
+    // life of the app and doubles as the watchdog.
+    var torKickedAt = DateTime.now();
     Timer.periodic(const Duration(seconds: 1), (t) {
       final raw = engine.getStatus();
       final st = parseTorStatus(raw);
@@ -3028,7 +3032,19 @@ class AppState extends ChangeNotifier {
         _bootstrapPct = pct;
         notifyListeners();
       }
-      if (st == TorStatus.reachable) t.cancel();
+      // tor died or never came up in this process. nothing else
+      // restarts it, so we do. throttled - a start takes a while.
+      if (st == TorStatus.off &&
+          DateTime.now().difference(torKickedAt).inSeconds > 45) {
+        torKickedAt = DateTime.now();
+        debugPrint('TOR_WATCHDOG: tor off, restarting listener');
+        _startListenerOnIsolate(docsDir.path).then((addr) {
+          if (addr.isNotEmpty && !addr.startsWith('error')) {
+            myOnion = addr;
+            notifyListeners();
+          }
+        });
+      }
     });
     _initConnectivity();
     // more relays than we need on purpose. damus alone has been refusing
