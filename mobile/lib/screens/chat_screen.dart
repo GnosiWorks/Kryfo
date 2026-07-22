@@ -2569,6 +2569,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             // rebuilds off the last slice to land, and that one used to arrive
             // with no burn at all, so ghost images never expired on their side.
             burnSeconds: _ghost ? _burnSeconds : null,
+            supporterBadge: await appState.sharedBadge(),
             sender: SenderInfo(
               haloId: appState.myId,
               edPub: engine.myEdPubkey(),
@@ -2884,6 +2885,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         burnSeconds: _ghost ? _burnSeconds : null,
         msgUid: msgUid,
         replyTo: replyToUid,
+        supporterBadge: await appState.sharedBadge(),
         sender: SenderInfo(
           haloId: appState.myId,
           edPub: engine.myEdPubkey(),
