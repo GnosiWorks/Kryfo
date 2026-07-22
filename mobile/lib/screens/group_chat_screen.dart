@@ -1083,6 +1083,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // after a send completes, the optimistic object may have been replaced by
   // a reload (notifyListeners -> _tryAppendNew). always re-find the live one
   // by uid so we mutate what's actually on screen, never an orphan.
+  String? _badgeFor(String id) {
+    for (final c in appState.contacts) {
+      if (c.haloId == id) return c.supporterBadge;
+    }
+    return null;
+  }
+
   _GMsg? _liveMsg(String? uid) {
     if (uid == null) return null;
     for (final m in _messages) {
@@ -2057,6 +2064,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                                       child: _GroupBubble(
                                         m: m,
                                         showSender: showSender,
+                                        senderBadge: _badgeFor(m.sender),
                                         quotedText: quoted,
                                         quotedAuthor: quotedAuthor,
                                         onLongPress: (ctx) =>
@@ -2765,6 +2773,7 @@ Widget _groupBubbleEntrance({
 class _GroupBubble extends StatelessWidget {
   final _GMsg m;
   final bool showSender;
+  final String? senderBadge;
   final String? quotedText;
   final String? quotedAuthor;
   final void Function(BuildContext)? onLongPress;
@@ -2774,6 +2783,7 @@ class _GroupBubble extends StatelessWidget {
   const _GroupBubble({
     required this.m,
     required this.showSender,
+    this.senderBadge,
     this.quotedText,
     this.quotedAuthor,
     this.onLongPress,
@@ -2810,13 +2820,43 @@ class _GroupBubble extends StatelessWidget {
                   if (!isOut && showSender)
                     Padding(
                       padding: const EdgeInsets.only(left: 2, bottom: 3),
-                      child: Text(
-                        m.senderName,
-                        style: HaloType.mono(
-                          size: 9.5,
-                          color: _authorColor(m.sender),
-                          letter: 0.4,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            m.senderName,
+                            style: HaloType.mono(
+                              size: 9.5,
+                              color: _authorColor(m.sender),
+                              letter: 0.4,
+                            ),
+                          ),
+                          if (senderBadge != null) ...[
+                            const SizedBox(width: 5),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 1,
+                              ),
+                              decoration: BoxDecoration(
+                                color: HaloColors.amber.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(5),
+                                border: Border.all(
+                                  color: HaloColors.amber.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                'supporter',
+                                style: HaloType.mono(
+                                  size: 7.5,
+                                  color: HaloColors.amber,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   Stack(

@@ -2425,8 +2425,6 @@ class AppState extends ChangeNotifier {
       'INCOMING len=${env.message.length} hasPreview=${env.preview != null} uid=${env.msgUid}',
     );
     if (await db.isBlocked(senderHaloId)) return;
-    // supporter badge the sender shared (null clears it if they turned it off)
-    await db.setContactBadge(senderHaloId, env.supporterBadge);
     // 1) group control
     if (env.groupControl != null) {
       await _applyGroupControl(senderHaloId, env);
@@ -2469,6 +2467,12 @@ class AppState extends ChangeNotifier {
       // into groups we never joined.
       debugPrint('dropping group msg for unknown group ${env.groupId}');
       return;
+    }
+    // badge rides real chat rows only. present = set, absent = clear so
+    // turning it off propagates. control frames and preview patches never
+    // get here with a fresh row, so they can't wipe it.
+    if (env.preview == null && env.msgUid != null) {
+      await db.setContactBadge(senderHaloId, env.supporterBadge);
     }
     // roster self-heal: if the admin rode their full member list on this
     // message and our copy drifted, reconcile. only trust it from the real
@@ -3768,6 +3772,7 @@ class AppState extends ChangeNotifier {
       groupId: groupId,
       roster: amAdmin ? members : null,
       rosterParticipants: rosterParts,
+      supporterBadge: await sharedBadge(),
       sender: _mySender(),
     );
     debugPrint(
@@ -3836,6 +3841,7 @@ class AppState extends ChangeNotifier {
         groupId: groupId,
         roster: amAdmin ? members : null,
         rosterParticipants: rosterParts,
+        supporterBadge: await sharedBadge(),
         sender: _mySender(),
       );
       var chunkOk = false;
