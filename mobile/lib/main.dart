@@ -2645,10 +2645,15 @@ class AppState extends ChangeNotifier {
     if (uid != null) {
       final pending = _pendingPreviews.remove(uid);
       if (pending != null) await db.setMsgPreview(uid, pending);
+      // saved now, messageExists covers dedup from here - drop the guard
+      _inflightUids.remove(uid);
     }
     // notification context - for groups, title = group name and body
     // prefixes the sender. payload uses "group:<id>" so tap-to-open can
     // route to the right screen.
+    debugPrint(
+      'UNREAD? cur=$currentChatPeer from=$senderHaloId badge=${env.supporterBadge}',
+    );
     if (!isGroup && currentChatPeer != senderHaloId) {
       await db.bumpUnread(senderHaloId);
     } else if (!isGroup && currentChatPeer == senderHaloId) {
