@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// halo mobile - phase 1: identity persistence + ECDH + editorial UI
+// kryfo mobile - phase 1: identity persistence + ECDH + editorial UI
 
 import 'dart:async';
 import 'widgets/tor_boot_splash.dart';
@@ -32,7 +32,7 @@ import 'screens/modes_screen.dart';
 import 'screens/push_settings_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/profile_screen.dart';
-import 'screens/my_halo_screen.dart';
+import 'screens/my_kryfo_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'lock_state.dart';
 import 'screens/lock_screen.dart';
@@ -1341,7 +1341,7 @@ class HaloDb {
   // ---- groups ----
 
   // create a group locally. members is the full set INCLUDING the creator
-  // (caller must include their own halo id if they want to appear in member
+  // (caller must include their own kryfo id if they want to appear in member
   // list). isAdmin = true for groups we created; false for groups we joined.
   Future<void> createGroup(
     String groupId,
@@ -1398,7 +1398,7 @@ class HaloDb {
     return rows.isEmpty ? null : rows.first;
   }
 
-  // the group creator/admin halo id. used to verify a roster self-heal
+  // the group creator/admin kryfo id. used to verify a roster self-heal
   // really came from the admin, not a member spoofing membership changes.
   Future<String?> groupAdminId(String groupId) async {
     final db = await open();
@@ -1482,7 +1482,7 @@ class HaloDb {
   }
 
   // load all messages for a group, oldest-first. peer_id on each row is the
-  // SENDER's halo id (for our own messages this is our halo id).
+  // SENDER's kryfo id (for our own messages this is our kryfo id).
   Future<List<Map<String, Object?>>> loadGroupMessages(String groupId) async {
     final db = await open();
     return db.query(
@@ -1529,7 +1529,7 @@ class HaloDb {
     );
   }
 
-  // add or replace a reaction. reactor is '' for self, peer's halo id
+  // add or replace a reaction. reactor is '' for self, peer's kryfo id
   // for theirs. one reaction per (msgUid, reactor) - re-reacting replaces.
   Future<void> setPinned(String msgUid, bool pinned) async {
     final db = await open();
@@ -2183,17 +2183,17 @@ Future<String> saveMediaBytes(List<int> bytes, String name) async {
 }
 
 String buildHaloUri(String id, String onion, String xpub) {
-  return 'halo://share?id=$id&onion=$onion&xpub=$xpub';
+  return 'kryfo://share?id=$id&onion=$onion&xpub=$xpub';
 }
 
 Future<String> buildHaloUriV2(String id, String onion) async {
   final bundle = await makePreKeyBundleB64();
-  return 'halo://share?id=$id&onion=$onion&v=2&bundle=$bundle';
+  return 'kryfo://share?id=$id&onion=$onion&v=2&bundle=$bundle';
 }
 
 Map<String, String>? parseHaloUri(String raw) {
   raw = raw.trim();
-  if (!raw.startsWith('halo://share')) return null;
+  if (!raw.startsWith('kryfo://share')) return null;
   try {
     final uri = Uri.parse(raw);
     final id = uri.queryParameters['id'];
@@ -2218,7 +2218,7 @@ Map<String, String>? parseHaloUri(String raw) {
 final engine = HaloEngine();
 final db = HaloDb();
 
-// open ChatScreen for a given halo id. used by notification taps
+// open ChatScreen for a given kryfo id. used by notification taps
 // (both warm - onDidReceiveNotificationResponse - and cold starts
 // via getNotificationAppLaunchDetails). reads contact details from
 // the db and pushes the route on the root navigator.
@@ -2243,7 +2243,7 @@ Future<void> openChatForHalo(String? haloId) async {
   );
 }
 
-// halo id of the peer whose chat is currently on screen. set by
+// kryfo id of the peer whose chat is currently on screen. set by
 // ChatScreen.initState, cleared on dispose. used to suppress
 // notifications for the conversation the user is already in.
 String? currentChatPeer;
@@ -2651,9 +2651,6 @@ class AppState extends ChangeNotifier {
     // notification context - for groups, title = group name and body
     // prefixes the sender. payload uses "group:<id>" so tap-to-open can
     // route to the right screen.
-    debugPrint(
-      'UNREAD? cur=$currentChatPeer from=$senderHaloId badge=${env.supporterBadge}',
-    );
     if (!isGroup && currentChatPeer != senderHaloId) {
       await db.bumpUnread(senderHaloId);
     } else if (!isGroup && currentChatPeer == senderHaloId) {
@@ -2708,7 +2705,7 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // apply a group control message. sender is the halo id that sent the
+  // apply a group control message. sender is the kryfo id that sent the
   // control; env.groupId is the target group; env.groupControl carries the
   // action and payload.
   Future<void> _applyGroupControl(
@@ -2813,7 +2810,7 @@ class AppState extends ChangeNotifier {
   bool restored = false;
   bool ready = false;
   bool _booting = false;
-  // live tor state; the home halo breathes off this.
+  // live tor state; the home kryfo breathes off this.
   // bumped whenever something changes for a peer's thread. open chats
   // compare against this instead of reloading on every notify.
   final Map<String, int> _chatRev = {};
@@ -2964,7 +2961,7 @@ class AppState extends ChangeNotifier {
     debugPrint('BOOT identity +${_bsw.elapsedMilliseconds}ms');
     _appLinks = AppLinks();
     _appLinks.uriLinkStream.listen((uri) async {
-      if (uri.scheme == 'halo') {
+      if (uri.scheme == 'kryfo') {
         final result = await handleHaloUri(uri.toString());
         debugPrint('deep link: $result');
         await refreshContacts();
@@ -2972,12 +2969,12 @@ class AppState extends ChangeNotifier {
       }
     });
     // the stream only fires while we're already running. a link tapped with
-    // halo closed cold-starts the app and would otherwise be dropped.
+    // kryfo closed cold-starts the app and would otherwise be dropped.
     unawaited(
       _appLinks
           .getInitialLink()
           .then((uri) async {
-            if (uri == null || uri.scheme != 'halo') return;
+            if (uri == null || uri.scheme != 'kryfo') return;
             final result = await handleHaloUri(uri.toString());
             debugPrint('deep link (cold start): $result');
             await refreshContacts();
@@ -3018,7 +3015,7 @@ class AppState extends ChangeNotifier {
         notifyListeners();
       }
     });
-    // poll bootstrap so the halo can breathe while the listener warms up.
+    // poll bootstrap so the kryfo can breathe while the listener warms up.
     // this used to cancel itself once tor went green - which meant a tor
     // death later on had no witness and no comeback. now it runs for the
     // life of the app and doubles as the watchdog.
@@ -3082,7 +3079,7 @@ class AppState extends ChangeNotifier {
       // returns null until a session exists, so the side that got *scanned*
       // never subscribed and could never receive the first message that
       // would have created the session. deadlock. (the store
-      // does eventually hold the right x25519 key - halo derives the signal
+      // does eventually hold the right x25519 key - kryfo derives the signal
       // identity from it - but not until that first message exists.)
       final rows = await db.contacts();
       final fresh = <String, String>{};
@@ -4009,7 +4006,7 @@ class AppState extends ChangeNotifier {
   }
 
   // build participant info {h,o,x} for each halo_id we have as a contact
-  // (or for our own halo). used to give group invites enough info that
+  // (or for our own kryfo). used to give group invites enough info that
   // recipients can fan-out to members they don't yet know.
   Future<List<Map<String, String>>> _buildParticipants(
     List<String> haloIds,
@@ -4033,7 +4030,7 @@ class AppState extends ChangeNotifier {
   }
 
   // create a group locally and announce it to invited members. memberHaloIds
-  // is the set of OTHER members (caller's halo id is added automatically).
+  // is the set of OTHER members (caller's kryfo id is added automatically).
   // returns the new group id.
   // phase-3 cap. small groups on purpose - keeps multicast cheap and dodges
   // the moderation trap big rooms bring.
@@ -4225,7 +4222,7 @@ class HaloApp extends StatelessWidget {
       valueListenable: themeRevision,
       builder: (context, _, __) => MaterialApp(
         navigatorKey: rootNavKey,
-        title: 'Halo',
+        title: 'Kryfo',
         theme: buildHaloTheme(),
         // one scroll feel everywhere: ios-style rubber-band on every
         // platform, no stretch-glow. the single biggest "premium" tell,
@@ -4464,7 +4461,7 @@ Future<void> showAddContact(BuildContext context) async {
               style: HaloType.mono(size: 12, color: HaloColors.text),
               decoration: InputDecoration(
                 border: InputBorder.none,
-                hintText: 'halo://share?...',
+                hintText: 'kryfo://share?...',
                 hintStyle: HaloType.mono(size: 12, color: HaloColors.text3),
               ),
             ),
@@ -4497,7 +4494,7 @@ Future<void> showAddContact(BuildContext context) async {
   );
   if (action == null) return;
   if (action == 'mine') {
-    await Navigator.of(context).push(haloRoute(const MyHaloScreen()));
+    await Navigator.of(context).push(haloRoute(const MyKryfoScreen()));
     return;
   }
 
@@ -4658,7 +4655,7 @@ class _DevScreenState extends State<DevScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'your halo',
+                'your kryfo',
                 style: HaloType.serif(
                   size: 14,
                   italic: true,
@@ -4719,7 +4716,7 @@ class _DevScreenState extends State<DevScreen> {
       builder: (_) => AlertDialog(
         backgroundColor: HaloColors.surface2,
         title: Text(
-          'add a halo',
+          'add a kryfo',
           style: HaloType.sans(color: HaloColors.amber),
         ),
         content: Column(
@@ -4748,7 +4745,7 @@ class _DevScreenState extends State<DevScreen> {
               maxLines: 4,
               style: HaloType.mono(size: 11, color: HaloColors.text),
               decoration: InputDecoration(
-                hintText: 'halo://share?...',
+                hintText: 'kryfo://share?...',
                 hintStyle: HaloType.mono(size: 11, color: HaloColors.text3),
               ),
             ),
@@ -4822,7 +4819,7 @@ class _DevScreenState extends State<DevScreen> {
             children: [
               const SizedBox(height: 8),
               Text(
-                'halo',
+                'kryfo',
                 style: HaloType.serif(
                   size: 56,
                   weight: FontWeight.w300,
@@ -4838,7 +4835,7 @@ class _DevScreenState extends State<DevScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'your halo:',
+                'your kryfo:',
                 style: HaloType.sans(size: 11, color: HaloColors.text2),
               ),
               Container(
@@ -4981,7 +4978,7 @@ class _DevScreenState extends State<DevScreen> {
                           ),
                         ),
                         content: Text(
-                          'the pin will be removed. anyone with your phone will see halo when they open it.',
+                          'the pin will be removed. anyone with your phone will see kryfo when they open it.',
                           style: HaloType.sans(
                             size: 13,
                             color: HaloColors.text2,
@@ -5215,7 +5212,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                   Text(
                     s == TorStatus.off
                         ? 'tor is off. turn it on to connect privately.'
-                        : 'the first connection takes a minute or two while tor builds a private route. after that it is cached, so opening halo later is much faster.',
+                        : 'the first connection takes a minute or two while tor builds a private route. after that it is cached, so opening kryfo later is much faster.',
                     style: HaloType.sans(
                       size: 12.5,
                       color: HaloColors.text,

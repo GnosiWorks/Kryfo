@@ -6,13 +6,13 @@ import 'package:share_plus/share_plus.dart';
 import '../main.dart' show appState, buildHaloUriV2;
 import '../theme.dart';
 
-class MyHaloScreen extends StatefulWidget {
-  const MyHaloScreen({super.key});
+class MyKryfoScreen extends StatefulWidget {
+  const MyKryfoScreen({super.key});
   @override
-  State<MyHaloScreen> createState() => _MyHaloScreenState();
+  State<MyKryfoScreen> createState() => _MyKryfoScreenState();
 }
 
-class _MyHaloScreenState extends State<MyHaloScreen> {
+class _MyKryfoScreenState extends State<MyKryfoScreen> {
   String? _uri;
 
   @override
@@ -48,7 +48,7 @@ class _MyHaloScreenState extends State<MyHaloScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
-          'my halo',
+          'my kryfo',
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
@@ -79,7 +79,7 @@ class _MyHaloScreenState extends State<MyHaloScreen> {
                 _qrBlock(context),
                 const SizedBox(height: 24),
                 Text(
-                  'share this so someone can add you. it carries your halo id '
+                  'share this so someone can add you. it carries your kryfo id '
                   'and onion address — nothing else.',
                   textAlign: TextAlign.center,
                   style: HaloType.sans(
@@ -168,10 +168,10 @@ class _MyHaloScreenState extends State<MyHaloScreen> {
         GestureDetector(
           onTap: () {
             Share.share(
-              "add me on halo. my id is ${appState.myId}\n\n"
+              "add me on kryfo. my id is ${appState.myId}\n\n"
               "tap to add me:\n$_uri\n\n"
-              "halo is a private messenger. no phone number, no email.",
-              subject: 'add me on halo',
+              "kryfo is a private messenger. no phone number, no email.",
+              subject: 'add me on kryfo',
             );
           },
           child: Container(

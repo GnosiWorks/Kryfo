@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // in-app QR scanner. private - never leaves the app. focus on UX:
 // dark masked viewfinder, animated scan line, success pulse on detect,
-// torch toggle for low-light, and clear feedback when a non-halo qr
+// torch toggle for low-light, and clear feedback when a non-kryfo qr
 // is in frame.
 
 import 'package:flutter/material.dart';
@@ -41,14 +41,14 @@ class _ScanScreenState extends State<ScanScreen>
     if (_handled) return;
     final raw = code.text;
     if (raw == null || raw.isEmpty) return;
-    if (!raw.startsWith('halo://')) {
+    if (!raw.startsWith('kryfo://')) {
       // brief hint and keep scanning. dedupe by time so the user isn't
-      // spammed if many non-halo codes are in frame.
+      // spammed if many non-kryfo codes are in frame.
       final now = DateTime.now();
       if (_hintAt == null ||
           now.difference(_hintAt!) > const Duration(seconds: 2)) {
         setState(() {
-          _hint = "that's not a halo qr · keep pointing";
+          _hint = "that's not a kryfo qr · keep pointing";
           _hintAt = now;
         });
       }
@@ -130,7 +130,7 @@ class _ScanScreenState extends State<ScanScreen>
                     ),
                     Expanded(
                       child: Text(
-                        'scan a halo qr',
+                        'scan a kryfo qr',
                         style: HaloType.serif(
                           size: 18,
                           italic: true,
@@ -165,7 +165,7 @@ class _ScanScreenState extends State<ScanScreen>
             ),
           ),
           // bottom helper text - switches to a transient warning when a
-          // non-halo qr appears in frame.
+          // non-kryfo qr appears in frame.
           Positioned(
             bottom: 0,
             left: 0,
@@ -192,7 +192,8 @@ class _ScanScreenState extends State<ScanScreen>
                       ),
                     ),
                     child: Text(
-                      _hint ?? 'point at a halo qr · nothing leaves your phone',
+                      _hint ??
+                          'point at a kryfo qr · nothing leaves your phone',
                       textAlign: TextAlign.center,
                       style: HaloType.sans(
                         size: 12.5,
@@ -237,7 +238,7 @@ class _MaskPainter extends CustomPainter {
 }
 
 // the viewfinder frame: amber corner brackets + a moving horizontal
-// scan line + a brief success flash when a halo qr is detected.
+// scan line + a brief success flash when a kryfo qr is detected.
 class _Viewfinder extends StatelessWidget {
   final double size;
   final bool success;

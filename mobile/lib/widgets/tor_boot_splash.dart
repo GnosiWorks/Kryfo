@@ -4,7 +4,7 @@ import '../theme.dart';
 import 'onion_loader.dart';
 
 // startup screen while the engine warms up tor. it tells the user plainly that
-// tor - the thing that makes halo private - is starting, so the wait reads as
+// tor - the thing that makes kryfo private - is starting, so the wait reads as
 // purposeful instead of stuck.
 class TorBootSplash extends StatefulWidget {
   const TorBootSplash({super.key});

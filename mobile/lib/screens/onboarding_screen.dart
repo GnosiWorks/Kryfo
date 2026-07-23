@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// halo onboarding flow - 5 screens shown on first launch, then never again.
+// kryfo onboarding flow - 5 screens shown on first launch, then never again.
 // welcome → identity reveal → keep safe → staying connected → first contact.
 
 import 'dart:math' as math;
@@ -8,10 +8,10 @@ import 'package:flutter/material.dart';
 import '../widgets/press_scale.dart';
 import '../theme.dart';
 import 'restore_screen.dart';
-import 'my_halo_screen.dart';
+import 'my_kryfo_screen.dart';
 import '../main.dart' show appState, AppState;
 import 'scan_screen.dart';
-import '../widgets/halo_avatar.dart';
+import '../widgets/kryfo_avatar.dart';
 import '../widgets/motion.dart' show haloRoute;
 
 class OnboardingScreen extends StatefulWidget {
@@ -202,7 +202,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
           const SizedBox(height: 14),
           Center(
             child: Text(
-              'halo is open source',
+              'kryfo is open source',
               style: HaloType.mono(
                 size: 10,
                 color: HaloColors.text3,
@@ -331,7 +331,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
             _sigilReveal(),
             const SizedBox(height: 22),
             Text(
-              'YOUR HALO ID',
+              'YOUR KRYFO ID',
               style: HaloType.mono(
                 size: 10,
                 color: HaloColors.amber,
@@ -450,9 +450,9 @@ class _IdentityScreenState extends State<_IdentityScreen>
                 opacity: eased,
                 child: Transform.scale(
                   scale: 0.72 + 0.28 * eased,
-                  child: HaloAvatar(
+                  child: KryfoAvatar(
                     seed: widget.appState.myId.isEmpty
-                        ? 'halo'
+                        ? 'kryfo'
                         : widget.appState.myId,
                     size: 56,
                   ),
@@ -699,7 +699,7 @@ class _KeepSafeScreen extends StatelessWidget {
           const SizedBox(height: 24),
           _rule(
             '01',
-            'write your halo down',
+            'write your kryfo down',
             'your three words are the only key. paper, password manager, anywhere safe. losing them means losing this identity for good. there\'s no recovery, by design.',
           ),
           const SizedBox(height: 12),
@@ -839,7 +839,7 @@ class _StayingConnectedScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'halo keeps one small notification in your tray. here is what it is for.',
+            'kryfo keeps one small notification in your tray. here is what it is for.',
             style: HaloType.sans(
               size: 13.5,
               color: HaloColors.text2,
@@ -849,12 +849,12 @@ class _StayingConnectedScreen extends StatelessWidget {
           const SizedBox(height: 24),
           _point(
             'it keeps your line open',
-            'halo listens through tor in the background so encrypted messages reach you even when the app is closed. android requires a visible notification while it does that.',
+            'kryfo listens through tor in the background so encrypted messages reach you even when the app is closed. android requires a visible notification while it does that.',
           ),
           const SizedBox(height: 12),
           _point(
             'it is safe to leave on',
-            'the notification is silent and sits at the bottom of your shade. turning it off does not make halo lighter, it just stops messages arriving until you reopen the app.',
+            'the notification is silent and sits at the bottom of your shade. turning it off does not make kryfo lighter, it just stops messages arriving until you reopen the app.',
           ),
           const Spacer(),
           GestureDetector(
@@ -980,19 +980,19 @@ class _FirstContactScreen extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           _path(
-            'show my halo',
+            'show my kryfo',
             'share a QR code with someone next to you',
             () async {
               // open the QR screen first, then finish onboarding once it returns.
               // completing first rebuilds the tree to home and eats the nav.
               final nav = Navigator.of(context);
-              await nav.push(haloRoute(const MyHaloScreen()));
+              await nav.push(haloRoute(const MyKryfoScreen()));
               onComplete();
             },
           ),
           const SizedBox(height: 12),
           _path(
-            'scan a halo',
+            'scan a kryfo',
             "scan a friend's QR code or paste their three words",
             () async {
               // open the scanner first, then finish onboarding once it returns.

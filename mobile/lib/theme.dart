@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// halo design tokens. mirrors css vars in 08_complete_spec.html.
+// kryfo design tokens. mirrors css vars in 08_complete_spec.html.
 // keep flat. one source of truth for color, type, spacing.
 
 import 'package:flutter/material.dart';
@@ -171,7 +171,7 @@ ThemeData buildHaloTheme() {
   );
 }
 
-// editorial toast: ink surface, hairline amber edge - reads like part of halo
+// editorial toast: ink surface, hairline amber edge - reads like part of kryfo
 // rather than a default grey snackbar. clears any in-flight toast first.
 void showHaloToast(BuildContext context, String message) {
   final messenger = ScaffoldMessenger.of(context);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import '../theme.dart';
-import '../widgets/halo_avatar.dart';
+import '../widgets/kryfo_avatar.dart';
 import '../widgets/stagger_in.dart';
 import '../main.dart' show appState;
 
@@ -212,7 +212,7 @@ class _ArchivedRowState extends State<_ArchivedRow> {
                         1,
                         0,
                       ]),
-                child: HaloAvatar(seed: c.avatarSeed, size: 44),
+                child: KryfoAvatar(seed: c.avatarSeed, size: 44),
               ),
             ),
             const SizedBox(width: 13),

@@ -5,7 +5,7 @@
 import 'package:flutter/material.dart';
 import '../main.dart' show appState;
 import '../theme.dart';
-import '../widgets/halo_avatar.dart';
+import '../widgets/kryfo_avatar.dart';
 import 'group_chat_screen.dart';
 import '../widgets/motion.dart' show haloRoute;
 
@@ -201,7 +201,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                             ),
                             child: Row(
                               children: [
-                                HaloAvatar(seed: c.avatarSeed, size: 36),
+                                KryfoAvatar(seed: c.avatarSeed, size: 36),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(

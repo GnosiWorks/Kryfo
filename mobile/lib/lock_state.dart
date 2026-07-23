@@ -144,7 +144,7 @@ class LockState extends ChangeNotifier {
     try {
       final auth = LocalAuthentication();
       final ok = await auth.authenticate(
-        localizedReason: 'unlock halo',
+        localizedReason: 'unlock kryfo',
         biometricOnly: true,
         persistAcrossBackgrounding: true,
       );

@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// halo_avatar.dart - procedural avatar from a seed string.
+// kryfo_avatar.dart - procedural avatar from a seed string.
 // gradient background, large italic serif initial, thin divider,
 // and a 3-letter mono tag below. seed-driven palette so identical
-// halo ids produce identical avatars across devices.
+// kryfo ids produce identical avatars across devices.
 
 import 'package:flutter/material.dart';
 import '../theme.dart';
 
-class HaloAvatar extends StatelessWidget {
+class KryfoAvatar extends StatelessWidget {
   final String seed;
   final double size;
-  const HaloAvatar({super.key, required this.seed, required this.size});
+  const KryfoAvatar({super.key, required this.seed, required this.size});
 
   @override
   Widget build(BuildContext context) {

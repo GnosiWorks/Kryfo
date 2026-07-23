@@ -1,4 +1,4 @@
-package com.halo.halo_app
+package app.kryfo
 
 import android.Manifest
 import android.app.job.JobInfo

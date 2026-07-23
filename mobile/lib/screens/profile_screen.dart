@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// profile screen. telegram-style: big avatar, halo id, display name,
+// profile screen. telegram-style: big avatar, kryfo id, display name,
 // supporter badge block (only if a tier is set), gear into settings.
 // staggered fade-up reveal, avatar scale-in, badge glow pulse.
 import 'package:flutter/material.dart';
@@ -7,10 +7,10 @@ import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../main.dart' show appState, showAddContact;
 import '../supporter.dart';
-import '../widgets/halo_avatar.dart';
+import '../widgets/kryfo_avatar.dart';
 import 'settings_screen.dart';
 import 'donate_screen.dart';
-import 'my_halo_screen.dart';
+import 'my_kryfo_screen.dart';
 import '../widgets/motion.dart' show haloRoute;
 
 class ProfileScreen extends StatefulWidget {
@@ -213,8 +213,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                             curve: Curves.easeOutBack,
                           ),
                         ),
-                        child: HaloAvatar(
-                          seed: id.isEmpty ? 'halo' : id,
+                        child: KryfoAvatar(
+                          seed: id.isEmpty ? 'kryfo' : id,
                           size: 96,
                         ),
                       ),
@@ -263,7 +263,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _PressRow(
-                        onTap: () => _copy(id, 'halo id'),
+                        onTap: () => _copy(id, 'kryfo id'),
                         child: Row(
                           children: [
                             Expanded(
@@ -380,7 +380,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 _PressRow(
                   onTap: () => Navigator.of(
                     context,
-                  ).push(haloRoute(const MyHaloScreen())),
+                  ).push(haloRoute(const MyKryfoScreen())),
                   child: Container(
                     decoration: BoxDecoration(
                       color: HaloColors.surface2,
@@ -398,7 +398,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'my halo code',
+                            'my kryfo code',
                             style: HaloType.sans(
                               size: 14,
                               color: HaloColors.text,
@@ -455,7 +455,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
               ),
               const SizedBox(height: 24),
-              _reveal(3, _Section(hasBadge ? 'give again' : 'support halo')),
+              _reveal(3, _Section(hasBadge ? 'give again' : 'support kryfo')),
               _reveal(
                 3,
                 _PressRow(
@@ -482,8 +482,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                         Expanded(
                           child: Text(
                             hasBadge
-                                ? 'halo runs on what people give'
-                                : 'keep halo independent',
+                                ? 'kryfo runs on what people give'
+                                : 'keep kryfo independent',
                             style: HaloType.sans(
                               size: 14,
                               color: HaloColors.text,
