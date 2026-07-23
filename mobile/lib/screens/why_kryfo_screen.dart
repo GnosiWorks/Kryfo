@@ -36,7 +36,7 @@ class WhyKryfoScreen extends StatelessWidget {
               _principle(
                 Icons.route_outlined,
                 'routed through tor',
-                'every message travels through tor — a chain of relays. no one, '
+                'every message travels through tor - a chain of relays. no one, '
                     'not us and not your network, can see who you talk to or where '
                     'you are.',
               ),
@@ -56,7 +56,7 @@ class WhyKryfoScreen extends StatelessWidget {
                 Icons.visibility_off_outlined,
                 'nothing leaks',
                 'no read receipts or typing tells handed to anyone, no contact '
-                    'list uploaded. metadata is what most apps leak — kryfo is built '
+                    'list uploaded. metadata is what most apps leak - kryfo is built '
                     'not to.',
               ),
               _principle(

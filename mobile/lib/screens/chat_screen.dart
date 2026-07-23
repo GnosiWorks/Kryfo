@@ -2914,7 +2914,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         msg.sending = false;
         msg.failed = true;
         _sending = false;
-        _status = 'no signal session — re-pair';
+        _status = 'no signal session - re-pair';
       });
       return;
     }
@@ -3540,7 +3540,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               const SizedBox(height: 8),
               Text(
                 'every message here is erased from this phone. this only '
-                'clears your copy — it does not touch their device.',
+                'clears your copy - it does not touch their device.',
                 style: HaloType.sans(
                   size: 13,
                   color: HaloColors.text2,
@@ -4531,7 +4531,7 @@ class _AcceptRequestBar extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'accept to reply — they can\'t message again until you do.',
+            'accept to reply - they can\'t message again until you do.',
             textAlign: TextAlign.center,
             style: HaloType.sans(
               size: 12.5,
@@ -6023,7 +6023,7 @@ class _ReactionPopState extends State<_ReactionPop>
   void initState() {
     super.initState();
     if (_ReactionPop._popped.contains(widget.popKey)) {
-      _c.value = 1.0; // already animated before — render settled, no blink.
+      _c.value = 1.0; // already animated before - render settled, no blink.
     } else {
       _ReactionPop._popped.add(widget.popKey);
       _c.forward();

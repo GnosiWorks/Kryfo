@@ -833,7 +833,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
             ),
             child: Text(
               "couldn't reach the payment service over tor right now. you can "
-              "still donate to the address below — your badge just won't unlock "
+              "still donate to the address below - your badge just won't unlock "
               "automatically. try again later for the badge.",
               style: HaloType.sans(
                 size: 12.5,
@@ -920,7 +920,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           Center(
             child: Text(
               'this screen updates itself the moment your payment is seen.\n'
-              'keep it open — nothing is stored, nothing identifies you.',
+              'keep it open - nothing is stored, nothing identifies you.',
               textAlign: TextAlign.center,
               style: HaloType.mono(size: 9.5, color: HaloColors.text2),
             ),
@@ -979,7 +979,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
             ),
             const SizedBox(height: 10),
             Text(
-              'no worries — bitcoin invoices time out for your privacy. '
+              'no worries - bitcoin invoices time out for your privacy. '
               'start a fresh one whenever you like.',
               textAlign: TextAlign.center,
               style: HaloType.sans(
@@ -1217,7 +1217,7 @@ class _ConfirmedViewState extends State<_ConfirmedView>
             Text(
               t == SupporterTier.none
                   ? 'thank you for keeping kryfo independent.'
-                  : "verified on-chain — you're a ${tierName(t)} now. "
+                  : "verified on-chain - you're a ${tierName(t)} now. "
                         'no one can take that off you.',
               textAlign: TextAlign.center,
               style: HaloType.sans(

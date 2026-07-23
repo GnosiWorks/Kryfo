@@ -47,7 +47,7 @@ class _LockSetupScreenState extends State<LockSetupScreen> {
                   style: HaloType.serif(size: 18, color: HaloColors.text),
                 ),
                 content: Text(
-                  "you can still use your pin anytime — fingerprint is just faster.",
+                  "you can still use your pin anytime - fingerprint is just faster.",
                   style: HaloType.sans(size: 13, color: HaloColors.text2),
                 ),
                 actions: [
@@ -94,7 +94,7 @@ class _LockSetupScreenState extends State<LockSetupScreen> {
   Widget build(BuildContext context) {
     final title = _confirming ? 'confirm pin' : 'set a pin';
     final hint = _mismatch
-        ? "didn't match — try again"
+        ? "didn't match - try again"
         : (_confirming
               ? 'enter the same 4 digits'
               : '4 digits, anything you can remember');

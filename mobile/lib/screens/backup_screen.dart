@@ -65,7 +65,7 @@ class _BackupScreenState extends State<BackupScreen> {
             files: [XFile(path)],
             subject: 'kryfo backup',
             text:
-                'your encrypted kryfo backup. keep both this file AND your passphrase safe — you need both to restore.',
+                'your encrypted kryfo backup. keep both this file AND your passphrase safe - you need both to restore.',
           ),
         );
       } else {

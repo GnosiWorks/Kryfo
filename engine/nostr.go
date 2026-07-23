@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// halo nostr layer — store-and-forward messaging via public relays.
+// halo nostr layer - store-and-forward messaging via public relays.
 // phase 1.6 sprint 5+6: integration into engine.
 //
 // architecture:
@@ -635,7 +635,7 @@ func HaloTorGet(cUrl *C.char) *C.char {
 	if resp.StatusCode != 200 {
 		return C.CString(fmt.Sprintf("error: status %d", resp.StatusCode))
 	}
-	// cap at 256kb — the og tags live in <head>, no need for the whole page.
+	// cap at 256kb - the og tags live in <head>, no need for the whole page.
 	limited := io.LimitReader(resp.Body, 256*1024)
 	body, err := io.ReadAll(limited)
 	if err != nil {
@@ -744,7 +744,7 @@ func HaloTorGetB64(cUrl *C.char) *C.char {
 	if resp.StatusCode != 200 {
 		return C.CString(fmt.Sprintf("error: status %d", resp.StatusCode))
 	}
-	// cap at 1mb — preview thumbnails, not full-res.
+	// cap at 1mb - preview thumbnails, not full-res.
 	limited := io.LimitReader(resp.Body, 1024*1024)
 	body, err := io.ReadAll(limited)
 	if err != nil {

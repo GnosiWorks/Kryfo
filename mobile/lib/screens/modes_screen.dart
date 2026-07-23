@@ -343,7 +343,7 @@ class _Footnote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'cosmetic in phase 1 — every message routes through tor.\nfast mode wires up in phase 2.',
+      'cosmetic in phase 1 - every message routes through tor.\nfast mode wires up in phase 2.',
       style: HaloType.mono(size: 10, color: HaloColors.text3),
     );
   }
