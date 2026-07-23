@@ -80,7 +80,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
                 const SizedBox(height: 24),
                 Text(
                   'share this so someone can add you. it carries your kryfo id '
-                  'and onion address — nothing else.',
+                  'and onion address - nothing else.',
                   textAlign: TextAlign.center,
                   style: HaloType.sans(
                     size: 12,

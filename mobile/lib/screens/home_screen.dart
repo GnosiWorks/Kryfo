@@ -406,7 +406,7 @@ void _showConnectionSheet(BuildContext context) {
                 ),
                 const SizedBox(height: 22),
                 Text(
-                  'kryfo sends every message through tor — a chain of relays '
+                  'kryfo sends every message through tor - a chain of relays '
                   'that hides who you are talking to and where you are. no '
                   'single server ever sees both ends.',
                   style: HaloType.sans(

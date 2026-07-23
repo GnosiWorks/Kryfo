@@ -440,7 +440,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(4, 10, 12, 0),
             child: Text(
-              'not independently audited. pre-alpha — good for testing, '
+              'not independently audited. pre-alpha - good for testing, '
               'not yet for high-stakes use.',
               style: HaloType.sans(
                 size: 12,

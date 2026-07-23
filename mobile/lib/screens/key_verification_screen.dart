@@ -154,7 +154,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                   StaggerIn(
                     index: 4,
                     child: Text(
-                      'if ${widget.peerName} sees the same number, your messages are private to just the two of you. comparing in person or over a call you trust is the surest way to be sure — but it is optional, never required to chat.',
+                      'if ${widget.peerName} sees the same number, your messages are private to just the two of you. comparing in person or over a call you trust is the surest way to be sure - but it is optional, never required to chat.',
                       style: HaloType.sans(
                         size: 13,
                         color: HaloColors.text2,

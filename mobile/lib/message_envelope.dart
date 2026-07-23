@@ -21,16 +21,16 @@ class UnwrappedMessage {
   final String? senderEdPub; // 'e' field, hex
   final String? senderOnion; // 'o' field
   final String? senderXPub; // 'x' field, hex
-  final int? burnSeconds; // 'b' field — seconds-from-receive
-  final String? msgUid; // 'u' field — stable cross-device message id
-  final ReactionFrame? reaction; // 'r' field — present on reaction control msgs
-  final PinFrame? pin; // 'pn' field — shared pin/unpin control msgs
-  final EditFrame? edit; // 'ed' field — present on edit control msgs
-  final String? replyTo; // 'q' field — msg_uid this message replies to
-  final String? groupId; // 'g' field — present for group messages
+  final int? burnSeconds; // 'b' field - seconds-from-receive
+  final String? msgUid; // 'u' field - stable cross-device message id
+  final ReactionFrame? reaction; // 'r' field - present on reaction control msgs
+  final PinFrame? pin; // 'pn' field - shared pin/unpin control msgs
+  final EditFrame? edit; // 'ed' field - present on edit control msgs
+  final String? replyTo; // 'q' field - msg_uid this message replies to
+  final String? groupId; // 'g' field - present for group messages
   final GroupControl?
-  groupControl; // 'gc' field — present on group control msgs
-  final String? imageB64; // 'i' field — base64-encoded compressed jpeg
+  groupControl; // 'gc' field - present on group control msgs
+  final String? imageB64; // 'i' field - base64-encoded compressed jpeg
   final String? unsend; // 'un' field - recalled msg_uid
   final String? fileB64; // 'f' field - base64 file bytes
   final String? fileName; // 'fn' field - original display name

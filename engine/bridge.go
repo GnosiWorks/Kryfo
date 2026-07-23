@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// halo engine — ffi bridge for flutter
+// halo engine - ffi bridge for flutter
 // phase 1 stage C-prep: identity + tor onion + ECDH + key export/restore for persistence.
 
 package main
@@ -750,7 +750,7 @@ func HaloDecryptBackup(cBlob, cPassphrase *C.char) *C.char {
 // watchHSDirUpload subscribes to tor's HS_DESC events and returns as
 // soon as an UPLOADED action is reported for our onion id, or after
 // 60s as a fallback. without this we'd just wait the full 60s
-// heuristic — most networks UPLOAD within 5-15 seconds.
+// heuristic - most networks UPLOAD within 5-15 seconds.
 func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID string) bool {
 	if t == nil || t.Control == nil || !subbed {
 		time.Sleep(120 * time.Second)

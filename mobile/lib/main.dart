@@ -4736,7 +4736,7 @@ class _DevScreenState extends State<DevScreen> {
             ),
             const SizedBox(height: 14),
             Text(
-              '— or paste —',
+              '- or paste -',
               style: HaloType.sans(size: 11, color: HaloColors.text3),
             ),
             const SizedBox(height: 10),
