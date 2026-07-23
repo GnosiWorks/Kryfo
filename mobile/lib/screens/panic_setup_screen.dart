@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // panic_setup_screen.dart - set a panic pin distinct from the
-// normal pin. entering it on the lock screen silently wipes halo
+// normal pin. entering it on the lock screen silently wipes kryfo
 // and exits. for coercion scenarios where you want plausible
 // deniability - to the attacker it looks like the app crashed.
 
@@ -91,7 +91,7 @@ class _PanicSetupScreenState extends State<PanicSetupScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
-                "this pin will silently wipe halo when entered on the lock screen. it must be different from your normal pin.",
+                "this pin will silently wipe kryfo when entered on the lock screen. it must be different from your normal pin.",
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 13,

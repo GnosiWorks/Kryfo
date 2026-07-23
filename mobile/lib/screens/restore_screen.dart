@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// restore_screen.dart - pick a halo backup file, enter passphrase,
+// restore_screen.dart - pick a kryfo backup file, enter passphrase,
 // overwrites local identity + db + prefs with backup contents. asks
-// user to force-close and reopen halo afterwards (cleanest way to
+// user to force-close and reopen kryfo afterwards (cleanest way to
 // rehydrate all in-memory state).
 
 import 'dart:io';
@@ -12,7 +12,7 @@ import '../theme.dart';
 
 class RestoreScreen extends StatefulWidget {
   // when non-null, called after a successful restore instead of the
-  // 'force-close halo' dialog. used from onboarding to skip restart
+  // 'force-close kryfo' dialog. used from onboarding to skip restart
   // and go straight to the home shell.
   final VoidCallback? onRestored;
   const RestoreScreen({super.key, this.onRestored});
@@ -33,8 +33,9 @@ class _RestoreScreenState extends State<RestoreScreen> {
     if (result == null || result.files.single.path == null) return;
     final path = result.files.single.path!;
     final blob = await File(path).readAsString();
-    if (!blob.startsWith('halo-backup:')) {
-      setState(() => _error = 'that file is not a halo backup');
+    if (!(blob.startsWith('kryfo-backup:') ||
+        blob.startsWith('halo-backup:'))) {
+      setState(() => _error = 'that file is not a kryfo backup');
       return;
     }
     setState(() {
@@ -71,7 +72,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
             style: HaloType.serif(size: 18, color: HaloColors.text),
           ),
           content: Text(
-            "halo will close now. tap the icon to reopen with your restored identity.",
+            "kryfo will close now. tap the icon to reopen with your restored identity.",
             style: HaloType.sans(size: 13, color: HaloColors.text2),
           ),
           actions: [
@@ -85,7 +86,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                 );
               },
               child: Text(
-                'reopen halo',
+                'reopen kryfo',
                 style: HaloType.sans(size: 13, color: HaloColors.amber),
               ),
             ),
@@ -118,7 +119,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
         elevation: 0,
         leading: const BackButton(color: Color(0xFFAAAAAA)),
         title: Text(
-          'restore halo',
+          'restore kryfo',
           style: HaloType.serif(size: 22, color: HaloColors.text, italic: true),
         ),
       ),
@@ -136,7 +137,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                   border: Border.all(color: HaloColors.rose, width: 0.5),
                 ),
                 child: Text(
-                  'this replaces your current halo (identity, messages, contacts). cannot be undone.',
+                  'this replaces your current kryfo (identity, messages, contacts). cannot be undone.',
                   style: HaloType.sans(
                     size: 12.5,
                     color: HaloColors.rose,

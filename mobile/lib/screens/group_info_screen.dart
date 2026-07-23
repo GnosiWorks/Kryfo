@@ -6,7 +6,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../main.dart' show appState, db;
 import '../theme.dart';
-import '../widgets/halo_avatar.dart';
+import '../widgets/kryfo_avatar.dart';
 import '../widgets/motion.dart' show haloRoute;
 import 'package:flutter/services.dart';
 import 'chat_screen.dart'
@@ -500,7 +500,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                     ),
                     child: Row(
                       children: [
-                        HaloAvatar(seed: m, size: 36),
+                        KryfoAvatar(seed: m, size: 36),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -722,7 +722,7 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                     ),
                     child: Row(
                       children: [
-                        HaloAvatar(seed: c.avatarSeed, size: 32),
+                        KryfoAvatar(seed: c.avatarSeed, size: 32),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(

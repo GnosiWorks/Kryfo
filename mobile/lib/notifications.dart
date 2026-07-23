@@ -60,7 +60,7 @@ Future<void> showMessageNotification({
 }) async {
   final hidden = await loadHideNotifContent();
   if (hidden) {
-    title = 'halo';
+    title = 'kryfo';
     body = 'new message';
   }
   final details = AndroidNotificationDetails(

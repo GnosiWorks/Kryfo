@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'donate_screen.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
-import '../widgets/halo_avatar.dart';
+import '../widgets/kryfo_avatar.dart';
 import 'notes_screen.dart';
 import 'archived_screen.dart';
 import '../miui_autostart.dart';
@@ -29,7 +29,7 @@ class HomeScreen extends StatelessWidget {
   final VoidCallback onOpenDev;
   final VoidCallback onOpenSettings;
   final VoidCallback onOpenSettingsDirect;
-  final void Function(String halo) onOpenChat;
+  final void Function(String kryfo) onOpenChat;
   final void Function(String groupId) onOpenGroup;
 
   const HomeScreen({
@@ -406,7 +406,7 @@ void _showConnectionSheet(BuildContext context) {
                 ),
                 const SizedBox(height: 22),
                 Text(
-                  'halo sends every message through tor — a chain of relays '
+                  'kryfo sends every message through tor — a chain of relays '
                   'that hides who you are talking to and where you are. no '
                   'single server ever sees both ends.',
                   style: HaloType.sans(
@@ -540,7 +540,7 @@ class _HomeHead extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'your halo',
+                  'your kryfo',
                   style: HaloType.mono(
                     size: 9.5,
                     color: HaloColors.text3,
@@ -712,7 +712,7 @@ class _EmptyStateState extends State<_EmptyState>
             ),
             const SizedBox(height: 14),
             Text(
-              'no halos yet.',
+              'no kryfos yet.',
               textAlign: TextAlign.center,
               style: HaloType.serif(
                 size: 22,
@@ -823,7 +823,7 @@ class _ArchivedPin extends StatelessWidget {
 class _ContactList extends StatelessWidget {
   final List<ContactPreview> contacts;
   final List<GroupSummary> groups;
-  final void Function(String halo) onTap;
+  final void Function(String kryfo) onTap;
   final void Function(String groupId) onOpenGroup;
   final VoidCallback onNewGroup;
   const _ContactList({
@@ -1083,7 +1083,7 @@ class _HeroCard extends StatelessWidget {
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    HaloAvatar(seed: c.avatarSeed, size: 42),
+                    KryfoAvatar(seed: c.avatarSeed, size: 42),
                     if (c.verified)
                       Positioned(
                         right: -1,
@@ -1375,7 +1375,7 @@ class _Row extends StatelessWidget {
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  HaloAvatar(seed: c.avatarSeed, size: 44),
+                  KryfoAvatar(seed: c.avatarSeed, size: 44),
                   if (c.verified)
                     Positioned(
                       right: -1,

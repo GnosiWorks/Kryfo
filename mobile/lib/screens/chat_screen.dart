@@ -31,7 +31,7 @@ import '../message_envelope.dart'
         powBits;
 import '../theme.dart';
 import '../media_progress.dart';
-import '../widgets/halo_avatar.dart';
+import '../widgets/kryfo_avatar.dart';
 import '../main.dart'
     show
         engine,
@@ -3766,7 +3766,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           ),
                           child: Row(
                             children: [
-                              HaloAvatar(seed: c.avatarSeed, size: 32),
+                              KryfoAvatar(seed: c.avatarSeed, size: 32),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
@@ -4757,7 +4757,7 @@ class _ChatHead extends StatelessWidget {
           GestureDetector(
             onTap: onBlock, // avatar -> contact actions + verify
             behavior: HitTestBehavior.opaque,
-            child: HaloAvatar(seed: avatarSeed, size: 36),
+            child: KryfoAvatar(seed: avatarSeed, size: 36),
           ),
           const SizedBox(width: 11),
           Expanded(
@@ -5316,7 +5316,7 @@ class _Bubble extends StatelessWidget {
   final String? quotedAuthor;
   final VoidCallback? onQuoteTap;
   // search context: the live query (empty when not searching), whether
-  // this bubble is the current hit (gets a soft amber halo), and whether
+  // this bubble is the current hit (gets a soft amber kryfo), and whether
   // it should dim (search active but this isn't a match).
   final String query;
   final bool isCurrentMatch;
@@ -6247,7 +6247,7 @@ class _ReplyQuoteBar extends StatelessWidget {
 }
 
 // floating reaction bar shown above the long-pressed bubble. soft shadow,
-// rounded pill, scale + fade entrance. matches halo's surface3 + line
+// rounded pill, scale + fade entrance. matches kryfo's surface3 + line
 // design language.
 class _EmojiPickerBubble extends StatefulWidget {
   final List<String> emojis;

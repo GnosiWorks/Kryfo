@@ -43,15 +43,15 @@ class _BackupScreenState extends State<BackupScreen> {
       final blob = await createBackupBlob(pw);
       final tempDir = await getTemporaryDirectory();
       final ts = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      final path = p.join(tempDir.path, 'halo-backup-$ts.txt');
+      final path = p.join(tempDir.path, 'kryfo-backup-$ts.txt');
       await File(path).writeAsString(blob, flush: true);
       if (!mounted) return;
       final bytes = await File(path).readAsBytes();
       String? saved;
       try {
         saved = await FilePicker.saveFile(
-          dialogTitle: 'save your halo backup',
-          fileName: 'halo-backup-$ts.txt',
+          dialogTitle: 'save your kryfo backup',
+          fileName: 'kryfo-backup-$ts.txt',
           bytes: bytes,
         );
       } catch (_) {
@@ -63,9 +63,9 @@ class _BackupScreenState extends State<BackupScreen> {
         await SharePlus.instance.share(
           ShareParams(
             files: [XFile(path)],
-            subject: 'halo backup',
+            subject: 'kryfo backup',
             text:
-                'your encrypted halo backup. keep both this file AND your passphrase safe — you need both to restore.',
+                'your encrypted kryfo backup. keep both this file AND your passphrase safe — you need both to restore.',
           ),
         );
       } else {
@@ -98,7 +98,7 @@ class _BackupScreenState extends State<BackupScreen> {
         elevation: 0,
         leading: const BackButton(color: Color(0xFFAAAAAA)),
         title: Text(
-          'back up halo',
+          'back up kryfo',
           style: HaloType.serif(size: 22, color: HaloColors.text, italic: true),
         ),
       ),

@@ -108,7 +108,7 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
                       accent: 'recommended',
                       active: _mode == PushMode.tor,
                       desc:
-                          'Halo polls Tor in the background. Nothing leaves your phone via any third party. Battery cost is small.',
+                          'Kryfo polls Tor in the background. Nothing leaves your phone via any third party. Battery cost is small.',
                       badges: const ['no metadata', '~30s latency'],
                       onTap: () => _pick(PushMode.tor),
                     ),
@@ -206,7 +206,7 @@ class _Head extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'how halo learns a message has arrived',
+            'how kryfo learns a message has arrived',
             style: HaloType.sans(size: 11, color: HaloColors.text2),
           ),
         ],

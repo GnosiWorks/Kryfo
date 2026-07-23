@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import '../theme.dart';
 
-class WhyHaloScreen extends StatelessWidget {
-  const WhyHaloScreen({super.key});
+class WhyKryfoScreen extends StatelessWidget {
+  const WhyKryfoScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +14,7 @@ class WhyHaloScreen extends StatelessWidget {
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
-          'why halo',
+          'why kryfo',
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
@@ -56,7 +56,7 @@ class WhyHaloScreen extends StatelessWidget {
                 Icons.visibility_off_outlined,
                 'nothing leaks',
                 'no read receipts or typing tells handed to anyone, no contact '
-                    'list uploaded. metadata is what most apps leak — halo is built '
+                    'list uploaded. metadata is what most apps leak — kryfo is built '
                     'not to.',
               ),
               _principle(
@@ -77,7 +77,7 @@ class WhyHaloScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'halo is pre-alpha and has not been audited. the crypto is real '
+                'kryfo is pre-alpha and has not been audited. the crypto is real '
                 'but no outside expert has checked it yet, so treat it as a work '
                 'in progress, not something to trust with your life.',
                 style: HaloType.sans(

@@ -88,7 +88,7 @@ class GroupControl {
   final String type; // 'create' | 'add' | 'remove' | 'rename' | 'leave'
   final String? name; // present on 'create' and 'rename'
   final List<String>?
-  members; // full member list on 'create'; the target halo id list on 'add'/'remove'
+  members; // full member list on 'create'; the target kryfo id list on 'add'/'remove'
   // participants carries full SenderInfo (halo_id + onion + xpub) for each
   // member the receiver might not already have as a contact. populated on
   // 'create' (every member) and 'add' (each newly added member). receivers

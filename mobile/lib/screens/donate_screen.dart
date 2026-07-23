@@ -143,7 +143,7 @@ class _DonateScreenState extends State<DonateScreen> {
         Text.rich(
           TextSpan(
             children: [
-              const TextSpan(text: 'keep halo '),
+              const TextSpan(text: 'keep kryfo '),
               TextSpan(
                 text: 'independent',
                 style: HaloType.serif(
@@ -1216,7 +1216,7 @@ class _ConfirmedViewState extends State<_ConfirmedView>
             const SizedBox(height: 10),
             Text(
               t == SupporterTier.none
-                  ? 'thank you for keeping halo independent.'
+                  ? 'thank you for keeping kryfo independent.'
                   : "verified on-chain — you're a ${tierName(t)} now. "
                         'no one can take that off you.',
               textAlign: TextAlign.center,
@@ -1412,14 +1412,14 @@ class _ThankYouScreenState extends State<_ThankYouScreen>
                 const SizedBox(height: 28),
               ],
               Text(
-                none ? 'thank you' : 'halo runs because of you',
+                none ? 'thank you' : 'kryfo runs because of you',
                 textAlign: TextAlign.center,
                 style: HaloType.serif(size: 26, color: HaloColors.text),
               ),
               const SizedBox(height: 12),
               Text(
                 none
-                    ? 'every bit keeps halo independent. no ads, no trackers, no one buying your attention.'
+                    ? 'every bit keeps kryfo independent. no ads, no trackers, no one buying your attention.'
                     : "you're a ${tierName(t)} now. no ads, no trackers, no one selling you out. just people keeping this alive.",
                 textAlign: TextAlign.center,
                 style: HaloType.sans(

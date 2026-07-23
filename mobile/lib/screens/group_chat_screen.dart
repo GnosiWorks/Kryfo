@@ -38,7 +38,7 @@ import '../main.dart'
         torGetB64OnIsolate;
 import '../theme.dart';
 import '../media_progress.dart';
-import '../widgets/halo_avatar.dart';
+import '../widgets/kryfo_avatar.dart';
 import '../widgets/burn_fade.dart';
 import 'group_info_screen.dart';
 import '../widgets/motion.dart'
@@ -1711,7 +1711,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                           ),
                           child: Row(
                             children: [
-                              HaloAvatar(seed: c.avatarSeed, size: 32),
+                              KryfoAvatar(seed: c.avatarSeed, size: 32),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
@@ -2835,7 +2835,7 @@ class _GroupBubble extends StatelessWidget {
             if (!isOut && showSender)
               Padding(
                 padding: const EdgeInsets.only(right: 6, bottom: 2),
-                child: HaloAvatar(seed: m.sender, size: 26),
+                child: KryfoAvatar(seed: m.sender, size: 26),
               ),
             if (!isOut && !showSender) const SizedBox(width: 32),
             Flexible(

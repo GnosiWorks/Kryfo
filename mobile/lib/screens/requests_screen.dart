@@ -5,7 +5,7 @@
 import 'package:flutter/material.dart';
 import '../main.dart' show db, appState;
 import '../theme.dart';
-import '../widgets/halo_avatar.dart';
+import '../widgets/kryfo_avatar.dart';
 import 'chat_screen.dart';
 import '../widgets/motion.dart' show haloRoute;
 
@@ -202,7 +202,7 @@ class _RequestCardState extends State<_RequestCard>
               ),
               child: Row(
                 children: [
-                  HaloAvatar(seed: widget.haloId, size: 44),
+                  KryfoAvatar(seed: widget.haloId, size: 44),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(

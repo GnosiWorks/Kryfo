@@ -51,7 +51,7 @@ class _LockScreenState extends State<LockScreen>
       setState(() => _busy = true);
       final result = await lockState.verifyPin(_pin);
       if (result == PinResult.panic) {
-        // silent wipe - the screen stays as if processing, then halo
+        // silent wipe - the screen stays as if processing, then kryfo
         // exits. to the coercer it looks like the app crashed.
         await wipeHalo();
         return;
@@ -87,7 +87,7 @@ class _LockScreenState extends State<LockScreen>
             children: [
               const Spacer(flex: 2),
               Text(
-                'halo',
+                'kryfo',
                 style: HaloType.serif(
                   size: 36,
                   color: HaloColors.amber,

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// halo motion library - tor warmup, send pills, typing/cursor/breath utilities.
+// kryfo motion library - tor warmup, send pills, typing/cursor/breath utilities.
 // matches the design language: fraunces serif, jetbrains mono, gentle curves,
 // breathing motion. one vocabulary, used throughout.
 
@@ -224,7 +224,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
       case TorStatus.publishing:
         return "telling the network you're online \u2014 without revealing where.";
       case TorStatus.reachable:
-        return 'your ip is hidden. only people with your halo can reach you.';
+        return 'your ip is hidden. only people with your kryfo can reach you.';
     }
   }
 
@@ -517,7 +517,7 @@ class _ZigZagWarmupPainter extends CustomPainter {
 
         final isCore = k == 3;
         if (isCore) {
-          // glow halo behind core
+          // glow kryfo behind core
           if (isActive) {
             canvas.drawCircle(
               c,
@@ -782,8 +782,8 @@ class _OnionSpinPainter extends CustomPainter {
 }
 
 // === TYPING DOTS ===
-// unused on purpose. halo sends NO typing signal over the wire (privacy: the
-// why_halo screen promises exactly that). kept only as a local building block
+// unused on purpose. kryfo sends NO typing signal over the wire (privacy: the
+// why_kryfo screen promises exactly that). kept only as a local building block
 // if a same-device demo ever needs it. do not wire this to the transport.
 class TypingDots extends StatefulWidget {
   const TypingDots({super.key});

@@ -9,7 +9,7 @@ import '../main.dart' show appState;
 import '../lock_state.dart';
 import '../miui_autostart.dart';
 import '../widgets/motion.dart' show TorStatus, haloRoute;
-import 'why_halo_screen.dart';
+import 'why_kryfo_screen.dart';
 import '../theme.dart';
 import 'modes_screen.dart';
 import 'blocked_screen.dart';
@@ -60,7 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: HaloColors.surface3,
         title: Text(
-          'wipe halo?',
+          'wipe kryfo?',
           style: HaloType.serif(size: 18, color: HaloColors.rose),
         ),
         content: Text(
@@ -123,7 +123,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ctx,
             ).pop(confirmCtrl.text.trim().toLowerCase() == 'wipe'),
             child: Text(
-              'wipe halo',
+              'wipe kryfo',
               style: HaloType.sans(size: 13, color: HaloColors.rose),
             ),
           ),
@@ -144,7 +144,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           style: HaloType.serif(size: 18, color: HaloColors.text),
         ),
         content: Text(
-          'the pin will be removed. anyone with your phone will see halo when they open it.',
+          'the pin will be removed. anyone with your phone will see kryfo when they open it.',
           style: HaloType.sans(size: 13, color: HaloColors.text2),
         ),
         actions: [
@@ -413,10 +413,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _Section('about'),
           _Row(
             icon: Icons.help_outline,
-            label: 'why halo',
+            label: 'why kryfo',
             value: 'how it protects you',
             onTap: () =>
-                Navigator.push(context, haloRoute(const WhyHaloScreen())),
+                Navigator.push(context, haloRoute(const WhyKryfoScreen())),
           ),
           _Row(
             icon: Icons.info_outline,
@@ -428,14 +428,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             label: 'report an issue',
             value: 'bug or security flaw',
             onTap: () => launchUrl(
-              Uri.parse('mailto:gnosiworks@proton.me?subject=Halo%20report'),
+              Uri.parse('mailto:gnosiworks@proton.me?subject=Kryfo%20report'),
               mode: LaunchMode.externalApplication,
             ),
           ),
           _Row(
             icon: Icons.code,
             label: 'open source',
-            value: 'github.com/GnosiWorks/Halo',
+            value: 'github.com/GnosiWorks/Kryfo',
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(4, 10, 12, 0),
@@ -460,7 +460,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      'wipe halo from this phone',
+                      'wipe kryfo from this phone',
                       style: HaloType.sans(size: 14, color: HaloColors.rose),
                     ),
                   ),

@@ -30,7 +30,7 @@ Future<void> openAutostartSettings() async {
 
 // non-xiaomi phones (samsung etc) kill background apps via battery
 // optimization. ask android to exempt us so messages still land when
-// halo is closed. miui keeps the autostart flow below.
+// kryfo is closed. miui keeps the autostart flow below.
 Future<void> maybeShowBackgroundPrompt(BuildContext context) async {
   if (await isMiui()) {
     await maybeShowMiuiPrompt(context);
@@ -87,13 +87,13 @@ Future<void> _showBatteryDialog(BuildContext context) {
             ),
             const SizedBox(height: 10),
             Text(
-              'Let halo run in the background',
+              'Let kryfo run in the background',
               style: HaloType.serif(size: 22),
             ),
             const SizedBox(height: 14),
             Text(
               "Your phone pauses apps to save battery. Without an exception, "
-              "halo can't receive messages while it's closed.",
+              "kryfo can't receive messages while it's closed.",
               style: HaloType.sans(color: HaloColors.text2, height: 1.55),
             ),
             const SizedBox(height: 24),
@@ -167,17 +167,17 @@ Future<void> _showDialog(BuildContext context) {
             ),
             const SizedBox(height: 10),
             Text(
-              'Let halo run in the background',
+              'Let kryfo run in the background',
               style: HaloType.serif(size: 22),
             ),
             const SizedBox(height: 14),
             Text(
-              'Xiaomi turns off background apps by default. Without autostart, halo can\'t deliver messages when the app is closed.',
+              'Xiaomi turns off background apps by default. Without autostart, kryfo can\'t deliver messages when the app is closed.',
               style: HaloType.sans(color: HaloColors.text2, height: 1.55),
             ),
             const SizedBox(height: 16),
             Text(
-              'On the next screen: find halo in the list and tap the toggle on.',
+              'On the next screen: find kryfo in the list and tap the toggle on.',
               style: HaloType.sans(
                 color: HaloColors.text3,
                 height: 1.55,

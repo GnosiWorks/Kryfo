@@ -1,4 +1,4 @@
-package com.halo.halo_app
+package app.kryfo
 
 import android.content.BroadcastReceiver
 import android.content.Context
