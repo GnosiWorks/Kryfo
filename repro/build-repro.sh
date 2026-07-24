@@ -11,16 +11,16 @@ mkdir -p "$OUT/arm64-v8a" "$OUT/x86_64"
 # repro win - dwarf carries paths). the ndk linker gets --build-id=none so
 # lld doesn't stamp a random note. trimpath comes from GOFLAGS in the image.
 LDFLAGS="-buildid= -w -s"
-CFLAGS_REPRO="-Wl,--build-id=none"
+export CGO_LDFLAGS="-Wl,--build-id=none"
 
 echo "arm64..."
-CC="$NDK/aarch64-linux-android27-clang $CFLAGS_REPRO" \
+CC="$NDK/aarch64-linux-android27-clang" \
   GOOS=android GOARCH=arm64 \
   go build -buildmode=c-shared -ldflags "$LDFLAGS" \
   -o "$OUT/arm64-v8a/libhalo.so" .
 
 echo "x86_64..."
-CC="$NDK/x86_64-linux-android24-clang $CFLAGS_REPRO" \
+CC="$NDK/x86_64-linux-android24-clang" \
   GOOS=android GOARCH=amd64 \
   go build -buildmode=c-shared -ldflags "$LDFLAGS" \
   -o "$OUT/x86_64/libhalo.so" .

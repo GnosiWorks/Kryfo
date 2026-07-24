@@ -37,17 +37,20 @@ export GOFLAGS="-mod=vendor -trimpath"
 export GOPROXY=off
 export GOCACHE="${GOCACHE:-$ENGINE_DIR/.gocache}"
 export CGO_ENABLED=1
+export CGO_LDFLAGS="-Wl,--build-id=none"
+export SOURCE_DATE_EPOCH=1700000000
+LDFLAGS="-buildid= -w -s"
 
 echo "ndk: $NDK_ROOT"
 echo "out: $JNI"
 
 echo "→ arm64 (phone)…"
 CC="$NDK/aarch64-linux-android27-clang" GOOS=android GOARCH=arm64 \
-  go build -buildmode=c-shared -o "$JNI/arm64-v8a/libhalo.so" .
+  go build -buildmode=c-shared -ldflags "$LDFLAGS" -o "$JNI/arm64-v8a/libhalo.so" .
 
 echo "→ x86_64 (emulator)…"
 CC="$NDK/x86_64-linux-android24-clang" GOOS=android GOARCH=amd64 \
-  go build -buildmode=c-shared -o "$JNI/x86_64/libhalo.so" .
+  go build -buildmode=c-shared -ldflags "$LDFLAGS" -o "$JNI/x86_64/libhalo.so" .
 
 ls -la "$JNI"/*/libhalo.so
 echo "✓ both archs built (offline)"

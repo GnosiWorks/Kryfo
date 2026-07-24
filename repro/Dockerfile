@@ -5,16 +5,14 @@ FROM debian:bookworm-20250630-slim
 
 # pinned tool versions
 ENV GO_VERSION=1.25.0
-ENV GO_SHA256=PLACEHOLDER_RUN_FILL_CHECKSUMS
+ENV GO_SHA256=2852af0cb20a13139b3448992e69b868e50ed0f8a1e5940ee1de9e19a123b613
 ENV NDK_VERSION=r28b
-ENV NDK_SHA256=9457d95a1e8a4a344c9f9d2b1a5f6b9c9e2e7c7c8b4e5f6a7b8c9d0e1f2a3b4c
+ENV NDK_SHA256=e9f2759862cecfd48c20bbb7d8cfedbb020f4d91b5f78d9a2fc106f7db3c27ed
 
 # bookworm ships tool versions frozen by the snapshot tag above, so these are
 # deterministic. only what the build actually needs.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      ca-certificates=20230311 \
-      curl=7.88.1-10+deb12u12 \
-      unzip=6.0-28 \
+    ca-certificates curl unzip \
     && rm -rf /var/lib/apt/lists/*
 
 # go toolchain, checksum-verified
@@ -33,6 +31,7 @@ ENV NDK=/opt/android-ndk-${NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64/bi
 
 # fixed build location - cgo records the working dir, so pin it
 WORKDIR /build
+RUN mkdir -p /build/out
 
 # deterministic build env. SOURCE_DATE_EPOCH pins any embedded timestamps;
 # -trimpath drops absolute module paths; buildid cleared; the linker's
