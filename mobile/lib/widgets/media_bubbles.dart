@@ -104,6 +104,9 @@ Widget fileCard(String? filePath, String? fileName, bool isOut) {
 }
 
 void openFullImage(BuildContext context, String path) {
+  // drop composer focus first, else popping the viewer restores it and the
+  // keyboard springs up over the chat.
+  FocusManager.instance.primaryFocus?.unfocus();
   Navigator.of(context).push(
     MaterialPageRoute(
       fullscreenDialog: true,

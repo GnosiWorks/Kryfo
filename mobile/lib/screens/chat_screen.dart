@@ -40,12 +40,18 @@ import '../main.dart'
         appState,
         currentChatPeer,
         torGetOnIsolate,
-        torGetB64OnIsolate;
+        torGetB64OnIsolate,
+        TorHalo;
 import '../widgets/motion.dart';
 import '../widgets/burn_fade.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
 final Map<String, String> _seenCipherPerPeer = {};
+// chunk indices already accepted by the peer, per media msg_uid. lets a
+// retry resume instead of re-uploading the whole file over tor.
+final Map<String, Set<int>> _chunkDone = {};
+// when each resume record was last touched, so a stale one can be dropped.
+final Map<String, int> _chunkDoneAt = {};
 // unsent drafts kept per peer so text survives leaving a chat.
 final Map<String, String> _draftPerPeer = {};
 // newest message ms seen when the chat was last left, per peer.
@@ -84,6 +90,7 @@ class _Msg {
   final String? replyTo;
   bool sending;
   bool failed;
+  bool delivered;
   bool edited;
   bool pinned;
   bool removing;
@@ -114,6 +121,7 @@ class _Msg {
     this.fileName,
     this.voiceDisguised = false,
     this.saved = false,
+    this.delivered = false,
     Map<String, String>? reactions,
   }) : reactions = reactions ?? <String, String>{};
 }
@@ -206,26 +214,31 @@ Widget _fileCard(_Msg msg, bool isOut) {
 }
 
 void _openFullImage(BuildContext context, String path) {
-  Navigator.of(context).push(
-    MaterialPageRoute(
-      fullscreenDialog: true,
-      builder: (ctx) => GestureDetector(
-        onTap: () => Navigator.of(ctx).pop(),
-        child: Scaffold(
-          backgroundColor: Colors.black,
-          body: SafeArea(
-            child: Center(
-              child: InteractiveViewer(
-                minScale: 1,
-                maxScale: 4,
-                child: Image.file(File(path)),
+  // drop the composer's focus first, else popping the viewer restores it and
+  // the keyboard springs up over the chat.
+  FocusManager.instance.primaryFocus?.unfocus();
+  Navigator.of(context)
+      .push(
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (ctx) => GestureDetector(
+            onTap: () => Navigator.of(ctx).pop(),
+            child: Scaffold(
+              backgroundColor: Colors.black,
+              body: SafeArea(
+                child: Center(
+                  child: InteractiveViewer(
+                    minScale: 1,
+                    maxScale: 4,
+                    child: Image.file(File(path)),
+                  ),
+                ),
               ),
             ),
           ),
         ),
-      ),
-    ),
-  );
+      )
+      .then((_) => FocusManager.instance.primaryFocus?.unfocus());
 }
 
 String _friendlyStatus(String raw) {
@@ -622,6 +635,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (rev != _lastRev) {
       _lastRev = rev;
       _tryAppendNew();
+      unawaited(_refreshDelivered());
     }
     _refreshRequestState();
   }
@@ -696,6 +710,25 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (changed && mounted) setState(() {});
   }
 
+  // a delivery receipt flipped `delivered` in the db for a message already on
+  // screen. _tryAppendNew won't catch it (no new row), so re-read the flag for
+  // any out-message not yet marked delivered and update the bubble in place.
+  Future<void> _refreshDelivered() async {
+    final pending = _messages
+        .where((m) => m.direction == 'out' && !m.delivered && m.msgUid != null)
+        .toList();
+    if (pending.isEmpty) return;
+    var changed = false;
+    for (final m in pending) {
+      final ok = await db.isDelivered(m.msgUid!);
+      if (ok && !m.delivered) {
+        m.delivered = true;
+        changed = true;
+      }
+    }
+    if (changed && mounted) setState(() {});
+  }
+
   Future<void> _tryAppendNew() async {
     if (!_loaded || _searching) {
       _loadMessages();
@@ -738,6 +771,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         fileName: r['file_name'] as String?,
         voiceDisguised: (r['voice_disguised'] as int? ?? 0) == 1,
         saved: (r['saved'] as int? ?? 0) == 1,
+        delivered: (r['delivered'] as int? ?? 0) == 1,
         sending:
             (r['direction'] as String) == 'out' &&
             (r['sent'] as int? ?? 1) == 0,
@@ -755,8 +789,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (uid != null) _seenUids.add(uid);
     }
     setState(() => _messages.addAll(fresh));
-    // a message landing while we're inside this chat left the home badge lit.
-    if (fresh.any((m) => m.direction != 'out')) {
+    // a message landing while we're actually reading this chat left the home
+    // badge lit - clear it. but this runs on every appState notify, and a
+    // backed-out chat is still in the tree for a while, so it would wipe a dot
+    // nobody had seen. only the open chat gets to clear.
+    if (fresh.any((m) => m.direction != 'out') &&
+        currentChatPeer == widget.peerHaloId) {
       unawaited(db.clearUnread(widget.peerHaloId));
       unawaited(appState.refreshContacts());
     }
@@ -1346,6 +1384,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _unsendMessage(_Msg m) async {
     if (m.msgUid == null) return;
+    // the confirm sheet hands focus back to the composer on close, which pops
+    // the keyboard for no reason. let go of it now and again after.
+    FocusManager.instance.primaryFocus?.unfocus();
     final confirm = await showModalBottomSheet<bool>(
       context: context,
       backgroundColor: HaloColors.surface2,
@@ -1399,6 +1440,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         ),
       ),
     );
+    FocusManager.instance.primaryFocus?.unfocus();
     if (confirm != true) return;
     if (mounted) setState(() => m.removing = true);
     // let the burn dissolve finish before the row is pulled (was 300ms, cut the
@@ -1688,6 +1730,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           fileName: r['file_name'] as String?,
           voiceDisguised: (r['voice_disguised'] as int? ?? 0) == 1,
           saved: (r['saved'] as int? ?? 0) == 1,
+          delivered: (r['delivered'] as int? ?? 0) == 1,
           sending:
               (r['direction'] as String) == 'out' &&
               (r['sent'] as int? ?? 1) == 0,
@@ -2398,7 +2441,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       powCap = await compute(_grindPowTask, caption);
       powRest = powCap; // caption rides every chunk, one seed fits all
     }
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final since = now - (_chunkDoneAt[msgUid] ?? now);
+    if (since > 240000) {
+      // too old to trust - the peer may have restarted and lost its buffer.
+      _chunkDone.remove(msgUid);
+    }
+    _chunkDoneAt[msgUid] = now;
+    final done = _chunkDone.putIfAbsent(msgUid, () => <int>{});
+    if (done.isNotEmpty && total > 1) {
+      debugPrint('MEDIA resume $msgUid: ${done.length}/$total already landed');
+      mediaProgressUpdate(msgUid, done.length / total);
+    }
     for (var i = 0; i < total; i++) {
+      if (done.contains(i)) continue; // peer already has this slice
       final String cipher;
       try {
         // name + voice flags ride every slice: the receiver rebuilds off
@@ -2457,10 +2513,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
       if (!sent) {
         debugPrint('MEDIA CHUNK $i/$total failed: $lastErr');
+        // keep what landed so tap-to-retry resumes from here.
         return lastErr;
       }
-      mediaProgressUpdate(msgUid, (i + 1) / total);
+      done.add(i);
+      _chunkDoneAt[msgUid] = DateTime.now().millisecondsSinceEpoch;
+      mediaProgressUpdate(msgUid, done.length / total);
     }
+    // whole file is across - drop the resume record.
+    _chunkDone.remove(msgUid);
+    _chunkDoneAt.remove(msgUid);
     return 'ok';
   }
 
@@ -3017,6 +3079,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         state == AppLifecycleState.inactive) {
       if (currentChatPeer == widget.peerHaloId) currentChatPeer = null;
     } else if (state == AppLifecycleState.resumed) {
+      // only re-claim "this chat is open" if we're actually the visible route.
+      // without the check, backing out to home and resuming later left this
+      // peer marked as open forever, and their unread dot never lit again.
+      final visible = ModalRoute.of(context)?.isCurrent ?? false;
+      if (!visible) {
+        if (currentChatPeer == widget.peerHaloId) currentChatPeer = null;
+        return;
+      }
       currentChatPeer = widget.peerHaloId;
       db.clearUnread(widget.peerHaloId).then((_) => appState.refreshContacts());
       _reconcileSending();
@@ -3039,6 +3109,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
     }
     if (changed && mounted) setState(() {});
+  }
+
+  @override
+  void deactivate() {
+    // popped or covered: stop claiming this chat is the one being read, so a
+    // message arriving right after we leave still lights the home dot.
+    if (currentChatPeer == widget.peerHaloId) currentChatPeer = null;
+    super.deactivate();
   }
 
   @override
@@ -4408,6 +4486,30 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   style: HaloType.mono(size: 10, color: HaloColors.amber),
                 ),
               ),
+            // tor still warming: say so where the eye already is. messages
+            // typed now are queued and go out the moment the route is up.
+            if (!_torReadyToSend())
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const TorHalo(),
+                    const SizedBox(width: 7),
+                    Flexible(
+                      child: Text(
+                        'building a private route · first connect is the slow '
+                        'one, later ones are quick. anything you send now is '
+                        'queued and delivers itself.',
+                        style: HaloType.sans(
+                          size: 10.5,
+                          color: HaloColors.text2,
+                        ).copyWith(height: 1.35),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 220),
               switchInCurve: Curves.easeOut,
@@ -5676,10 +5778,11 @@ class _Bubble extends StatelessWidget {
                                                   ),
                                                 ),
                                                 const SizedBox(width: 3),
-                                                if (!msg.sending && !msg.failed)
-                                                  const Text(
+                                                if (!msg.sending &&
+                                                    !msg.failed) ...[
+                                                  Text(
                                                     '✓',
-                                                    style: TextStyle(
+                                                    style: const TextStyle(
                                                       fontSize: 10,
                                                       color: Colors.white,
                                                       fontWeight:
@@ -5687,6 +5790,22 @@ class _Bubble extends StatelessWidget {
                                                       height: 1,
                                                     ),
                                                   ),
+                                                  if (msg.delivered) ...[
+                                                    const SizedBox(width: 4),
+                                                    const Text(
+                                                      'delivered',
+                                                      style: TextStyle(
+                                                        fontFamily:
+                                                            'JetBrains Mono',
+                                                        fontSize: 8.5,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        color: Colors.white,
+                                                        letterSpacing: 0.3,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ],
                                               ],
                                             ),
                                           ),
@@ -5758,6 +5877,19 @@ class _Bubble extends StatelessWidget {
                                             height: 1,
                                           ),
                                         ),
+                                        if (msg.delivered) ...[
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'delivered',
+                                            style: TextStyle(
+                                              fontFamily: 'JetBrains Mono',
+                                              fontSize: 8.5,
+                                              fontWeight: FontWeight.w600,
+                                              color: metaColor,
+                                              letterSpacing: 0.3,
+                                            ),
+                                          ),
+                                        ],
                                         if (msg.burnAt != null) ...[
                                           const SizedBox(width: 6),
                                           Icon(
