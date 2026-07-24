@@ -63,3 +63,5 @@ mobile/android/key.properties
 mobile/android/key.properties
 *.jks
 *.keystore
+icon-backup-*/
+engine/e*.py
