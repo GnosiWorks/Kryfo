@@ -23,6 +23,12 @@ android {
     }
 
     namespace = "app.kryfo"
+
+    packaging {
+        jniLibs {
+            keepDebugSymbols += "**/libhalo.so"
+        }
+    }
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "28.2.13676358"
 
