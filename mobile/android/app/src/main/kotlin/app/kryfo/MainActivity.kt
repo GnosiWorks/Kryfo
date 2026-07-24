@@ -14,6 +14,7 @@ import android.content.ActivityNotFoundException
 import android.net.Uri
 import android.provider.Settings
 import android.view.WindowManager
+import android.os.Bundle
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
@@ -32,8 +33,19 @@ class MainActivity : FlutterFragmentActivity() {
     // normal way (attached to native properly), and configureFlutterEngine
     // below puts it in the cache for next time. this is the hook a
     // FlutterFragmentActivity actually honours.
-    override fun getCachedEngineId(): String? =
-        if (FlutterEngineCache.getInstance().contains(ENGINE_ID)) ENGINE_ID else null
+    override fun getCachedEngineId(): String? {
+        val cache = FlutterEngineCache.getInstance()
+        val eng = cache.get(ENGINE_ID) ?: return null
+        // the crash was FlutterView.onSizeChanged pushing viewport metrics into
+        // an engine whose renderer had detached (window surface torn down on a
+        // recents swipe, activity recreated before reattach). reusing that
+        // engine here is what blew up. only claim the cached engine when its
+        // renderer is actually displaying; otherwise return null so the
+        // framework builds and cleanly attaches a fresh one for this window.
+        // the background isolate + tor keep running on the cached engine
+        // regardless - this only governs which engine drives THIS activity.
+        return if (eng.renderer.isDisplayingFlutterUi) ENGINE_ID else null
+    }
 
     // keep the engine when this screen goes away, so the dart isolate and the
     // nostr poll timer keep running in the background

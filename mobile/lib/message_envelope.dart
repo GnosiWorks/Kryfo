@@ -47,6 +47,7 @@ class UnwrappedMessage {
   final int? powNonce; // 'pw' - proof-of-work nonce (first-contact only)
   final int? powBitsUsed; // 'pb' - difficulty the sender solved to
   final String? supporterBadge; // 'bg' - sender's shared supporter tier
+  final String? deliveredUid; // 'dr' - receipt: uid the peer just stored
   UnwrappedMessage(
     this.message, {
     this.endpoint,
@@ -78,6 +79,7 @@ class UnwrappedMessage {
     this.powNonce,
     this.powBitsUsed,
     this.supporterBadge,
+    this.deliveredUid,
   });
 }
 
@@ -202,6 +204,7 @@ Future<String> wrapMessage(
   List<Map<String, String>>? rosterParticipants,
   int? powNonce,
   int? powBitsUsed,
+  String? deliveredUid,
   String? supporterBadge,
 }) async {
   final mode = await loadPushMode();
@@ -219,6 +222,7 @@ Future<String> wrapMessage(
   if (replyTo != null) body['q'] = replyTo;
   if (imageB64 != null) body['i'] = imageB64;
   if (unsend != null) body['un'] = unsend;
+  if (deliveredUid != null) body['dr'] = deliveredUid;
   if (fileB64 != null) body['f'] = fileB64;
   if (fileName != null) body['fn'] = fileName;
   if (voice) body['vo'] = 1;
@@ -336,6 +340,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       groupControl: gc,
       imageB64: json['i'] as String?,
       unsend: json['un'] as String?,
+      deliveredUid: json['dr'] as String?,
       fileB64: json['f'] as String?,
       fileName: json['fn'] as String?,
       voice: json['vo'] == 1,

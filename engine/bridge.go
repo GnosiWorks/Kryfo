@@ -454,6 +454,7 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 // conn is provably dead. serialized on startMu against Start/Shutdown so two
 // restarts (or a restart racing shutdown) can't overlap.
 var torRestarting int32
+var lastTorRestart int64 // unix seconds of the last restart, for cooldown
 
 func restartTor() {
 	// collapse concurrent triggers - only one restart at a time.
@@ -461,6 +462,16 @@ func restartTor() {
 		return
 	}
 	defer atomic.StoreInt32(&torRestarting, 0)
+
+	// cooldown: a quiet-but-alive relay shouldn't drive a restart loop. hold
+	// to at least 3 min between restarts. the deaf-cycle trigger can be noisy;
+	// the dialer-hang trigger is rarer but shares the same floor.
+	now := time.Now().Unix()
+	if prev := atomic.LoadInt64(&lastTorRestart); prev != 0 && now-prev < 180 {
+		log.Printf("halo: restartTor skipped - %ds since last (cooldown 180s)", now-prev)
+		return
+	}
+	atomic.StoreInt64(&lastTorRestart, now)
 
 	startMu.Lock()
 	defer startMu.Unlock()

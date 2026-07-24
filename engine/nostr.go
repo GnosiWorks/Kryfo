@@ -355,6 +355,7 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 		own := i == 0
 		go func(u string) {
 			last := nostr.Timestamp(lastSaved)
+			deafRuns := 0
 			retry := 10 * time.Second
 			rejoin := 5 * time.Second
 			deaf := 4 * time.Minute
@@ -412,6 +413,8 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 					continue
 				}
 				log.Printf("nostr: listening on %s for addr %s...", u, rcvPk[:12])
+				// consecutive deaf cycles on our own relay = tor is wedged mute.
+				// tracked across reconnects via deafRuns (declared above the loop).
 				// a dead tor circuit leaves the websocket open but mute - no
 				// error, no channel close, this select just goes deaf forever
 				// while messages slide past. quiet too long = assume dead and
@@ -432,6 +435,7 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 							}
 							dispatch(ev)
 						}
+						deafRuns = 0
 						if !idle.Stop() {
 							select {
 							case <-idle.C:
@@ -442,6 +446,19 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 					case <-idle.C:
 						log.Printf("nostr: %s quiet %s, cycling the sub", u, deaf)
 						r.Close()
+						// mute is how a wedged tor looks when the dialer doesn't
+						// hang. our own relay carries the traffic, so two silent
+						// cycles in a row means the circuit is dead - restart tor
+						// the same way the hang path does. non-own relays just
+						// cycle (a quiet public relay isn't proof of anything).
+						if own {
+							deafRuns++
+							if deafRuns >= 2 {
+								deafRuns = 0
+								log.Println("nostr: own relay mute twice, tor wedged -> restart")
+								go restartTor()
+							}
+						}
 						goto reconnect
 					case <-ctx.Done():
 						idle.Stop()

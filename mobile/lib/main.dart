@@ -471,7 +471,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 32,
+      version: 33,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -523,6 +523,7 @@ class HaloDb {
             voice_disguised INTEGER NOT NULL DEFAULT 0,
             saved INTEGER NOT NULL DEFAULT 0,
             sent INTEGER NOT NULL DEFAULT 1,
+            delivered INTEGER NOT NULL DEFAULT 0,
             preview TEXT,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
@@ -572,6 +573,11 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 33) {
+          await db.execute(
+            'ALTER TABLE messages ADD COLUMN delivered INTEGER NOT NULL DEFAULT 0',
+          );
+        }
         if (oldV < 32) {
           await db.execute(
             'ALTER TABLE contacts ADD COLUMN supporter_badge TEXT',
@@ -1859,6 +1865,44 @@ class HaloDb {
     return (r.first['sent'] as int? ?? 0) == 1;
   }
 
+  // every outgoing row that never got confirmed on the wire, oldest first.
+  // the drainer walks this on a timer so a send survives tor warmup, backing
+  // out of the chat, and a cold restart.
+  Future<List<Map<String, Object?>>> unsentOutbox() async {
+    final db = await open();
+    return db.query(
+      'messages',
+      where:
+          "direction = 'out' AND delivered = 0 AND msg_uid IS NOT NULL "
+          "AND (group_id IS NULL OR group_id = '')",
+      orderBy: 'sent_at ASC',
+      limit: 40,
+    );
+  }
+
+  Future<bool> isDelivered(String msgUid) async {
+    final db = await open();
+    final r = await db.query(
+      'messages',
+      columns: ['delivered'],
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+      limit: 1,
+    );
+    if (r.isEmpty) return false;
+    return (r.first['delivered'] as int? ?? 0) == 1;
+  }
+
+  Future<void> markDelivered(String msgUid) async {
+    final db = await open();
+    await db.update(
+      'messages',
+      {'sent': 1, 'delivered': 1},
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+    );
+  }
+
   Future<void> markSent(String msgUid) async {
     final db = await open();
     await db.update(
@@ -2288,8 +2332,99 @@ class AppState extends ChangeNotifier {
   // incoming media chunks buffered by mediaId until all arrive, then
   // reassembled into the full base64. single-chunk media skips this.
   final Map<String, Map<int, String>> _mediaChunks = {};
+  // group media slices already accepted by at least one member, per msg_uid,
+  // so tap-to-retry resumes instead of re-sending the whole file.
+  final Map<String, Set<int>> _grpChunkDone = {};
+  final Map<String, int> _grpChunkDoneAt = {};
   // burn seconds for media still arriving in slices, keyed by mediaId.
   final Map<String, int> _mediaBurn = {};
+  // uids the drainer is mid-flight on, so a slow send isn't fired twice by
+  // the next sweep.
+  final Set<String> _outboxInflight = <String>{};
+  // re-fire count per uid this session. caps the loop so an unreachable peer
+  // stops grinding; tap-to-retry in the chat still forces a send.
+  final Map<String, int> _outboxTries = <String, int>{};
+  Timer? _outboxTimer;
+  bool _outboxWasReady = false;
+
+  // start the outbox drainer. safe to call more than once.
+  void startOutboxDrain() {
+    _outboxTimer?.cancel();
+    _outboxTimer = Timer.periodic(const Duration(seconds: 20), (_) {
+      unawaited(drainOutbox());
+    });
+  }
+
+  // re-send anything the wire never confirmed. cheap when there's nothing to
+  // do (one indexed query). skipped entirely while tor can't carry traffic.
+  Future<void> drainOutbox() async {
+    final ready =
+        _torStatus == TorStatus.bootstrapped ||
+        _torStatus == TorStatus.publishing ||
+        _torStatus == TorStatus.reachable;
+    if (!ready) {
+      _outboxWasReady = false;
+      return;
+    }
+    _outboxWasReady = true;
+    final rows = await db.unsentOutbox();
+    if (rows.isEmpty) return;
+    for (final r in rows) {
+      final uid = r['msg_uid'] as String?;
+      if (uid == null || _outboxInflight.contains(uid)) continue;
+      // a send fired seconds ago still has its own future running; leave it be.
+      final age = DateTime.now().millisecondsSinceEpoch - (r['sent_at'] as int);
+      if (age < 45000) continue;
+      final tries = _outboxTries[uid] ?? 0;
+      if (tries >= 15) continue; // ~5 min of trying is enough
+      _outboxTries[uid] = tries + 1;
+      _outboxInflight.add(uid);
+      unawaited(_drainOne(r).whenComplete(() => _outboxInflight.remove(uid)));
+    }
+  }
+
+  Future<void> _drainOne(Map<String, Object?> r) async {
+    final uid = r['msg_uid'] as String;
+    final peer = r['peer_id'] as String;
+    final groupId = r['group_id'] as String?;
+    // media rows re-send through their own chunked path; text is what the
+    // drainer owns. a stranded media row stays tap-to-retry in the chat.
+    if ((r['media_path'] as String?) != null ||
+        (r['file_path'] as String?) != null) {
+      return;
+    }
+    try {
+      final wrapped = await wrapMessage(
+        r['plaintext'] as String,
+        msgUid: uid,
+        replyTo: r['reply_to'] as String?,
+        groupId: groupId,
+        supporterBadge: await sharedBadge(),
+        sender: _mySender(),
+      );
+      if (groupId != null) {
+        final members = await db.getGroupMembers(groupId);
+        final results = await Future.wait([
+          for (final m in members)
+            if (m != myId) _sendOneEnvelope(m, wrapped),
+        ]);
+        if (results.any((ok) => ok)) {
+          await db.markSent(uid);
+          notifyListeners();
+        }
+        return;
+      }
+      final ok = await _sendOneEnvelope(peer, wrapped);
+      if (ok) {
+        debugPrint('OUTBOX: redelivered $uid');
+        await db.markSent(uid);
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('OUTBOX: $uid still stuck ($e)');
+    }
+  }
+
   // global send-privacy mode: 'fast' | 'normal' | 'private'. cosmetic for now -
   // every message routes over full tor until fast/hop modes wire up (phase 2).
   String _sendMode = 'private';
@@ -2425,6 +2560,15 @@ class AppState extends ChangeNotifier {
     debugPrint(
       'INCOMING len=${env.message.length} hasPreview=${env.preview != null} uid=${env.msgUid}',
     );
+    // delivery receipt: the peer stored a message we sent. flip its tick and
+    // stop the outbox chasing it. handled before the stranger gate + dedup so
+    // an ack is never itself treated as a message or counted toward the cap.
+    if (env.deliveredUid != null) {
+      await db.markDelivered(env.deliveredUid!);
+      _bumpChatRev(senderHaloId);
+      notifyListeners();
+      return;
+    }
     if (await db.isBlocked(senderHaloId)) return;
     // 1) group control
     if (env.groupControl != null) {
@@ -2456,6 +2600,12 @@ class AppState extends ChangeNotifier {
     // 2.6) unsend - sender recalled a message; delete our copy
     if (env.unsend != null) {
       await db.deleteMessage(env.unsend!);
+      // a recall mid-transfer would otherwise leave a half-filled buffer and
+      // a progress bar that never completes. drop both.
+      if (_mediaChunks.remove(env.unsend!) != null) {
+        _mediaBurn.remove(env.unsend!);
+        incomingMediaDone(env.groupId != null ? env.groupId! : senderHaloId);
+      }
       // refresh so it vanishes live if the peer's looking at the chat now,
       // not only after they leave and come back.
       notifyListeners();
@@ -2614,6 +2764,15 @@ class AppState extends ChangeNotifier {
         if (env.preview != null) {
           await db.setMsgPreview(uid, jsonEncode(env.preview));
         }
+        // already have it, but a re-send means our receipt never landed. ack
+        // again so the sender's tick flips and the outbox stops redelivering.
+        if (!isGroup &&
+            env.deliveredUid == null &&
+            env.reaction == null &&
+            env.edit == null &&
+            senderHaloId != myId) {
+          unawaited(_sendDeliveryReceipt(senderHaloId, uid));
+        }
         notifyListeners();
         return;
       }
@@ -2647,6 +2806,13 @@ class AppState extends ChangeNotifier {
       if (pending != null) await db.setMsgPreview(uid, pending);
       // saved now, messageExists covers dedup from here - drop the guard
       _inflightUids.remove(uid);
+    }
+    // send a delivery receipt back for 1:1 messages we just stored, so the
+    // sender's tick means "on your phone" not "a relay took it". groups skip
+    // this (N acks per message is noise); receipts themselves carry no uid of
+    // their own and are handled before any gate on the far side.
+    if (!isGroup && uid != null && senderHaloId != myId) {
+      unawaited(_sendDeliveryReceipt(senderHaloId, uid));
     }
     // notification context - for groups, title = group name and body
     // prefixes the sender. payload uses "group:<id>" so tap-to-open can
@@ -3006,6 +3172,9 @@ class AppState extends ChangeNotifier {
     // start after this, and both take longer to warm than the prekeys, so
     // the session is ready well before any message can arrive.
     _bootSignal().then((_) => debugPrint('BOOT signal (deferred) done'));
+    // outbox drainer: anything the wire never confirmed gets re-sent for the
+    // life of the app, whatever screen you're on and across restarts.
+    startOutboxDrain();
     // start tor last, after all sync identity + signal work. nothing
     // above needs it, and starting it earlier stalled the main thread
     // while tor bootstrapped.
@@ -3029,6 +3198,13 @@ class AppState extends ChangeNotifier {
         _bootstrapPct = pct;
         notifyListeners();
       }
+      // tor just became usable: flush anything the outbox is holding instead
+      // of waiting out the next 20s tick.
+      final nowReady =
+          st == TorStatus.bootstrapped ||
+          st == TorStatus.publishing ||
+          st == TorStatus.reachable;
+      if (nowReady && !_outboxWasReady) unawaited(drainOutbox());
       // tor died or never came up in this process. nothing else
       // restarts it, so we do. throttled - a start takes a while.
       if (st == TorStatus.off &&
@@ -3535,6 +3711,21 @@ class AppState extends ChangeNotifier {
     return t.name;
   }
 
+  // tiny ack: tells the original sender their message landed. reuses the
+  // gift-wrap transport; carries only the uid, no body, no sender bundle.
+  Future<void> _sendDeliveryReceipt(String toHaloId, String uid) async {
+    try {
+      final wrapped = await wrapMessage(
+        '',
+        deliveredUid: uid,
+        sender: _mySender(),
+      );
+      await _sendOneEnvelope(toHaloId, wrapped);
+    } catch (e) {
+      debugPrint('receipt for $uid failed: $e');
+    }
+  }
+
   SenderInfo _mySender() => SenderInfo(
     haloId: myId,
     edPub: engine.myEdPubkey(),
@@ -3883,14 +4074,29 @@ class AppState extends ChangeNotifier {
     // (receiver got the row but never the full file). the breather is down
     // from 400ms to 150ms which is all the safe speedup there is dart-side;
     // the real fix is batched publish in the engine.
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now - (_grpChunkDoneAt[msgUid] ?? now) > 240000) {
+      _grpChunkDone.remove(msgUid); // stale - a member may have restarted
+    }
+    _grpChunkDoneAt[msgUid] = now;
+    final done = _grpChunkDone.putIfAbsent(msgUid, () => <int>{});
+    if (done.isNotEmpty && total > 1) {
+      debugPrint('GRP MEDIA resume $msgUid: ${done.length}/$total already out');
+      mediaProgressUpdate(msgUid, done.length / total);
+    }
     for (var i = 0; i < total; i++) {
+      if (done.contains(i)) continue;
       final chunkOk = await sendChunk(i);
       if (!chunkOk) return 'error: chunk $i undeliverable';
-      mediaProgressUpdate(msgUid, (i + 1) / total);
+      done.add(i);
+      _grpChunkDoneAt[msgUid] = DateTime.now().millisecondsSinceEpoch;
+      mediaProgressUpdate(msgUid, done.length / total);
       if (total > 1 && i < total - 1) {
         await Future.delayed(const Duration(milliseconds: 150));
       }
     }
+    _grpChunkDone.remove(msgUid);
+    _grpChunkDoneAt.remove(msgUid);
     return 'ok';
   }
 

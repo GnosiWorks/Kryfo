@@ -1834,6 +1834,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   Future<void> _unsendGroupMessage(_GMsg m) async {
     if (m.msgUid == null) return;
+    // the confirm sheet hands focus back to the composer, popping the
+    // keyboard for no reason. drop it.
+    FocusManager.instance.primaryFocus?.unfocus();
     final confirm = await showModalBottomSheet<bool>(
       context: context,
       backgroundColor: HaloColors.surface2,
@@ -1903,9 +1906,24 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         state == AppLifecycleState.inactive) {
       if (currentChatPeer == 'group:${widget.groupId}') currentChatPeer = null;
     } else if (state == AppLifecycleState.resumed) {
+      // only re-claim the marker while we're the visible route, else backing
+      // out and resuming later leaves the group marked open and its badge dead.
+      final visible = ModalRoute.of(context)?.isCurrent ?? false;
+      if (!visible) {
+        if (currentChatPeer == 'group:${widget.groupId}')
+          currentChatPeer = null;
+        return;
+      }
       currentChatPeer = 'group:${widget.groupId}';
       db.clearGroupUnread(widget.groupId).then((_) => appState.refreshGroups());
     }
+  }
+
+  @override
+  void deactivate() {
+    // popped or covered: stop claiming this group is being read.
+    if (currentChatPeer == 'group:${widget.groupId}') currentChatPeer = null;
+    super.deactivate();
   }
 
   @override
