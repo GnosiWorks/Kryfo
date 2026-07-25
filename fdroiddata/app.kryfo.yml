@@ -49,8 +49,6 @@ Builds:
     prebuild:
       - $$flutter$$/bin/flutter config --no-analytics
       - $$flutter$$/bin/flutter pub get
-    scanignore:
-      - mobile/android/app/src/main/jniLibs
     build: |
       set -e
       export PATH=/usr/local/go/bin:$PATH
