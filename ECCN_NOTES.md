@@ -1,8 +1,8 @@
 # ECCN 5D002 / TSU export notification
 
-Halo bundles real crypto (libsignal Double Ratchet, Tor, Nostr encryption).
+Kryfo bundles real crypto (libsignal Double Ratchet, Tor, Nostr encryption).
 US export rules classify this as 5D002 (encryption source). Publicly available
-open-source gets License Exception TSU (15 CFR 740.13(e)) — you NOTIFY, not ask.
+open-source gets License Exception TSU (15 CFR 740.13(e)) - you NOTIFY, not ask.
 
 ## The one-time email (send WHEN repo goes public, URL must resolve)
 
@@ -13,8 +13,8 @@ Body:
 This is a notification under License Exception TSU, 15 CFR 740.13(e), of the
 internet location of publicly available encryption source code.
 
-Project: Halo (open-source private messenger)
-URL: https://github.com/GnosiWorks/Halo
+Project: Kryfo (open-source private messenger)
+URL: https://github.com/GnosiWorks/Kryfo
 Description: End-to-end encrypted messaging client. Uses the Signal Double
 Ratchet (libsignal), Tor onion routing, and encrypted Nostr transport.
 Source is publicly available under GPLv3.

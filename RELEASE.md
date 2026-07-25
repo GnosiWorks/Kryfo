@@ -17,13 +17,13 @@ flutter build apk --release --target-platform android-arm64,android-x64
 
 ## 3. Tag
 ```
-cd ~/halo
-git tag -a v0.1.x-alpha -m "halo 0.1.x-alpha"
+cd ~/kryfo
+git tag -a v0.1.x-alpha -m "kryfo 0.1.x-alpha"
 git push origin v0.1.x-alpha
 ```
 
 ## 4. F-Droid
-- Bump `Builds:` block in `fdroiddata/com.halo.halo_app.yml` (versionCode, versionName, commit)
+- Bump `Builds:` block in `fdroiddata/com.kryfo.kryfo_app.yml` (versionCode, versionName, commit)
 - Bump `CurrentVersion` + `CurrentVersionCode`
 - Open a PR against the fdroiddata repo
 
@@ -32,7 +32,7 @@ git push origin v0.1.x-alpha
 - Attach the signed APK (for users who want to sideload before F-Droid index updates)
 
 ## Reproducibility
-F-Droid builds on their own servers. To verify locally that the build is deterministic, build twice with a fresh clone — the APK SHA-256 should match.
+F-Droid builds on their own servers. To verify locally that the build is deterministic, build twice with a fresh clone - the APK SHA-256 should match.
 
 If they differ, common culprits:
 - timestamps baked into AndroidManifest (`android:versionName` with build date)

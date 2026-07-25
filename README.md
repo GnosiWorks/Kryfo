@@ -1,4 +1,4 @@
-# halo
+# kryfo
 
 a private messenger. no phone number, no email, no account. messages go end
 to end encrypted, routed over tor onion services or through nostr relays when
