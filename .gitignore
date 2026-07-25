@@ -65,3 +65,5 @@ mobile/android/key.properties
 *.keystore
 icon-backup-*/
 engine/e*.py
+repro/verify_offline.sh
+repro/Dockerfile.public.bak
