@@ -1,18 +1,18 @@
-# F-Droid build metadata for halo.
-# This file lives in the fdroiddata repository at metadata/com.halo.halo_app.yml
+# F-Droid build metadata for kryfo.
+# This file lives in the fdroiddata repository at metadata/com.kryfo.kryfo_app.yml
 # once the GitHub repo is public and the first release tag is cut.
 
 Categories:
   - Internet
 License: AGPL-3.0-only
-SourceCode: https://github.com/<PLACEHOLDER_USER>/halo
-IssueTracker: https://github.com/<PLACEHOLDER_USER>/halo/issues
-Changelog: https://github.com/<PLACEHOLDER_USER>/halo/blob/main/CHANGELOG.md
+SourceCode: https://github.com/<PLACEHOLDER_USER>/kryfo
+IssueTracker: https://github.com/<PLACEHOLDER_USER>/kryfo/issues
+Changelog: https://github.com/<PLACEHOLDER_USER>/kryfo/blob/main/CHANGELOG.md
 
-AutoName: halo
+AutoName: kryfo
 
 RepoType: git
-Repo: https://github.com/<PLACEHOLDER_USER>/halo.git
+Repo: https://github.com/<PLACEHOLDER_USER>/kryfo.git
 
 Builds:
   - versionName: 0.1.0-alpha

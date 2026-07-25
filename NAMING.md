@@ -1,19 +1,19 @@
 # naming
 
-## verdict: "halo" must change
+## verdict: "kryfo" must change
 
 the name is crowded in exactly this category, which means app-store
 rejections, trademark friction, and no search visibility. found live in the
 encrypted-messenger space:
 
-- HaloChat (end-to-end messenger, google play + app store, active 2026,
-  HALO NETWORK TECHNOLOGY LTD)
-- Halo Privacy Inc / HaloLink (encrypted messaging, ios)
-- Halo Link Classic (encrypted voice + messaging, ios)
-- Doc Halo / Symplr (HIPAA encrypted messaging)
-- Halo.Messenger (amazon appstore)
+- KryfoChat (end-to-end messenger, google play + app store, active 2026,
+  KRYFO NETWORK TECHNOLOGY LTD)
+- Kryfo Privacy Inc / KryfoLink (encrypted messaging, ios)
+- Kryfo Link Classic (encrypted voice + messaging, ios)
+- Doc Kryfo / Symplr (HIPAA encrypted messaging)
+- Kryfo.Messenger (amazon appstore)
 
-plus Microsoft's Halo game mark, which is broad and aggressively enforced.
+plus Microsoft's Kryfo game mark, which is broad and aggressively enforced.
 this isn't a maybe. the name has to go before any public listing.
 
 ## what the new name needs
@@ -35,7 +35,7 @@ this isn't a maybe. the name has to go before any public listing.
 5. plain web search for "<name> messenger" and "<name> app"
 
 a name that survives all five is a real candidate. anything that trips 1-3
-is a repeat of the halo problem.
+is a repeat of the kryfo problem.
 
 ## direction, not final answers
 
@@ -45,7 +45,7 @@ real but unexpected word, or a short coinage that sounds inevitable after
 you hear it. worth generating a batch of 15-20, running each through the
 five checks, and keeping only the two or three that survive clean - then
 sleeping on those before the rename touches code, package id
-(com.halo.halo_app becomes the new id), and store listings.
+(com.kryfo.kryfo_app becomes the new id), and store listings.
 
 changing the package id is a one-way door once published, so the name has to
 be locked before the first public release, not after.
