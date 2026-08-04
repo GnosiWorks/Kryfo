@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// speed & privacy modes. cosmetic in phase 1 - tor is mandatory in the engine.
-// fast mode wires up in phase 2.
+// speed & privacy modes. private (tor) is live and stays the default;
+// balanced (clearnet to our own relay) and fast (direct) are ui-only until
+// the engine can route around tor. balanced exists because mandatory tor is
+// the app's biggest usability cost - see transport tiers in CONTEXT.
 
 import 'package:flutter/material.dart';
 import '../theme.dart';
@@ -53,6 +55,21 @@ class _ModesScreenState extends State<ModesScreen> {
               hops: '3',
               ipVisible: false,
               onTap: () => _pick('private'),
+            ),
+            _ModeCard(
+              name: 'Balanced',
+              soon: true,
+              active: _mode == 'balanced',
+              desc:
+                  'Straight to a Kryfo relay, no onion hops. Sends land in about a second and there is no waiting for Tor to warm up.',
+              speed: 'quick',
+              hops: '1',
+              ipVisible: false,
+              ipText: 'relay only',
+              ipWarn: true,
+              warning:
+                  'the relay sees the address you connect from. your contacts and every other relay still do not, and messages stay end-to-end encrypted either way.',
+              onTap: () => _pick('balanced'),
             ),
             _ModeCard(
               name: 'Fast',
@@ -146,6 +163,9 @@ class _ModeCard extends StatelessWidget {
   final String speed;
   final String hops;
   final bool ipVisible;
+  // some tiers aren't a clean hidden/visible - 'relay only' is its own.
+  final String? ipText;
+  final bool ipWarn;
   final String? warning;
   final VoidCallback onTap;
   const _ModeCard({
@@ -157,6 +177,8 @@ class _ModeCard extends StatelessWidget {
     required this.speed,
     required this.hops,
     required this.ipVisible,
+    this.ipText,
+    this.ipWarn = false,
     this.warning,
     required this.onTap,
   });
@@ -261,8 +283,9 @@ class _ModeCard extends StatelessWidget {
                   const SizedBox(width: 14),
                   _Meta(
                     k: 'ip',
-                    v: ipVisible ? 'visible' : 'hidden',
+                    v: ipText ?? (ipVisible ? 'visible' : 'hidden'),
                     red: ipVisible,
+                    warn: ipWarn,
                   ),
                 ],
               ),
@@ -315,7 +338,13 @@ class _Meta extends StatelessWidget {
   final String k;
   final String v;
   final bool red;
-  const _Meta({required this.k, required this.v, this.red = false});
+  final bool warn;
+  const _Meta({
+    required this.k,
+    required this.v,
+    this.red = false,
+    this.warn = false,
+  });
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -330,7 +359,11 @@ class _Meta extends StatelessWidget {
           style: HaloType.sans(
             size: 10,
             weight: FontWeight.w500,
-            color: red ? HaloColors.rose : HaloColors.text,
+            color: red
+                ? HaloColors.rose
+                : warn
+                ? HaloColors.amber
+                : HaloColors.text,
           ),
         ),
       ],
@@ -343,7 +376,8 @@ class _Footnote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'cosmetic in phase 1 - every message routes through tor.\nfast mode wires up in phase 2.',
+      'private is live. balanced and fast are still being built - '
+      'until then every message routes through tor.',
       style: HaloType.mono(size: 10, color: HaloColors.text3),
     );
   }

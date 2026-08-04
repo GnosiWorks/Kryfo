@@ -2,7 +2,10 @@
 // kryfo design tokens. mirrors css vars in 08_complete_spec.html.
 // keep flat. one source of truth for color, type, spacing.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class _Palette {
   final Color ink, surface, surface2, surface3, line, line2;
@@ -173,6 +176,25 @@ ThemeData buildHaloTheme() {
 
 // editorial toast: ink surface, hairline amber edge - reads like part of kryfo
 // rather than a default grey snackbar. clears any in-flight toast first.
+// ids and crypto addresses are the two things worth stealing off a phone,
+// and any app the user pastes into can read the clipboard. so we take them
+// back out after a minute - but only if they're still what we put there,
+// otherwise we'd be wiping something the user copied since.
+Timer? _clipTimer;
+
+void copySensitive(String value) {
+  Clipboard.setData(ClipboardData(text: value));
+  _clipTimer?.cancel();
+  _clipTimer = Timer(const Duration(seconds: 60), () async {
+    try {
+      final now = await Clipboard.getData(Clipboard.kTextPlain);
+      if (now?.text == value) {
+        await Clipboard.setData(const ClipboardData(text: ''));
+      }
+    } catch (_) {}
+  });
+}
+
 void showHaloToast(BuildContext context, String message) {
   final messenger = ScaffoldMessenger.of(context);
   messenger.clearSnackBars();

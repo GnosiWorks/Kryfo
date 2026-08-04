@@ -471,7 +471,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 33,
+      version: 34,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -570,9 +570,34 @@ class HaloDb {
             ts INTEGER NOT NULL
           )
         ''');
+        await db.execute('''
+          CREATE TABLE media_chunks (
+            media_id TEXT NOT NULL,
+            idx INTEGER NOT NULL,
+            slice TEXT NOT NULL,
+            total INTEGER NOT NULL,
+            burn INTEGER,
+            at INTEGER NOT NULL,
+            PRIMARY KEY (media_id, idx)
+          )
+        ''');
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 34) {
+          // partial media used to live in ram only - a restart lost it.
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS media_chunks (
+              media_id TEXT NOT NULL,
+              idx INTEGER NOT NULL,
+              slice TEXT NOT NULL,
+              total INTEGER NOT NULL,
+              burn INTEGER,
+              at INTEGER NOT NULL,
+              PRIMARY KEY (media_id, idx)
+            )
+          ''');
+        }
         if (oldV < 33) {
           await db.execute(
             'ALTER TABLE messages ADD COLUMN delivered INTEGER NOT NULL DEFAULT 0',
@@ -1865,19 +1890,95 @@ class HaloDb {
     return (r.first['sent'] as int? ?? 0) == 1;
   }
 
-  // every outgoing row that never got confirmed on the wire, oldest first.
-  // the drainer walks this on a timer so a send survives tor warmup, backing
-  // out of the chat, and a cold restart.
+  // every outgoing row the wire never accepted, oldest first. the drainer
+  // walks this on a timer so a send survives tor warmup, backing out of the
+  // chat, and a cold restart.
+  //
+  // deliberately keyed on `sent`, not `delivered`: a message that went out
+  // but hasn't been acked is not a message that needs sending again, and
+  // retrying on a missing ack loops forever when the ack never comes.
   Future<List<Map<String, Object?>>> unsentOutbox() async {
     final db = await open();
     return db.query(
       'messages',
       where:
-          "direction = 'out' AND delivered = 0 AND msg_uid IS NOT NULL "
+          "direction = 'out' AND sent = 0 AND msg_uid IS NOT NULL "
           "AND (group_id IS NULL OR group_id = '')",
       orderBy: 'sent_at ASC',
       limit: 40,
     );
+  }
+
+  // --- chunked media, buffered on disk so a restart doesn't lose a transfer ---
+
+  // store one slice, return how many of this media's slices we now hold.
+  Future<int> putMediaChunk(
+    String mediaId,
+    int idx,
+    String slice,
+    int total,
+    int? burn,
+  ) async {
+    final db = await open();
+    await db.rawInsert(
+      'INSERT OR REPLACE INTO media_chunks '
+      '(media_id, idx, slice, total, burn, at) VALUES (?, ?, ?, ?, ?, ?)',
+      [mediaId, idx, slice, total, burn, DateTime.now().millisecondsSinceEpoch],
+    );
+    final r = await db.rawQuery(
+      'SELECT COUNT(*) c FROM media_chunks WHERE media_id = ?',
+      [mediaId],
+    );
+    return (r.first['c'] as int?) ?? 0;
+  }
+
+  // burn window rides the slices so it survives a restart too.
+  Future<int?> mediaChunkBurn(String mediaId) async {
+    final db = await open();
+    final r = await db.query(
+      'media_chunks',
+      columns: ['burn'],
+      where: 'media_id = ? AND burn IS NOT NULL',
+      whereArgs: [mediaId],
+      limit: 1,
+    );
+    if (r.isEmpty) return null;
+    return r.first['burn'] as int?;
+  }
+
+  Future<List<String>> mediaChunkSlices(String mediaId) async {
+    final db = await open();
+    final r = await db.query(
+      'media_chunks',
+      columns: ['slice'],
+      where: 'media_id = ?',
+      whereArgs: [mediaId],
+      orderBy: 'idx ASC',
+    );
+    return [for (final row in r) (row['slice'] as String?) ?? ''];
+  }
+
+  Future<int> dropMediaChunks(String mediaId) async {
+    final db = await open();
+    return db.delete(
+      'media_chunks',
+      where: 'media_id = ?',
+      whereArgs: [mediaId],
+    );
+  }
+
+  // a transfer nobody ever finished shouldn't sit in the db forever.
+  Future<void> sweepMediaChunks() async {
+    final db = await open();
+    final cutoff =
+        DateTime.now().millisecondsSinceEpoch -
+        const Duration(days: 7).inMilliseconds;
+    final n = await db.delete(
+      'media_chunks',
+      where: 'at < ?',
+      whereArgs: [cutoff],
+    );
+    if (n > 0) debugPrint('swept $n stale media chunks');
   }
 
   Future<bool> isDelivered(String msgUid) async {
@@ -2329,21 +2430,20 @@ class AppState extends ChangeNotifier {
   // previews that arrived before their message (fetch runs parallel to the
   // send now, so the frames can race). patched on right after the row saves.
   final Map<String, String> _pendingPreviews = {};
-  // incoming media chunks buffered by mediaId until all arrive, then
-  // reassembled into the full base64. single-chunk media skips this.
-  final Map<String, Map<int, String>> _mediaChunks = {};
   // group media slices already accepted by at least one member, per msg_uid,
   // so tap-to-retry resumes instead of re-sending the whole file.
   final Map<String, Set<int>> _grpChunkDone = {};
   final Map<String, int> _grpChunkDoneAt = {};
-  // burn seconds for media still arriving in slices, keyed by mediaId.
-  final Map<String, int> _mediaBurn = {};
   // uids the drainer is mid-flight on, so a slow send isn't fired twice by
   // the next sweep.
   final Set<String> _outboxInflight = <String>{};
   // re-fire count per uid this session. caps the loop so an unreachable peer
   // stops grinding; tap-to-retry in the chat still forces a send.
   final Map<String, int> _outboxTries = <String, int>{};
+  // earliest ms a uid may be tried again. every retry builds a fresh gift
+  // wrap, so a flat cadence leaves one copy per attempt sitting on every
+  // relay forever - the receiver then decrypts and acks all of them.
+  final Map<String, int> _outboxNextAt = <String, int>{};
   Timer? _outboxTimer;
   bool _outboxWasReady = false;
 
@@ -2368,7 +2468,17 @@ class AppState extends ChangeNotifier {
     }
     _outboxWasReady = true;
     final rows = await db.unsentOutbox();
-    if (rows.isEmpty) return;
+    if (rows.isEmpty) {
+      if (_outboxTries.isNotEmpty) {
+        _outboxTries.clear();
+        _outboxNextAt.clear();
+      }
+      return;
+    }
+    // anything that landed since the last sweep stops costing us bookkeeping.
+    final live = {for (final r in rows) r['msg_uid'] as String?};
+    _outboxTries.removeWhere((k, _) => !live.contains(k));
+    _outboxNextAt.removeWhere((k, _) => !live.contains(k));
     for (final r in rows) {
       final uid = r['msg_uid'] as String?;
       if (uid == null || _outboxInflight.contains(uid)) continue;
@@ -2376,7 +2486,16 @@ class AppState extends ChangeNotifier {
       final age = DateTime.now().millisecondsSinceEpoch - (r['sent_at'] as int);
       if (age < 45000) continue;
       final tries = _outboxTries[uid] ?? 0;
-      if (tries >= 15) continue; // ~5 min of trying is enough
+      if (tries >= 8) continue;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final nextAt = _outboxNextAt[uid];
+      if (nextAt != null && now < nextAt) continue;
+      // doubling gap, capped at ten minutes. eight tries now covers about an
+      // hour instead of fifteen tries covering five, and leaves half as many
+      // copies on the relays.
+      var gap = 45000 << tries;
+      if (gap > 600000) gap = 600000;
+      _outboxNextAt[uid] = now + gap;
       _outboxTries[uid] = tries + 1;
       _outboxInflight.add(uid);
       unawaited(_drainOne(r).whenComplete(() => _outboxInflight.remove(uid)));
@@ -2425,8 +2544,10 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // global send-privacy mode: 'fast' | 'normal' | 'private'. cosmetic for now -
-  // every message routes over full tor until fast/hop modes wire up (phase 2).
+  // global send-privacy mode: 'private' | 'balanced' | 'fast'. private is
+  // tor and is the default; the other two are pickable in the ui but don't
+  // change routing yet - everything still goes over tor until the transport
+  // work lands. 'normal' is the old name for private, migrated on load.
   String _sendMode = 'private';
   String get sendMode => _sendMode;
 
@@ -2602,8 +2723,7 @@ class AppState extends ChangeNotifier {
       await db.deleteMessage(env.unsend!);
       // a recall mid-transfer would otherwise leave a half-filled buffer and
       // a progress bar that never completes. drop both.
-      if (_mediaChunks.remove(env.unsend!) != null) {
-        _mediaBurn.remove(env.unsend!);
+      if (await db.dropMediaChunks(env.unsend!) > 0) {
         incomingMediaDone(env.groupId != null ? env.groupId! : senderHaloId);
       }
       // refresh so it vanishes live if the peer's looking at the chat now,
@@ -2682,25 +2802,31 @@ class AppState extends ChangeNotifier {
     if (env.mediaId != null && env.chunkTotal != null && env.chunkTotal! > 1) {
       final mid = env.mediaId!;
       final progressKey = isGroup ? env.groupId! : senderHaloId;
-      final slot = _mediaChunks.putIfAbsent(mid, () => <int, String>{});
       final slice = (env.imageB64 ?? env.fileB64) ?? '';
-      slot[env.chunkIndex ?? 0] = slice;
-      if (env.burnSeconds != null && env.burnSeconds! > 0) {
-        _mediaBurn[mid] = env.burnSeconds!;
-      }
-      chunkBurn = _mediaBurn[mid] ?? chunkBurn;
-      if (slot.length < env.chunkTotal!) {
+      // slices land on disk as they arrive, so closing the app mid-transfer
+      // no longer throws the partial away. the count is over rows, which is
+      // what makes a restart resume instead of start over.
+      final have = await db.putMediaChunk(
+        mid,
+        env.chunkIndex ?? 0,
+        slice,
+        env.chunkTotal!,
+        (env.burnSeconds != null && env.burnSeconds! > 0)
+            ? env.burnSeconds
+            : null,
+      );
+      chunkBurn = await db.mediaChunkBurn(mid) ?? chunkBurn;
+      if (have < env.chunkTotal!) {
         // still waiting on more pieces - surface how far along we are.
-        incomingMediaUpdate(progressKey, slot.length, env.chunkTotal!);
+        incomingMediaUpdate(progressKey, have, env.chunkTotal!);
         return;
       }
       // all pieces in: stitch them back in index order.
       final full = StringBuffer();
-      for (var i = 0; i < env.chunkTotal!; i++) {
-        full.write(slot[i] ?? '');
+      for (final part in await db.mediaChunkSlices(mid)) {
+        full.write(part);
       }
-      _mediaChunks.remove(mid);
-      _mediaBurn.remove(mid);
+      await db.dropMediaChunks(mid);
       incomingMediaDone(progressKey);
       // preview thumbnail: reassembled chunks patch onto the card of the
       // message with this uid, not a new media bubble. update + refresh, done.
@@ -3175,6 +3301,8 @@ class AppState extends ChangeNotifier {
     // outbox drainer: anything the wire never confirmed gets re-sent for the
     // life of the app, whatever screen you're on and across restarts.
     startOutboxDrain();
+    // drop week-old partial transfers nobody ever completed.
+    unawaited(db.sweepMediaChunks());
     // start tor last, after all sync identity + signal work. nothing
     // above needs it, and starting it earlier stalled the main thread
     // while tor bootstrapped.
@@ -3220,19 +3348,19 @@ class AppState extends ChangeNotifier {
       }
     });
     _initConnectivity();
-    // more relays than we need on purpose. damus alone has been refusing
-    // connections for days, and with only two configured that left a single
-    // live relay holding every offline message. publish succeeds if any one
-    // accepts, and the subscription dedups, so extra relays only buy odds.
+    // spares are worth having - one live relay holding every offline message
+    // is how a bad night turns into lost mail. but a relay that never answers
+    // is not a spare, it is a tor circuit burned every ten seconds. damus
+    // returned 503 on fifty-three straight attempts and snort tls-timed-out
+    // on every one, so both are out. the engine benches the rest on its own
+    // if they start behaving the same way.
     _nostrInitOnIsolate(
       // our own relay first (tor onion, always awake) - public relays fall back.
       // the engine dials every relay through tor, so ws:// over the onion is fine.
       'ws://z4waup3c6j6gknkjba72cqjjuffhgg6gtgqfu3vetzcvgoluvr42srid.onion,'
-      'wss://relay.damus.io,'
       'wss://nos.lol,'
       'wss://relay.primal.net,'
       'wss://nostr.mom,'
-      'wss://relay.snort.social,'
       'wss://nostr.oxtr.dev',
     );
     await loadDisplayName();
@@ -3711,9 +3839,22 @@ class AppState extends ChangeNotifier {
     return t.name;
   }
 
+  // last ack per uid, so a burst of duplicates costs one receipt not twenty.
+  final Map<String, int> _ackedAt = <String, int>{};
+
   // tiny ack: tells the original sender their message landed. reuses the
   // gift-wrap transport; carries only the uid, no body, no sender bundle.
   Future<void> _sendDeliveryReceipt(String toHaloId, String uid) async {
+    // a relay replaying its backlog hands us the same message many times over
+    // and each copy used to buy a full fan-out. re-acking still matters (the
+    // first receipt may have died) so this throttles rather than blocks.
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final last = _ackedAt[uid];
+    if (last != null && now - last < 30000) return;
+    _ackedAt[uid] = now;
+    if (_ackedAt.length > 500) {
+      _ackedAt.removeWhere((_, t) => now - t > 300000);
+    }
     try {
       final wrapped = await wrapMessage(
         '',
@@ -4900,7 +5041,7 @@ class _DevScreenState extends State<DevScreen> {
               const SizedBox(height: 12),
               TextButton(
                 onPressed: () {
-                  Clipboard.setData(ClipboardData(text: uri));
+                  copySensitive(uri);
                   showHaloToast(context, 'uri copied');
                 },
                 child: Text(

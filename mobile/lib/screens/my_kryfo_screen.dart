@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import '../main.dart' show appState, buildHaloUriV2;
@@ -139,7 +138,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
         const SizedBox(height: 16),
         GestureDetector(
           onTap: () {
-            Clipboard.setData(ClipboardData(text: _uri!));
+            copySensitive(_uri!);
             showHaloToast(context, 'address copied');
           },
           child: Container(

@@ -35,13 +35,13 @@ import (
 )
 
 var (
-	mu       sync.Mutex
-	startMu  sync.Mutex
-	torNode  *tor.Tor
-	listener net.Listener
-	myAddr   string
+	mu           sync.Mutex
+	startMu      sync.Mutex
+	torNode      *tor.Tor
+	listener     net.Listener
+	myAddr       string
 	savedDataDir string // kept so the dialer watchdog can relaunch tor
-	inbox    []string
+	inbox        []string
 
 	myEdPriv ed25519.PrivateKey
 	myEdPub  ed25519.PublicKey
