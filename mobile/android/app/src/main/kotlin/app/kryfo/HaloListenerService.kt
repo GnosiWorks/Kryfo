@@ -31,7 +31,7 @@ class HaloListenerService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("halo is on")
+            .setContentTitle("kryfo is on")
             .setContentText("your encrypted line stays open so messages arrive")
             .setSmallIcon(R.drawable.ic_halo_notification)
             .setColor(0xFFF59E0B.toInt())
@@ -65,7 +65,8 @@ class HaloListenerService : Service() {
                 "staying connected",
                 NotificationManager.IMPORTANCE_MIN
             ).apply {
-                description = "keeps halo connected so encrypted messages arrive while it is closed. turning this off stops delivery."
+                description =
+                        "keeps kryfo connected so encrypted messages arrive while it is closed. turning this off stops delivery."
                 setShowBadge(false)
                 enableVibration(false)
                 setSound(null, null)

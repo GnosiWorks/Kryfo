@@ -4,7 +4,6 @@
 // badge unlock is honor-system until btcpay watches the chain (needs the vps).
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../supporter.dart';
 import '../badge_client.dart';
@@ -497,7 +496,7 @@ class _DonateScreenState extends State<DonateScreen> {
           const SizedBox(height: 10),
           GestureDetector(
             onTap: () {
-              Clipboard.setData(ClipboardData(text: addr));
+              copySensitive(addr);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
@@ -1017,7 +1016,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
   }
 
   void _copy(String v) {
-    Clipboard.setData(ClipboardData(text: v));
+    copySensitive(v);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -1114,7 +1113,7 @@ class _StaticAddress extends StatelessWidget {
           const SizedBox(height: 10),
           PressScale(
             onTap: () {
-              Clipboard.setData(ClipboardData(text: address));
+              copySensitive(address);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(

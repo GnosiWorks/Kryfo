@@ -54,6 +54,73 @@ var (
 	nostrSentIDs = map[string]bool{}
 )
 
+// relay health. a relay that will not answer still costs a full tor circuit
+// on every attempt, and with one subscribe goroutine per relay per contact
+// that adds up fast - damus sat on 503 for fifty-three straight tries inside
+// one ninety-second window. count consecutive failures, bench the relay for
+// a doubling stretch, forget the whole history on the first success.
+var (
+	relayHealthMu sync.Mutex
+	relayFails    = map[string]int{}
+	relayCoolTill = map[string]time.Time{}
+)
+
+// a couple of misses is just a bad circuit, not a dead relay.
+const relayFailGrace = 3
+
+func relayBackoff(n int) time.Duration {
+	if n <= relayFailGrace {
+		return 0
+	}
+	shift := n - relayFailGrace - 1
+	if shift > 6 {
+		return 5 * time.Minute
+	}
+	d := 10 * time.Second << uint(shift)
+	if d > 5*time.Minute {
+		d = 5 * time.Minute
+	}
+	return d
+}
+
+func relayCold(u string) bool {
+	relayHealthMu.Lock()
+	defer relayHealthMu.Unlock()
+	till, ok := relayCoolTill[u]
+	return ok && time.Now().Before(till)
+}
+
+func relayFailed(u string) {
+	relayHealthMu.Lock()
+	defer relayHealthMu.Unlock()
+	relayFails[u]++
+	if d := relayBackoff(relayFails[u]); d > 0 {
+		relayCoolTill[u] = time.Now().Add(d)
+		log.Printf("nostr: benching %s for %s, %d failures in a row", u, d, relayFails[u])
+	}
+}
+
+func relayOK(u string) {
+	relayHealthMu.Lock()
+	defer relayHealthMu.Unlock()
+	if relayFails[u] != 0 {
+		delete(relayFails, u)
+		delete(relayCoolTill, u)
+	}
+}
+
+// how long to wait before the next attempt, never shorter than the caller's
+// own cadence.
+func relayRetryAfter(u string, base time.Duration) time.Duration {
+	relayHealthMu.Lock()
+	n := relayFails[u]
+	relayHealthMu.Unlock()
+	if d := relayBackoff(n); d > base {
+		return d
+	}
+	return base
+}
+
 // ---------- key derivation (mirrors probe) ----------
 
 func nostrConversationID(a, b [32]byte) []byte {
@@ -186,8 +253,20 @@ func restoreReachableIfHealed() {
 
 func nostrPublishMulti(ctx context.Context, ev nostr.Event) (ok int) {
 	nostrMu.Lock()
-	urls := append([]string(nil), nostrRelays...)
+	all := append([]string(nil), nostrRelays...)
 	nostrMu.Unlock()
+
+	// index 0 is our own relay and is never benched - it carries the traffic
+	// and the tor watchdog already covers it going away.
+	urls := make([]string, 0, len(all))
+	for i, u := range all {
+		if i == 0 || !relayCold(u) {
+			urls = append(urls, u)
+		}
+	}
+	if len(urls) == 0 {
+		urls = all
+	}
 
 	// publishes run on a context detached from the caller's: HaloNostrSend
 	// does `defer cancel()`, so once we return the request ctx dies. we
@@ -215,15 +294,18 @@ func nostrPublishMulti(ctx context.Context, ev nostr.Event) (ok int) {
 			r := nostr.NewRelay(bg, u, nostr.RelayOptions{})
 			if err := r.ConnectWithClient(bg, client); err != nil {
 				log.Printf("nostr: connect %s: %v", u, err)
+				relayFailed(u)
 				result <- false
 				return
 			}
 			defer r.Close()
 			if err := r.Publish(bg, ev); err != nil {
 				log.Printf("nostr: publish %s: %v", u, err)
+				relayFailed(u)
 				result <- false
 				return
 			}
+			relayOK(u)
 			log.Printf("nostr: published to %s ok", u)
 			result <- true
 		}(url)
@@ -355,7 +437,6 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 		own := i == 0
 		go func(u string) {
 			last := nostr.Timestamp(lastSaved)
-			deafRuns := 0
 			retry := 10 * time.Second
 			rejoin := 5 * time.Second
 			deaf := 4 * time.Minute
@@ -386,7 +467,12 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 				r := nostr.NewRelay(ctx, u, nostr.RelayOptions{})
 				if err := r.ConnectWithClient(ctx, client); err != nil {
 					log.Printf("nostr: subscribe-connect %s: %v", u, err)
-					time.Sleep(retry)
+					wait := retry
+					if !own {
+						relayFailed(u)
+						wait = relayRetryAfter(u, retry)
+					}
+					time.Sleep(wait)
 					continue
 				}
 				f := nostr.Filter{
@@ -409,12 +495,18 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 				if err != nil {
 					log.Printf("nostr: subscribe %s: %v", u, err)
 					r.Close()
-					time.Sleep(retry)
+					wait := retry
+					if !own {
+						relayFailed(u)
+						wait = relayRetryAfter(u, retry)
+					}
+					time.Sleep(wait)
 					continue
 				}
+				if !own {
+					relayOK(u)
+				}
 				log.Printf("nostr: listening on %s for addr %s...", u, rcvPk[:12])
-				// consecutive deaf cycles on our own relay = tor is wedged mute.
-				// tracked across reconnects via deafRuns (declared above the loop).
 				// a dead tor circuit leaves the websocket open but mute - no
 				// error, no channel close, this select just goes deaf forever
 				// while messages slide past. quiet too long = assume dead and
@@ -435,7 +527,6 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 							}
 							dispatch(ev)
 						}
-						deafRuns = 0
 						if !idle.Stop() {
 							select {
 							case <-idle.C:
@@ -446,19 +537,10 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 					case <-idle.C:
 						log.Printf("nostr: %s quiet %s, cycling the sub", u, deaf)
 						r.Close()
-						// mute is how a wedged tor looks when the dialer doesn't
-						// hang. our own relay carries the traffic, so two silent
-						// cycles in a row means the circuit is dead - restart tor
-						// the same way the hang path does. non-own relays just
-						// cycle (a quiet public relay isn't proof of anything).
-						if own {
-							deafRuns++
-							if deafRuns >= 2 {
-								deafRuns = 0
-								log.Println("nostr: own relay mute twice, tor wedged -> restart")
-								go restartTor()
-							}
-						}
+						// a quiet relay proves nothing on its own - an idle chat looks
+						// exactly like a dead circuit from here. just cycle the sub; a
+						// genuinely unusable tor shows up as dial failures, which
+						// restartTor already watches for.
 						goto reconnect
 					case <-ctx.Done():
 						idle.Stop()
@@ -540,9 +622,9 @@ func HaloNostrSend(cPeerXPubHex, cMsg *C.char) *C.char {
 	// sides derived different addresses and nothing will ever arrive.
 	_, dst, derr := nip17DeriveRole(peerArr, nip17RcvInfo, hex.EncodeToString(peerArr[:]))
 	if derr == nil {
-		log.Printf("nostr: sent event %s to %d/%d relays, addr %s...", ev.ID.Hex()[:12], ok, len(nostrRelays), dst[:12])
+		log.Printf("nostr: sent event %s to %d relays, addr %s...", ev.ID.Hex()[:12], ok, dst[:12])
 	} else {
-		log.Printf("nostr: sent event %s to %d/%d relays", ev.ID.Hex()[:12], ok, len(nostrRelays))
+		log.Printf("nostr: sent event %s to %d relays", ev.ID.Hex()[:12], ok)
 	}
 	return C.CString("ok")
 }

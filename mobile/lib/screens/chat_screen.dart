@@ -2353,6 +2353,115 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     ).then((result) => _finishMediaSend(msg, result));
   }
 
+  // rough wire time for a payload. each 16k slice is its own encrypted
+  // message with a full tor round trip, call it ~1.1s a slice, and base64
+  // inflates the bytes by a third on the way out.
+  String _wireEstimate(int bytes) {
+    final slices = ((bytes * 4 / 3) / (16 * 1024)).ceil();
+    final secs = (slices * 1.1).round();
+    if (secs < 20) return 'a few seconds';
+    if (secs < 90) return 'under a minute';
+    final mins = (secs / 60).round();
+    return 'roughly $mins min';
+  }
+
+  String _humanBytes(int b) {
+    if (b < 1024) return '$b b';
+    if (b < 1024 * 1024) return '${(b / 1024).round()} kb';
+    return '${(b / (1024 * 1024)).toStringAsFixed(1)} mb';
+  }
+
+  // anything big enough to be a wait gets a confirm first. small stuff goes
+  // straight out - a dialog on a 40kb photo would just be noise.
+  Future<bool> _confirmBigSend(int bytes, String what) async {
+    if (bytes < 512 * 1024) return true;
+    if (!mounted) return false;
+    final ok = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: HaloColors.surface2,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 20, 22, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'send this $what?',
+                style: HaloType.serif(size: 19, color: HaloColors.text),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${_humanBytes(bytes)} · ${_wireEstimate(bytes)} over tor',
+                style: HaloType.mono(size: 12, color: HaloColors.amber),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'big files go out in small encrypted pieces, so they take a '
+                'while. keep the app open and it keeps going.',
+                style: HaloType.sans(
+                  size: 12,
+                  color: HaloColors.text2,
+                ).copyWith(height: 1.4),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(ctx, false),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: HaloColors.line),
+                          borderRadius: BorderRadius.circular(11),
+                        ),
+                        child: Text(
+                          'cancel',
+                          style: HaloType.sans(
+                            size: 13,
+                            color: HaloColors.text2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(ctx, true),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: HaloColors.amber,
+                          borderRadius: BorderRadius.circular(11),
+                        ),
+                        child: Text(
+                          'send it',
+                          style: HaloType.sans(
+                            size: 13,
+                            color: HaloColors.onAmber,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (mounted) FocusManager.instance.primaryFocus?.unfocus();
+    return ok == true;
+  }
+
   Future<void> _pickAndSendFile() async {
     final res = await FilePicker.pickFiles(withData: true);
     if (res == null || res.files.isEmpty) return;
@@ -2363,6 +2472,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (mounted) showHaloToast(context, 'file too big · 8 mb max');
       return;
     }
+    if (!await _confirmBigSend(data.length, 'file')) return;
     final msgUid = _newMsgUid();
     final dir = await getApplicationDocumentsDirectory();
     final mediaDir = Directory('${dir.path}/media');
