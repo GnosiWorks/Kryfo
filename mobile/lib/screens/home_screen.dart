@@ -692,9 +692,9 @@ class _OfflineStrip extends StatelessWidget {
         // guessing whether anything was queued or lost.
         final tail = n == 0
             ? 'nothing waiting to send'
-            : n == 1
-            ? "1 message queued · it'll send itself"
-            : "$n messages queued · they'll send themselves";
+            : offline
+            ? "$n waiting · sends when you're back"
+            : '$n waiting · sending now';
 
         return Container(
           width: double.infinity,
@@ -709,6 +709,7 @@ class _OfflineStrip extends StatelessWidget {
             ),
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               BreathDot(color: tint, size: 7),
               const SizedBox(width: 10),
@@ -730,8 +731,7 @@ class _OfflineStrip extends StatelessWidget {
                     color: tint.withValues(alpha: 0.85),
                     weight: FontWeight.w500,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
                 ),
               ),
               if (n > 0) ...[
