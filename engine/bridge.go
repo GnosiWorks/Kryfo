@@ -806,6 +806,7 @@ func watchBootstrap(t *tor.Tor) {
 				lastPct = pct
 				statusMu.Lock()
 				bootstrapPct = pct
+				noteBootstrapProgress(pct)
 				statusMu.Unlock()
 				log.Printf("halo: tor bootstrap %d%%", pct)
 			}
