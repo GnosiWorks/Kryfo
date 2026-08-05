@@ -336,6 +336,10 @@ func nostrPublishMulti(ctx context.Context, ev nostr.Event) (ok int) {
 // run a long-lived subscription against all configured relays for events from `pk`.
 // dedupes across relays. exits when ctx is cancelled.
 func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]byte, rcvPk string) {
+	nostrSubscribeRunnerMode(ctx, peerXPubHex, peerArr, rcvPk, false, 0)
+}
+
+func nostrSubscribeRunnerMode(ctx context.Context, peerXPubHex string, peerArr [32]byte, rcvPk string, fc bool, fcCounter int) {
 	nostrMu.Lock()
 	urls := append([]string(nil), nostrRelays...)
 	nostrMu.Unlock()
@@ -421,13 +425,23 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 			log.Printf("nostr: wrap parse failed: %v", err)
 			return
 		}
-		content, err := nip17Unwrap(peerArr, gw)
+		var content string
+		var err error
+		if fc {
+			content, _, err = nip17UnwrapFirstContact(fcCounter, gw)
+		} else {
+			content, err = nip17Unwrap(peerArr, gw)
+		}
 		if err != nil {
 			log.Printf("nostr: unwrap dropped one: %v", err)
 			return
 		}
+		tag := peerXPubHex
+		if fc {
+			tag = "firstcontact"
+		}
 		nostrMu.Lock()
-		nostrInbox = append(nostrInbox, peerXPubHex+"|"+content)
+		nostrInbox = append(nostrInbox, tag+"|"+content)
 		nostrMu.Unlock()
 		log.Printf("nostr: received event %s for peer %s...", id[:12], peerXPubHex[:12])
 	}
@@ -655,6 +669,91 @@ func HaloNostrSubscribe(cPeerXPubHex *C.char) *C.char {
 
 	go nostrSubscribeRunner(ctx, peerHex, peerArr, rcvPk)
 	log.Printf("nostr: subscribed for peer %s... at addr %s...", peerHex[:12], rcvPk[:12])
+	return C.CString("ok")
+}
+
+// the public half of our first-contact address. goes in the invite so a
+// stranger can reach us before either side knows the other's key.
+//
+//export HaloFirstContactPk
+func HaloFirstContactPk(counter C.int) *C.char {
+	_, pk, err := nip17FirstContactKeys(int(counter))
+	if err != nil {
+		return C.CString(fmt.Sprintf("error: %v", err))
+	}
+	return C.CString(pk)
+}
+
+// watch our own first-contact address. unlike every other subscription this
+// needs no contacts, which is the whole point: a fresh install with an empty
+// roster can still be reached.
+//
+//export HaloNostrSubscribeFirstContact
+func HaloNostrSubscribeFirstContact(counter C.int) *C.char {
+	_, fcPk, err := nip17FirstContactKeys(int(counter))
+	if err != nil {
+		return C.CString(fmt.Sprintf("error: derive: %v", err))
+	}
+
+	nostrMu.Lock()
+	if cancel, exists := nostrSubs["firstcontact"]; exists {
+		cancel()
+		delete(nostrSubs, "firstcontact")
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	nostrSubs["firstcontact"] = cancel
+	nostrMu.Unlock()
+
+	var zero [32]byte
+	go nostrSubscribeRunnerMode(ctx, "firstcontact", zero, fcPk, true, int(counter))
+	log.Printf("nostr: watching first-contact addr %s...", fcPk[:12])
+	return C.CString("ok")
+}
+
+// introduce ourselves to someone who has never heard of us. the seal is
+// signed with our usual per-conversation key, so once they know us the normal
+// verification applies to everything after this.
+//
+//export HaloNostrSendFirstContact
+func HaloNostrSendFirstContact(cPeerXPubHex, cFcPk, cMsg *C.char) *C.char {
+	peerHex := C.GoString(cPeerXPubHex)
+	fcPk := C.GoString(cFcPk)
+	msg := C.GoString(cMsg)
+
+	peerBytes, err := hex.DecodeString(peerHex)
+	if err != nil || len(peerBytes) != 32 {
+		return C.CString("error: bad peer pubkey")
+	}
+	if len(fcPk) != 64 {
+		return C.CString("error: bad first-contact pubkey")
+	}
+	var peerArr [32]byte
+	copy(peerArr[:], peerBytes)
+
+	gw, err := nip17WrapFirstContact(peerArr, fcPk, msg)
+	if err != nil {
+		return C.CString(fmt.Sprintf("error: wrap: %v", err))
+	}
+	// the wrap comes from the nip59 lib's event type; cross into the relay
+	// lib as plain json, same as the normal send path.
+	var ev nostr.Event
+	if err := easyjson.Unmarshal([]byte(gw.String()), &ev); err != nil {
+		return C.CString(fmt.Sprintf("error: wrap convert: %v", err))
+	}
+	nostrMu.Lock()
+	nostrSentIDs[ev.ID.Hex()] = true
+	if len(nostrSentIDs) > 4096 {
+		nostrSentIDs = map[string]bool{}
+	}
+	nostrMu.Unlock()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
+	defer cancel()
+	ok := nostrPublishMulti(ctx, ev)
+	if ok == 0 {
+		return C.CString("error: no relays accepted")
+	}
+	log.Printf("nostr: sent first-contact %s to %d relays, addr %s...", ev.ID.Hex()[:12], ok, fcPk[:12])
 	return C.CString("ok")
 }
 
