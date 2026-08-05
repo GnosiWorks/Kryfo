@@ -88,6 +88,7 @@ class HaloEngine {
   late final OneArgFnDart _nostrSubscribe;
   late final CStrFnDart _nostrPoll;
   late final CounterFnDart _fcPk;
+  late final CStrFnDart _txState;
   late final OneArgFnDart _ntfyPing;
   late final OneArgFnDart _torGet;
   late final OneArgFnDart _torGetJson;
@@ -133,6 +134,7 @@ class HaloEngine {
     );
     _nostrPoll = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloNostrPoll');
     _fcPk = _lib.lookupFunction<CounterFn, CounterFnDart>('HaloFirstContactPk');
+    _txState = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloTransportState');
     _ntfyPing = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNtfyPing');
     _torGet = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGet');
     _torGetJson = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetJSON');
@@ -241,6 +243,16 @@ class HaloEngine {
 
   // the address a stranger can reach us at. cheap and synchronous - it is a
   // key derivation, no network.
+  // everything the transport knows, in one read. no
+  // inference on this side.
+  Map<String, dynamic> transportState() {
+    try {
+      return jsonDecode(_txState().toDartString()) as Map<String, dynamic>;
+    } catch (_) {
+      return const {};
+    }
+  }
+
   String firstContactPk(int counter) => _fcPk(counter).toDartString();
 
   // watch it. unlike every other subscription this needs no contacts, which

@@ -91,6 +91,9 @@ func relayCold(u string) bool {
 }
 
 func relayFailed(u string) {
+	if !torReadyNow() {
+		return
+	}
 	relayHealthMu.Lock()
 	defer relayHealthMu.Unlock()
 	relayFails[u]++
@@ -223,6 +226,10 @@ func torNostrClient() (*http.Client, error) {
 		// rebuild just re-hangs. past a higher bar the process itself is gone,
 		// so relaunch tor (async, it takes seconds and holds startMu).
 		if dialerHangs >= 5 {
+			if bootstrapMovingRecently() {
+				log.Println("nostr: dialer hung but bootstrap is still climbing, leaving tor alone")
+				return nil, fmt.Errorf("tor still bootstrapping")
+			}
 			dialerHangs = 0
 			go restartTor()
 		}
@@ -306,6 +313,7 @@ func nostrPublishMulti(ctx context.Context, ev nostr.Event) (ok int) {
 				return
 			}
 			relayOK(u)
+			noteSend()
 			log.Printf("nostr: published to %s ok", u)
 			result <- true
 		}(url)
@@ -440,6 +448,7 @@ func nostrSubscribeRunnerMode(ctx context.Context, peerXPubHex string, peerArr [
 		if fc {
 			tag = "firstcontact"
 		}
+		noteRecv()
 		nostrMu.Lock()
 		nostrInbox = append(nostrInbox, tag+"|"+content)
 		nostrMu.Unlock()

@@ -30,6 +30,12 @@ class TransportScreen extends StatelessWidget {
           final tor = appState.torStatus;
           final pct = appState.bootstrapPct;
           final contacts = appState.contacts.length;
+          final tx = engine.transportState();
+          final relays = (tx['relays'] as List?) ?? const [];
+          final subs = tx['sub_count'] as int? ?? 0;
+          final rx = tx['secs_since_recv'] as int? ?? -1;
+          final sx = tx['secs_since_send'] as int? ?? -1;
+          final uploads = tx['hsdir_uploads'] as int? ?? 0;
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
@@ -62,6 +68,59 @@ class TransportScreen extends StatelessWidget {
                 'queued to send',
                 '${appState.queued}',
                 appState.queued == 0 ? HaloColors.text2 : HaloColors.amber,
+              ),
+
+              _Line(
+                'onion published',
+
+                uploads > 0 ? 'yes ($uploads)' : 'not yet',
+
+                uploads > 0 ? HaloColors.green : HaloColors.rose,
+              ),
+
+              const SizedBox(height: 20),
+
+              _Head('relays'),
+
+              for (final r in relays)
+                _Line(
+                  _relayLabel(r['url'] as String? ?? ''),
+
+                  r['benched'] == true
+                      ? 'benched ${r['bench_for_s']}s'
+                      : (r['fails'] as int? ?? 0) > 0
+                      ? '${r['fails']} fails'
+                      : 'ok',
+
+                  r['benched'] == true
+                      ? HaloColors.rose
+                      : (r['fails'] as int? ?? 0) > 0
+                      ? HaloColors.amber
+                      : HaloColors.green,
+                ),
+
+              const SizedBox(height: 20),
+
+              _Head('traffic'),
+
+              _Line(
+                'relay subscriptions',
+
+                '$subs',
+
+                subs == 0 ? HaloColors.rose : HaloColors.text2,
+              ),
+
+              _Line(
+                'last sent',
+                sx < 0 ? 'never' : '${sx}s ago',
+                HaloColors.text2,
+              ),
+
+              _Line(
+                'last received',
+                rx < 0 ? 'never' : '${rx}s ago',
+                HaloColors.text2,
               ),
 
               const SizedBox(height: 20),
@@ -136,6 +195,14 @@ Color _torTint(TorStatus t) => switch (t) {
   TorStatus.reachable => HaloColors.green,
 };
 
+// our own relay is a 56 character onion. nobody reads that off a
+// screen and it does not fit, so name it instead.
+String _relayLabel(String url) {
+  final bare = url.replaceFirst(RegExp(r'^wss?://'), '');
+  if (bare.contains('.onion')) return 'our relay (onion)';
+  return bare;
+}
+
 class _Head extends StatelessWidget {
   const _Head(this.text);
   final String text;
@@ -165,7 +232,15 @@ class _Line extends StatelessWidget {
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: HaloType.mono(size: 13, color: HaloColors.text2)),
+        Flexible(
+          child: Text(
+            label,
+            style: HaloType.mono(size: 13, color: HaloColors.text2),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        const SizedBox(width: 12),
         Text(
           value,
           style: HaloType.mono(size: 13, color: tint, weight: FontWeight.w600),
