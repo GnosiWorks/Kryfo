@@ -47,6 +47,7 @@ engine/libhalo.h
 engine/libhalo.so
 fix2.py
 icon-backup-*/
+mobile/*.py
 mobile/android/key.properties
 onionfix.py
 patch*.py
