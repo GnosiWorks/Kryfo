@@ -884,20 +884,30 @@ class _BreathDotState extends State<BreathDot>
   }
 
   @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-    animation: _ctl,
-    builder: (ctx, _) {
-      final op = 0.5 + 0.5 * math.sin(_ctl.value * 2 * math.pi);
+  Widget build(BuildContext context) {
+    if (MediaQuery.of(context).disableAnimations) {
+      _ctl.stop();
       return Container(
         width: widget.size,
         height: widget.size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: widget.color.withValues(alpha: op),
-        ),
+        decoration: BoxDecoration(shape: BoxShape.circle, color: widget.color),
       );
-    },
-  );
+    }
+    return AnimatedBuilder(
+      animation: _ctl,
+      builder: (ctx, _) {
+        final op = 0.5 + 0.5 * math.sin(_ctl.value * 2 * math.pi);
+        return Container(
+          width: widget.size,
+          height: widget.size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: widget.color.withValues(alpha: op),
+          ),
+        );
+      },
+    );
+  }
 }
 
 // === BLINKING CURSOR ===

@@ -244,13 +244,22 @@ void _openFullImage(BuildContext context, String path) {
 String _friendlyStatus(String raw) {
   if (raw.isEmpty) return '';
   if (!appState.online && raw.startsWith('error:')) {
-    return "you are offline · sends when you reconnect";
+    return "you are offline · this sends itself when you reconnect";
+  }
+  if (raw.startsWith('error:') && !appState.torReady) {
+    return "still connecting to tor · it'll go out on its own";
   }
   if (raw.startsWith('error: dial:') || raw.contains('host unreachable')) {
-    return "couldn't reach peer · they may be offline";
+    return "couldn't reach them directly · trying the relay instead";
+  }
+  if (raw.contains('no relays accepted')) {
+    return "no relay took it · retrying, nothing is lost";
+  }
+  if (raw.contains('timeout')) {
+    return "took too long · queued for another go";
   }
   if (raw.startsWith('error:')) {
-    return 'something went wrong';
+    return "didn't send · it stays queued and retries";
   }
   return raw;
 }
@@ -5710,391 +5719,404 @@ class _Bubble extends StatelessWidget {
                         clipBehavior: msg.mediaPath != null
                             ? Clip.antiAlias
                             : Clip.none,
-                        child: Column(
-                          crossAxisAlignment: isOut
-                              ? CrossAxisAlignment.end
-                              : CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (quotedText != null)
-                              GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                onTap: onQuoteTap,
-                                child: Container(
-                                  margin: const EdgeInsets.only(bottom: 4),
-                                  clipBehavior: Clip.antiAlias,
-                                  decoration: BoxDecoration(
-                                    color: isOut
-                                        ? HaloColors.onAmber.withValues(
-                                            alpha: 0.1,
-                                          )
-                                        : HaloColors.amber.withValues(
-                                            alpha: 0.08,
-                                          ),
-                                    borderRadius: BorderRadius.circular(9),
-                                  ),
-                                  child: IntrinsicHeight(
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.stretch,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(
-                                          width: 3,
-                                          color: isOut
-                                              ? HaloColors.onAmber.withValues(
-                                                  alpha: 0.7,
-                                                )
-                                              : HaloColors.amber,
-                                        ),
-                                        const SizedBox(width: 9),
-                                        Flexible(
-                                          child: Padding(
-                                            padding: const EdgeInsets.fromLTRB(
-                                              0,
-                                              6,
-                                              10,
-                                              6,
+                        child: IntrinsicWidth(
+                          child: Column(
+                            crossAxisAlignment: isOut
+                                ? CrossAxisAlignment.end
+                                : CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (quotedText != null)
+                                GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: onQuoteTap,
+                                  child: Container(
+                                    margin: const EdgeInsets.only(bottom: 4),
+                                    clipBehavior: Clip.antiAlias,
+                                    decoration: BoxDecoration(
+                                      color: isOut
+                                          ? HaloColors.onAmber.withValues(
+                                              alpha: 0.1,
+                                            )
+                                          : HaloColors.amber.withValues(
+                                              alpha: 0.08,
                                             ),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                if (quotedAuthor != null)
+                                      borderRadius: BorderRadius.circular(9),
+                                    ),
+                                    child: IntrinsicHeight(
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        mainAxisSize: MainAxisSize.max,
+                                        children: [
+                                          Container(
+                                            width: 3,
+                                            color: isOut
+                                                ? HaloColors.onAmber.withValues(
+                                                    alpha: 0.7,
+                                                  )
+                                                : HaloColors.amber,
+                                          ),
+                                          const SizedBox(width: 9),
+                                          Flexible(
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.fromLTRB(
+                                                    0,
+                                                    6,
+                                                    10,
+                                                    6,
+                                                  ),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  if (quotedAuthor != null)
+                                                    Text(
+                                                      quotedAuthor!,
+                                                      style: HaloType.mono(
+                                                        size: 10,
+                                                        color: isOut
+                                                            ? HaloColors.onAmber
+                                                                  .withValues(
+                                                                    alpha: 0.85,
+                                                                  )
+                                                            : HaloColors.amber,
+                                                        letter: 0.4,
+                                                      ),
+                                                    ),
+                                                  if (quotedAuthor != null)
+                                                    const SizedBox(height: 2),
                                                   Text(
-                                                    quotedAuthor!,
-                                                    style: HaloType.mono(
-                                                      size: 10,
+                                                    quotedText!,
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: HaloType.sans(
+                                                      size: 12.5,
                                                       color: isOut
                                                           ? HaloColors.onAmber
                                                                 .withValues(
                                                                   alpha: 0.85,
                                                                 )
-                                                          : HaloColors.amber,
-                                                      letter: 0.4,
+                                                          : HaloColors.text2,
+                                                      height: 1.25,
                                                     ),
                                                   ),
-                                                if (quotedAuthor != null)
-                                                  const SizedBox(height: 2),
-                                                Text(
-                                                  quotedText!,
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: HaloType.sans(
-                                                    size: 12.5,
-                                                    color: isOut
-                                                        ? HaloColors.onAmber
-                                                              .withValues(
-                                                                alpha: 0.85,
-                                                              )
-                                                        : HaloColors.text2,
-                                                    height: 1.25,
-                                                  ),
-                                                ),
-                                              ],
+                                                ],
+                                              ),
                                             ),
                                           ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              if (msg.fileName == 'voice.wav' &&
+                                  msg.filePath != null)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 2,
+                                  ),
+                                  child: _VoiceBubble(
+                                    key: ValueKey('vb_${msg.filePath}'),
+                                    path: msg.filePath!,
+                                    isOut: isOut,
+                                    disguised: msg.voiceDisguised,
+                                  ),
+                                )
+                              else if (msg.fileName != null)
+                                GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () {
+                                    if (msg.filePath != null) {
+                                      Share.shareXFiles([XFile(msg.filePath!)]);
+                                    }
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 2,
+                                    ),
+                                    child: _fileCard(msg, isOut),
+                                  ),
+                                ),
+                              if (msg.mediaPath != null)
+                                GestureDetector(
+                                  onTap: () =>
+                                      _openFullImage(context, msg.mediaPath!),
+                                  child: ClipRRect(
+                                    borderRadius: msg.text.isNotEmpty
+                                        ? const BorderRadius.vertical(
+                                            top: Radius.circular(14),
+                                          )
+                                        : BorderRadius.circular(14),
+                                    child: Stack(
+                                      clipBehavior: Clip.none,
+                                      children: [
+                                        ConstrainedBox(
+                                          constraints: const BoxConstraints(
+                                            maxHeight: 280,
+                                          ),
+                                          child: Image.file(
+                                            File(msg.mediaPath!),
+                                            cacheWidth: 1080,
+                                            gaplessPlayback: true,
+                                            filterQuality: FilterQuality.medium,
+                                            fit: BoxFit.cover,
+                                            width: double.infinity,
+                                            errorBuilder: (_, __, ___) =>
+                                                const SizedBox.shrink(),
+                                          ),
                                         ),
+                                        if (showMeta)
+                                          Positioned(
+                                            right: 8,
+                                            bottom: 8,
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 7,
+                                                    vertical: 3,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.45,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(
+                                                    _fmtTime(msg.when),
+                                                    style: const TextStyle(
+                                                      fontFamily:
+                                                          'JetBrains Mono',
+                                                      fontSize: 9,
+                                                      color: Colors.white,
+                                                      letterSpacing: 0.4,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 3),
+                                                  if (!msg.sending &&
+                                                      !msg.failed) ...[
+                                                    Text(
+                                                      '✓',
+                                                      style: const TextStyle(
+                                                        fontSize: 10,
+                                                        color: Colors.white,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        height: 1,
+                                                      ),
+                                                    ),
+                                                    if (msg.delivered) ...[
+                                                      const SizedBox(width: 4),
+                                                      const Text(
+                                                        'delivered',
+                                                        style: TextStyle(
+                                                          fontFamily:
+                                                              'JetBrains Mono',
+                                                          fontSize: 8.5,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          color: Colors.white,
+                                                          letterSpacing: 0.3,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ],
+                                                ],
+                                              ),
+                                            ),
+                                          ),
                                       ],
                                     ),
                                   ),
                                 ),
-                              ),
-                            if (msg.fileName == 'voice.wav' &&
-                                msg.filePath != null)
                               Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 2,
-                                ),
-                                child: _VoiceBubble(
-                                  key: ValueKey('vb_${msg.filePath}'),
-                                  path: msg.filePath!,
-                                  isOut: isOut,
-                                  disguised: msg.voiceDisguised,
-                                ),
-                              )
-                            else if (msg.fileName != null)
-                              GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                onTap: () {
-                                  if (msg.filePath != null) {
-                                    Share.shareXFiles([XFile(msg.filePath!)]);
-                                  }
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 2,
-                                  ),
-                                  child: _fileCard(msg, isOut),
-                                ),
-                              ),
-                            if (msg.mediaPath != null)
-                              GestureDetector(
-                                onTap: () =>
-                                    _openFullImage(context, msg.mediaPath!),
-                                child: ClipRRect(
-                                  borderRadius: msg.text.isNotEmpty
-                                      ? const BorderRadius.vertical(
-                                          top: Radius.circular(14),
-                                        )
-                                      : BorderRadius.circular(14),
-                                  child: Stack(
-                                    clipBehavior: Clip.none,
-                                    children: [
-                                      ConstrainedBox(
-                                        constraints: const BoxConstraints(
-                                          maxHeight: 280,
-                                        ),
-                                        child: Image.file(
-                                          File(msg.mediaPath!),
-                                          cacheWidth: 1080,
-                                          gaplessPlayback: true,
-                                          filterQuality: FilterQuality.medium,
-                                          fit: BoxFit.cover,
-                                          width: double.infinity,
-                                          errorBuilder: (_, __, ___) =>
-                                              const SizedBox.shrink(),
-                                        ),
+                                padding: msg.mediaPath != null
+                                    ? (msg.text.isNotEmpty
+                                          ? const EdgeInsets.fromLTRB(
+                                              12,
+                                              8,
+                                              12,
+                                              10,
+                                            )
+                                          : const EdgeInsets.fromLTRB(
+                                              2,
+                                              6,
+                                              2,
+                                              0,
+                                            ))
+                                    : EdgeInsets.zero,
+                                child: Column(
+                                  crossAxisAlignment: msg.mediaPath != null
+                                      ? CrossAxisAlignment.start
+                                      : CrossAxisAlignment.end,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (msg.text.isNotEmpty)
+                                      _body(
+                                        isOut,
+                                        image: msg.mediaPath != null,
                                       ),
-                                      if (showMeta)
-                                        Positioned(
-                                          right: 8,
-                                          bottom: 8,
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 7,
-                                              vertical: 3,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: Colors.black.withValues(
-                                                alpha: 0.45,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Text(
-                                                  _fmtTime(msg.when),
-                                                  style: const TextStyle(
-                                                    fontFamily:
-                                                        'JetBrains Mono',
-                                                    fontSize: 9,
-                                                    color: Colors.white,
-                                                    letterSpacing: 0.4,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 3),
-                                                if (!msg.sending &&
-                                                    !msg.failed) ...[
-                                                  Text(
-                                                    '✓',
-                                                    style: const TextStyle(
-                                                      fontSize: 10,
-                                                      color: Colors.white,
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                      height: 1,
-                                                    ),
-                                                  ),
-                                                  if (msg.delivered) ...[
-                                                    const SizedBox(width: 4),
-                                                    const Text(
-                                                      'delivered',
-                                                      style: TextStyle(
-                                                        fontFamily:
-                                                            'JetBrains Mono',
-                                                        fontSize: 8.5,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                        color: Colors.white,
-                                                        letterSpacing: 0.3,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ],
-                                              ],
-                                            ),
-                                          ),
-                                        ),
+                                    if (msg.preview != null) ...[
+                                      const SizedBox(height: 6),
+                                      LinkPreviewCard(
+                                        preview: msg.preview!,
+                                        isOut: isOut,
+                                      ),
                                     ],
-                                  ),
-                                ),
-                              ),
-                            Padding(
-                              padding: msg.mediaPath != null
-                                  ? (msg.text.isNotEmpty
-                                        ? const EdgeInsets.fromLTRB(
-                                            12,
-                                            8,
-                                            12,
-                                            10,
-                                          )
-                                        : const EdgeInsets.fromLTRB(2, 6, 2, 0))
-                                  : EdgeInsets.zero,
-                              child: Column(
-                                crossAxisAlignment: msg.mediaPath != null
-                                    ? CrossAxisAlignment.start
-                                    : CrossAxisAlignment.end,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (msg.text.isNotEmpty)
-                                    _body(isOut, image: msg.mediaPath != null),
-                                  if (msg.preview != null) ...[
-                                    const SizedBox(height: 6),
-                                    LinkPreviewCard(
-                                      preview: msg.preview!,
-                                      isOut: isOut,
-                                    ),
-                                  ],
-                                  if (showMeta && msg.mediaPath == null) ...[
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          _fmtTime(msg.when),
-                                          style: TextStyle(
-                                            fontFamily: 'JetBrains Mono',
-                                            fontSize: 9,
-                                            color: metaColor,
-                                            letterSpacing: 0.4,
-                                          ),
-                                        ),
-                                        if (msg.edited) ...[
-                                          const SizedBox(width: 5),
+                                    if (showMeta && msg.mediaPath == null) ...[
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
                                           Text(
-                                            'edited',
+                                            _fmtTime(msg.when),
                                             style: TextStyle(
                                               fontFamily: 'JetBrains Mono',
                                               fontSize: 9,
                                               color: metaColor,
-                                              fontStyle: FontStyle.italic,
                                               letterSpacing: 0.4,
                                             ),
                                           ),
-                                        ],
-                                        const SizedBox(width: 3),
-                                        Text(
-                                          '✓',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: metaColor,
-                                            fontWeight: FontWeight.w700,
-                                            height: 1,
-                                          ),
-                                        ),
-                                        if (msg.delivered) ...[
-                                          const SizedBox(width: 4),
+                                          if (msg.edited) ...[
+                                            const SizedBox(width: 5),
+                                            Text(
+                                              'edited',
+                                              style: TextStyle(
+                                                fontFamily: 'JetBrains Mono',
+                                                fontSize: 9,
+                                                color: metaColor,
+                                                fontStyle: FontStyle.italic,
+                                                letterSpacing: 0.4,
+                                              ),
+                                            ),
+                                          ],
+                                          const SizedBox(width: 3),
                                           Text(
-                                            'delivered',
+                                            '✓',
                                             style: TextStyle(
-                                              fontFamily: 'JetBrains Mono',
-                                              fontSize: 8.5,
-                                              fontWeight: FontWeight.w600,
+                                              fontSize: 11,
                                               color: metaColor,
-                                              letterSpacing: 0.3,
+                                              fontWeight: FontWeight.w700,
+                                              height: 1,
                                             ),
                                           ),
-                                        ],
-                                        if (msg.burnAt != null) ...[
-                                          const SizedBox(width: 6),
-                                          Icon(
-                                            Icons
-                                                .local_fire_department_outlined,
-                                            size: 11,
-                                            color: metaColor,
-                                          ),
-                                          const SizedBox(width: 2),
-                                          Text(
-                                            _fmtBurn(msg.burnAt!),
-                                            style: HaloType.mono(
-                                              size: 9.5,
-                                              color: metaColor,
-                                              weight: FontWeight.w600,
+                                          if (msg.delivered) ...[
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'delivered',
+                                              style: TextStyle(
+                                                fontFamily: 'JetBrains Mono',
+                                                fontSize: 8.5,
+                                                fontWeight: FontWeight.w600,
+                                                color: metaColor,
+                                                letterSpacing: 0.3,
+                                              ),
                                             ),
-                                          ),
+                                          ],
+                                          if (msg.burnAt != null) ...[
+                                            const SizedBox(width: 6),
+                                            Icon(
+                                              Icons
+                                                  .local_fire_department_outlined,
+                                              size: 11,
+                                              color: metaColor,
+                                            ),
+                                            const SizedBox(width: 2),
+                                            Text(
+                                              _fmtBurn(msg.burnAt!),
+                                              style: HaloType.mono(
+                                                size: 9.5,
+                                                color: metaColor,
+                                                weight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
                                         ],
-                                      ],
-                                    ),
-                                  ],
-                                  if (!isOut &&
-                                      msg.edited &&
-                                      msg.mediaPath == null) ...[
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      'edited',
-                                      style: TextStyle(
-                                        fontFamily: 'JetBrains Mono',
-                                        fontSize: 9,
-                                        color: HaloColors.amber.withValues(
-                                          alpha: 0.55,
+                                      ),
+                                    ],
+                                    if (!isOut &&
+                                        msg.edited &&
+                                        msg.mediaPath == null) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'edited',
+                                        style: TextStyle(
+                                          fontFamily: 'JetBrains Mono',
+                                          fontSize: 9,
+                                          color: HaloColors.amber.withValues(
+                                            alpha: 0.55,
+                                          ),
+                                          fontStyle: FontStyle.italic,
+                                          letterSpacing: 0.4,
                                         ),
-                                        fontStyle: FontStyle.italic,
-                                        letterSpacing: 0.4,
                                       ),
-                                    ),
-                                  ],
+                                    ],
 
-                                  if (msg.burnAt != null &&
-                                      !msg.sending &&
-                                      !showMeta) ...[
-                                    const SizedBox(height: 4),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 4,
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons
-                                                .local_fire_department_outlined,
-                                            size: 11,
-                                            color: (isOut && !isImage)
-                                                ? HaloColors.onAmber
-                                                : HaloColors.amber.withValues(
-                                                    alpha: 0.75,
-                                                  ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            _fmtBurn(msg.burnAt!),
-                                            style: HaloType.mono(
-                                              size: 9.5,
+                                    if (msg.burnAt != null &&
+                                        !msg.sending &&
+                                        !showMeta) ...[
+                                      const SizedBox(height: 4),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons
+                                                  .local_fire_department_outlined,
+                                              size: 11,
                                               color: (isOut && !isImage)
                                                   ? HaloColors.onAmber
                                                   : HaloColors.amber.withValues(
                                                       alpha: 0.75,
                                                     ),
-                                              weight: FontWeight.w600,
-                                            ).copyWith(letterSpacing: 0.3),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                  if (msg.failed) ...[
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'failed · tap to retry',
-                                      style: TextStyle(
-                                        fontFamily: 'JetBrains Mono',
-                                        fontSize: 10,
-                                        color: HaloColors.onAmber.withValues(
-                                          alpha: 0.95,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              _fmtBurn(msg.burnAt!),
+                                              style: HaloType.mono(
+                                                size: 9.5,
+                                                color: (isOut && !isImage)
+                                                    ? HaloColors.onAmber
+                                                    : HaloColors.amber
+                                                          .withValues(
+                                                            alpha: 0.75,
+                                                          ),
+                                                weight: FontWeight.w600,
+                                              ).copyWith(letterSpacing: 0.3),
+                                            ),
+                                          ],
                                         ),
-                                        letterSpacing: 0.4,
                                       ),
-                                    ),
+                                    ],
+                                    if (msg.failed) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'failed · tap to retry',
+                                        style: TextStyle(
+                                          fontFamily: 'JetBrains Mono',
+                                          fontSize: 10,
+                                          color: HaloColors.onAmber.withValues(
+                                            alpha: 0.95,
+                                          ),
+                                          letterSpacing: 0.4,
+                                        ),
+                                      ),
+                                    ],
                                   ],
-                                ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),

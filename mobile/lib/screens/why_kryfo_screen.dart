@@ -25,6 +25,7 @@ class WhyKryfoScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
+                'kryfo · KREE-fo · greek for hidden.\n'
                 'a quiet place to talk, built so no one is watching.',
                 style: HaloType.serif(
                   size: 22,
