@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
-import '../main.dart' show appState, buildHaloUriV2;
+import '../main.dart' show appState, buildHaloUriV3;
 import '../theme.dart';
 
 class MyKryfoScreen extends StatefulWidget {
@@ -33,7 +33,11 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
 
   Future<void> _load() async {
     if (appState.myOnion.isEmpty) return;
-    final uri = await buildHaloUriV2(appState.myId, appState.myOnion);
+    final uri = await buildHaloUriV3(
+      appState.myId,
+      appState.myOnion,
+      appState.fcCounter,
+    );
     if (mounted) setState(() => _uri = uri);
   }
 

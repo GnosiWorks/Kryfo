@@ -130,6 +130,23 @@ extern char* HaloDecryptBackup(char* cBlob, char* cPassphrase);
 extern char* HaloNostrInit(char* cRelaysCSV);
 extern char* HaloNostrSend(char* cPeerXPubHex, char* cMsg);
 extern char* HaloNostrSubscribe(char* cPeerXPubHex);
+
+// the public half of our first-contact address. goes in the invite so a
+// stranger can reach us before either side knows the other's key.
+//
+extern char* HaloFirstContactPk(int counter);
+
+// watch our own first-contact address. unlike every other subscription this
+// needs no contacts, which is the whole point: a fresh install with an empty
+// roster can still be reached.
+//
+extern char* HaloNostrSubscribeFirstContact(int counter);
+
+// introduce ourselves to someone who has never heard of us. the seal is
+// signed with our usual per-conversation key, so once they know us the normal
+// verification applies to everything after this.
+//
+extern char* HaloNostrSendFirstContact(char* cPeerXPubHex, char* cFcPk, char* cMsg);
 extern char* HaloNostrPoll(void);
 
 // posts a wake-up trigger to the peer's ntfy endpoint via tor. fire-and-

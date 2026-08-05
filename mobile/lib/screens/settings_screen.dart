@@ -424,6 +424,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Navigator.push(context, haloRoute(const WhyKryfoScreen())),
           ),
           _Row(
+            icon: Icons.autorenew,
+            label: 'reset my invite link',
+            hint: 'old qr codes and links stop working',
+            onTap: () async {
+              final ok = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  backgroundColor: HaloColors.surface3,
+                  title: Text(
+                    'reset invite link?',
+                    style: HaloType.serif(size: 18, color: HaloColors.text),
+                  ),
+                  content: Text(
+                    'anyone holding an old qr code or link stops being able '
+                    'to reach you. your contacts, chats and history are not '
+                    'touched.',
+                    style: HaloType.sans(size: 13, color: HaloColors.text2),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(false),
+                      child: Text(
+                        'cancel',
+                        style: HaloType.sans(size: 13, color: HaloColors.text2),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(true),
+                      child: Text(
+                        'reset',
+                        style: HaloType.sans(size: 13, color: HaloColors.rose),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+              if (ok != true) return;
+              await appState.resetInviteAddress();
+              if (context.mounted) {
+                showHaloToast(context, 'invite reset · share the new code');
+              }
+            },
+          ),
+          _Row(
             icon: Icons.visibility_outlined,
             label: 'what we can see',
             value: 'the honest list',
