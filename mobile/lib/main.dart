@@ -21,6 +21,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'theme.dart';
+import 'wipe.dart';
 import 'media_progress.dart';
 import 'screens/home_screen.dart';
 import 'screens/new_group_screen.dart';
@@ -57,6 +58,12 @@ typedef OneArgFn = Pointer<Utf8> Function(Pointer<Utf8>);
 typedef OneArgFnDart = Pointer<Utf8> Function(Pointer<Utf8>);
 typedef TwoArgFn = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
 typedef TwoArgFnDart = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+typedef ThreeArgFn =
+    Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
+typedef ThreeArgFnDart =
+    Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
+typedef CounterFn = Pointer<Utf8> Function(Int32);
+typedef CounterFnDart = Pointer<Utf8> Function(int);
 
 class HaloEngine {
   late final DynamicLibrary _lib;
@@ -80,6 +87,7 @@ class HaloEngine {
   late final TwoArgFnDart _nostrSend;
   late final OneArgFnDart _nostrSubscribe;
   late final CStrFnDart _nostrPoll;
+  late final CounterFnDart _fcPk;
   late final OneArgFnDart _ntfyPing;
   late final OneArgFnDart _torGet;
   late final OneArgFnDart _torGetJson;
@@ -124,6 +132,7 @@ class HaloEngine {
       'HaloNostrSubscribe',
     );
     _nostrPoll = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloNostrPoll');
+    _fcPk = _lib.lookupFunction<CounterFn, CounterFnDart>('HaloFirstContactPk');
     _ntfyPing = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNtfyPing');
     _torGet = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGet');
     _torGetJson = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetJSON');
@@ -230,6 +239,26 @@ class HaloEngine {
     _subscribeOnIsolate(peerXPubHex).ignore();
   }
 
+  // the address a stranger can reach us at. cheap and synchronous - it is a
+  // key derivation, no network.
+  String firstContactPk(int counter) => _fcPk(counter).toDartString();
+
+  // watch it. unlike every other subscription this needs no contacts, which
+  // is the whole point.
+  void subscribeFirstContactBg(int counter) {
+    _fcSubscribeOnIsolate(counter).ignore();
+  }
+
+  // introduce ourselves to someone who has never heard of us.
+  Future<String> sendFirstContact(
+    String peerXPubHex,
+    String fcPk,
+    String b64Cipher,
+  ) => _fcSendOnIsolate(peerXPubHex, fcPk, b64Cipher).timeout(
+    const Duration(seconds: 60),
+    onTimeout: () => 'error: relay timeout',
+  );
+
   String nostrSubscribe(String peerXPubHex) {
     final ptr = peerXPubHex.toNativeUtf8();
     try {
@@ -332,6 +361,39 @@ class HaloEngine {
         const Duration(seconds: 15),
         onTimeout: () => 'error: onion timeout',
       );
+}
+
+Future<String> _fcSendOnIsolate(String peerXPub, String fcPk, String msg) {
+  return Isolate.run(() {
+    final lib = Platform.isAndroid
+        ? DynamicLibrary.open('libhalo.so')
+        : DynamicLibrary.process();
+    final fn = lib.lookupFunction<ThreeArgFn, ThreeArgFnDart>(
+      'HaloNostrSendFirstContact',
+    );
+    final a = peerXPub.toNativeUtf8();
+    final b = fcPk.toNativeUtf8();
+    final c = msg.toNativeUtf8();
+    try {
+      return fn(a, b, c).toDartString();
+    } finally {
+      malloc.free(a);
+      malloc.free(b);
+      malloc.free(c);
+    }
+  });
+}
+
+Future<String> _fcSubscribeOnIsolate(int counter) {
+  return Isolate.run(() {
+    final lib = Platform.isAndroid
+        ? DynamicLibrary.open('libhalo.so')
+        : DynamicLibrary.process();
+    final fn = lib.lookupFunction<CounterFn, CounterFnDart>(
+      'HaloNostrSubscribeFirstContact',
+    );
+    return fn(counter).toDartString();
+  });
 }
 
 // run a blocking native send on a throwaway background isolate so the ui
@@ -2290,7 +2352,7 @@ Future<String?> signalDecrypt(
 Future<String> handleHaloUri(String raw) async {
   final parsed = parseHaloUri(raw);
   if (parsed == null) return 'invalid uri';
-  if (parsed['v'] == '2') {
+  if (parsed['v'] == '2' || parsed['v'] == '3') {
     try {
       await processPeerBundle(parsed['id']!, parsed['bundle']!);
     } catch (e) {
@@ -2298,6 +2360,15 @@ Future<String> handleHaloUri(String raw) async {
     }
     await db.upsertContact(parsed['id']!, parsed['onion']!, '');
     await db.setPeerBundle(parsed['id']!, parsed['bundle']!);
+    final fc = parsed['fc'];
+    debugPrint(
+      fc == null || fc.isEmpty
+          ? 'pair: v${parsed['v']} invite, no first-contact addr'
+          : 'pair: v${parsed['v']} invite carries first-contact addr',
+    );
+    if (fc != null && fc.isNotEmpty) {
+      await appState.rememberPeerFc(parsed['id']!, fc);
+    }
     await appState.subscribePeer(parsed['id']!);
     return 'signal session built: ${parsed['id']}';
   } else {
@@ -2336,6 +2407,18 @@ Future<String> buildHaloUriV2(String id, String onion) async {
   return 'kryfo://share?id=$id&onion=$onion&v=2&bundle=$bundle';
 }
 
+// v3 carries a first-contact address alongside the bundle. without it the
+// only way a stranger can introduce themselves is our onion, and when that
+// will not publish a one-way scan silently never works.
+Future<String> buildHaloUriV3(String id, String onion, int fcCounter) async {
+  final bundle = await makePreKeyBundleB64();
+  final fc = engine.firstContactPk(fcCounter);
+  if (fc.isEmpty || fc.startsWith('error')) {
+    return buildHaloUriV2(id, onion);
+  }
+  return 'kryfo://share?id=$id&onion=$onion&v=3&bundle=$bundle&fc=$fc';
+}
+
 Map<String, String>? parseHaloUri(String raw) {
   raw = raw.trim();
   if (!raw.startsWith('kryfo://share')) return null;
@@ -2345,6 +2428,16 @@ Map<String, String>? parseHaloUri(String raw) {
     final onion = uri.queryParameters['onion'];
     if (id == null || onion == null) return null;
     final v = uri.queryParameters['v'] ?? '1';
+    if (v == '3') {
+      final bundle = uri.queryParameters['bundle'];
+      if (bundle == null) return null;
+      final out = {'id': id, 'onion': onion, 'bundle': bundle, 'v': '3'};
+      final fc = uri.queryParameters['fc'];
+      // an old build reading a v3 link still pairs, it just falls back to
+      // onion-only first contact.
+      if (fc != null && fc.length == 64) out['fc'] = fc;
+      return out;
+    }
     if (v == '2') {
       final bundle = uri.queryParameters['bundle'];
       if (bundle == null) return null;
@@ -2458,6 +2551,7 @@ class AppState extends ChangeNotifier {
   void startOutboxDrain() {
     _outboxTimer?.cancel();
     _outboxTimer = Timer.periodic(const Duration(seconds: 20), (_) {
+      if (haloWiping) return;
       unawaited(drainOutbox());
     });
   }
@@ -2657,6 +2751,62 @@ class AppState extends ChangeNotifier {
       key: 'theme_light',
       value: v.toString(),
     );
+  }
+
+  // which first-contact address our invites currently point at. an invite can
+  // end up in a bio or a screenshot, so it has to be retirable without
+  // burning the identity - bumping this does exactly that and leaves every
+  // existing conversation alone.
+  int _fcCounter = 0;
+  int get fcCounter => _fcCounter;
+
+  // a stranger's first-contact address, kept only until they back-pair.
+  // after that the normal per-conversation addresses take over.
+  final Map<String, String> _peerFc = <String, String>{};
+
+  Future<void> _loadFirstContact() async {
+    const st = FlutterSecureStorage();
+    _fcCounter = int.tryParse(await st.read(key: 'fc_counter') ?? '') ?? 0;
+    try {
+      final raw = await st.read(key: 'peer_fc');
+      if (raw != null && raw.isNotEmpty) {
+        (jsonDecode(raw) as Map<String, dynamic>).forEach((k, v) {
+          _peerFc[k] = v as String;
+        });
+      }
+    } catch (_) {}
+    engine.subscribeFirstContactBg(_fcCounter);
+    notifyListeners();
+  }
+
+  String? peerFcFor(String haloId) => _peerFc[haloId];
+
+  Future<void> rememberPeerFc(String haloId, String fcPk) async {
+    _peerFc[haloId] = fcPk;
+    await const FlutterSecureStorage().write(
+      key: 'peer_fc',
+      value: jsonEncode(_peerFc),
+    );
+  }
+
+  Future<void> forgetPeerFc(String haloId) async {
+    if (_peerFc.remove(haloId) == null) return;
+    await const FlutterSecureStorage().write(
+      key: 'peer_fc',
+      value: jsonEncode(_peerFc),
+    );
+  }
+
+  // retires every invite handed out so far. contacts, sessions and history
+  // are untouched; only the address strangers use to reach us moves.
+  Future<void> resetInviteAddress() async {
+    _fcCounter++;
+    await const FlutterSecureStorage().write(
+      key: 'fc_counter',
+      value: '$_fcCounter',
+    );
+    engine.subscribeFirstContactBg(_fcCounter);
+    notifyListeners();
   }
 
   // people lose accounts because nothing ever asked them to write the words
@@ -3266,7 +3416,8 @@ class AppState extends ChangeNotifier {
       await _applyIncomingPayload(h, env, fromBackPair: true);
       await refreshContacts();
       notifyListeners();
-      debugPrint('back-pair: created contact via direct onion');
+      await forgetPeerFc(h);
+      debugPrint('back-pair: created contact for $h');
       return h;
     } catch (e) {
       debugPrint('back-pair error: $e');
@@ -3387,6 +3538,7 @@ class AppState extends ChangeNotifier {
     // life of the app and doubles as the watchdog.
     var torKickedAt = DateTime.now();
     Timer.periodic(const Duration(seconds: 1), (t) {
+      if (haloWiping) return;
       final raw = engine.getStatus();
       final st = parseTorStatus(raw);
       final pct = parseBootstrapPct(raw);
@@ -3432,12 +3584,16 @@ class AppState extends ChangeNotifier {
       'wss://nostr.mom,'
       'wss://nostr.oxtr.dev',
     );
+    // has to follow the relay list: the runner snapshots it on start and
+    // gives up if it is empty.
+    _loadFirstContact();
     await loadDisplayName();
     await loadScreenshotPref();
     await initNotifications(onTap: openChatForHalo);
 
     // periodic sweep: delete messages whose burn_at has passed.
     Timer.periodic(const Duration(seconds: 5), (_) async {
+      if (haloWiping) return;
       try {
         await db.purgeExpired();
       } catch (_) {}
@@ -3489,6 +3645,7 @@ class AppState extends ChangeNotifier {
     // pair from strangers + falls back to trial-decrypt against known
     // contacts for in-session direct-onion messages.
     Timer.periodic(const Duration(seconds: 1), (_) async {
+      if (haloWiping) return;
       // reentrancy guard: the ffi drain + decrypt can outrun the 1s tick
       // while tor is still warming, and stacked calls pinned the main
       // thread hard enough to anr on weak phones. skip if one's running.
@@ -3601,6 +3758,7 @@ class AppState extends ChangeNotifier {
     });
 
     Timer.periodic(const Duration(seconds: 1), (_) async {
+      if (haloWiping) return;
       // reading mail off a relay only needs tor's client side, which is up at
       // bootstrapped. this used to wait for `reachable` - our own onion being
       // published - which is a different thing entirely and minutes later.
@@ -3694,7 +3852,7 @@ class AppState extends ChangeNotifier {
                 'nostr: back-pair ${paired != null ? "ok $paired" : "failed"}',
               );
               if (paired != null) {
-                _xPubToHaloId[m.peer] = paired;
+                if (m.peer != 'firstcontact') _xPubToHaloId[m.peer] = paired;
                 await db.markSeen(h);
                 landed = true;
               }
@@ -4118,6 +4276,21 @@ class AppState extends ChangeNotifier {
             .then((r) => settle('nostr', r))
             .catchError((_) => settle('nostr', 'err')),
       );
+      final fc = _peerFc[memberId];
+      debugPrint(
+        fc == null || fc.isEmpty
+            ? 'send: no first-contact addr for $memberId (v2 invite?)'
+            : 'send: racing onion + relay + first-contact for $memberId',
+      );
+      if (fc != null && fc.isNotEmpty) {
+        pending++;
+        unawaited(
+          engine
+              .sendFirstContact(xpub, fc, cipher)
+              .then((r) => settle('firstcontact', r))
+              .catchError((_) => settle('firstcontact', 'err')),
+        );
+      }
       return done.future;
     } catch (e) {
       debugPrint('send to $memberId failed: $e');
@@ -4955,6 +5128,7 @@ Future<void> showAddContact(BuildContext context) async {
 
   final status = await handleHaloUri(uri);
   await appState.refreshContacts();
+  if (!context.mounted) return;
   showHaloToast(context, status);
 }
 
@@ -5086,7 +5260,11 @@ class _DevScreenState extends State<DevScreen> {
       setState(() => _status = 'tap start listening first');
       return;
     }
-    final uri = await buildHaloUriV2(appState.myId, _myAddr);
+    final uri = await buildHaloUriV3(
+      appState.myId,
+      _myAddr,
+      appState.fcCounter,
+    );
     if (!context.mounted) return;
     showDialog(
       context: context,

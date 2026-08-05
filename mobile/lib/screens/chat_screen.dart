@@ -2011,6 +2011,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
       if (xpub != null) {
         _peerXPub = xpub;
+        // before they back-pair, the pair address is one they cannot
+        // derive yet. their first-contact address is the only relay
+        // route that reaches them.
+        final fcPk = appState.peerFcFor(widget.peerHaloId);
+        if (!_backPaired && fcPk != null && fcPk.isNotEmpty) {
+          final fr = await engine.sendFirstContact(xpub, fcPk, cipher);
+          if (fr == 'ok') return 'ok';
+          debugPrint('chat send: first-contact failed ($fr)');
+        }
         return await Future(() => engine.nostrSend(xpub!, cipher));
       }
       return tor ?? 'error: no transport';
@@ -3132,6 +3141,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
       if (xpub != null) {
         _peerXPub = xpub;
+        // before they back-pair, the pair address is one they cannot
+        // derive yet. their first-contact address is the only relay
+        // route that reaches them.
+        final fcPk = appState.peerFcFor(widget.peerHaloId);
+        if (!_backPaired && fcPk != null && fcPk.isNotEmpty) {
+          final fr = await engine.sendFirstContact(xpub, fcPk, cipher);
+          if (fr == 'ok') return 'ok';
+          debugPrint('chat send: first-contact failed ($fr)');
+        }
         return await Future(() => engine.nostrSend(xpub!, cipher));
       }
       return tor ?? 'error: no transport';
