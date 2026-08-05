@@ -67,3 +67,5 @@ icon-backup-*/
 engine/e*.py
 repro/verify_offline.sh
 repro/Dockerfile.public.bak
+engine/engine
+engine/libhalo.so
