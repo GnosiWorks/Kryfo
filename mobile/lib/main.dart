@@ -2444,6 +2444,13 @@ class AppState extends ChangeNotifier {
   // wrap, so a flat cadence leaves one copy per attempt sitting on every
   // relay forever - the receiver then decrypts and acks all of them.
   final Map<String, int> _outboxNextAt = <String, int>{};
+
+  // how many messages are sitting unsent, and for whom. the offline strip
+  // reads this so it can say "2 waiting" instead of just "offline".
+  int _queued = 0;
+  final Map<String, int> _queuedPerPeer = <String, int>{};
+  int get queued => _queued;
+  int queuedFor(String haloId) => _queuedPerPeer[haloId] ?? 0;
   Timer? _outboxTimer;
   bool _outboxWasReady = false;
 
@@ -2473,8 +2480,20 @@ class AppState extends ChangeNotifier {
         _outboxTries.clear();
         _outboxNextAt.clear();
       }
+      if (_queued != 0) {
+        _queued = 0;
+        _queuedPerPeer.clear();
+        notifyListeners();
+      }
       return;
     }
+    _queued = rows.length;
+    _queuedPerPeer.clear();
+    for (final r in rows) {
+      final to = r['to_halo_id'] as String?;
+      if (to != null) _queuedPerPeer[to] = (_queuedPerPeer[to] ?? 0) + 1;
+    }
+    notifyListeners();
     // anything that landed since the last sweep stops costing us bookkeeping.
     final live = {for (final r in rows) r['msg_uid'] as String?};
     _outboxTries.removeWhere((k, _) => !live.contains(k));
@@ -2640,10 +2659,52 @@ class AppState extends ChangeNotifier {
     );
   }
 
+  // people lose accounts because nothing ever asked them to write the words
+  // down. one card on home, dismissible, never shown again once they have a
+  // backup or once they say no.
+  bool _hasBackup = true;
+  bool _nudgeOff = true;
+  bool get showBackupNudge => !_hasBackup && !_nudgeOff;
+
+  Future<void> _loadBackupFlags() async {
+    const st = FlutterSecureStorage();
+    _hasBackup = (await st.read(key: 'backup_made')) == '1';
+    _nudgeOff = (await st.read(key: 'backup_nudge_off')) == '1';
+    notifyListeners();
+  }
+
+  Future<void> markBackupMade() async {
+    _hasBackup = true;
+    await const FlutterSecureStorage().write(key: 'backup_made', value: '1');
+    notifyListeners();
+  }
+
+  Future<void> dismissBackupNudge() async {
+    _nudgeOff = true;
+    await const FlutterSecureStorage().write(
+      key: 'backup_nudge_off',
+      value: '1',
+    );
+    notifyListeners();
+  }
+
+  // some screens are not optional. recovery shows the whole key, so it turns
+  // the flag on whatever the user picked in settings, and hands it back on
+  // the way out.
+  bool _secureForced = false;
+  Future<void> forceSecure(bool on) async {
+    _secureForced = on;
+    try {
+      await _platformChannel.invokeMethod('setSecure', {
+        'on': on || _blockScreenshots,
+      });
+    } catch (_) {}
+  }
+
   Future<void> _applyScreenSecure() async {
     try {
       await _platformChannel.invokeMethod('setSecure', {
-        'on': _blockScreenshots,
+        'on': _blockScreenshots || _secureForced,
       });
     } catch (_) {}
   }
@@ -3116,6 +3177,13 @@ class AppState extends ChangeNotifier {
   TorStatus _torStatus = TorStatus.off;
   int _bootstrapPct = 0;
   TorStatus get torStatus => _torStatus;
+
+  // tor can carry traffic. same test the outbox uses, exposed so the
+  // transport screen and the ui agree instead of each deciding for itself.
+  bool get torReady =>
+      _torStatus == TorStatus.bootstrapped ||
+      _torStatus == TorStatus.publishing ||
+      _torStatus == TorStatus.reachable;
   int get bootstrapPct => _bootstrapPct;
   bool _online = true;
   bool get online => _online;
@@ -3301,6 +3369,7 @@ class AppState extends ChangeNotifier {
     // outbox drainer: anything the wire never confirmed gets re-sent for the
     // life of the app, whatever screen you're on and across restarts.
     startOutboxDrain();
+    _loadBackupFlags();
     // drop week-old partial transfers nobody ever completed.
     unawaited(db.sweepMediaChunks());
     // start tor last, after all sync identity + signal work. nothing
@@ -3841,6 +3910,14 @@ class AppState extends ChangeNotifier {
 
   // last ack per uid, so a burst of duplicates costs one receipt not twenty.
   final Map<String, int> _ackedAt = <String, int>{};
+
+  // user tapped retry. clears the backoff so the next sweep goes out now
+  // rather than waiting out the doubling gap.
+  Future<void> flushOutboxNow() async {
+    _outboxNextAt.clear();
+    _outboxTries.clear();
+    await drainOutbox();
+  }
 
   // tiny ack: tells the original sender their message landed. reuses the
   // gift-wrap transport; carries only the uid, no body, no sender bundle.
@@ -4571,6 +4648,21 @@ class HaloApp extends StatelessWidget {
         navigatorKey: rootNavKey,
         title: 'Kryfo',
         theme: buildHaloTheme(),
+        // one place for the two accessibility settings everything else
+        // should obey. clamped rather than uncapped - past 1.6 the chat
+        // bubbles stop being readable, which helps nobody.
+        builder: (ctx, child) {
+          final mq = MediaQuery.of(ctx);
+          return MediaQuery(
+            data: mq.copyWith(
+              textScaler: mq.textScaler.clamp(
+                minScaleFactor: 0.85,
+                maxScaleFactor: 1.6,
+              ),
+            ),
+            child: child ?? const SizedBox.shrink(),
+          );
+        },
         // one scroll feel everywhere: ios-style rubber-band on every
         // platform, no stretch-glow. the single biggest "premium" tell,
         // and it was unset so android fell back to the clamp+glow default.
@@ -4580,6 +4672,10 @@ class HaloApp extends StatelessWidget {
     );
   }
 }
+
+// true when the phone asks for less movement. widgets check this before
+// running anything decorative.
+bool reduceMotion(BuildContext c) => MediaQuery.of(c).disableAnimations;
 
 class _HaloScrollBehavior extends ScrollBehavior {
   const _HaloScrollBehavior();

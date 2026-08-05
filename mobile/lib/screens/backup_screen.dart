@@ -10,6 +10,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../backup.dart';
+import '../main.dart';
 import '../theme.dart';
 
 class BackupScreen extends StatefulWidget {
@@ -19,6 +20,12 @@ class BackupScreen extends StatefulWidget {
 }
 
 class _BackupScreenState extends State<BackupScreen> {
+  @override
+  void initState() {
+    super.initState();
+    appState.forceSecure(true);
+  }
+
   final _p1 = TextEditingController();
   final _p2 = TextEditingController();
   bool _busy = false;
@@ -71,6 +78,7 @@ class _BackupScreenState extends State<BackupScreen> {
       } else {
         showHaloToast(context, 'backup saved · keep the passphrase safe');
       }
+      await appState.markBackupMade();
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
@@ -84,6 +92,7 @@ class _BackupScreenState extends State<BackupScreen> {
 
   @override
   void dispose() {
+    appState.forceSecure(false);
     _p1.dispose();
     _p2.dispose();
     super.dispose();

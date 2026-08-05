@@ -10,6 +10,8 @@ import '../lock_state.dart';
 import '../miui_autostart.dart';
 import '../widgets/motion.dart' show TorStatus, haloRoute;
 import 'why_kryfo_screen.dart';
+import 'transport_screen.dart';
+import 'seen_screen.dart';
 import '../theme.dart';
 import 'modes_screen.dart';
 import 'blocked_screen.dart';
@@ -265,6 +267,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _Row(
             icon: Icons.visibility_off_outlined,
             label: 'block screenshots',
+            hint: 'hides kryfo from the recents view and screenshots',
             value: appState.blockScreenshots ? 'on' : 'off',
             onTap: () async {
               await appState.setBlockScreenshots(!appState.blockScreenshots);
@@ -274,6 +277,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _Row(
             icon: Icons.light_mode_outlined,
             label: 'light theme',
+            hint: 'same protection, brighter',
             value: HaloColors.isLight ? 'on' : 'off',
             onTap: () async {
               await appState.setLight(!HaloColors.isLight);
@@ -391,6 +395,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _Row(
             icon: Icons.record_voice_over,
             label: 'disguise voice',
+            hint: 'shifts your pitch before a voice note leaves',
             value: _disguise ? 'on' : 'off',
             onTap: () async {
               setState(() => _disguise = !_disguise);
@@ -417,6 +422,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: 'how it protects you',
             onTap: () =>
                 Navigator.push(context, haloRoute(const WhyKryfoScreen())),
+          ),
+          _Row(
+            icon: Icons.visibility_outlined,
+            label: 'what we can see',
+            value: 'the honest list',
+            onTap: () => Navigator.push(context, haloRoute(const SeenScreen())),
+          ),
+          _Row(
+            icon: Icons.lan_outlined,
+            label: 'transport',
+            value: 'what the network is doing',
+            onTap: () =>
+                Navigator.push(context, haloRoute(const TransportScreen())),
           ),
           _Row(
             icon: Icons.info_outline,
@@ -494,12 +512,16 @@ class _Section extends StatelessWidget {
 class _Row extends StatefulWidget {
   final String label;
   final String? value;
+  // one plain line under the label. toggles showed on/off and nothing
+  // about what the switch actually does.
+  final String? hint;
   final VoidCallback? onTap;
   final bool accent;
   final IconData? icon;
   const _Row({
     required this.label,
     this.value,
+    this.hint,
     this.onTap,
     this.accent = false,
     this.icon,
@@ -592,9 +614,26 @@ class _RowState extends State<_Row> {
               const SizedBox(width: 14),
             ],
             Expanded(
-              child: Text(
-                label,
-                style: HaloType.sans(size: 14, color: HaloColors.text),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    label,
+                    style: HaloType.sans(size: 14, color: HaloColors.text),
+                  ),
+                  if (widget.hint != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 3, right: 10),
+                      child: Text(
+                        widget.hint!,
+                        style: HaloType.mono(
+                          size: 10.5,
+                          color: HaloColors.text3,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
             if (value != null)

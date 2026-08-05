@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
 import 'notes_screen.dart';
+import 'backup_screen.dart';
 import 'archived_screen.dart';
 import '../miui_autostart.dart';
 import '../main.dart';
@@ -70,6 +71,7 @@ class HomeScreen extends StatelessWidget {
               onSettings: onOpenSettingsDirect,
             ),
             const _OfflineStrip(),
+            const _BackupNudge(),
             _NotesPin(
               onTap: () =>
                   Navigator.of(context).push(haloRoute(const NotesScreen())),
@@ -579,35 +581,142 @@ class _HomeHead extends StatelessWidget {
 
 // ───────── empty state ─────────
 
-class _OfflineStrip extends StatelessWidget {
-  const _OfflineStrip();
+class _BackupNudge extends StatelessWidget {
+  const _BackupNudge();
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: appState,
       builder: (context, _) {
-        if (appState.online) return const SizedBox.shrink();
+        if (!appState.showBackupNudge) return const SizedBox.shrink();
+        return Container(
+          margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+          padding: const EdgeInsets.fromLTRB(15, 13, 15, 13),
+          decoration: BoxDecoration(
+            color: HaloColors.amber.withValues(alpha: 0.09),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: HaloColors.amber.withValues(alpha: 0.25)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'lose this phone, lose this account',
+                style: HaloType.sans(
+                  size: 13.5,
+                  color: HaloColors.text,
+                  weight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                'there is no password reset here, and no one to ask. a '
+                'backup takes a minute.',
+                style: HaloType.sans(size: 12, color: HaloColors.text3),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      Navigator.of(
+                        context,
+                      ).push(haloRoute(const BackupScreen()));
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 15,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: HaloColors.amber,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        'back up now',
+                        style: HaloType.mono(
+                          size: 11.5,
+                          color: HaloColors.onAmber,
+                          weight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: () => appState.dismissBackupNudge(),
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Text(
+                        'not now',
+                        style: HaloType.mono(
+                          size: 11.5,
+                          color: HaloColors.text3,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _OfflineStrip extends StatelessWidget {
+  const _OfflineStrip();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: appState,
+      builder: (context, _) {
+        final n = appState.queued;
+        // nothing wrong and nothing waiting, so say nothing
+        if (appState.online && n == 0) return const SizedBox.shrink();
+
+        final offline = !appState.online;
+        final tint = offline ? HaloColors.rose : HaloColors.amber;
+        final head = offline ? 'offline' : 'waiting';
+        // the old strip said "offline" and stopped, which left people
+        // guessing whether anything was queued or lost.
+        final tail = n == 0
+            ? 'nothing waiting to send'
+            : n == 1
+            ? "1 message queued · it'll send itself"
+            : "$n messages queued · they'll send themselves";
+
         return Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
           decoration: BoxDecoration(
-            color: HaloColors.rose.withValues(alpha: 0.14),
+            color: tint.withValues(alpha: 0.14),
             border: Border(
               bottom: BorderSide(
-                color: HaloColors.rose.withValues(alpha: 0.35),
+                color: tint.withValues(alpha: 0.35),
                 width: 0.5,
               ),
             ),
           ),
           child: Row(
             children: [
-              BreathDot(color: HaloColors.rose, size: 7),
+              BreathDot(color: tint, size: 7),
               const SizedBox(width: 10),
               Text(
-                'offline',
+                head,
                 style: HaloType.mono(
                   size: 12,
-                  color: HaloColors.rose,
+                  color: tint,
                   weight: FontWeight.w500,
                   letter: 0.08,
                 ),
@@ -615,16 +724,45 @@ class _OfflineStrip extends StatelessWidget {
               const SizedBox(width: 9),
               Expanded(
                 child: Text(
-                  'sends when you reconnect',
+                  tail,
                   style: HaloType.mono(
                     size: 11.5,
-                    color: HaloColors.rose.withValues(alpha: 0.85),
+                    color: tint.withValues(alpha: 0.85),
                     weight: FontWeight.w500,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              if (n > 0) ...[
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    appState.flushOutboxNow();
+                  },
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: tint.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      'retry',
+                      style: HaloType.mono(
+                        size: 11,
+                        color: tint,
+                        weight: FontWeight.w600,
+                        letter: 0.06,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         );

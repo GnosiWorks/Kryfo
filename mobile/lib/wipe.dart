@@ -42,6 +42,5 @@ Future<void> wipeHalo() async {
     rethrow;
   }
   // exit so the user reopens fresh
-  await Future.delayed(const Duration(milliseconds: 200));
   exit(0);
 }
