@@ -161,6 +161,7 @@ ThemeData buildHaloTheme() {
             error: HaloColors.rose,
           );
   return base.copyWith(
+    materialTapTargetSize: MaterialTapTargetSize.padded,
     scaffoldBackgroundColor: HaloColors.surface,
     canvasColor: HaloColors.surface,
     colorScheme: scheme,
@@ -195,8 +196,20 @@ void copySensitive(String value) {
   });
 }
 
+// set on the MaterialApp so a toast never depends on the screen that asked
+// for it still being alive.
+final GlobalKey<ScaffoldMessengerState> haloMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
+
 void showHaloToast(BuildContext context, String message) {
-  final messenger = ScaffoldMessenger.of(context);
+  ScaffoldMessengerState? messenger = haloMessengerKey.currentState;
+  if (messenger == null) {
+    try {
+      messenger = ScaffoldMessenger.of(context);
+    } catch (_) {
+      return;
+    }
+  }
   messenger.clearSnackBars();
   messenger.showSnackBar(
     SnackBar(
