@@ -36,6 +36,7 @@ class TransportScreen extends StatelessWidget {
           final rx = tx['secs_since_recv'] as int? ?? -1;
           final sx = tx['secs_since_send'] as int? ?? -1;
           final uploads = tx['hsdir_uploads'] as int? ?? 0;
+          final pubFor = tx['publishing_secs'] as int? ?? -1;
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
@@ -73,7 +74,11 @@ class TransportScreen extends StatelessWidget {
               _Line(
                 'onion published',
 
-                uploads > 0 ? 'yes ($uploads)' : 'not yet',
+                uploads > 0
+                    ? 'yes ($uploads)'
+                    : pubFor > 0
+                    ? 'trying ${pubFor}s'
+                    : 'not yet',
 
                 uploads > 0 ? HaloColors.green : HaloColors.rose,
               ),

@@ -534,6 +534,11 @@ class _HomeHead extends StatelessWidget {
                 Text(
                   '$day,',
                   style: HaloType.serif(size: 26, weight: FontWeight.w400),
+                  // display type, capped. at 200% this became one word per
+                  // line and pushed the whole list off screen.
+                  textScaler: TextScaler.linear(
+                    MediaQuery.of(context).textScaler.scale(1).clamp(1.0, 1.15),
+                  ),
                 ),
                 Text(
                   '$month ${now.day}',
@@ -542,6 +547,9 @@ class _HomeHead extends StatelessWidget {
                     weight: FontWeight.w300,
                     color: HaloColors.amber,
                     italic: true,
+                  ),
+                  textScaler: TextScaler.linear(
+                    MediaQuery.of(context).textScaler.scale(1).clamp(1.0, 1.15),
                   ),
                 ),
                 const SizedBox(height: 8),

@@ -22,7 +22,24 @@ var (
 	lastRecv  time.Time
 	lastBoot  time.Time
 	lastBootP int
+	pubSince  time.Time
 )
+
+// called when tor starts trying to publish the onion descriptor. an onion
+// stuck here for minutes is a different problem from one that just started.
+func notePublishing() {
+	txMu.Lock()
+	if pubSince.IsZero() {
+		pubSince = time.Now()
+	}
+	txMu.Unlock()
+}
+
+func notePublished() {
+	txMu.Lock()
+	pubSince = time.Time{}
+	txMu.Unlock()
+}
 
 func noteSend() {
 	txMu.Lock()
@@ -83,6 +100,7 @@ type transportView struct {
 	SecsSinceTx  int         `json:"secs_since_send"`
 	SecsSinceRx  int         `json:"secs_since_recv"`
 	InboxDepth   int         `json:"inbox_depth"`
+	PublishingS  int         `json:"publishing_secs"`
 }
 
 func transportSnapshot() transportView {
@@ -121,6 +139,10 @@ func transportSnapshot() transportView {
 	relayHealthMu.Unlock()
 
 	txMu.RLock()
+	v.PublishingS = -1
+	if !pubSince.IsZero() {
+		v.PublishingS = int(now.Sub(pubSince).Seconds())
+	}
 	v.SecsSinceTx = -1
 	v.SecsSinceRx = -1
 	if !lastSend.IsZero() {
