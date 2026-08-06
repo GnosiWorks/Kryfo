@@ -454,7 +454,11 @@ class _AddScanButton extends StatelessWidget {
             width: 1.4,
           ),
         ),
-        child: Icon(Icons.add, size: 20, color: HaloColors.amber),
+        child: Semantics(
+          label: 'add a contact',
+          button: true,
+          child: Icon(Icons.add, size: 20, color: HaloColors.amber),
+        ),
       ),
     );
   }
@@ -1345,7 +1349,15 @@ class _SwipeRow extends StatelessWidget {
         color: HaloColors.surface2,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 24),
-        child: Icon(Icons.archive_outlined, size: 20, color: HaloColors.amber),
+        child: Semantics(
+          label: 'archived chats',
+          button: true,
+          child: Icon(
+            Icons.archive_outlined,
+            size: 20,
+            color: HaloColors.amber,
+          ),
+        ),
       ),
       confirmDismiss: (dir) async {
         if (dir == DismissDirection.endToStart) {

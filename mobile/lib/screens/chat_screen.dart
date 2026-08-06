@@ -4993,6 +4993,7 @@ class _ChatHead extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
+            tooltip: 'back',
             icon: Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
             onPressed: onBack,
           ),
@@ -5136,10 +5137,12 @@ class _ChatHead extends StatelessWidget {
               onPressed: onPinned,
             ),
           IconButton(
+            tooltip: 'search this chat',
             icon: Icon(Icons.search_rounded, color: HaloColors.text2, size: 21),
             onPressed: onSearch,
           ),
           IconButton(
+            tooltip: 'contact options',
             icon: Icon(Icons.more_vert, color: HaloColors.text2, size: 21),
             onPressed: onBlock,
           ),

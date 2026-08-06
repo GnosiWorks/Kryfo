@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import '../main.dart' show appState, buildHaloUriV3;
@@ -82,8 +83,10 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
                 _qrBlock(context),
                 const SizedBox(height: 24),
                 Text(
-                  'share this so someone can add you. it carries your kryfo id '
-                  'and onion address - nothing else.',
+                  'share this so someone can add you. it carries your kryfo '
+                  'id, your onion address, and the keys needed to start an '
+                  'encrypted chat. no phone number, no email, nothing about '
+                  'your contacts.',
                   textAlign: TextAlign.center,
                   style: HaloType.sans(
                     size: 12,
@@ -142,8 +145,9 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
         const SizedBox(height: 16),
         GestureDetector(
           onTap: () {
+            HapticFeedback.selectionClick();
             copySensitive(_uri!);
-            showHaloToast(context, 'address copied');
+            showHaloToast(context, 'invite copied · clears in 60s');
           },
           child: Container(
             constraints: const BoxConstraints(maxWidth: 300),

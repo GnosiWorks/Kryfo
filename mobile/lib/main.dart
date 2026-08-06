@@ -2365,6 +2365,7 @@ Future<String> handleHaloUri(String raw) async {
   final parsed = parseHaloUri(raw);
   if (parsed == null) return 'invalid uri';
   if (parsed['v'] == '2' || parsed['v'] == '3') {
+    final already = await db.getContact(parsed['id']!) != null;
     try {
       await processPeerBundle(parsed['id']!, parsed['bundle']!);
     } catch (e) {
@@ -2382,7 +2383,9 @@ Future<String> handleHaloUri(String raw) async {
       await appState.rememberPeerFc(parsed['id']!, fc);
     }
     await appState.subscribePeer(parsed['id']!);
-    return 'signal session built: ${parsed['id']}';
+    return already
+        ? 'already saved: ${parsed['id']}'
+        : 'added ${parsed['id']} · you can message them now';
   } else {
     await db.upsertContact(parsed['id']!, parsed['onion']!, parsed['xpub']!);
     await appState.subscribePeer(parsed['id']!);
@@ -4831,6 +4834,7 @@ class HaloApp extends StatelessWidget {
       valueListenable: themeRevision,
       builder: (context, _, __) => MaterialApp(
         navigatorKey: rootNavKey,
+        scaffoldMessengerKey: haloMessengerKey,
         title: 'Kryfo',
         theme: buildHaloTheme(),
         // one place for the two accessibility settings everything else
