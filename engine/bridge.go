@@ -94,6 +94,9 @@ func setStatus(s string) {
 	defer statusMu.Unlock()
 	if torStatus != s {
 		log.Printf("halo: status %s -> %s", torStatus, s)
+		if torStatus == "publishing" {
+			notePublished()
+		}
 		torStatus = s
 	}
 }
@@ -433,6 +436,7 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 		if torStatus == "publishing" {
 			log.Println("halo: status publishing -> reachable (HSDir uploaded)")
 			torStatus = "reachable"
+			notePublished()
 			go func() {
 				if _, err := torNostrClient(); err != nil {
 					log.Printf("halo: nostr client pre-warm failed: %v", err)
@@ -771,6 +775,11 @@ func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID st
 	}
 
 	timeout := time.After(120 * time.Second)
+	// how many hsdirs we have handed the descriptor to. the hashring is six
+	// per replica, so three is a comfortable majority of one replica and the
+	// descriptor is fetchable well before that.
+	uploads := 0
+	const enough = 3
 	for {
 		select {
 		case ev := <-ch:
@@ -778,10 +787,28 @@ func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID st
 			if !ok {
 				continue
 			}
-			if hs.Action == "FAILED" && (hs.Address == onionID || hs.Address == onionID+".onion") {
-				log.Printf("halo: HS_DESC FAILED via %s reason=%s", hs.HSDir, hs.Reason)
+			// log every action, not just the two we care about. an upload
+			// that is never attempted looks identical to one that fails if
+			// you only watch for FAILED.
+			mine := hs.Address == onionID || hs.Address == onionID+".onion"
+			log.Printf(
+				"halo: HS_DESC %s addr=%s hsdir=%s reason=%s mine=%t",
+				hs.Action, hs.Address, hs.HSDir, hs.Reason, mine,
+			)
+			if hs.Action == "UPLOAD" && mine {
+				uploads++
+				statusMu.Lock()
+				hsdirUploads = uploads
+				statusMu.Unlock()
+				if uploads == enough {
+					log.Printf(
+						"halo: descriptor handed to %d hsdirs, treating as published",
+						uploads,
+					)
+					return true
+				}
 			}
-			if hs.Action == "UPLOADED" && (hs.Address == onionID || hs.Address == onionID+".onion") {
+			if hs.Action == "UPLOADED" && mine {
 				log.Printf("halo: HS_DESC UPLOADED received for %s", onionID)
 				return true
 			}
@@ -818,6 +845,7 @@ func watchBootstrap(t *tor.Tor) {
 				statusMu.Unlock()
 				if cur != "reachable" {
 					setStatus("publishing")
+					notePublishing()
 				}
 				return
 			}

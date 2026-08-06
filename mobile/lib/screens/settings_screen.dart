@@ -614,6 +614,9 @@ class _RowState extends State<_Row> {
   }
 
   Widget _body(BuildContext context) {
+    // 14pt is the label size; once it renders past ~19 the two-column layout
+    // stops fitting on a phone.
+    final stacked = MediaQuery.of(context).textScaler.scale(14) > 19;
     if (accent) {
       return InkWell(
         onTap: onTap,
@@ -688,13 +691,26 @@ class _RowState extends State<_Row> {
                         ),
                       ),
                     ),
+                  // past this scale there is no room for a value beside the
+                  // label, so it goes underneath instead of crushing it
+                  if (value != null && value!.isNotEmpty && stacked)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4, right: 10),
+                      child: Text(
+                        value!,
+                        style: HaloType.sans(size: 13, color: HaloColors.text2),
+                      ),
+                    ),
                 ],
               ),
             ),
-            if (value != null)
-              Text(
-                value!,
-                style: HaloType.sans(size: 13, color: HaloColors.text2),
+            if (value != null && !stacked)
+              Flexible(
+                child: Text(
+                  value!,
+                  style: HaloType.sans(size: 13, color: HaloColors.text2),
+                  textAlign: TextAlign.right,
+                ),
               ),
             if (onTap != null) ...[
               const SizedBox(width: 8),
