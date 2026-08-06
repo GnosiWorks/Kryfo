@@ -11,6 +11,7 @@ import '../miui_autostart.dart';
 import '../widgets/motion.dart' show TorStatus, haloRoute;
 import 'why_kryfo_screen.dart';
 import 'transport_screen.dart';
+import 'bridges_screen.dart';
 import 'seen_screen.dart';
 import '../theme.dart';
 import 'modes_screen.dart';
@@ -474,6 +475,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () => Navigator.push(context, haloRoute(const SeenScreen())),
           ),
           _Row(
+            icon: Icons.vpn_lock_outlined,
+            label: 'bridges',
+            hint: 'for networks that block tor',
+            value: appState.bridgesOn ? 'on' : 'off',
+            onTap: () async {
+              await Navigator.push(context, haloRoute(const BridgesScreen()));
+              setState(() {});
+            },
+          ),
+          _Row(
             icon: Icons.lan_outlined,
             label: 'transport',
             value: 'what the network is doing',
@@ -687,11 +698,7 @@ class _RowState extends State<_Row> {
               ),
             if (onTap != null) ...[
               const SizedBox(width: 8),
-              const Icon(
-                Icons.chevron_right,
-                color: Color(0xFF6B625A),
-                size: 18,
-              ),
+              Icon(Icons.chevron_right, color: HaloColors.text3, size: 18),
             ],
           ],
         ),

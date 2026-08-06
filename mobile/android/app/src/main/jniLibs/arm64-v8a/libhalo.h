@@ -25,6 +25,7 @@ extern const char *_GoStringPtr(_GoString_ s);
 
 
 
+
 /* End of preamble from import "C" comments.  */
 
 
@@ -128,6 +129,22 @@ extern char* HaloEncryptBackup(char* cPlain, char* cPassphrase);
 // "error: wrong passphrase or corrupt" on auth failure.
 //
 extern char* HaloDecryptBackup(char* cBlob, char* cPassphrase);
+
+// takes newline separated bridge lines and whether to use them. the caller is
+// expected to restart tor afterwards; changing this mid-session does nothing
+// on its own, because tor reads the config once at startup.
+//
+extern char* HaloSetBridges(char* cLines, int on);
+
+// what the ui needs: whether bridges are on, how many are configured, and
+// whether the local transport is actually up.
+//
+// bounce tor so it picks up a config change. bridges are the only reason to
+// call this - tor reads its arguments once and never again, so toggling them
+// without a restart looks like the feature silently not working.
+//
+extern char* HaloRestartTor(void);
+extern char* HaloBridgeState(void);
 extern char* HaloNostrInit(char* cRelaysCSV);
 extern char* HaloNostrSend(char* cPeerXPubHex, char* cMsg);
 extern char* HaloNostrSubscribe(char* cPeerXPubHex);
