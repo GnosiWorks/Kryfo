@@ -616,7 +616,12 @@ class _RowState extends State<_Row> {
   Widget _body(BuildContext context) {
     // 14pt is the label size; once it renders past ~19 the two-column layout
     // stops fitting on a phone.
-    final stacked = MediaQuery.of(context).textScaler.scale(14) > 19;
+    // a short value ("on", "off", "0.1 · alpha") sits fine on the right. a
+    // sentence does not - it either overflows or wraps into ribbons, and both
+    // look broken. long values go under the label, at any text size.
+    final v = value ?? '';
+    final stacked =
+        v.length > 14 || MediaQuery.of(context).textScaler.scale(14) > 19;
     if (accent) {
       return InkWell(
         onTap: onTap,
@@ -705,12 +710,10 @@ class _RowState extends State<_Row> {
               ),
             ),
             if (value != null && !stacked)
-              Flexible(
-                child: Text(
-                  value!,
-                  style: HaloType.sans(size: 13, color: HaloColors.text2),
-                  textAlign: TextAlign.right,
-                ),
+              Text(
+                value!,
+                style: HaloType.sans(size: 13, color: HaloColors.text2),
+                maxLines: 1,
               ),
             if (onTap != null) ...[
               const SizedBox(width: 8),

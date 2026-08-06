@@ -13,6 +13,7 @@ import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
 import 'notes_screen.dart';
 import 'backup_screen.dart';
+import 'bridges_screen.dart';
 import 'archived_screen.dart';
 import '../miui_autostart.dart';
 import '../main.dart';
@@ -72,6 +73,7 @@ class HomeScreen extends StatelessWidget {
             ),
             const _OfflineStrip(),
             const _BackupNudge(),
+            const _BridgeHint(),
             _NotesPin(
               onTap: () =>
                   Navigator.of(context).push(haloRoute(const NotesScreen())),
@@ -592,6 +594,114 @@ class _HomeHead extends StatelessWidget {
 }
 
 // ───────── empty state ─────────
+
+class _BridgeHint extends StatelessWidget {
+  const _BridgeHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: appState,
+      builder: (context, _) {
+        if (!appState.suggestBridges) return const SizedBox.shrink();
+        return Container(
+          margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                HaloColors.violet.withValues(alpha: 0.16),
+                HaloColors.violet.withValues(alpha: 0.05),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: HaloColors.violet.withValues(alpha: 0.35),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  BreathDot(color: HaloColors.violet, size: 7),
+                  const SizedBox(width: 9),
+                  Text(
+                    'still trying',
+                    style: HaloType.mono(
+                      size: 11,
+                      color: HaloColors.violet,
+                      weight: FontWeight.w600,
+                      letter: 0.12,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                "tor has not connected for a few minutes. some networks block "
+                "it on purpose. bridges get around that.",
+                style: HaloType.sans(size: 13, color: HaloColors.text2),
+              ),
+              const SizedBox(height: 13),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      Navigator.of(
+                        context,
+                      ).push(haloRoute(const BridgesScreen()));
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 15,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: HaloColors.violet,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        'set up bridges',
+                        style: HaloType.mono(
+                          size: 11.5,
+                          color: HaloColors.text,
+                          weight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: () => appState.dismissBridgeHint(),
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Text(
+                        'keep waiting',
+                        style: HaloType.mono(
+                          size: 11.5,
+                          color: HaloColors.text3,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
 
 class _BackupNudge extends StatelessWidget {
   const _BackupNudge();
