@@ -2804,6 +2804,7 @@ class AppState extends ChangeNotifier {
     const st = FlutterSecureStorage();
     _bridgeLines = await st.read(key: 'bridge_lines') ?? '';
     _bridgesOn = (await st.read(key: 'bridges_on')) == '1';
+    _bridgeHintOff = (await st.read(key: 'bridge_hint_off')) == '1';
     if (_bridgesOn && _bridgeLines.isNotEmpty) {
       final r = engine.setBridges(_bridgeLines, true);
       debugPrint('bridges: $r');
@@ -3398,6 +3399,16 @@ class AppState extends ChangeNotifier {
   int _bootstrapPct = 0;
   TorStatus get torStatus => _torStatus;
 
+  // called from the status poll. the clock runs while tor is trying and
+  // resets the moment it can carry traffic.
+  void _noteTorProgress() {
+    if (torReady) {
+      _torTryingSince = null;
+    } else {
+      _torTryingSince ??= DateTime.now();
+    }
+  }
+
   // tor can carry traffic. same test the outbox uses, exposed so the
   // transport screen and the ui agree instead of each deciding for itself.
   bool get torReady =>
@@ -3405,6 +3416,28 @@ class AppState extends ChangeNotifier {
       _torStatus == TorStatus.publishing ||
       _torStatus == TorStatus.reachable;
   int get bootstrapPct => _bootstrapPct;
+  // when tor first started trying this session. a network that
+  // blocks tor looks exactly like a slow one for the first
+  // minute or two, so we wait before suggesting anything.
+  DateTime? _torTryingSince;
+  bool _bridgeHintOff = false;
+  bool get suggestBridges {
+    if (_bridgeHintOff || _bridgesOn || !_online) return false;
+    if (torReady) return false;
+    final t = _torTryingSince;
+    if (t == null) return false;
+    return DateTime.now().difference(t).inSeconds > 180;
+  }
+
+  Future<void> dismissBridgeHint() async {
+    _bridgeHintOff = true;
+    await const FlutterSecureStorage().write(
+      key: 'bridge_hint_off',
+      value: '1',
+    );
+    notifyListeners();
+  }
+
   bool _online = true;
   bool get online => _online;
   List<ContactPreview> contacts = [];
@@ -3615,6 +3648,7 @@ class AppState extends ChangeNotifier {
       final pct = parseBootstrapPct(raw);
       if (st != _torStatus || pct != _bootstrapPct) {
         _torStatus = st;
+        _noteTorProgress();
         _bootstrapPct = pct;
         notifyListeners();
       }
