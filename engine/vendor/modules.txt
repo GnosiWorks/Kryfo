@@ -156,6 +156,9 @@ github.com/tyler-smith/go-bip39/wordlists
 # gitlab.com/yawning/edwards25519-extra v0.0.0-20231005122941-2149dcafc266
 ## explicit; go 1.20
 gitlab.com/yawning/edwards25519-extra/elligator2
+gitlab.com/yawning/edwards25519-extra/h2c
+gitlab.com/yawning/edwards25519-extra/internal/montgomery
+gitlab.com/yawning/edwards25519-extra/vrf
 # gitlab.com/yawning/obfs4.git v0.0.0-20231012084234-c3e2d44b1033
 ## explicit; go 1.20
 gitlab.com/yawning/obfs4.git/common/csrand
@@ -165,9 +168,17 @@ gitlab.com/yawning/obfs4.git/common/ntor
 gitlab.com/yawning/obfs4.git/common/probdist
 gitlab.com/yawning/obfs4.git/common/replayfilter
 gitlab.com/yawning/obfs4.git/common/socks5
+gitlab.com/yawning/obfs4.git/common/uniformdh
+gitlab.com/yawning/obfs4.git/internal/x25519ell2
+gitlab.com/yawning/obfs4.git/obfs4proxy
+gitlab.com/yawning/obfs4.git/transports
 gitlab.com/yawning/obfs4.git/transports/base
+gitlab.com/yawning/obfs4.git/transports/meeklite
+gitlab.com/yawning/obfs4.git/transports/obfs2
+gitlab.com/yawning/obfs4.git/transports/obfs3
 gitlab.com/yawning/obfs4.git/transports/obfs4
 gitlab.com/yawning/obfs4.git/transports/obfs4/framing
+gitlab.com/yawning/obfs4.git/transports/scramblesuit
 # gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib v1.5.0
 ## explicit; go 1.11
 gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib
@@ -183,7 +194,9 @@ golang.org/x/crypto/ed25519
 golang.org/x/crypto/hkdf
 golang.org/x/crypto/internal/alias
 golang.org/x/crypto/internal/poly1305
+golang.org/x/crypto/nacl/secretbox
 golang.org/x/crypto/pbkdf2
+golang.org/x/crypto/salsa20/salsa
 golang.org/x/crypto/scrypt
 golang.org/x/crypto/sha3
 # golang.org/x/exp v0.0.0-20250305212735-054e65f0b394

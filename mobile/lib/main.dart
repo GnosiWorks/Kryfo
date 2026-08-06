@@ -89,6 +89,9 @@ class HaloEngine {
   late final CStrFnDart _nostrPoll;
   late final CounterFnDart _fcPk;
   late final CStrFnDart _txState;
+  late final TwoArgFnDart _setBridges;
+  late final CStrFnDart _bridgeState;
+  late final CStrFnDart _restartTor;
   late final OneArgFnDart _ntfyPing;
   late final OneArgFnDart _torGet;
   late final OneArgFnDart _torGetJson;
@@ -135,6 +138,9 @@ class HaloEngine {
     _nostrPoll = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloNostrPoll');
     _fcPk = _lib.lookupFunction<CounterFn, CounterFnDart>('HaloFirstContactPk');
     _txState = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloTransportState');
+    _setBridges = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloSetBridges');
+    _bridgeState = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloBridgeState');
+    _restartTor = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloRestartTor');
     _ntfyPing = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNtfyPing');
     _torGet = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGet');
     _torGetJson = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetJSON');
@@ -243,6 +249,24 @@ class HaloEngine {
 
   // the address a stranger can reach us at. cheap and synchronous - it is a
   // key derivation, no network.
+  // bridge lines in, a summary out. tor only reads its config at startup, so
+  // callers restart it after changing this or nothing happens.
+  String setBridges(String lines, bool on) {
+    final a = lines.toNativeUtf8();
+    final b = (on ? '1' : '0').toNativeUtf8();
+    try {
+      return _setBridges(a, b).toDartString();
+    } finally {
+      malloc.free(a);
+      malloc.free(b);
+    }
+  }
+
+  // "on|count|port"
+  String bridgeState() => _bridgeState().toDartString();
+
+  void restartTor() => _restartTor();
+
   // everything the transport knows, in one read. no
   // inference on this side.
   Map<String, dynamic> transportState() {
@@ -2768,6 +2792,37 @@ class AppState extends ChangeNotifier {
     );
   }
 
+  // bridges. off by default, because they are slower and most people are not
+  // being filtered - but the people who are cannot use kryfo at all without
+  // them.
+  bool _bridgesOn = false;
+  String _bridgeLines = '';
+  bool get bridgesOn => _bridgesOn;
+  String get bridgeLines => _bridgeLines;
+
+  Future<void> _loadBridges() async {
+    const st = FlutterSecureStorage();
+    _bridgeLines = await st.read(key: 'bridge_lines') ?? '';
+    _bridgesOn = (await st.read(key: 'bridges_on')) == '1';
+    if (_bridgesOn && _bridgeLines.isNotEmpty) {
+      final r = engine.setBridges(_bridgeLines, true);
+      debugPrint('bridges: $r');
+    }
+    notifyListeners();
+  }
+
+  // returns the engine's summary so the ui can say how many lines it liked.
+  Future<String> applyBridges(String lines, bool on) async {
+    _bridgeLines = lines;
+    _bridgesOn = on;
+    const st = FlutterSecureStorage();
+    await st.write(key: 'bridge_lines', value: lines);
+    await st.write(key: 'bridges_on', value: on ? '1' : '0');
+    final r = engine.setBridges(lines, on);
+    notifyListeners();
+    return r;
+  }
+
   // which first-contact address our invites currently point at. an invite can
   // end up in a bio or a screenshot, so it has to be retirable without
   // burning the identity - bumping this does exactly that and leaves every
@@ -3536,6 +3591,7 @@ class AppState extends ChangeNotifier {
     // life of the app, whatever screen you're on and across restarts.
     startOutboxDrain();
     _loadBackupFlags();
+    await _loadBridges();
     // drop week-old partial transfers nobody ever completed.
     unawaited(db.sweepMediaChunks());
     // start tor last, after all sync identity + signal work. nothing
