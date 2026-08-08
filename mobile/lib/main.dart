@@ -623,7 +623,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 34,
+      version: 35,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -669,6 +669,7 @@ class HaloDb {
             group_id TEXT,
             edited INTEGER NOT NULL DEFAULT 0,
             pinned INTEGER NOT NULL DEFAULT 0,
+            secure INTEGER NOT NULL DEFAULT 0,
             media_path TEXT,
             file_path TEXT,
             file_name TEXT,
@@ -736,6 +737,13 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 35) {
+          // the sender can ask that a message not be screenshotted. we
+          // keep the flag so it still holds after a restart.
+          await db.execute(
+            'ALTER TABLE messages ADD COLUMN secure INTEGER NOT NULL DEFAULT 0',
+          );
+        }
         if (oldV < 34) {
           // partial media used to live in ram only - a restart lost it.
           await db.execute('''
@@ -1409,6 +1417,7 @@ class HaloDb {
     bool saved = false,
     int sent = 1,
     String? preview,
+    bool secure = false,
   }) async {
     final db = await open();
     await db.insert('messages', {
@@ -1427,6 +1436,7 @@ class HaloDb {
       'preview': preview,
       'saved': saved ? 1 : 0,
       'sent': sent,
+      'secure': secure ? 1 : 0,
     });
     // any inbound message proves the peer knows us, so flip back_paired.
     // subsequent sends to them can use nostr safely.
@@ -2852,6 +2862,20 @@ class AppState extends ChangeNotifier {
   bool _secureChats = false;
   bool get secureChats => _secureChats;
 
+  // a chat currently showing a message the sender marked. their app asked
+  // for this, and ours is the one that has to honour it - the same way
+  // instagram and signal view-once work, because both ends run the same app.
+  final Set<String> _secureChatIds = <String>{};
+
+  void chatHasSecureContent(String haloId, bool yes) {
+    final changed = yes
+        ? _secureChatIds.add(haloId)
+        : _secureChatIds.remove(haloId);
+    if (changed) forceSecure(_secureChatIds.isNotEmpty);
+  }
+
+  void leftChat(String haloId) => chatHasSecureContent(haloId, false);
+
   Future<void> setSecureChats(bool v) async {
     _secureChats = v;
     await const FlutterSecureStorage().write(
@@ -3315,6 +3339,7 @@ class AppState extends ChangeNotifier {
       filePath: filePath,
       fileName: fileName,
       preview: env.preview != null ? jsonEncode(env.preview) : null,
+      secure: env.secure,
     );
     // a preview that raced ahead of this message was stashed - patch it on.
     if (uid != null) {

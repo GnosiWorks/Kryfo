@@ -48,8 +48,10 @@ class UnwrappedMessage {
   final int? powBitsUsed; // 'pb' - difficulty the sender solved to
   final String? supporterBadge; // 'bg' - sender's shared supporter tier
   final String? deliveredUid; // 'dr' - receipt: uid the peer just stored
+  final bool secure; // 'sc' - sender asked that this not be screenshotted
   UnwrappedMessage(
     this.message, {
+    this.secure = false,
     this.endpoint,
     this.senderHaloId,
     this.senderEdPub,
@@ -206,6 +208,7 @@ Future<String> wrapMessage(
   int? powBitsUsed,
   String? deliveredUid,
   String? supporterBadge,
+  bool secure = false,
 }) async {
   final mode = await loadPushMode();
   final body = <String, dynamic>{'m': plain};
@@ -237,6 +240,7 @@ Future<String> wrapMessage(
   if (powNonce != null) body['pw'] = powNonce;
   if (powBitsUsed != null) body['pb'] = powBitsUsed;
   if (supporterBadge != null) body['bg'] = supporterBadge;
+  if (secure) body['sc'] = 1;
 
   if (mode == PushMode.ntfy) {
     final topic = await loadNtfyTopic();
@@ -341,6 +345,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       imageB64: json['i'] as String?,
       unsend: json['un'] as String?,
       deliveredUid: json['dr'] as String?,
+      secure: json['sc'] == 1,
       fileB64: json['f'] as String?,
       fileName: json['fn'] as String?,
       voice: json['vo'] == 1,

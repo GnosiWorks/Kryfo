@@ -88,6 +88,8 @@ class _Msg {
   String? msgUid;
   // msg_uid of the message this one replies to, or null.
   final String? replyTo;
+  // sender asked that this not be screenshotted
+  final bool secure;
   bool sending;
   bool failed;
   bool delivered;
@@ -111,6 +113,7 @@ class _Msg {
     this.burnSecs,
     this.msgUid,
     this.replyTo,
+    this.secure = false,
     this.sending = false,
     this.failed = false,
     this.edited = false,
@@ -330,6 +333,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   int _firstUnreadIndex = -1;
   bool _unreadResolved = false;
   bool _ghost = _lastGhost; // restored from last use this session.
+  // marks the next message so the other phone blocks screenshots of it. off
+  // by default: most messages do not need it and the cost is that neither
+  // side can screenshot the chat.
+  bool _secureNext = false;
   bool _disguise = false;
   int _burnSeconds = _lastBurnSeconds; // restored from last use this session.
   Timer? _burnTick;
@@ -367,6 +374,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           burnAt: r['burn_at'] as int?,
           msgUid: uid,
           replyTo: r['reply_to'] as String?,
+          secure: (r['secure'] as int? ?? 0) == 1,
           edited: (r['edited'] as int? ?? 0) == 1,
           pinned: (r['pinned'] as int? ?? 0) == 1,
           mediaPath: r['media_path'] as String?,
@@ -489,6 +497,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     super.initState();
 
     if (appState.secureChats) appState.forceSecure(true);
+    _applySecureContent();
     WidgetsBinding.instance.addObserver(this);
     _reconcileSending();
     appState.loadGhostPref().then((p) {
@@ -775,6 +784,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         burnAt: r['burn_at'] as int?,
         msgUid: uid,
         replyTo: r['reply_to'] as String?,
+        secure: (r['secure'] as int? ?? 0) == 1,
         edited: (r['edited'] as int? ?? 0) == 1,
         pinned: (r['pinned'] as int? ?? 0) == 1,
         mediaPath: r['media_path'] as String?,
@@ -800,6 +810,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (uid != null) _seenUids.add(uid);
     }
     setState(() => _messages.addAll(fresh));
+    _applySecureContent();
     // a message landing while we're actually reading this chat left the home
     // badge lit - clear it. but this runs on every appState notify, and a
     // backed-out chat is still in the tree for a while, so it would wipe a dot
@@ -1734,6 +1745,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           burnAt: r['burn_at'] as int?,
           msgUid: uid,
           replyTo: r['reply_to'] as String?,
+          secure: (r['secure'] as int? ?? 0) == 1,
           edited: (r['edited'] as int? ?? 0) == 1,
           pinned: (r['pinned'] as int? ?? 0) == 1,
           mediaPath: r['media_path'] as String?,
@@ -1970,6 +1982,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         msgUid: msg.msgUid,
         replyTo: msg.replyTo,
         burnSeconds: msg.burnSecs,
+        secure: msg.secure,
         supporterBadge: await appState.sharedBadge(),
         sender: SenderInfo(
           haloId: appState.myId,
@@ -3041,6 +3054,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       replyTo: replyToUid,
       burnSecs: _ghost ? _burnSeconds : null,
       burnAt: null,
+      secure: _secureNext,
     );
     setState(() {
       _messages.add(msg);
@@ -3051,6 +3065,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _msgCtrl.clear();
     _scrollToEnd();
     HapticFeedback.lightImpact();
+    if (_secureNext) setState(() => _secureNext = false);
     await db.saveMessage(
       widget.peerHaloId,
       'out',
@@ -3059,6 +3074,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       msgUid: msgUid,
       replyTo: replyToUid,
       sent: 0,
+      secure: _secureNext,
     );
     // best-effort link preview over tor, fire-and-forget so it never delays
     // the send. pops the card in when (if) it resolves.
@@ -3261,8 +3277,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     super.deactivate();
   }
 
+  // any message in this conversation the sender marked. one is enough:
+
+  // android's flag is per-window, not per-view.
+
+  void _applySecureContent() {
+    final any = _messages.any((m) => m.secure);
+
+    appState.chatHasSecureContent(widget.peerHaloId, any);
+  }
+
   @override
   void dispose() {
+    appState.leftChat(widget.peerHaloId);
     if (appState.secureChats) appState.forceSecure(false);
     _pollTimer?.cancel();
     _burnTick?.cancel();
@@ -4439,6 +4466,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                                   : _retry(m),
                                               onLongPress: (ctx) =>
                                                   _showEmojiPickerAt(ctx, m),
+                                              secure: m.secure,
                                               quotedText: quoted,
                                               onQuoteTap: m.replyTo == null
                                                   ? null
@@ -4702,6 +4730,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     : _Composer(
                         onAttach: _showAttachSheet,
                         ghost: _ghost,
+                        secure: _secureNext,
+                        onToggleSecure: () {
+                          HapticFeedback.selectionClick();
+                          setState(() => _secureNext = !_secureNext);
+                          showHaloToast(
+                            context,
+                            _secureNext
+                                ? 'screenshots blocked for what you send next'
+                                : 'screenshot block off',
+                          );
+                        },
                         onToggleGhost: () => setState(() {
                           _ghost = !_ghost;
                           _lastGhost = _ghost;
@@ -5560,6 +5599,7 @@ class _Bubble extends StatelessWidget {
   final _Msg msg;
   final void Function(_Msg)? onRetry;
   final void Function(BuildContext)? onLongPress;
+  final bool secure;
   final String? quotedText;
   final String? quotedAuthor;
   final VoidCallback? onQuoteTap;
@@ -5579,6 +5619,7 @@ class _Bubble extends StatelessWidget {
     required this.msg,
     this.onRetry,
     this.onLongPress,
+    this.secure = false,
     this.quotedText,
     this.quotedAuthor,
     this.onQuoteTap,
@@ -6002,6 +6043,14 @@ class _Bubble extends StatelessWidget {
                                       Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
+                                          if (msg.secure) ...[
+                                            Icon(
+                                              Icons.shield_rounded,
+                                              size: 10,
+                                              color: metaColor,
+                                            ),
+                                            const SizedBox(width: 4),
+                                          ],
                                           Text(
                                             _fmtTime(msg.when),
                                             style: TextStyle(
@@ -6952,6 +7001,9 @@ class _VoiceBubbleState extends State<_VoiceBubble> {
     });
   }
 
+  // called after every list rebuild. a marked message arriving while the chat
+  // is open has to turn protection on too, not only one that was already
+  // there when it opened.
   Future<void> _load() async {
     // old notes can point at a file that got wiped/moved between installs.
     // flag it so the bubble shows 'audio unavailable' instead of a dead shell.
@@ -7367,6 +7419,8 @@ class _Composer extends StatelessWidget {
   final VoidCallback onSend;
   final bool ghost;
   final VoidCallback onToggleGhost;
+  final bool secure;
+  final VoidCallback onToggleSecure;
   final VoidCallback onPickBurn;
   final int burnSeconds;
   final VoidCallback onAttach;
@@ -7380,6 +7434,8 @@ class _Composer extends StatelessWidget {
     required this.onSend,
     required this.ghost,
     required this.onToggleGhost,
+    required this.secure,
+    required this.onToggleSecure,
     required this.onPickBurn,
     required this.burnSeconds,
     required this.onAttach,
@@ -7480,6 +7536,23 @@ class _Composer extends StatelessWidget {
                     Icons.local_fire_department_outlined,
                     size: 18,
                     color: ghost ? HaloColors.onAmber : HaloColors.text2,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: onToggleSecure,
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: secure ? HaloColors.violet : Colors.transparent,
+                  ),
+                  child: Icon(
+                    secure ? Icons.shield_rounded : Icons.shield_outlined,
+                    size: 18,
+                    color: secure ? HaloColors.text : HaloColors.text2,
                   ),
                 ),
               ),

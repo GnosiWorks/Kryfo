@@ -27,6 +27,7 @@ extern const char *_GoStringPtr(_GoString_ s);
 
 
 
+
 /* End of preamble from import "C" comments.  */
 
 
@@ -207,6 +208,12 @@ extern char* HaloTorGetJSON(char* cUrl);
 // image from the origin and leaks their ip. capped larger than html.
 //
 extern char* HaloTorGetB64(char* cUrl);
+
+// private, balanced or fast. anything else is treated as private, because a
+// typo must never quietly drop someone out of tor.
+//
+extern char* HaloSetTransportMode(char* cMode);
+extern char* HaloTransportMode(void);
 extern char* HaloTransportState(void);
 
 #ifdef __cplusplus
