@@ -461,12 +461,22 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 var torRestarting int32
 var lastTorRestart int64 // unix seconds of the last restart, for cooldown
 
+// how many old tor instances are still shutting down. each one holds its
+// memory and its circuits until it finishes, so starting another on top is
+// how the process gets killed.
+var torClosing int32
+
 func restartTor() {
 	// collapse concurrent triggers - only one restart at a time.
 	if !atomic.CompareAndSwapInt32(&torRestarting, 0, 1) {
 		return
 	}
 	defer atomic.StoreInt32(&torRestarting, 0)
+
+	if n := atomic.LoadInt32(&torClosing); n > 0 {
+		log.Printf("halo: restartTor skipped - %d old tor still closing", n)
+		return
+	}
 
 	// cooldown: a quiet-but-alive relay shouldn't drive a restart loop. hold
 	// to at least 3 min between restarts. the deaf-cycle trigger can be noisy;
@@ -490,6 +500,9 @@ func restartTor() {
 		return
 	}
 	log.Println("halo: restarting embedded tor (dialer wedged)")
+	statusMu.Lock()
+	hsdirUploads = 0
+	statusMu.Unlock()
 	setStatus("starting")
 
 	// drop the old node + cached client so nothing keeps dialing the dead one.
@@ -500,7 +513,23 @@ func restartTor() {
 	mu.Unlock()
 	nostrResetClient()
 	if old != nil {
-		old.Close()
+		// closing a tor with live circuits can block for minutes. nothing
+		// still points at it, so do not wait.
+		atomic.AddInt32(&torClosing, 1)
+		go func() {
+			defer atomic.AddInt32(&torClosing, -1)
+			done := make(chan struct{})
+			go func() {
+				old.Close()
+				close(done)
+			}()
+			select {
+			case <-done:
+				log.Println("halo: old tor closed")
+			case <-time.After(20 * time.Second):
+				log.Println("halo: old tor is taking its time, moving on")
+			}
+		}()
 	}
 
 	torDataDir := dir + "/tor"

@@ -3,6 +3,9 @@
 // kryfo matters most that is enough to get it blocked. a bridge is an entry
 // point that is not published anywhere, reached through obfs4, which makes
 // the traffic look like nothing in particular.
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../main.dart';
@@ -21,6 +24,14 @@ class _BridgesScreenState extends State<BridgesScreen> {
   late bool _on;
   bool _busy = false;
   String? _result;
+  bool _asking = false;
+  bool _reconnecting = false;
+  int _elapsed = 0;
+  Timer? _tick;
+  String? _captcha;
+  String? _challenge;
+  String? _askError;
+  final _answer = TextEditingController();
 
   @override
   void initState() {
@@ -32,12 +43,80 @@ class _BridgesScreenState extends State<BridgesScreen> {
 
   @override
   void dispose() {
+    _tick?.cancel();
     _ctrl.dispose();
+    _answer.dispose();
     super.dispose();
   }
 
   int get _lineCount =>
       _ctrl.text.split('\n').where((l) => l.trim().isNotEmpty).length;
+
+  // ask bridges.torproject.org for a fresh set. this is plain https, not tor -
+  // tor being unreachable is the whole reason someone is on this screen.
+  Future<void> _request() async {
+    setState(() {
+      _asking = true;
+      _captcha = null;
+      _challenge = null;
+      _askError = null;
+    });
+    final r = await engine.moatFetch();
+    if (!mounted) return;
+    if (!r.startsWith('ok|')) {
+      setState(() {
+        _asking = false;
+        _askError = r.replaceFirst('error: ', '');
+      });
+      return;
+    }
+    final parts = r.substring(3).split('|');
+    setState(() {
+      _asking = false;
+      _captcha = parts[0];
+      _challenge = parts.length > 1 ? parts[1] : null;
+      _answer.clear();
+    });
+  }
+
+  Future<void> _sendAnswer() async {
+    final ch = _challenge;
+    if (ch == null || _answer.text.trim().isEmpty) return;
+    setState(() {
+      _asking = true;
+      _askError = null;
+    });
+    final r = await engine.moatSolve(ch, _answer.text.trim());
+    if (!mounted) return;
+    if (r == 'wrong') {
+      // a wrong or stale captcha is a normal outcome, not a failure. fetch a
+      // new one rather than making them tap again.
+      setState(() => _askError = 'that was not it. here is another.');
+      await _request();
+      return;
+    }
+    if (!r.startsWith('ok|')) {
+      setState(() {
+        _asking = false;
+        _askError = r.replaceFirst('error: ', '');
+      });
+      return;
+    }
+    final lines = r.substring(3);
+    setState(() {
+      _asking = false;
+      _captcha = null;
+      _challenge = null;
+      _on = true;
+      _ctrl.text = _ctrl.text.trim().isEmpty
+          ? lines
+          : '${_ctrl.text.trim()}\n$lines';
+    });
+    HapticFeedback.mediumImpact();
+    if (mounted) {
+      showHaloToast(context, 'got bridges · save to use them');
+    }
+  }
 
   Future<void> _save() async {
     setState(() => _busy = true);
@@ -49,10 +128,31 @@ class _BridgesScreenState extends State<BridgesScreen> {
     engine.restartTor();
     if (!mounted) return;
     setState(() {
-      _busy = false;
       _result = r;
+      _reconnecting = true;
+      _elapsed = 0;
     });
-    showHaloToast(context, 'reconnecting through tor · this takes a minute');
+    // a dead button for ninety seconds looks broken. count, and stop when
+    // tor can actually carry traffic again.
+    _tick?.cancel();
+    _tick = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) {
+        t.cancel();
+        return;
+      }
+      setState(() => _elapsed++);
+      if (appState.torReady || _elapsed > 240) {
+        t.cancel();
+        setState(() {
+          _reconnecting = false;
+          _busy = false;
+        });
+        if (appState.torReady) {
+          HapticFeedback.mediumImpact();
+          showHaloToast(context, 'connected');
+        }
+      }
+    });
   }
 
   @override
@@ -105,7 +205,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                 Row(
                   children: [
                     BreathDot(
-                      color: live ? HaloColors.violet : HaloColors.text3,
+                      color: live ? HaloColors.violet : HaloColors.amber,
                       size: 7,
                     ),
                     const SizedBox(width: 9),
@@ -113,7 +213,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                       live ? 'going the quiet way' : 'straight to tor',
                       style: HaloType.mono(
                         size: 11,
-                        color: live ? HaloColors.violet : HaloColors.text3,
+                        color: live ? HaloColors.violet : HaloColors.text2,
                         weight: FontWeight.w600,
                         letter: 0.12,
                       ),
@@ -176,8 +276,27 @@ class _BridgesScreenState extends State<BridgesScreen> {
           ),
 
           const SizedBox(height: 26),
+          _RequestBlock(
+            asking: _asking,
+            captcha: _captcha,
+            error: _askError,
+            answer: _answer,
+            onRequest: _request,
+            onSend: _sendAnswer,
+          ),
+
+          const SizedBox(height: 26),
           Row(
             children: [
+              Container(
+                width: 3,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: HaloColors.violet,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 8),
               Text(
                 'your bridges',
                 style: HaloType.mono(
@@ -254,18 +373,72 @@ class _BridgesScreenState extends State<BridgesScreen> {
               padding: const EdgeInsets.symmetric(vertical: 16),
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: _busy ? HaloColors.surface2 : HaloColors.amber,
+                gradient: (_busy || _reconnecting)
+                    ? null
+                    : LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: _on && _lineCount > 0
+                            ? [HaloColors.violet, HaloColors.amber]
+                            : [HaloColors.amber, HaloColors.amber],
+                      ),
+                color: _busy ? HaloColors.surface2 : null,
+                border: _reconnecting
+                    ? Border.all(
+                        color: HaloColors.violet.withValues(alpha: 0.5),
+                      )
+                    : null,
                 borderRadius: BorderRadius.circular(16),
+                boxShadow: _busy
+                    ? null
+                    : [
+                        BoxShadow(
+                          color:
+                              (_on && _lineCount > 0
+                                      ? HaloColors.violet
+                                      : HaloColors.amber)
+                                  .withValues(alpha: 0.28),
+                          blurRadius: 18,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
               ),
-              child: Text(
-                _busy ? 'applying…' : 'save and reconnect',
-                style: HaloType.mono(
-                  size: 13,
-                  color: _busy ? HaloColors.text2 : HaloColors.onAmber,
-                  weight: FontWeight.w700,
-                  letter: 0.04,
-                ),
-              ),
+              child: _reconnecting
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 13,
+                          height: 13,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: HaloColors.violet,
+                          ),
+                        ),
+                        const SizedBox(width: 11),
+                        Text(
+                          _elapsed < 20
+                              ? 'restarting tor…'
+                              : _elapsed < 60
+                              ? 'finding a bridge… ${_elapsed}s'
+                              : 'still trying… ${_elapsed}s',
+                          style: HaloType.mono(
+                            size: 12.5,
+                            color: HaloColors.text2,
+                            weight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    )
+                  : Text(
+                      _busy ? 'applying…' : 'save and reconnect',
+                      style: HaloType.mono(
+                        size: 13,
+                        color: _busy ? HaloColors.text2 : HaloColors.onAmber,
+                        weight: FontWeight.w700,
+                        letter: 0.04,
+                      ),
+                    ),
             ),
           ),
 
@@ -285,6 +458,182 @@ class _BridgesScreenState extends State<BridgesScreen> {
             'saving restarts tor, so the next connection takes longer than '
                 'usual. bridges are slower in general. if your network does not '
                 'block tor, leave this off.',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RequestBlock extends StatelessWidget {
+  const _RequestBlock({
+    required this.asking,
+    required this.captcha,
+    required this.error,
+    required this.answer,
+    required this.onRequest,
+    required this.onSend,
+  });
+  final bool asking;
+  final String? captcha;
+  final String? error;
+  final TextEditingController answer;
+  final VoidCallback onRequest;
+  final VoidCallback onSend;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      decoration: BoxDecoration(
+        color: HaloColors.surface2,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: HaloColors.violet.withValues(alpha: 0.28)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.download_rounded, size: 16, color: HaloColors.violet),
+              const SizedBox(width: 8),
+              Text(
+                'get bridges',
+                style: HaloType.sans(
+                  size: 14.5,
+                  color: HaloColors.text,
+                  weight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Text(
+            captcha == null
+                ? 'ask the tor project directly. you solve a puzzle so bots '
+                      'cannot drain the supply.'
+                : 'type what you see. lowercase is fine.',
+            style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+          ),
+          if (captcha == null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 11),
+              decoration: BoxDecoration(
+                color: HaloColors.rose.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: HaloColors.rose.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.visibility_outlined,
+                    size: 15,
+                    color: HaloColors.rose,
+                  ),
+                  const SizedBox(width: 9),
+                  Expanded(
+                    child: Text(
+                      'this one request does not go through tor — it cannot, '
+                      'since tor is what is not working. whoever runs your '
+                      'network will see you contacting the tor project. if '
+                      'that alone is a problem where you are, get bridges '
+                      'somewhere else and paste them below.',
+                      style: HaloType.sans(size: 12, color: HaloColors.text2),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (captcha != null) ...[
+            const SizedBox(height: 14),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.memory(
+                base64Decode(captcha!),
+                fit: BoxFit.contain,
+                height: 90,
+                errorBuilder: (_, __, ___) => Text(
+                  'could not draw the puzzle',
+                  style: HaloType.mono(size: 11, color: HaloColors.rose),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: HaloColors.ink,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: HaloColors.line),
+                    ),
+                    child: TextField(
+                      controller: answer,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      textCapitalization: TextCapitalization.none,
+                      style: HaloType.mono(size: 13, color: HaloColors.text),
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        hintText: 'answer',
+                        hintStyle: HaloType.mono(
+                          size: 12,
+                          color: HaloColors.text3,
+                        ),
+                      ),
+                      onSubmitted: (_) => onSend(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: asking ? null : onSend,
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 13,
+                    ),
+                    decoration: BoxDecoration(
+                      color: asking ? HaloColors.surface3 : HaloColors.violet,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      asking ? '…' : 'send',
+                      style: HaloType.mono(
+                        size: 12,
+                        color: HaloColors.text,
+                        weight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          if (error != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              error!,
+              style: HaloType.mono(size: 11.5, color: HaloColors.rose),
+            ),
+          ],
+          const SizedBox(height: 13),
+          _Ghost(
+            icon: Icons.refresh_rounded,
+            label: asking
+                ? 'asking…'
+                : captcha == null
+                ? 'request bridges'
+                : 'different puzzle',
+            onTap: asking ? () {} : onRequest,
           ),
         ],
       ),
@@ -345,13 +694,13 @@ class _Note extends StatelessWidget {
           head,
           style: HaloType.mono(
             size: 10.5,
-            color: HaloColors.text3,
+            color: HaloColors.amber,
             weight: FontWeight.w600,
             letter: 0.14,
           ),
         ),
         const SizedBox(height: 6),
-        Text(body, style: HaloType.sans(size: 12.5, color: HaloColors.text2)),
+        Text(body, style: HaloType.sans(size: 13, color: HaloColors.text)),
       ],
     ),
   );

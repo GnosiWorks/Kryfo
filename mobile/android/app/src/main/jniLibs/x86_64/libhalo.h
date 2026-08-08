@@ -26,6 +26,7 @@ extern const char *_GoStringPtr(_GoString_ s);
 
 
 
+
 /* End of preamble from import "C" comments.  */
 
 
@@ -145,6 +146,17 @@ extern char* HaloSetBridges(char* cLines, int on);
 //
 extern char* HaloRestartTor(void);
 extern char* HaloBridgeState(void);
+
+// ask for a captcha. returns "ok|<base64 png>|<challenge>" or "error: ...".
+// the challenge is opaque and must be handed back with the answer; it carries
+// a signed timestamp and dies after thirty minutes.
+//
+extern char* HaloMoatFetch(void);
+
+// send the answer back. returns "ok|<bridge lines separated by newline>",
+// "wrong" if the captcha was not solved, or "error: ...".
+//
+extern char* HaloMoatSolve(char* cChallenge, char* cSolution);
 extern char* HaloNostrInit(char* cRelaysCSV);
 extern char* HaloNostrSend(char* cPeerXPubHex, char* cMsg);
 extern char* HaloNostrSubscribe(char* cPeerXPubHex);

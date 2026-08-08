@@ -58,29 +58,35 @@ class _ModesScreenState extends State<ModesScreen> {
             ),
             _ModeCard(
               name: 'Balanced',
-              soon: true,
               active: _mode == 'balanced',
               desc:
-                  'Straight to a Kryfo relay, no onion hops. Sends land in about a second and there is no waiting for Tor to warm up.',
+                  'One plain connection to Kryfo\'s own relay, no onion hops. '
+                  'Sends land in about a second, and nothing waits for Tor to '
+                  'warm up. Works where Tor is blocked.',
               speed: 'quick',
               hops: '1',
               ipVisible: false,
               ipText: 'relay only',
               ipWarn: true,
               warning:
-                  'the relay sees the address you connect from. your contacts and every other relay still do not, and messages stay end-to-end encrypted either way.',
+                  'the relay knows the address you connect from, and nothing '
+                  'is contacted except it. who you talk to, and what you said, '
+                  'stay sealed from everyone including us.',
               onTap: () => _pick('balanced'),
             ),
             _ModeCard(
               name: 'Fast',
-              soon: true,
               active: _mode == 'fast',
               desc:
-                  'Direct connection. Near-instant. Use for low-stakes chats.',
+                  'Plain connections to every relay. Near-instant, and the '
+                  'least private of the three.',
               speed: 'instant',
               hops: '0',
               ipVisible: true,
-              warning: 'not active yet · every message still uses full Tor.',
+              warning:
+                  'every relay you use knows the address you connect from, not '
+                  'only ours. messages are still sealed, but the fact that you '
+                  'sent one is not. for low-stakes chats.',
               onTap: () => _pick('fast'),
             ),
             const Spacer(),
@@ -376,8 +382,8 @@ class _Footnote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'private is live. balanced and fast are still being built - '
-      'until then every message routes through tor.',
+      'private is the default and stays that way unless you change it. '
+      'switching takes effect on the next message.',
       style: HaloType.mono(size: 10, color: HaloColors.text3),
     );
   }
