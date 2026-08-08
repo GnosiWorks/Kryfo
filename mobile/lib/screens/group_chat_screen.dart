@@ -107,6 +107,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   @override
   void initState() {
     super.initState();
+
+    if (appState.secureChats) appState.forceSecure(true);
     currentChatPeer = 'group:${widget.groupId}';
     WidgetsBinding.instance.addObserver(this);
     db.clearGroupUnread(widget.groupId).then((_) => appState.refreshGroups());
@@ -1928,6 +1930,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   @override
   void dispose() {
+    if (appState.secureChats) appState.forceSecure(false);
     // persist the draft one more time on the way out.
     final draft = _msgCtrl.text;
     if (draft.trim().isEmpty) {

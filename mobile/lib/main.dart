@@ -92,6 +92,9 @@ class HaloEngine {
   late final TwoArgFnDart _setBridges;
   late final CStrFnDart _bridgeState;
   late final CStrFnDart _restartTor;
+  late final CStrFnDart _moatFetch;
+  late final OneArgFnDart _setMode;
+  late final TwoArgFnDart _moatSolve;
   late final OneArgFnDart _ntfyPing;
   late final OneArgFnDart _torGet;
   late final OneArgFnDart _torGetJson;
@@ -141,6 +144,11 @@ class HaloEngine {
     _setBridges = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloSetBridges');
     _bridgeState = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloBridgeState');
     _restartTor = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloRestartTor');
+    _moatFetch = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMoatFetch');
+    _setMode = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
+      'HaloSetTransportMode',
+    );
+    _moatSolve = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloMoatSolve');
     _ntfyPing = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNtfyPing');
     _torGet = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGet');
     _torGetJson = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetJSON');
@@ -266,6 +274,31 @@ class HaloEngine {
   String bridgeState() => _bridgeState().toDartString();
 
   void restartTor() => _restartTor();
+
+  // tell the engine whether to route through tor. it decides the route; the
+  // relay list for each mode is chosen below.
+  String setTransportMode(String mode) {
+    final p = mode.toNativeUtf8();
+    try {
+      return _setMode(p).toDartString();
+    } finally {
+      malloc.free(p);
+    }
+  }
+
+  // both moat calls block on a network round trip, so they run off the ui
+  // isolate. the request is plain https on purpose - tor being unreachable is
+  // why someone is asking for bridges at all.
+  Future<String> moatFetch() => _moatOnIsolate(null, null).timeout(
+    const Duration(seconds: 60),
+    onTimeout: () => 'error: timed out reaching the bridge service',
+  );
+
+  Future<String> moatSolve(String challenge, String answer) =>
+      _moatOnIsolate(challenge, answer).timeout(
+        const Duration(seconds: 60),
+        onTimeout: () => 'error: timed out sending the answer',
+      );
 
   // everything the transport knows, in one read. no
   // inference on this side.
@@ -416,6 +449,27 @@ Future<String> _fcSendOnIsolate(String peerXPub, String fcPk, String msg) {
       malloc.free(a);
       malloc.free(b);
       malloc.free(c);
+    }
+  });
+}
+
+Future<String> _moatOnIsolate(String? challenge, String? answer) {
+  return Isolate.run(() {
+    final lib = Platform.isAndroid
+        ? DynamicLibrary.open('libhalo.so')
+        : DynamicLibrary.process();
+    if (challenge == null) {
+      final fn = lib.lookupFunction<CStrFn, CStrFnDart>('HaloMoatFetch');
+      return fn().toDartString();
+    }
+    final fn = lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloMoatSolve');
+    final a = challenge.toNativeUtf8();
+    final b = (answer ?? '').toNativeUtf8();
+    try {
+      return fn(a, b).toDartString();
+    } finally {
+      malloc.free(a);
+      malloc.free(b);
     }
   });
 }
@@ -2732,10 +2786,45 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // private goes through tor to everything. balanced talks plain tls to our
+  // own relay and nothing else, so only we see an ip. fast talks plain tls to
+  // every relay, so they all do.
+  static const _clearnetRelay = 'wss://relay.kryfo.app';
+
+  String relaysFor(String mode) {
+    switch (mode) {
+      case 'balanced':
+        return _clearnetRelay;
+      case 'fast':
+        return '$_clearnetRelay,'
+            'wss://nos.lol,'
+            'wss://relay.primal.net,'
+            'wss://nostr.mom,'
+            'wss://nostr.oxtr.dev';
+      default:
+        return 'ws://z4waup3c6j6gknkjba72cqjjuffhgg6gtgqfu3vetzcvgoluvr42srid.onion,'
+            'wss://nos.lol,'
+            'wss://relay.primal.net,'
+            'wss://nostr.mom,'
+            'wss://nostr.oxtr.dev';
+    }
+  }
+
   Future<void> setSendMode(String m) async {
+    final changed = _sendMode != m;
     _sendMode = m;
     notifyListeners();
     await const FlutterSecureStorage().write(key: 'send_mode', value: m);
+    if (!changed) return;
+    // the engine caches one http client per route, so the mode has to land
+    // before the relay list is rebuilt or the first connection uses the old
+    // one.
+    engine.setTransportMode(m);
+    _nostrInitOnIsolate(relaysFor(m));
+    for (final c in contacts) {
+      await subscribePeer(c.haloId);
+    }
+    debugPrint('mode: $m, relays rebuilt');
   }
 
   String _displayName = '';
@@ -2755,10 +2844,29 @@ class AppState extends ChangeNotifier {
   static const _platformChannel = MethodChannel('halo/platform');
   bool _blockScreenshots = false;
   bool get blockScreenshots => _blockScreenshots;
+
+  // when on, every chat screen sets FLAG_SECURE while it is open - so
+  // screenshots of conversations are blocked on this phone whoever took them.
+  // it protects a conversation only if both sides have it on, and a camera
+  // pointed at the screen still works. the ui says so.
+  bool _secureChats = false;
+  bool get secureChats => _secureChats;
+
+  Future<void> setSecureChats(bool v) async {
+    _secureChats = v;
+    await const FlutterSecureStorage().write(
+      key: 'secure_chats',
+      value: v ? '1' : '0',
+    );
+    notifyListeners();
+  }
+
   Future<void> loadScreenshotPref() async {
     _blockScreenshots =
         (await const FlutterSecureStorage().read(key: 'block_screenshots')) ==
         'true';
+    _secureChats =
+        (await const FlutterSecureStorage().read(key: 'secure_chats')) == '1';
     await _applyScreenSecure();
     notifyListeners();
   }

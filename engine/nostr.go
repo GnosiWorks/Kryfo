@@ -91,7 +91,8 @@ func relayCold(u string) bool {
 }
 
 func relayFailed(u string) {
-	if !torReadyNow() {
+	// only tor's warmup can make a connect failure meaningless
+	if modeNeedsTor() && !torReadyNow() {
 		return
 	}
 	relayHealthMu.Lock()
@@ -168,6 +169,13 @@ func torNostrClient() (*http.Client, error) {
 	if cachedNostrClient != nil {
 		return cachedNostrClient, nil
 	}
+	// balanced and fast do not go through tor at all, so there is nothing to
+	// wait for and no dialer to build.
+	if !modeNeedsTor() {
+		cachedNostrClient = directNostrClient()
+		log.Printf("nostr: direct client (%s mode, not via tor)", currentMode())
+		return cachedNostrClient, nil
+	}
 	mu.Lock()
 	t := torNode
 	mu.Unlock()
@@ -229,6 +237,14 @@ func torNostrClient() (*http.Client, error) {
 			if bootstrapMovingRecently() {
 				log.Println("nostr: dialer hung but bootstrap is still climbing, leaving tor alone")
 				return nil, fmt.Errorf("tor still bootstrapping")
+			}
+			// one dead bridge in a list of four produces exactly this, and
+			// restarting a tor that is already reachable turns it into a
+			// loop that ends with the process being killed.
+			if bridgesEnabled() && bridgeWorkingRecently() {
+				log.Println("nostr: dialer hung but a bridge is still carrying traffic, leaving tor alone")
+				dialerHangs = 0
+				return nil, fmt.Errorf("bridge dial failed")
 			}
 			dialerHangs = 0
 			go restartTor()

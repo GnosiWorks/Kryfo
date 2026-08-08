@@ -28,6 +28,7 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"time"
 
 	"gitlab.com/yawning/obfs4.git/common/socks5"
 	"gitlab.com/yawning/obfs4.git/transports/base"
@@ -41,7 +42,48 @@ var (
 	bridgeList []string
 	ptPort     int
 	ptListener net.Listener
+
+	// when a bridge last carried a connection, and how many times each has
+	// failed in a row. a list usually contains one or two that no longer
+	// work, which is normal and must not look like tor being broken.
+	lastBridgeOK time.Time
+	bridgeFails  = map[string]int{}
 )
+
+const bridgeDeadAfter = 4
+
+// true if any bridge worked in the last three minutes. the dialer watchdog
+// checks this before blaming tor.
+func bridgeWorkingRecently() bool {
+	bridgeMu.RLock()
+	defer bridgeMu.RUnlock()
+	return !lastBridgeOK.IsZero() && time.Since(lastBridgeOK) < 3*time.Minute
+}
+
+func noteBridgeOK(target string) {
+	bridgeMu.Lock()
+	lastBridgeOK = time.Now()
+	delete(bridgeFails, target)
+	bridgeMu.Unlock()
+}
+
+func noteBridgeFail(target string) {
+	bridgeMu.Lock()
+	bridgeFails[target]++
+	n := bridgeFails[target]
+	bridgeMu.Unlock()
+	if n == bridgeDeadAfter {
+		log.Printf("bridges: %s has failed %d times, skipping it", target, n)
+	}
+}
+
+// a bridge that has failed this many times in a row is not coming back this
+// session. tor still has the line, but we stop wasting dials on it.
+func bridgeIsDead(target string) bool {
+	bridgeMu.RLock()
+	defer bridgeMu.RUnlock()
+	return bridgeFails[target] >= bridgeDeadAfter
+}
 
 // a bridge line looks like:
 //
@@ -90,9 +132,11 @@ func bridgeTorArgs() []string {
 		"--UseBridges", "1",
 		"--ClientTransportPlugin", fmt.Sprintf("obfs4 socks5 127.0.0.1:%d", port),
 	}
-	for _, b := range bridgeLines() {
+	lines := bridgeLines()
+	for _, b := range lines {
 		args = append(args, "--Bridge", b)
 	}
+	log.Printf("bridges: handing tor %d bridge lines via 127.0.0.1:%d", len(lines), port)
 	return args
 }
 
@@ -178,18 +222,26 @@ func servePTConn(conn net.Conn, factory base.ClientFactory) {
 	dial := func(network, addr string) (net.Conn, error) {
 		return net.Dial(network, addr)
 	}
+	if bridgeIsDead(req.Target) {
+		// fail fast rather than making tor wait out another timeout
+		_ = req.Reply(socks5.ReplyHostUnreachable)
+		return
+	}
 	remote, err := factory.Dial("tcp", req.Target, dial, args)
 	if err != nil {
 		log.Printf("bridges: dial %s: %v", req.Target, err)
+		noteBridgeFail(req.Target)
 		_ = req.Reply(socks5.ErrorToReplyCode(err))
 		return
 	}
+	noteBridgeOK(req.Target)
 	defer remote.Close()
 
 	if err = req.Reply(socks5.ReplySucceeded); err != nil {
 		log.Printf("bridges: socks reply: %v", err)
 		return
 	}
+	log.Printf("bridges: obfs4 connected to %s", req.Target)
 
 	var wg sync.WaitGroup
 	wg.Add(2)

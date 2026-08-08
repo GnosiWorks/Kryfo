@@ -74,6 +74,11 @@ func bootstrapMovingRecently() bool {
 // tor can carry traffic. the single test - callers used to each keep their
 // own copy of this and they drifted.
 func torReadyNow() bool {
+	// outside private mode nothing is waiting on tor, so "ready" is about
+	// whether we can send at all - and we can.
+	if !modeNeedsTor() {
+		return true
+	}
 	statusMu.RLock()
 	defer statusMu.RUnlock()
 	return torStatus == "bootstrapped" ||
@@ -100,6 +105,7 @@ type transportView struct {
 	SecsSinceTx  int         `json:"secs_since_send"`
 	SecsSinceRx  int         `json:"secs_since_recv"`
 	InboxDepth   int         `json:"inbox_depth"`
+	Mode         string      `json:"mode"`
 	PublishingS  int         `json:"publishing_secs"`
 }
 
@@ -112,6 +118,7 @@ func transportSnapshot() transportView {
 	}
 	statusMu.RUnlock()
 	v.TorReady = torReadyNow()
+	v.Mode = currentMode()
 
 	mu.Lock()
 	v.OnionAddr = myAddr

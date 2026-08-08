@@ -487,6 +487,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+
+    if (appState.secureChats) appState.forceSecure(true);
     WidgetsBinding.instance.addObserver(this);
     _reconcileSending();
     appState.loadGhostPref().then((p) {
@@ -3261,6 +3263,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    if (appState.secureChats) appState.forceSecure(false);
     _pollTimer?.cancel();
     _burnTick?.cancel();
     if (currentChatPeer == widget.peerHaloId) currentChatPeer = null;
