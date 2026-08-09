@@ -740,9 +740,16 @@ class HaloDb {
         if (oldV < 35) {
           // the sender can ask that a message not be screenshotted. we
           // keep the flag so it still holds after a restart.
-          await db.execute(
-            'ALTER TABLE messages ADD COLUMN secure INTEGER NOT NULL DEFAULT 0',
-          );
+          // a phone that already ran a v35 build has this column, and the
+          // ALTER then throws, the database never opens, and the app hangs on
+          // boot with no way back. migrations have to be safe to re-run.
+          try {
+            await db.execute(
+              'ALTER TABLE messages ADD COLUMN secure INTEGER NOT NULL DEFAULT 0',
+            );
+          } catch (e) {
+            debugPrint('migrate v35: column already present ($e)');
+          }
         }
         if (oldV < 34) {
           // partial media used to live in ram only - a restart lost it.
@@ -3560,6 +3567,16 @@ class AppState extends ChangeNotifier {
     final t = _torTryingSince;
     if (t == null) return false;
     return DateTime.now().difference(t).inSeconds > 180;
+  }
+
+  // bridges are on and tor still cannot connect. bridges are slower and some
+  // of them are simply dead, so the honest suggestion is to try without.
+  bool get suggestBridgesOff {
+    if (!_bridgesOn || !_online) return false;
+    if (torReady) return false;
+    final t = _torTryingSince;
+    if (t == null) return false;
+    return DateTime.now().difference(t).inSeconds > 150;
   }
 
   Future<void> dismissBridgeHint() async {

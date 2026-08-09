@@ -216,10 +216,14 @@ Widget _fileCard(_Msg msg, bool isOut) {
   );
 }
 
-void _openFullImage(BuildContext context, String path) {
+void _openFullImage(BuildContext context, String path, {bool secure = false}) {
   // drop the composer's focus first, else popping the viewer restores it and
   // the keyboard springs up over the chat.
   FocusManager.instance.primaryFocus?.unfocus();
+  // the flag is per-window, so it can only be on while this screen is up.
+  // that is exactly the granularity we want: the photo is protected, the
+  // conversation around it is not.
+  if (secure) appState.forceSecure(true);
   Navigator.of(context)
       .push(
         MaterialPageRoute(
@@ -241,7 +245,10 @@ void _openFullImage(BuildContext context, String path) {
           ),
         ),
       )
-      .then((_) => FocusManager.instance.primaryFocus?.unfocus());
+      .then((_) {
+        if (secure) appState.forceSecure(false);
+        FocusManager.instance.primaryFocus?.unfocus();
+      });
 }
 
 String _friendlyStatus(String raw) {
@@ -917,9 +924,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       // roughly (len-1-idx)/len of the extent.
       final frac = (_messages.length - 1 - idx) / _messages.length;
       final approx = frac * _scrollCtrl.position.maxScrollExtent;
-      _scrollCtrl.jumpTo(
-        approx.clamp(0.0, _scrollCtrl.position.maxScrollExtent),
-      );
+      if (_scrollReady)
+        _scrollCtrl.jumpTo(
+          approx.clamp(0.0, _scrollCtrl.position.maxScrollExtent),
+        );
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ctx = _matchKeys[idx]?.currentContext;
@@ -1505,7 +1513,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final frac = (_messages.length - 1 - idx) / _messages.length;
     final approx = (frac * max - _scrollCtrl.position.viewportDimension * 0.3)
         .clamp(0.0, max);
-    _scrollCtrl.jumpTo(approx.clamp(0.0, max));
+    _safeJump(approx.clamp(0.0, max));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ctx = _jumpKey.currentContext;
       if (ctx != null) {
@@ -1714,6 +1722,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _loadMessagesInner() async {
+    debugPrint('LOAD: start');
     await db.purgeExpiredBurns();
     db.isBackPaired(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _backPaired = v);
@@ -1831,6 +1840,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
     }
     setState(() {
+      debugPrint('LOAD: setState, msgs=' + _messages.length.toString());
+      for (final m in _messages) {
+        debugPrint(
+          'LOAD: row dir=' +
+              m.direction +
+              ' txt=' +
+              m.text.length.toString() +
+              ' media=' +
+              (m.mediaPath ?? 'null') +
+              ' file=' +
+              (m.filePath ?? 'null'),
+        );
+      }
       _loaded = true;
       _messages
         ..clear()
@@ -1881,12 +1903,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     var attempts = 0;
     double lastMax = -1;
     void step() {
-      if (!mounted || !_scrollCtrl.hasClients) return;
+      if (!mounted || !_scrollReady) return;
       final max = _scrollCtrl.position.maxScrollExtent;
       final frac = (_messages.length - 1 - idx) / _messages.length;
       final approx = (frac * max - _scrollCtrl.position.viewportDimension * 0.3)
           .clamp(0.0, max);
-      _scrollCtrl.jumpTo(approx);
+      _safeJump(approx);
       final ctx = _jumpKey.currentContext;
       final settled = (max - lastMax).abs() < 1.0 && attempts > 1;
       lastMax = max;
@@ -1917,6 +1939,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
   }
 
+  // hasClients is not enough: the controller attaches before the list has
+  // been laid out, and a jump then reads a null minScrollExtent - which takes
+  // the whole chat screen down with it.
+  // .position asserts exactly one attached scroll view, and during a route
+  // transition two can be attached at once - the assert then throws mid
+  // layout, which paints nothing and looks like a dead conversation.
+  // .positions is the safe plural form.
+  bool get _scrollReady =>
+      _scrollCtrl.positions.length == 1 &&
+      _scrollCtrl.positions.first.hasContentDimensions;
+
+  void _safeJump(double to) {
+    if (_scrollReady) _scrollCtrl.jumpTo(to);
+  }
+
   void _scrollToEnd({bool instant = false}) {
     if (_jumpActive) return;
     // reversed list: the newest message lives at offset 0, so "scroll to end"
@@ -1924,13 +1961,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // naturally pinned to the bottom.
     if (!_scrollCtrl.hasClients) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_scrollCtrl.hasClients) _scrollCtrl.jumpTo(0);
+        if (mounted && _scrollReady) _scrollCtrl.jumpTo(0);
       });
       return;
     }
     if (instant) {
-      _scrollCtrl.jumpTo(0);
+      _safeJump(0);
     } else {
+      if (!_scrollReady) return;
       _scrollCtrl.animateTo(
         0,
         duration: const Duration(milliseconds: 200),
@@ -2722,6 +2760,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     await mediaFile.writeAsBytes(bytes);
     final mediaPath = mediaFile.path;
     final b64 = base64Encode(bytes);
+    // read it once - the toggle is cleared below and the save reads it after.
+    final wantSecure = _secureNext;
     final msg = _Msg(
       'out',
       caption,
@@ -2731,6 +2771,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       mediaPath: mediaPath,
       burnSecs: _ghost ? _burnSeconds : null,
       burnAt: null,
+      secure: wantSecure,
     );
     setState(() {
       _messages.add(msg);
@@ -2746,7 +2787,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       mediaPath: mediaPath,
       burnAt: msg.burnAt,
       sent: 0,
+      secure: wantSecure,
     );
+    if (wantSecure && mounted) setState(() => _secureNext = false);
     // chunk the base64 so no single envelope exceeds the transport limit. small
     // images stay one chunk and behave exactly as before. big ones split into
     // ~60kb slices that the receiver reassembles by mediaId.
@@ -2783,6 +2826,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             // rebuilds off the last slice to land, and that one used to arrive
             // with no burn at all, so ghost images never expired on their side.
             burnSeconds: _ghost ? _burnSeconds : null,
+            secure: wantSecure,
             supporterBadge: await appState.sharedBadge(),
             sender: SenderInfo(
               haloId: appState.myId,
@@ -3054,7 +3098,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       replyTo: replyToUid,
       burnSecs: _ghost ? _burnSeconds : null,
       burnAt: null,
-      secure: _secureNext,
     );
     setState(() {
       _messages.add(msg);
@@ -3065,7 +3108,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _msgCtrl.clear();
     _scrollToEnd();
     HapticFeedback.lightImpact();
-    if (_secureNext) setState(() => _secureNext = false);
+
     await db.saveMessage(
       widget.peerHaloId,
       'out',
@@ -3074,7 +3117,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       msgUid: msgUid,
       replyTo: replyToUid,
       sent: 0,
-      secure: _secureNext,
     );
     // best-effort link preview over tor, fire-and-forget so it never delays
     // the send. pops the card in when (if) it resolves.
@@ -3214,7 +3256,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   @override
   void didChangeMetrics() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scrollCtrl.hasClients) return;
+      if (!mounted || !_scrollReady) return;
       if (MediaQuery.of(context).viewInsets.bottom > 0) {
         // reversed list: bottom (newest) is offset 0.
         _scrollCtrl.animateTo(
@@ -3281,15 +3323,156 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   // android's flag is per-window, not per-view.
 
-  void _applySecureContent() {
-    final any = _messages.any((m) => m.secure);
-
-    appState.chatHasSecureContent(widget.peerHaloId, any);
+  Widget _buildRow(BuildContext c, int i, bool searchActive) {
+    final ix = _messages.length - 1 - i;
+    final m = _messages[ix];
+    // a leaked empty control message (an old reaction/preview frame that fell
+    // through) renders as a blank stub bubble. skip anything with no content.
+    if (m.text.isEmpty &&
+        m.mediaPath == null &&
+        m.filePath == null &&
+        m.preview == null) {
+      return const SizedBox.shrink();
+    }
+    String? quoted;
+    String? quotedAuthor;
+    if (m.replyTo != null) {
+      final original = _messages.firstWhere(
+        (x) => x.msgUid == m.replyTo,
+        orElse: () => _Msg('', '', DateTime.now()),
+      );
+      if (original.text.isNotEmpty) {
+        quoted = original.text;
+        quotedAuthor = original.direction == 'out' ? 'you' : 'them';
+      } else if (original.mediaPath != null) {
+        quoted = 'photo';
+        quotedAuthor = original.direction == 'out' ? 'you' : 'them';
+      } else if (original.fileName == 'voice.wav') {
+        quoted = 'voice message';
+        quotedAuthor = original.direction == 'out' ? 'you' : 'them';
+      } else if (original.fileName != null) {
+        quoted = original.fileName;
+        quotedAuthor = original.direction == 'out' ? 'you' : 'them';
+      } else {
+        quoted = 'message unavailable';
+      }
+    }
+    final isMatch = searchActive && _matches.contains(ix);
+    final isCurrent =
+        searchActive && _matches.isNotEmpty && _matches[_matchPos] == ix;
+    final dimmed = searchActive && !isMatch;
+    final showDate = ix == 0 || !_sameDay(_messages[ix - 1].when, m.when);
+    final prevMsg = ix > 0 ? _messages[ix - 1] : null;
+    final nextMsg = ix < _messages.length - 1 ? _messages[ix + 1] : null;
+    bool sameRun(_Msg? o) =>
+        o != null &&
+        o.direction == m.direction &&
+        !o.removing &&
+        _sameDay(o.when, m.when) &&
+        (m.when.difference(o.when).inSeconds).abs() < 120;
+    final firstInGroup = !sameRun(prevMsg) || ix == _firstUnreadIndex;
+    final lastInGroup = !sameRun(nextMsg);
+    return RepaintBoundary(
+      child: Column(
+        key: ObjectKey(m),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (showDate) _dateDivider(m.when),
+          if (ix == _firstUnreadIndex) _newMessagesDivider(),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 1.0, end: m.removing ? 0.0 : 1.0),
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOut,
+            child: _SwipeToReply(
+              onReply: () {
+                HapticFeedback.selectionClick();
+                setState(() {
+                  _replyTo = m;
+                  _replyFlash = m;
+                });
+                Future.delayed(const Duration(milliseconds: 700), () {
+                  if (mounted && identical(_replyFlash, m)) {
+                    setState(() => _replyFlash = null);
+                  }
+                });
+              },
+              child: SizedBox(
+                width: double.infinity,
+                child: AnimatedScale(
+                  scale: m.removing ? 0.92 : 1.0,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeIn,
+                  child: AnimatedOpacity(
+                    opacity:
+                        (m.removing ||
+                            (m.msgUid != null && m.msgUid == _liftedUid))
+                        ? 0.0
+                        : 1.0,
+                    duration: const Duration(milliseconds: 300),
+                    child: _Bubble(
+                      key: isMatch
+                          ? _matchKeys[i]
+                          : (i == _jumpIndex ? _jumpKey : null),
+                      msg: m,
+                      firstInGroup: firstInGroup,
+                      lastInGroup: lastInGroup,
+                      revealed: m.msgUid != null && m.msgUid == _revealedUid,
+                      onReveal: m.msgUid == null
+                          ? null
+                          : () => setState(
+                              () => _revealedUid = _revealedUid == m.msgUid
+                                  ? null
+                                  : m.msgUid,
+                            ),
+                      onRetry: (m) => m.mediaPath != null
+                          ? _retryImage(m)
+                          : m.filePath != null
+                          ? _retryMedia(m)
+                          : _retry(m),
+                      onLongPress: (ctx) => _showEmojiPickerAt(ctx, m),
+                      secure: m.secure,
+                      quotedText: quoted,
+                      onQuoteTap: m.replyTo == null
+                          ? null
+                          : () {
+                              for (final x in _messages) {
+                                if (x.msgUid != null && x.msgUid == m.replyTo) {
+                                  _scrollToMessage(x);
+                                  break;
+                                }
+                              }
+                            },
+                      quotedAuthor: quotedAuthor,
+                      query: searchActive ? _query : '',
+                      isCurrentMatch: isCurrent,
+                      dimmed: dimmed,
+                      ripple:
+                          m.msgUid != null &&
+                          (m.msgUid == _rippleUid || identical(m, _replyFlash)),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            builder: (_, f, child) => ClipRect(
+              child: Align(
+                alignment: Alignment.topCenter,
+                heightFactor: f,
+                child: child,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
+
+  // the whole-conversation lock is gone. protection now lives in the viewer,
+  // so a marked photo is covered and the chat around it stays usable.
+  void _applySecureContent() {}
 
   @override
   void dispose() {
-    appState.leftChat(widget.peerHaloId);
     if (appState.secureChats) appState.forceSecure(false);
     _pollTimer?.cancel();
     _burnTick?.cancel();
@@ -3319,10 +3502,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _openMediaGallery() async {
     final rows = await db.messagesFor(widget.peerHaloId);
     final paths = <String>[];
+    final securePaths = <String>{};
     for (final r in rows) {
       final mp = r['media_path'] as String?;
       if (mp != null && mp.isNotEmpty && await File(mp).exists()) {
         paths.add(mp);
+        if ((r['secure'] as int? ?? 0) == 1) securePaths.add(mp);
       }
     }
     if (!mounted) return;
@@ -3330,6 +3515,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       haloRoute(
         MediaGalleryScreen(
           paths: paths.reversed.toList(),
+          securePaths: securePaths,
           title: _nickname ?? widget.peerHaloId,
         ),
       ),
@@ -4155,7 +4341,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   void _scrollToBottom() {
-    if (!_scrollCtrl.hasClients) return;
+    if (!_scrollReady) return;
     setState(() => _seenCount = _messages.length);
     // reversed list: newest sits at offset 0.
     _scrollCtrl.animateTo(
@@ -4320,194 +4506,24 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           ),
                           itemCount: _messages.length,
                           itemBuilder: (c, i) {
-                            final ix = _messages.length - 1 - i;
-                            final m = _messages[ix];
-                            // a leaked empty control message (an old reaction/preview frame that fell
-                            // through) renders as a blank stub bubble. skip anything with no content.
-                            if (m.text.isEmpty &&
-                                m.mediaPath == null &&
-                                m.filePath == null &&
-                                m.preview == null) {
-                              return const SizedBox.shrink();
-                            }
-                            String? quoted;
-                            String? quotedAuthor;
-                            if (m.replyTo != null) {
-                              final original = _messages.firstWhere(
-                                (x) => x.msgUid == m.replyTo,
-                                orElse: () => _Msg('', '', DateTime.now()),
-                              );
-                              if (original.text.isNotEmpty) {
-                                quoted = original.text;
-                                quotedAuthor = original.direction == 'out'
-                                    ? 'you'
-                                    : 'them';
-                              } else if (original.mediaPath != null) {
-                                quoted = 'photo';
-                                quotedAuthor = original.direction == 'out'
-                                    ? 'you'
-                                    : 'them';
-                              } else if (original.fileName == 'voice.wav') {
-                                quoted = 'voice message';
-                                quotedAuthor = original.direction == 'out'
-                                    ? 'you'
-                                    : 'them';
-                              } else if (original.fileName != null) {
-                                quoted = original.fileName;
-                                quotedAuthor = original.direction == 'out'
-                                    ? 'you'
-                                    : 'them';
-                              } else {
-                                quoted = 'message unavailable';
-                              }
-                            }
-                            final isMatch =
-                                searchActive && _matches.contains(ix);
-                            final isCurrent =
-                                searchActive &&
-                                _matches.isNotEmpty &&
-                                _matches[_matchPos] == ix;
-                            final dimmed = searchActive && !isMatch;
-                            final showDate =
-                                ix == 0 ||
-                                !_sameDay(_messages[ix - 1].when, m.when);
-                            final prevMsg = ix > 0 ? _messages[ix - 1] : null;
-                            final nextMsg = ix < _messages.length - 1
-                                ? _messages[ix + 1]
-                                : null;
-                            bool sameRun(_Msg? o) =>
-                                o != null &&
-                                o.direction == m.direction &&
-                                !o.removing &&
-                                _sameDay(o.when, m.when) &&
-                                (m.when.difference(o.when).inSeconds).abs() <
-                                    120;
-                            final firstInGroup =
-                                !sameRun(prevMsg) || ix == _firstUnreadIndex;
-                            final lastInGroup = !sameRun(nextMsg);
-                            return RepaintBoundary(
-                              child: Column(
-                                key: ObjectKey(m),
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  if (showDate) _dateDivider(m.when),
-                                  if (ix == _firstUnreadIndex)
-                                    _newMessagesDivider(),
-                                  TweenAnimationBuilder<double>(
-                                    tween: Tween(
-                                      begin: 1.0,
-                                      end: m.removing ? 0.0 : 1.0,
-                                    ),
-                                    duration: const Duration(milliseconds: 280),
-                                    curve: Curves.easeOut,
-                                    child: _SwipeToReply(
-                                      onReply: () {
-                                        HapticFeedback.selectionClick();
-                                        setState(() {
-                                          _replyTo = m;
-                                          _replyFlash = m;
-                                        });
-                                        Future.delayed(
-                                          const Duration(milliseconds: 700),
-                                          () {
-                                            if (mounted &&
-                                                identical(_replyFlash, m)) {
-                                              setState(
-                                                () => _replyFlash = null,
-                                              );
-                                            }
-                                          },
-                                        );
-                                      },
-                                      child: SizedBox(
-                                        width: double.infinity,
-                                        child: AnimatedScale(
-                                          scale: m.removing ? 0.92 : 1.0,
-                                          duration: const Duration(
-                                            milliseconds: 300,
-                                          ),
-                                          curve: Curves.easeIn,
-                                          child: AnimatedOpacity(
-                                            opacity:
-                                                (m.removing ||
-                                                    (m.msgUid != null &&
-                                                        m.msgUid == _liftedUid))
-                                                ? 0.0
-                                                : 1.0,
-                                            duration: const Duration(
-                                              milliseconds: 300,
-                                            ),
-                                            child: _Bubble(
-                                              key: isMatch
-                                                  ? _matchKeys[i]
-                                                  : (i == _jumpIndex
-                                                        ? _jumpKey
-                                                        : null),
-                                              msg: m,
-                                              firstInGroup: firstInGroup,
-                                              lastInGroup: lastInGroup,
-                                              revealed:
-                                                  m.msgUid != null &&
-                                                  m.msgUid == _revealedUid,
-                                              onReveal: m.msgUid == null
-                                                  ? null
-                                                  : () => setState(
-                                                      () => _revealedUid =
-                                                          _revealedUid ==
-                                                              m.msgUid
-                                                          ? null
-                                                          : m.msgUid,
-                                                    ),
-                                              onRetry: (m) =>
-                                                  m.mediaPath != null
-                                                  ? _retryImage(m)
-                                                  : m.filePath != null
-                                                  ? _retryMedia(m)
-                                                  : _retry(m),
-                                              onLongPress: (ctx) =>
-                                                  _showEmojiPickerAt(ctx, m),
-                                              secure: m.secure,
-                                              quotedText: quoted,
-                                              onQuoteTap: m.replyTo == null
-                                                  ? null
-                                                  : () {
-                                                      for (final x
-                                                          in _messages) {
-                                                        if (x.msgUid != null &&
-                                                            x.msgUid ==
-                                                                m.replyTo) {
-                                                          _scrollToMessage(x);
-                                                          break;
-                                                        }
-                                                      }
-                                                    },
-                                              quotedAuthor: quotedAuthor,
-                                              query: searchActive ? _query : '',
-                                              isCurrentMatch: isCurrent,
-                                              dimmed: dimmed,
-                                              ripple:
-                                                  m.msgUid != null &&
-                                                  (m.msgUid == _rippleUid ||
-                                                      identical(
-                                                        m,
-                                                        _replyFlash,
-                                                      )),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    builder: (_, f, child) => ClipRect(
-                                      child: Align(
-                                        alignment: Alignment.topCenter,
-                                        heightFactor: f,
-                                        child: child,
-                                      ),
-                                    ),
+                            // one unbuildable message must never cost
+                            // the whole conversation. draw a stub and
+                            // carry on.
+                            try {
+                              return _buildRow(c, i, searchActive);
+                            } catch (e) {
+                              debugPrint('bubble failed: $e');
+                              return const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 6),
+                                child: Text(
+                                  "this message can't be shown",
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF8F8579),
                                   ),
-                                ],
-                              ),
-                            );
+                                ),
+                              );
+                            }
                           },
                         ),
                   Positioned(
@@ -4737,8 +4753,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           showHaloToast(
                             context,
                             _secureNext
-                                ? 'screenshots blocked for what you send next'
-                                : 'screenshot block off',
+                                ? 'next photo opens protected · they cannot '
+                                      'screenshot it'
+                                : 'photo protection off',
                           );
                         },
                         onToggleGhost: () => setState(() {
@@ -5911,8 +5928,11 @@ class _Bubble extends StatelessWidget {
                                 ),
                               if (msg.mediaPath != null)
                                 GestureDetector(
-                                  onTap: () =>
-                                      _openFullImage(context, msg.mediaPath!),
+                                  onTap: () => _openFullImage(
+                                    context,
+                                    msg.mediaPath!,
+                                    secure: msg.secure,
+                                  ),
                                   child: ClipRRect(
                                     borderRadius: msg.text.isNotEmpty
                                         ? const BorderRadius.vertical(
@@ -5933,8 +5953,24 @@ class _Bubble extends StatelessWidget {
                                             filterQuality: FilterQuality.medium,
                                             fit: BoxFit.cover,
                                             width: double.infinity,
-                                            errorBuilder: (_, __, ___) =>
-                                                const SizedBox.shrink(),
+                                            errorBuilder: (_, e, __) {
+                                              debugPrint(
+                                                'image failed: '
+                                                '${msg.mediaPath} / $e',
+                                              );
+                                              return Container(
+                                                height: 120,
+                                                alignment: Alignment.center,
+                                                color: Colors.black26,
+                                                child: Text(
+                                                  'photo unavailable',
+                                                  style: HaloType.mono(
+                                                    size: 11,
+                                                    color: HaloColors.text2,
+                                                  ),
+                                                ),
+                                              );
+                                            },
                                           ),
                                         ),
                                         if (showMeta)
@@ -7689,10 +7725,14 @@ class _Composer extends StatelessWidget {
 // field. pops the caption on send, or null on back (cancel).
 class MediaGalleryScreen extends StatelessWidget {
   final List<String> paths;
+  // which of them the sender marked. a protected photo must stay protected
+  // wherever it is opened from, or the gallery is a second door.
+  final Set<String> securePaths;
   final String title;
   const MediaGalleryScreen({
     super.key,
     required this.paths,
+    this.securePaths = const {},
     required this.title,
   });
 
@@ -7741,7 +7781,11 @@ class MediaGalleryScreen extends StatelessWidget {
               itemBuilder: (context, i) {
                 final path = paths[i];
                 return GestureDetector(
-                  onTap: () => _openFullImage(context, path),
+                  onTap: () => _openFullImage(
+                    context,
+                    path,
+                    secure: securePaths.contains(path),
+                  ),
                   child: Image.file(
                     File(path),
                     fit: BoxFit.cover,

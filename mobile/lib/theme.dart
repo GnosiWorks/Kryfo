@@ -221,7 +221,15 @@ void showHaloToast(BuildContext context, String message) {
       behavior: SnackBarBehavior.floating,
       elevation: 0,
       duration: const Duration(milliseconds: 3500),
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      margin: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        bottom:
+            MediaQueryData.fromView(
+              WidgetsBinding.instance.platformDispatcher.views.first,
+            ).size.height -
+            170,
+      ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(

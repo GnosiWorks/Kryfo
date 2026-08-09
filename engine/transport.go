@@ -65,6 +65,23 @@ func noteBootstrapProgress(pct int) {
 	txMu.Unlock()
 }
 
+// nothing has been sent or received for a long while. any guard that says
+// "leave tor alone" has to yield to this, or a wedged dialer never recovers.
+func trafficStalled() bool {
+	txMu.RLock()
+	defer txMu.RUnlock()
+	last := lastSend
+	if lastRecv.After(last) {
+		last = lastRecv
+	}
+	if last.IsZero() {
+		// nothing has ever moved this session; fall back to the bootstrap
+		// clock so a genuinely fresh start is not called stalled.
+		return !lastBoot.IsZero() && time.Since(lastBoot) > 3*time.Minute
+	}
+	return time.Since(last) > 3*time.Minute
+}
+
 func bootstrapMovingRecently() bool {
 	txMu.RLock()
 	defer txMu.RUnlock()
