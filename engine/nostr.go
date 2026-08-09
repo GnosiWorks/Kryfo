@@ -234,17 +234,24 @@ func torNostrClient() (*http.Client, error) {
 		// rebuild just re-hangs. past a higher bar the process itself is gone,
 		// so relaunch tor (async, it takes seconds and holds startMu).
 		if dialerHangs >= 5 {
-			if bootstrapMovingRecently() {
+			// a guard that cannot expire is not a safeguard, it is a trap.
+			// nothing moving for three minutes overrides all of them.
+			stalled := trafficStalled()
+			if !stalled && bootstrapMovingRecently() {
 				log.Println("nostr: dialer hung but bootstrap is still climbing, leaving tor alone")
 				return nil, fmt.Errorf("tor still bootstrapping")
 			}
-			// one dead bridge in a list of four produces exactly this, and
-			// restarting a tor that is already reachable turns it into a
-			// loop that ends with the process being killed.
-			if bridgesEnabled() && bridgeWorkingRecently() {
+			// one dead bridge among several produces exactly this, and
+			// restarting a tor that is already working turns it into a loop
+			// that ends with the process being killed. but only while
+			// something is actually getting through.
+			if !stalled && bridgesEnabled() && bridgeWorkingRecently() {
 				log.Println("nostr: dialer hung but a bridge is still carrying traffic, leaving tor alone")
 				dialerHangs = 0
 				return nil, fmt.Errorf("bridge dial failed")
+			}
+			if stalled {
+				log.Println("nostr: nothing has moved in 3 minutes, restarting tor regardless")
 			}
 			dialerHangs = 0
 			go restartTor()

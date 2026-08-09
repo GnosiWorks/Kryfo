@@ -267,8 +267,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _Section('security'),
           _Row(
             icon: Icons.photo_camera_back_outlined,
-            label: 'protect conversations',
-            hint: 'blocks screenshots inside chats, on this phone',
+            label: 'screen security',
+            hint: 'hides kryfo from recents and blocks screenshots here',
             value: appState.secureChats ? 'on' : 'off',
             onTap: () async {
               await appState.setSecureChats(!appState.secureChats);
