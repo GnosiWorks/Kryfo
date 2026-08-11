@@ -8057,7 +8057,18 @@ class LinkPreviewCard extends StatelessWidget {
                   // decode at card width, not full res - lighter on weak phones
                   // while scrolling (samsung).
                   cacheWidth: 520,
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                  errorBuilder: (_, e, __) {
+                    debugPrint('gallery image failed: $e');
+                    return Container(
+                      color: Colors.black26,
+                      alignment: Alignment.center,
+                      child: Icon(
+                        Icons.broken_image_outlined,
+                        size: 18,
+                        color: HaloColors.text3,
+                      ),
+                    );
+                  },
                 ),
               ),
             Padding(
@@ -8103,7 +8114,7 @@ class LinkPreviewCard extends StatelessWidget {
 // the real route for every message today.
 PrivacyMode _pmFrom(String m) => m == 'fast'
     ? PrivacyMode.fast
-    : (m == 'balanced' || m == 'normal')
+    : m == 'balanced'
     ? PrivacyMode.normal
     : PrivacyMode.private;
 
