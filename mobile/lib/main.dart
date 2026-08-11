@@ -3830,15 +3830,13 @@ class AppState extends ChangeNotifier {
     // returned 503 on fifty-three straight attempts and snort tls-timed-out
     // on every one, so both are out. the engine benches the rest on its own
     // if they start behaving the same way.
-    _nostrInitOnIsolate(
-      // our own relay first (tor onion, always awake) - public relays fall back.
-      // the engine dials every relay through tor, so ws:// over the onion is fine.
-      'ws://z4waup3c6j6gknkjba72cqjjuffhgg6gtgqfu3vetzcvgoluvr42srid.onion,'
-      'wss://nos.lol,'
-      'wss://relay.primal.net,'
-      'wss://nostr.mom,'
-      'wss://nostr.oxtr.dev',
-    );
+    // read the saved mode before anything touches the network, tell the
+    // engine, and pick the matching relay list. doing this after would start
+    // every session on tor regardless of what the person chose.
+    await loadSendMode();
+    engine.setTransportMode(_sendMode);
+    debugPrint('transport: booting in $_sendMode');
+    _nostrInitOnIsolate(relaysFor(_sendMode));
     // has to follow the relay list: the runner snapshots it on start and
     // gives up if it is empty.
     _loadFirstContact();

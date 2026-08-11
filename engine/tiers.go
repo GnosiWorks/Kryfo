@@ -19,6 +19,7 @@ package main
 import "C"
 
 import (
+	"crypto/tls"
 	"log"
 	"net"
 	"net/http"
@@ -59,7 +60,11 @@ func directNostrClient() *http.Client {
 			}).DialContext,
 			TLSHandshakeTimeout:   10 * time.Second,
 			ResponseHeaderTimeout: 15 * time.Second,
-			ForceAttemptHTTP2:     true,
+			// http/2 has no websocket upgrade. a relay behind a proxy that
+			// offers h2 would negotiate it and then hang forever on the
+			// handshake, which reads as a slow network rather than a bug.
+			ForceAttemptHTTP2: false,
+			TLSNextProto:      map[string]func(string, *tls.Conn) http.RoundTripper{},
 		},
 		Timeout: 60 * time.Second,
 	}

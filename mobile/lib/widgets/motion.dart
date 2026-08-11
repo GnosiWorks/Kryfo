@@ -19,6 +19,11 @@ const kText3 = Color(0xFF948A7E);
 const kAmber = Color(0xFFF59E0B);
 const kAmberSoft = Color(0x24F59E0B);
 const kGreen = Color(0xFF34D399);
+// the onion route's own colour, so three hops read differently from one
+const kViolet = Color(0xFFA78BFA);
+// the relay route's colour. cool enough never to read as tor's violet or
+// amber's "still working on it".
+const kCyan = Color(0xFF4BB8C9);
 const kGreenSoft = Color(0x2434D399);
 
 enum TorStatus { off, starting, bootstrapped, publishing, reachable }
@@ -601,6 +606,76 @@ class _ZigZagWarmupPainter extends CustomPainter {
       old.lit.length != lit.length;
 }
 
+// a padlock snapping shut with two dots trailing it. the shackle lifts and
+// closes on a loop; the dots brighten in sequence behind it, so the thing
+// reads as sealed first and travelling second.
+class _LockTrailPainter extends CustomPainter {
+  final double t;
+  final Color color;
+  _LockTrailPainter({required this.t, required this.color});
+
+  @override
+  void paint(Canvas c, Size s) {
+    final body = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    final stroke = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round;
+
+    // 0 open, 1 shut. sits closed for most of the cycle so it does not
+    // look like it is struggling.
+    final close = t < 0.35
+        ? (t / 0.35)
+        : t < 0.75
+        ? 1.0
+        : 1.0 - ((t - 0.75) / 0.25);
+    final lift = (1 - close) * 3.0;
+
+    const bw = 11.0;
+    const bh = 8.0;
+    final bx = 0.0;
+    final by = s.height - bh;
+
+    c.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(bx, by, bw, bh),
+        const Radius.circular(2),
+      ),
+      body,
+    );
+
+    // shackle: a half round that rides up as it opens
+    final r = 3.4;
+    final cx = bx + bw / 2;
+    final cy = by - lift;
+    c.drawArc(
+      Rect.fromCircle(center: Offset(cx, cy), radius: r),
+      3.14159,
+      3.14159,
+      false,
+      stroke,
+    );
+
+    // two dots behind, brightening in turn
+    for (var i = 0; i < 2; i++) {
+      final phase = (t + i * 0.18) % 1.0;
+      final a = 0.18 + 0.72 * (0.5 - (phase - 0.5).abs()) * 2;
+      c.drawCircle(
+        Offset(bx + bw + 4.5 + i * 4.0, s.height - bh / 2),
+        1.3,
+        Paint()..color = color.withValues(alpha: a.clamp(0.0, 1.0)),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _LockTrailPainter o) =>
+      o.t != t || o.color != color;
+}
+
 // === SEND PILL (mode-aware) ===
 // fast = no pill (delivered ✓ shows inline in bubble meta)
 // normal = "1 hop" + 1 rotating onion
@@ -622,7 +697,11 @@ class _SendPillState extends State<SendPill>
     super.initState();
     _ctl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1400),
+      // one hop turns faster than three. the pace is the difference you feel
+      // before you read the label.
+      duration: Duration(
+        milliseconds: widget.mode == PrivacyMode.private ? 1400 : 800,
+      ),
     )..repeat();
   }
 
@@ -655,7 +734,19 @@ class _SendPillState extends State<SendPill>
     }
   }
 
-  Color get _color => widget.delivered ? kGreen : kAmber;
+  // the route has a colour of its own, so the mode reads at a glance
+  // without anyone having to parse the words.
+  Color get _color {
+    if (widget.delivered) return kGreen;
+    switch (widget.mode) {
+      case PrivacyMode.private:
+        return kViolet;
+      case PrivacyMode.normal:
+        return kCyan;
+      case PrivacyMode.fast:
+        return kGreen;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -690,6 +781,19 @@ class _SendPillState extends State<SendPill>
                 color: _color,
                 height: 1,
                 fontWeight: FontWeight.w700,
+              ),
+            ),
+          ] else if (widget.mode == PrivacyMode.normal) ...[
+            const SizedBox(width: 7),
+            SizedBox(
+              width: 22,
+              height: 11,
+              child: AnimatedBuilder(
+                animation: _ctl,
+                builder: (ctx, _) => CustomPaint(
+                  painter: _LockTrailPainter(t: _ctl.value, color: _color),
+                  size: Size.infinite,
+                ),
               ),
             ),
           ] else if (_onionCount > 0) ...[
