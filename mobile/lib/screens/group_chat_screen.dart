@@ -257,11 +257,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   void _onGroupScroll() {
-    if (!_scrollCtrl.hasClients) return;
+    if (!_scrollReady) return;
     // not reversed here, unlike 1:1 - the newest message lives at
     // maxScrollExtent, so distance from the bottom is the gap to it.
-    final pos = _scrollCtrl.position;
-    final fromBottom = pos.maxScrollExtent - pos.pixels;
+    final fromBottom = _maxScroll - _pixels;
     final show = fromBottom > 240;
     if (!show) _seenCount = _messages.length;
     if (show != _showScrollDown && mounted) {
@@ -270,7 +269,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // the settle window also stops a stray pre-jump scroll event on open
     // from loading older and anchoring the view at the top.
     if (_suppressSticky) return;
-    if (pos.pixels < 400) _loadOlder();
+    if (_pixels < 400) _loadOlder();
   }
 
   Future<void> _loadOlder() async {
@@ -462,10 +461,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       // reading it. a background reload (reaction, preview, burn) yanking
       // the view to the bottom is what kept throwing pin jumps and
       // scrollback to the end of the chat.
-      final nearEnd =
-          !_scrollCtrl.hasClients ||
-          _scrollCtrl.position.maxScrollExtent - _scrollCtrl.position.pixels <
-              240;
+      final nearEnd = !_scrollReady || _maxScroll - _pixels < 240;
       if (!_loaded || (nearEnd && _jumpUid == null)) {
         _scrollToEnd(instant: true);
       }
@@ -604,13 +600,97 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     _scrollToEnd();
   }
 
+  // .position asserts exactly one attached scroll view, and during a route
+  // transition two can be. hasClients is not enough on its own - the
+  // controller attaches before the list has dimensions to read.
+  bool get _scrollReady =>
+      _scrollCtrl.positions.length == 1 &&
+      _scrollCtrl.positions.first.hasContentDimensions;
+
+  double get _maxScroll =>
+      _scrollReady ? _scrollCtrl.positions.first.maxScrollExtent : 0.0;
+
+  double get _pixels => _scrollReady ? _scrollCtrl.positions.first.pixels : 0.0;
+
+  Widget _buildGroupRow(int i) {
+    final m = _messages[i];
+    final prev = i > 0 ? _messages[i - 1] : null;
+    final showSender =
+        m.direction == 'in' &&
+        (prev == null || prev.sender != m.sender || prev.direction != 'in');
+    String? quoted;
+    String? quotedAuthor;
+    if (m.replyTo != null) {
+      final orig = _messages.firstWhere(
+        (x) => x.msgUid == m.replyTo,
+        orElse: () =>
+            _GMsg(sender: '', direction: '', text: '', when: DateTime.now()),
+      );
+      if (orig.direction.isNotEmpty) {
+        quotedAuthor = orig.direction == 'out' ? 'you' : orig.senderName;
+      }
+      if (orig.text.isNotEmpty) {
+        quoted = orig.text;
+      } else if (orig.mediaPath != null) {
+        quoted = 'photo';
+      } else if (orig.fileName == 'voice.wav') {
+        quoted = 'voice message';
+      } else if (orig.fileName != null) {
+        quoted = orig.fileName;
+      } else {
+        quoted = 'message unavailable';
+        quotedAuthor = null;
+      }
+    }
+    final animateIn = m.fresh;
+    m.fresh = false;
+    final showDate = i == 0 || (prev != null && !_sameDay(prev.when, m.when));
+    return Column(
+      key: ValueKey(m.msgUid ?? 'r${m.rowid}'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (showDate) _dateDivider(m.when, m.msgUid ?? 'r${m.rowid}'),
+        RepaintBoundary(
+          key: (m.msgUid != null && m.msgUid == _jumpUid) ? _jumpKey : null,
+          child: _groupBubbleEntrance(
+            isOut: m.direction == 'out',
+            active: animateIn,
+            child: _GroupSwipeToReply(
+              onReply: () => setState(() => _replyTo = m),
+              child: _GroupBubble(
+                m: m,
+                showSender: showSender,
+                senderBadge: _badgeFor(m.sender),
+                quotedText: quoted,
+                quotedAuthor: quotedAuthor,
+                onLongPress: (ctx) => _showEmojiPickerAt(ctx, m),
+                onRetry: m.failed ? () => _retryGroup(m) : null,
+                ripple: m.msgUid != null && m.msgUid == _rippleUid,
+                onReplyTap: m.replyTo == null
+                    ? null
+                    : () {
+                        for (final x in _messages) {
+                          if (x.msgUid != null && x.msgUid == m.replyTo) {
+                            _scrollToGroupMessage(x);
+                            break;
+                          }
+                        }
+                      },
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   void _scrollToEnd({bool instant = false}) {
     // on first open the list isn't laid out yet, so maxScrollExtent is 0 and a
     // plain animateTo leaves us pinned at the top. jump after the frame, and if
     // extent is still growing (images sizing in), snap once more.
     void go() {
-      if (!_scrollCtrl.hasClients) return;
-      final max = _scrollCtrl.position.maxScrollExtent;
+      if (!_scrollReady) return;
+      final max = _maxScroll;
       if (instant) {
         _scrollCtrl.jumpTo(max);
       } else {
@@ -626,8 +706,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       go();
       // a second pass after media/layout settles catches the real bottom.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_scrollCtrl.hasClients) {
-          _scrollCtrl.jumpTo(_scrollCtrl.position.maxScrollExtent);
+        if (mounted && _scrollReady) {
+          _scrollCtrl.jumpTo(_maxScroll);
         }
       });
     });
@@ -1405,8 +1485,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   void _updateSticky() {
-    if (_suppressSticky || !_scrollCtrl.hasClients) return;
-    if (_scrollCtrl.position.maxScrollExtent <= 0) return;
+    if (_suppressSticky || !_scrollReady) return;
+    if (_maxScroll <= 0) return;
     // throttle, the raw scroll stream fires many times a frame.
     final now = DateTime.now();
     if (now.difference(_lastSticky).inMilliseconds < 100) return;
@@ -1501,9 +1581,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           final want = vp
               .getOffsetToReveal(ro, 0.3)
               .offset
-              .clamp(0.0, _scrollCtrl.position.maxScrollExtent)
+              .clamp(0.0, _maxScroll)
               .toDouble();
-          if ((want - _scrollCtrl.position.pixels).abs() > 4) {
+          if (!_scrollReady) return;
+          if ((want - _pixels).abs() > 4) {
             _scrollCtrl.jumpTo(want);
           }
         } catch (_) {
@@ -1519,13 +1600,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // rough-jump so the target gets built, then ensureVisible lands it. this
   // list is NOT reversed (unlike 1:1), older sits near offset 0.
   void _scrollToIndex(int idx) {
-    if (idx < 0 || idx >= _messages.length || !_scrollCtrl.hasClients) return;
+    if (idx < 0 || idx >= _messages.length || !_scrollReady) return;
     final m = _messages[idx];
     setState(() => _jumpUid = m.msgUid);
-    final max = _scrollCtrl.position.maxScrollExtent;
+    final max = _maxScroll;
     final frac = idx / _messages.length;
-    final approx = (frac * max - _scrollCtrl.position.viewportDimension * 0.3)
-        .clamp(0.0, max);
+    final vpDim = _scrollCtrl.positions.first.viewportDimension;
+    final approx = (frac * max - vpDim * 0.3).clamp(0.0, max);
     _scrollCtrl.jumpTo(approx.clamp(0.0, max));
     _settleJump(0);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -2047,99 +2128,23 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                           ),
                           itemCount: _messages.length,
                           itemBuilder: (_, i) {
-                            final m = _messages[i];
-                            final prev = i > 0 ? _messages[i - 1] : null;
-                            final showSender =
-                                m.direction == 'in' &&
-                                (prev == null ||
-                                    prev.sender != m.sender ||
-                                    prev.direction != 'in');
-                            String? quoted;
-                            String? quotedAuthor;
-                            if (m.replyTo != null) {
-                              final orig = _messages.firstWhere(
-                                (x) => x.msgUid == m.replyTo,
-                                orElse: () => _GMsg(
-                                  sender: '',
-                                  direction: '',
-                                  text: '',
-                                  when: DateTime.now(),
+                            // one unbuildable message must not cost the
+                            // whole conversation.
+                            try {
+                              return _buildGroupRow(i);
+                            } catch (e) {
+                              debugPrint('group bubble failed: \$e');
+                              return const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 6),
+                                child: Text(
+                                  "this message can't be shown",
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF8F8579),
+                                  ),
                                 ),
                               );
-                              if (orig.direction.isNotEmpty) {
-                                quotedAuthor = orig.direction == 'out'
-                                    ? 'you'
-                                    : orig.senderName;
-                              }
-                              if (orig.text.isNotEmpty) {
-                                quoted = orig.text;
-                              } else if (orig.mediaPath != null) {
-                                quoted = 'photo';
-                              } else if (orig.fileName == 'voice.wav') {
-                                quoted = 'voice message';
-                              } else if (orig.fileName != null) {
-                                quoted = orig.fileName;
-                              } else {
-                                quoted = 'message unavailable';
-                                quotedAuthor = null;
-                              }
                             }
-                            final animateIn = m.fresh;
-                            m.fresh = false;
-                            final showDate =
-                                i == 0 ||
-                                (prev != null && !_sameDay(prev.when, m.when));
-                            return Column(
-                              key: ValueKey(m.msgUid ?? 'r${m.rowid}'),
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (showDate)
-                                  _dateDivider(
-                                    m.when,
-                                    m.msgUid ?? 'r${m.rowid}',
-                                  ),
-                                RepaintBoundary(
-                                  key:
-                                      (m.msgUid != null && m.msgUid == _jumpUid)
-                                      ? _jumpKey
-                                      : null,
-                                  child: _groupBubbleEntrance(
-                                    isOut: m.direction == 'out',
-                                    active: animateIn,
-                                    child: _GroupSwipeToReply(
-                                      onReply: () =>
-                                          setState(() => _replyTo = m),
-                                      child: _GroupBubble(
-                                        m: m,
-                                        showSender: showSender,
-                                        senderBadge: _badgeFor(m.sender),
-                                        quotedText: quoted,
-                                        quotedAuthor: quotedAuthor,
-                                        onLongPress: (ctx) =>
-                                            _showEmojiPickerAt(ctx, m),
-                                        onRetry: m.failed
-                                            ? () => _retryGroup(m)
-                                            : null,
-                                        ripple:
-                                            m.msgUid != null &&
-                                            m.msgUid == _rippleUid,
-                                        onReplyTap: m.replyTo == null
-                                            ? null
-                                            : () {
-                                                for (final x in _messages) {
-                                                  if (x.msgUid != null &&
-                                                      x.msgUid == m.replyTo) {
-                                                    _scrollToGroupMessage(x);
-                                                    break;
-                                                  }
-                                                }
-                                              },
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
                           },
                         ),
                         Positioned(

@@ -766,14 +766,22 @@ class HaloDb {
           ''');
         }
         if (oldV < 33) {
-          await db.execute(
-            'ALTER TABLE messages ADD COLUMN delivered INTEGER NOT NULL DEFAULT 0',
-          );
+          try {
+            await db.execute(
+              'ALTER TABLE messages ADD COLUMN delivered INTEGER NOT NULL DEFAULT 0',
+            );
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 32) {
-          await db.execute(
-            'ALTER TABLE contacts ADD COLUMN supporter_badge TEXT',
-          );
+          try {
+            await db.execute(
+              'ALTER TABLE contacts ADD COLUMN supporter_badge TEXT',
+            );
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 31) {
           // group retries used to INSERT the local row again; duplicate
@@ -787,15 +795,29 @@ class HaloDb {
           ''');
         }
         if (oldV < 30) {
-          await db.execute('ALTER TABLE contacts ADD COLUMN peer_bundle TEXT');
+          try {
+            await db.execute(
+              'ALTER TABLE contacts ADD COLUMN peer_bundle TEXT',
+            );
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 29) {
-          await db.execute('ALTER TABLE groups ADD COLUMN atmosphere TEXT');
+          try {
+            await db.execute('ALTER TABLE groups ADD COLUMN atmosphere TEXT');
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 28) {
-          await db.execute(
-            'ALTER TABLE groups ADD COLUMN unread INTEGER NOT NULL DEFAULT 0',
-          );
+          try {
+            await db.execute(
+              'ALTER TABLE groups ADD COLUMN unread INTEGER NOT NULL DEFAULT 0',
+            );
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 27) {
           await db.execute('''
@@ -808,52 +830,104 @@ class HaloDb {
         if (oldV < 26) {
           // message requests: existing contacts stay accepted (default 1),
           // only new unknown senders arrive unaccepted.
-          await db.execute(
-            'ALTER TABLE contacts ADD COLUMN accepted INTEGER NOT NULL DEFAULT 1',
-          );
+          try {
+            await db.execute(
+              'ALTER TABLE contacts ADD COLUMN accepted INTEGER NOT NULL DEFAULT 1',
+            );
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 25) {
-          await db.execute('ALTER TABLE groups ADD COLUMN admin_id TEXT');
+          try {
+            await db.execute('ALTER TABLE groups ADD COLUMN admin_id TEXT');
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 24) {
-          await db.execute('ALTER TABLE groups ADD COLUMN description TEXT');
+          try {
+            await db.execute('ALTER TABLE groups ADD COLUMN description TEXT');
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 23) {
-          await db.execute('ALTER TABLE messages ADD COLUMN preview TEXT');
+          try {
+            await db.execute('ALTER TABLE messages ADD COLUMN preview TEXT');
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 22) {
-          await db.execute(
-            'ALTER TABLE messages ADD COLUMN voice_disguised INTEGER NOT NULL DEFAULT 0',
-          );
-          await db.execute(
-            'ALTER TABLE messages ADD COLUMN saved INTEGER NOT NULL DEFAULT 0',
-          );
+          try {
+            await db.execute(
+              'ALTER TABLE messages ADD COLUMN voice_disguised INTEGER NOT NULL DEFAULT 0',
+            );
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
+          try {
+            await db.execute(
+              'ALTER TABLE messages ADD COLUMN saved INTEGER NOT NULL DEFAULT 0',
+            );
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 21) {
-          await db.execute('ALTER TABLE messages ADD COLUMN file_path TEXT');
-          await db.execute('ALTER TABLE messages ADD COLUMN file_name TEXT');
+          try {
+            await db.execute('ALTER TABLE messages ADD COLUMN file_path TEXT');
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
+          try {
+            await db.execute('ALTER TABLE messages ADD COLUMN file_name TEXT');
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 20) {
-          await db.execute(
-            'ALTER TABLE contacts ADD COLUMN key_changed INTEGER NOT NULL DEFAULT 0',
-          );
+          try {
+            await db.execute(
+              'ALTER TABLE contacts ADD COLUMN key_changed INTEGER NOT NULL DEFAULT 0',
+            );
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 19) {
-          await db.execute(
-            'ALTER TABLE messages ADD COLUMN sent INTEGER NOT NULL DEFAULT 1',
-          );
+          try {
+            await db.execute(
+              'ALTER TABLE messages ADD COLUMN sent INTEGER NOT NULL DEFAULT 1',
+            );
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 2) await _signalTables(db);
         if (oldV < 3) {
-          await db.execute('ALTER TABLE messages ADD COLUMN burn_at INTEGER');
+          try {
+            await db.execute('ALTER TABLE messages ADD COLUMN burn_at INTEGER');
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 4) {
-          await db.execute(
-            'ALTER TABLE contacts ADD COLUMN back_paired INTEGER NOT NULL DEFAULT 0',
-          );
+          try {
+            await db.execute(
+              'ALTER TABLE contacts ADD COLUMN back_paired INTEGER NOT NULL DEFAULT 0',
+            );
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 5) {
-          await db.execute('ALTER TABLE messages ADD COLUMN msg_uid TEXT');
+          try {
+            await db.execute('ALTER TABLE messages ADD COLUMN msg_uid TEXT');
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
           await db.execute(
             'CREATE INDEX IF NOT EXISTS idx_messages_msg_uid ON messages(msg_uid)',
           );
@@ -868,60 +942,116 @@ class HaloDb {
           ''');
         }
         if (oldV < 6) {
-          await db.execute('ALTER TABLE messages ADD COLUMN reply_to TEXT');
+          try {
+            await db.execute('ALTER TABLE messages ADD COLUMN reply_to TEXT');
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 8) {
-          await db.execute('ALTER TABLE contacts ADD COLUMN nickname TEXT');
+          try {
+            await db.execute('ALTER TABLE contacts ADD COLUMN nickname TEXT');
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 9) {
-          await db.execute(
-            'ALTER TABLE messages ADD COLUMN edited INTEGER NOT NULL DEFAULT 0',
-          );
+          try {
+            await db.execute(
+              'ALTER TABLE messages ADD COLUMN edited INTEGER NOT NULL DEFAULT 0',
+            );
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 10) {
-          await db.execute(
-            'ALTER TABLE contacts ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0',
-          );
+          try {
+            await db.execute(
+              'ALTER TABLE contacts ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0',
+            );
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 11) {
-          await db.execute(
-            'ALTER TABLE contacts ADD COLUMN muted INTEGER NOT NULL DEFAULT 0',
-          );
+          try {
+            await db.execute(
+              'ALTER TABLE contacts ADD COLUMN muted INTEGER NOT NULL DEFAULT 0',
+            );
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 12) {
-          await db.execute(
-            'ALTER TABLE contacts ADD COLUMN archived INTEGER NOT NULL DEFAULT 0',
-          );
+          try {
+            await db.execute(
+              'ALTER TABLE contacts ADD COLUMN archived INTEGER NOT NULL DEFAULT 0',
+            );
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 13) {
-          await db.execute(
-            'ALTER TABLE messages ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0',
-          );
+          try {
+            await db.execute(
+              'ALTER TABLE messages ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0',
+            );
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 14) {
-          await db.execute(
-            'ALTER TABLE contacts ADD COLUMN verified INTEGER NOT NULL DEFAULT 0',
-          );
+          try {
+            await db.execute(
+              'ALTER TABLE contacts ADD COLUMN verified INTEGER NOT NULL DEFAULT 0',
+            );
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 16) {
-          await db.execute(
-            'ALTER TABLE contacts ADD COLUMN unread INTEGER NOT NULL DEFAULT 0',
-          );
+          try {
+            await db.execute(
+              'ALTER TABLE contacts ADD COLUMN unread INTEGER NOT NULL DEFAULT 0',
+            );
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 17) {
-          await db.execute('ALTER TABLE contacts ADD COLUMN atmosphere TEXT');
+          try {
+            await db.execute('ALTER TABLE contacts ADD COLUMN atmosphere TEXT');
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 18) {
-          await db.execute('ALTER TABLE contacts ADD COLUMN note TEXT');
-          await db.execute(
-            'ALTER TABLE contacts ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0',
-          );
+          try {
+            await db.execute('ALTER TABLE contacts ADD COLUMN note TEXT');
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
+          try {
+            await db.execute(
+              'ALTER TABLE contacts ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0',
+            );
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 15) {
-          await db.execute('ALTER TABLE messages ADD COLUMN media_path TEXT');
+          try {
+            await db.execute('ALTER TABLE messages ADD COLUMN media_path TEXT');
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
         }
         if (oldV < 7) {
-          await db.execute('ALTER TABLE messages ADD COLUMN group_id TEXT');
+          try {
+            await db.execute('ALTER TABLE messages ADD COLUMN group_id TEXT');
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
           await db.execute(
             'CREATE INDEX IF NOT EXISTS idx_messages_group_id ON messages(group_id)',
           );
@@ -2807,23 +2937,21 @@ class AppState extends ChangeNotifier {
   // own relay and nothing else, so only we see an ip. fast talks plain tls to
   // every relay, so they all do.
   static const _clearnetRelay = 'wss://relay.kryfo.app';
+  // one list. two copies drift, and the drift is invisible until someone
+  // cannot receive on one route.
+  static const _publicRelays =
+      'wss://nos.lol,wss://relay.primal.net,wss://nostr.mom,'
+      'wss://nostr.oxtr.dev';
 
   String relaysFor(String mode) {
     switch (mode) {
       case 'balanced':
         return _clearnetRelay;
       case 'fast':
-        return '$_clearnetRelay,'
-            'wss://nos.lol,'
-            'wss://relay.primal.net,'
-            'wss://nostr.mom,'
-            'wss://nostr.oxtr.dev';
+        return '$_clearnetRelay,$_publicRelays';
       default:
-        return 'ws://z4waup3c6j6gknkjba72cqjjuffhgg6gtgqfu3vetzcvgoluvr42srid.onion,'
-            'wss://nos.lol,'
-            'wss://relay.primal.net,'
-            'wss://nostr.mom,'
-            'wss://nostr.oxtr.dev';
+        return 'ws://z4waup3c6j6gknkjba72cqjjuffhgg6gtgqfu3vetzcvgoluvr42srid'
+            '.onion,$_publicRelays';
     }
   }
 
@@ -2872,17 +3000,6 @@ class AppState extends ChangeNotifier {
   // a chat currently showing a message the sender marked. their app asked
   // for this, and ours is the one that has to honour it - the same way
   // instagram and signal view-once work, because both ends run the same app.
-  final Set<String> _secureChatIds = <String>{};
-
-  void chatHasSecureContent(String haloId, bool yes) {
-    final changed = yes
-        ? _secureChatIds.add(haloId)
-        : _secureChatIds.remove(haloId);
-    if (changed) forceSecure(_secureChatIds.isNotEmpty);
-  }
-
-  void leftChat(String haloId) => chatHasSecureContent(haloId, false);
-
   Future<void> setSecureChats(bool v) async {
     _secureChats = v;
     await const FlutterSecureStorage().write(
@@ -3551,7 +3668,12 @@ class AppState extends ChangeNotifier {
 
   // tor can carry traffic. same test the outbox uses, exposed so the
   // transport screen and the ui agree instead of each deciding for itself.
+  // mirrors torReadyNow() in the engine. outside onion nothing is waiting on
+  // a bootstrap, so "ready" is simply whether we have a network - otherwise
+  // the stale-send reaper never runs in relay mode and failed sends sit
+  // frozen with no way to retry them.
   bool get torReady =>
+      _sendMode != 'private' ||
       _torStatus == TorStatus.bootstrapped ||
       _torStatus == TorStatus.publishing ||
       _torStatus == TorStatus.reachable;
@@ -3834,6 +3956,9 @@ class AppState extends ChangeNotifier {
     // engine, and pick the matching relay list. doing this after would start
     // every session on tor regardless of what the person chose.
     await loadSendMode();
+    // 'normal' was the old name for private. migrating here rather than on
+    // the modes screen means the rest of the app never sees it.
+    if (_sendMode == 'normal') await setSendMode('private');
     engine.setTransportMode(_sendMode);
     debugPrint('transport: booting in $_sendMode');
     _nostrInitOnIsolate(relaysFor(_sendMode));

@@ -132,17 +132,20 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
                           : null,
                     ),
                     _PushCard(
-                      name: 'Faster via Google',
-                      active: _mode == PushMode.fcm,
+                      name: 'Via Google',
+                      active: false,
                       soon: true,
                       desc:
-                          'Google sends a wake-up ping. Message content is never seen by Google, but timing metadata is. Available in a future Play Store build.',
+                          'Google would send the wake-up ping. It never sees '
+                          'what you were sent, but it does learn that you were '
+                          'sent something, and when. We are looking at '
+                          'UnifiedPush instead - same speed, no Google.',
                       badges: const [
-                        'more metadata',
-                        'instant',
+                        'not available',
                         'needs Google Play',
+                        'leaks timing',
                       ],
-                      onTap: () => _pick(PushMode.fcm),
+                      onTap: () {},
                     ),
                     const SizedBox(height: 32),
                     const Padding(
