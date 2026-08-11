@@ -8103,7 +8103,7 @@ class LinkPreviewCard extends StatelessWidget {
 // the real route for every message today.
 PrivacyMode _pmFrom(String m) => m == 'fast'
     ? PrivacyMode.fast
-    : m == 'normal'
+    : (m == 'balanced' || m == 'normal')
     ? PrivacyMode.normal
     : PrivacyMode.private;
 

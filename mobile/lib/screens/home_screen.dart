@@ -303,27 +303,47 @@ class _ConnectionHaloState extends State<_ConnectionHalo>
   // publishing our own onion so peers can dial us directly. saying
   // "connecting" through all of it made a usable app look broken.
   String _label() {
+    // outside onion mode nothing waits on tor, so the tor phase is not the
+    // thing to report - the connection is simply up.
+    // outside onion there is no bootstrap to wait on, so the label names the
+    // route rather than reporting a phase that does not exist.
+    if (appState.sendMode == 'balanced') {
+      return appState.online ? 'Via Relay' : 'Offline';
+    }
+    if (appState.sendMode == 'fast') {
+      return appState.online ? 'Fast' : 'Offline';
+    }
     switch (widget.status) {
       case TorStatus.reachable:
-        return 'connected';
+        return 'Connected';
       case TorStatus.bootstrapped:
       case TorStatus.publishing:
-        return 'ready to send';
+        return 'Ready To Send';
       case TorStatus.off:
       case TorStatus.starting:
-        return _peak > 0 ? 'connecting $_peak%' : 'connecting';
+        return _peak > 0 ? 'Connecting $_peak%' : 'Connecting';
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final reachable = widget.status == TorStatus.reachable;
+    final direct = appState.sendMode != 'private';
+    final reachable = direct
+        ? appState.online
+        : widget.status == TorStatus.reachable;
     final usable =
-        widget.status == TorStatus.bootstrapped ||
-        widget.status == TorStatus.publishing;
-    final dot = reachable
+        !direct &&
+        (widget.status == TorStatus.bootstrapped ||
+            widget.status == TorStatus.publishing);
+    // each route has its own colour, so the mode reads before the words do
+    final mode = appState.sendMode;
+    final dot = !reachable && !usable
+        ? HaloColors.amber
+        : mode == 'balanced'
+        ? kRelayCyan
+        : mode == 'fast'
         ? HaloColors.green
-        : (usable ? HaloColors.violet : HaloColors.amber);
+        : (reachable ? HaloColors.green : HaloColors.violet);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -376,8 +396,13 @@ void _showConnectionSheet(BuildContext context) {
       child: ListenableBuilder(
         listenable: appState,
         builder: (ctx, _) {
-          final reachable = appState.torStatus == TorStatus.reachable;
-          final usable = appState.torStatus == TorStatus.publishing;
+          final mode = appState.sendMode;
+          final direct = mode != 'private';
+          final reachable = direct
+              ? appState.online
+              : appState.torStatus == TorStatus.reachable;
+          final usable = !direct && appState.torStatus == TorStatus.publishing;
+
           return SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(24, 22, 24, 26),
             child: Column(
@@ -390,30 +415,50 @@ void _showConnectionSheet(BuildContext context) {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  reachable
+                  mode == 'balanced'
+                      ? (reachable ? 'via our relay' : 'offline')
+                      : mode == 'fast'
+                      ? (reachable ? 'across several relays' : 'offline')
+                      : reachable
                       ? 'connected over tor'
                       : usable
                       ? 'ready to send over tor'
                       : 'connecting over tor',
                   style: HaloType.mono(
                     size: 11,
-                    color: reachable
+                    color: !reachable && !usable
+                        ? HaloColors.amber
+                        : mode == 'balanced'
+                        ? kRelayCyan
+                        : mode == 'fast'
                         ? HaloColors.green
-                        : (usable ? HaloColors.violet : HaloColors.amber),
+                        : (reachable ? HaloColors.green : HaloColors.violet),
                   ),
                 ),
                 const SizedBox(height: 20),
-                Center(
-                  child: TorWarmupGraph(
-                    status: appState.torStatus,
-                    bootstrapPct: appState.bootstrapPct,
+                if (!direct)
+                  Center(
+                    child: TorWarmupGraph(
+                      status: appState.torStatus,
+                      bootstrapPct: appState.bootstrapPct,
+                    ),
                   ),
-                ),
                 const SizedBox(height: 22),
                 Text(
-                  'kryfo sends every message through tor - a chain of relays '
-                  'that hides who you are talking to and where you are. no '
-                  'single server ever sees both ends.',
+                  mode == 'balanced'
+                      ? 'kryfo sends through one sealed connection to our own '
+                            'relay. nothing else is contacted, and your '
+                            'address is never passed on to it - there is '
+                            'nothing there to keep.'
+                      : mode == 'fast'
+                      ? 'kryfo spreads your messages across several '
+                            'relays, so one having a bad day does not '
+                            'hold anything up. everything stays sealed '
+                            'end to end.'
+                      : 'kryfo sends every message through tor - a chain '
+                            'of relays that hides who you are talking to '
+                            'and where you are. no single server ever '
+                            'sees both ends.',
                   style: HaloType.sans(
                     size: 13,
                     color: HaloColors.text2,
@@ -422,8 +467,15 @@ void _showConnectionSheet(BuildContext context) {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'the first connection after opening takes a moment while '
-                  'that path is built. once it is green, you are through.',
+                  mode == 'balanced'
+                      ? 'no warm-up, no waiting. this is the one to use where '
+                            'tor is blocked.'
+                      : mode == 'fast'
+                      ? 'every relay you use sees that you connected, not '
+                            'what you said or who to.'
+                      : 'the first connection after opening takes a moment '
+                            'while that path is built. once it is green, '
+                            'you are through.',
                   style: HaloType.sans(
                     size: 13,
                     color: HaloColors.text3,
@@ -438,6 +490,9 @@ void _showConnectionSheet(BuildContext context) {
     ),
   );
 }
+
+// the relay route's colour - cool enough never to read as tor's violet
+const kRelayCyan = Color(0xFF4BB8C9);
 
 class _AddScanButton extends StatelessWidget {
   final VoidCallback onTap;

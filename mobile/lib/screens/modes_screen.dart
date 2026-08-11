@@ -46,7 +46,7 @@ class _ModesScreenState extends State<ModesScreen> {
             const _Head(),
             const SizedBox(height: 6),
             _ModeCard(
-              name: 'Private',
+              name: 'Onion',
               accent: '·',
               active: _mode == 'private',
               desc:
@@ -57,12 +57,12 @@ class _ModesScreenState extends State<ModesScreen> {
               onTap: () => _pick('private'),
             ),
             _ModeCard(
-              name: 'Balanced',
+              name: 'Relay',
               active: _mode == 'balanced',
               desc:
-                  'One plain connection to Kryfo\'s own relay, no onion hops. '
-                  'Sends land in about a second, and nothing waits for Tor to '
-                  'warm up. Works where Tor is blocked.',
+                  'One sealed connection to Kryfo\'s own relay, like a VPN '
+                  'with nothing to log. Sends land in about a second, and it '
+                  'works where Tor is blocked.',
               speed: 'quick',
               hops: '1',
               ipVisible: false,
@@ -382,7 +382,7 @@ class _Footnote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'private is the default and stays that way unless you change it. '
+      'onion is the default and stays that way unless you change it. '
       'switching takes effect on the next message.',
       style: HaloType.mono(size: 10, color: HaloColors.text3),
     );
