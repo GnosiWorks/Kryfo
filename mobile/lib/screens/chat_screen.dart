@@ -2469,7 +2469,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
               const SizedBox(height: 8),
               Text(
-                '${_humanBytes(bytes)} · ${_wireEstimate(bytes)} over tor',
+                appState.sendMode == 'private'
+                    ? '${_humanBytes(bytes)} · ${_wireEstimate(bytes)} over tor'
+                    : _humanBytes(bytes),
                 style: HaloType.mono(size: 12, color: HaloColors.amber),
               ),
               const SizedBox(height: 6),
@@ -5145,7 +5147,11 @@ class _ChatHead extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'encrypted · over tor',
+                          appState.sendMode == 'balanced'
+                              ? 'encrypted · via relay'
+                              : appState.sendMode == 'fast'
+                              ? 'encrypted · direct'
+                              : 'encrypted · over tor',
                           style: HaloType.mono(
                             size: 10,
                             color: HaloColors.text2,

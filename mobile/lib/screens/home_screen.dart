@@ -220,6 +220,10 @@ class _StatusBar extends StatelessWidget {
                 child: _ConnectionHalo(
                   status: appState.torStatus,
                   pct: appState.bootstrapPct,
+                  // the mode has to be a prop or the widget never rebuilds
+                  // when only the route changes.
+                  mode: appState.sendMode,
+                  online: appState.online,
                 ),
               ),
             ],
@@ -258,8 +262,15 @@ const _months = [
 
 class _ConnectionHalo extends StatefulWidget {
   final TorStatus status;
+  final String mode;
+  final bool online;
   final int pct;
-  const _ConnectionHalo({required this.status, required this.pct});
+  const _ConnectionHalo({
+    required this.status,
+    required this.pct,
+    required this.mode,
+    required this.online,
+  });
   @override
   State<_ConnectionHalo> createState() => _ConnectionHaloState();
 }
@@ -315,7 +326,6 @@ class _ConnectionHaloState extends State<_ConnectionHalo>
     }
     switch (widget.status) {
       case TorStatus.reachable:
-        return 'Connected';
       case TorStatus.bootstrapped:
       case TorStatus.publishing:
         return 'Ready To Send';
@@ -777,19 +787,21 @@ class _BridgeHint extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                "tor has not connected for a few minutes. some networks block "
-                "it on purpose. bridges get around that.",
+                "tor is not getting through. some networks block it on "
+                "purpose. our own relay is one plain connection and usually "
+                "works anyway - or bridges, which take longer to set up.",
                 style: HaloType.sans(size: 13, color: HaloColors.text2),
               ),
               const SizedBox(height: 13),
               Row(
                 children: [
                   GestureDetector(
-                    onTap: () {
+                    onTap: () async {
                       HapticFeedback.selectionClick();
-                      Navigator.of(
-                        context,
-                      ).push(haloRoute(const BridgesScreen()));
+                      await appState.setSendMode('balanced');
+                      if (context.mounted) {
+                        showHaloToast(context, 'switched to relay');
+                      }
                     },
                     behavior: HitTestBehavior.opaque,
                     child: Container(
@@ -798,14 +810,38 @@ class _BridgeHint extends StatelessWidget {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: HaloColors.violet,
+                        color: kRelayCyan,
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'set up bridges',
+                        'use our relay',
                         style: HaloType.mono(
                           size: 11.5,
-                          color: HaloColors.text,
+                          color: HaloColors.ink,
+                          weight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      Navigator.of(
+                        context,
+                      ).push(haloRoute(const BridgesScreen()));
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Text(
+                        'bridges',
+                        style: HaloType.mono(
+                          size: 11.5,
+                          color: HaloColors.violet,
                           weight: FontWeight.w600,
                         ),
                       ),

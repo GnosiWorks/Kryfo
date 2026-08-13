@@ -174,6 +174,23 @@ class _BridgesScreenState extends State<BridgesScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
         children: [
+          if (appState.sendMode != 'private') ...[
+            Container(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 13),
+              decoration: BoxDecoration(
+                color: HaloColors.surface2,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: HaloColors.line),
+              ),
+              child: Text(
+                'bridges only change how tor connects, and you are not on '
+                'onion mode right now. what you set here is saved, it just '
+                'does nothing until you switch back.',
+                style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
           // the state of things, said once, at the top
           Container(
             width: double.infinity,

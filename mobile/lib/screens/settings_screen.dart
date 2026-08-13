@@ -235,8 +235,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: Icons.shield_outlined,
             label: 'speed & privacy',
             value: appState.sendMode == 'fast'
-                ? 'fast · direct'
-                : 'private · 3 hops',
+                ? 'fast'
+                : appState.sendMode == 'balanced'
+                ? 'relay · 1 hop'
+                : 'onion · 3 hops',
             onTap: () async {
               await Navigator.of(context).push(haloRoute(const ModesScreen()));
               if (mounted) setState(() {});
@@ -245,7 +247,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _Row(
             icon: Icons.notifications_none,
             label: 'notifications',
-            value: 'tor only',
+            value: appState.sendMode == 'private' ? 'over tor' : 'in app',
             onTap: () => Navigator.of(
               context,
             ).push(haloRoute(const PushSettingsScreen())),

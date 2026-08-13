@@ -809,7 +809,7 @@ class _SendPillState extends State<SendPill>
                     painter: _OnionSpinPainter(
                       t: _ctl.value,
                       phase: i * (1.0 / _onionCount),
-                      color: kAmber,
+                      color: _color,
                     ),
                     size: Size.infinite,
                   ),

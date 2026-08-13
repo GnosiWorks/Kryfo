@@ -3659,6 +3659,10 @@ class AppState extends ChangeNotifier {
   // called from the status poll. the clock runs while tor is trying and
   // resets the moment it can carry traffic.
   void _noteTorProgress() {
+    if (_bootstrapPct != _lastPct) {
+      _lastPct = _bootstrapPct;
+      _pctMovedAt = DateTime.now();
+    }
     if (torReady) {
       _torTryingSince = null;
     } else {
@@ -3683,22 +3687,38 @@ class AppState extends ChangeNotifier {
   // minute or two, so we wait before suggesting anything.
   DateTime? _torTryingSince;
   bool _bridgeHintOff = false;
-  bool get suggestBridges {
-    if (_bridgeHintOff || _bridgesOn || !_online) return false;
+  // when the bootstrap percentage last moved. a climbing bar is a slow
+  // network; a stuck one under half way is a blocked one.
+  int _lastPct = -1;
+  DateTime? _pctMovedAt;
+
+  bool get _torLooksBlocked {
+    if (_sendMode != 'private') return false;
     if (torReady) return false;
     final t = _torTryingSince;
     if (t == null) return false;
-    return DateTime.now().difference(t).inSeconds > 180;
+    // still early - give it room before calling anything wrong
+    if (DateTime.now().difference(t).inSeconds < 120) return false;
+    // it is climbing, just not quickly. that is a slow network, not a wall.
+    final moved = _pctMovedAt;
+    if (moved != null && DateTime.now().difference(moved).inSeconds < 90) {
+      return false;
+    }
+    // past halfway it is talking to the network fine and something else is
+    // wrong. blocking bites at the start, not the end.
+    return _bootstrapPct < 50;
+  }
+
+  bool get suggestBridges {
+    if (_bridgeHintOff || _bridgesOn || !_online) return false;
+    return _torLooksBlocked;
   }
 
   // bridges are on and tor still cannot connect. bridges are slower and some
   // of them are simply dead, so the honest suggestion is to try without.
   bool get suggestBridgesOff {
     if (!_bridgesOn || !_online) return false;
-    if (torReady) return false;
-    final t = _torTryingSince;
-    if (t == null) return false;
-    return DateTime.now().difference(t).inSeconds > 150;
+    return _torLooksBlocked;
   }
 
   Future<void> dismissBridgeHint() async {
