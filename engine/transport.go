@@ -52,6 +52,30 @@ func resetTrafficClock() {
 	txMu.Unlock()
 }
 
+// the last time any relay connection succeeded. this is the only signal that
+// cannot lie: tor can report itself bootstrapped, the bootstrap clock can look
+// healthy, and the dialer can still be dead underneath all of it.
+var lastRelayOK time.Time
+
+func noteRelayConnected() {
+	txMu.Lock()
+	lastRelayOK = time.Now()
+	txMu.Unlock()
+}
+
+// nothing has connected in three minutes. whatever else is true, this route
+// is not carrying anything.
+func relaysAllDead() bool {
+	txMu.RLock()
+	defer txMu.RUnlock()
+	if lastRelayOK.IsZero() {
+		// nothing has ever connected this session - fall back to how long
+		// tor has been up, so a genuinely fresh start is not called dead.
+		return !lastBoot.IsZero() && time.Since(lastBoot) > 3*time.Minute
+	}
+	return time.Since(lastRelayOK) > 3*time.Minute
+}
+
 func noteSend() {
 	txMu.Lock()
 	lastSend = time.Now()

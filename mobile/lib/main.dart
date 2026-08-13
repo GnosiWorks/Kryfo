@@ -6264,7 +6264,10 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: _explain,
+      // nothing to explain outside onion - no bootstrap, no circuit, no
+      // descriptor. a tap that opens a page about tor while you are on the
+      // relay is worse than a tap that does nothing.
+      onTap: appState.sendMode == 'private' ? _explain : null,
       behavior: HitTestBehavior.opaque,
       child: AnimatedBuilder(
         animation: Listenable.merge([appState, _c]),
@@ -6278,10 +6281,15 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
           const torGreen = Color(0xFF34D399);
           final accent = off
               ? HaloColors.text3
-              : secured
+              // one route, one colour. onion stays violet whether tor is
+              // merely usable or fully published - going green on the way
+              // made it look like a different state.
+              : appState.sendMode == 'balanced'
+              ? const Color(0xFF4BB8C9)
+              : appState.sendMode == 'fast'
               ? torGreen
-              : usable
-              ? HaloColors.violet
+              : (secured || usable)
+              ? const Color(0xFFB79CFF)
               : HaloColors.amber;
           final t = _c.value;
           final dot = SizedBox(
@@ -6319,13 +6327,16 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
           if (!widget.label) {
             return SizedBox(width: 20, height: 20, child: Center(child: dot));
           }
-          final txt = off
-              ? 'tor off'
-              : secured
-              ? 'connected'
-              : usable
-              ? 'ready to send'
-              : 'connecting';
+          final mode = appState.sendMode;
+          final txt = mode == 'balanced'
+              ? (appState.online ? 'Via Relay' : 'Offline')
+              : mode == 'fast'
+              ? (appState.online ? 'Fast' : 'Offline')
+              : off
+              ? 'Tor Off'
+              : (secured || usable)
+              ? 'Tor Ready'
+              : 'Connecting';
           return Row(
             mainAxisSize: MainAxisSize.min,
             children: [
