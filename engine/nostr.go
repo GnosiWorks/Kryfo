@@ -507,6 +507,16 @@ func nostrSubscribeRunnerMode(ctx context.Context, peerXPubHex string, peerArr [
 						wait = 45 * time.Second
 					}
 					log.Printf("nostr: tor not ready, retry subscribe to %s in %s: %v", u, wait, err)
+					// a hung dialer that nothing rescues leaves the phone deaf
+					// to every relay, which looks like features being broken
+					// rather than a transport that died.
+					if modeNeedsTor() && relaysAllDead() {
+						log.Println("nostr: no relay has connected in 3 minutes, rebuilding tor")
+						atomic.StoreInt64(&lastTorRestart, 0)
+						go restartTor()
+						time.Sleep(20 * time.Second)
+						continue
+					}
 					time.Sleep(wait)
 					continue
 				}
@@ -521,6 +531,8 @@ func nostrSubscribeRunnerMode(ctx context.Context, peerXPubHex string, peerArr [
 					time.Sleep(wait)
 					continue
 				}
+				// a relay answered. this is the one fact the watchdog trusts.
+				noteRelayConnected()
 				f := nostr.Filter{
 					Kinds: []nostr.Kind{1059},
 					Tags:  nostr.TagMap{"p": []string{rcvPk}},
