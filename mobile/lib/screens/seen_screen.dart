@@ -3,6 +3,7 @@
 // the parts that are not flattering. if this page ever stops being true,
 // fix the app, not the page.
 import 'package:flutter/material.dart';
+import '../main.dart';
 import '../theme.dart';
 
 class SeenScreen extends StatelessWidget {
@@ -45,13 +46,33 @@ class SeenScreen extends StatelessWidget {
             'end to end encrypted with the signal double ratchet, then sealed '
                 'again inside a gift wrap. we could not read it if we tried.',
           ),
-          _Claim(
-            'your ip address',
-            'hidden · tor',
-            HaloColors.green,
-            'everything leaves through tor by default. the relay sees an exit '
-                'node, never you.',
-          ),
+          if (appState.sendMode == 'private')
+            _Claim(
+              'your ip address',
+              'hidden · tor',
+              HaloColors.green,
+              'everything leaves through tor. the relay sees an exit node, '
+                  'never you.',
+            )
+          else if (appState.sendMode == 'balanced')
+            _Claim(
+              'your ip address',
+              'our relay only',
+              HaloColors.amber,
+              'you are on relay mode, so this goes straight to our own relay '
+                  'rather than through tor. nothing forwards your address to '
+                  'it and nothing is written down, but the connection is ours '
+                  'to see. switch to onion if that matters.',
+            )
+          else
+            _Claim(
+              'your ip address',
+              'every relay sees it',
+              HaloColors.rose,
+              'you are on fast mode. each public relay you use learns that '
+                  'you connected, though not to whom or what you said. onion '
+                  'or relay mode both hide it.',
+            ),
           _Claim(
             'your contact graph',
             'never uploaded',

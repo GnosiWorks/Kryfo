@@ -337,7 +337,9 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 	// a hard-killed previous process can leave tor's lock behind, which blocks
 	// this start and froze a fast relaunch. tor is single-instance per data dir
 	// and we hold startMu, so removing a stale lock here is safe.
-	os.Remove(torDataDir + "/lock")
+	// same reasoning as the restart path: a run file left by a process that
+	// was killed rather than closed will fail the next start outright.
+	cleanTorRunFiles(torDataDir)
 
 	setStatus("starting")
 	log.Println("halo: starting embedded tor...")
@@ -454,6 +456,23 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 	return C.CString(addr)
 }
 
+// bine writes a fresh torrc and control-port file per run and does not always
+// clean them up. a half-written one left by a dying process is read by the
+// next start as "invalid port format", which killed the restart outright.
+func cleanTorRunFiles(dir string) {
+	os.Remove(dir + "/lock")
+	ents, err := os.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	for _, e := range ents {
+		n := e.Name()
+		if strings.HasPrefix(n, "control-port-") || strings.HasPrefix(n, "torrc-") {
+			os.Remove(dir + "/" + n)
+		}
+	}
+}
+
 // restartTor tears down the wedged tor and brings a fresh one up on the same
 // data dir + onion key. triggered by the dialer watchdog when the control
 // conn is provably dead. serialized on startMu against Start/Shutdown so two
@@ -533,15 +552,38 @@ func restartTor() {
 	}
 
 	torDataDir := dir + "/tor"
-	os.Remove(torDataDir + "/lock")
-	t, err := tor.Start(nil, &tor.StartConf{
-		ProcessCreator: libtor.Creator,
-		DataDir:        torDataDir,
-		DebugWriter:    newTorDebugWriter(),
-		ExtraArgs:      bridgeTorArgs(),
-	})
-	if err != nil {
+	// give the old process a moment to let go of its files. without this the
+	// new tor reads a control port file the dying one is still rewriting.
+	if old != nil {
+		for i := 0; i < 30; i++ {
+			if atomic.LoadInt32(&torClosing) == 0 {
+				break
+			}
+			time.Sleep(200 * time.Millisecond)
+		}
+	}
+	cleanTorRunFiles(torDataDir)
+
+	var t *tor.Tor
+	var err error
+	for attempt := 0; attempt < 2; attempt++ {
+		t, err = tor.Start(nil, &tor.StartConf{
+			ProcessCreator: libtor.Creator,
+			DataDir:        torDataDir,
+			DebugWriter:    newTorDebugWriter(),
+			ExtraArgs:      bridgeTorArgs(),
+		})
+		if err == nil {
+			break
+		}
 		log.Printf("halo: restartTor tor.Start failed: %v", err)
+		// a stale control port file is the usual cause and clearing it is
+		// cheap. one retry beats leaving the app at "off" with no way back.
+		time.Sleep(2 * time.Second)
+		cleanTorRunFiles(torDataDir)
+	}
+	if err != nil {
+		log.Printf("halo: restartTor gave up: %v", err)
 		setStatus("off")
 		return
 	}
