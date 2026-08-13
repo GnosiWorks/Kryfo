@@ -75,6 +75,7 @@ class HomeScreen extends StatelessWidget {
             const _BackupNudge(),
             const _BridgeHint(),
             const _BridgeStuckHint(),
+            const _RelayDownHint(),
             _NotesPin(
               onTap: () =>
                   Navigator.of(context).push(haloRoute(const NotesScreen())),
@@ -660,6 +661,107 @@ class _HomeHead extends StatelessWidget {
 }
 
 // ───────── empty state ─────────
+
+class _RelayDownHint extends StatelessWidget {
+  const _RelayDownHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: appState,
+      builder: (context, _) {
+        if (!appState.suggestFastFallback) return const SizedBox.shrink();
+        return Container(
+          margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          decoration: BoxDecoration(
+            color: HaloColors.amber.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: HaloColors.amber.withValues(alpha: 0.35)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  BreathDot(color: HaloColors.amber, size: 7),
+                  const SizedBox(width: 9),
+                  Text(
+                    'our relay is quiet',
+                    style: HaloType.mono(
+                      size: 11,
+                      color: HaloColors.amber,
+                      weight: FontWeight.w600,
+                      letter: 0.12,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                "relay mode uses only our own relay, and it is not answering "
+                "right now. fast mode adds public relays alongside it, so "
+                "messages still land. everything stays sealed either way.",
+                style: HaloType.sans(size: 13, color: HaloColors.text2),
+              ),
+              const SizedBox(height: 13),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () async {
+                      HapticFeedback.selectionClick();
+                      await appState.setSendMode('fast');
+                      if (context.mounted) {
+                        showHaloToast(context, 'switched to fast');
+                      }
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 15,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: HaloColors.amber,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        'use fast mode',
+                        style: HaloType.mono(
+                          size: 11.5,
+                          color: HaloColors.ink,
+                          weight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: () => appState.dismissRelayHint(),
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Text(
+                        'keep waiting',
+                        style: HaloType.mono(
+                          size: 11.5,
+                          color: HaloColors.text3,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
 
 class _BridgeStuckHint extends StatelessWidget {
   const _BridgeStuckHint();

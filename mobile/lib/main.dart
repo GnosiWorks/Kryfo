@@ -1164,6 +1164,10 @@ class HaloDb {
       'first_seen': now,
       'last_seen': now,
       'back_paired': 0,
+      // being in a group with someone is not knowing them. the key is kept
+      // so their messages decrypt; the row stays out of the contact list
+      // until you add them yourself.
+      'accepted': 0,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
@@ -3659,6 +3663,14 @@ class AppState extends ChangeNotifier {
   // called from the status poll. the clock runs while tor is trying and
   // resets the moment it can carry traffic.
   void _noteTorProgress() {
+    // the transport state carries the subscription count; a relay that is up
+    // has at least one.
+    try {
+      final tx = engine.transportState();
+      _noteRelayHealth(tx['sub_count'] as int? ?? 0);
+    } catch (_) {
+      // transport not readable yet - nothing to conclude
+    }
     if (_bootstrapPct != _lastPct) {
       _lastPct = _bootstrapPct;
       _pctMovedAt = DateTime.now();
@@ -3716,6 +3728,36 @@ class AppState extends ChangeNotifier {
 
   // bridges are on and tor still cannot connect. bridges are slower and some
   // of them are simply dead, so the honest suggestion is to try without.
+  // our relay is not answering and it is the only one relay mode uses.
+  DateTime? _relayDownSince;
+  bool _relayHintOff = false;
+
+  bool get suggestFastFallback {
+    if (_relayHintOff || _sendMode != 'balanced' || !_online) return false;
+    final t = _relayDownSince;
+    if (t == null) return false;
+    return DateTime.now().difference(t).inSeconds > 90;
+  }
+
+  Future<void> dismissRelayHint() async {
+    _relayHintOff = true;
+    notifyListeners();
+  }
+
+  // fed by the transport poll: subscriptions are the honest signal that our
+  // relay is actually answering.
+  void _noteRelayHealth(int subs) {
+    if (_sendMode != 'balanced') {
+      _relayDownSince = null;
+      return;
+    }
+    if (subs > 0) {
+      _relayDownSince = null;
+    } else {
+      _relayDownSince ??= DateTime.now();
+    }
+  }
+
   bool get suggestBridgesOff {
     if (!_bridgesOn || !_online) return false;
     return _torLooksBlocked;

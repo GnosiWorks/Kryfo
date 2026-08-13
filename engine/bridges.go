@@ -28,6 +28,7 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"gitlab.com/yawning/obfs4.git/common/socks5"
@@ -315,6 +316,8 @@ func HaloSetBridges(cLines *C.char, on C.int) *C.char {
 //
 //export HaloRestartTor
 func HaloRestartTor() *C.char {
+	// asked for by hand, so the loop guard does not apply
+	atomic.StoreInt64(&lastTorRestart, 0)
 	go restartTor()
 	return C.CString("ok")
 }
