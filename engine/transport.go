@@ -41,6 +41,17 @@ func notePublished() {
 	txMu.Unlock()
 }
 
+// a mode change makes the traffic clock meaningless: relay sends say nothing
+// about whether tor still works, and leaving them there blocks the watchdog
+// from restarting a route that has genuinely died.
+func resetTrafficClock() {
+	txMu.Lock()
+	lastSend = time.Time{}
+	lastRecv = time.Time{}
+	lastBoot = time.Time{}
+	txMu.Unlock()
+}
+
 func noteSend() {
 	txMu.Lock()
 	lastSend = time.Now()

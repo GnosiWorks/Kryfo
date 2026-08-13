@@ -88,6 +88,18 @@ func HaloSetTransportMode(cMode *C.char) *C.char {
 		// the cached client is bound to one route; drop it so the next
 		// connection is built the new way.
 		nostrResetClient()
+		resetTrafficClock()
+		// coming back to onion after a spell elsewhere, tor has been idle
+		// and its dialer is usually stale. a stale dialer is not reliably
+		// detectable, and ten seconds of reconnecting beats three minutes
+		// of failed sends while the watchdog works it out.
+		if m == modePrivate && prev != modePrivate {
+			log.Println("transport: back on onion, rebuilding tor")
+			// the cooldown guards against a looping watchdog, not against
+			// someone deliberately choosing a route.
+			atomic.StoreInt64(&lastTorRestart, 0)
+			go restartTor()
+		}
 	}
 	return C.CString(m)
 }

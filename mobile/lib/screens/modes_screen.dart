@@ -68,10 +68,6 @@ class _ModesScreenState extends State<ModesScreen> {
               ipVisible: false,
               ipText: 'relay only',
               ipWarn: true,
-              warning:
-                  'the relay knows the address you connect from, and nothing '
-                  'is contacted except it. who you talk to, and what you said, '
-                  'stay sealed from everyone including us.',
               onTap: () => _pick('balanced'),
             ),
             _ModeCard(
