@@ -512,9 +512,12 @@ func nostrSubscribeRunnerMode(ctx context.Context, peerXPubHex string, peerArr [
 					// rather than a transport that died.
 					if modeNeedsTor() && relaysAllDead() {
 						log.Println("nostr: no relay has connected in 3 minutes, rebuilding tor")
+						// arm first: the other relay goroutines are in this
+						// same loop and would otherwise each fire one.
+						armRelayWatch()
 						atomic.StoreInt64(&lastTorRestart, 0)
 						go restartTor()
-						time.Sleep(20 * time.Second)
+						time.Sleep(30 * time.Second)
 						continue
 					}
 					time.Sleep(wait)

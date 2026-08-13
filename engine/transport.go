@@ -63,6 +63,15 @@ func noteRelayConnected() {
 	txMu.Unlock()
 }
 
+// called when the dead man switch fires. it restarts the three minute clock
+// so the next attempt is three minutes out rather than twenty seconds, and
+// so the other relay goroutines do not each fire their own.
+func armRelayWatch() {
+	txMu.Lock()
+	lastRelayOK = time.Now()
+	txMu.Unlock()
+}
+
 // nothing has connected in three minutes. whatever else is true, this route
 // is not carrying anything.
 func relaysAllDead() bool {
