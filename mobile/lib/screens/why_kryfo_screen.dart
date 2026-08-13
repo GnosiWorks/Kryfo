@@ -37,7 +37,8 @@ class WhyKryfoScreen extends StatelessWidget {
               _principle(
                 Icons.route_outlined,
                 'routed through tor',
-                'every message travels through tor - a chain of relays. no one, '
+                'by default every message travels through tor - a chain of '
+                    'relays. no one, '
                     'not us and not your network, can see who you talk to or where '
                     'you are.',
               ),

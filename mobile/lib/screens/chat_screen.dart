@@ -2618,7 +2618,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       chunks.add(b64.substring(i, math.min(i + chunkSize, b64.length)));
     }
     final total = chunks.length;
-    if (total > 1) mediaProgressStart(msgUid, chatKey: widget.peerHaloId);
+    // a voice note is a couple of seconds of audio. the strip is for photos
+    // and files, where the wait is long enough to wonder about.
+    final showProgress = total > 1 && !voice;
+    if (showProgress) mediaProgressStart(msgUid, chatKey: widget.peerHaloId);
     // stranger gate wants pow on every envelope. two grinds max: one for the
     // chunk-0 payload, one for the '' the rest carry.
     int? powCap;
@@ -2637,7 +2640,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final done = _chunkDone.putIfAbsent(msgUid, () => <int>{});
     if (done.isNotEmpty && total > 1) {
       debugPrint('MEDIA resume $msgUid: ${done.length}/$total already landed');
-      mediaProgressUpdate(msgUid, done.length / total);
+      if (showProgress) mediaProgressUpdate(msgUid, done.length / total);
     }
     for (var i = 0; i < total; i++) {
       if (done.contains(i)) continue; // peer already has this slice
@@ -2704,7 +2707,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
       done.add(i);
       _chunkDoneAt[msgUid] = DateTime.now().millisecondsSinceEpoch;
-      mediaProgressUpdate(msgUid, done.length / total);
+      if (showProgress) mediaProgressUpdate(msgUid, done.length / total);
     }
     // whole file is across - drop the resume record.
     _chunkDone.remove(msgUid);
