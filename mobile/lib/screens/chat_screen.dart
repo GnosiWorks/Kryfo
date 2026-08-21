@@ -2954,6 +2954,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   bool _torReadyToSend() {
+    // outside onion nothing is routed through tor, so there is nothing to
+    // wait for. waiting anyway is how a working relay looked like a broken
+    // app somewhere tor is blocked.
+    if (appState.sendMode != 'private') return appState.online;
     final s = appState.torStatus;
     return s == TorStatus.bootstrapped ||
         s == TorStatus.publishing ||
@@ -4680,7 +4684,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
             // tor still warming: say so where the eye already is. messages
             // typed now are queued and go out the moment the route is up.
-            if (!_torReadyToSend())
+            if (appState.sendMode == 'private' && !_torReadyToSend())
               Padding(
                 padding: const EdgeInsets.only(bottom: 6),
                 child: Row(
@@ -4758,8 +4762,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           showHaloToast(
                             context,
                             _secureNext
-                                ? 'next photo opens protected · they cannot '
-                                      'screenshot it'
+                                ? 'the next photo you send opens protected · '
+                                      'they cannot screenshot it'
                                 : 'photo protection off',
                           );
                         },
@@ -5134,10 +5138,11 @@ class _ChatHead extends StatelessWidget {
                       ],
                     ],
                   ),
-                  Text(
-                    nickname != null ? haloId : 'onion',
-                    style: HaloType.mono(size: 10, color: HaloColors.text2),
-                  ),
+                  if (nickname != null)
+                    Text(
+                      haloId,
+                      style: HaloType.mono(size: 10, color: HaloColors.text2),
+                    ),
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: Row(

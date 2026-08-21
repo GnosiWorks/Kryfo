@@ -445,7 +445,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               // future still running) must keep its pill or a working media send
               // flips to failed mid-flight - the "had to retry 2-3 times" bug.
               // also hold off while tor is warming: the send is queued, not dead.
-              final torUp = appState.torStatus == TorStatus.reachable;
+              // outside onion there is no warmup to wait out, so a stale
+              // send is simply stale.
+              final torUp =
+                  appState.sendMode != 'private' ||
+                  appState.torStatus == TorStatus.reachable;
               final stale = m.when.isBefore(
                 DateTime.now().subtract(const Duration(seconds: 60)),
               );
