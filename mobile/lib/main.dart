@@ -2803,10 +2803,9 @@ class AppState extends ChangeNotifier {
   // re-send anything the wire never confirmed. cheap when there's nothing to
   // do (one indexed query). skipped entirely while tor can't carry traffic.
   Future<void> drainOutbox() async {
-    final ready =
-        _torStatus == TorStatus.bootstrapped ||
-        _torStatus == TorStatus.publishing ||
-        _torStatus == TorStatus.reachable;
+    // torReady already knows the mode - outside onion there is nothing to
+    // wait for and a queued message should just go.
+    final ready = torReady;
     if (!ready) {
       _outboxWasReady = false;
       return;
@@ -4093,7 +4092,8 @@ class AppState extends ChangeNotifier {
       // bootstrapped) - the bytes are already sitting in the go inbox. it
       // does NOT need our own onion published, so don't wait for reachable
       // or a message that landed while still publishing sits unread.
-      if (_torStatus != TorStatus.reachable &&
+      if (_sendMode == 'private' &&
+          _torStatus != TorStatus.reachable &&
           _torStatus != TorStatus.bootstrapped &&
           _torStatus != TorStatus.publishing) {
         return;
@@ -4203,7 +4203,8 @@ class AppState extends ChangeNotifier {
       // bootstrapped. this used to wait for `reachable` - our own onion being
       // published - which is a different thing entirely and minutes later.
       // queued messages just sat there while the app looked connected.
-      if (_torStatus != TorStatus.reachable &&
+      if (_sendMode == 'private' &&
+          _torStatus != TorStatus.reachable &&
           _torStatus != TorStatus.bootstrapped &&
           _torStatus != TorStatus.publishing) {
         return;
