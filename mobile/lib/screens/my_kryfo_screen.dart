@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+
+import '../contact_card.dart';
 import 'package:share_plus/share_plus.dart';
 import '../main.dart' show appState, buildHaloUriV3;
 import '../theme.dart';
@@ -170,6 +172,81 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
               ],
             ),
           ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            GestureDetector(
+              onTap: () async {
+                HapticFeedback.selectionClick();
+                await shareContactCard(
+                  context: context,
+                  haloId: appState.myId,
+                  uri: _uri!,
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: HaloColors.surface2,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: HaloColors.line),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.badge_outlined,
+                      size: 15,
+                      color: HaloColors.text2,
+                    ),
+                    const SizedBox(width: 7),
+                    Text(
+                      'card',
+                      style: HaloType.mono(size: 11, color: HaloColors.text2),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: () async {
+                HapticFeedback.selectionClick();
+                await shareContactVcf(haloId: appState.myId, uri: _uri!);
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: HaloColors.surface2,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: HaloColors.line),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.contact_page_outlined,
+                      size: 15,
+                      color: HaloColors.text2,
+                    ),
+                    const SizedBox(width: 7),
+                    Text(
+                      'contact file',
+                      style: HaloType.mono(size: 11, color: HaloColors.text2),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
         GestureDetector(

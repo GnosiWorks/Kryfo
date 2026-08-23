@@ -28,6 +28,7 @@ import 'screens/new_group_screen.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'screens/group_chat_screen.dart';
 import 'screens/chat_screen.dart';
+import 'screens/pair_code_screen.dart';
 import 'screens/scan_screen.dart';
 import 'screens/modes_screen.dart';
 import 'screens/push_settings_screen.dart';
@@ -312,6 +313,18 @@ class HaloEngine {
 
   String firstContactPk(int counter) => _fcPk(counter).toDartString();
 
+  // put an invite where a six digit code points, and look for one there.
+  Future<String> pairCodePublish(String code, String payload) =>
+      _pairCodeOnIsolate(code, payload).timeout(
+        const Duration(seconds: 50),
+        onTimeout: () => 'error: could not reach a relay',
+      );
+
+  Future<String> pairCodeFetch(String code) => _pairCodeOnIsolate(
+    code,
+    null,
+  ).timeout(const Duration(seconds: 40), onTimeout: () => 'empty');
+
   // watch it. unlike every other subscription this needs no contacts, which
   // is the whole point.
   void subscribeFirstContactBg(int counter) {
@@ -470,6 +483,35 @@ Future<String> _moatOnIsolate(String? challenge, String? answer) {
     } finally {
       malloc.free(a);
       malloc.free(b);
+    }
+  });
+}
+
+// publishing and fetching both wait on a relay, so they go off the ui thread.
+Future<String> _pairCodeOnIsolate(String code, String? payload) {
+  return Isolate.run(() {
+    final lib = Platform.isAndroid
+        ? DynamicLibrary.open('libhalo.so')
+        : DynamicLibrary.process();
+    final c = code.toNativeUtf8();
+    try {
+      if (payload == null) {
+        final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>(
+          'HaloPairCodeFetch',
+        );
+        return fn(c).toDartString();
+      }
+      final fn = lib.lookupFunction<TwoArgFn, TwoArgFnDart>(
+        'HaloPairCodePublish',
+      );
+      final pl = payload.toNativeUtf8();
+      try {
+        return fn(c, pl).toDartString();
+      } finally {
+        malloc.free(pl);
+      }
+    } finally {
+      malloc.free(c);
     }
   });
 }
@@ -5797,6 +5839,19 @@ class _DevScreenState extends State<DevScreen> {
                 ),
               ),
             ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.maxFinite,
+              child: OutlinedButton.icon(
+                onPressed: () => Navigator.pop(context, 'code'),
+                icon: const Icon(Icons.dialpad, size: 18),
+                label: const Text('pairing code'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: HaloColors.text2,
+                  side: BorderSide(color: HaloColors.line),
+                ),
+              ),
+            ),
             const SizedBox(height: 14),
             Text(
               '- or paste -',
@@ -5830,6 +5885,13 @@ class _DevScreenState extends State<DevScreen> {
       ),
     );
     if (action == null) return;
+
+    if (action == 'code') {
+      if (!context.mounted) return;
+      await Navigator.of(context).push(haloRoute(const PairCodeScreen()));
+      await appState.refreshContacts();
+      return;
+    }
 
     String uri;
     if (action == 'scan') {

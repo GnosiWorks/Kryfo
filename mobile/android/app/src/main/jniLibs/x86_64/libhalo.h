@@ -28,6 +28,7 @@ extern const char *_GoStringPtr(_GoString_ s);
 
 
 
+
 /* End of preamble from import "C" comments.  */
 
 
@@ -208,6 +209,18 @@ extern char* HaloTorGetJSON(char* cUrl);
 // image from the origin and leaks their ip. capped larger than html.
 //
 extern char* HaloTorGetB64(char* cUrl);
+
+// put an invite at the address the code names. encrypted to the derived key,
+// so it is readable by whoever has the code and nobody else, and stamped to
+// expire in ten minutes.
+//
+extern char* HaloPairCodePublish(char* cCode, char* cPayload);
+
+// look for an invite at the address the code names. returns the payload, or
+// "empty" when nothing is there yet - the caller polls, because the other
+// person may not have pressed share.
+//
+extern char* HaloPairCodeFetch(char* cCode);
 
 // private, balanced or fast. anything else is treated as private, because a
 // typo must never quietly drop someone out of tor.
