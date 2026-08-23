@@ -4,8 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../contact_card.dart';
+import 'pair_code_screen.dart';
 import 'package:share_plus/share_plus.dart';
 import '../main.dart' show appState, buildHaloUriV3;
+import '../widgets/motion.dart' show haloRoute;
 import '../theme.dart';
 
 class MyKryfoScreen extends StatefulWidget {
@@ -207,6 +209,35 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
                     const SizedBox(width: 7),
                     Text(
                       'card',
+                      style: HaloType.mono(size: 11, color: HaloColors.text2),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                Navigator.of(context).push(haloRoute(const PairCodeScreen()));
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: HaloColors.surface2,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: HaloColors.line),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.dialpad, size: 15, color: HaloColors.text2),
+                    const SizedBox(width: 7),
+                    Text(
+                      'code',
                       style: HaloType.mono(size: 11, color: HaloColors.text2),
                     ),
                   ],
