@@ -29,6 +29,7 @@ extern const char *_GoStringPtr(_GoString_ s);
 
 
 
+
 /* End of preamble from import "C" comments.  */
 
 
@@ -148,6 +149,20 @@ extern char* HaloSetBridges(char* cLines, int on);
 //
 extern char* HaloRestartTor(void);
 extern char* HaloBridgeState(void);
+
+//
+// is this handle free? returns "free", "taken", or an error string.
+extern char* HaloHandleCheck(char* cHandle);
+
+//
+// claim a handle for an invite. the signature is over the handle alone, made
+// with the identity key, so the registry can check the claimer is the person
+// the invite describes.
+extern char* HaloHandleClaim(char* cHandle, char* cInvite, char* cBio);
+
+//
+// give it back. the same signature proves it was yours to release.
+extern char* HaloHandleRelease(char* cHandle);
 
 // ask for a captcha. returns "ok|<base64 png>|<challenge>" or "error: ...".
 // the challenge is opaque and must be handed back with the answer; it carries
