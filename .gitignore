@@ -40,7 +40,6 @@ apply_all.py
 burnfix_*.py
 chatfix.py
 diag_engine.py
-dmrelay/
 engine/e*.py
 engine/engine
 engine/libhalo.h
@@ -58,3 +57,9 @@ repro/Dockerfile.public.bak
 repro/verify_offline.sh
 statusfix.py
 subfix.py
+
+# relay and handle service source is public - the binaries are not
+dmrelay/halo-relay
+dmrelay/dmrelay-data/
+server/handle/kryfo-handles
+dmrelay/dmrelay
