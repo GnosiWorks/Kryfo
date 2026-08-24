@@ -8,6 +8,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path_provider/path_provider.dart';
+
+import 'main.dart' show engine;
 import 'package:shared_preferences/shared_preferences.dart';
 
 // everything still running checks this before touching the database. the
@@ -21,6 +23,19 @@ Future<void> wipeHalo() async {
   try {
     // identity markers go first. if anything below fails the next launch
     // still starts at onboarding instead of an empty home screen.
+    // give the handle back before the key that proves it is ours is gone.
+    // best effort and short - a wipe must not wait on a network, least of
+    // all a panic one - but leaving a public page up advertising someone who
+    // just erased themselves is the wrong failure.
+    try {
+      final h = await const FlutterSecureStorage().read(key: 'my_handle');
+      if (h != null && h.isNotEmpty) {
+        await Future.any([
+          Future(() => engine.handleRelease(h)),
+          Future.delayed(const Duration(seconds: 4)),
+        ]);
+      }
+    } catch (_) {}
     await const FlutterSecureStorage().deleteAll();
     await const FlutterSecureStorage(
       aOptions: AndroidOptions(encryptedSharedPreferences: true),

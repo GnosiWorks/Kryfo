@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../contact_card.dart';
+import 'handle_screen.dart';
 import 'pair_code_screen.dart';
 import 'package:share_plus/share_plus.dart';
 import '../main.dart' show appState, buildHaloUriV3;
@@ -176,8 +177,10 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
           children: [
             GestureDetector(
               onTap: () async {
@@ -215,7 +218,6 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: 10),
             GestureDetector(
               onTap: () {
                 HapticFeedback.selectionClick();
@@ -244,7 +246,6 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: 10),
             GestureDetector(
               onTap: () async {
                 HapticFeedback.selectionClick();
@@ -278,6 +279,37 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 14),
+        GestureDetector(
+          onTap: () {
+            HapticFeedback.selectionClick();
+            Navigator.of(context).push(haloRoute(const HandleScreen()));
+          },
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: HaloColors.surface2,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: HaloColors.line),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.alternate_email, size: 16, color: HaloColors.text2),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    appState.myHandle == null
+                        ? 'claim a public handle'
+                        : '@' + (appState.myHandle ?? ''),
+                    style: HaloType.mono(size: 12, color: HaloColors.text2),
+                  ),
+                ),
+                Icon(Icons.chevron_right, size: 16, color: HaloColors.text3),
+              ],
+            ),
+          ),
         ),
         const SizedBox(height: 12),
         GestureDetector(

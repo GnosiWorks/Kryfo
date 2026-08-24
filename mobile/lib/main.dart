@@ -95,6 +95,9 @@ class HaloEngine {
   late final CStrFnDart _restartTor;
   late final CStrFnDart _moatFetch;
   late final OneArgFnDart _setMode;
+  late final OneArgFnDart _handleCheck;
+  late final ThreeArgFnDart _handleClaim;
+  late final OneArgFnDart _handleRelease;
   late final TwoArgFnDart _moatSolve;
   late final OneArgFnDart _ntfyPing;
   late final OneArgFnDart _torGet;
@@ -148,6 +151,15 @@ class HaloEngine {
     _moatFetch = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMoatFetch');
     _setMode = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
       'HaloSetTransportMode',
+    );
+    _handleCheck = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
+      'HaloHandleCheck',
+    );
+    _handleClaim = _lib.lookupFunction<ThreeArgFn, ThreeArgFnDart>(
+      'HaloHandleClaim',
+    );
+    _handleRelease = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
+      'HaloHandleRelease',
     );
     _moatSolve = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloMoatSolve');
     _ntfyPing = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNtfyPing');
@@ -275,6 +287,37 @@ class HaloEngine {
   String bridgeState() => _bridgeState().toDartString();
 
   void restartTor() => _restartTor();
+
+  String handleCheck(String h) {
+    final p = h.toNativeUtf8();
+    try {
+      return _handleCheck(p).toDartString();
+    } finally {
+      malloc.free(p);
+    }
+  }
+
+  String handleClaim(String h, String invite, String bio) {
+    final a = h.toNativeUtf8();
+    final b = invite.toNativeUtf8();
+    final c = bio.toNativeUtf8();
+    try {
+      return _handleClaim(a, b, c).toDartString();
+    } finally {
+      malloc.free(a);
+      malloc.free(b);
+      malloc.free(c);
+    }
+  }
+
+  String handleRelease(String h) {
+    final p = h.toNativeUtf8();
+    try {
+      return _handleRelease(p).toDartString();
+    } finally {
+      malloc.free(p);
+    }
+  }
 
   // tell the engine whether to route through tor. it decides the route; the
   // relay list for each mode is chosen below.
@@ -2972,6 +3015,27 @@ class AppState extends ChangeNotifier {
     await s.write(key: 'disguise_on', value: on ? '1' : '0');
   }
 
+  // the handle we claimed, if any. local only - the registry is the source
+  // of truth and this is just so the screen knows what to show.
+  String? _myHandle;
+  String? get myHandle => _myHandle;
+
+  Future<void> loadMyHandle() async {
+    _myHandle = await const FlutterSecureStorage().read(key: 'my_handle');
+    notifyListeners();
+  }
+
+  Future<void> setMyHandle(String? h) async {
+    _myHandle = h;
+    final st = const FlutterSecureStorage();
+    if (h == null) {
+      await st.delete(key: 'my_handle');
+    } else {
+      await st.write(key: 'my_handle', value: h);
+    }
+    notifyListeners();
+  }
+
   Future<void> loadSendMode() async {
     _sendMode =
         await const FlutterSecureStorage().read(key: 'send_mode') ?? 'private';
@@ -3171,6 +3235,20 @@ class AppState extends ChangeNotifier {
 
   // retires every invite handed out so far. contacts, sessions and history
   // are untouched; only the address strangers use to reach us moves.
+  // the registry holds a copy of the invite, so a reset has to reach it or
+  // the public page keeps handing out an address that no longer answers.
+  Future<void> _repointHandle() async {
+    final h = _myHandle;
+    if (h == null) return;
+    try {
+      final uri = await buildHaloUriV3(myId, myOnion, _fcCounter);
+      engine.handleClaim(h, uri, '');
+    } catch (_) {
+      // offline, or the registry is down. the handle stays claimed and
+      // stale rather than lost, and the next claim fixes it.
+    }
+  }
+
   Future<void> resetInviteAddress() async {
     _fcCounter++;
     await const FlutterSecureStorage().write(
@@ -3178,6 +3256,7 @@ class AppState extends ChangeNotifier {
       value: '$_fcCounter',
     );
     engine.subscribeFirstContactBg(_fcCounter);
+    await _repointHandle();
     notifyListeners();
   }
 
@@ -4059,6 +4138,7 @@ class AppState extends ChangeNotifier {
     // engine, and pick the matching relay list. doing this after would start
     // every session on tor regardless of what the person chose.
     await loadSendMode();
+    await loadMyHandle();
     // 'normal' was the old name for private. migrating here rather than on
     // the modes screen means the rest of the app never sees it.
     if (_sendMode == 'normal') await setSendMode('private');

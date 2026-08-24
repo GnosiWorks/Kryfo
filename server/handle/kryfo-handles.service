@@ -1,0 +1,16 @@
+[Unit]
+Description=Kryfo handle registry
+After=network.target
+
+[Service]
+ExecStart=/opt/kryfo-handles/kryfo-handles
+Environment=HANDLE_ADDR=127.0.0.1:3336
+Environment=HANDLE_DIR=/opt/kryfo-handles
+Restart=always
+User=ubuntu
+# logs to ram only, same posture as the relay
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
