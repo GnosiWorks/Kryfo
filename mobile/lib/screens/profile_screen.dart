@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
+import 'avatar_picker_screen.dart';
 import '../main.dart' show appState, showAddContact;
 import '../supporter.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -213,9 +214,41 @@ class _ProfileScreenState extends State<ProfileScreen>
                             curve: Curves.easeOutBack,
                           ),
                         ),
-                        child: KryfoAvatar(
-                          seed: id.isEmpty ? 'kryfo' : id,
-                          size: 96,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () async {
+                            HapticFeedback.selectionClick();
+                            await Navigator.of(
+                              context,
+                            ).push(haloRoute(const AvatarPickerScreen()));
+                            if (mounted) setState(() {});
+                          },
+                          child: Stack(
+                            alignment: Alignment.bottomRight,
+                            children: [
+                              KryfoAvatar(
+                                seed: id.isEmpty ? 'kryfo' : id,
+                                size: 96,
+                                choice: appState.myAvatar,
+                              ),
+                              Container(
+                                padding: const EdgeInsets.all(5),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: HaloColors.amber,
+                                  border: Border.all(
+                                    color: HaloColors.surface,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.edit,
+                                  size: 12,
+                                  color: HaloColors.ink,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(height: 14),
