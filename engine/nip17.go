@@ -73,7 +73,7 @@ func nip17Wrap(peer [32]byte, msg string) (nostr2.Event, error) {
 	if err != nil {
 		return nostr2.Event{}, err
 	}
-	exp := fmt.Sprintf("%d", time.Now().Add(30*24*time.Hour).Unix())
+	exp := fmt.Sprintf("%d", time.Now().Add(14*24*time.Hour).Unix())
 	return nip59.GiftWrap(rumor, rcvPk,
 		func(pt string) (string, error) { return nip44.Encrypt(pt, ck) },
 		func(e *nostr2.Event) error { return e.Sign(sndSk) },
