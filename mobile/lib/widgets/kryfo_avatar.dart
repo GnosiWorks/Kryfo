@@ -6,14 +6,28 @@
 
 import 'package:flutter/material.dart';
 import '../theme.dart';
+import 'avatar_mark.dart';
+
+// how many distinct avatars exist. shown on the picker because the number is
+// the point: nobody else is going to have yours by accident.
+int get avatarChoiceCount => _palettes.length * markCount * rotCount;
 
 class KryfoAvatar extends StatelessWidget {
   final String seed;
   final double size;
-  const KryfoAvatar({super.key, required this.seed, required this.size});
+  // null means the old behaviour - palette from the seed, serif initial.
+  // anything else is a deliberate choice, encoded as one int.
+  final int? choice;
+  const KryfoAvatar({
+    super.key,
+    required this.seed,
+    required this.size,
+    this.choice,
+  });
 
   @override
   Widget build(BuildContext context) {
+    if (choice != null) return _markedAvatar(choice!, size);
     final b = _seedBytes(seed);
     final palette = _palettes[b[0] % _palettes.length];
 
@@ -88,6 +102,32 @@ class KryfoAvatar extends StatelessWidget {
       ),
     );
   }
+}
+
+// a choice is one int: palette, mark and rotation packed together, so it is
+// a single value to store and pass around. unpacked in _markedAvatar below.
+
+Widget _markedAvatar(int ch, double size) {
+  final rot = ch % rotCount;
+  final mark = (ch ~/ rotCount) % markCount;
+  final pal = _palettes[(ch ~/ (rotCount * markCount)) % _palettes.length];
+  return ClipOval(
+    child: Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [pal.start, pal.end],
+        ),
+      ),
+      child: CustomPaint(
+        painter: AvatarMarkPainter(mark: mark, rot: rot, color: pal.ink),
+        size: Size.square(size),
+      ),
+    ),
+  );
 }
 
 class _Palette {

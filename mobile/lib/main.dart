@@ -3020,6 +3020,29 @@ class AppState extends ChangeNotifier {
   String? _myHandle;
   String? get myHandle => _myHandle;
 
+  // the avatar someone picked, or null for the one their id produces. local
+  // only - it is drawn from a number on every device that has the number, and
+  // what they picked for themselves is nobody else's business.
+  int? _myAvatar;
+  int? get myAvatar => _myAvatar;
+
+  Future<void> loadMyAvatar() async {
+    final v = await const FlutterSecureStorage().read(key: 'my_avatar');
+    _myAvatar = v == null ? null : int.tryParse(v);
+    notifyListeners();
+  }
+
+  Future<void> setMyAvatar(int? v) async {
+    _myAvatar = v;
+    final st = const FlutterSecureStorage();
+    if (v == null) {
+      await st.delete(key: 'my_avatar');
+    } else {
+      await st.write(key: 'my_avatar', value: '$v');
+    }
+    notifyListeners();
+  }
+
   Future<void> loadMyHandle() async {
     _myHandle = await const FlutterSecureStorage().read(key: 'my_handle');
     notifyListeners();
@@ -4139,6 +4162,7 @@ class AppState extends ChangeNotifier {
     // every session on tor regardless of what the person chose.
     await loadSendMode();
     await loadMyHandle();
+    await loadMyAvatar();
     // 'normal' was the old name for private. migrating here rather than on
     // the modes screen means the rest of the app never sees it.
     if (_sendMode == 'normal') await setSendMode('private');
