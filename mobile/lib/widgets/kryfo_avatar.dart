@@ -11,6 +11,7 @@ import 'avatar_mark.dart';
 // how many distinct avatars exist. shown on the picker because the number is
 // the point: nobody else is going to have yours by accident.
 int get avatarChoiceCount => _palettes.length * markCount * rotCount;
+int get avatarPaletteCount => _palettes.length;
 
 class KryfoAvatar extends StatelessWidget {
   final String seed;

@@ -155,6 +155,8 @@ class ContactPreview {
   final String? preview;
   final DateTime? when;
   final String avatarSeed;
+  // the face they picked, if they have. null means draw from their id.
+  final int? avatar;
   final bool blocked;
   final bool archived;
   final bool muted;
@@ -168,6 +170,7 @@ class ContactPreview {
     this.preview,
     this.when,
     required this.avatarSeed,
+    this.avatar,
     this.blocked = false,
     this.archived = false,
     this.muted = false,
@@ -1617,7 +1620,7 @@ class _HeroCard extends StatelessWidget {
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    KryfoAvatar(seed: c.avatarSeed, size: 42),
+                    KryfoAvatar(seed: c.avatarSeed, size: 42, choice: c.avatar),
                     if (c.verified)
                       Positioned(
                         right: -1,
@@ -1917,7 +1920,7 @@ class _Row extends StatelessWidget {
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  KryfoAvatar(seed: c.avatarSeed, size: 44),
+                  KryfoAvatar(seed: c.avatarSeed, size: 44, choice: c.avatar),
                   if (c.verified)
                     Positioned(
                       right: -1,

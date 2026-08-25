@@ -36,7 +36,9 @@ const (
 	// we sweep at 14 days, so a longer expiration would be a promise we do
 	// not keep. the extra day absorbs clock skew - a phone an hour fast
 	// should not have its mail refused.
-	maxExpiry       = undeliveredTTL + 24*time.Hour
+	// we sweep at 14 days; the extra day absorbs clock skew so a phone an
+	// hour fast does not have its mail refused.
+	maxExpiry       = wrapTTL + 24*time.Hour
 	maxFutureSkew   = 15 * time.Minute
 	// wraps jitter created_at into the past, spec allows up to 2 days
 	maxPastSkew = 3 * 24 * time.Hour
@@ -126,7 +128,7 @@ func main() {
 	relay.Info.Description = "nip-17 gift wrap store, auth-gated reads"
 
 	relay.StoreEvent = append(relay.StoreEvent, db.SaveEvent)
-	relay.QueryEvents = append(relay.QueryEvents, trackingQuery(db.QueryEvents))
+	relay.QueryEvents = append(relay.QueryEvents, db.QueryEvents)
 	relay.DeleteEvent = append(relay.DeleteEvent, db.DeleteEvent)
 	relay.ReplaceEvent = append(relay.ReplaceEvent, db.ReplaceEvent)
 	relay.CountEvents = append(relay.CountEvents, db.CountEvents)
