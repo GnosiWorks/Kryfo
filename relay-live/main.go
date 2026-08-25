@@ -33,6 +33,8 @@ func main() {
 	if v := os.Getenv("RELAY_ADDR"); v != "" {
 		addr = v
 	}
+	startSweeper(&db)
+
 	fmt.Println("halo relay listening on", addr)
 	log.Fatal(http.ListenAndServe(addr, relay))
 }
