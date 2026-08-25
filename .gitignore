@@ -63,3 +63,5 @@ dmrelay/dmrelay-data/
 server/handle/kryfo-handles
 dmrelay/dmrelay
 server/handle/kryfo-handles
+relay-live/halo-relay
+relay-live/data/

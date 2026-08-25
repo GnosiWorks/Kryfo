@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// pick a face. every option is drawn on the phone from a number, so there is
-// no image to upload, no camera permission to grant, and nothing about the
-// choice ever leaves the device. the one you start on is the one your kryfo
-// id already produces, so doing nothing is a real answer.
+// pick a face. shape and colour are chosen separately, because scrolling a
+// thousand combinations to find the one you wanted is not choosing - the
+// twelve shapes were just wearing a hundred outfits each.
+//
+// every option is drawn on the phone from a number. no image to upload, no
+// camera permission, nothing to license. the number rides with your messages
+// so the people you talk to see the face you picked.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../main.dart' show appState, showHaloToast;
 import '../theme.dart';
+import '../widgets/avatar_mark.dart';
 import '../widgets/kryfo_avatar.dart';
 
 class AvatarPickerScreen extends StatefulWidget {
@@ -18,34 +22,39 @@ class AvatarPickerScreen extends StatefulWidget {
 }
 
 class _AvatarPickerScreenState extends State<AvatarPickerScreen> {
-  static const _perPage = 24;
-  int _page = 0;
-  int? _sel;
+  // null shape means the initial your id already draws
+  int? _shape;
+  int _rot = 0;
+  int _pal = 0;
 
   @override
   void initState() {
     super.initState();
-    _sel = appState.myAvatar;
-    if (_sel != null) _page = _sel! ~/ _perPage;
+    final ch = appState.myAvatar;
+    if (ch != null) {
+      _rot = ch % rotCount;
+      _shape = (ch ~/ rotCount) % markCount;
+      _pal = (ch ~/ (rotCount * markCount)) % avatarPaletteCount;
+    }
   }
 
+  int? get _choice => _shape == null
+      ? null
+      : _pal * markCount * rotCount + _shape! * rotCount + _rot;
+
   Future<void> _save() async {
-    await appState.setMyAvatar(_sel);
+    await appState.setMyAvatar(_choice);
     if (!mounted) return;
     showHaloToast(
       context,
-      _sel == null ? 'back to your initial' : 'that one is yours',
+      _choice == null ? 'back to your initial' : 'that one is yours',
     );
     Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    final total = avatarChoiceCount;
-    final pages = (total / _perPage).ceil();
-    final start = _page * _perPage;
     final id = appState.myId;
-
     return Scaffold(
       backgroundColor: HaloColors.surface,
       appBar: AppBar(
@@ -66,83 +75,125 @@ class _AvatarPickerScreenState extends State<AvatarPickerScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
         children: [
-          const SizedBox(height: 6),
-          KryfoAvatar(seed: id, size: 84, choice: _sel),
-          const SizedBox(height: 12),
-          Text(
-            '$total to choose from · drawn on this phone',
-            style: HaloType.mono(size: 10.5, color: HaloColors.text2),
+          Center(
+            child: KryfoAvatar(seed: id, size: 96, choice: _choice),
           ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                mainAxisSpacing: 14,
-                crossAxisSpacing: 14,
+          const SizedBox(height: 10),
+          Center(
+            child: Text(
+              'the people you message see this too',
+              style: HaloType.mono(size: 10.5, color: HaloColors.text2),
+            ),
+          ),
+          const SizedBox(height: 26),
+
+          _Label('shape'),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              _Swatch(
+                selected: _shape == null,
+                onTap: () => setState(() => _shape = null),
+                child: KryfoAvatar(seed: id, size: 50),
               ),
-              itemCount: _perPage + (_page == 0 ? 1 : 0),
-              itemBuilder: (_, i) {
-                // the first tile on the first page hands the initial back,
-                // so the original avatar is never lost behind a choice.
-                if (_page == 0 && i == 0) {
-                  return _Tile(
-                    selected: _sel == null,
-                    onTap: () => setState(() => _sel = null),
-                    child: KryfoAvatar(seed: id, size: 60),
-                  );
-                }
-                final idx = start + i - (_page == 0 ? 1 : 0);
-                if (idx >= total) return const SizedBox.shrink();
-                return _Tile(
-                  selected: _sel == idx,
+              for (var m = 0; m < markCount; m++)
+                _Swatch(
+                  selected: _shape == m,
                   onTap: () {
                     HapticFeedback.selectionClick();
-                    setState(() => _sel = idx);
+                    setState(() => _shape = m);
                   },
-                  child: KryfoAvatar(seed: id, size: 60, choice: idx),
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: Row(
-              children: [
-                _Nav(
-                  icon: Icons.chevron_left,
-                  on: _page > 0,
-                  onTap: () => setState(() => _page--),
-                ),
-                Expanded(
-                  child: Text(
-                    '${_page + 1} / $pages',
-                    textAlign: TextAlign.center,
-                    style: HaloType.mono(size: 11, color: HaloColors.text2),
+                  child: KryfoAvatar(
+                    seed: id,
+                    size: 50,
+                    choice: _pal * markCount * rotCount + m * rotCount + _rot,
                   ),
                 ),
-                _Nav(
-                  icon: Icons.chevron_right,
-                  on: _page < pages - 1,
-                  onTap: () => setState(() => _page++),
+            ],
+          ),
+
+          const SizedBox(height: 26),
+          _Label('colour'),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              for (var p = 0; p < avatarPaletteCount; p++)
+                _Swatch(
+                  selected: _pal == p,
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    setState(() => _pal = p);
+                  },
+                  child: KryfoAvatar(
+                    seed: id,
+                    size: 50,
+                    choice:
+                        p * markCount * rotCount +
+                        (_shape ?? 0) * rotCount +
+                        _rot,
+                  ),
                 ),
+            ],
+          ),
+
+          if (_shape != null) ...[
+            const SizedBox(height: 26),
+            _Label('turn'),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                for (var r = 0; r < rotCount; r++) ...[
+                  _Swatch(
+                    selected: _rot == r,
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() => _rot = r);
+                    },
+                    child: KryfoAvatar(
+                      seed: id,
+                      size: 50,
+                      choice:
+                          _pal * markCount * rotCount + _shape! * rotCount + r,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
               ],
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 }
 
-class _Tile extends StatelessWidget {
+class _Label extends StatelessWidget {
+  final String text;
+  const _Label(this.text);
+  @override
+  Widget build(BuildContext context) => Text(
+    text,
+    style: HaloType.mono(
+      size: 11,
+      color: HaloColors.text2,
+      letter: 0.14,
+      weight: FontWeight.w600,
+    ),
+  );
+}
+
+class _Swatch extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
   final Widget child;
-  const _Tile({
+  const _Swatch({
     required this.selected,
     required this.onTap,
     required this.child,
@@ -164,35 +215,7 @@ class _Tile extends StatelessWidget {
             width: 2,
           ),
         ),
-        child: Center(child: child),
-      ),
-    );
-  }
-}
-
-class _Nav extends StatelessWidget {
-  final IconData icon;
-  final bool on;
-  final VoidCallback onTap;
-  const _Nav({required this.icon, required this.on, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: on ? onTap : null,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.all(9),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: HaloColors.surface2,
-          border: Border.all(color: HaloColors.line),
-        ),
-        child: Icon(
-          icon,
-          size: 18,
-          color: on ? HaloColors.text2 : HaloColors.line2,
-        ),
+        child: child,
       ),
     );
   }

@@ -708,7 +708,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 35,
+      version: 36,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -738,7 +738,8 @@ class HaloDb {
             key_changed INTEGER NOT NULL DEFAULT 0,
             peer_bundle TEXT,
             accepted INTEGER NOT NULL DEFAULT 1,
-            supporter_badge TEXT
+            supporter_badge TEXT,
+            avatar INTEGER
           )
         ''');
         await db.execute('''
@@ -822,6 +823,15 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 36) {
+          // the face a contact picked, so we draw theirs and not a
+          // default derived from their id.
+          try {
+            await db.execute('ALTER TABLE contacts ADD COLUMN avatar INTEGER');
+          } catch (_) {
+            // already present - migrations must be safe to re-run
+          }
+        }
         if (oldV < 35) {
           // the sender can ask that a message not be screenshotted. we
           // keep the flag so it still holds after a restart.
@@ -1311,6 +1321,16 @@ class HaloDb {
     await d.update(
       'contacts',
       {'supporter_badge': tier},
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+    );
+  }
+
+  Future<void> setContactAvatar(String haloId, int? av) async {
+    final db = await open();
+    await db.update(
+      'contacts',
+      {'avatar': av},
       where: 'halo_id = ?',
       whereArgs: [haloId],
     );
@@ -3612,6 +3632,11 @@ class AppState extends ChangeNotifier {
       preview: env.preview != null ? jsonEncode(env.preview) : null,
       secure: env.secure,
     );
+    // remember the face they picked. cheap, and it arrives with every
+    // message so it stays current if they change it.
+    if (env.senderAvatar != null) {
+      await db.setContactAvatar(senderHaloId, env.senderAvatar);
+    }
     // a preview that raced ahead of this message was stashed - patch it on.
     if (uid != null) {
       final pending = _pendingPreviews.remove(uid);
@@ -4598,6 +4623,7 @@ class AppState extends ChangeNotifier {
           haloId: haloId,
           nickname: r['nickname'] as String?,
           avatarSeed: haloId,
+          avatar: (r['avatar'] as num?)?.toInt(),
           preview: preview,
           when: when,
           blocked: (r['blocked'] as int? ?? 0) == 1,
@@ -4694,6 +4720,7 @@ class AppState extends ChangeNotifier {
     edPub: engine.myEdPubkey(),
     onion: myOnion,
     xPub: engine.myXPubkey(),
+    avatar: _myAvatar,
   );
 
   // pairwise envelope send. wraps libsignal encrypt + transport choice

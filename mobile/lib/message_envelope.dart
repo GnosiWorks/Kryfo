@@ -21,6 +21,7 @@ class UnwrappedMessage {
   final String? senderEdPub; // 'e' field, hex
   final String? senderOnion; // 'o' field
   final String? senderXPub; // 'x' field, hex
+  final int? senderAvatar; // 'av' - the face they picked, drawn from a number
   final int? burnSeconds; // 'b' field - seconds-from-receive
   final String? msgUid; // 'u' field - stable cross-device message id
   final ReactionFrame? reaction; // 'r' field - present on reaction control msgs
@@ -57,6 +58,7 @@ class UnwrappedMessage {
     this.senderEdPub,
     this.senderOnion,
     this.senderXPub,
+    this.senderAvatar,
     this.burnSeconds,
     this.msgUid,
     this.reaction,
@@ -125,11 +127,13 @@ class SenderInfo {
   final String edPub;
   final String onion;
   final String xPub;
+  final int? avatar;
   const SenderInfo({
     required this.haloId,
     required this.edPub,
     required this.onion,
     required this.xPub,
+    this.avatar,
   });
 }
 
@@ -249,6 +253,7 @@ Future<String> wrapMessage(
   }
   if (sender != null) {
     body['h'] = sender.haloId;
+    if (sender.avatar != null) body['av'] = sender.avatar;
     body['e'] = sender.edPub;
     body['o'] = sender.onion;
     body['x'] = sender.xPub;
@@ -331,6 +336,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       (json['m'] as String?) ?? '',
       endpoint: json['p'] as String?,
       senderHaloId: json['h'] as String?,
+      senderAvatar: (json['av'] as num?)?.toInt(),
       senderEdPub: json['e'] as String?,
       senderOnion: json['o'] as String?,
       senderXPub: json['x'] as String?,
