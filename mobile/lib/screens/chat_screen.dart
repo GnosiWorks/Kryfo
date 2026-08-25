@@ -816,7 +816,22 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       fresh.add(m);
       if (uid != null) _seenUids.add(uid);
     }
-    setState(() => _messages.addAll(fresh));
+    setState(() {
+      _messages.addAll(fresh);
+      // by time, always. appending puts a late arrival after messages newer
+      // than itself, which reads wrong on its own and also emits a second
+      // day divider for a day that already has one - and both dividers grab
+      // the same GlobalKey, which tears the whole list out of the tree.
+      _messages.sort((a, b) => a.when.compareTo(b.when));
+      // and never the same message twice: two bubbles built from one object
+      // collide on their ObjectKey the same way.
+      final seen = <String>{};
+      _messages.retainWhere((m) {
+        final id = m.msgUid;
+        if (id == null) return true;
+        return seen.add(id);
+      });
+    });
     _applySecureContent();
     // a message landing while we're actually reading this chat left the home
     // badge lit - clear it. but this runs on every appState notify, and a
@@ -7589,23 +7604,9 @@ class _Composer extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
-              GestureDetector(
-                onTap: onToggleSecure,
-                behavior: HitTestBehavior.opaque,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: secure ? HaloColors.violet : Colors.transparent,
-                  ),
-                  child: Icon(
-                    secure ? Icons.shield_rounded : Icons.shield_outlined,
-                    size: 18,
-                    color: secure ? HaloColors.text : HaloColors.text2,
-                  ),
-                ),
-              ),
+              // shield hidden until it can be verified end to end on a
+              // device. the flag, the wire and the viewer are all still
+              // wired - only the way to turn it on is gone.
               const SizedBox(width: 10),
               GestureDetector(
                 onTap: onAttach,
