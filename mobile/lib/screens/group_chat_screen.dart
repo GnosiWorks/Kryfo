@@ -76,6 +76,20 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   final Map<String, GlobalKey> _dayKeys = {};
   final Map<String, int> _dayMsOf = {};
   final GlobalKey _listKey = GlobalKey();
+
+  // the day dividers key off "is this a different day from the message
+  // before it", so an out-of-order list emits two dividers for one day and
+  // both grab the same GlobalKey.
+  void _normaliseMessages() {
+    _messages.sort((a, b) => a.when.compareTo(b.when));
+    final seen = <String>{};
+    _messages.retainWhere((m) {
+      final id = m.msgUid;
+      if (id == null) return true;
+      return seen.add(id);
+    });
+  }
+
   final ValueNotifier<String?> _stickyLabel = ValueNotifier(null);
   final ValueNotifier<bool> _stickyShown = ValueNotifier(false);
   int? _stickyDayMs;
@@ -335,7 +349,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       // drop the maps - they repopulate on build.
       _dayKeys.clear();
       _dayMsOf.clear();
-      setState(() => _messages.insertAll(0, older));
+      setState(() {
+        _messages.insertAll(0, older);
+        _normaliseMessages();
+      });
       // anchor: pull the previous top message back to the top of the view so
       // the prepend doesn't yank the scroll.
       final anchorUid = _messages[older.length].msgUid;
@@ -600,7 +617,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final nowHave = _messages.map((m) => m.msgUid).toSet();
     fresh.removeWhere((m) => m.msgUid != null && nowHave.contains(m.msgUid));
     if (fresh.isEmpty) return;
-    setState(() => _messages.addAll(fresh));
+    setState(() {
+      _messages.addAll(fresh);
+      _normaliseMessages();
+    });
     _scrollToEnd();
   }
 
