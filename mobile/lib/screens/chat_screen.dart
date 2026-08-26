@@ -413,7 +413,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         }
       }
       if (!mounted || older.isEmpty) return;
-      setState(() => _messages.insertAll(0, older));
+      setState(() {
+        _messages.insertAll(0, older);
+        _normaliseMessages();
+      });
     } finally {
       _loadingOlder = false;
     }
@@ -425,7 +428,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (p.pixels > p.maxScrollExtent - 600) _loadOlder();
   }
 
-  final Map<int, GlobalKey> _dayKeys = {};
+  // keyed by the message the divider sits above, not by the day, so two
+  // dividers can never hold the same key. _dayMsOf maps a key back to the
+  // day it represents for the sticky header.
+  final Map<String, GlobalKey> _dayKeys = {};
+  final Map<String, int> _dayMsOf = {};
+
+  // the keys belong to messages, so they go when the messages do
+  void _forgetDayKeys() {
+    _dayKeys.clear();
+    _dayMsOf.clear();
+  }
+
   final GlobalKey _listKey = GlobalKey();
   final ValueNotifier<String?> _stickyLabel = ValueNotifier(null);
   final ValueNotifier<bool> _stickyShown = ValueNotifier(false);
@@ -434,6 +448,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Timer? _stickyHideTimer;
   bool _suppressSticky = true;
   final List<_Msg> _messages = [];
+
+  // every path that touches the list ends here. the day dividers key off
+  // "is this message a different day from the one before it", so an
+  // out-of-order list emits two dividers for one day - and both grab the
+  // same GlobalKey, which takes the whole chat out of the widget tree.
+  void _normaliseMessages() {
+    _messages.sort((a, b) => a.when.compareTo(b.when));
+    final seen = <String>{};
+    _messages.retainWhere((m) {
+      final id = m.msgUid;
+      if (id == null) return true;
+      return seen.add(id);
+    });
+  }
+
   bool _loaded = false;
   Atmo _atmosphere = Atmo.none;
   String _status = '';
@@ -818,19 +847,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
     setState(() {
       _messages.addAll(fresh);
-      // by time, always. appending puts a late arrival after messages newer
-      // than itself, which reads wrong on its own and also emits a second
-      // day divider for a day that already has one - and both dividers grab
-      // the same GlobalKey, which tears the whole list out of the tree.
-      _messages.sort((a, b) => a.when.compareTo(b.when));
-      // and never the same message twice: two bubbles built from one object
-      // collide on their ObjectKey the same way.
-      final seen = <String>{};
-      _messages.retainWhere((m) {
-        final id = m.msgUid;
-        if (id == null) return true;
-        return seen.add(id);
-      });
+      _normaliseMessages();
     });
     _applySecureContent();
     // a message landing while we're actually reading this chat left the home
@@ -1869,9 +1886,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         );
       }
       _loaded = true;
+      _forgetDayKeys();
       _messages
         ..clear()
         ..addAll(loaded);
+      _normaliseMessages();
       if (loaded.isNotEmpty) {
         final last = loaded.last.when;
         _stickyDayMs = DateTime(
@@ -2417,6 +2436,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
     setState(() {
       _messages.add(msg);
+      _normaliseMessages();
       _status = '';
     });
     _scrollToEnd();
@@ -2586,6 +2606,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
     setState(() {
       _messages.add(msg);
+      _normaliseMessages();
       _status = '';
     });
     _scrollToEnd();
@@ -2795,6 +2816,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
     setState(() {
       _messages.add(msg);
+      _normaliseMessages();
       _status = '';
     });
     _scrollToEnd();
@@ -3401,7 +3423,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         key: ObjectKey(m),
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (showDate) _dateDivider(m.when),
+          if (showDate) _dateDivider(m.when, m.msgUid ?? 'r${m.rowid}'),
           if (ix == _firstUnreadIndex) _newMessagesDivider(),
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 1.0, end: m.removing ? 0.0 : 1.0),
@@ -4393,13 +4415,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final top = listObj.localToGlobal(Offset.zero).dy;
     int? best;
     double bestDy = -1e9;
-    _dayKeys.forEach((dayMs, key) {
+    _dayKeys.forEach((anchor, key) {
       final obj = key.currentContext?.findRenderObject();
       if (obj is! RenderBox) return;
       final dy = obj.localToGlobal(Offset.zero).dy;
       if (dy <= top + 6 && dy > bestDy) {
         bestDy = dy;
-        best = dayMs;
+        best = _dayMsOf[anchor];
       }
     });
     if (best != null) _stickyDayMs = best;
@@ -4442,13 +4464,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     return label;
   }
 
-  Widget _dateDivider(DateTime when) {
+  Widget _dateDivider(DateTime when, String anchor) {
     final dayMs = DateTime(
       when.year,
       when.month,
       when.day,
     ).millisecondsSinceEpoch;
-    final key = _dayKeys.putIfAbsent(dayMs, () => GlobalKey());
+    final key = _dayKeys.putIfAbsent(anchor, () => GlobalKey());
+    _dayMsOf[anchor] = dayMs;
     return Padding(
       key: key,
       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -5975,29 +5998,38 @@ class _Bubble extends StatelessWidget {
                                           constraints: const BoxConstraints(
                                             maxHeight: 280,
                                           ),
-                                          child: Image.file(
-                                            File(msg.mediaPath!),
-                                            cacheWidth: 1080,
-                                            gaplessPlayback: true,
-                                            filterQuality: FilterQuality.medium,
-                                            fit: BoxFit.cover,
-                                            width: double.infinity,
-                                            errorBuilder: (_, e, __) {
+                                          child: LayoutBuilder(
+                                            builder: (ctx, bc) {
                                               debugPrint(
-                                                'image failed: '
-                                                '${msg.mediaPath} / $e',
+                                                'PHOTOBOX w=${bc.minWidth}..'
+                                                '${bc.maxWidth} h=${bc.minHeight}'
+                                                '..${bc.maxHeight}',
                                               );
-                                              return Container(
-                                                height: 120,
-                                                alignment: Alignment.center,
-                                                color: Colors.black26,
-                                                child: Text(
-                                                  'photo unavailable',
-                                                  style: HaloType.mono(
-                                                    size: 11,
-                                                    color: HaloColors.text2,
-                                                  ),
-                                                ),
+                                              return Image.file(
+                                                File(msg.mediaPath!),
+
+                                                gaplessPlayback: true,
+
+                                                fit: BoxFit.cover,
+                                                width: double.infinity,
+                                                errorBuilder: (_, e, __) {
+                                                  debugPrint(
+                                                    'image failed: '
+                                                    '${msg.mediaPath} / $e',
+                                                  );
+                                                  return Container(
+                                                    height: 120,
+                                                    alignment: Alignment.center,
+                                                    color: Colors.black26,
+                                                    child: Text(
+                                                      'photo unavailable',
+                                                      style: HaloType.mono(
+                                                        size: 11,
+                                                        color: HaloColors.text2,
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
                                               );
                                             },
                                           ),
