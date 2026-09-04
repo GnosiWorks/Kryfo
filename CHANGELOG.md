@@ -2,6 +2,28 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.0] - 2026-09-04
+
+Second pre-alpha. Groups, a relay route that works on its own, and the photo
+bubble finally paints.
+
+### Added
+- group chats with photos, files, voice notes, replies, reactions and pins
+- relay as a route in its own right, named on every screen, surviving restart
+- obfs4 bridges in process over socks5, with no executable shipped
+- pair codes and a contact card you can share
+- public handles, which follow wipes and invite resets
+- 1200 drawn avatars picked by shape and colour, now offered during setup
+- first contact over a relay, so a stranger reaches you before your onion publishes
+- one apk per abi, each with its own version code
+
+### Fixed
+- photos drew as a black rectangle in 1:1 chats
+- the first stranger to write could claim the shared first-contact tag, and everyone after them silently failed to pair
+- chats could blank out when two day dividers shared one key
+- a tree with no engine built an apk that died on launch; it now fails at build time
+- boot failures say what went wrong instead of sitting on the tor splash forever
+
 ## [0.1.0-alpha] - 2026-05-20
 
 First public pre-alpha. Usable for technical testers; not yet ready for everyday use.
