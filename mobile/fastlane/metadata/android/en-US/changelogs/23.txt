@@ -1,0 +1,10 @@
+groups: photos, files, voice notes, replies, reactions, pins.
+
+relay is a route of its own now, named on every screen and remembered across
+restarts. obfs4 bridges run in process, with no executable shipped.
+
+pair codes, a shareable contact card, public handles, and 1200 drawn avatars
+you can pick from during setup.
+
+fixed: photos drew as a black rectangle, a stranger's first message could lock
+out every stranger after them, and chats could blank out mid-conversation.

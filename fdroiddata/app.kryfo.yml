@@ -14,9 +14,9 @@ RepoType: git
 Repo: https://github.com/GnosiWorks/Kryfo.git
 
 Builds:
-  - versionName: 0.1.0-alpha
-    versionCode: 12
-    commit: v0.1.0-alpha
+  - versionName: 0.2.0
+    versionCode: 22
+    commit: v0.2.0
     subdir: mobile
     sudo:
       - apt-get update
@@ -58,9 +58,9 @@ Builds:
     ndk: r28b
     output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
 
-  - versionName: 0.1.0-alpha
-    versionCode: 13
-    commit: v0.1.0-alpha
+  - versionName: 0.2.0
+    versionCode: 23
+    commit: v0.2.0
     subdir: mobile
     sudo:
       - apt-get update
@@ -108,5 +108,5 @@ VercodeOperation:
   - '%c * 10 + 2'
   - '%c * 10 + 3'
 UpdateCheckData: pubspec.yaml|version:\s.+\+(\d+)|.|version:\s(.+)\+
-CurrentVersion: 0.1.0-alpha
-CurrentVersionCode: 13
+CurrentVersion: 0.2.0
+CurrentVersionCode: 23
