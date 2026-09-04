@@ -1754,7 +1754,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _loadMessagesInner() async {
-    debugPrint('LOAD: start');
     await db.purgeExpiredBurns();
     db.isBackPaired(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _backPaired = v);
@@ -1872,19 +1871,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
     }
     setState(() {
-      debugPrint('LOAD: setState, msgs=' + _messages.length.toString());
-      for (final m in _messages) {
-        debugPrint(
-          'LOAD: row dir=' +
-              m.direction +
-              ' txt=' +
-              m.text.length.toString() +
-              ' media=' +
-              (m.mediaPath ?? 'null') +
-              ' file=' +
-              (m.filePath ?? 'null'),
-        );
-      }
       _loaded = true;
       _forgetDayKeys();
       _messages
@@ -3179,7 +3165,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     int? powNonce;
     if (_recvCount == 0) {
       powNonce = await compute(_grindPowTask, text);
-      debugPrint('pow: ground nonce=$powNonce len=${text.length}');
     }
     final String cipher;
     try {
@@ -5998,40 +5983,41 @@ class _Bubble extends StatelessWidget {
                                           constraints: const BoxConstraints(
                                             maxHeight: 280,
                                           ),
-                                          child: LayoutBuilder(
-                                            builder: (ctx, bc) {
-                                              debugPrint(
-                                                'PHOTOBOX w=${bc.minWidth}..'
-                                                '${bc.maxWidth} h=${bc.minHeight}'
-                                                '..${bc.maxHeight}',
-                                              );
-                                              return Image.file(
-                                                File(msg.mediaPath!),
-
-                                                gaplessPlayback: true,
-
-                                                fit: BoxFit.cover,
-                                                width: double.infinity,
-                                                errorBuilder: (_, e, __) {
-                                                  debugPrint(
-                                                    'image failed: '
-                                                    '${msg.mediaPath} / $e',
-                                                  );
-                                                  return Container(
-                                                    height: 120,
-                                                    alignment: Alignment.center,
-                                                    color: Colors.black26,
-                                                    child: Text(
-                                                      'photo unavailable',
-                                                      style: HaloType.mono(
-                                                        size: 11,
-                                                        color: HaloColors.text2,
-                                                      ),
+                                          // the bubble sizes itself with
+                                          // IntrinsicWidth, and an Image
+                                          // answers that with its own width -
+                                          // infinity, until the file decodes.
+                                          // pin one so the answer holds either
+                                          // way.
+                                          child: SizedBox(
+                                            width:
+                                                MediaQuery.of(
+                                                  context,
+                                                ).size.width *
+                                                0.78,
+                                            child: Image.file(
+                                              File(msg.mediaPath!),
+                                              gaplessPlayback: true,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, e, __) {
+                                                debugPrint(
+                                                  'image failed: '
+                                                  '${msg.mediaPath} / $e',
+                                                );
+                                                return Container(
+                                                  height: 120,
+                                                  alignment: Alignment.center,
+                                                  color: Colors.black26,
+                                                  child: Text(
+                                                    'photo unavailable',
+                                                    style: HaloType.mono(
+                                                      size: 11,
+                                                      color: HaloColors.text2,
                                                     ),
-                                                  );
-                                                },
-                                              );
-                                            },
+                                                  ),
+                                                );
+                                              },
+                                            ),
                                           ),
                                         ),
                                         if (showMeta)
