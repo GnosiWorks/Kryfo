@@ -2,6 +2,7 @@
 // kryfo mobile - phase 1: identity persistence + ECDH + editorial UI
 
 import 'dart:async';
+import 'widgets/boot_failed.dart';
 import 'widgets/tor_boot_splash.dart';
 import 'dart:convert';
 import 'dart:math';
@@ -4053,7 +4054,32 @@ class AppState extends ChangeNotifier {
     } catch (_) {}
   }
 
+  // anything that threw in boot left ready false for good, behind a splash
+  // that says "starting Tor" - so a local fault was indistinguishable from a
+  // slow bootstrap, with nothing to read and no way out. hold the error so
+  // the gate can show it.
+  String? bootError;
+
   Future<void> boot() async {
+    try {
+      await _boot();
+    } catch (e, st) {
+      debugPrint('BOOT failed: $e\n$st');
+      bootError = e.toString();
+      _booting = false;
+      notifyListeners();
+    }
+  }
+
+  // clears the error and runs the whole thing again. the failure may well be
+  // permanent, but retrying costs nothing and beats a force-stop.
+  Future<void> retryBoot() async {
+    bootError = null;
+    notifyListeners();
+    await boot();
+  }
+
+  Future<void> _boot() async {
     final _bsw = Stopwatch()..start();
     // both _OnboardingGate and _RootShell call boot() on cold start, before
     // ready flips. without this guard they raced through generateIdentity +
@@ -4395,7 +4421,16 @@ class AppState extends ChangeNotifier {
             await _handleBundleCtl(m.peer, m.cipher, h);
             continue;
           }
-          var haloId = _xPubToHaloId[m.peer];
+          // 'firstcontact' is a lane, not a peer. every stranger's opening
+          // message arrives under that one tag, so it can neither name who
+          // sent this nor be remembered as anyone: the first stranger to land
+          // here would otherwise claim the tag and every stranger after them
+          // would be trial-decrypted against that one session.
+          final fcLane = m.peer == 'firstcontact';
+          var haloId = fcLane ? null : _xPubToHaloId[m.peer];
+          // flagKeyChange means "this cipher really is from this peer", which
+          // skips the identity check and spends the one-time prekey. only a
+          // real xpub mapping earns that.
           String? wrapped = haloId == null
               ? null
               : await signalDecrypt(haloId, m.cipher, flagKeyChange: true);
@@ -4408,7 +4443,7 @@ class AppState extends ChangeNotifier {
               if (p != null) {
                 wrapped = p;
                 haloId = c.haloId;
-                _xPubToHaloId[m.peer] = c.haloId;
+                if (!fcLane) _xPubToHaloId[m.peer] = c.haloId;
                 break;
               }
             }
@@ -4420,7 +4455,7 @@ class AppState extends ChangeNotifier {
               if (p != null) {
                 wrapped = p;
                 haloId = id;
-                _xPubToHaloId[m.peer] = id;
+                if (!fcLane) _xPubToHaloId[m.peer] = id;
                 break;
               }
             }
@@ -4440,7 +4475,7 @@ class AppState extends ChangeNotifier {
               if (p != null) {
                 wrapped = p;
                 haloId = addr;
-                _xPubToHaloId[m.peer] = addr;
+                if (!fcLane) _xPubToHaloId[m.peer] = addr;
                 final env0 = unwrapMessage(p);
                 await db.upsertContact(
                   addr,
@@ -4464,7 +4499,7 @@ class AppState extends ChangeNotifier {
                 'nostr: back-pair ${paired != null ? "ok $paired" : "failed"}',
               );
               if (paired != null) {
-                if (m.peer != 'firstcontact') _xPubToHaloId[m.peer] = paired;
+                if (!fcLane) _xPubToHaloId[m.peer] = paired;
                 await db.markSeen(h);
                 landed = true;
               }
@@ -6317,6 +6352,15 @@ class _OnboardingGateState extends State<_OnboardingGate> {
     return ListenableBuilder(
       listenable: appState,
       builder: (context, _) {
+        if (appState.bootError != null) {
+          return BootFailedScreen(
+            error: appState.bootError!,
+            onRetry: () {
+              setState(() => _hold = false);
+              appState.retryBoot();
+            },
+          );
+        }
         if (!appState.ready || _hold) {
           return const TorBootSplash();
         }
