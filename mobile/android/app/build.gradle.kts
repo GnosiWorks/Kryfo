@@ -84,6 +84,25 @@ flutter {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 
+// libhalo.so is gitignored, so a tree that has never run engine/build.sh
+// still assembles a valid apk - one that dies on launch with "dlopen failed"
+// and never reaches a screen. fail here, where we can say what to run.
+tasks.named("preBuild") {
+    doFirst {
+        val missing = listOf("arm64-v8a", "x86_64").filter {
+            !file("src/main/jniLibs/$it/libhalo.so").exists()
+        }
+        if (missing.isNotEmpty()) {
+            throw GradleException(
+                "libhalo.so missing for ${missing.joinToString(", ")}.\n" +
+                    "the go engine has not been built. run:\n" +
+                    "    cd engine && ./build.sh\n" +
+                    "see BUILDING.md."
+            )
+        }
+    }
+}
+
 // one apk per abi, each with its own version code. f-droid needs to tell
 // them apart, and a shared code means only one of them is ever offered.
 val abiCodes = mapOf("armeabi-v7a" to 1, "arm64-v8a" to 2, "x86_64" to 3)
