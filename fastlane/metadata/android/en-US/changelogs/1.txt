@@ -1,7 +1,0 @@
-first public pre-alpha build.
-
-- 1:1 chat over tor + nostr
-- ghost mode, reactions, reply-to
-- app lock with biometric, panic pin
-- procedurally generated avatars
-- editorial design language
