@@ -834,6 +834,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     )..fresh = true;
     setState(() {
       _messages.add(optimistic);
+      _normaliseMessages();
       _replyTo = null;
     });
     _scrollToEnd();
@@ -1082,7 +1083,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       burnSecs: burn,
     );
     m.fresh = true;
-    setState(() => _messages.add(m));
+    setState(() {
+      _messages.add(m);
+      _normaliseMessages();
+    });
     _scrollToEnd();
     HapticFeedback.lightImpact();
     await db.saveMessage(
@@ -1131,7 +1135,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       burnSecs: burn,
     );
     m.fresh = true;
-    setState(() => _messages.add(m));
+    setState(() {
+      _messages.add(m);
+      _normaliseMessages();
+    });
     _scrollToEnd();
     HapticFeedback.lightImpact();
     await db.saveMessage(
@@ -1189,7 +1196,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       burnSecs: burn,
     );
     m.fresh = true;
-    setState(() => _messages.add(m));
+    setState(() {
+      _messages.add(m);
+      _normaliseMessages();
+    });
     _scrollToEnd();
     HapticFeedback.lightImpact();
     await db.saveMessage(
