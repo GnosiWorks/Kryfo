@@ -2677,7 +2677,7 @@ Future<String?> signalDecrypt(
     // normal no-match against the wrong contact never sets the flag.
     if (flagKeyChange) {
       await db.setKeyChanged(peerId, true);
-      appState.notifyListeners();
+      appState.keyChanged();
     }
     return null;
   } on InvalidKeyIdException catch (_) {
@@ -2867,6 +2867,10 @@ class GroupPreview {
 }
 
 class AppState extends ChangeNotifier {
+  // signalDecrypt lives outside this class but has to repaint the banners
+  // when a peer's identity key changes.
+  void keyChanged() => notifyListeners();
+
   // uids being processed right now, to dedup near-simultaneous arrivals
   // (preview re-send racing a manual retry) before the db write lands.
   final Set<String> _inflightUids = <String>{};

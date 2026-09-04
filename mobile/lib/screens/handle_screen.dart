@@ -8,7 +8,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../main.dart' show appState, engine, buildHaloUriV3, showHaloToast;
+import '../main.dart' show appState, engine, buildHaloUriV3;
 import '../theme.dart';
 
 class HandleScreen extends StatefulWidget {

@@ -7,12 +7,14 @@ import 'package:flutter/services.dart';
 class PressScale extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final double scale;
   final bool haptic;
   const PressScale({
     super.key,
     required this.child,
     this.onTap,
+    this.onLongPress,
     this.scale = 0.95,
     this.haptic = true,
   });
@@ -25,7 +27,9 @@ class _PressScaleState extends State<PressScale> {
   bool _down = false;
 
   void _set(bool v) {
-    if (widget.onTap != null && _down != v) setState(() => _down = v);
+    if ((widget.onTap ?? widget.onLongPress) != null && _down != v) {
+      setState(() => _down = v);
+    }
   }
 
   @override
@@ -34,6 +38,13 @@ class _PressScaleState extends State<PressScale> {
       onTapDown: (_) => _set(true),
       onTapUp: (_) => _set(false),
       onTapCancel: () => _set(false),
+      onLongPress: widget.onLongPress == null
+          ? null
+          : () {
+              _set(false);
+              HapticFeedback.mediumImpact();
+              widget.onLongPress!();
+            },
       onTap: widget.onTap == null
           ? null
           : () {

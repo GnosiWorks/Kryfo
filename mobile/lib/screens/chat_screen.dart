@@ -42,6 +42,7 @@ import '../main.dart'
         torGetOnIsolate,
         torGetB64OnIsolate,
         TorHalo;
+import '../widgets/press_scale.dart';
 import '../widgets/motion.dart';
 import '../widgets/burn_fade.dart';
 
@@ -646,41 +647,35 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _burnTick = Timer.periodic(const Duration(milliseconds: 100), (_) {
       if (!mounted) return;
       final now = DateTime.now().millisecondsSinceEpoch;
-      final expired = _messages
-          .where(
-            (m) =>
-                m.burnAt != null &&
-                m.burnAt! <= now &&
-                !m.removing &&
-                !m.sending &&
-                !m.failed,
-          )
-          .toList();
-      for (final m in expired) {
-        m.removing = true;
-        // wait for the full _BurnFade dissolve (520ms) before pulling the row,
-        // else the animation cuts off and the message pops away.
-        Future.delayed(const Duration(milliseconds: 560), () {
-          if (mounted) setState(() => _messages.remove(m));
-          if (m.msgUid != null) db.deleteMessage(m.msgUid!);
-        });
-      }
-      if (expired.isNotEmpty) HapticFeedback.lightImpact();
-      // avoid repainting the whole list every 250ms for a ghost's full life.
-      // repaint near the burn moment and once a second for the countdown.
-      int? soonest;
+      // one pass, and no list unless something actually burnt. most chats
+      // carry no ghosts at all, and this runs ten times a second for as long
+      // as the chat is open.
+      List<_Msg>? expired;
+      var anyGhost = false;
       for (final m in _messages) {
         if (m.burnAt == null) continue;
-        final r = m.burnAt! - now;
-        if (soonest == null || r < soonest) soonest = r;
+        anyGhost = true;
+        if (m.burnAt! <= now && !m.removing && !m.sending && !m.failed) {
+          (expired ??= []).add(m);
+        }
       }
-      // the _BurnFade dissolve animates itself - the timer doesn't need to
-      // repaint the whole list every 250ms while a ghost burns (that was the
-      // jank). only repaint when something just expired, or once a second for
-      // the countdown text.
+      if (!anyGhost) return;
+      if (expired != null) {
+        for (final m in expired) {
+          m.removing = true;
+          // wait for the full _BurnFade dissolve (520ms) before pulling the
+          // row, else the animation cuts off and the message pops away.
+          Future.delayed(const Duration(milliseconds: 560), () {
+            if (mounted) setState(() => _messages.remove(m));
+            if (m.msgUid != null) db.deleteMessage(m.msgUid!);
+          });
+        }
+        HapticFeedback.lightImpact();
+      }
+      // _BurnFade dissolves itself, so the timer only has to repaint when
+      // something just expired or the countdown text changes second.
       final sec = now ~/ 1000;
-      final ticked = soonest != null && sec != _lastBurnSec;
-      if (expired.isNotEmpty || ticked) {
+      if (expired != null || sec != _lastBurnSec) {
         _lastBurnSec = sec;
         setState(() {});
       }
@@ -1609,6 +1604,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         uid,
       );
     }
+    if (!mounted) return;
     final ctrl = TextEditingController(text: m.text);
     final result = await showModalBottomSheet<String>(
       context: context,
@@ -3104,7 +3100,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         if (chunkThumb) {
           const cs = 16 * 1024;
           final slices = <String>[];
-          for (var i = 0; i < img!.length; i += cs) {
+          for (var i = 0; i < img.length; i += cs) {
             slices.add(img.substring(i, math.min(i + cs, img.length)));
           }
           final pvid = 'pv_$msgUid';
@@ -3571,6 +3567,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _chatActions() async {
     final contact = await db.getContact(widget.peerHaloId);
     final pinned = (contact?['pinned'] as int? ?? 0) == 1;
+    if (!mounted) return;
     final action = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: HaloColors.surface2,
@@ -3888,6 +3885,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               child: GestureDetector(
                 onTap: () async {
                   await db.setNote(widget.peerHaloId, ctrl.text.trim());
+                  if (!ctx.mounted) return;
                   Navigator.pop(ctx);
                   if (mounted) showHaloToast(context, 'note saved');
                 },
@@ -7610,9 +7608,10 @@ class _Composer extends StatelessWidget {
           ),
           Row(
             children: [
-              GestureDetector(
+              PressScale(
                 onTap: onToggleGhost,
                 onLongPress: onPickBurn,
+                scale: 0.88,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
                   width: 32,
@@ -7642,9 +7641,9 @@ class _Composer extends StatelessWidget {
               // device. the flag, the wire and the viewer are all still
               // wired - only the way to turn it on is gone.
               const SizedBox(width: 10),
-              GestureDetector(
+              PressScale(
                 onTap: onAttach,
-                behavior: HitTestBehavior.opaque,
+                scale: 0.86,
                 child: Icon(
                   Icons.add_photo_alternate_outlined,
                   size: 22,
@@ -7721,8 +7720,10 @@ class _Composer extends StatelessWidget {
                     );
                   }
                   final canSend = !sending && hasText;
-                  return GestureDetector(
+                  return PressScale(
                     onTap: canSend ? onSend : null,
+                    scale: 0.86,
+                    haptic: false, // _send already fires its own impact
                     child: AnimatedScale(
                       duration: const Duration(milliseconds: 200),
                       curve: Curves.easeOut,

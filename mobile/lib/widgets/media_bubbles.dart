@@ -46,7 +46,7 @@ Widget fileCard(String? filePath, String? fileName, bool isOut) {
   final icon = isOut ? HaloColors.onAmber : HaloColors.amber;
   int? sz;
   try {
-    if (filePath != null) sz = File(filePath!).lengthSync();
+    if (filePath != null) sz = File(filePath).lengthSync();
   } catch (_) {}
   final ext = (fileName ?? '').contains('.')
       ? fileName!.split('.').last.toUpperCase()

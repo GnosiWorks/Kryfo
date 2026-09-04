@@ -1502,7 +1502,9 @@ class _GroupRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      child: Container(
+      splashColor: HaloColors.amber.withValues(alpha: 0.10),
+      highlightColor: HaloColors.amber.withValues(alpha: 0.05),
+      child: Ink(
         decoration: g.unread > 0
             ? BoxDecoration(
                 color: HaloColors.amber.withValues(alpha: 0.06),
@@ -1564,28 +1566,44 @@ class _GroupRow extends StatelessWidget {
               ),
               if (g.unread > 0) ...[
                 const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 1,
-                  ),
-                  constraints: const BoxConstraints(minWidth: 18),
-                  decoration: BoxDecoration(
-                    color: HaloColors.amber,
-                    borderRadius: BorderRadius.circular(9),
-                  ),
-                  child: Text(
-                    g.unread > 99 ? '99+' : '${g.unread}',
-                    textAlign: TextAlign.center,
-                    style: HaloType.sans(
-                      size: 10,
-                      weight: FontWeight.w600,
-                      color: HaloColors.onAmber,
-                    ),
-                  ),
-                ),
+                _UnreadBadge(g.unread),
               ],
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// unread count. pops when the number changes so a message arriving while you
+// are looking at the list is not a silent swap.
+class _UnreadBadge extends StatelessWidget {
+  final int count;
+  const _UnreadBadge(this.count);
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      key: ValueKey(count),
+      tween: Tween(begin: 0.55, end: 1),
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutBack,
+      builder: (_, t, child) => Transform.scale(scale: t, child: child),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+        constraints: const BoxConstraints(minWidth: 18),
+        decoration: BoxDecoration(
+          color: HaloColors.amber,
+          borderRadius: BorderRadius.circular(9),
+        ),
+        child: Text(
+          count > 99 ? '99+' : '$count',
+          textAlign: TextAlign.center,
+          style: HaloType.sans(
+            size: 10,
+            weight: FontWeight.w600,
+            color: HaloColors.onAmber,
           ),
         ),
       ),
@@ -1903,7 +1921,11 @@ class _Row extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       onLongPress: onLongPress,
-      child: Container(
+      splashColor: HaloColors.amber.withValues(alpha: 0.10),
+      highlightColor: HaloColors.amber.withValues(alpha: 0.05),
+      // Ink, not Container: an unread row tints itself amber, and a Container
+      // paints that tint over the splash so the tap looks dead.
+      child: Ink(
         decoration: c.unread > 0
             ? BoxDecoration(
                 color: HaloColors.amber.withValues(alpha: 0.06),
@@ -2016,26 +2038,7 @@ class _Row extends StatelessWidget {
                       ),
                       if (c.unread > 0) ...[
                         const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 1,
-                          ),
-                          constraints: const BoxConstraints(minWidth: 18),
-                          decoration: BoxDecoration(
-                            color: HaloColors.amber,
-                            borderRadius: BorderRadius.circular(9),
-                          ),
-                          child: Text(
-                            c.unread > 99 ? '99+' : '${c.unread}',
-                            textAlign: TextAlign.center,
-                            style: HaloType.sans(
-                              size: 10,
-                              weight: FontWeight.w600,
-                              color: HaloColors.onAmber,
-                            ),
-                          ),
-                        ),
+                        _UnreadBadge(c.unread),
                       ],
                     ],
                   ),
