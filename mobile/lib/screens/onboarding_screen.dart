@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// kryfo onboarding flow - 5 screens shown on first launch, then never again.
-// welcome → identity reveal → keep safe → staying connected → first contact.
+// kryfo onboarding flow - 6 screens shown on first launch, then never again.
+// welcome → identity reveal → pick a face → keep safe → staying connected →
+// first contact.
 
 import 'dart:math' as math;
 import 'dart:ui' as ui;
@@ -11,6 +12,7 @@ import 'restore_screen.dart';
 import 'my_kryfo_screen.dart';
 import '../main.dart' show appState, AppState;
 import 'scan_screen.dart';
+import 'avatar_picker_screen.dart' show AvatarChoiceEditor;
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/motion.dart' show haloRoute;
 
@@ -53,6 +55,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           children: [
             _WelcomeScreen(onContinue: _next),
             _IdentityScreen(appState: widget.appState, onContinue: _next),
+            _PickFaceScreen(onContinue: _next),
             _KeepSafeScreen(onContinue: _next),
             _StayingConnectedScreen(onContinue: _next),
             _FirstContactScreen(onComplete: widget.onComplete),
@@ -630,6 +633,125 @@ class _HaloRingPainter extends CustomPainter {
   @override
   bool shouldRepaint(_HaloRingPainter old) =>
       old.sweep != sweep || old.glow != glow;
+}
+
+// === 03b · PICK A FACE ===
+//
+// straight after the identity reveal, because the face is drawn from the id
+// you have just been shown. buried in the profile, nobody found it.
+
+class _PickFaceScreen extends StatefulWidget {
+  final VoidCallback onContinue;
+  const _PickFaceScreen({required this.onContinue});
+  @override
+  State<_PickFaceScreen> createState() => _PickFaceScreenState();
+}
+
+class _PickFaceScreenState extends State<_PickFaceScreen> {
+  int? _choice = appState.myAvatar;
+  bool _touched = false;
+
+  Future<void> _saveAndGo() async {
+    if (_touched) await appState.setMyAvatar(_choice);
+    widget.onContinue();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(28, 50, 28, 36),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          RichText(
+            text: TextSpan(
+              style: HaloType.serif(
+                size: 30,
+                weight: FontWeight.w300,
+                color: HaloColors.text,
+                height: 1.05,
+              ),
+              children: [
+                const TextSpan(text: 'pick a '),
+                TextSpan(
+                  text: 'face',
+                  style: HaloType.serif(
+                    size: 30,
+                    weight: FontWeight.w300,
+                    italic: true,
+                    color: HaloColors.amber,
+                    height: 1.05,
+                  ),
+                ),
+                const TextSpan(text: '.'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'drawn on this phone from a number, never uploaded. '
+            'change it whenever you like.',
+            style: HaloType.sans(
+              size: 13.5,
+              color: HaloColors.text2,
+              height: 1.55,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: AvatarChoiceEditor(
+              padding: const EdgeInsets.only(top: 12, bottom: 12),
+              caption: 'the people you message see this too',
+              onChanged: (c) => setState(() {
+                _choice = c;
+                _touched = true;
+              }),
+            ),
+          ),
+          Row(
+            children: [
+              GestureDetector(
+                onTap: widget.onContinue,
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 11,
+                  ),
+                  child: Text(
+                    'keep my initial',
+                    style: HaloType.sans(size: 12, color: HaloColors.text2),
+                  ),
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: _saveAndGo,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 22,
+                    vertical: 11,
+                  ),
+                  decoration: BoxDecoration(
+                    color: HaloColors.amber,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    _touched ? 'that one →' : 'continue →',
+                    style: HaloType.sans(
+                      size: 12,
+                      color: HaloColors.onAmber,
+                      weight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // === 04 · KEEP SAFE ===
