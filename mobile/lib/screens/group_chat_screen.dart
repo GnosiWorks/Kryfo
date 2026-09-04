@@ -11,7 +11,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/media_bubbles.dart';
 import 'chat_screen.dart'
@@ -151,31 +150,36 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     _burnTick = Timer.periodic(const Duration(milliseconds: 100), (_) {
       if (!mounted) return;
       final now = DateTime.now().millisecondsSinceEpoch;
-      final expired = _messages
-          .where(
-            (m) =>
-                m.burnAt != null &&
-                m.burnAt! <= now &&
-                !m.removing &&
-                !m.sending &&
-                !m.failed,
-          )
-          .toList();
-      for (final m in expired) {
-        m.removing = true;
-        // wait for the BurnFade dissolve (520ms) before pulling the row, else
-        // the animation cuts off and the message pops away.
-        Future.delayed(const Duration(milliseconds: 560), () {
-          if (mounted) setState(() => _messages.remove(m));
-          if (m.msgUid != null) db.deleteMessage(m.msgUid!);
-        });
+      // one pass, and no list unless something actually burnt. most groups
+      // carry no ghosts at all, and this runs ten times a second for as long
+      // as the chat is open.
+      List<_GMsg>? expired;
+      var anyGhost = false;
+      for (final m in _messages) {
+        if (m.burnAt == null) continue;
+        anyGhost = true;
+        if (m.burnAt! <= now && !m.removing && !m.sending && !m.failed) {
+          (expired ??= []).add(m);
+        }
       }
-      // repaint once a second for the countdown, not every 100ms (that was jank)
+      if (!anyGhost) return;
+      if (expired != null) {
+        for (final m in expired) {
+          m.removing = true;
+          // wait for the BurnFade dissolve (520ms) before pulling the row,
+          // else the animation cuts off and the message pops away.
+          Future.delayed(const Duration(milliseconds: 560), () {
+            if (mounted) setState(() => _messages.remove(m));
+            if (m.msgUid != null) db.deleteMessage(m.msgUid!);
+          });
+        }
+        HapticFeedback.lightImpact();
+      }
+      // repaint when something expired or the countdown changes second, not
+      // every 100ms (that was the jank)
       final sec = now ~/ 1000;
-      final hasGhost = _messages.any((m) => m.burnAt != null);
-      if (expired.isNotEmpty || (hasGhost && sec != _lastBurnSec)) {
+      if (expired != null || sec != _lastBurnSec) {
         _lastBurnSec = sec;
-        if (expired.isNotEmpty) HapticFeedback.lightImpact();
         setState(() {});
       }
     });

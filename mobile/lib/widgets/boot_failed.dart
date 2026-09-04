@@ -59,9 +59,8 @@ class BootFailedScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   TextButton(
-                    onPressed: () => Clipboard.setData(
-                      ClipboardData(text: error),
-                    ),
+                    onPressed: () =>
+                        Clipboard.setData(ClipboardData(text: error)),
                     child: Text(
                       'copy',
                       style: HaloType.mono(size: 12, color: HaloColors.text3),
@@ -83,10 +82,7 @@ class BootFailedScreen extends StatelessWidget {
                     ),
                     child: Text(
                       'try again',
-                      style: HaloType.sans(
-                        size: 14,
-                        color: HaloColors.onAmber,
-                      ),
+                      style: HaloType.sans(size: 14, color: HaloColors.onAmber),
                     ),
                   ),
                 ],

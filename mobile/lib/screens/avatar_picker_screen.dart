@@ -68,7 +68,9 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
     return ListView(
       padding: widget.padding,
       children: [
-        Center(child: KryfoAvatar(seed: id, size: 96, choice: _choice)),
+        Center(
+          child: KryfoAvatar(seed: id, size: 96, choice: _choice),
+        ),
         const SizedBox(height: 10),
         Center(
           child: Text(
