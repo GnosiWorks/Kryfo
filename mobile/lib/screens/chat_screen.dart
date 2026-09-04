@@ -461,7 +461,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (id == null) return true;
       return seen.add(id);
     });
+    // quoted replies resolve through here rather than scanning the list once
+    // per visible row.
+    _byUid
+      ..clear()
+      ..addEntries(
+        _messages
+            .where((m) => m.msgUid != null)
+            .map((m) => MapEntry(m.msgUid!, m)),
+      );
   }
+
+  final Map<String, _Msg> _byUid = {};
 
   bool _loaded = false;
   Atmo _atmosphere = Atmo.none;
@@ -494,6 +505,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   String _query = '';
   String? _liftedUid;
   List<int> _matches = [];
+  // same hits as _matches, for the per-row "is this one" test
+  Set<int> _matchSet = {};
   int _matchPos = 0;
   final Map<int, GlobalKey> _matchKeys = {};
   final GlobalKey _jumpKey = GlobalKey();
@@ -906,6 +919,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       _query = '';
       _searchCtrl.clear();
       _matches = [];
+      _matchSet = {};
       _matchPos = 0;
       _matchKeys.clear();
     });
@@ -927,6 +941,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     setState(() {
       _query = query;
       _matches = matches;
+      _matchSet = matches.toSet();
       _matchPos = matches.isEmpty ? 0 : matches.length - 1;
       _matchKeys
         ..clear()
@@ -3133,6 +3148,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
     setState(() {
       _messages.add(msg);
+      _normaliseMessages();
       _sending = true;
       _status = '';
       _replyTo = null;
@@ -3368,27 +3384,26 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     String? quoted;
     String? quotedAuthor;
     if (m.replyTo != null) {
-      final original = _messages.firstWhere(
-        (x) => x.msgUid == m.replyTo,
-        orElse: () => _Msg('', '', DateTime.now()),
-      );
-      if (original.text.isNotEmpty) {
-        quoted = original.text;
-        quotedAuthor = original.direction == 'out' ? 'you' : 'them';
-      } else if (original.mediaPath != null) {
-        quoted = 'photo';
-        quotedAuthor = original.direction == 'out' ? 'you' : 'them';
-      } else if (original.fileName == 'voice.wav') {
-        quoted = 'voice message';
-        quotedAuthor = original.direction == 'out' ? 'you' : 'them';
-      } else if (original.fileName != null) {
-        quoted = original.fileName;
-        quotedAuthor = original.direction == 'out' ? 'you' : 'them';
-      } else {
+      final original = _byUid[m.replyTo];
+      if (original == null) {
         quoted = 'message unavailable';
+      } else {
+        quotedAuthor = original.direction == 'out' ? 'you' : 'them';
+        if (original.text.isNotEmpty) {
+          quoted = original.text;
+        } else if (original.mediaPath != null) {
+          quoted = 'photo';
+        } else if (original.fileName == 'voice.wav') {
+          quoted = 'voice message';
+        } else if (original.fileName != null) {
+          quoted = original.fileName;
+        } else {
+          quoted = 'message unavailable';
+          quotedAuthor = null;
+        }
       }
     }
-    final isMatch = searchActive && _matches.contains(ix);
+    final isMatch = searchActive && _matchSet.contains(ix);
     final isCurrent =
         searchActive && _matches.isNotEmpty && _matches[_matchPos] == ix;
     final dimmed = searchActive && !isMatch;
@@ -4049,6 +4064,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (!mounted) return;
     setState(() {
       _messages.clear();
+      _normaliseMessages();
     });
   }
 
