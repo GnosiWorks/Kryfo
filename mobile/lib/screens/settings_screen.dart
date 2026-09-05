@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../main.dart' show appState;
 import '../lock_state.dart';
+import '../intro_prefs.dart';
 import '../miui_autostart.dart';
 import '../widgets/motion.dart' show TorStatus, haloRoute;
 import 'why_kryfo_screen.dart';
@@ -172,12 +173,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   bool _disguise = false;
+  bool _acceptIntros = true;
 
   @override
   void initState() {
     super.initState();
     appState.loadDisguisePref().then((d) {
       if (mounted) setState(() => _disguise = d);
+    });
+    loadAcceptIntros().then((v) {
+      if (mounted) setState(() => _acceptIntros = v);
     });
   }
 
@@ -263,6 +268,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
             label: 'blocked',
             onTap: () =>
                 Navigator.of(context).push(haloRoute(const BlockedScreen())),
+          ),
+          _Row(
+            icon: Icons.people_outline,
+            label: 'accept introductions',
+            hint:
+                'friends can introduce you to their friends. off means introductions are dropped.',
+            value: _acceptIntros ? 'on' : 'off',
+            onTap: () async {
+              setState(() => _acceptIntros = !_acceptIntros);
+              await saveAcceptIntros(_acceptIntros);
+            },
           ),
           const SizedBox(height: 24),
 
