@@ -81,6 +81,14 @@ class SeenScreen extends StatelessWidget {
                 'number exists here to leak.',
           ),
           _Claim(
+            'introductions',
+            'the introducer only',
+            HaloColors.green,
+            'when a contact introduces you to someone, that contact learns the '
+                'two of you are now connected. nobody else does. the relay '
+                'sees ciphertext, and no server ever sees the graph.',
+          ),
+          _Claim(
             'that a device fetched mail',
             'timing only',
             HaloColors.amber,
