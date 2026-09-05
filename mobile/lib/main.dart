@@ -41,6 +41,7 @@ import 'lock_state.dart';
 import 'screens/lock_screen.dart';
 import 'screens/lock_setup_screen.dart';
 import 'push_mode.dart';
+import 'intro_prefs.dart';
 import 'supporter.dart';
 import 'ntfy_listener.dart';
 import 'message_envelope.dart';
@@ -3442,6 +3443,11 @@ class AppState extends ChangeNotifier {
       await _applyGroupControl(senderHaloId, env);
       return;
     }
+    // 1.5) introduction - a friend hands us someone's card
+    if (env.intro != null) {
+      await _applyIntro(senderHaloId, env.intro!);
+      return;
+    }
     // shared pin - every member mirrors it
     if (env.pin != null) {
       await db.setPinned(env.pin!.targetUid, env.pin!.pinned);
@@ -3514,13 +3520,18 @@ class AppState extends ChangeNotifier {
       }
     }
     // stranger lock + proof-of-work gate (1:1 only, unaccepted senders).
+    // a sender a friend introduced is not a stranger: no pow, no cap. they
+    // still land in requests and still need an accept to get a reply.
     if (!isGroup && !await db.isAccepted(senderHaloId)) {
+      final row = await db.getContact(senderHaloId);
+      final vouched = row?['vouched_by'] != null;
       // pow: only the back-pair message (true first contact) must carry a
       // valid nonce - that's the one lane a cold stranger can arrive on. a
       // whisper through an existing session already paid pow once, and a
       // deleted peer's client has no idea it needs to grind again. drop
       // silently - the spammer learns nothing.
-      if (fromBackPair &&
+      if (!vouched &&
+          fromBackPair &&
           (env.powNonce == null ||
               !verifyPow(env.message, env.powNonce!, powBits))) {
         debugPrint(
@@ -3530,7 +3541,7 @@ class AppState extends ChangeNotifier {
       }
       // 2-message cap: a stranger gets 2 into requests, then the chat is locked
       // until we accept them. drop past the cap - no receipt.
-      final have = await db.countMessagesFrom(senderHaloId);
+      final have = vouched ? 0 : await db.countMessagesFrom(senderHaloId);
       if (have >= 2) {
         debugPrint('stranger lock: dropping from $senderHaloId (cap hit)');
         return;
@@ -3752,6 +3763,41 @@ class AppState extends ChangeNotifier {
   // apply a group control message. sender is the kryfo id that sent the
   // control; env.groupId is the target group; env.groupControl carries the
   // action and payload.
+  // a contact we accepted vouches for someone. the card becomes a request
+  // row with vouched_by set, so their first message skips the stranger gate.
+  // trust is ours alone: a card from anyone we have not accepted is dropped
+  // unread, and so is one that names us or the sender.
+  Future<void> _applyIntro(String senderHaloId, IntroFrame card) async {
+    if (!await db.isAccepted(senderHaloId)) return;
+    if (!await loadAcceptIntros()) {
+      debugPrint('intro: dropped, introductions are off');
+      return;
+    }
+    final h = card.haloId;
+    if (h == myId || h == senderHaloId) return;
+    final existing = await db.getContact(h);
+    if (existing != null && (existing['accepted'] as int? ?? 0) == 1) return;
+    await db.upsertContactStub(h, card.onion, card.xPub);
+    await db.setVouched(h, senderHaloId);
+    // the note is the introducer's one line about them. only fills an empty
+    // note - never overwrites something we wrote ourselves.
+    final note = card.note?.trim() ?? '';
+    if (note.isNotEmpty && ((existing?['note'] as String?) ?? '').isEmpty) {
+      await db.setNote(h, note.length > 40 ? note.substring(0, 40) : note);
+    }
+    if (card.avatar != null) await db.setContactAvatar(h, card.avatar);
+    if (card.fc != null && card.fc!.isNotEmpty) {
+      await rememberPeerFc(h, card.fc!);
+    }
+    // a card is keys, not a session. listen for them and swap prekey bundles
+    // now, so the first message either side types has a session to ride.
+    await subscribePeer(h);
+    _healPending.add(h);
+    unawaited(_sendBundleCtl(h, want: true));
+    debugPrint('intro: $senderHaloId introduced $h');
+    await refreshContacts();
+  }
+
   Future<void> _applyGroupControl(
     String senderHaloId,
     UnwrappedMessage env,
@@ -4286,7 +4332,9 @@ class AppState extends ChangeNotifier {
       // would have created the session. deadlock. (the store
       // does eventually hold the right x25519 key - kryfo derives the signal
       // identity from it - but not until that first message exists.)
-      final rows = await db.contacts();
+      // introduced people we have not accepted yet listen too, or the
+      // message that would turn them into a request never arrives.
+      final rows = [...await db.contacts(), ...await db.vouchedPending()];
       final fresh = <String, String>{};
       for (final r in rows) {
         final haloId = r['halo_id'] as String?;
@@ -4908,7 +4956,13 @@ class AppState extends ChangeNotifier {
       if (!await signalSession.sessionStore.containsSession(
             SignalProtocolAddress(memberId, 1),
           ) &&
-          (await db.getContact(memberId))?['peer_bundle'] == null) {
+          contact['peer_bundle'] == null) {
+        // an introduced peer whose bundle swap never landed: ask again, the
+        // user's tap-to-retry goes through once it does.
+        if (contact['vouched_by'] != null) {
+          _healPending.add(memberId);
+          unawaited(_sendBundleCtl(memberId, want: true));
+        }
         debugPrint('send: $memberId unreachable (no session/bundle), skipping');
         return false;
       }
@@ -4997,6 +5051,56 @@ class AppState extends ChangeNotifier {
     } catch (e) {
       debugPrint('accept ack failed: $e');
     }
+  }
+
+  // one contact's card, ready to hand to another. the row is the source:
+  // v2 pairings keep the xpub in the signal store, so fall back to that.
+  Future<IntroFrame?> _introCardFor(String haloId, String note) async {
+    final c = await db.getContact(haloId);
+    if (c == null || (c['accepted'] as int? ?? 0) != 1) return null;
+    var x = (c['xpub'] as String?) ?? '';
+    if (x.isEmpty) x = await signalSession.peerXPubHex(haloId) ?? '';
+    if (x.isEmpty) return null;
+    return IntroFrame(
+      haloId: haloId,
+      onion: (c['onion'] as String?) ?? '',
+      xPub: x,
+      avatar: (c['avatar'] as num?)?.toInt(),
+      fc: peerFcFor(haloId),
+      note: note.isEmpty ? null : note,
+    );
+  }
+
+  // introduce two accepted contacts to each other. each gets the other's
+  // card over the session we already hold with them. returns whether each
+  // side took it; the caller owns the budget and the wording.
+  Future<({bool toFirst, bool toSecond})> introduce(
+    String first,
+    String second, {
+    String note = '',
+  }) async {
+    final n = note.trim();
+    final cardOfFirst = await _introCardFor(first, n);
+    final cardOfSecond = await _introCardFor(second, n);
+    if (cardOfFirst == null || cardOfSecond == null) {
+      return (toFirst: false, toSecond: false);
+    }
+    Future<bool> send(String to, IntroFrame card) async {
+      try {
+        final wrapped = await wrapMessage('', intro: card, sender: _mySender());
+        return await _sendOneEnvelope(to, wrapped);
+      } catch (e) {
+        debugPrint('intro to $to failed: $e');
+        return false;
+      }
+    }
+
+    final r = await Future.wait([
+      send(first, cardOfSecond),
+      send(second, cardOfFirst),
+    ]);
+    debugPrint('intro: $first<->$second first=${r[0]} second=${r[1]}');
+    return (toFirst: r[0], toSecond: r[1]);
   }
 
   Future<void> _sendControlToGroup(String groupId, GroupControl gc) async {
