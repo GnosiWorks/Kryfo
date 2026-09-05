@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../main.dart' show db, appState;
 import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
+import '../widgets/intro_chip.dart';
 import 'chat_screen.dart';
 import '../widgets/motion.dart' show haloRoute;
 
@@ -15,9 +16,20 @@ class RequestsScreen extends StatefulWidget {
   State<RequestsScreen> createState() => _RequestsScreenState();
 }
 
+// who vouched for a request row, as we know them: our nickname for them,
+// their face, and whether we verified their safety number.
+class _Introducer {
+  final String id;
+  final String name;
+  final int? avatar;
+  final bool verified;
+  const _Introducer(this.id, this.name, this.avatar, this.verified);
+}
+
 class _RequestsScreenState extends State<RequestsScreen> {
   List<Map<String, Object?>> _pending = [];
   final Map<String, String> _previews = {};
+  final Map<String, _Introducer> _introducers = {};
   bool _loading = true;
 
   @override
@@ -29,6 +41,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
   Future<void> _load() async {
     final rows = await db.pendingRequests();
     final previews = <String, String>{};
+    final introducers = <String, _Introducer>{};
     for (final r in rows) {
       final id = r['halo_id'] as String;
       final msgs = await db.messagesFor(id);
@@ -39,6 +52,20 @@ class _RequestsScreenState extends State<RequestsScreen> {
       } else {
         previews[id] = 'wants to connect';
       }
+      // an introduced row names the friend who vouched. their row can be
+      // gone (deleted since) - then the request stays, just without the chip.
+      final by = r['vouched_by'] as String?;
+      if (by != null) {
+        final c = await db.getContact(by);
+        if (c != null && (c['accepted'] as int? ?? 0) == 1) {
+          introducers[id] = _Introducer(
+            by,
+            (c['nickname'] as String?) ?? by,
+            (c['avatar'] as num?)?.toInt(),
+            (c['verified'] as int? ?? 0) == 1,
+          );
+        }
+      }
     }
     if (!mounted) return;
     setState(() {
@@ -46,6 +73,9 @@ class _RequestsScreenState extends State<RequestsScreen> {
       _previews
         ..clear()
         ..addAll(previews);
+      _introducers
+        ..clear()
+        ..addAll(introducers);
       _loading = false;
     });
   }
@@ -96,7 +126,9 @@ class _RequestsScreenState extends State<RequestsScreen> {
                   key: ValueKey('req_$id'),
                   order: i,
                   haloId: id,
+                  avatar: (row['avatar'] as num?)?.toInt(),
                   preview: _previews[id] ?? '',
+                  introducer: _introducers[id],
                   onTap: () => _open(row),
                 );
               },
@@ -135,16 +167,21 @@ class _RequestsScreenState extends State<RequestsScreen> {
 }
 
 // staggered fade-and-rise as each card comes in. tap opens the conversation.
+// an introduced row carries the vouching friend as an amber chip.
 class _RequestCard extends StatefulWidget {
   final int order;
   final String haloId;
+  final int? avatar;
   final String preview;
+  final _Introducer? introducer;
   final VoidCallback onTap;
   const _RequestCard({
     super.key,
     required this.order,
     required this.haloId,
+    this.avatar,
     required this.preview,
+    this.introducer,
     required this.onTap,
   });
   @override
@@ -202,7 +239,11 @@ class _RequestCardState extends State<_RequestCard>
               ),
               child: Row(
                 children: [
-                  KryfoAvatar(seed: widget.haloId, size: 44),
+                  KryfoAvatar(
+                    seed: widget.haloId,
+                    size: 44,
+                    choice: widget.avatar,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -218,6 +259,18 @@ class _RequestCardState extends State<_RequestCard>
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
+                        if (widget.introducer != null) ...[
+                          const SizedBox(height: 6),
+                          IntroducedBy(
+                            name: widget.introducer!.name,
+                            seed: widget.introducer!.id,
+                            avatar: widget.introducer!.avatar,
+                            verified: widget.introducer!.verified,
+                            delay: Duration(
+                              milliseconds: 60 * widget.order + 180,
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 4),
                         Text(
                           widget.preview,
