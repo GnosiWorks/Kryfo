@@ -709,7 +709,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 36,
+      version: 37,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -740,7 +740,9 @@ class HaloDb {
             peer_bundle TEXT,
             accepted INTEGER NOT NULL DEFAULT 1,
             supporter_badge TEXT,
-            avatar INTEGER
+            avatar INTEGER,
+            vouched_by TEXT,
+            vouched_at INTEGER
           )
         ''');
         await db.execute('''
@@ -824,6 +826,18 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 37) {
+          // who introduced this contact, so their request skips the stranger
+          // gate. wrapped: a duplicate column throw here hangs the app on boot.
+          try {
+            await db.execute('ALTER TABLE contacts ADD COLUMN vouched_by TEXT');
+          } catch (_) {}
+          try {
+            await db.execute(
+              'ALTER TABLE contacts ADD COLUMN vouched_at INTEGER',
+            );
+          } catch (_) {}
+        }
         if (oldV < 36) {
           // the face a contact picked, so we draw theirs and not a
           // default derived from their id.
@@ -1324,6 +1338,28 @@ class HaloDb {
       {'supporter_badge': tier},
       where: 'halo_id = ?',
       whereArgs: [haloId],
+    );
+  }
+
+  // a contact we already accepted handed us this one. only ever set on a
+  // stub, and only from a frame that came over that contact's own session.
+  Future<void> setVouched(String haloId, String byId) async {
+    final db = await open();
+    await db.update(
+      'contacts',
+      {'vouched_by': byId, 'vouched_at': DateTime.now().millisecondsSinceEpoch},
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+    );
+  }
+
+  // introduced people we have not accepted yet. they need a relay
+  // subscription like a real contact or their first message never lands.
+  Future<List<Map<String, Object?>>> vouchedPending() async {
+    final db = await open();
+    return db.query(
+      'contacts',
+      where: 'accepted = 0 AND blocked = 0 AND vouched_by IS NOT NULL',
     );
   }
 
