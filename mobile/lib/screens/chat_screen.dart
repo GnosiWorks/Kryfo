@@ -19,6 +19,8 @@ import 'package:just_audio/just_audio.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'key_verification_screen.dart';
+import 'introduce_sheet.dart';
+import '../widgets/intro_chip.dart';
 import '../signal_session.dart';
 import '../message_envelope.dart'
     show
@@ -533,9 +535,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // sender-side lock: messaging a stranger who hasn't accepted, past the cap.
   // once they engage (reply/back-pair) or we accept them, it clears.
   bool get _requestPending => !_peerEngaged && _recvCount == 0;
-  bool get _requestLocked => _requestPending && _sentCount >= 2;
+  bool get _requestLocked =>
+      _requestPending && _sentCount >= 2 && _vouchedBy == null;
   // receiver-side: a stranger has messaged us and we haven't accepted yet.
   bool get _incomingRequest => !_accepted && _recvCount > 0;
+  // a friend introduced this peer. no sender-side cap either: the other end
+  // skips its gate for us, so locking ourselves would be the only lock left.
+  String? _vouchedBy;
+  String? _introName;
+  int? _introAvatar;
+  bool _introVerified = false;
+  bool get _vouched => _vouchedBy != null && _introName != null;
   bool _showScrollDown = false;
   int _seenCount = 0;
   String? _rippleUid;
@@ -585,13 +595,23 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         _draftPerPeer[widget.peerHaloId] = t;
       }
     });
-    db.getContact(widget.peerHaloId).then((c) {
-      if (mounted) {
-        setState(() {
-          _nickname = c?['nickname'] as String?;
-          _note = c?['note'] as String?;
-        });
-      }
+    db.getContact(widget.peerHaloId).then((c) async {
+      if (!mounted) return;
+      setState(() {
+        _nickname = c?['nickname'] as String?;
+        _note = c?['note'] as String?;
+        _vouchedBy = c?['vouched_by'] as String?;
+      });
+      // the introducer, as we know them. gone from contacts = no banner.
+      final by = _vouchedBy;
+      if (by == null) return;
+      final a = await db.getContact(by);
+      if (!mounted || a == null || (a['accepted'] as int? ?? 0) != 1) return;
+      setState(() {
+        _introName = (a['nickname'] as String?) ?? by;
+        _introAvatar = (a['avatar'] as num?)?.toInt();
+        _introVerified = (a['verified'] as int? ?? 0) == 1;
+      });
     });
     db.getAtmosphere(widget.peerHaloId).then((a) {
       if (mounted) setState(() => _atmosphere = atmoFromName(a));
@@ -3603,6 +3623,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   ),
                 ),
               ),
+              _IntroduceRow(
+                enabled: _accepted,
+                onTap: () => Navigator.pop(ctx, 'introduce'),
+              ),
               InkWell(
                 onTap: () => Navigator.pop(ctx, 'photos'),
                 child: Padding(
@@ -3793,6 +3817,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
     if (action == 'verify') {
       _openKeyVerification();
+    } else if (action == 'introduce') {
+      await showIntroduceSheet(
+        context,
+        peerId: widget.peerHaloId,
+        peerName: _nickname ?? widget.peerHaloId,
+      );
     } else if (action == 'mute') {
       await _toggleMute();
     } else if (action == 'archive') {
@@ -4526,7 +4556,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 onTap: () =>
                     _scrollToMessage(_messages.lastWhere((m) => m.pinned)),
               ),
-            if (_requestPending && _sentCount > 0) const _RequestBanner(),
+            if (_vouched && !_accepted && _recvCount == 0)
+              _IntroBanner(
+                name: _introName!,
+                seed: _vouchedBy!,
+                avatar: _introAvatar,
+                verified: _introVerified,
+              )
+            else if (_requestPending && _sentCount > 0)
+              const _RequestBanner(),
             if (_keyChanged)
               _KeyChangedBanner(
                 peerName: _nickname ?? widget.peerHaloId,
@@ -4783,6 +4821,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     ? _BlockedBar(onUnblock: _unblockContact)
                     : _incomingRequest
                     ? _AcceptRequestBar(
+                        introducer: _vouched ? _introName : null,
                         onAccept: _acceptRequestPeer,
                         onDecline: _declineRequestPeer,
                         onBlock: _blockRequestPeer,
@@ -4859,10 +4898,12 @@ class _ScaleTapState extends State<_ScaleTap> {
 // shown at the bottom of a chat when a stranger has messaged us and we
 // haven't accepted them yet. accept opens the chat; decline dismisses quietly.
 class _AcceptRequestBar extends StatelessWidget {
+  final String? introducer; // set when a friend vouched for them
   final VoidCallback onAccept;
   final VoidCallback onDecline;
   final VoidCallback onBlock;
   const _AcceptRequestBar({
+    this.introducer,
     required this.onAccept,
     required this.onDecline,
     required this.onBlock,
@@ -4878,7 +4919,9 @@ class _AcceptRequestBar extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'accept to reply - they can\'t message again until you do.',
+            introducer == null
+                ? 'accept to reply - they can\'t message again until you do.'
+                : '$introducer introduced you. accept to reply.',
             textAlign: TextAlign.center,
             style: HaloType.sans(
               size: 12.5,
@@ -4939,6 +4982,103 @@ class _AcceptRequestBar extends StatelessWidget {
             size: 13,
             color: fg,
           ).copyWith(fontWeight: bold ? FontWeight.w600 : FontWeight.w400),
+        ),
+      ),
+    );
+  }
+}
+
+// shown above the thread when a friend introduced this peer and neither side
+// has said anything yet. takes the place of the stranger warning.
+class _IntroBanner extends StatelessWidget {
+  final String name;
+  final String seed;
+  final int? avatar;
+  final bool verified;
+  const _IntroBanner({
+    required this.name,
+    required this.seed,
+    this.avatar,
+    this.verified = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.fromLTRB(13, 11, 13, 12),
+      decoration: BoxDecoration(
+        color: HaloColors.amber.withValues(alpha: 0.08),
+        border: Border.all(color: HaloColors.amber.withValues(alpha: 0.25)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          IntroducedBy(
+            name: name,
+            seed: seed,
+            avatar: avatar,
+            verified: verified,
+            delay: const Duration(milliseconds: 120),
+          ),
+          const SizedBox(height: 7),
+          Text(
+            '$name introduced you. say hello - they got your card too.',
+            style: HaloType.sans(
+              size: 12.5,
+              color: HaloColors.text2,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// the "introduce to..." row in the contact sheet. greyed with a reason while
+// the contact is still a request - you cannot vouch for someone you have not
+// accepted yourself.
+class _IntroduceRow extends StatelessWidget {
+  final bool enabled;
+  final VoidCallback onTap;
+  const _IntroduceRow({required this.enabled, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: enabled ? onTap : null,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Row(
+          children: [
+            Icon(
+              Icons.people_outline,
+              size: 18,
+              color: enabled ? HaloColors.amber : HaloColors.text3,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'introduce to...',
+                    style: HaloType.sans(
+                      size: 14,
+                      color: enabled ? HaloColors.text : HaloColors.text3,
+                    ),
+                  ),
+                  if (!enabled)
+                    Text(
+                      'accept them first',
+                      style: HaloType.mono(size: 9.5, color: HaloColors.text3),
+                    ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
