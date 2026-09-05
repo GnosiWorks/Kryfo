@@ -69,3 +69,5 @@ relay-live/data/
 relay-live/halo-relay
 relay-live/data/
 CLAUDE_CODE_BRIEF.md
+engine/vendor/**/builddeps/**/*.a
+engine/vendor/**/builddeps/**/*.la
