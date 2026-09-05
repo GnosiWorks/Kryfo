@@ -50,6 +50,7 @@ class UnwrappedMessage {
   final String? supporterBadge; // 'bg' - sender's shared supporter tier
   final String? deliveredUid; // 'dr' - receipt: uid the peer just stored
   final bool secure; // 'sc' - sender asked that this not be screenshotted
+  final IntroFrame? intro; // 'in' - a contact's card, vouched by the sender
   UnwrappedMessage(
     this.message, {
     this.secure = false,
@@ -84,6 +85,7 @@ class UnwrappedMessage {
     this.powBitsUsed,
     this.supporterBadge,
     this.deliveredUid,
+    this.intro,
   });
 }
 
@@ -120,6 +122,28 @@ class PinFrame {
   final String targetUid;
   final bool pinned;
   const PinFrame({required this.targetUid, required this.pinned});
+}
+
+// an introduction: the sender hands us a third person's card and vouches for
+// them. carries only what a group invite already carries plus the note the
+// introducer typed. no nickname ever rides here.
+class IntroFrame {
+  final String haloId;
+  final String onion;
+  final String xPub;
+  final String? edPub;
+  final int? avatar;
+  final String? fc; // their first-contact address, if the sender has one
+  final String? note;
+  const IntroFrame({
+    required this.haloId,
+    required this.onion,
+    required this.xPub,
+    this.edPub,
+    this.avatar,
+    this.fc,
+    this.note,
+  });
 }
 
 class SenderInfo {
@@ -213,6 +237,7 @@ Future<String> wrapMessage(
   String? deliveredUid,
   String? supporterBadge,
   bool secure = false,
+  IntroFrame? intro,
 }) async {
   final mode = await loadPushMode();
   final body = <String, dynamic>{'m': plain};
@@ -225,6 +250,18 @@ Future<String> wrapMessage(
   }
   if (edit != null) {
     body['ed'] = {'u': edit.targetUid, 'm': edit.newText};
+  }
+  if (intro != null) {
+    final card = <String, dynamic>{
+      'h': intro.haloId,
+      'o': intro.onion,
+      'x': intro.xPub,
+    };
+    if (intro.edPub != null) card['e'] = intro.edPub;
+    if (intro.avatar != null) card['av'] = intro.avatar;
+    if (intro.fc != null && intro.fc!.isNotEmpty) card['fc'] = intro.fc;
+    if (intro.note != null && intro.note!.isNotEmpty) card['n'] = intro.note;
+    body['in'] = card;
   }
   if (replyTo != null) body['q'] = replyTo;
   if (imageB64 != null) body['i'] = imageB64;
@@ -304,6 +341,26 @@ UnwrappedMessage unwrapMessage(String wrapped) {
         newText: (edRaw['m'] as String?) ?? '',
       );
     }
+    IntroFrame? intro;
+    final inRaw = json['in'];
+    if (inRaw is Map) {
+      final h = inRaw['h'] as String?;
+      final o = inRaw['o'] as String?;
+      final x = inRaw['x'] as String?;
+      // a card without keys is nothing we could ever message. drop it here so
+      // the receiver never sees a half card.
+      if (h != null && h.isNotEmpty && o != null && x != null && x.isNotEmpty) {
+        intro = IntroFrame(
+          haloId: h,
+          onion: o,
+          xPub: x,
+          edPub: inRaw['e'] as String?,
+          avatar: (inRaw['av'] as num?)?.toInt(),
+          fc: inRaw['fc'] as String?,
+          note: inRaw['n'] as String?,
+        );
+      }
+    }
     GroupControl? gc;
     final gcRaw = json['gc'];
     if (gcRaw is Map) {
@@ -345,6 +402,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       reaction: reaction,
       pin: pin,
       edit: edit,
+      intro: intro,
       replyTo: json['q'] as String?,
       groupId: json['g'] as String?,
       groupControl: gc,
