@@ -2,6 +2,30 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.1] - 2026-09-06
+
+Third pre-alpha. Friends can introduce you, strangers get looked at on your
+phone before you do, and a room can be made to disappear.
+
+### Added
+- introductions: a contact you accepted can hand you a friend's card. the request skips the stranger gate, shows who vouched, and the introducer has five a week
+- vouches as their own table, so several people you know can vouch for one person and the profile says so
+- scam shield: a stranger's first message and a lookalike name are checked on the phone, with rules that ship in the app. it advises, never blocks
+- burner rooms: a room with an end time, joined under a key made for it alone. late joiners see no history, expiry shreds everything, the screen is shielded while it is open
+- per-room keys in the engine, so a room's relay addresses share nothing with your identity
+
+### Fixed
+- a stranger's queued first message lost its proof-of-work on retry and was dropped at the far end without a word
+- the screen shield stayed on after leaving a room, and every chat screen leaked its listeners on the way out: an unswiped bubble built its spring inside dispose
+- leaving a room from its info screen closed the app
+- the burn timer deleted rows but never the files behind them
+- release builds no longer print ids, onions or message text to the log
+- grey hex colours replaced by the palette tokens on every screen
+
+### Changed
+- sharing and switches use the current flutter apis
+- three dependencies nothing imported are gone, and so is the dead status bar
+
 ## [0.2.0] - 2026-09-04
 
 Second pre-alpha. Groups, a relay route that works on its own, and the photo
