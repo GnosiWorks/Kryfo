@@ -18,12 +18,20 @@ String expiryLabel(Duration d) {
   return '${d.inHours}h';
 }
 
-// "disappears in 24 hours" for the banner. plain words, not a timer.
+// "disappears in 24 hours" for the banner. plain words, not a timer. a
+// joiner sees what is actually left, which can be minutes.
 String expiryWords(Duration d) {
   if (d.inDays >= 1 && d.inHours % 24 == 0) {
     return d.inDays == 1 ? '24 hours' : '${d.inDays} days';
   }
-  return d.inHours == 1 ? 'an hour' : '${d.inHours} hours';
+  if (d.inDays >= 1) return '${d.inDays} days';
+  if (d.inHours >= 1) {
+    final exact = d.inMinutes % 60 == 0;
+    if (d.inHours == 1) return exact ? 'an hour' : 'about an hour';
+    return exact ? '${d.inHours} hours' : 'about ${d.inHours} hours';
+  }
+  if (d.inMinutes >= 2) return '${d.inMinutes} minutes';
+  return 'a minute';
 }
 
 // what the header and the list row show. days and hours while there is
