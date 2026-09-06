@@ -45,6 +45,7 @@ import 'intro_prefs.dart';
 import 'scam_prefs.dart';
 import 'scam_shield.dart';
 import 'rooms.dart';
+import 'outbox.dart';
 import 'supporter.dart';
 import 'ntfy_listener.dart';
 import 'message_envelope.dart';
@@ -817,7 +818,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 40,
+      version: 41,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -875,6 +876,7 @@ class HaloDb {
             sent INTEGER NOT NULL DEFAULT 1,
             delivered INTEGER NOT NULL DEFAULT 0,
             preview TEXT,
+            pow_nonce INTEGER,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
         ''');
@@ -943,6 +945,16 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 41) {
+          // the proof-of-work a stranger's first message was sent with. the
+          // outbox used to rebuild the envelope without it, so a retried
+          // opener was dropped on the far side and nobody saw why.
+          try {
+            await db.execute(
+              'ALTER TABLE messages ADD COLUMN pow_nonce INTEGER',
+            );
+          } catch (_) {}
+        }
         if (oldV < 40) {
           // burner rooms live in the groups table with their own key and a
           // clock. each ALTER on its own and wrapped: one throw here and
@@ -1596,6 +1608,16 @@ class HaloDb {
       {'dismissed': 1},
       where: 'halo_id = ?',
       whereArgs: [haloId],
+    );
+  }
+
+  Future<void> setPowNonce(String msgUid, int nonce) async {
+    final db = await open();
+    await db.update(
+      'messages',
+      {'pow_nonce': nonce},
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
     );
   }
 
@@ -3100,6 +3122,8 @@ Future<String?> signalDecrypt(
   }
 }
 
+int _outboxGrind(String seed) => grindPow(seed, powBits);
+
 Future<String> handleHaloUri(String raw) async {
   final room = RoomLink.parse(raw);
   if (room != null) return appState.joinRoom(room);
@@ -3414,13 +3438,20 @@ class AppState extends ChangeNotifier {
       return;
     }
     try {
-      final wrapped = await wrapMessage(
-        r['plaintext'] as String,
-        msgUid: uid,
-        replyTo: r['reply_to'] as String?,
-        groupId: groupId,
-        supporterBadge: await sharedBadge(),
+      // a stranger's opener rides its nonce again. a row ground before this
+      // column existed has none; grind it now rather than send a retry the
+      // far side will drop.
+      var row = r;
+      if (groupId == null &&
+          redeliveryNeedsPow(r, backPaired: await db.isBackPaired(peer))) {
+        final nonce = await compute(_outboxGrind, r['plaintext'] as String);
+        await db.setPowNonce(uid, nonce);
+        row = {...r, 'pow_nonce': nonce};
+      }
+      final wrapped = await wrapRedelivery(
+        row,
         sender: _mySender(),
+        badge: await sharedBadge(),
       );
       if (groupId != null) {
         final members = await db.getGroupMembers(groupId);

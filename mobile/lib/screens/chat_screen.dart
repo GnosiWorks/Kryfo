@@ -3229,7 +3229,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // first send. seed is the raw text - matches the receiver's verifyPow.
     int? powNonce;
     if (_recvCount == 0) {
-      powNonce = await compute(_grindPowTask, text);
+      final n = await compute(_grindPowTask, text);
+      powNonce = n;
+      // kept on the row so a retry from the outbox carries the same nonce
+      await db.setPowNonce(msgUid, n);
     }
     final String cipher;
     try {
