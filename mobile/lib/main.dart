@@ -25,6 +25,7 @@ import 'wipe.dart';
 import 'media_progress.dart';
 import 'screens/home_screen.dart';
 import 'screens/new_group_screen.dart';
+import 'screens/room_create_sheet.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'screens/group_chat_screen.dart';
 import 'screens/chat_screen.dart';
@@ -43,6 +44,7 @@ import 'push_mode.dart';
 import 'intro_prefs.dart';
 import 'scam_prefs.dart';
 import 'scam_shield.dart';
+import 'rooms.dart';
 import 'supporter.dart';
 import 'ntfy_listener.dart';
 import 'message_envelope.dart';
@@ -66,6 +68,20 @@ typedef ThreeArgFn =
     Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
 typedef ThreeArgFnDart =
     Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
+typedef FourArgFn =
+    Pointer<Utf8> Function(
+      Pointer<Utf8>,
+      Pointer<Utf8>,
+      Pointer<Utf8>,
+      Pointer<Utf8>,
+    );
+typedef FourArgFnDart =
+    Pointer<Utf8> Function(
+      Pointer<Utf8>,
+      Pointer<Utf8>,
+      Pointer<Utf8>,
+      Pointer<Utf8>,
+    );
 typedef CounterFn = Pointer<Utf8> Function(Int32);
 typedef CounterFnDart = Pointer<Utf8> Function(int);
 
@@ -489,6 +505,96 @@ class HaloEngine {
         const Duration(seconds: 15),
         onTimeout: () => 'error: onion timeout',
       );
+
+  // burner rooms. every call hands the room's own private key back to the
+  // engine, which never keeps it: the key lives in the room row and dies
+  // with it.
+  ({String priv, String pub})? roomKeygen() {
+    final r = _lib
+        .lookupFunction<CStrFn, CStrFnDart>('HaloRoomKeygen')()
+        .toDartString();
+    final i = r.indexOf(':');
+    if (r.startsWith('error') || i < 0) return null;
+    return (priv: r.substring(0, i), pub: r.substring(i + 1));
+  }
+
+  String roomFcPk(String priv) {
+    final fn = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloRoomFcPk');
+    final p = priv.toNativeUtf8();
+    try {
+      return fn(p).toDartString();
+    } finally {
+      malloc.free(p);
+    }
+  }
+
+  Future<String> roomSend(String priv, String peerPub, String msg) =>
+      _roomFfiOnIsolate('HaloRoomSend', [priv, peerPub, msg]).timeout(
+        const Duration(seconds: 60),
+        onTimeout: () => 'error: relay timeout',
+      );
+
+  Future<String> roomSendFirstContact(
+    String priv,
+    String peerPub,
+    String fcPk,
+    String msg,
+  ) => _roomFfiOnIsolate('HaloRoomSendFirstContact', [priv, peerPub, fcPk, msg])
+      .timeout(
+        const Duration(seconds: 60),
+        onTimeout: () => 'error: relay timeout',
+      );
+
+  void roomSubscribeBg(String priv, String peerPub) =>
+      _roomFfiOnIsolate('HaloRoomSubscribe', [priv, peerPub]).ignore();
+  void roomSubscribeFcBg(String priv) =>
+      _roomFfiOnIsolate('HaloRoomSubscribeFirstContact', [priv]).ignore();
+  void roomUnsubscribeBg(String pub) =>
+      _roomFfiOnIsolate('HaloRoomUnsubscribe', [pub]).ignore();
+}
+
+// one to four string args in, a string out, on its own isolate like every
+// other relay call.
+Future<String> _roomFfiOnIsolate(String name, List<String> args) {
+  return Isolate.run(() {
+    final lib = Platform.isAndroid
+        ? DynamicLibrary.open('libhalo.so')
+        : DynamicLibrary.process();
+    final ptrs = [for (final a in args) a.toNativeUtf8()];
+    try {
+      switch (ptrs.length) {
+        case 1:
+          return lib
+              .lookupFunction<OneArgFn, OneArgFnDart>(name)(ptrs[0])
+              .toDartString();
+        case 2:
+          return lib
+              .lookupFunction<TwoArgFn, TwoArgFnDart>(name)(ptrs[0], ptrs[1])
+              .toDartString();
+        case 3:
+          return lib
+              .lookupFunction<ThreeArgFn, ThreeArgFnDart>(name)(
+                ptrs[0],
+                ptrs[1],
+                ptrs[2],
+              )
+              .toDartString();
+        default:
+          return lib
+              .lookupFunction<FourArgFn, FourArgFnDart>(name)(
+                ptrs[0],
+                ptrs[1],
+                ptrs[2],
+                ptrs[3],
+              )
+              .toDartString();
+      }
+    } finally {
+      for (final p in ptrs) {
+        malloc.free(p);
+      }
+    }
+  });
 }
 
 Future<String> _fcSendOnIsolate(String peerXPub, String fcPk, String msg) {
@@ -711,7 +817,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 39,
+      version: 40,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -796,7 +902,14 @@ class HaloDb {
             is_admin INTEGER NOT NULL DEFAULT 0,
             admin_id TEXT,
             unread INTEGER NOT NULL DEFAULT 0,
-            atmosphere TEXT
+            atmosphere TEXT,
+            room_priv TEXT,
+            room_pub TEXT,
+            expires_at INTEGER,
+            creator_pub TEXT,
+            fc_pk TEXT,
+            member_cap INTEGER,
+            room_seen INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute('''
@@ -830,6 +943,24 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 40) {
+          // burner rooms live in the groups table with their own key and a
+          // clock. each ALTER on its own and wrapped: one throw here and
+          // the app never opens again.
+          for (final col in const [
+            'room_priv TEXT',
+            'room_pub TEXT',
+            'expires_at INTEGER',
+            'creator_pub TEXT',
+            'fc_pk TEXT',
+            'member_cap INTEGER',
+            'room_seen INTEGER NOT NULL DEFAULT 0',
+          ]) {
+            try {
+              await db.execute('ALTER TABLE groups ADD COLUMN $col');
+            } catch (_) {}
+          }
+        }
         if (oldV < 39) {
           // what the scam shield flagged on a stranger, and whether the
           // person told it to drop the matter.
@@ -2062,6 +2193,113 @@ class HaloDb {
     await db.delete('groups', where: 'group_id = ?', whereArgs: [groupId]);
   }
 
+  // a burner room: a group row with a key of its own and an end time.
+  // members are room keys, not kryfo ids; admin_id is the creator's key.
+  Future<void> createRoom({
+    required String groupId,
+    required String name,
+    required String priv,
+    required String pub,
+    required int expiresAt,
+    required String creatorPub,
+    required String fcPk,
+    int? cap,
+    required List<String> members,
+  }) async {
+    final db = await open();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.insert('groups', {
+      'group_id': groupId,
+      'name': name,
+      'created_at': now,
+      'is_admin': creatorPub == pub ? 1 : 0,
+      'admin_id': creatorPub,
+      'room_priv': priv,
+      'room_pub': pub,
+      'expires_at': expiresAt,
+      'creator_pub': creatorPub,
+      'fc_pk': fcPk,
+      'member_cap': cap,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    final batch = db.batch();
+    for (final m in members) {
+      batch.insert('group_members', {
+        'group_id': groupId,
+        'halo_id': m,
+        'joined_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    }
+    await batch.commit(noResult: true);
+  }
+
+  Future<Map<String, Object?>?> roomByPub(String pub) async {
+    final db = await open();
+    final rows = await db.query(
+      'groups',
+      where: 'room_pub = ?',
+      whereArgs: [pub],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  Future<List<Map<String, Object?>>> rooms() async {
+    final db = await open();
+    return db.query('groups', where: 'room_pub IS NOT NULL');
+  }
+
+  Future<List<Map<String, Object?>>> expiredRooms(int now) async {
+    final db = await open();
+    return db.query(
+      'groups',
+      where: 'room_pub IS NOT NULL AND expires_at <= ?',
+      whereArgs: [now],
+    );
+  }
+
+  Future<void> markRoomSeen(String groupId) async {
+    final db = await open();
+    await db.update(
+      'groups',
+      {'room_seen': 1},
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+    );
+  }
+
+  // every file a group's messages point at, so expiry can shred them
+  Future<List<String>> groupFilePaths(String groupId) async {
+    final db = await open();
+    final rows = await db.query(
+      'messages',
+      columns: ['media_path', 'file_path'],
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+    );
+    return [
+      for (final r in rows)
+        for (final k in const ['media_path', 'file_path'])
+          if ((r[k] as String?)?.isNotEmpty == true) r[k] as String,
+    ];
+  }
+
+  Future<void> deleteGroupMessages(String groupId) async {
+    final db = await open();
+    final rows = await db.query(
+      'messages',
+      columns: ['msg_uid'],
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+    );
+    for (final r in rows) {
+      final uid = r['msg_uid'] as String?;
+      if (uid != null) {
+        await db.delete('reactions', where: 'msg_uid = ?', whereArgs: [uid]);
+      }
+    }
+    await db.delete('messages', where: 'group_id = ?', whereArgs: [groupId]);
+  }
+
   // load all messages for a group, oldest-first. peer_id on each row is the
   // SENDER's kryfo id (for our own messages this is our kryfo id).
   Future<List<Map<String, Object?>>> loadGroupMessages(String groupId) async {
@@ -2144,16 +2382,14 @@ class HaloDb {
     );
   }
 
-  // kill the jpgs too, not just the rows. otherwise a burned photo is still
-  // sitting on disk
+  // kill the files too, not just the rows. otherwise a burned photo is still
+  // sitting on disk. zeros first, then unlink, so a raw read of the flash
+  // finds nothing either.
   Future<void> _scrubMedia(List<Map<String, Object?>> rows) async {
     for (final r in rows) {
-      final mp = r['media_path'] as String?;
-      if (mp != null && mp.isNotEmpty) {
-        try {
-          final f = File(mp);
-          if (await f.exists()) await f.delete();
-        } catch (_) {}
+      for (final k in const ['media_path', 'file_path']) {
+        final mp = r[k] as String?;
+        if (mp != null && mp.isNotEmpty) await shredFile(mp);
       }
     }
   }
@@ -2176,7 +2412,7 @@ class HaloDb {
     final now = DateTime.now().millisecondsSinceEpoch;
     final rows = await db.query(
       'messages',
-      columns: ['msg_uid'],
+      columns: ['msg_uid', 'media_path', 'file_path'],
       where: 'burn_at IS NOT NULL AND burn_at < ?',
       whereArgs: [now],
     );
@@ -2865,6 +3101,8 @@ Future<String?> signalDecrypt(
 }
 
 Future<String> handleHaloUri(String raw) async {
+  final room = RoomLink.parse(raw);
+  if (room != null) return appState.joinRoom(room);
   final parsed = parseHaloUri(raw);
   if (parsed == null) return 'invalid uri';
   if (parsed['v'] == '2' || parsed['v'] == '3') {
@@ -2893,6 +3131,33 @@ Future<String> handleHaloUri(String raw) async {
     await db.upsertContact(parsed['id']!, parsed['onion']!, parsed['xpub']!);
     await appState.subscribePeer(parsed['id']!);
     return 'peer imported (v1): ${parsed['id']}';
+  }
+}
+
+// overwrite with zeros, then unlink. best effort - flash wear levelling can
+// keep an old block, but the easy read is gone.
+Future<void> shredFile(String path) async {
+  try {
+    final f = File(path);
+    if (!await f.exists()) return;
+    final len = await f.length();
+    final raf = await f.open(mode: FileMode.writeOnly);
+    try {
+      const chunk = 64 * 1024;
+      final zeros = Uint8List(chunk);
+      var left = len;
+      while (left > 0) {
+        final n = left < chunk ? left : chunk;
+        await raf.writeFrom(zeros, 0, n);
+        left -= n;
+      }
+      await raf.flush();
+    } finally {
+      await raf.close();
+    }
+    await f.delete();
+  } catch (e) {
+    debugPrint('shred: $e');
   }
 }
 
@@ -3024,6 +3289,7 @@ class GroupPreview {
   final bool isAdmin;
   final DateTime createdAt;
   final int unread;
+  final int? expiresAt; // a burner room's end, null for a group
   const GroupPreview({
     required this.groupId,
     required this.name,
@@ -3031,6 +3297,7 @@ class GroupPreview {
     required this.isAdmin,
     required this.createdAt,
     this.unread = 0,
+    this.expiresAt,
   });
 }
 
@@ -3159,7 +3426,7 @@ class AppState extends ChangeNotifier {
         final members = await db.getGroupMembers(groupId);
         final results = await Future.wait([
           for (final m in members)
-            if (m != myId) _sendOneEnvelope(m, wrapped),
+            if (m != myId) _sendGroupEnvelope(groupId, m, wrapped),
         ]);
         if (results.any((ok) => ok)) {
           await db.markSent(uid);
@@ -3635,6 +3902,7 @@ class AppState extends ChangeNotifier {
       final adminId = await db.groupAdminId(env.groupId!);
       if (adminId != null && senderHaloId == adminId) {
         await db.syncGroupMembers(env.groupId!, env.roster!);
+        await _subscribeRoomMembers(env.groupId!);
         // create contact stubs for self-healed members so we can actually
         // encrypt to them - ids alone aren't enough, we need their keys.
         if (env.rosterParticipants != null) {
@@ -3869,7 +4137,10 @@ class AppState extends ChangeNotifier {
           : (fileName == 'voice.wav'
                 ? 'voice message'
                 : fileName ?? (mediaPath != null ? 'photo' : ''));
-      notifBody = '$senderHaloId: $gBody';
+      final who = looksLikeRoomKey(senderHaloId)
+          ? roomTag(senderHaloId)
+          : senderHaloId;
+      notifBody = '$who: $gBody';
       notifPayload = 'group:${env.groupId}';
       suppress = currentChatPeer == notifPayload;
     } else {
@@ -3966,10 +4237,18 @@ class AppState extends ChangeNotifier {
     final groupId = env.groupId;
     if (groupId == null) return;
     switch (gc.type) {
+      case 'join':
+        // only ever valid off a room drop box, handled there
+        return;
       case 'create':
         // someone added us to a new group. they are the admin; we are
         // a regular member. group.is_admin stays 0.
         if (gc.members == null || gc.name == null) return;
+        // a room roster is only the creator's to send
+        if (await _roomOf(groupId) != null &&
+            senderHaloId != await db.groupAdminId(groupId)) {
+          return;
+        }
         if (!await db.groupExists(groupId)) {
           await db.createGroup(
             groupId,
@@ -4516,6 +4795,7 @@ class AppState extends ChangeNotifier {
         fresh[xPub] = haloId;
       }
       await _saveXPubCache(fresh);
+      await _subscribeRooms();
     });
     // open ntfy websocket when push mode is ntfy. on incoming
     // ping, the existing 1s drain loop catches up - we just log for now.
@@ -4663,6 +4943,17 @@ class AppState extends ChangeNotifier {
           // dedup: skip a message we've already handled (see direct-onion note).
           final h = sha256.convert(utf8.encode(m.cipher)).toString();
           if (await db.alreadySeen(h)) continue;
+          // a room frame: opened by the room key already, never signal
+          if (m.peer.startsWith('room:') || m.peer.startsWith('roomfc:')) {
+            try {
+              await _handleRoomFrame(m.peer, m.cipher);
+            } catch (e) {
+              debugPrint('room frame: $e');
+            }
+            await db.markSeen(h);
+            notifyListeners();
+            continue;
+          }
           if (m.cipher.startsWith('{')) {
             // control frame riding the transport outside signal (bundle
             // exchange). signal wire is base64 - never starts with '{'.
@@ -4947,6 +5238,7 @@ class AppState extends ChangeNotifier {
             r['created_at'] as int,
           ),
           unread: (r['unread'] as int? ?? 0),
+          expiresAt: r['expires_at'] as int?,
         ),
       );
     }
@@ -5264,6 +5556,296 @@ class AppState extends ChangeNotifier {
     return (toFirst: r[0], toSecond: r[1]);
   }
 
+  // what a group row says about being a room, or null for a plain group
+  Future<({String priv, String pub, int expiresAt})?> _roomOf(
+    String groupId,
+  ) async {
+    final g = await db.getGroup(groupId);
+    final priv = g?['room_priv'] as String?;
+    final pub = g?['room_pub'] as String?;
+    if (priv == null || pub == null) return null;
+    return (priv: priv, pub: pub, expiresAt: (g!['expires_at'] as int?) ?? 0);
+  }
+
+  // the one door every group frame leaves through. a plain group goes to
+  // the member's signal session as always. a room frame is rewritten so
+  // the only identity on it is the room key - no kryfo id, no onion, no
+  // push endpoint, no badge - and sealed with the room key to the member's
+  // room key.
+  Future<bool> _sendGroupEnvelope(
+    String groupId,
+    String memberId,
+    String wrapped,
+  ) async {
+    final room = await _roomOf(groupId);
+    if (room == null) return _sendOneEnvelope(memberId, wrapped);
+    if (memberId == room.pub) return false;
+    if (room.expiresAt <= DateTime.now().millisecondsSinceEpoch) return false;
+    final r = await engine.roomSend(
+      room.priv,
+      memberId,
+      _roomify(wrapped, room.pub),
+    );
+    if (r != 'ok') debugPrint('room send: $r');
+    return r == 'ok';
+  }
+
+  String _roomify(String wrapped, String pub) {
+    const prefix = 'halo/1:';
+    if (!wrapped.startsWith(prefix)) return wrapped;
+    try {
+      final j =
+          jsonDecode(wrapped.substring(prefix.length)) as Map<String, dynamic>;
+      j['h'] = pub;
+      j['x'] = pub;
+      j.remove('o');
+      j.remove('e');
+      j.remove('p');
+      j.remove('bg');
+      j.remove('rp');
+      return '$prefix${jsonEncode(j)}';
+    } catch (_) {
+      return wrapped;
+    }
+  }
+
+  // ---- burner rooms ----
+
+  // rooms we listen to, room pub -> member pubs, so a roster update only
+  // opens the subscriptions it did not have.
+  final Map<String, Set<String>> _roomSubs = {};
+  Timer? _roomTimer;
+  // the last room that expired, shown for a few seconds in the chat list
+  String? expiredRoomName;
+
+  Future<String> createRoom(
+    String name, {
+    required Duration expiry,
+    int? cap,
+  }) async {
+    final k = engine.roomKeygen();
+    if (k == null) throw StateError('could not make a room key');
+    final fc = engine.roomFcPk(k.priv);
+    if (fc.startsWith('error')) throw StateError(fc);
+    final groupId = newMsgUid();
+    await db.createRoom(
+      groupId: groupId,
+      name: name.trim().isEmpty ? 'room' : name.trim(),
+      priv: k.priv,
+      pub: k.pub,
+      expiresAt: DateTime.now().add(expiry).millisecondsSinceEpoch,
+      creatorPub: k.pub,
+      fcPk: fc,
+      cap: cap,
+      members: [k.pub],
+    );
+    engine.roomSubscribeFcBg(k.priv);
+    _roomSubs[k.pub] = {};
+    _armRoomTimer();
+    await refreshGroups();
+    return groupId;
+  }
+
+  Future<RoomLink?> roomLinkFor(String groupId) async {
+    final g = await db.getGroup(groupId);
+    if (g == null || g['room_pub'] == null) return null;
+    return RoomLink(
+      roomId: groupId,
+      name: g['name'] as String,
+      expiresAt: g['expires_at'] as int,
+      creatorPub: g['creator_pub'] as String,
+      fcPk: g['fc_pk'] as String,
+      cap: g['member_cap'] as int?,
+    );
+  }
+
+  // join off a link: make a key for this room only, tell the creator's drop
+  // box about it, and listen for the creator. the roster comes back from
+  // them and opens the rest.
+  Future<String> joinRoom(RoomLink link) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (link.expiresAt <= now) return 'this room has already expired';
+    if (await db.groupExists(link.roomId)) {
+      return 'you are already in this room';
+    }
+    final k = engine.roomKeygen();
+    if (k == null) return 'could not make a room key';
+    await db.createRoom(
+      groupId: link.roomId,
+      name: link.name,
+      priv: k.priv,
+      pub: k.pub,
+      expiresAt: link.expiresAt,
+      creatorPub: link.creatorPub,
+      fcPk: link.fcPk,
+      cap: link.cap,
+      members: [link.creatorPub, k.pub],
+    );
+    _roomSubs[k.pub] = {};
+    await _subscribeRoomMembers(link.roomId);
+    _armRoomTimer();
+    await refreshGroups();
+    final wrapped = _roomify(
+      await wrapMessage(
+        '',
+        groupId: link.roomId,
+        groupControl: const GroupControl(type: 'join'),
+        sender: _mySender(),
+      ),
+      k.pub,
+    );
+    final r = await engine.roomSendFirstContact(
+      k.priv,
+      link.creatorPub,
+      link.fcPk,
+      wrapped,
+    );
+    debugPrint('room join: $r');
+    return r == 'ok'
+        ? 'joined ${link.name}'
+        : 'joined ${link.name}, but the creator could not be reached yet';
+  }
+
+  // open a subscription for every member key we do not listen to yet
+  Future<void> _subscribeRoomMembers(String groupId) async {
+    final room = await _roomOf(groupId);
+    if (room == null) return;
+    final have = _roomSubs.putIfAbsent(room.pub, () => {});
+    for (final m in await db.getGroupMembers(groupId)) {
+      if (m == room.pub || have.contains(m)) continue;
+      have.add(m);
+      engine.roomSubscribeBg(room.priv, m);
+    }
+  }
+
+  // someone came in off the link. only the creator takes these, only for a
+  // live room, only under the cap. then everyone gets the new roster and
+  // subscribes to the newcomer off it.
+  Future<void> _roomJoin(String roomPub, UnwrappedMessage env) async {
+    final g = await db.roomByPub(roomPub);
+    if (g == null || env.groupId != g['group_id']) return;
+    if ((g['is_admin'] as int? ?? 0) != 1) return;
+    if ((g['expires_at'] as int) <= DateTime.now().millisecondsSinceEpoch) {
+      return;
+    }
+    final who = env.senderHaloId;
+    if (who == null || !looksLikeRoomKey(who) || who == roomPub) return;
+    final groupId = g['group_id'] as String;
+    final members = await db.getGroupMembers(groupId);
+    final cap = g['member_cap'] as int?;
+    if (!members.contains(who)) {
+      if (cap != null && members.length >= cap) {
+        debugPrint('room: full, ignoring join');
+        return;
+      }
+      await db.addGroupMember(groupId, who);
+    }
+    await _subscribeRoomMembers(groupId);
+    final all = await db.getGroupMembers(groupId);
+    await _sendControlToGroup(
+      groupId,
+      GroupControl(type: 'create', name: g['name'] as String, members: all),
+    );
+    _bumpChatRev('group:$groupId');
+    await refreshGroups();
+  }
+
+  // a frame off a room subscription. the tag says which room key took it
+  // and which member key sent it; the content is the plain envelope, the
+  // relay layer already opened the seal.
+  Future<void> _handleRoomFrame(String tag, String content) async {
+    final parts = tag.split(':');
+    if (parts.length < 2) return;
+    final roomPub = parts[1];
+    final g = await db.roomByPub(roomPub);
+    if (g == null) return;
+    final groupId = g['group_id'] as String;
+    if ((g['expires_at'] as int) <= DateTime.now().millisecondsSinceEpoch) {
+      await _destroyRoom(groupId, expired: true);
+      return;
+    }
+    final env = unwrapMessage(content);
+    if (env.groupId != groupId) return;
+    if (parts[0] == 'roomfc') {
+      if (env.groupControl?.type == 'join') await _roomJoin(roomPub, env);
+      return;
+    }
+    if (parts.length < 3) return;
+    final from = parts[2];
+    if (env.senderHaloId != from) return;
+    if (!(await db.getGroupMembers(groupId)).contains(from)) {
+      debugPrint('room: frame from a key not in the roster, dropped');
+      return;
+    }
+    await _applyIncomingPayload(from, env);
+    if (env.groupControl != null) await _subscribeRoomMembers(groupId);
+  }
+
+  // the room is over: every message, every file, the row, the key, the
+  // subscriptions. the wipe goes through the same shred the burn timer
+  // uses. a gone room is not a notification, just a line in the list for
+  // a moment if someone is looking.
+  Future<void> _destroyRoom(String groupId, {bool expired = false}) async {
+    final g = await db.getGroup(groupId);
+    if (g == null) return;
+    final pub = g['room_pub'] as String?;
+    if (pub != null) {
+      engine.roomUnsubscribeBg(pub);
+      _roomSubs.remove(pub);
+    }
+    for (final path in await db.groupFilePaths(groupId)) {
+      await shredFile(path);
+    }
+    await db.deleteGroupMessages(groupId);
+    await db.deleteGroup(groupId);
+    if (expired) {
+      expiredRoomName = g['name'] as String?;
+      Timer(const Duration(seconds: 6), () {
+        expiredRoomName = null;
+        notifyListeners();
+      });
+    }
+    _bumpChatRev('group:$groupId');
+    await refreshGroups();
+  }
+
+  Future<void> leaveRoom(String groupId) async {
+    try {
+      await _sendControlToGroup(groupId, const GroupControl(type: 'leave'));
+    } catch (_) {}
+    await _destroyRoom(groupId);
+  }
+
+  Future<void> _sweepRooms() async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final g in await db.expiredRooms(now)) {
+      await _destroyRoom(g['group_id'] as String, expired: true);
+    }
+  }
+
+  // one sweep every half minute is plenty: the header counts down on its
+  // own, this only has to notice the end.
+  void _armRoomTimer() {
+    _roomTimer ??= Timer.periodic(const Duration(seconds: 30), (_) {
+      if (!haloWiping) unawaited(_sweepRooms());
+    });
+  }
+
+  // on boot: drop what ended while we were away, then listen to what lives
+  Future<void> _subscribeRooms() async {
+    await _sweepRooms();
+    final rooms = await db.rooms();
+    for (final g in rooms) {
+      final gid = g['group_id'] as String;
+      final priv = g['room_priv'] as String;
+      final pub = g['room_pub'] as String;
+      _roomSubs.putIfAbsent(pub, () => {});
+      if ((g['is_admin'] as int? ?? 0) == 1) engine.roomSubscribeFcBg(priv);
+      await _subscribeRoomMembers(gid);
+    }
+    if (rooms.isNotEmpty) _armRoomTimer();
+  }
+
   Future<void> _sendControlToGroup(String groupId, GroupControl gc) async {
     final wrapped = await wrapMessage(
       '',
@@ -5274,7 +5856,7 @@ class AppState extends ChangeNotifier {
     final members = await db.getGroupMembers(groupId);
     await Future.wait([
       for (final memberId in members)
-        if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
+        if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
     ]);
   }
 
@@ -5335,7 +5917,7 @@ class AppState extends ChangeNotifier {
     );
     final results = await Future.wait([
       for (final memberId in members)
-        if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
+        if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
     ]);
     final anyOk = results.any((ok) => ok);
     // the tick is earned, not assumed: only a delivery to at least one
@@ -5403,7 +5985,8 @@ class AppState extends ChangeNotifier {
       for (var tryN = 0; tryN < 3 && !chunkOk; tryN++) {
         final results = await Future.wait([
           for (final memberId in members)
-            if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
+            if (memberId != myId)
+              _sendGroupEnvelope(groupId, memberId, wrapped),
         ]);
         chunkOk = results.any((ok) => ok);
         if (!chunkOk) {
@@ -5462,7 +6045,7 @@ class AppState extends ChangeNotifier {
     final members = await db.getGroupMembers(groupId);
     await Future.wait([
       for (final memberId in members)
-        if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
+        if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
     ]);
   }
 
@@ -5490,7 +6073,7 @@ class AppState extends ChangeNotifier {
     unawaited(
       Future.wait([
         for (final memberId in members)
-          if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
+          if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
       ]),
     );
   }
@@ -5508,7 +6091,7 @@ class AppState extends ChangeNotifier {
     final members = await db.getGroupMembers(groupId);
     await Future.wait([
       for (final memberId in members)
-        if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
+        if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
     ]);
     notifyListeners();
   }
@@ -5529,7 +6112,7 @@ class AppState extends ChangeNotifier {
     final members = await db.getGroupMembers(groupId);
     await Future.wait([
       for (final memberId in members)
-        if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
+        if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
     ]);
     notifyListeners();
   }
@@ -5552,7 +6135,7 @@ class AppState extends ChangeNotifier {
     final members = await db.getGroupMembers(groupId);
     await Future.wait([
       for (final memberId in members)
-        if (memberId != myId) _sendOneEnvelope(memberId, wrapped),
+        if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
     ]);
   }
 
@@ -5640,7 +6223,7 @@ class AppState extends ChangeNotifier {
         groupControl: addGc,
         sender: _mySender(),
       );
-      await _sendOneEnvelope(memberId, wrapped);
+      await _sendGroupEnvelope(groupId, memberId, wrapped);
     }
     final allMembers = await db.getGroupMembers(groupId);
     final allParticipants = await _buildParticipants(allMembers);
@@ -5657,7 +6240,7 @@ class AppState extends ChangeNotifier {
         groupControl: createGc,
         sender: _mySender(),
       );
-      await _sendOneEnvelope(newMember, wrapped);
+      await _sendGroupEnvelope(groupId, newMember, wrapped);
     }
     await refreshGroups();
   }
@@ -5684,7 +6267,7 @@ class AppState extends ChangeNotifier {
         groupControl: gc,
         sender: _mySender(),
       );
-      await _sendOneEnvelope(memberId, wrapped);
+      await _sendGroupEnvelope(groupId, memberId, wrapped);
     }
     await refreshGroups();
   }
@@ -5702,6 +6285,7 @@ class AppState extends ChangeNotifier {
   // anyone can leave. tells the remaining members so they can drop us from
   // their copies. caller deletes the group locally.
   Future<void> leaveGroupAndAnnounce(String groupId) async {
+    if (await _roomOf(groupId) != null) return leaveRoom(groupId);
     final gc = GroupControl(type: 'leave');
     await _sendControlToGroup(groupId, gc);
     await db.deleteGroup(groupId);
@@ -5870,18 +6454,25 @@ class _RootShellState extends State<RootShell> {
               name: g.name,
               memberCount: g.memberCount,
               unread: g.unread,
+              expiresAt: g.expiresAt,
             ),
           )
           .toList(),
       onAddContact: () => showAddContact(context),
       onNewGroup: () => _open(const NewGroupScreen()),
+      onNewRoom: () async {
+        final id = await showRoomCreateSheet(context);
+        if (id == null || !mounted) return;
+        _open(GroupChatScreen(groupId: id));
+      },
+      expiredRoomName: appState.expiredRoomName,
       onOpenDev: () => _open(const DevScreen()),
       onOpenSettings: () => _open(const ProfileScreen()),
       onOpenSettingsDirect: () => _open(SettingsScreen()),
       onOpenChat: (id) async {
         final rows = await db.contacts();
         final matches = rows.where((r) => r['halo_id'] == id).toList();
-        if (matches.isEmpty || !mounted) return;
+        if (matches.isEmpty || !context.mounted) return;
         final row = matches.first;
         Navigator.push(
           context,
@@ -6063,7 +6654,7 @@ Future<void> showAddContact(BuildContext context) async {
       ),
     ),
   );
-  if (action == null) return;
+  if (action == null || !context.mounted) return;
   if (action == 'mine') {
     await Navigator.of(context).push(haloRoute(const MyKryfoScreen()));
     return;
@@ -6220,7 +6811,7 @@ class _DevScreenState extends State<DevScreen> {
       _myAddr,
       appState.fcCounter,
     );
-    if (!context.mounted) return;
+    if (!mounted) return;
     showDialog(
       context: context,
       builder: (_) => Dialog(
@@ -6355,10 +6946,9 @@ class _DevScreenState extends State<DevScreen> {
         ],
       ),
     );
-    if (action == null) return;
+    if (action == null || !mounted) return;
 
     if (action == 'code') {
-      if (!context.mounted) return;
       await Navigator.of(context).push(haloRoute(const PairCodeScreen()));
       await appState.refreshContacts();
       return;

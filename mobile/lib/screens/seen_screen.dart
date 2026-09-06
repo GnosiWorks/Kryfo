@@ -97,6 +97,15 @@ class SeenScreen extends StatelessWidget {
                 'stranger and cannot see anything a contact sends you.',
           ),
           _Claim(
+            'burner rooms',
+            'per-room keys',
+            HaloColors.green,
+            'you join a room under a key made for it, so the people inside '
+                'learn nothing that works elsewhere. late joiners get no '
+                'history. at expiry the keys, the messages and the media are '
+                'destroyed, and the screen is shielded while a room is open.',
+          ),
+          _Claim(
             'that a device fetched mail',
             'timing only',
             HaloColors.amber,

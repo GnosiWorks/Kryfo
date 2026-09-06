@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'donate_screen.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
+import '../widgets/room_countdown.dart';
 import '../widgets/kryfo_avatar.dart';
 import 'notes_screen.dart';
 import 'backup_screen.dart';
@@ -28,6 +29,8 @@ class HomeScreen extends StatelessWidget {
   final int pendingCount;
   final VoidCallback onAddContact;
   final VoidCallback onNewGroup;
+  final VoidCallback onNewRoom;
+  final String? expiredRoomName;
   final VoidCallback onOpenDev;
   final VoidCallback onOpenSettings;
   final VoidCallback onOpenSettingsDirect;
@@ -41,6 +44,8 @@ class HomeScreen extends StatelessWidget {
     this.groups = const [],
     required this.onAddContact,
     required this.onNewGroup,
+    required this.onNewRoom,
+    this.expiredRoomName,
     required this.onOpenDev,
     required this.onOpenSettings,
     required this.onOpenSettingsDirect,
@@ -108,6 +113,8 @@ class HomeScreen extends StatelessWidget {
                       onTap: onOpenChat,
                       onOpenGroup: onOpenGroup,
                       onNewGroup: onNewGroup,
+                      onNewRoom: onNewRoom,
+                      expiredRoomName: expiredRoomName,
                     ),
             ),
             _NavTabs(
@@ -188,12 +195,15 @@ class GroupSummary {
   final String name;
   final int memberCount;
   final int unread;
+  final int? expiresAt; // set for a burner room
   const GroupSummary({
     required this.groupId,
     required this.name,
     required this.memberCount,
     this.unread = 0,
+    this.expiresAt,
   });
+  bool get isRoom => expiresAt != null;
 }
 
 // ───────── date header ─────────
@@ -1079,12 +1089,16 @@ class _ContactList extends StatelessWidget {
   final void Function(String kryfo) onTap;
   final void Function(String groupId) onOpenGroup;
   final VoidCallback onNewGroup;
+  final VoidCallback onNewRoom;
+  final String? expiredRoomName;
   const _ContactList({
     required this.contacts,
     required this.groups,
     required this.onTap,
     required this.onOpenGroup,
     required this.onNewGroup,
+    required this.onNewRoom,
+    this.expiredRoomName,
   });
   @override
   Widget build(BuildContext context) {
@@ -1108,6 +1122,32 @@ class _ContactList extends StatelessWidget {
               ),
               const Spacer(),
               GestureDetector(
+                onTap: onNewRoom,
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 14),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.timer_outlined,
+                        size: 13,
+                        color: HaloColors.violet,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        'room',
+                        style: HaloType.mono(
+                          size: 10,
+                          color: HaloColors.violet,
+                          letter: 0.14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              GestureDetector(
                 onTap: onNewGroup,
                 behavior: HitTestBehavior.opaque,
                 child: Row(
@@ -1129,6 +1169,18 @@ class _ContactList extends StatelessWidget {
             ],
           ),
         ),
+        // a room that just ended: one quiet line, gone in a few seconds
+        if (expiredRoomName != null)
+          _Enter(
+            index: 0,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+              child: Text(
+                '${expiredRoomName!} · room expired',
+                style: HaloType.mono(size: 10, color: HaloColors.violet),
+              ),
+            ),
+          ),
         ...groups.asMap().entries.map(
           (e) => _Enter(
             index: 1 + e.key,
@@ -1240,10 +1292,13 @@ class _GroupRow extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: HaloColors.amberSoft,
+                  color: g.isRoom
+                      ? HaloColors.violet.withValues(alpha: 0.14)
+                      : HaloColors.amberSoft,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: HaloColors.amber.withValues(alpha: 0.35),
+                    color: (g.isRoom ? HaloColors.violet : HaloColors.amber)
+                        .withValues(alpha: 0.35),
                     width: 0.6,
                   ),
                 ),
@@ -1253,7 +1308,7 @@ class _GroupRow extends StatelessWidget {
                   style: HaloType.serif(
                     size: 18,
                     italic: true,
-                    color: HaloColors.amber,
+                    color: g.isRoom ? HaloColors.violet : HaloColors.amber,
                   ),
                 ),
               ),
@@ -1273,10 +1328,13 @@ class _GroupRow extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      '${g.memberCount} members',
-                      style: HaloType.mono(size: 10, color: HaloColors.text3),
-                    ),
+                    if (g.isRoom)
+                      RoomCountdown(expiresAt: g.expiresAt!, size: 10)
+                    else
+                      Text(
+                        '${g.memberCount} members',
+                        style: HaloType.mono(size: 10, color: HaloColors.text3),
+                      ),
                   ],
                 ),
               ),
@@ -1932,7 +1990,7 @@ class _SavedPin extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: Color(0xFF6B625A), size: 18),
+            Icon(Icons.chevron_right, color: HaloColors.text3, size: 18),
           ],
         ),
       ),
@@ -1994,7 +2052,7 @@ class _NotesPin extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: Color(0xFF6B625A), size: 18),
+            Icon(Icons.chevron_right, color: HaloColors.text3, size: 18),
           ],
         ),
       ),

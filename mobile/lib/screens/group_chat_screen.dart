@@ -41,8 +41,17 @@ import '../widgets/burn_fade.dart';
 import 'group_info_screen.dart';
 import '../widgets/motion.dart'
     show haloRoute, SendPill, PrivacyMode, TorStatus;
+import '../rooms.dart';
+import '../widgets/notice_banner.dart';
+import '../widgets/room_countdown.dart';
+import 'room_link_sheet.dart';
 
 final Map<String, String> _draftPerGroup = {};
+
+// our nickname for a member, or nothing so the id shows. a room member is a
+// key, not a person we know, so it gets the short tag instead.
+String? _senderLabel(Map<String, String> nickById, String peer) =>
+    nickById[peer] ?? (looksLikeRoomKey(peer) ? roomTag(peer) : null);
 
 class GroupChatScreen extends StatefulWidget {
   final String groupId;
@@ -60,6 +69,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   int _seenCount = 0;
   String _groupName = '';
   int _memberCount = 0;
+  // burner room state: when it ends, and whether this is the first open
+  int? _roomExpiresAt;
+  bool _roomBanner = false;
+  bool get _isRoom => _roomExpiresAt != null;
   bool _isAdmin = false;
   bool _sending = false;
   _GMsg? _replyTo;
@@ -123,6 +136,23 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (appState.secureChats) appState.forceSecure(true);
     currentChatPeer = 'group:${widget.groupId}';
     WidgetsBinding.instance.addObserver(this);
+    // a room is never in the app switcher and never screenshotted. the flag
+    // is set the moment we know it is a room and cleared on the way out.
+    db.getGroup(widget.groupId).then((g) async {
+      if (!mounted || g == null || g['room_pub'] == null) return;
+      setState(() {
+        _roomExpiresAt = g['expires_at'] as int?;
+        _roomBanner = (g['room_seen'] as int? ?? 0) == 0;
+      });
+      appState.forceSecure(true);
+      // the creator's first open: hand them the invite right away, that is
+      // the only thing an empty room is for
+      if (_roomBanner && (g['is_admin'] as int? ?? 0) == 1) {
+        await Future.delayed(const Duration(milliseconds: 450));
+        final link = await appState.roomLinkFor(widget.groupId);
+        if (link != null && mounted) await showRoomLinkSheet(context, link);
+      }
+    });
     db.clearGroupUnread(widget.groupId).then((_) => appState.refreshGroups());
     // restore a draft left behind last time this group was open.
     _msgCtrl.text = _draftPerGroup[widget.groupId] ?? '';
@@ -328,7 +358,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         final dir = r['direction'] as String;
         final m = _GMsg(
           sender: r['peer_id'] as String,
-          senderName: nickById[r['peer_id'] as String],
+          senderName: _senderLabel(nickById, r['peer_id'] as String),
           direction: dir,
           text: r['plaintext'] as String,
           when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
@@ -397,6 +427,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         if (mounted) setState(() => _atmosphere = atmoFromName(a));
       });
       final g = await db.getGroup(widget.groupId);
+      // a room that ended while this was open is gone, so is the screen
+      if (g == null && _isRoom) {
+        if (mounted) Navigator.of(context).pop();
+        return;
+      }
       final members = await db.getGroupMembers(widget.groupId);
       // keep whatever window the user has expanded to - a mid-scroll reaction
       // used to collapse the list back to one page and yank the view.
@@ -427,6 +462,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       setState(() {
         _groupName = (g?['name'] as String?) ?? 'group';
         _memberCount = members.length;
+        _roomExpiresAt = g?['expires_at'] as int?;
         _isAdmin = ((g?['is_admin'] as int?) ?? 0) == 1;
         _messages
           ..clear()
@@ -442,7 +478,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               final dir = r['direction'] as String;
               final m = _GMsg(
                 sender: r['peer_id'] as String,
-                senderName: nickById[r['peer_id'] as String],
+                senderName: _senderLabel(nickById, r['peer_id'] as String),
                 direction: dir,
                 text: r['plaintext'] as String,
                 when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
@@ -595,7 +631,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       final dir = r['direction'] as String;
       final m = _GMsg(
         sender: r['peer_id'] as String,
-        senderName: nickById[r['peer_id'] as String],
+        senderName: _senderLabel(nickById, r['peer_id'] as String),
         direction: dir,
         text: r['plaintext'] as String,
         when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
@@ -2047,7 +2083,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   @override
   void dispose() {
-    if (appState.secureChats) appState.forceSecure(false);
+    if (appState.secureChats || _isRoom) appState.forceSecure(false);
+    if (_isRoom && _roomBanner) db.markRoomSeen(widget.groupId);
     // persist the draft one more time on the way out.
     final draft = _msgCtrl.text;
     if (draft.trim().isEmpty) {
@@ -2092,6 +2129,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 : _Header(
                     name: _groupName,
                     memberCount: _memberCount,
+                    expiresAt: _roomExpiresAt,
                     onBack: () => Navigator.of(context).pop(),
                     onSearch: _openSearch,
                     pinnedCount: _messages.where((m) => m.pinned).length,
@@ -2103,6 +2141,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       _load();
                     },
                   ),
+            if (_isRoom && _roomBanner)
+              NoticeBanner(
+                glyph: NoticeGlyph.clock,
+                text:
+                    'this room and everything in it disappears in '
+                    '${expiryWords(DateTime.fromMillisecondsSinceEpoch(_roomExpiresAt!).difference(DateTime.now()))}',
+                color: HaloColors.violet,
+                margin: const EdgeInsets.fromLTRB(12, 6, 12, 2),
+                delay: const Duration(milliseconds: 160),
+              ),
             if (_messages.any((m) => m.pinned))
               _GroupPinnedBar(
                 message: _messages.lastWhere((m) => m.pinned),
@@ -2170,13 +2218,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                               return _buildGroupRow(i);
                             } catch (e) {
                               debugPrint('group bubble failed: \$e');
-                              return const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 6),
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 6,
+                                ),
                                 child: Text(
                                   "this message can't be shown",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFF8F8579),
+                                  style: HaloType.sans(
+                                    size: 12,
+                                    color: HaloColors.text3,
                                   ),
                                 ),
                               );
@@ -2381,6 +2431,7 @@ class _GroupPinnedBar extends StatelessWidget {
 class _Header extends StatelessWidget {
   final String name;
   final int memberCount;
+  final int? expiresAt; // a room: the subtitle is the clock, not the count
   final VoidCallback onBack;
   final VoidCallback onTapInfo;
   final VoidCallback? onSearch;
@@ -2389,6 +2440,7 @@ class _Header extends StatelessWidget {
   const _Header({
     required this.name,
     required this.memberCount,
+    this.expiresAt,
     required this.onBack,
     required this.onTapInfo,
     this.onSearch,
@@ -2449,13 +2501,27 @@ class _Header extends StatelessWidget {
                               color: HaloColors.text,
                             ),
                           ),
-                          Text(
-                            '$memberCount members',
-                            style: HaloType.mono(
-                              size: 10,
-                              color: HaloColors.text3,
+                          if (expiresAt != null)
+                            Row(
+                              children: [
+                                RoomCountdown(expiresAt: expiresAt!, size: 10),
+                                Text(
+                                  ' · $memberCount here',
+                                  style: HaloType.mono(
+                                    size: 10,
+                                    color: HaloColors.text3,
+                                  ),
+                                ),
+                              ],
+                            )
+                          else
+                            Text(
+                              '$memberCount members',
+                              style: HaloType.mono(
+                                size: 10,
+                                color: HaloColors.text3,
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ),
@@ -3082,9 +3148,11 @@ class _GroupBubble extends StatelessWidget {
                                         behavior: HitTestBehavior.opaque,
                                         onTap: () {
                                           if (m.filePath != null) {
-                                            Share.shareXFiles([
-                                              XFile(m.filePath!),
-                                            ]);
+                                            SharePlus.instance.share(
+                                              ShareParams(
+                                                files: [XFile(m.filePath!)],
+                                              ),
+                                            );
                                           }
                                         },
                                         child: Padding(

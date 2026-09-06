@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import '../main.dart' show appState, db;
 import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
+import '../rooms.dart';
+import 'room_link_sheet.dart';
 import '../widgets/motion.dart' show haloRoute;
 import 'package:flutter/services.dart';
 import 'chat_screen.dart'
@@ -22,6 +24,10 @@ class GroupInfoScreen extends StatefulWidget {
 class _GroupInfoScreenState extends State<GroupInfoScreen> {
   String _name = '';
   bool _isAdmin = false;
+  // room fields, null for a plain group
+  String? _roomPub;
+  int? _roomExpiresAt;
+  bool get _isRoom => _roomPub != null;
   List<String> _members = [];
   bool _loading = true;
 
@@ -38,6 +44,8 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     setState(() {
       _name = (g?['name'] as String?) ?? 'group';
       _isAdmin = ((g?['is_admin'] as int?) ?? 0) == 1;
+      _roomPub = g?['room_pub'] as String?;
+      _roomExpiresAt = g?['expires_at'] as int?;
       _members = members;
       _loading = false;
     });
@@ -296,11 +304,13 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       builder: (c) => AlertDialog(
         backgroundColor: HaloColors.surface2,
         title: Text(
-          'leave group?',
+          _isRoom ? 'leave room?' : 'leave group?',
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
         content: Text(
-          'you will stop receiving messages and other members will see you leave.',
+          _isRoom
+              ? 'everything in it is wiped from this phone now, and the key you used here is gone for good.'
+              : 'you will stop receiving messages and other members will see you leave.',
           style: HaloType.sans(size: 13, color: HaloColors.text2),
         ),
         actions: [
@@ -400,7 +410,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   ),
                   const SizedBox(height: 14),
                   GestureDetector(
-                    onTap: _isAdmin ? _rename : null,
+                    onTap: _isAdmin && !_isRoom ? _rename : null,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -412,7 +422,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                             color: HaloColors.text,
                           ),
                         ),
-                        if (_isAdmin) ...[
+                        if (_isAdmin && !_isRoom) ...[
                           const SizedBox(width: 6),
                           Icon(
                             Icons.edit_outlined,
@@ -461,7 +471,36 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                     ),
                   ),
                   const Spacer(),
-                  if (_isAdmin)
+                  if (_isRoom)
+                    GestureDetector(
+                      onTap: () async {
+                        final link = await appState.roomLinkFor(widget.groupId);
+                        if (link != null && context.mounted) {
+                          await showRoomLinkSheet(context, link);
+                        }
+                      },
+                      behavior: HitTestBehavior.opaque,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.qr_code_2_outlined,
+                            size: 14,
+                            color: HaloColors.violet,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'invite',
+                            style: HaloType.mono(
+                              size: 10,
+                              color: HaloColors.violet,
+                              letter: 0.14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (_isAdmin && !_isRoom)
                     GestureDetector(
                       onTap: _addMembers,
                       child: Row(
@@ -492,7 +531,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                 itemCount: _members.length,
                 itemBuilder: (_, i) {
                   final m = _members[i];
-                  final isMe = m == myId;
+                  final isMe = m == myId || (_isRoom && m == _roomPub);
                   return Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -507,12 +546,17 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                m,
-                                style: HaloType.sans(
-                                  size: 14,
-                                  weight: FontWeight.w500,
-                                  color: HaloColors.text,
-                                ),
+                                looksLikeRoomKey(m) ? roomTag(m) : m,
+                                style: looksLikeRoomKey(m)
+                                    ? HaloType.mono(
+                                        size: 13,
+                                        color: HaloColors.text,
+                                      )
+                                    : HaloType.sans(
+                                        size: 14,
+                                        weight: FontWeight.w500,
+                                        color: HaloColors.text,
+                                      ),
                               ),
                               if (isMe)
                                 Text(
@@ -628,7 +672,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    'leave group',
+                    _isRoom ? 'leave room' : 'leave group',
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w500,
