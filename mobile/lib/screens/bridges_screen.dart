@@ -574,7 +574,7 @@ class _RequestBlock extends StatelessWidget {
                 base64Decode(captcha!),
                 fit: BoxFit.contain,
                 height: 90,
-                errorBuilder: (_, __, ___) => Text(
+                errorBuilder: (_, _, _) => Text(
                   'could not draw the puzzle',
                   style: HaloType.mono(size: 11, color: HaloColors.rose),
                 ),

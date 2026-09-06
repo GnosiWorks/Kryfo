@@ -89,7 +89,7 @@ class SendProgressLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<int>(
       valueListenable: mediaProgressTick,
-      builder: (_, __, ___) {
+      builder: (_, _, _) {
         final v = mediaSendProgress[msgUid];
         if (v == null) return const SizedBox.shrink();
         return Padding(
@@ -117,7 +117,7 @@ class IncomingMediaBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<int>(
       valueListenable: mediaProgressTick,
-      builder: (_, __, ___) {
+      builder: (_, _, _) {
         // an outgoing send for this chat takes precedence: that's the
         // one where the user can still ruin it by leaving.
         double? outV;

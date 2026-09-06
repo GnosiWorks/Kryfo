@@ -73,7 +73,7 @@ class _TorBootSplashState extends State<TorBootSplash>
             const SizedBox(height: 22),
             AnimatedBuilder(
               animation: _c,
-              builder: (_, __) => Row(
+              builder: (_, _) => Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _hopDot('guard', 0.0),

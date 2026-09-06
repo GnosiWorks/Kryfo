@@ -28,8 +28,9 @@ class _VouchersSheet extends StatelessWidget {
     final d = DateTime.fromMillisecondsSinceEpoch(ms);
     final now = DateTime.now();
     if (now.difference(d).inDays < 1) return DateFormat.Hm().format(d);
-    if (now.difference(d).inDays < 7)
+    if (now.difference(d).inDays < 7) {
       return DateFormat.E().format(d).toLowerCase();
+    }
     return DateFormat.MMMd().format(d).toLowerCase();
   }
 

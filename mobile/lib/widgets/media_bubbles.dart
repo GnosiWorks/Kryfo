@@ -6,7 +6,6 @@
 
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -359,6 +358,7 @@ class HoldToTalkMic extends StatefulWidget {
   final VoidCallback onToggleDisguise;
   final void Function(String path, int ms, bool cancelled) onComplete;
   const HoldToTalkMic({
+    super.key,
     required this.disguise,
     required this.onToggleDisguise,
     required this.onComplete,
@@ -504,7 +504,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
                   tween: Tween(begin: 0.4, end: 1.0),
                   duration: const Duration(milliseconds: 650),
                   curve: Curves.easeInOut,
-                  builder: (_, v, __) => Opacity(
+                  builder: (_, v, _) => Opacity(
                     opacity: cancel ? 1.0 : v,
                     child: Container(
                       width: 11,
@@ -621,7 +621,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
 
 class ImageCaptionScreen extends StatefulWidget {
   final Uint8List bytes;
-  const ImageCaptionScreen({required this.bytes});
+  const ImageCaptionScreen({super.key, required this.bytes});
   @override
   State<ImageCaptionScreen> createState() => ImageCaptionScreenState();
 }

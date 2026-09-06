@@ -35,8 +35,8 @@ Route<T> haloRoute<T>(Widget page) {
   return PageRouteBuilder<T>(
     transitionDuration: const Duration(milliseconds: 360),
     reverseTransitionDuration: const Duration(milliseconds: 280),
-    pageBuilder: (_, __, ___) => page,
-    transitionsBuilder: (_, anim, __, child) {
+    pageBuilder: (_, _, _) => page,
+    transitionsBuilder: (_, anim, _, child) {
       final curved = CurvedAnimation(
         parent: anim,
         curve: Curves.easeOutCubic,
@@ -151,10 +151,11 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
     _phaseTimer = Timer(stepDur, () {
       if (!mounted) return;
       setState(() {
-        if (_phase < target)
+        if (_phase < target) {
           _phase++;
-        else if (_phase > target)
+        } else if (_phase > target) {
           _phase--;
+        }
       });
       _walkTo(target);
     });

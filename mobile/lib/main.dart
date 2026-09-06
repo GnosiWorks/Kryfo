@@ -9,7 +9,6 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'dart:ffi';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Curve;
@@ -3869,9 +3868,7 @@ class AppState extends ChangeNotifier {
           ? env.message
           : (fileName == 'voice.wav'
                 ? 'voice message'
-                : fileName != null
-                ? fileName
-                : (mediaPath != null ? 'photo' : ''));
+                : fileName ?? (mediaPath != null ? 'photo' : ''));
       notifBody = '$senderHaloId: $gBody';
       notifPayload = 'group:${env.groupId}';
       suppress = currentChatPeer == notifPayload;
@@ -3879,9 +3876,7 @@ class AppState extends ChangeNotifier {
       notifTitle = senderHaloId;
       notifBody = env.message.isNotEmpty
           ? env.message
-          : (fileName != null
-                ? fileName
-                : (mediaPath != null ? 'photo' : env.message));
+          : (fileName ?? (mediaPath != null ? 'photo' : env.message));
       notifPayload = senderHaloId;
       suppress =
           currentChatPeer == senderHaloId || await db.isMuted(senderHaloId);
@@ -4331,7 +4326,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _boot() async {
-    final _bsw = Stopwatch()..start();
+    final bsw = Stopwatch()..start();
     // both _OnboardingGate and _RootShell call boot() on cold start, before
     // ready flips. without this guard they raced through generateIdentity +
     // db open together and froze a fresh-wipe launch solid.
@@ -4351,7 +4346,7 @@ class AppState extends ChangeNotifier {
       await db.saveIdentity(myId, engine.myEdPrivkey(), engine.myXPrivkey());
     }
     myXPub = engine.myXPubkey();
-    debugPrint('BOOT identity +${_bsw.elapsedMilliseconds}ms');
+    debugPrint('BOOT identity +${bsw.elapsedMilliseconds}ms');
     _appLinks = AppLinks();
     _appLinks.uriLinkStream.listen((uri) async {
       if (uri.scheme == 'kryfo') {
@@ -4379,9 +4374,9 @@ class AppState extends ChangeNotifier {
     );
 
     await refreshContacts();
-    debugPrint('BOOT contacts +${_bsw.elapsedMilliseconds}ms');
+    debugPrint('BOOT contacts +${bsw.elapsedMilliseconds}ms');
     await refreshGroups();
-    debugPrint('BOOT groups +${_bsw.elapsedMilliseconds}ms');
+    debugPrint('BOOT groups +${bsw.elapsedMilliseconds}ms');
     // paint the home as soon as contacts/groups are ready; notifications,
     // nostr subscriptions and ntfy keep warming up in the background.
     onboardingComplete =
@@ -4392,7 +4387,7 @@ class AppState extends ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 300));
     }
     ready = true;
-    debugPrint('BOOT ready +${_bsw.elapsedMilliseconds}ms');
+    debugPrint('BOOT ready +${bsw.elapsedMilliseconds}ms');
     notifyListeners();
     // signal prekey gen is cpu-heavy (~5s on a fresh identity) and nothing
     // above needs it - defer it so the home paints first. tor + nostr also
@@ -4772,10 +4767,10 @@ class AppState extends ChangeNotifier {
         _polling = false;
       }
     });
-    final _stored = await const FlutterSecureStorage().read(
+    final stored = await const FlutterSecureStorage().read(
       key: 'onboarding_done',
     );
-    onboardingComplete = _stored == 'true';
+    onboardingComplete = stored == 'true';
     ready = true;
     notifyListeners();
   }
@@ -5038,8 +5033,9 @@ class AppState extends ChangeNotifier {
   Future<void> _sendBundleCtl(String memberId, {required bool want}) async {
     final key = '$memberId:$want';
     final now = DateTime.now().millisecondsSinceEpoch;
-    if (now - (_bundleCtlSentAt[key] ?? 0) < 60000)
+    if (now - (_bundleCtlSentAt[key] ?? 0) < 60000) {
       return; // 1/min, not 1/chunk
+    }
     _bundleCtlSentAt[key] = now;
     try {
       final contact = await db.getContact(memberId);
@@ -5775,7 +5771,7 @@ class HaloApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<int>(
       valueListenable: themeRevision,
-      builder: (context, _, __) => MaterialApp(
+      builder: (context, _, _) => MaterialApp(
         navigatorKey: rootNavKey,
         scaffoldMessengerKey: haloMessengerKey,
         title: 'Kryfo',
@@ -6617,7 +6613,7 @@ class _DevScreenState extends State<DevScreen> {
                 },
                 child: AnimatedBuilder(
                   animation: lockState,
-                  builder: (_, __) => Text(
+                  builder: (_, _) => Text(
                     lockState.enabled ? 'app lock · on →' : 'app lock · off →',
                     style: HaloType.mono(size: 11, color: HaloColors.amber),
                   ),
@@ -6719,7 +6715,7 @@ class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: lockState,
-      builder: (_, __) {
+      builder: (_, _) {
         if (lockState.locked) return const LockScreen();
         return widget.child;
       },
@@ -6729,7 +6725,7 @@ class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
 
 class TorHalo extends StatefulWidget {
   final bool label;
-  const TorHalo({this.label = false});
+  const TorHalo({super.key, this.label = false});
   @override
   State<TorHalo> createState() => TorHaloState();
 }

@@ -1021,10 +1021,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       // roughly (len-1-idx)/len of the extent.
       final frac = (_messages.length - 1 - idx) / _messages.length;
       final approx = frac * _scrollCtrl.position.maxScrollExtent;
-      if (_scrollReady)
+      if (_scrollReady) {
         _scrollCtrl.jumpTo(
           approx.clamp(0.0, _scrollCtrl.position.maxScrollExtent),
         );
+      }
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ctx = _matchKeys[idx]?.currentContext;
@@ -3069,9 +3070,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
       String? grab(String prop) {
         final re = RegExp(
-          '<meta[^>]+(?:property|name)=["\']' +
-              RegExp.escape(prop) +
-              '["\'][^>]+content=["\']([^"\']+)',
+          '<meta[^>]+(?:property|name)=["\']${RegExp.escape(prop)}["\'][^>]+content=["\']([^"\']+)',
           caseSensitive: false,
         );
         return re.firstMatch(html)?.group(1);
@@ -3102,7 +3101,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       final pv = <String, String>{
         'url': url,
         if (title != null) 'title': unescapeHtml(title),
-        if (imageData != null) 'img': imageData,
+        'img': ?imageData,
         if (site != null) 'site': unescapeHtml(site),
       };
       if (!mounted) return;
@@ -3135,7 +3134,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         debugPrint(
           'PREVIEW-SEND resend uid=$msgUid keys=${pvOut.keys.toList()} chunkThumb=$chunkThumb',
         );
-        Future<void> _fire(String cipher) async {
+        Future<void> fire(String cipher) async {
           final useDirectOnion = !_backPaired || _peerXPub == null;
           final f = useDirectOnion
               ? Future(() => engine.sendTo(widget.peerOnion, cipher))
@@ -3150,7 +3149,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           replyTo: msg.replyTo,
           preview: pvOut,
         );
-        await _fire(await signalEncrypt(widget.peerHaloId, wrapped));
+        await fire(await signalEncrypt(widget.peerHaloId, wrapped));
         // then the thumbnail as pvImg chunks, reassembled onto the card.
         if (chunkThumb) {
           const cs = 16 * 1024;
@@ -3169,7 +3168,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               chunkTotal: slices.length,
               pvImg: true,
             );
-            await _fire(await signalEncrypt(widget.peerHaloId, w));
+            await fire(await signalEncrypt(widget.peerHaloId, w));
           }
         }
       } catch (_) {}
@@ -4762,12 +4761,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       child: Center(
                         child: ValueListenableBuilder<bool>(
                           valueListenable: _stickyShown,
-                          builder: (_, shown, __) => AnimatedOpacity(
+                          builder: (_, shown, _) => AnimatedOpacity(
                             duration: const Duration(milliseconds: 220),
                             opacity: shown ? 1.0 : 0.0,
                             child: ValueListenableBuilder<String?>(
                               valueListenable: _stickyLabel,
-                              builder: (_, label, __) => label == null
+                              builder: (_, label, _) => label == null
                                   ? const SizedBox.shrink()
                                   : Container(
                                       padding: const EdgeInsets.symmetric(
@@ -5475,6 +5474,7 @@ class SearchHead extends StatefulWidget {
   final VoidCallback onNext;
   final VoidCallback onClose;
   const SearchHead({
+    super.key,
     required this.controller,
     required this.matchCount,
     required this.matchPos,
@@ -5847,7 +5847,7 @@ class _MenuBackdropState extends State<_MenuBackdrop>
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _c,
-      builder: (_, __) {
+      builder: (_, _) {
         final t = Curves.easeOut.transform(_c.value);
         // animate only the dark overlay (cheap). the blur sigma stays fixed -
         // animating BackdropFilter blur recomputes the whole blur every frame
@@ -6214,7 +6214,7 @@ class _Bubble extends StatelessWidget {
                                               File(msg.mediaPath!),
                                               gaplessPlayback: true,
                                               fit: BoxFit.cover,
-                                              errorBuilder: (_, e, __) {
+                                              errorBuilder: (_, e, _) {
                                                 debugPrint(
                                                   'image failed: '
                                                   '${msg.mediaPath} / $e',
@@ -7056,7 +7056,7 @@ String atmoLabel(Atmo a) => switch (a) {
 
 class AtmosphereWash extends StatelessWidget {
   final Atmo atmo;
-  const AtmosphereWash(this.atmo);
+  const AtmosphereWash(this.atmo, {super.key});
   @override
   Widget build(BuildContext context) {
     if (atmo == Atmo.none) return const SizedBox.shrink();
@@ -7596,7 +7596,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
                   tween: Tween(begin: 0.4, end: 1.0),
                   duration: const Duration(milliseconds: 650),
                   curve: Curves.easeInOut,
-                  builder: (_, v, __) => Opacity(
+                  builder: (_, v, _) => Opacity(
                     opacity: cancel ? 1.0 : v,
                     child: Container(
                       width: 11,
@@ -8308,7 +8308,7 @@ class LinkPreviewCard extends StatelessWidget {
                   // decode at card width, not full res - lighter on weak phones
                   // while scrolling (samsung).
                   cacheWidth: 520,
-                  errorBuilder: (_, e, __) {
+                  errorBuilder: (_, e, _) {
                     debugPrint('gallery image failed: $e');
                     return Container(
                       color: Colors.black26,

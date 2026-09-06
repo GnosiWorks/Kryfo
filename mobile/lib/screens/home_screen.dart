@@ -128,8 +128,8 @@ Route<void> _archivedRoute() {
   return PageRouteBuilder<void>(
     transitionDuration: const Duration(milliseconds: 340),
     reverseTransitionDuration: const Duration(milliseconds: 260),
-    pageBuilder: (_, __, ___) => const ArchivedScreen(),
-    transitionsBuilder: (_, anim, __, child) {
+    pageBuilder: (_, _, _) => const ArchivedScreen(),
+    transitionsBuilder: (_, anim, _, child) {
       final curved = CurvedAnimation(
         parent: anim,
         curve: Curves.easeOutCubic,
@@ -929,7 +929,7 @@ class _EmptyStateState extends State<_EmptyState>
                   // soft amber ring breathing outward - the app quietly waiting.
                   AnimatedBuilder(
                     animation: _pulse,
-                    builder: (_, __) {
+                    builder: (_, _) {
                       final t = Curves.easeOut.transform(_pulse.value);
                       return Container(
                         width: 56 + 22 * t,
@@ -1461,7 +1461,7 @@ class _SwipeRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dismissible(
-      key: ValueKey('swipe_' + c.haloId),
+      key: ValueKey('swipe_${c.haloId}'),
       background: Container(
         color: HaloColors.surface2,
         alignment: Alignment.centerLeft,

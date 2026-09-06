@@ -788,7 +788,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
         children: [
           AnimatedBuilder(
             animation: _pulse,
-            builder: (_, __) => Row(
+            builder: (_, _) => Row(
               mainAxisSize: MainAxisSize.min,
               children: List.generate(3, (i) {
                 final t = (_pulse.value + i * 0.25) % 1.0;
@@ -932,7 +932,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
   Widget _watchingPill() {
     return AnimatedBuilder(
       animation: _pulse,
-      builder: (_, __) => Container(
+      builder: (_, _) => Container(
         padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 14),
         decoration: BoxDecoration(
           color: HaloColors.surface,
@@ -1201,7 +1201,7 @@ class _ConfirmedViewState extends State<_ConfirmedView>
               height: 96,
               child: AnimatedBuilder(
                 animation: _c,
-                builder: (_, __) => CustomPaint(
+                builder: (_, _) => CustomPaint(
                   painter: _CheckPainter(_c.value, HaloColors.amber),
                 ),
               ),

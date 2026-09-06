@@ -6,7 +6,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -758,9 +757,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       }
       String? grab(String prop) {
         final re = RegExp(
-          '<meta[^>]+(?:property|name)=["\']' +
-              RegExp.escape(prop) +
-              '["\'][^>]+content=["\']([^"\']+)',
+          '<meta[^>]+(?:property|name)=["\']${RegExp.escape(prop)}["\'][^>]+content=["\']([^"\']+)',
           caseSensitive: false,
         );
         return re.firstMatch(html)?.group(1);
@@ -793,7 +790,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       final pv = <String, String>{
         'url': url,
         if (title != null) 'title': unescapeHtml(title),
-        if (imageData != null) 'img': imageData,
+        'img': ?imageData,
         if (site != null) 'site': unescapeHtml(site),
       };
       // wait for the send verdict before showing/announcing - a preview for
@@ -2031,8 +2028,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       // out and resuming later leaves the group marked open and its badge dead.
       final visible = ModalRoute.of(context)?.isCurrent ?? false;
       if (!visible) {
-        if (currentChatPeer == 'group:${widget.groupId}')
+        if (currentChatPeer == 'group:${widget.groupId}') {
           currentChatPeer = null;
+        }
         return;
       }
       currentChatPeer = 'group:${widget.groupId}';
@@ -2193,12 +2191,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                             child: Center(
                               child: ValueListenableBuilder<bool>(
                                 valueListenable: _stickyShown,
-                                builder: (_, shown, __) => AnimatedOpacity(
+                                builder: (_, shown, _) => AnimatedOpacity(
                                   duration: const Duration(milliseconds: 220),
                                   opacity: shown ? 1.0 : 0.0,
                                   child: ValueListenableBuilder<String?>(
                                     valueListenable: _stickyLabel,
-                                    builder: (_, label, __) => label == null
+                                    builder: (_, label, _) => label == null
                                         ? const SizedBox.shrink()
                                         : Container(
                                             padding: const EdgeInsets.symmetric(
@@ -3131,7 +3129,7 @@ class _GroupBubble extends StatelessWidget {
                                                     filterQuality:
                                                         FilterQuality.medium,
                                                     fit: BoxFit.cover,
-                                                    errorBuilder: (_, __, ___) =>
+                                                    errorBuilder: (_, _, _) =>
                                                         const SizedBox.shrink(),
                                                   ),
                                                 ),
@@ -3534,7 +3532,7 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
     final fade = Tween<double>(begin: 0, end: 1).animate(_ctrl);
     return AnimatedBuilder(
       animation: _ctrl,
-      builder: (_, __) => Opacity(
+      builder: (_, _) => Opacity(
         opacity: fade.value,
         child: Transform.scale(
           scale: scale.value,

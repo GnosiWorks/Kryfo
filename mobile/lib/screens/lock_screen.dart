@@ -82,7 +82,7 @@ class _LockScreenState extends State<LockScreen>
       body: SafeArea(
         child: AnimatedBuilder(
           animation: lockState,
-          builder: (_, __) => Column(
+          builder: (_, _) => Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(flex: 2),

@@ -2,7 +2,6 @@
 // libsignal session bootstrap. derives identity from existing X25519 keys,
 // generates signed prekey + one-time prekeys on first run.
 
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
