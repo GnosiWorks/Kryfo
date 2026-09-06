@@ -5715,11 +5715,20 @@ class _SwipeToReplyState extends State<_SwipeToReply>
   bool _armed = false;
   static const double _trigger = 56;
   static const double _max = 80;
-  late final AnimationController _spring = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 240),
-  );
+  // built in initState, not on first use: a bubble nobody swiped would
+  // otherwise create this inside dispose, and a ticker made that late
+  // throws, which stops the whole route from unmounting.
+  late final AnimationController _spring;
   Animation<double> _back = const AlwaysStoppedAnimation(0);
+
+  @override
+  void initState() {
+    super.initState();
+    _spring = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 240),
+    );
+  }
 
   @override
   void dispose() {
