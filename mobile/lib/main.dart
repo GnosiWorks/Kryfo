@@ -4559,17 +4559,6 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<Map<String, String>> _loadXPubCache() async {
-    try {
-      final raw = await const FlutterSecureStorage().read(key: 'xpub_cache');
-      if (raw == null || raw.isEmpty) return {};
-      final decoded = jsonDecode(raw) as Map<String, dynamic>;
-      return decoded.map((k, v) => MapEntry(k, v as String));
-    } catch (_) {
-      return {};
-    }
-  }
-
   Future<void> _saveXPubCache(Map<String, String> cache) async {
     try {
       await const FlutterSecureStorage().write(

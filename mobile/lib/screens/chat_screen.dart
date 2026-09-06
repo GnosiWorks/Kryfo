@@ -53,7 +53,6 @@ import '../widgets/motion.dart';
 import '../widgets/burn_fade.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
-final Map<String, String> _seenCipherPerPeer = {};
 // chunk indices already accepted by the peer, per media msg_uid. lets a
 // retry resume instead of re-uploading the whole file over tor.
 final Map<String, Set<int>> _chunkDone = {};

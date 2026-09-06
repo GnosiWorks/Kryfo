@@ -109,7 +109,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   DateTime _lastSticky = DateTime.fromMillisecondsSinceEpoch(0);
   bool _searching = false;
   final _searchCtrl = TextEditingController();
-  String _query = '';
   List<int> _matches = [];
   int _matchPos = 0;
   Atmo _atmosphere = Atmo.none;
@@ -1604,7 +1603,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   void _closeSearch() {
     setState(() {
       _searching = false;
-      _query = '';
       _searchCtrl.clear();
       _matches = [];
       _matchPos = 0;
@@ -1623,7 +1621,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       }
     }
     setState(() {
-      _query = query;
       _matches = matches;
       _matchPos = matches.isEmpty ? 0 : matches.length - 1;
     });
