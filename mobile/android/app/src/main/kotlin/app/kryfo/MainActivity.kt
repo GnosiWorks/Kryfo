@@ -13,6 +13,9 @@ import androidx.core.content.ContextCompat
 import android.content.ActivityNotFoundException
 import android.net.Uri
 import android.provider.Settings
+import android.view.SurfaceView
+import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.os.Bundle
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -94,6 +97,40 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
+    // flag_secure on the window is not enough on every phone: flutter draws
+    // into a surfaceview whose own secure bit was latched when the flag went
+    // on, and one ui keeps it after the flag comes off. clearing meant the
+    // whole app stayed unscreenshottable until a restart. so the surface is
+    // told directly, and on the way off it is recreated, which is the one
+    // thing that reliably drops the bit.
+    private var secureNow = false
+    private fun setSecureWindow(on: Boolean) {
+        android.util.Log.i("kryfo", "setSecure on=$on was=$secureNow")
+        if (on) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+        val surface = findSurface(window.decorView)
+        surface?.setSecure(on)
+        if (!on && secureNow && surface != null) {
+            surface.visibility = View.GONE
+            surface.post { surface.visibility = View.VISIBLE }
+        }
+        secureNow = on
+    }
+
+    private fun findSurface(v: View): SurfaceView? {
+        if (v is SurfaceView) return v
+        if (v is ViewGroup) {
+            for (i in 0 until v.childCount) {
+                val hit = findSurface(v.getChildAt(i))
+                if (hit != null) return hit
+            }
+        }
+        return null
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         // hold on to it so the next activity attaches to this same engine
@@ -111,11 +148,7 @@ class MainActivity : FlutterFragmentActivity() {
                         // engine outlives the window now, so this can be
                         // called with nothing attached
                         try {
-                            if (on) {
-                                window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-                            } else {
-                                window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-                            }
+                            setSecureWindow(on)
                         } catch (e: Exception) {
                         }
                         result.success(null)

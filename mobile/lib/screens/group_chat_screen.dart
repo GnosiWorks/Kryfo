@@ -2078,13 +2078,32 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   void deactivate() {
     // popped or covered: stop claiming this group is being read.
     if (currentChatPeer == 'group:${widget.groupId}') currentChatPeer = null;
+    _leaveRoomScreen();
     super.deactivate();
+  }
+
+  // the shield comes off here and not only in dispose: on some phones the
+  // popped screen is deactivated but never disposed, and a shield nobody
+  // lifts makes the whole app unscreenshottable until a restart.
+  bool _left = false;
+  void _leaveRoomScreen() {
+    if (_left) return;
+    _left = true;
+    if (appState.secureChats || _isRoom) appState.forceSecure(false);
+    if (_isRoom && _roomBanner) db.markRoomSeen(widget.groupId);
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    // came back after a deactivate that was only a reparent
+    _left = false;
+    if (_isRoom) appState.forceSecure(true);
   }
 
   @override
   void dispose() {
-    if (appState.secureChats || _isRoom) appState.forceSecure(false);
-    if (_isRoom && _roomBanner) db.markRoomSeen(widget.groupId);
+    _leaveRoomScreen();
     // persist the draft one more time on the way out.
     final draft = _msgCtrl.text;
     if (draft.trim().isEmpty) {
