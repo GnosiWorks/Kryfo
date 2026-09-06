@@ -13,6 +13,7 @@ import 'settings_screen.dart';
 import 'donate_screen.dart';
 import 'my_kryfo_screen.dart';
 import '../widgets/motion.dart' show haloRoute;
+import '../widgets/sheet_handle.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -100,7 +101,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       builder: (ctx) => Padding(
         padding: EdgeInsets.fromLTRB(
           20,
-          18,
+          0,
           20,
           20 + MediaQuery.of(ctx).viewInsets.bottom,
         ),
@@ -108,6 +109,8 @@ class _ProfileScreenState extends State<ProfileScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SheetHandle(),
+            const SizedBox(height: 8),
             Text(
               'display name',
               style: HaloType.serif(size: 18, color: HaloColors.text),

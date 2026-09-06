@@ -55,6 +55,7 @@ import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
 import 'dart:isolate';
 import 'dlog.dart';
+import 'widgets/sheet_handle.dart';
 
 typedef VoidFn = Void Function();
 typedef IntArgFn = Void Function(Int32);
@@ -6524,7 +6525,7 @@ Future<void> showAddContact(BuildContext context) async {
     builder: (sheetCtx) => Padding(
       padding: EdgeInsets.fromLTRB(
         22,
-        18,
+        0,
         22,
         24 + MediaQuery.of(sheetCtx).viewInsets.bottom,
       ),
@@ -6532,6 +6533,8 @@ Future<void> showAddContact(BuildContext context) async {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const SheetHandle(),
+          const SizedBox(height: 8),
           Center(
             child: Container(
               width: 36,

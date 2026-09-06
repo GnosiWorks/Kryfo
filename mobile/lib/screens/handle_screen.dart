@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 
 import '../main.dart' show appState, engine, buildHaloUriV3;
 import '../theme.dart';
+import '../widgets/stagger_in.dart';
 
 class HandleScreen extends StatefulWidget {
   const HandleScreen({super.key});
@@ -113,7 +114,7 @@ class _HandleScreenState extends State<HandleScreen> {
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
-        children: [
+        children: staggerAll([
           if (_claimed != null) ...[
             _ClaimedCard(handle: _claimed!, onRelease: _busy ? null : _release),
             const SizedBox(height: 22),
@@ -170,7 +171,7 @@ class _HandleScreenState extends State<HandleScreen> {
               ),
             ),
           ],
-        ],
+        ]),
       ),
     );
   }

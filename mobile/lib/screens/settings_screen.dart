@@ -24,6 +24,7 @@ import 'backup_screen.dart';
 import '../wipe.dart';
 import 'restore_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../widgets/stagger_in.dart';
 
 Widget _postureLine(String label, bool on, String onText, String offText) {
   return Padding(
@@ -205,7 +206,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-        children: [
+        children: staggerAll([
           ListenableBuilder(
             listenable: Listenable.merge([appState, lockState]),
             builder: (_, _) {
@@ -587,7 +588,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 32),
-        ],
+        ]),
       ),
     );
   }

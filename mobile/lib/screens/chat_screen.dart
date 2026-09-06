@@ -53,6 +53,7 @@ import '../widgets/press_scale.dart';
 import '../widgets/motion.dart';
 import '../widgets/burn_fade.dart';
 import '../dlog.dart';
+import '../widgets/sheet_handle.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
 // chunk indices already accepted by the peer, per media msg_uid. lets a
@@ -1443,6 +1444,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SheetHandle(),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Text(
@@ -1527,6 +1529,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SheetHandle(),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
               child: Text(
@@ -1681,6 +1684,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SheetHandle(),
             Text(
               'edit message',
               style: HaloType.serif(
@@ -2228,6 +2232,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SheetHandle(),
               Row(
                 children: [
                   Icon(
@@ -2552,6 +2557,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SheetHandle(),
               Text(
                 'send this $what?',
                 style: HaloType.serif(size: 19, color: HaloColors.text),
@@ -3638,6 +3644,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              const SheetHandle(),
               // who vouched, if anyone we know did. nothing at all otherwise.
               if (_vouched)
                 NoticeBanner(
@@ -3928,6 +3935,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SheetHandle(),
             Text(
               'note on this contact',
               style: HaloType.serif(size: 18, color: HaloColors.text),
@@ -4009,6 +4017,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SheetHandle(),
               Text(
                 'atmosphere',
                 style: HaloType.serif(size: 18, color: HaloColors.text),
@@ -4091,6 +4100,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SheetHandle(),
               Text(
                 'clear this conversation?',
                 style: HaloType.serif(size: 18, color: HaloColors.text),
@@ -4182,6 +4192,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SheetHandle(),
               Row(
                 children: [
                   Icon(Icons.block, size: 15, color: HaloColors.amber),
@@ -4295,6 +4306,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SheetHandle(),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
               child: Text(
@@ -4388,6 +4400,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SheetHandle(),
             Text(
               'name this contact',
               style: HaloType.serif(

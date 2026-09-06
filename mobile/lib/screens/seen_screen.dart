@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import '../main.dart';
 import '../theme.dart';
+import '../widgets/stagger_in.dart';
 
 class SeenScreen extends StatelessWidget {
   const SeenScreen({super.key});
@@ -24,7 +25,7 @@ class SeenScreen extends StatelessWidget {
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 44),
-        children: [
+        children: staggerAll([
           Text(
             'every messenger claims privacy. this is the specific list, '
             'including the parts that do not flatter us.',
@@ -144,7 +145,7 @@ class SeenScreen extends StatelessWidget {
               style: HaloType.mono(size: 11.5, color: HaloColors.text2),
             ),
           ),
-        ],
+        ]),
       ),
     );
   }

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../main.dart';
 import '../theme.dart';
 import '../widgets/motion.dart';
+import '../widgets/stagger_in.dart';
 
 class TransportScreen extends StatelessWidget {
   const TransportScreen({super.key});
@@ -40,7 +41,7 @@ class TransportScreen extends StatelessWidget {
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
-            children: [
+            children: staggerAll([
               Text(
                 'nothing here leaves the phone. it is the same state the '
                 'engine uses to decide what to do.',
@@ -176,7 +177,7 @@ class TransportScreen extends StatelessWidget {
                   ),
                 ),
               ),
-            ],
+            ]),
           );
         },
       ),
