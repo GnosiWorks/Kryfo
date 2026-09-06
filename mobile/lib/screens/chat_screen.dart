@@ -100,11 +100,11 @@ class _Msg {
   // sender asked that this not be screenshotted
   final bool secure;
   bool sending;
-  bool failed;
+  bool failed = false;
   bool delivered;
   bool edited;
   bool pinned;
-  bool removing;
+  bool removing = false;
   String? mediaPath;
   String? filePath;
   String? fileName;
@@ -124,10 +124,8 @@ class _Msg {
     this.replyTo,
     this.secure = false,
     this.sending = false,
-    this.failed = false,
     this.edited = false,
     this.pinned = false,
-    this.removing = false,
     this.mediaPath,
     this.filePath,
     this.fileName,

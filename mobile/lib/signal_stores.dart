@@ -164,7 +164,6 @@ class HaloSessionStore implements SessionStore {
     return SessionRecord.fromSerialized(rows.first['record'] as Uint8List);
   }
 
-  @override
   // every address we hold a session with, contact or not. lets the drain
   // loop try a peer we deleted (session kept) whose next whisper needs
   // decrypting before it can be re-filed as a request.

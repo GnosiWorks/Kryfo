@@ -2352,8 +2352,8 @@ class _GMsg {
   final String? msgUid;
   final String? replyTo;
   bool sending;
-  bool failed;
-  bool removing;
+  bool failed = false;
+  bool removing = false;
   bool fresh = false; // one-shot: animate entrance, then cleared on first build
   String? mediaPath;
   String? filePath;
@@ -2376,8 +2376,6 @@ class _GMsg {
     this.msgUid,
     this.replyTo,
     this.sending = false,
-    this.failed = false,
-    this.removing = false,
     this.mediaPath,
     this.filePath,
     this.fileName,
@@ -2385,7 +2383,6 @@ class _GMsg {
     this.pinned = false,
     this.saved = false,
     this.edited = false,
-    this.preview,
     Map<String, String>? reactions,
   }) : reactions = reactions ?? {},
        senderName = senderName ?? sender;
