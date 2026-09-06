@@ -20,7 +20,10 @@ import 'dart:io';
 import 'dart:convert';
 import 'key_verification_screen.dart';
 import 'introduce_sheet.dart';
+import 'vouchers_sheet.dart';
+import '../vouch_text.dart';
 import '../widgets/intro_chip.dart';
+import '../widgets/notice_banner.dart';
 import '../signal_session.dart';
 import '../message_envelope.dart'
     show
@@ -535,17 +538,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // sender-side lock: messaging a stranger who hasn't accepted, past the cap.
   // once they engage (reply/back-pair) or we accept them, it clears.
   bool get _requestPending => !_peerEngaged && _recvCount == 0;
-  bool get _requestLocked =>
-      _requestPending && _sentCount >= 2 && _vouchedBy == null;
+  bool get _requestLocked => _requestPending && _sentCount >= 2 && !_vouched;
   // receiver-side: a stranger has messaged us and we haven't accepted yet.
   bool get _incomingRequest => !_accepted && _recvCount > 0;
-  // a friend introduced this peer. no sender-side cap either: the other end
+  // friends vouched for this peer. no sender-side cap then: the other end
   // skips its gate for us, so locking ourselves would be the only lock left.
-  String? _vouchedBy;
-  String? _introName;
-  int? _introAvatar;
-  bool _introVerified = false;
-  bool get _vouched => _vouchedBy != null && _introName != null;
+  List<String> _voucherNames = const [];
+  String? _voucherSeed; // first voucher, whose face the chip wears
+  int? _voucherAvatar;
+  bool _voucherVerified = false;
+  bool get _vouched => _voucherNames.isNotEmpty;
   bool _showScrollDown = false;
   int _seenCount = 0;
   String? _rippleUid;
@@ -595,24 +597,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         _draftPerPeer[widget.peerHaloId] = t;
       }
     });
-    db.getContact(widget.peerHaloId).then((c) async {
-      if (!mounted) return;
-      setState(() {
-        _nickname = c?['nickname'] as String?;
-        _note = c?['note'] as String?;
-        _vouchedBy = c?['vouched_by'] as String?;
-      });
-      // the introducer, as we know them. gone from contacts = no banner.
-      final by = _vouchedBy;
-      if (by == null) return;
-      final a = await db.getContact(by);
-      if (!mounted || a == null || (a['accepted'] as int? ?? 0) != 1) return;
-      setState(() {
-        _introName = (a['nickname'] as String?) ?? by;
-        _introAvatar = (a['avatar'] as num?)?.toInt();
-        _introVerified = (a['verified'] as int? ?? 0) == 1;
-      });
+    db.getContact(widget.peerHaloId).then((c) {
+      if (mounted) {
+        setState(() {
+          _nickname = c?['nickname'] as String?;
+          _note = c?['note'] as String?;
+        });
+      }
     });
+    _loadVouches();
     db.getAtmosphere(widget.peerHaloId).then((a) {
       if (mounted) setState(() => _atmosphere = atmoFromName(a));
     });
@@ -722,6 +715,25 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       unawaited(_refreshDelivered());
     }
     _refreshRequestState();
+  }
+
+  // who vouched, as we know them. only accepted contacts come back, so a
+  // voucher we deleted since simply stops being named.
+  Future<void> _loadVouches() async {
+    final vs = await db.vouchesFor(widget.peerHaloId);
+    if (!mounted) return;
+    setState(() {
+      _voucherNames = [
+        for (final v in vs)
+          (v['nickname'] as String?) ?? v['voucher_id'] as String,
+      ];
+      if (vs.isNotEmpty) {
+        _voucherSeed = vs.first['voucher_id'] as String;
+        _voucherAvatar = (vs.first['avatar'] as num?)?.toInt();
+        _voucherVerified =
+            vs.length == 1 && (vs.first['verified'] as int? ?? 0) == 1;
+      }
+    });
   }
 
   // lock state loads once on open, so a reply landing while the sender sits
@@ -3600,6 +3612,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // who vouched, if anyone we know did. nothing at all otherwise.
+              if (_vouched)
+                NoticeBanner(
+                  glyph: NoticeGlyph.people,
+                  text: vouchedByLine(_voucherNames),
+                  color: HaloColors.amber,
+                  margin: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+                  onTap: () => Navigator.pop(ctx, 'vouchers'),
+                ),
               InkWell(
                 onTap: () => Navigator.pop(ctx, 'verify'),
                 child: Padding(
@@ -3817,6 +3838,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
     if (action == 'verify') {
       _openKeyVerification();
+    } else if (action == 'vouchers') {
+      await showVouchersSheet(context, widget.peerHaloId);
     } else if (action == 'introduce') {
       await showIntroduceSheet(
         context,
@@ -4558,10 +4581,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
             if (_vouched && !_accepted && _recvCount == 0)
               _IntroBanner(
-                name: _introName!,
-                seed: _vouchedBy!,
-                avatar: _introAvatar,
-                verified: _introVerified,
+                names: _voucherNames,
+                seed: _voucherSeed!,
+                avatar: _voucherAvatar,
+                verified: _voucherVerified,
               )
             else if (_requestPending && _sentCount > 0)
               const _RequestBanner(),
@@ -4821,7 +4844,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     ? _BlockedBar(onUnblock: _unblockContact)
                     : _incomingRequest
                     ? _AcceptRequestBar(
-                        introducer: _vouched ? _introName : null,
+                        introducer: _vouched ? vouchNames(_voucherNames) : null,
                         onAccept: _acceptRequestPeer,
                         onDecline: _declineRequestPeer,
                         onBlock: _blockRequestPeer,
@@ -4991,12 +5014,12 @@ class _AcceptRequestBar extends StatelessWidget {
 // shown above the thread when a friend introduced this peer and neither side
 // has said anything yet. takes the place of the stranger warning.
 class _IntroBanner extends StatelessWidget {
-  final String name;
+  final List<String> names;
   final String seed;
   final int? avatar;
   final bool verified;
   const _IntroBanner({
-    required this.name,
+    required this.names,
     required this.seed,
     this.avatar,
     this.verified = false,
@@ -5016,7 +5039,7 @@ class _IntroBanner extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           IntroducedBy(
-            name: name,
+            label: introducedByLine(names),
             seed: seed,
             avatar: avatar,
             verified: verified,
@@ -5024,7 +5047,7 @@ class _IntroBanner extends StatelessWidget {
           ),
           const SizedBox(height: 7),
           Text(
-            '$name introduced you. say hello - they got your card too.',
+            '${vouchNames(names)} introduced you. say hello - they got your card too.',
             style: HaloType.sans(
               size: 12.5,
               color: HaloColors.text2,

@@ -18,7 +18,11 @@ void main() {
   testWidgets('names the introducer in amber with their face', (tester) async {
     await tester.pumpWidget(
       _wrap(
-        const IntroducedBy(name: 'sam', seed: 'thumb-behave-boring', avatar: 7),
+        const IntroducedBy(
+          label: 'introduced by sam',
+          seed: 'thumb-behave-boring',
+          avatar: 7,
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -34,7 +38,13 @@ void main() {
 
   testWidgets('a verified introducer gets a green check', (tester) async {
     await tester.pumpWidget(
-      _wrap(const IntroducedBy(name: 'sam', seed: 'x-y-z', verified: true)),
+      _wrap(
+        const IntroducedBy(
+          label: 'introduced by sam',
+          seed: 'x-y-z',
+          verified: true,
+        ),
+      ),
     );
     await tester.pumpAndSettle();
     final check = tester.widget<Icon>(find.byIcon(Icons.check_rounded));
@@ -45,7 +55,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         const IntroducedBy(
-          name: 'sam',
+          label: 'introduced by sam',
           seed: 'x-y-z',
           delay: Duration(milliseconds: 300),
         ),

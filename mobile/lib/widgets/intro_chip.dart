@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// "introduced by <friend>" - the amber chip on a request row that a contact
-// vouched for. the face is theirs, the name is what we call them locally,
-// the check means we verified their safety number. pops in a beat after the
-// row so it reads as a second thought, not part of the card.
+// "introduced by alice and bob" - the amber chip on a request row that our
+// contacts vouched for. the face is the first voucher's, the names are what
+// we call them locally, the check means we verified that one. pops in a beat
+// after the row so it reads as a second thought, not part of the card.
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import 'kryfo_avatar.dart';
 
 class IntroducedBy extends StatefulWidget {
-  final String name;
+  // the whole line, already phrased ("introduced by alice and 2 others")
+  final String label;
   final String seed;
   final int? avatar;
   final bool verified;
@@ -16,7 +17,7 @@ class IntroducedBy extends StatefulWidget {
   final double size;
   const IntroducedBy({
     super.key,
-    required this.name,
+    required this.label,
     required this.seed,
     this.avatar,
     this.verified = false,
@@ -80,7 +81,7 @@ class _IntroducedByState extends State<IntroducedBy>
               SizedBox(width: widget.size * 0.5),
               Flexible(
                 child: Text(
-                  'introduced by ${widget.name}',
+                  widget.label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: HaloType.sans(

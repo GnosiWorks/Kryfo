@@ -710,7 +710,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 37,
+      version: 38,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -824,9 +824,27 @@ class HaloDb {
             PRIMARY KEY (media_id, idx)
           )
         ''');
+        await _vouchTable(db);
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 38) {
+          // one person can be vouched for by several people we know, and
+          // that count is the whole point. the old single column stays put
+          // (dropping columns on a phone is not worth it) but nothing reads
+          // or writes it any more.
+          await _vouchTable(db);
+          try {
+            await db.execute('''
+              INSERT OR IGNORE INTO vouches (halo_id, voucher_id, note, created_at)
+              SELECT halo_id, vouched_by, NULL,
+                     IFNULL(vouched_at, first_seen)
+              FROM contacts WHERE vouched_by IS NOT NULL
+            ''');
+          } catch (e) {
+            debugPrint('migrate v38: backfill skipped ($e)');
+          }
+        }
         if (oldV < 37) {
           // who introduced this contact, so their request skips the stranger
           // gate. wrapped: a duplicate column throw here hangs the app on boot.
@@ -1342,26 +1360,68 @@ class HaloDb {
     );
   }
 
-  // a contact we already accepted handed us this one. only ever set on a
-  // stub, and only from a frame that came over that contact's own session.
-  Future<void> setVouched(String haloId, String byId) async {
+  // who vouched for whom. a row only ever lands when the voucher is a
+  // contact we accepted, which is what makes the count mean anything.
+  Future<void> addVouch(String haloId, String voucherId, String? note) async {
     final db = await open();
-    await db.update(
+    final v = await db.query(
       'contacts',
-      {'vouched_by': byId, 'vouched_at': DateTime.now().millisecondsSinceEpoch},
+      columns: ['accepted'],
       where: 'halo_id = ?',
-      whereArgs: [haloId],
+      whereArgs: [voucherId],
+      limit: 1,
     );
+    if (v.isEmpty || (v.first['accepted'] as int? ?? 0) != 1) {
+      debugPrint('vouch: $voucherId is not an accepted contact, dropped');
+      return;
+    }
+    final n = (note ?? '').trim();
+    await db.insert('vouches', {
+      'halo_id': haloId,
+      'voucher_id': voucherId,
+      'note': n.isEmpty ? null : (n.length > 40 ? n.substring(0, 40) : n),
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  // every vouch for one person, joined to what we know about the voucher.
+  // only vouchers we still hold as accepted contacts count - a deleted or
+  // blocked one drops out here rather than lingering as a name.
+  Future<List<Map<String, Object?>>> vouchesFor(String haloId) async {
+    final db = await open();
+    return db.rawQuery(
+      '''
+      SELECT v.voucher_id, v.note, v.created_at,
+             c.nickname, c.avatar, c.verified
+      FROM vouches v JOIN contacts c ON c.halo_id = v.voucher_id
+      WHERE v.halo_id = ? AND c.accepted = 1 AND c.blocked = 0
+      ORDER BY v.created_at ASC
+      ''',
+      [haloId],
+    );
+  }
+
+  Future<bool> isVouched(String haloId) async {
+    final db = await open();
+    final r = await db.rawQuery(
+      '''
+      SELECT 1 FROM vouches v JOIN contacts c ON c.halo_id = v.voucher_id
+      WHERE v.halo_id = ? AND c.accepted = 1 AND c.blocked = 0 LIMIT 1
+      ''',
+      [haloId],
+    );
+    return r.isNotEmpty;
   }
 
   // introduced people we have not accepted yet. they need a relay
   // subscription like a real contact or their first message never lands.
   Future<List<Map<String, Object?>>> vouchedPending() async {
     final db = await open();
-    return db.query(
-      'contacts',
-      where: 'accepted = 0 AND blocked = 0 AND vouched_by IS NOT NULL',
-    );
+    return db.rawQuery('''
+      SELECT DISTINCT c.* FROM contacts c
+      JOIN vouches v ON v.halo_id = c.halo_id
+      WHERE c.accepted = 0 AND c.blocked = 0
+    ''');
   }
 
   Future<void> setContactAvatar(String haloId, int? av) async {
@@ -2534,6 +2594,21 @@ class HaloDb {
   }
 }
 
+Future<void> _vouchTable(Database db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS vouches (
+      halo_id TEXT NOT NULL,
+      voucher_id TEXT NOT NULL,
+      note TEXT,
+      created_at INTEGER NOT NULL,
+      PRIMARY KEY (halo_id, voucher_id)
+    )
+  ''');
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_vouches_halo_id ON vouches(halo_id)',
+  );
+}
+
 Future<void> _signalTables(Database db) async {
   await db.execute(
     'CREATE TABLE IF NOT EXISTS prekeys (id INTEGER PRIMARY KEY, record BLOB NOT NULL)',
@@ -3523,8 +3598,7 @@ class AppState extends ChangeNotifier {
     // a sender a friend introduced is not a stranger: no pow, no cap. they
     // still land in requests and still need an accept to get a reply.
     if (!isGroup && !await db.isAccepted(senderHaloId)) {
-      final row = await db.getContact(senderHaloId);
-      final vouched = row?['vouched_by'] != null;
+      final vouched = await db.isVouched(senderHaloId);
       // pow: only the back-pair message (true first contact) must carry a
       // valid nonce - that's the one lane a cold stranger can arrive on. a
       // whisper through an existing session already paid pow once, and a
@@ -3764,7 +3838,7 @@ class AppState extends ChangeNotifier {
   // control; env.groupId is the target group; env.groupControl carries the
   // action and payload.
   // a contact we accepted vouches for someone. the card becomes a request
-  // row with vouched_by set, so their first message skips the stranger gate.
+  // row with a vouch on it, so their first message skips the stranger gate.
   // trust is ours alone: a card from anyone we have not accepted is dropped
   // unread, and so is one that names us or the sender.
   Future<void> _applyIntro(String senderHaloId, IntroFrame card) async {
@@ -3778,13 +3852,9 @@ class AppState extends ChangeNotifier {
     final existing = await db.getContact(h);
     if (existing != null && (existing['accepted'] as int? ?? 0) == 1) return;
     await db.upsertContactStub(h, card.onion, card.xPub);
-    await db.setVouched(h, senderHaloId);
-    // the note is the introducer's one line about them. only fills an empty
-    // note - never overwrites something we wrote ourselves.
-    final note = card.note?.trim() ?? '';
-    if (note.isNotEmpty && ((existing?['note'] as String?) ?? '').isEmpty) {
-      await db.setNote(h, note.length > 40 ? note.substring(0, 40) : note);
-    }
+    // the note is the introducer's one line about them. it lives on the
+    // vouch, so two introducers can each say their piece.
+    await db.addVouch(h, senderHaloId, card.note);
     if (card.avatar != null) await db.setContactAvatar(h, card.avatar);
     if (card.fc != null && card.fc!.isNotEmpty) {
       await rememberPeerFc(h, card.fc!);
@@ -4959,7 +5029,7 @@ class AppState extends ChangeNotifier {
           contact['peer_bundle'] == null) {
         // an introduced peer whose bundle swap never landed: ask again, the
         // user's tap-to-retry goes through once it does.
-        if (contact['vouched_by'] != null) {
+        if (await db.isVouched(memberId)) {
           _healPending.add(memberId);
           unawaited(_sendBundleCtl(memberId, want: true));
         }
