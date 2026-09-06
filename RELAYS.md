@@ -2,7 +2,7 @@
 
 three directories here look like relays. only one of them runs.
 
-## `relay-live/` — this is production
+## `relay-live/` - this is production
 
 khatru + sqlite, about forty lines, listening on `127.0.0.1:3334` behind
 nginx at `relay.kryfo.app`. no auth, no kind policy, no size limit: it takes
@@ -21,7 +21,7 @@ fine and then panics at startup with a stub driver. build it:
 
 this source lived only on the server until aug 25. it is here now.
 
-## `dmrelay/` — the next one, NOT deployable yet
+## `dmrelay/` - the next one, NOT deployable yet
 
 badger instead of sqlite, expiration validation, kind allow-list, and
 **nip-42 gated reads**: you only receive wraps for an address you have proved
@@ -36,7 +36,7 @@ different startup lines.
 **before deploying it:** teach the engine nip-42 auth, then test against it on
 a spare box, not production.
 
-## `relay/` — dead
+## `relay/` - dead
 
 the original store-and-forward over a bespoke websocket protocol, from before
 the move to nostr. kept for reference only. nothing talks to it.

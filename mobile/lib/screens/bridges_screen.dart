@@ -377,7 +377,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
           _Note(
             'where to get them',
             'bridges.torproject.org, or email bridges@torproject.org from a '
-                'gmail or riseup address. ask for obfs4 — kryfo does not speak '
+                'gmail or riseup address. ask for obfs4 - kryfo does not speak '
                 'the others yet.',
           ),
 
@@ -554,7 +554,7 @@ class _RequestBlock extends StatelessWidget {
                   const SizedBox(width: 9),
                   Expanded(
                     child: Text(
-                      'this one request does not go through tor — it cannot, '
+                      'this one request does not go through tor - it cannot, '
                       'since tor is what is not working. whoever runs your '
                       'network will see you contacting the tor project. if '
                       'that alone is a problem where you are, get bridges '

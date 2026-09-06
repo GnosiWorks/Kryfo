@@ -1,4 +1,4 @@
-// halo nostr roundtrip probe — sprints 1.6.2 + 1.6.3 + 1.6.4 + 1.6.7
+// halo nostr roundtrip probe - sprints 1.6.2 + 1.6.3 + 1.6.4 + 1.6.7
 //
 // what this probe does:
 //   1. simulates two halos (alice, bob) with X25519 keys
@@ -11,7 +11,7 @@
 //   7. subscribes to the same 3 relays in parallel, dedupes by event id, picks first
 //   8. decrypts, verifies plaintext roundtripped intact
 //
-// not yet here: tor SOCKS routing (sprint 1.6.7) — added in next iteration
+// not yet here: tor SOCKS routing (sprint 1.6.7) - added in next iteration
 // once we confirm the fiatjaf.com/nostr RelayOptions API for custom dialers.
 
 package main
@@ -130,15 +130,15 @@ func publishMulti(ctx context.Context, urls []string, ev nostr.Event) int {
 			defer cancel()
 			r, err := nostr.RelayConnect(rctx, u, nostr.RelayOptions{})
 			if err != nil {
-				fmt.Printf("  ✗ %s — connect: %v\n", u, err)
+				fmt.Printf("  ✗ %s - connect: %v\n", u, err)
 				return
 			}
 			defer r.Close()
 			if err := r.Publish(rctx, ev); err != nil {
-				fmt.Printf("  ✗ %s — publish: %v\n", u, err)
+				fmt.Printf("  ✗ %s - publish: %v\n", u, err)
 				return
 			}
-			fmt.Printf("  ✓ %s — published\n", u)
+			fmt.Printf("  ✓ %s - published\n", u)
 			mu.Lock()
 			ok++
 			mu.Unlock()
@@ -160,7 +160,7 @@ func subscribeMulti(ctx context.Context, urls []string, pk nostr.PubKey, kind no
 			defer wg.Done()
 			r, err := nostr.RelayConnect(rctx, u, nostr.RelayOptions{})
 			if err != nil {
-				fmt.Printf("  ✗ %s — connect: %v\n", u, err)
+				fmt.Printf("  ✗ %s - connect: %v\n", u, err)
 				return
 			}
 			defer r.Close()
@@ -171,13 +171,13 @@ func subscribeMulti(ctx context.Context, urls []string, pk nostr.PubKey, kind no
 			}
 			sub, err := r.Subscribe(rctx, f, nostr.SubscriptionOptions{})
 			if err != nil {
-				fmt.Printf("  ✗ %s — subscribe: %v\n", u, err)
+				fmt.Printf("  ✗ %s - subscribe: %v\n", u, err)
 				return
 			}
 			select {
 			case ev := <-sub.Events:
 				if ev.ID.Hex() != "" {
-					fmt.Printf("  ✓ %s — got event\n", u)
+					fmt.Printf("  ✓ %s - got event\n", u)
 					select {
 					case out <- ev:
 					default:
