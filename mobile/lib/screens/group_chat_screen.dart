@@ -47,6 +47,7 @@ import '../widgets/room_countdown.dart';
 import '../widgets/swipe_to_reply.dart';
 import 'room_link_sheet.dart';
 import '../dlog.dart';
+import '../widgets/sheet_handle.dart';
 
 final Map<String, String> _draftPerGroup = {};
 
@@ -1726,6 +1727,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SheetHandle(),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Text(
@@ -1834,6 +1836,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SheetHandle(),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
               child: Text(
@@ -1928,6 +1931,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SheetHandle(),
             Text(
               'edit message',
               style: HaloType.serif(
@@ -2006,6 +2010,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SheetHandle(),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
               child: Text(

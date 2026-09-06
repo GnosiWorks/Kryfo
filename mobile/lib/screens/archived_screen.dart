@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
-import '../widgets/stagger_in.dart';
 import '../main.dart' show appState;
+import '../widgets/stagger_in.dart';
 
 // chats you have archived. hidden from the main list but still receive
 // normally. they read dimmer here on purpose - resting, not gone. a row
@@ -93,12 +93,15 @@ class ArchivedScreen extends StatelessWidget {
                 Expanded(
                   child: archived.isEmpty
                       ? Center(
-                          child: Text(
-                            'nothing archived',
-                            style: HaloType.serif(
-                              size: 18,
-                              italic: true,
-                              color: HaloColors.text2,
+                          child: StaggerIn(
+                            index: 0,
+                            child: Text(
+                              'nothing archived',
+                              style: HaloType.serif(
+                                size: 18,
+                                italic: true,
+                                color: HaloColors.text2,
+                              ),
                             ),
                           ),
                         )

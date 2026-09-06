@@ -8,6 +8,7 @@ import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
 import 'group_chat_screen.dart';
 import '../widgets/motion.dart' show haloRoute;
+import '../widgets/stagger_in.dart';
 
 class NewGroupScreen extends StatefulWidget {
   const NewGroupScreen({super.key});
@@ -186,59 +187,62 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                       itemBuilder: (_, i) {
                         final c = contacts[i];
                         final picked = _selected.contains(c.haloId);
-                        return InkWell(
-                          onTap: () => setState(() {
-                            if (picked) {
-                              _selected.remove(c.haloId);
-                            } else {
-                              _selected.add(c.haloId);
-                            }
-                          }),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
-                            child: Row(
-                              children: [
-                                KryfoAvatar(seed: c.avatarSeed, size: 36),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    c.haloId,
-                                    style: HaloType.sans(
-                                      size: 14,
-                                      weight: FontWeight.w500,
-                                      color: HaloColors.text,
+                        return StaggerIn(
+                          index: i,
+                          child: InkWell(
+                            onTap: () => setState(() {
+                              if (picked) {
+                                _selected.remove(c.haloId);
+                              } else {
+                                _selected.add(c.haloId);
+                              }
+                            }),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              child: Row(
+                                children: [
+                                  KryfoAvatar(seed: c.avatarSeed, size: 36),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      c.haloId,
+                                      style: HaloType.sans(
+                                        size: 14,
+                                        weight: FontWeight.w500,
+                                        color: HaloColors.text,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                AnimatedContainer(
-                                  duration: const Duration(milliseconds: 120),
-                                  width: 22,
-                                  height: 22,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: picked
-                                        ? HaloColors.amber
-                                        : Colors.transparent,
-                                    border: Border.all(
+                                  AnimatedContainer(
+                                    duration: const Duration(milliseconds: 120),
+                                    width: 22,
+                                    height: 22,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
                                       color: picked
                                           ? HaloColors.amber
-                                          : HaloColors.line2,
-                                      width: 1.4,
+                                          : Colors.transparent,
+                                      border: Border.all(
+                                        color: picked
+                                            ? HaloColors.amber
+                                            : HaloColors.line2,
+                                        width: 1.4,
+                                      ),
                                     ),
+                                    alignment: Alignment.center,
+                                    child: picked
+                                        ? Icon(
+                                            Icons.check_rounded,
+                                            size: 14,
+                                            color: HaloColors.onAmber,
+                                          )
+                                        : null,
                                   ),
-                                  alignment: Alignment.center,
-                                  child: picked
-                                      ? Icon(
-                                          Icons.check_rounded,
-                                          size: 14,
-                                          color: HaloColors.onAmber,
-                                        )
-                                      : null,
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         );

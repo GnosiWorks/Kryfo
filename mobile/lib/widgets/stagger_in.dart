@@ -39,3 +39,9 @@ class _StaggerInState extends State<StaggerIn> {
     );
   }
 }
+
+// wrap a literal list of children so they assemble one after another
+List<Widget> staggerAll(List<Widget> children, {int from = 0}) => [
+  for (var i = 0; i < children.length; i++)
+    StaggerIn(index: from + i, child: children[i]),
+];

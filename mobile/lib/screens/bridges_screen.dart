@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import '../main.dart';
 import '../theme.dart';
 import '../widgets/motion.dart';
+import '../widgets/stagger_in.dart';
 
 class BridgesScreen extends StatefulWidget {
   const BridgesScreen({super.key});
@@ -173,7 +174,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
-        children: [
+        children: staggerAll([
           if (appState.sendMode != 'private') ...[
             Container(
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 13),
@@ -476,7 +477,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                 'usual. bridges are slower in general. if your network does not '
                 'block tor, leave this off.',
           ),
-        ],
+        ]),
       ),
     );
   }

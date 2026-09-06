@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import '../theme.dart';
-import '../widgets/stagger_in.dart';
 import '../main.dart' show appState;
+import '../widgets/stagger_in.dart';
 
 // lists contacts you have blocked. unblock restores them to your chats and
 // lets their messages through again. blocking never notifies the other side.
@@ -70,12 +70,15 @@ class _BlockedScreenState extends State<BlockedScreen> {
                   ? const SizedBox()
                   : _blocked.isEmpty
                   ? Center(
-                      child: Text(
-                        'no one is blocked',
-                        style: HaloType.serif(
-                          size: 18,
-                          italic: true,
-                          color: HaloColors.text2,
+                      child: StaggerIn(
+                        index: 0,
+                        child: Text(
+                          'no one is blocked',
+                          style: HaloType.serif(
+                            size: 18,
+                            italic: true,
+                            color: HaloColors.text2,
+                          ),
                         ),
                       ),
                     )

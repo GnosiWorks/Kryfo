@@ -13,6 +13,8 @@ import '../widgets/motion.dart' show haloRoute;
 import 'package:flutter/services.dart';
 import 'chat_screen.dart'
     show MediaGalleryScreen, Atmo, atmoFromName, atmoAccent, atmoLabel;
+import '../widgets/stagger_in.dart';
+import '../widgets/sheet_handle.dart';
 
 class GroupInfoScreen extends StatefulWidget {
   final String groupId;
@@ -171,11 +173,13 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       ),
       builder: (ctx) => SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 22),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SheetHandle(),
+              const SizedBox(height: 8),
               Text(
                 'atmosphere',
                 style: HaloType.serif(size: 18, color: HaloColors.text),
@@ -532,54 +536,57 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                 itemBuilder: (_, i) {
                   final m = _members[i];
                   final isMe = m == myId || (_isRoom && m == _roomPub);
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      children: [
-                        KryfoAvatar(seed: m, size: 36),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                looksLikeRoomKey(m) ? roomTag(m) : m,
-                                style: looksLikeRoomKey(m)
-                                    ? HaloType.mono(
-                                        size: 13,
-                                        color: HaloColors.text,
-                                      )
-                                    : HaloType.sans(
-                                        size: 14,
-                                        weight: FontWeight.w500,
-                                        color: HaloColors.text,
-                                      ),
-                              ),
-                              if (isMe)
+                  return StaggerIn(
+                    index: i,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          KryfoAvatar(seed: m, size: 36),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
                                 Text(
-                                  'you',
-                                  style: HaloType.mono(
-                                    size: 10,
-                                    color: HaloColors.amber,
-                                    letter: 0.3,
-                                  ),
+                                  looksLikeRoomKey(m) ? roomTag(m) : m,
+                                  style: looksLikeRoomKey(m)
+                                      ? HaloType.mono(
+                                          size: 13,
+                                          color: HaloColors.text,
+                                        )
+                                      : HaloType.sans(
+                                          size: 14,
+                                          weight: FontWeight.w500,
+                                          color: HaloColors.text,
+                                        ),
                                 ),
-                            ],
-                          ),
-                        ),
-                        if (_isAdmin && !isMe)
-                          IconButton(
-                            icon: Icon(
-                              Icons.remove_circle_outline,
-                              size: 18,
-                              color: HaloColors.text3,
+                                if (isMe)
+                                  Text(
+                                    'you',
+                                    style: HaloType.mono(
+                                      size: 10,
+                                      color: HaloColors.amber,
+                                      letter: 0.3,
+                                    ),
+                                  ),
+                              ],
                             ),
-                            onPressed: () => _confirmRemove(m),
                           ),
-                      ],
+                          if (_isAdmin && !isMe)
+                            IconButton(
+                              icon: Icon(
+                                Icons.remove_circle_outline,
+                                size: 18,
+                                color: HaloColors.text3,
+                              ),
+                              onPressed: () => _confirmRemove(m),
+                            ),
+                        ],
+                      ),
                     ),
                   );
                 },

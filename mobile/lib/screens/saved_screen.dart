@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
-import '../widgets/stagger_in.dart';
 import '../widgets/press_scale.dart';
 import '../main.dart';
 import '../theme.dart';
 import 'chat_screen.dart';
 import '../widgets/motion.dart' show haloRoute;
+import '../widgets/stagger_in.dart';
 
 // every saved message across all chats, newest first. tap a card to jump to
 // that message in its chat; tap the bookmark to unsave.
@@ -150,9 +150,12 @@ class _SavedScreenState extends State<SavedScreen> {
               ),
             ),
             const SizedBox(height: 22),
-            Text(
-              'nothing saved yet',
-              style: HaloType.serif(size: 24, color: HaloColors.text),
+            StaggerIn(
+              index: 0,
+              child: Text(
+                'nothing saved yet',
+                style: HaloType.serif(size: 24, color: HaloColors.text),
+              ),
             ),
             const SizedBox(height: 10),
             Text(
