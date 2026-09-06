@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the way into a burner room: a qr and a link. anyone holding it can join
 // until the room ends, so the sheet says that plainly.
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -38,6 +39,8 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     )..forward();
+    // debug builds only: lets a second device join off logcat while testing
+    if (kDebugMode) debugPrint('room link: ${widget.link.encode()}');
   }
 
   @override

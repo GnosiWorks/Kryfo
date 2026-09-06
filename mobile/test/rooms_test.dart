@@ -33,6 +33,9 @@ void main() {
     expect(expiryWords(const Duration(hours: 24)), '24 hours');
     expect(expiryWords(const Duration(hours: 1)), 'an hour');
     expect(expiryWords(const Duration(days: 7)), '7 days');
+    expect(expiryWords(const Duration(minutes: 56)), '56 minutes');
+    expect(expiryWords(const Duration(hours: 3, minutes: 20)), 'about 3 hours');
+    expect(expiryWords(const Duration(seconds: 50)), 'a minute');
   });
 
   test('link round trips', () {
