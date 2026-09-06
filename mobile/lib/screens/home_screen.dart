@@ -1288,27 +1288,32 @@ class _GroupRow extends StatelessWidget {
               // group avatar: square tile in amberSoft with the first letter
               // of the group name in italic serif. distinct from contact
               // avatars (circular) so groups feel different at a glance.
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: g.isRoom
-                      ? HaloColors.violet.withValues(alpha: 0.14)
-                      : HaloColors.amberSoft,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: (g.isRoom ? HaloColors.violet : HaloColors.amber)
-                        .withValues(alpha: 0.35),
-                    width: 0.6,
+              Hero(
+                tag: 'group-${g.groupId}',
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: g.isRoom
+                        ? HaloColors.violet.withValues(alpha: 0.14)
+                        : HaloColors.amberSoft,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: (g.isRoom ? HaloColors.violet : HaloColors.amber)
+                          .withValues(alpha: 0.35),
+                      width: 0.6,
+                    ),
                   ),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  g.name.isEmpty ? '·' : g.name.characters.first.toUpperCase(),
-                  style: HaloType.serif(
-                    size: 18,
-                    italic: true,
-                    color: g.isRoom ? HaloColors.violet : HaloColors.amber,
+                  alignment: Alignment.center,
+                  child: Text(
+                    g.name.isEmpty
+                        ? '·'
+                        : g.name.characters.first.toUpperCase(),
+                    style: HaloType.serif(
+                      size: 18,
+                      italic: true,
+                      color: g.isRoom ? HaloColors.violet : HaloColors.amber,
+                    ),
                   ),
                 ),
               ),
@@ -1622,7 +1627,14 @@ class _Row extends StatelessWidget {
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  KryfoAvatar(seed: c.avatarSeed, size: 44, choice: c.avatar),
+                  Hero(
+                    tag: 'face-${c.avatarSeed}',
+                    child: KryfoAvatar(
+                      seed: c.avatarSeed,
+                      size: 44,
+                      choice: c.avatar,
+                    ),
+                  ),
                   if (c.verified)
                     Positioned(
                       right: -1,
@@ -1835,13 +1847,31 @@ class _Tab extends StatelessWidget {
   const _Tab({required this.label, required this.active});
   @override
   Widget build(BuildContext context) {
-    return Text(
-      label,
-      style: HaloType.sans(
-        size: 11,
-        weight: active ? FontWeight.w500 : FontWeight.w400,
-        color: active ? HaloColors.text : HaloColors.text2,
-      ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 180),
+          style: HaloType.sans(
+            size: 11,
+            weight: active ? FontWeight.w500 : FontWeight.w400,
+            color: active ? HaloColors.text : HaloColors.text2,
+          ),
+          child: Text(label),
+        ),
+        const SizedBox(height: 4),
+        // a short amber mark that grows under the tab you are on
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutBack,
+          width: active ? 14 : 0,
+          height: 3,
+          decoration: BoxDecoration(
+            color: HaloColors.amber,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+      ],
     );
   }
 }

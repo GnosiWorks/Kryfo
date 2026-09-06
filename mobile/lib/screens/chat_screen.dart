@@ -519,6 +519,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   final GlobalKey _jumpKey = GlobalKey();
   int? _jumpIndex;
   String? _nickname;
+  int? _peerFace; // the face they picked, so the header matches the list
   bool _blocked = false;
   bool _muted = false;
   bool _verified = false;
@@ -605,6 +606,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         setState(() {
           _nickname = c?['nickname'] as String?;
           _note = c?['note'] as String?;
+          _peerFace = (c?['avatar'] as num?)?.toInt();
         });
       }
     });
@@ -4610,6 +4612,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     supporterBadge: _peerBadge,
                     onBlock: _chatActions,
                     avatarSeed: widget.avatarSeed,
+                    face: _peerFace,
                     onBack: () => Navigator.pop(context),
                     onSearch: _openSearch,
                     onRename: _renameContact,
@@ -5282,6 +5285,7 @@ class _ChatHead extends StatelessWidget {
   final String haloId;
   final String? nickname;
   final String avatarSeed;
+  final int? face;
   final VoidCallback onBack;
   final VoidCallback onSearch;
   final VoidCallback onRename;
@@ -5295,6 +5299,7 @@ class _ChatHead extends StatelessWidget {
     required this.haloId,
     this.nickname,
     required this.avatarSeed,
+    this.face,
     required this.onBack,
     required this.onSearch,
     required this.onRename,
@@ -5323,7 +5328,11 @@ class _ChatHead extends StatelessWidget {
           GestureDetector(
             onTap: onBlock, // avatar -> contact actions + verify
             behavior: HitTestBehavior.opaque,
-            child: KryfoAvatar(seed: avatarSeed, size: 36),
+            // the same face flies in from the list row
+            child: Hero(
+              tag: 'face-$avatarSeed',
+              child: KryfoAvatar(seed: avatarSeed, size: 36, choice: face),
+            ),
           ),
           const SizedBox(width: 11),
           Expanded(
@@ -7828,75 +7837,91 @@ class _Composer extends StatelessWidget {
                 valueListenable: controller,
                 builder: (context, value, _) {
                   final hasText = value.text.trim().isNotEmpty;
-                  if (!hasText && !sending) {
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        GestureDetector(
-                          onTap: onToggleDisguise,
-                          behavior: HitTestBehavior.opaque,
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 12),
-                            child: Icon(
-                              disguise
-                                  ? Icons.record_voice_over
-                                  : Icons.voice_over_off,
-                              size: 20,
-                              color: disguise
-                                  ? HaloColors.amber
-                                  : HaloColors.text3,
+                  final canSend = !sending && hasText;
+                  // mic and send trade places with a small pop instead of a cut
+                  final Widget end = (!hasText && !sending)
+                      ? KeyedSubtree(
+                          key: const ValueKey('mic'),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              GestureDetector(
+                                onTap: onToggleDisguise,
+                                behavior: HitTestBehavior.opaque,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 12),
+                                  child: Icon(
+                                    disguise
+                                        ? Icons.record_voice_over
+                                        : Icons.voice_over_off,
+                                    size: 20,
+                                    color: disguise
+                                        ? HaloColors.amber
+                                        : HaloColors.text3,
+                                  ),
+                                ),
+                              ),
+                              _HoldToTalkMic(
+                                disguise: disguise,
+                                onToggleDisguise: onToggleDisguise,
+                                onComplete: onVoiceComplete,
+                              ),
+                            ],
+                          ),
+                        )
+                      : KeyedSubtree(
+                          key: const ValueKey('send'),
+                          child: PressScale(
+                            onTap: canSend ? onSend : null,
+                            scale: 0.86,
+                            haptic: false, // _send already fires its own impact
+                            child: AnimatedScale(
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeOut,
+                              scale: canSend ? 1.0 : 0.88,
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                curve: Curves.easeOut,
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: canSend
+                                      ? HaloColors.amber
+                                      : HaloColors.surface3,
+                                  boxShadow: canSend
+                                      ? [
+                                          BoxShadow(
+                                            color: HaloColors.amber.withValues(
+                                              alpha: 0.35,
+                                            ),
+                                            blurRadius: 12,
+                                            spreadRadius: -1,
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  Icons.arrow_upward,
+                                  size: 18,
+                                  color: canSend
+                                      ? HaloColors.onAmber
+                                      : HaloColors.text3,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                        _HoldToTalkMic(
-                          disguise: disguise,
-                          onToggleDisguise: onToggleDisguise,
-                          onComplete: onVoiceComplete,
-                        ),
-                      ],
-                    );
-                  }
-                  final canSend = !sending && hasText;
-                  return PressScale(
-                    onTap: canSend ? onSend : null,
-                    scale: 0.86,
-                    haptic: false, // _send already fires its own impact
-                    child: AnimatedScale(
-                      duration: const Duration(milliseconds: 200),
-                      curve: Curves.easeOut,
-                      scale: canSend ? 1.0 : 0.88,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        curve: Curves.easeOut,
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: canSend
-                              ? HaloColors.amber
-                              : HaloColors.surface3,
-                          boxShadow: canSend
-                              ? [
-                                  BoxShadow(
-                                    color: HaloColors.amber.withValues(
-                                      alpha: 0.35,
-                                    ),
-                                    blurRadius: 12,
-                                    spreadRadius: -1,
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        alignment: Alignment.center,
-                        child: Icon(
-                          Icons.arrow_upward,
-                          size: 18,
-                          color: canSend
-                              ? HaloColors.onAmber
-                              : HaloColors.text3,
-                        ),
-                      ),
+                        );
+                  return AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    switchInCurve: Curves.easeOutBack,
+                    switchOutCurve: Curves.easeIn,
+                    transitionBuilder: (child, anim) => ScaleTransition(
+                      scale: anim,
+                      child: FadeTransition(opacity: anim, child: child),
                     ),
+                    child: end,
                   );
                 },
               ),

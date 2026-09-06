@@ -267,10 +267,13 @@ class _RequestCardState extends State<_RequestCard>
               ),
               child: Row(
                 children: [
-                  KryfoAvatar(
-                    seed: widget.haloId,
-                    size: 44,
-                    choice: widget.avatar,
+                  Hero(
+                    tag: 'face-${widget.haloId}',
+                    child: KryfoAvatar(
+                      seed: widget.haloId,
+                      size: 44,
+                      choice: widget.avatar,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
