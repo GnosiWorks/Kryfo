@@ -89,6 +89,14 @@ class SeenScreen extends StatelessWidget {
                 'sees ciphertext, and no server ever sees the graph.',
           ),
           _Claim(
+            'the scam shield',
+            'on device',
+            HaloColors.green,
+            'runs on your phone with rules that ship in the app. no network, '
+                'no list downloads. it only reads the first message from a '
+                'stranger and cannot see anything a contact sends you.',
+          ),
+          _Claim(
             'that a device fetched mail',
             'timing only',
             HaloColors.amber,

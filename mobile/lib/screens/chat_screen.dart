@@ -21,6 +21,7 @@ import 'dart:convert';
 import 'key_verification_screen.dart';
 import 'introduce_sheet.dart';
 import 'vouchers_sheet.dart';
+import 'shield_sheet.dart';
 import '../vouch_text.dart';
 import '../widgets/intro_chip.dart';
 import '../widgets/notice_banner.dart';
@@ -548,6 +549,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   int? _voucherAvatar;
   bool _voucherVerified = false;
   bool get _vouched => _voucherNames.isNotEmpty;
+  // what the scam shield saw on this stranger, if anything and not ignored
+  ShieldFlag? _flag;
   bool _showScrollDown = false;
   int _seenCount = 0;
   String? _rippleUid;
@@ -606,6 +609,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
     });
     _loadVouches();
+    _loadShield();
     db.getAtmosphere(widget.peerHaloId).then((a) {
       if (mounted) setState(() => _atmosphere = atmoFromName(a));
     });
@@ -715,6 +719,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       unawaited(_refreshDelivered());
     }
     _refreshRequestState();
+    if (!_accepted && _flag == null) _loadShield();
   }
 
   // who vouched, as we know them. only accepted contacts come back, so a
@@ -734,6 +739,24 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             vs.length == 1 && (vs.first['verified'] as int? ?? 0) == 1;
       }
     });
+  }
+
+  Future<void> _loadShield() async {
+    if (await db.isAccepted(widget.peerHaloId)) return;
+    final f = ShieldFlag.fromRow(await db.shieldFor(widget.peerHaloId));
+    if (mounted && f != _flag) setState(() => _flag = f);
+  }
+
+  Future<void> _openShield() async {
+    final f = _flag;
+    if (f == null) return;
+    final c = await showShieldSheet(context, widget.peerHaloId, f);
+    if (!mounted || c == null) return;
+    if (c == ShieldChoice.ignore) {
+      setState(() => _flag = null);
+    } else {
+      Navigator.pop(context);
+    }
   }
 
   // lock state loads once on open, so a reply landing while the sender sits
@@ -4222,7 +4245,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     HapticFeedback.selectionClick();
     await db.acceptRequest(widget.peerHaloId);
     await appState.refreshContacts();
-    if (mounted) setState(() => _accepted = true);
+    if (mounted) {
+      setState(() {
+        _accepted = true;
+        _flag = null;
+      });
+    }
     unawaited(appState.sendAcceptAck(widget.peerHaloId));
   }
 
@@ -4579,7 +4607,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 onTap: () =>
                     _scrollToMessage(_messages.lastWhere((m) => m.pinned)),
               ),
-            if (_vouched && !_accepted && _recvCount == 0)
+            if (_flag != null && !_accepted)
+              const SizedBox.shrink()
+            else if (_vouched && !_accepted && _recvCount == 0)
               _IntroBanner(
                 names: _voucherNames,
                 seed: _voucherSeed!,
@@ -4803,6 +4833,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     ),
                   ],
                 ),
+              ),
+            if (_flag != null && !_accepted && !_blocked)
+              NoticeBanner(
+                glyph: NoticeGlyph.shield,
+                text: _flag!.headline,
+                color: HaloColors.rose,
+                margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+                onTap: _openShield,
               ),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 220),
