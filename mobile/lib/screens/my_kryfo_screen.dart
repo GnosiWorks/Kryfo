@@ -314,11 +314,14 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
         const SizedBox(height: 12),
         GestureDetector(
           onTap: () {
-            Share.share(
-              "add me on kryfo. my id is ${appState.myId}\n\n"
-              "tap to add me:\n$_uri\n\n"
-              "kryfo is a private messenger. no phone number, no email.",
-              subject: 'add me on kryfo',
+            SharePlus.instance.share(
+              ShareParams(
+                text:
+                    "add me on kryfo. my id is ${appState.myId}\n\n"
+                    "tap to add me:\n$_uri\n\n"
+                    "kryfo is a private messenger. no phone number, no email.",
+                subject: 'add me on kryfo',
+              ),
             );
           },
           child: Container(

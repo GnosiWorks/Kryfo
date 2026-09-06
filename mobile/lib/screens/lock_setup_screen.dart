@@ -103,7 +103,7 @@ class _LockSetupScreenState extends State<LockSetupScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: const BackButton(color: Color(0xFFAAAAAA)),
+        leading: BackButton(color: HaloColors.text2),
         title: Text(
           'app lock',
           style: HaloType.serif(size: 18, color: HaloColors.text, italic: true),
@@ -172,9 +172,9 @@ class _SetupKeypad extends StatelessWidget {
             height: 72,
             alignment: Alignment.center,
             child: isBack
-                ? const Icon(
+                ? Icon(
                     Icons.backspace_outlined,
-                    color: Color(0xFFAAAAAA),
+                    color: HaloColors.text2,
                     size: 22,
                   )
                 : Text(

@@ -94,7 +94,7 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
                           const SizedBox(width: 12),
                           Switch(
                             value: _hideContent,
-                            activeColor: HaloColors.amber,
+                            activeThumbColor: HaloColors.amber,
                             onChanged: (v) {
                               setState(() => _hideContent = v);
                               setHideNotifContent(v);

@@ -117,7 +117,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: const BackButton(color: Color(0xFFAAAAAA)),
+        leading: BackButton(color: HaloColors.text2),
         title: Text(
           'restore kryfo',
           style: HaloType.serif(size: 22, color: HaloColors.text, italic: true),
@@ -132,7 +132,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0x1AE53935),
+                  color: HaloColors.rose.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: HaloColors.rose, width: 0.5),
                 ),

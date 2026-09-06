@@ -33,7 +33,7 @@ Future<void> openAutostartSettings() async {
 // kryfo is closed. miui keeps the autostart flow below.
 Future<void> maybeShowBackgroundPrompt(BuildContext context) async {
   if (await isMiui()) {
-    await maybeShowMiuiPrompt(context);
+    if (context.mounted) await maybeShowMiuiPrompt(context);
     return;
   }
   final prefs = await SharedPreferences.getInstance();

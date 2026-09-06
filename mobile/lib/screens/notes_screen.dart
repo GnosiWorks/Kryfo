@@ -108,7 +108,7 @@ class _NotesScreenState extends State<NotesScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: const BackButton(color: Color(0xFFAAAAAA)),
+        leading: BackButton(color: HaloColors.text2),
         titleSpacing: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
