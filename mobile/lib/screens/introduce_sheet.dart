@@ -8,7 +8,9 @@ import '../intro_budget.dart';
 import '../main.dart' show appState;
 import '../screens/home_screen.dart' show ContactPreview;
 import '../theme.dart';
+import '../vouch_text.dart';
 import '../widgets/kryfo_avatar.dart';
+import '../widgets/notice_banner.dart';
 
 const _noteMax = 40;
 
@@ -223,6 +225,24 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
                   ),
                 ),
               ),
+            ),
+            // the one warning there is. no approval step behind it, on
+            // purpose: the introducer could forward an invite by hand today.
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: _picked == null
+                  ? const SizedBox(width: double.infinity, height: 0)
+                  : Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                      child: NoticeBanner(
+                        key: ValueKey(_picked),
+                        glyph: NoticeGlyph.link,
+                        text: shareWarning(widget.peerName, _nameOf(_picked!)),
+                        color: HaloColors.amber,
+                      ),
+                    ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 6),

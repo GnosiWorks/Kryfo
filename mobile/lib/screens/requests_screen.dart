@@ -7,6 +7,7 @@ import '../main.dart' show db, appState;
 import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/intro_chip.dart';
+import '../vouch_text.dart';
 import 'chat_screen.dart';
 import '../widgets/motion.dart' show haloRoute;
 
@@ -16,14 +17,14 @@ class RequestsScreen extends StatefulWidget {
   State<RequestsScreen> createState() => _RequestsScreenState();
 }
 
-// who vouched for a request row, as we know them: our nickname for them,
-// their face, and whether we verified their safety number.
+// who vouched for a request row, as we know them. the line is phrased
+// already; the face and check belong to the first voucher.
 class _Introducer {
-  final String id;
-  final String name;
+  final String label;
+  final String seed;
   final int? avatar;
   final bool verified;
-  const _Introducer(this.id, this.name, this.avatar, this.verified);
+  const _Introducer(this.label, this.seed, this.avatar, this.verified);
 }
 
 class _RequestsScreenState extends State<RequestsScreen> {
@@ -52,19 +53,20 @@ class _RequestsScreenState extends State<RequestsScreen> {
       } else {
         previews[id] = 'wants to connect';
       }
-      // an introduced row names the friend who vouched. their row can be
-      // gone (deleted since) - then the request stays, just without the chip.
-      final by = r['vouched_by'] as String?;
-      if (by != null) {
-        final c = await db.getContact(by);
-        if (c != null && (c['accepted'] as int? ?? 0) == 1) {
-          introducers[id] = _Introducer(
-            by,
-            (c['nickname'] as String?) ?? by,
-            (c['avatar'] as num?)?.toInt(),
-            (c['verified'] as int? ?? 0) == 1,
-          );
-        }
+      // an introduced row names the friends who vouched. only vouchers we
+      // still hold as contacts come back, so a deleted one just drops off.
+      final vs = await db.vouchesFor(id);
+      if (vs.isNotEmpty) {
+        final first = vs.first;
+        introducers[id] = _Introducer(
+          introducedByLine([
+            for (final v in vs)
+              (v['nickname'] as String?) ?? v['voucher_id'] as String,
+          ]),
+          first['voucher_id'] as String,
+          (first['avatar'] as num?)?.toInt(),
+          vs.length == 1 && (first['verified'] as int? ?? 0) == 1,
+        );
       }
     }
     if (!mounted) return;
@@ -262,8 +264,8 @@ class _RequestCardState extends State<_RequestCard>
                         if (widget.introducer != null) ...[
                           const SizedBox(height: 6),
                           IntroducedBy(
-                            name: widget.introducer!.name,
-                            seed: widget.introducer!.id,
+                            label: widget.introducer!.label,
+                            seed: widget.introducer!.seed,
                             avatar: widget.introducer!.avatar,
                             verified: widget.introducer!.verified,
                             delay: Duration(
