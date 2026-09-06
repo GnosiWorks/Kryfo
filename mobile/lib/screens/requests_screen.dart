@@ -140,7 +140,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
           : ListView.separated(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               itemCount: _pending.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (context, i) {
                 final row = _pending[i];
                 final id = row['halo_id'] as String;
@@ -374,7 +374,7 @@ class _BreathingInboxState extends State<_BreathingInbox>
         children: [
           AnimatedBuilder(
             animation: _pulse,
-            builder: (_, __) {
+            builder: (_, _) {
               final t = Curves.easeOut.transform(_pulse.value);
               return Container(
                 width: 46 + 20 * t,

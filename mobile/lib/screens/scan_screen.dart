@@ -266,7 +266,7 @@ class _Viewfinder extends StatelessWidget {
           if (!success)
             AnimatedBuilder(
               animation: scanAnim,
-              builder: (_, __) {
+              builder: (_, _) {
                 final y = scanAnim.value * (size - 4);
                 return Positioned(
                   top: y,

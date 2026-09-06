@@ -251,6 +251,8 @@ List<int> _seedBytes(String s) {
     out.add((h >> 16) & 0xFF);
     out.add((h >> 24) & 0xFF);
   }
-  while (out.length < 16) out.add(0);
+  while (out.length < 16) {
+    out.add(0);
+  }
   return out;
 }

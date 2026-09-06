@@ -37,7 +37,7 @@ class _OnionLoaderState extends State<OnionLoader>
     animation: _c,
     // quantized to ~20fps. full-rate repaints of the sketch pinned a core
     // on weak phones for the whole tor warmup and android called us dead.
-    builder: (_, __) => RepaintBoundary(
+    builder: (_, _) => RepaintBoundary(
       child: CustomPaint(
         size: Size(widget.size, widget.size * 162 / 120),
         painter: _OnionPainter(

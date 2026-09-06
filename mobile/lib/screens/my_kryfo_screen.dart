@@ -302,7 +302,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
                   child: Text(
                     appState.myHandle == null
                         ? 'claim a public handle'
-                        : '@' + (appState.myHandle ?? ''),
+                        : '@${appState.myHandle ?? ''}',
                     style: HaloType.mono(size: 12, color: HaloColors.text2),
                   ),
                 ),

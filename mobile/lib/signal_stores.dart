@@ -100,7 +100,9 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
 
   bool _eq(List<int> a, List<int> b) {
     if (a.length != b.length) return false;
-    for (var i = 0; i < a.length; i++) if (a[i] != b[i]) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
     return true;
   }
 }
@@ -171,6 +173,7 @@ class HaloSessionStore implements SessionStore {
     return rows.map((r) => r['address'] as String).toSet().toList();
   }
 
+  @override
   Future<List<int>> getSubDeviceSessions(String name) async {
     final rows = await _db.query(
       'sessions',

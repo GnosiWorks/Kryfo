@@ -4,7 +4,6 @@
 // opens dev for technical use.
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../main.dart' show appState;
 import '../lock_state.dart';
 import '../intro_prefs.dart';
@@ -191,6 +190,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: HaloColors.surface,
@@ -208,7 +208,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           ListenableBuilder(
             listenable: Listenable.merge([appState, lockState]),
-            builder: (_, __) {
+            builder: (_, _) {
               final tor = appState.torStatus == TorStatus.reachable;
               return Container(
                 margin: const EdgeInsets.only(bottom: 24),
@@ -331,7 +331,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           AnimatedBuilder(
             animation: lockState,
-            builder: (_, __) => Column(
+            builder: (_, _) => Column(
               children: [
                 _Row(
                   icon: Icons.lock_outline,

@@ -36,7 +36,7 @@ class ArchivedScreen extends StatelessWidget {
       body: SafeArea(
         child: AnimatedBuilder(
           animation: appState,
-          builder: (_, __) {
+          builder: (_, _) {
             final archived = appState.contacts
                 .where((c) => c.archived)
                 .toList();

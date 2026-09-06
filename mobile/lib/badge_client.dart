@@ -108,7 +108,7 @@ Future<BadgeReceipt> fetchReceipt(String invoiceId) async {
 }
 
 /// ed25519 check against the pinned public key. the payload format is frozen
-/// ("kryfo-badge|v1|<id>|<tier>") so old receipts keep verifying after updates.
+/// (`kryfo-badge|v1|<id>|<tier>`) so old receipts keep verifying after updates.
 Future<bool> verifyReceipt(String payload, String sigB64) async {
   try {
     final pub = ed.PublicKey(base64Url.decode(_pad(kBadgePubKeyB64)));

@@ -16,8 +16,8 @@ class ShieldHit {
   final String line; // the plain sentence shown to the person
   const ShieldHit(this.code, this.line);
   @override
-  bool operator ==(Object o) =>
-      o is ShieldHit && o.code == code && o.line == line;
+  bool operator ==(Object other) =>
+      other is ShieldHit && other.code == code && other.line == line;
   @override
   int get hashCode => Object.hash(code, line);
 }
@@ -32,11 +32,12 @@ class ShieldResult {
   String? get headline {
     if (!flagged) return null;
     for (final h in hits) {
-      if (h.code == 'name_match')
+      if (h.code == 'name_match') {
         return h.line.replaceFirst(
           'name matches your contact',
           'this name matches',
         );
+      }
     }
     return 'looks like a scam';
   }
