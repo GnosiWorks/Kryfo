@@ -8,7 +8,9 @@ import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/intro_chip.dart';
 import '../vouch_text.dart';
+import '../widgets/notice_banner.dart';
 import 'chat_screen.dart';
+import 'shield_sheet.dart';
 import '../widgets/motion.dart' show haloRoute;
 
 class RequestsScreen extends StatefulWidget {
@@ -31,6 +33,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
   List<Map<String, Object?>> _pending = [];
   final Map<String, String> _previews = {};
   final Map<String, _Introducer> _introducers = {};
+  final Map<String, ShieldFlag> _flags = {};
   bool _loading = true;
 
   @override
@@ -43,8 +46,11 @@ class _RequestsScreenState extends State<RequestsScreen> {
     final rows = await db.pendingRequests();
     final previews = <String, String>{};
     final introducers = <String, _Introducer>{};
+    final flags = <String, ShieldFlag>{};
     for (final r in rows) {
       final id = r['halo_id'] as String;
+      final flag = ShieldFlag.fromRow(await db.shieldFor(id));
+      if (flag != null) flags[id] = flag;
       final msgs = await db.messagesFor(id);
       if (msgs.isNotEmpty) {
         final last = msgs.last;
@@ -78,6 +84,9 @@ class _RequestsScreenState extends State<RequestsScreen> {
       _introducers
         ..clear()
         ..addAll(introducers);
+      _flags
+        ..clear()
+        ..addAll(flags);
       _loading = false;
     });
   }
@@ -97,6 +106,17 @@ class _RequestsScreenState extends State<RequestsScreen> {
     // coming back: the request may have been accepted/declined/blocked in-chat,
     // so refresh the list + the home pin count.
     await appState.refreshContacts();
+    await _load();
+  }
+
+  Future<void> _shield(String id) async {
+    final flag = _flags[id];
+    if (flag == null) return;
+    final c = await showShieldSheet(context, id, flag);
+    if (c == null || !mounted) return;
+    if (c != ShieldChoice.ignore) {
+      showHaloToast(context, c == ShieldChoice.block ? 'blocked' : 'deleted');
+    }
     await _load();
   }
 
@@ -131,6 +151,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
                   avatar: (row['avatar'] as num?)?.toInt(),
                   preview: _previews[id] ?? '',
                   introducer: _introducers[id],
+                  flag: _flags[id],
+                  onShield: () => _shield(id),
                   onTap: () => _open(row),
                 );
               },
@@ -176,6 +198,8 @@ class _RequestCard extends StatefulWidget {
   final int? avatar;
   final String preview;
   final _Introducer? introducer;
+  final ShieldFlag? flag;
+  final VoidCallback? onShield;
   final VoidCallback onTap;
   const _RequestCard({
     super.key,
@@ -184,6 +208,8 @@ class _RequestCard extends StatefulWidget {
     this.avatar,
     required this.preview,
     this.introducer,
+    this.flag,
+    this.onShield,
     required this.onTap,
   });
   @override
@@ -271,6 +297,18 @@ class _RequestCardState extends State<_RequestCard>
                             delay: Duration(
                               milliseconds: 60 * widget.order + 180,
                             ),
+                          ),
+                        ],
+                        if (widget.flag != null) ...[
+                          const SizedBox(height: 7),
+                          NoticeBanner(
+                            glyph: NoticeGlyph.shield,
+                            text: widget.flag!.headline,
+                            color: HaloColors.rose,
+                            delay: Duration(
+                              milliseconds: 60 * widget.order + 220,
+                            ),
+                            onTap: widget.onShield,
                           ),
                         ],
                         const SizedBox(height: 4),

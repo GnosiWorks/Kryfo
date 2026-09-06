@@ -42,6 +42,8 @@ import 'screens/lock_screen.dart';
 import 'screens/lock_setup_screen.dart';
 import 'push_mode.dart';
 import 'intro_prefs.dart';
+import 'scam_prefs.dart';
+import 'scam_shield.dart';
 import 'supporter.dart';
 import 'ntfy_listener.dart';
 import 'message_envelope.dart';
@@ -710,7 +712,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 38,
+      version: 39,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -825,9 +827,15 @@ class HaloDb {
           )
         ''');
         await _vouchTable(db);
+        await _shieldTable(db);
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 39) {
+          // what the scam shield flagged on a stranger, and whether the
+          // person told it to drop the matter.
+          await _shieldTable(db);
+        }
         if (oldV < 38) {
           // one person can be vouched for by several people we know, and
           // that count is the whole point. the old single column stays put
@@ -1422,6 +1430,43 @@ class HaloDb {
       JOIN vouches v ON v.halo_id = c.halo_id
       WHERE c.accepted = 0 AND c.blocked = 0
     ''');
+  }
+
+  Future<void> setShield(
+    String haloId,
+    String headline,
+    List<String> lines,
+  ) async {
+    final db = await open();
+    await db.insert('shield', {
+      'halo_id': haloId,
+      'headline': headline,
+      'lines': jsonEncode(lines),
+      'dismissed': 0,
+      'at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  Future<Map<String, Object?>?> shieldFor(String haloId) async {
+    final db = await open();
+    final r = await db.query(
+      'shield',
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+      limit: 1,
+    );
+    return r.isEmpty ? null : r.first;
+  }
+
+  // ignore = for good. the row stays so the check never re-runs on them.
+  Future<void> dismissShield(String haloId) async {
+    final db = await open();
+    await db.update(
+      'shield',
+      {'dismissed': 1},
+      where: 'halo_id = ?',
+      whereArgs: [haloId],
+    );
   }
 
   Future<void> setContactAvatar(String haloId, int? av) async {
@@ -2594,6 +2639,18 @@ class HaloDb {
   }
 }
 
+Future<void> _shieldTable(Database db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS shield (
+      halo_id TEXT PRIMARY KEY,
+      headline TEXT NOT NULL,
+      lines TEXT NOT NULL,
+      dismissed INTEGER NOT NULL DEFAULT 0,
+      at INTEGER NOT NULL
+    )
+  ''');
+}
+
 Future<void> _vouchTable(Database db) async {
   await db.execute('''
     CREATE TABLE IF NOT EXISTS vouches (
@@ -3763,6 +3820,10 @@ class AppState extends ChangeNotifier {
     if (env.senderAvatar != null) {
       await db.setContactAvatar(senderHaloId, env.senderAvatar);
     }
+    // scam shield: a stranger's opener, once, on this phone only.
+    if (!isGroup && !burnOk) {
+      unawaited(_runShield(senderHaloId, env.message, env.senderAvatar));
+    }
     // a preview that raced ahead of this message was stashed - patch it on.
     if (uid != null) {
       final pending = _pendingPreviews.remove(uid);
@@ -3837,6 +3898,40 @@ class AppState extends ChangeNotifier {
   // apply a group control message. sender is the kryfo id that sent the
   // control; env.groupId is the target group; env.groupControl carries the
   // action and payload.
+  // runs the shield over a stranger's first message and their id, against
+  // the contacts we hold. only the first message counts - later ones from
+  // the same stranger are not re-read - and an existing row (flagged or
+  // dismissed) means the check already happened.
+  Future<void> _runShield(String senderHaloId, String text, int? face) async {
+    try {
+      if (!await loadScamShieldOn()) return;
+      if (await db.countMessagesFrom(senderHaloId) != 1) return;
+      if (await db.shieldFor(senderHaloId) != null) return;
+      final rows = await db.contacts();
+      final r = shieldCheck(
+        strangerId: senderHaloId,
+        strangerAvatar: face,
+        firstMessage: text,
+        contacts: [
+          for (final c in rows)
+            ShieldContact(
+              c['halo_id'] as String,
+              nickname: c['nickname'] as String?,
+              avatar: (c['avatar'] as num?)?.toInt(),
+            ),
+        ],
+      );
+      if (!r.flagged) return;
+      await db.setShield(senderHaloId, r.headline!, [
+        for (final h in r.hits) h.line,
+      ]);
+      debugPrint('shield: flagged ${r.hits.map((h) => h.code).join(',')}');
+      notifyListeners();
+    } catch (e) {
+      debugPrint('shield: $e');
+    }
+  }
+
   // a contact we accepted vouches for someone. the card becomes a request
   // row with a vouch on it, so their first message skips the stranger gate.
   // trust is ours alone: a card from anyone we have not accepted is dropped

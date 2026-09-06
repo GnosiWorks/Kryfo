@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../main.dart' show appState;
 import '../lock_state.dart';
 import '../intro_prefs.dart';
+import '../scam_prefs.dart';
 import '../miui_autostart.dart';
 import '../widgets/motion.dart' show TorStatus, haloRoute;
 import 'why_kryfo_screen.dart';
@@ -174,6 +175,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   bool _disguise = false;
   bool _acceptIntros = true;
+  bool _shieldOn = true;
 
   @override
   void initState() {
@@ -183,6 +185,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
     loadAcceptIntros().then((v) {
       if (mounted) setState(() => _acceptIntros = v);
+    });
+    loadScamShieldOn().then((v) {
+      if (mounted) setState(() => _shieldOn = v);
     });
   }
 
@@ -278,6 +283,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () async {
               setState(() => _acceptIntros = !_acceptIntros);
               await saveAcceptIntros(_acceptIntros);
+            },
+          ),
+          _Row(
+            icon: Icons.shield_outlined,
+            label: 'scam shield',
+            hint:
+                'checks messages from strangers on your phone. nothing is sent anywhere.',
+            value: _shieldOn ? 'on' : 'off',
+            onTap: () async {
+              setState(() => _shieldOn = !_shieldOn);
+              await saveScamShieldOn(_shieldOn);
             },
           ),
           const SizedBox(height: 24),
