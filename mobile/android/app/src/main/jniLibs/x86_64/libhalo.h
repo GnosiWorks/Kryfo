@@ -27,6 +27,12 @@ extern const char *_GoStringPtr(_GoString_ s);
 
 
 
+#line 11 "room.go"
+
+#include <stdlib.h>
+
+#line 1 "cgo-generated-wrapper"
+
 
 
 
@@ -236,6 +242,35 @@ extern char* HaloPairCodePublish(char* cCode, char* cPayload);
 // person may not have pressed share.
 //
 extern char* HaloPairCodeFetch(char* cCode);
+
+// a fresh x25519 keypair for one room. "priv:pub", both hex. dart keeps it
+// in the room row and hands the private half back on every call.
+//
+extern char* HaloRoomKeygen(void);
+
+// the room's first-contact address. goes in the invite so someone with the
+// link can reach the creator before the creator knows them.
+//
+extern char* HaloRoomFcPk(char* cPriv);
+extern char* HaloRoomSend(char* cPriv, char* cPeer, char* cMsg);
+extern char* HaloRoomSendFirstContact(char* cPriv, char* cPeer, char* cFcPk, char* cMsg);
+
+// listen for one member of a room. the inbox line is tagged
+// "room:<roompub>:<peerpub>" so dart knows both which room key received it
+// and who sent it.
+//
+extern char* HaloRoomSubscribe(char* cPriv, char* cPeer);
+
+// the room's own drop box, for people joining off the link. tagged
+// "roomfc:<roompub>". what lands here is unverified until the join frame
+// inside it names a key we can then subscribe to properly.
+//
+extern char* HaloRoomSubscribeFirstContact(char* cPriv);
+
+// stop every subscription a room key holds. called on expiry and on leave;
+// after this nothing addressed to the room can arrive.
+//
+extern char* HaloRoomUnsubscribe(char* cPub);
 
 // private, balanced or fast. anything else is treated as private, because a
 // typo must never quietly drop someone out of tor.

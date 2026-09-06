@@ -25,15 +25,38 @@ const (
 	nip17RcvInfo = "halo-nip17-rcv-v1:"
 )
 
+// one x25519 identity. the main one lives in the globals; a burner room
+// gets its own, so the room's addresses share nothing with the rest.
+type xid struct {
+	priv, pub [32]byte
+}
+
+func myXid() xid { return xid{priv: myXPriv, pub: myXPub} }
+
+func xidFromPrivHex(h string) (xid, error) {
+	b, err := hex.DecodeString(h)
+	if err != nil || len(b) != 32 {
+		return xid{}, fmt.Errorf("bad x25519 private key")
+	}
+	var id xid
+	copy(id.priv[:], b)
+	curve25519.ScalarBaseMult(&id.pub, &id.priv)
+	return id, nil
+}
+
 // derive the secp keypair for one role (send or receive) in one conversation.
 // both peers can compute both roles from their shared secret; nobody else
 // can compute either, and nothing links two conversations.
 func nip17DeriveRole(peer [32]byte, info, ownerXPubHex string) (sk, pk string, err error) {
-	shared, err := curve25519.X25519(myXPriv[:], peer[:])
+	return nip17DeriveRoleAs(myXid(), peer, info, ownerXPubHex)
+}
+
+func nip17DeriveRoleAs(me xid, peer [32]byte, info, ownerXPubHex string) (sk, pk string, err error) {
+	shared, err := curve25519.X25519(me.priv[:], peer[:])
 	if err != nil {
 		return "", "", err
 	}
-	cid := nostrConversationID(myXPub, peer)
+	cid := nostrConversationID(me.pub, peer)
 	for ctr := 0; ctr < 4; ctr++ {
 		seed := nostrHkdf(shared, cid, []byte(fmt.Sprintf("%s%s:%d", info, ownerXPubHex, ctr)), 32)
 		sk = hex.EncodeToString(seed)
@@ -46,18 +69,26 @@ func nip17DeriveRole(peer [32]byte, info, ownerXPubHex string) (sk, pk string, e
 
 // my receive address for this peer. the subscription filters on its pubkey.
 func nip17RcvAddress(peer [32]byte) (sk, pk string, err error) {
-	return nip17DeriveRole(peer, nip17RcvInfo, hex.EncodeToString(myXPub[:]))
+	return nip17RcvAddressAs(myXid(), peer)
+}
+
+func nip17RcvAddressAs(me xid, peer [32]byte) (sk, pk string, err error) {
+	return nip17DeriveRoleAs(me, peer, nip17RcvInfo, hex.EncodeToString(me.pub[:]))
 }
 
 // wrap msg for the peer: rumor -> seal (signed with our per-convo sender
 // key) -> gift wrap (fresh throwaway key + jittered timestamp, done inside
 // nip59). returns the wrap ready to publish.
 func nip17Wrap(peer [32]byte, msg string) (nostr2.Event, error) {
-	sndSk, sndPk, err := nip17DeriveRole(peer, nip17SndInfo, hex.EncodeToString(myXPub[:]))
+	return nip17WrapAs(myXid(), peer, msg)
+}
+
+func nip17WrapAs(me xid, peer [32]byte, msg string) (nostr2.Event, error) {
+	sndSk, sndPk, err := nip17DeriveRoleAs(me, peer, nip17SndInfo, hex.EncodeToString(me.pub[:]))
 	if err != nil {
 		return nostr2.Event{}, err
 	}
-	_, rcvPk, err := nip17DeriveRole(peer, nip17RcvInfo, hex.EncodeToString(peer[:]))
+	_, rcvPk, err := nip17DeriveRoleAs(me, peer, nip17RcvInfo, hex.EncodeToString(peer[:]))
 	if err != nil {
 		return nostr2.Event{}, err
 	}
@@ -84,7 +115,11 @@ func nip17Wrap(peer [32]byte, msg string) (nostr2.Event, error) {
 // unwrap a gift wrap from this peer. anything not sealed by the peer's
 // derived sender key is dropped.
 func nip17Unwrap(peer [32]byte, gw nostr2.Event) (string, error) {
-	rcvSk, _, err := nip17RcvAddress(peer)
+	return nip17UnwrapAs(myXid(), peer, gw)
+}
+
+func nip17UnwrapAs(me xid, peer [32]byte, gw nostr2.Event) (string, error) {
+	rcvSk, _, err := nip17RcvAddressAs(me, peer)
 	if err != nil {
 		return "", err
 	}
@@ -98,7 +133,7 @@ func nip17Unwrap(peer [32]byte, gw nostr2.Event) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	_, wantSnd, err := nip17DeriveRole(peer, nip17SndInfo, hex.EncodeToString(peer[:]))
+	_, wantSnd, err := nip17DeriveRoleAs(me, peer, nip17SndInfo, hex.EncodeToString(peer[:]))
 	if err != nil {
 		return "", err
 	}
