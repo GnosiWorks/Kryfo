@@ -2156,6 +2156,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                   )
                 : _Header(
                     name: _groupName,
+                    groupId: widget.groupId,
                     memberCount: _memberCount,
                     expiresAt: _roomExpiresAt,
                     onBack: () => Navigator.of(context).pop(),
@@ -2455,6 +2456,7 @@ class _GroupPinnedBar extends StatelessWidget {
 
 class _Header extends StatelessWidget {
   final String name;
+  final String groupId;
   final int memberCount;
   final int? expiresAt; // a room: the subtitle is the clock, not the count
   final VoidCallback onBack;
@@ -2464,6 +2466,7 @@ class _Header extends StatelessWidget {
   final VoidCallback? onPinned;
   const _Header({
     required this.name,
+    required this.groupId,
     required this.memberCount,
     this.expiresAt,
     required this.onBack,
@@ -2490,26 +2493,29 @@ class _Header extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                 child: Row(
                   children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: HaloColors.amberSoft,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: HaloColors.amber.withValues(alpha: 0.35),
-                          width: 0.6,
+                    Hero(
+                      tag: 'group-$groupId',
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: HaloColors.amberSoft,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: HaloColors.amber.withValues(alpha: 0.35),
+                            width: 0.6,
+                          ),
                         ),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        name.isEmpty
-                            ? '·'
-                            : name.characters.first.toUpperCase(),
-                        style: HaloType.serif(
-                          size: 18,
-                          italic: true,
-                          color: HaloColors.amber,
+                        alignment: Alignment.center,
+                        child: Text(
+                          name.isEmpty
+                              ? '·'
+                              : name.characters.first.toUpperCase(),
+                          style: HaloType.serif(
+                            size: 18,
+                            italic: true,
+                            color: HaloColors.amber,
+                          ),
                         ),
                       ),
                     ),
