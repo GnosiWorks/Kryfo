@@ -4771,6 +4771,13 @@ class AppState extends ChangeNotifier {
       // would have created the session. deadlock. (the store
       // does eventually hold the right x25519 key - kryfo derives the signal
       // identity from it - but not until that first message exists.)
+      // rooms first, on their own: a hang anywhere in the contact loop
+      // below must not leave a live room deaf after a restart.
+      try {
+        await _subscribeRooms();
+      } catch (e) {
+        debugPrint('rooms: boot subscribe failed: $e');
+      }
       // introduced people we have not accepted yet listen too, or the
       // message that would turn them into a request never arrives.
       final rows = [...await db.contacts(), ...await db.vouchedPending()];
@@ -4795,7 +4802,6 @@ class AppState extends ChangeNotifier {
         fresh[xPub] = haloId;
       }
       await _saveXPubCache(fresh);
-      await _subscribeRooms();
     });
     // open ntfy websocket when push mode is ntfy. on incoming
     // ping, the existing 1s drain loop catches up - we just log for now.
@@ -5844,6 +5850,7 @@ class AppState extends ChangeNotifier {
       await _subscribeRoomMembers(gid);
     }
     if (rooms.isNotEmpty) _armRoomTimer();
+    debugPrint('rooms: listening to ${rooms.length}');
   }
 
   Future<void> _sendControlToGroup(String groupId, GroupControl gc) async {
