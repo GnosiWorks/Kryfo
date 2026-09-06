@@ -12,9 +12,9 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// halo fast relay — forwards opaque, end-to-end-encrypted blobs between two
+// halo fast relay - forwards opaque, end-to-end-encrypted blobs between two
 // connected clients. it never sees plaintext: payload is libsignal ciphertext.
-// it DOES see metadata — which routing keys talk to each other, timing, ip.
+// it DOES see metadata - which routing keys talk to each other, timing, ip.
 // that is the fast-mode tradeoff. tor mode never touches this server.
 //
 // addressing: a client registers a routing key (its x25519 pubkey hex, the
@@ -28,7 +28,7 @@ import (
 
 var (
 	addr     = flag.String("addr", ":8443", "listen address")
-	certFile = flag.String("cert", "", "TLS cert file (plain ws if empty — dev only)")
+	certFile = flag.String("cert", "", "TLS cert file (plain ws if empty - dev only)")
 	keyFile  = flag.String("key", "", "TLS key file")
 )
 
@@ -231,6 +231,6 @@ func main() {
 		log.Printf("halo relay (wss) on %s", *addr)
 		log.Fatal(srv.ListenAndServeTLS(*certFile, *keyFile))
 	}
-	log.Printf("halo relay (ws, NO TLS — dev only) on %s", *addr)
+	log.Printf("halo relay (ws, NO TLS - dev only) on %s", *addr)
 	log.Fatal(srv.ListenAndServe())
 }
