@@ -616,14 +616,13 @@ class _Row extends StatefulWidget {
   // about what the switch actually does.
   final String? hint;
   final VoidCallback? onTap;
-  final bool accent;
+  final bool accent = false;
   final IconData? icon;
   const _Row({
     required this.label,
     this.value,
     this.hint,
     this.onTap,
-    this.accent = false,
     this.icon,
   });
 

@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import 'package:flutter/foundation.dart';
 // message_envelope.dart - wrap outgoing plain text with optional metadata
 // (ntfy endpoint + sender identity for back-pair) so the peer learns our
 // push endpoint and identity over the existing encrypted channel. wrapped

@@ -28,7 +28,6 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   bool _isAdmin = false;
   // room fields, null for a plain group
   String? _roomPub;
-  int? _roomExpiresAt;
   bool get _isRoom => _roomPub != null;
   List<String> _members = [];
   bool _loading = true;
@@ -47,7 +46,6 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       _name = (g?['name'] as String?) ?? 'group';
       _isAdmin = ((g?['is_admin'] as int?) ?? 0) == 1;
       _roomPub = g?['room_pub'] as String?;
-      _roomExpiresAt = g?['expires_at'] as int?;
       _members = members;
       _loading = false;
     });

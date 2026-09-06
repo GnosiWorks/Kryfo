@@ -160,7 +160,7 @@ class _ModeCard extends StatelessWidget {
   final String name;
   final String? accent;
   final bool active;
-  final bool soon;
+  final bool soon = false;
   final String desc;
   final String speed;
   final String hops;
@@ -174,7 +174,6 @@ class _ModeCard extends StatelessWidget {
     required this.name,
     this.accent,
     required this.active,
-    this.soon = false,
     required this.desc,
     required this.speed,
     required this.hops,

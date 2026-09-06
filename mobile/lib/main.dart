@@ -105,9 +105,7 @@ class HaloEngine {
   late final VoidFnDart _shutdown;
   late final IntArgFnDart _setDebug;
   late final CStrFnDart _getStatus;
-  late final TwoArgFnDart _send;
   late final OneArgFnDart _nostrInit;
-  late final TwoArgFnDart _nostrSend;
   late final OneArgFnDart _nostrSubscribe;
   late final CStrFnDart _nostrPoll;
   late final CounterFnDart _fcPk;
@@ -115,12 +113,10 @@ class HaloEngine {
   late final TwoArgFnDart _setBridges;
   late final CStrFnDart _bridgeState;
   late final CStrFnDart _restartTor;
-  late final CStrFnDart _moatFetch;
   late final OneArgFnDart _setMode;
   late final OneArgFnDart _handleCheck;
   late final ThreeArgFnDart _handleClaim;
   late final OneArgFnDart _handleRelease;
-  late final TwoArgFnDart _moatSolve;
   late final OneArgFnDart _ntfyPing;
   late final OneArgFnDart _torGet;
   late final OneArgFnDart _torGetJson;
@@ -158,9 +154,7 @@ class HaloEngine {
     _drainInbox = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloDrainInbox');
     _shutdown = _lib.lookupFunction<VoidFn, VoidFnDart>('HaloShutdown');
     _getStatus = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloGetStatus');
-    _send = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloSendTo');
     _nostrInit = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrInit');
-    _nostrSend = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloNostrSend');
     _nostrSubscribe = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
       'HaloNostrSubscribe',
     );
@@ -170,7 +164,6 @@ class HaloEngine {
     _setBridges = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloSetBridges');
     _bridgeState = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloBridgeState');
     _restartTor = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloRestartTor');
-    _moatFetch = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMoatFetch');
     _setMode = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
       'HaloSetTransportMode',
     );
@@ -183,7 +176,6 @@ class HaloEngine {
     _handleRelease = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
       'HaloHandleRelease',
     );
-    _moatSolve = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloMoatSolve');
     _ntfyPing = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNtfyPing');
     _torGet = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGet');
     _torGetJson = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetJSON');
