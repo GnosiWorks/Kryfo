@@ -427,9 +427,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         if (mounted) setState(() => _atmosphere = atmoFromName(a));
       });
       final g = await db.getGroup(widget.groupId);
-      // a room that ended while this was open is gone, so is the screen
+      // a room that ended while this was open is gone, so is the screen.
+      // only when it is the one in front: leaving from the info screen
+      // already pops both, and a third pop would close the app.
       if (g == null && _isRoom) {
-        if (mounted) Navigator.of(context).pop();
+        if (!mounted) return;
+        if (ModalRoute.of(context)?.isCurrent ?? false) {
+          Navigator.of(context).pop();
+        }
         return;
       }
       final members = await db.getGroupMembers(widget.groupId);
