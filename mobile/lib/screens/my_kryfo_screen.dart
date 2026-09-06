@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -44,6 +45,9 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
       appState.myOnion,
       appState.fcCounter,
     );
+    // debug builds only: a second device on the desk can import it off
+    // logcat instead of scanning a screen
+    if (kDebugMode) debugPrint('invite: $uri');
     if (mounted) setState(() => _uri = uri);
   }
 
