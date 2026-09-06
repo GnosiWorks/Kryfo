@@ -308,9 +308,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 ),
                               ),
                             ),
-                            const Icon(
+                            Icon(
                               Icons.copy_outlined,
-                              color: Color(0xFF6B625A),
+                              color: HaloColors.text3,
                               size: 14,
                             ),
                           ],
@@ -336,9 +336,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              const Icon(
+                              Icon(
                                 Icons.copy_outlined,
-                                color: Color(0xFF6B625A),
+                                color: HaloColors.text3,
                                 size: 14,
                               ),
                             ],
@@ -610,7 +610,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         Switch(
           value: value,
           onChanged: (v) => onChanged(v),
-          activeColor: const Color(0xFF1A0F04),
+          activeThumbColor: HaloColors.onAmber,
           activeTrackColor: HaloColors.amber,
           inactiveThumbColor: HaloColors.text3,
           inactiveTrackColor: HaloColors.surface3,

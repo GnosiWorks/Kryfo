@@ -144,9 +144,9 @@ class _LockScreenState extends State<LockScreen>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.fingerprint,
-                          color: Color(0xFFAAAAAA),
+                          color: HaloColors.text2,
                           size: 20,
                         ),
                         const SizedBox(width: 8),
@@ -188,9 +188,9 @@ class _Keypad extends StatelessWidget {
           height: 72,
           alignment: Alignment.center,
           child: isBack
-              ? const Icon(
+              ? Icon(
                   Icons.backspace_outlined,
-                  color: Color(0xFFAAAAAA),
+                  color: HaloColors.text2,
                   size: 22,
                 )
               : Text(

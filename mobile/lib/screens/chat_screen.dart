@@ -1060,7 +1060,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         uid,
       );
     }
-    if (!mounted) return;
+    if (!mounted || !bubbleContext.mounted) return;
     final box = bubbleContext.findRenderObject() as RenderBox?;
     if (box == null) return;
     final offset = box.localToGlobal(Offset.zero);
@@ -3858,6 +3858,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         ),
       ),
     );
+    if (!mounted) return;
     if (action == 'verify') {
       _openKeyVerification();
     } else if (action == 'vouchers') {
@@ -4649,13 +4650,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               return _buildRow(c, i, searchActive);
                             } catch (e) {
                               debugPrint('bubble failed: $e');
-                              return const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 6),
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 6,
+                                ),
                                 child: Text(
                                   "this message can't be shown",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFF8F8579),
+                                  style: HaloType.sans(
+                                    size: 12,
+                                    color: HaloColors.text3,
                                   ),
                                 ),
                               );
@@ -6168,7 +6171,11 @@ class _Bubble extends StatelessWidget {
                                   behavior: HitTestBehavior.opaque,
                                   onTap: () {
                                     if (msg.filePath != null) {
-                                      Share.shareXFiles([XFile(msg.filePath!)]);
+                                      SharePlus.instance.share(
+                                        ShareParams(
+                                          files: [XFile(msg.filePath!)],
+                                        ),
+                                      );
                                     }
                                   },
                                   child: Padding(
