@@ -14,12 +14,14 @@ import '../widgets/notice_banner.dart';
 
 const _noteMax = 40;
 
+// the sheet hands back what to say; the toast is shown from here, after
+// the sheet is gone, so the messenger never sees a half-popped scaffold.
 Future<void> showIntroduceSheet(
   BuildContext context, {
   required String peerId,
   required String peerName,
-}) {
-  return showModalBottomSheet<void>(
+}) async {
+  final toast = await showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
     backgroundColor: HaloColors.surface2,
@@ -28,6 +30,7 @@ Future<void> showIntroduceSheet(
     ),
     builder: (_) => _IntroduceSheet(peerId: peerId, peerName: peerName),
   );
+  if (toast != null && context.mounted) showHaloToast(context, toast);
 }
 
 class _IntroduceSheet extends StatefulWidget {
@@ -95,12 +98,9 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
     final b = widget.peerName;
     final c = _nameOf(other);
     if (r.toFirst && r.toSecond) {
-      Navigator.of(context).pop();
-      showHaloToast(context, 'introduced');
+      Navigator.of(context).pop('introduced');
     } else if (any) {
-      Navigator.of(context).pop();
-      showHaloToast(
-        context,
+      Navigator.of(context).pop(
         r.toFirst
             ? '$b got it, but $c could not be reached'
             : '$c got it, but $b could not be reached',
