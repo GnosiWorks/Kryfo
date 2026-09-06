@@ -4719,12 +4719,10 @@ class AppState extends ChangeNotifier {
         _bootstrapPct = pct;
         notifyListeners();
       }
-      // tor just became usable: flush anything the outbox is holding instead
-      // of waiting out the next 20s tick.
-      final nowReady =
-          st == TorStatus.bootstrapped ||
-          st == TorStatus.publishing ||
-          st == TorStatus.reachable;
+      // the route just became usable: flush anything the outbox is holding
+      // instead of waiting out the next 20s tick. torReady asks the mode
+      // first, so outside onion this never waits on a bootstrap.
+      final nowReady = torReady;
       if (nowReady && !_outboxWasReady) unawaited(drainOutbox());
       // tor died or never came up in this process. nothing else
       // restarts it, so we do. throttled - a start takes a while.
