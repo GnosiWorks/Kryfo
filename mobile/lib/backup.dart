@@ -12,6 +12,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'main.dart' show engine;
+import 'dlog.dart';
 
 const _kDbPassphrase = 'halo.db.passphrase';
 const _secureStorage = FlutterSecureStorage(
@@ -174,5 +175,5 @@ Future<void> restoreBackupBlob(String blob, String passphrase) async {
   final edPriv = payload['edPriv'] as String;
   final xPriv = payload['xPriv'] as String;
   engine.restoreIdentity(edPriv, xPriv);
-  debugPrint('backup: restored identity');
+  dlog('backup: restored identity');
 }

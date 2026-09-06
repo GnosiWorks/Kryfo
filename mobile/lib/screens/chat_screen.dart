@@ -51,6 +51,7 @@ import '../main.dart'
 import '../widgets/press_scale.dart';
 import '../widgets/motion.dart';
 import '../widgets/burn_fade.dart';
+import '../dlog.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
 // chunk indices already accepted by the peer, per media msg_uid. lets a
@@ -1583,7 +1584,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           ? Future(() => engine.sendTo(widget.peerOnion, cipher))
           : Future(() => engine.nostrSend(_peerXPub!, cipher)));
     } catch (e) {
-      debugPrint('unsend send failed: $e');
+      dlog('unsend send failed: $e');
     }
   }
 
@@ -1751,7 +1752,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           : Future(() => engine.nostrSend(_peerXPub!, cipher));
       await f;
     } catch (e) {
-      debugPrint('edit send failed: $e');
+      dlog('edit send failed: $e');
     }
   }
 
@@ -1796,7 +1797,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           : Future(() => engine.nostrSend(_peerXPub!, cipher));
       await f;
     } catch (e) {
-      debugPrint('reaction send failed: $e');
+      dlog('reaction send failed: $e');
     }
   }
 
@@ -2143,7 +2144,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (!_backPaired && widget.peerOnion.isNotEmpty) {
         tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
         if (tor == 'ok') return 'ok';
-        debugPrint('chat send: tor direct failed ($tor), trying nostr');
+        dlog('chat send: tor direct failed ($tor), trying nostr');
       }
       // peer xpub may be null on a fresh back-pair / reconnect (it's loaded
       // once at open). re-fetch from the session before giving up, so the relay
@@ -2160,7 +2161,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         if (!_backPaired && fcPk != null && fcPk.isNotEmpty) {
           final fr = await engine.sendFirstContact(xpub, fcPk, cipher);
           if (fr == 'ok') return 'ok';
-          debugPrint('chat send: first-contact failed ($fr)');
+          dlog('chat send: first-contact failed ($fr)');
         }
         return await Future(() => engine.nostrSend(xpub!, cipher));
       }
@@ -2727,7 +2728,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _chunkDoneAt[msgUid] = now;
     final done = _chunkDone.putIfAbsent(msgUid, () => <int>{});
     if (done.isNotEmpty && total > 1) {
-      debugPrint('MEDIA resume $msgUid: ${done.length}/$total already landed');
+      dlog('MEDIA resume $msgUid: ${done.length}/$total already landed');
       if (showProgress) mediaProgressUpdate(msgUid, done.length / total);
     }
     for (var i = 0; i < total; i++) {
@@ -2789,7 +2790,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         if (!sent) await Future.delayed(const Duration(milliseconds: 600));
       }
       if (!sent) {
-        debugPrint('MEDIA CHUNK $i/$total failed: $lastErr');
+        dlog('MEDIA CHUNK $i/$total failed: $lastErr');
         // keep what landed so tap-to-retry resumes from here.
         return lastErr;
       }
@@ -2961,7 +2962,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           if (!sent) await Future.delayed(const Duration(milliseconds: 600));
         }
         if (!sent) {
-          debugPrint('CHUNK $i/$total failed after retries: $lastErr');
+          dlog('CHUNK $i/$total failed after retries: $lastErr');
           return lastErr;
         }
       }
@@ -3061,7 +3062,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _enrichPreview(_Msg msg, String url, String msgUid) async {
     try {
       final html = await torGetOnIsolate(url);
-      debugPrint(
+      dlog(
         'PREVIEW-FETCH url=$url len=${html.length} head=${html.substring(0, html.length < 60 ? html.length : 60)}',
       );
       if (html.startsWith('error:') || html.isEmpty) {
@@ -3130,7 +3131,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         if (img != null && img.length > pvWhole) {
           pvOut.remove('img'); // card goes without img; chunks carry it if any
         }
-        debugPrint(
+        dlog(
           'PREVIEW-SEND resend uid=$msgUid keys=${pvOut.keys.toList()} chunkThumb=$chunkThumb',
         );
         Future<void> fire(String cipher) async {
@@ -3293,7 +3294,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (!_backPaired && widget.peerOnion.isNotEmpty) {
         tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
         if (tor == 'ok') return 'ok';
-        debugPrint('chat send: tor direct failed ($tor), trying nostr');
+        dlog('chat send: tor direct failed ($tor), trying nostr');
       }
       // peer xpub may be null on a fresh back-pair / reconnect (it's loaded
       // once at open). re-fetch from the session before giving up, so the relay
@@ -3310,7 +3311,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         if (!_backPaired && fcPk != null && fcPk.isNotEmpty) {
           final fr = await engine.sendFirstContact(xpub, fcPk, cipher);
           if (fr == 'ok') return 'ok';
-          debugPrint('chat send: first-contact failed ($fr)');
+          dlog('chat send: first-contact failed ($fr)');
         }
         return await Future(() => engine.nostrSend(xpub!, cipher));
       }
@@ -4651,7 +4652,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             try {
                               return _buildRow(c, i, searchActive);
                             } catch (e) {
-                              debugPrint('bubble failed: $e');
+                              dlog('bubble failed: $e');
                               return Padding(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 6,
@@ -6224,7 +6225,7 @@ class _Bubble extends StatelessWidget {
                                               gaplessPlayback: true,
                                               fit: BoxFit.cover,
                                               errorBuilder: (_, e, _) {
-                                                debugPrint(
+                                                dlog(
                                                   'image failed: '
                                                   '${msg.mediaPath} / $e',
                                                 );
@@ -8318,7 +8319,7 @@ class LinkPreviewCard extends StatelessWidget {
                   // while scrolling (samsung).
                   cacheWidth: 520,
                   errorBuilder: (_, e, _) {
-                    debugPrint('gallery image failed: $e');
+                    dlog('gallery image failed: $e');
                     return Container(
                       color: Colors.black26,
                       alignment: Alignment.center,

@@ -10,6 +10,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'push_mode.dart';
+import 'dlog.dart';
 
 const _envelopePrefix = 'halo/1:';
 const _peerEndpointPrefix = 'ntfy_peer_endpoint_';
@@ -431,7 +432,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
           .toList(),
     );
   } catch (e) {
-    debugPrint(
+    dlog(
       'UNWRAP-FAIL $e raw=${wrapped.substring(0, wrapped.length < 80 ? wrapped.length : 80)}',
     );
     return UnwrappedMessage(wrapped);

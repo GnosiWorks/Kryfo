@@ -11,6 +11,7 @@ import 'package:share_plus/share_plus.dart';
 import '../main.dart' show appState, buildHaloUriV3;
 import '../widgets/motion.dart' show haloRoute;
 import '../theme.dart';
+import '../dlog.dart';
 
 class MyKryfoScreen extends StatefulWidget {
   const MyKryfoScreen({super.key});
@@ -47,7 +48,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
     );
     // debug builds only: a second device on the desk can import it off
     // logcat instead of scanning a screen
-    if (kDebugMode) debugPrint('invite: $uri');
+    dlog('invite: $uri');
     if (mounted) setState(() => _uri = uri);
   }
 

@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'signal_stores.dart';
+import 'dlog.dart';
 
 class SignalSession {
   late HaloIdentityKeyStore identityStore;
@@ -59,7 +60,7 @@ class SignalSession {
         spk.getKeyPair().publicKey.serialize(),
         spk.signature,
       );
-      debugPrint('signal: existing spk self-verify = $ok');
+      dlog('signal: existing spk self-verify = $ok');
       if (!ok) {
         await signedPreKeyStore.removeSignedPreKey(spk.id);
         spk = null;
@@ -77,9 +78,7 @@ class SignalSession {
         fresh.getKeyPair().publicKey.serialize(),
         fresh.signature,
       );
-      debugPrint(
-        'signal: generated signed prekey id=${fresh.id} self-verify = $ok',
-      );
+      dlog('signal: generated signed prekey id=${fresh.id} self-verify = $ok');
     }
 
     // keep prekeys 0-9 topped up. check which ids are actually present and
@@ -97,11 +96,11 @@ class SignalSession {
         final k = PreKeyRecord.fromBuffer(blob);
         await preKeyStore.storePreKey(k.id, k);
       }
-      debugPrint('signal: filled prekey ids=$missing');
+      dlog('signal: filled prekey ids=$missing');
     }
 
     _ready = true;
-    debugPrint('signal: bootstrapped (regId=$registrationId)');
+    dlog('signal: bootstrapped (regId=$registrationId)');
   }
 
   Future<int> _loadOrGenRegId(Database d) async {
@@ -126,7 +125,7 @@ class SignalSession {
       final pub = raw.length == 33 ? raw.sublist(1) : raw;
       return pub.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
     } catch (e) {
-      debugPrint('peerXPubHex error: \$e');
+      dlog('peerXPubHex error: \$e');
       return null;
     }
   }
