@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'main.dart' show engine;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dlog.dart';
 
 // everything still running checks this before touching the database. the
 // timers outlive the widget tree and cannot all be cancelled from here.
@@ -58,11 +59,11 @@ Future<void> wipeHalo() async {
       }
     }
 
-    debugPrint('wipe: complete');
+    dlog('wipe: complete');
   } catch (e) {
     // never rethrow. a half-finished wipe that leaves the app running is
     // worse than one that exits - the keys are already gone by here.
-    debugPrint('wipe error: $e');
+    dlog('wipe error: $e');
   }
   // exit so the user reopens fresh
   exit(0);

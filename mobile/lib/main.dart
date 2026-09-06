@@ -54,6 +54,7 @@ import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
 import 'dart:isolate';
+import 'dlog.dart';
 
 typedef VoidFn = Void Function();
 typedef IntArgFn = Void Function(Int32);
@@ -992,7 +993,7 @@ class HaloDb {
               FROM contacts WHERE vouched_by IS NOT NULL
             ''');
           } catch (e) {
-            debugPrint('migrate v38: backfill skipped ($e)');
+            dlog('migrate v38: backfill skipped ($e)');
           }
         }
         if (oldV < 37) {
@@ -1027,7 +1028,7 @@ class HaloDb {
               'ALTER TABLE messages ADD COLUMN secure INTEGER NOT NULL DEFAULT 0',
             );
           } catch (e) {
-            debugPrint('migrate v35: column already present ($e)');
+            dlog('migrate v35: column already present ($e)');
           }
         }
         if (oldV < 34) {
@@ -1522,7 +1523,7 @@ class HaloDb {
       limit: 1,
     );
     if (v.isEmpty || (v.first['accepted'] as int? ?? 0) != 1) {
-      debugPrint('vouch: $voucherId is not an accepted contact, dropped');
+      dlog('vouch: $voucherId is not an accepted contact, dropped');
       return;
     }
     final n = (note ?? '').trim();
@@ -2786,7 +2787,7 @@ class HaloDb {
       where: 'at < ?',
       whereArgs: [cutoff],
     );
-    if (n > 0) debugPrint('swept $n stale media chunks');
+    if (n > 0) dlog('swept $n stale media chunks');
   }
 
   Future<bool> isDelivered(String msgUid) async {
@@ -3067,9 +3068,7 @@ Future<String?> signalDecrypt(
         try {
           plain = await cipher.decryptFromSignal(pkm.getWhisperMessage());
         } catch (e) {
-          debugPrint(
-            'signalDecrypt: session path failed ($e), prekey fallback',
-          );
+          dlog('signalDecrypt: session path failed ($e), prekey fallback');
           plain = await cipher.decrypt(pkm);
         }
       } else {
@@ -3078,7 +3077,7 @@ Future<String?> signalDecrypt(
             !pkId.isPresent ||
             await signalSession.preKeyStore.containsPreKey(pkId.value);
         if (!havePk) {
-          debugPrint('signalDecrypt: prekey gone, no session for $peerId');
+          dlog('signalDecrypt: prekey gone, no session for $peerId');
           return null;
         }
         plain = await cipher.decrypt(pkm);
@@ -3092,7 +3091,7 @@ Future<String?> signalDecrypt(
     _zeroBytes(plain); // cleartext decoded out, wipe the raw buffer
     return text;
   } on DuplicateMessageException catch (_) {
-    debugPrint('signalDecrypt: duplicate from $peerId, dropped');
+    dlog('signalDecrypt: duplicate from $peerId, dropped');
     // store-and-forward re-delivers messages - a duplicate is expected and
     // benign. the original already decrypted, so drop this one quietly.
     return null;
@@ -3117,7 +3116,7 @@ Future<String?> signalDecrypt(
     }
     return null;
   } catch (e) {
-    debugPrint('signalDecrypt: $e');
+    dlog('signalDecrypt: $e');
     return null;
   }
 }
@@ -3139,7 +3138,7 @@ Future<String> handleHaloUri(String raw) async {
     await db.upsertContact(parsed['id']!, parsed['onion']!, '');
     await db.setPeerBundle(parsed['id']!, parsed['bundle']!);
     final fc = parsed['fc'];
-    debugPrint(
+    dlog(
       fc == null || fc.isEmpty
           ? 'pair: v${parsed['v']} invite, no first-contact addr'
           : 'pair: v${parsed['v']} invite carries first-contact addr',
@@ -3181,7 +3180,7 @@ Future<void> shredFile(String path) async {
     }
     await f.delete();
   } catch (e) {
-    debugPrint('shred: $e');
+    dlog('shred: $e');
   }
 }
 
@@ -3467,12 +3466,12 @@ class AppState extends ChangeNotifier {
       }
       final ok = await _sendOneEnvelope(peer, wrapped);
       if (ok) {
-        debugPrint('OUTBOX: redelivered $uid');
+        dlog('OUTBOX: redelivered $uid');
         await db.markSent(uid);
         notifyListeners();
       }
     } catch (e) {
-      debugPrint('OUTBOX: $uid still stuck ($e)');
+      dlog('OUTBOX: $uid still stuck ($e)');
     }
   }
 
@@ -3592,7 +3591,7 @@ class AppState extends ChangeNotifier {
     for (final c in contacts) {
       await subscribePeer(c.haloId);
     }
-    debugPrint('mode: $m, relays rebuilt');
+    dlog('mode: $m, relays rebuilt');
   }
 
   String _displayName = '';
@@ -3686,7 +3685,7 @@ class AppState extends ChangeNotifier {
     _bridgeHintOff = (await st.read(key: 'bridge_hint_off')) == '1';
     if (_bridgesOn && _bridgeLines.isNotEmpty) {
       final r = engine.setBridges(_bridgeLines, true);
-      debugPrint('bridges: $r');
+      dlog('bridges: $r');
     }
     notifyListeners();
   }
@@ -3829,10 +3828,7 @@ class AppState extends ChangeNotifier {
   Future<void> applyPushMode(PushMode m) async {
     await savePushMode(m);
     if (m == PushMode.ntfy) {
-      _ntfyListener ??= NtfyListener(
-        onPing: () {},
-        log: (msg) => debugPrint(msg),
-      );
+      _ntfyListener ??= NtfyListener(onPing: () {}, log: (msg) => dlog(msg));
       await _ntfyListener!.start();
     } else {
       await _ntfyListener?.stop();
@@ -3854,7 +3850,7 @@ class AppState extends ChangeNotifier {
     _bumpChatRev(senderHaloId);
     if (env.groupId != null) _bumpChatRev('group:${env.groupId}');
     await db.markBackPaired(senderHaloId);
-    debugPrint(
+    dlog(
       'INCOMING len=${env.message.length} hasPreview=${env.preview != null} uid=${env.msgUid}',
     );
     // delivery receipt: the peer stored a message we sent. flip its tick and
@@ -3917,7 +3913,7 @@ class AppState extends ChangeNotifier {
     if (isGroup && !await db.groupExists(env.groupId!)) {
       // unknown group - drop. prevents random senders from injecting rows
       // into groups we never joined.
-      debugPrint('dropping group msg for unknown group ${env.groupId}');
+      dlog('dropping group msg for unknown group ${env.groupId}');
       return;
     }
     // badge rides real chat rows only. present = set, absent = clear so
@@ -3963,7 +3959,7 @@ class AppState extends ChangeNotifier {
           fromBackPair &&
           (env.powNonce == null ||
               !verifyPow(env.message, env.powNonce!, powBits))) {
-        debugPrint(
+        dlog(
           'pow: dropping first-contact from $senderHaloId (nonce=${env.powNonce} bits=${env.powBitsUsed})',
         );
         return;
@@ -3972,7 +3968,7 @@ class AppState extends ChangeNotifier {
       // until we accept them. drop past the cap - no receipt.
       final have = vouched ? 0 : await db.countMessagesFrom(senderHaloId);
       if (have >= 2) {
-        debugPrint('stranger lock: dropping from $senderHaloId (cap hit)');
+        dlog('stranger lock: dropping from $senderHaloId (cap hit)');
         return;
       }
     }
@@ -4222,10 +4218,10 @@ class AppState extends ChangeNotifier {
       await db.setShield(senderHaloId, r.headline!, [
         for (final h in r.hits) h.line,
       ]);
-      debugPrint('shield: flagged ${r.hits.map((h) => h.code).join(',')}');
+      dlog('shield: flagged ${r.hits.map((h) => h.code).join(',')}');
       notifyListeners();
     } catch (e) {
-      debugPrint('shield: $e');
+      dlog('shield: $e');
     }
   }
 
@@ -4236,7 +4232,7 @@ class AppState extends ChangeNotifier {
   Future<void> _applyIntro(String senderHaloId, IntroFrame card) async {
     if (!await db.isAccepted(senderHaloId)) return;
     if (!await loadAcceptIntros()) {
-      debugPrint('intro: dropped, introductions are off');
+      dlog('intro: dropped, introductions are off');
       return;
     }
     final h = card.haloId;
@@ -4256,7 +4252,7 @@ class AppState extends ChangeNotifier {
     await subscribePeer(h);
     _healPending.add(h);
     unawaited(_sendBundleCtl(h, want: true));
-    debugPrint('intro: $senderHaloId introduced $h');
+    dlog('intro: $senderHaloId introduced $h');
     await refreshContacts();
   }
 
@@ -4353,10 +4349,7 @@ class AppState extends ChangeNotifier {
     await saveNtfyServer(url);
     if (_ntfyListener != null) {
       await _ntfyListener!.stop();
-      _ntfyListener = NtfyListener(
-        onPing: () {},
-        log: (msg) => debugPrint(msg),
-      );
+      _ntfyListener = NtfyListener(onPing: () {}, log: (msg) => dlog(msg));
       await _ntfyListener!.start();
     }
   }
@@ -4518,7 +4511,7 @@ class AppState extends ChangeNotifier {
     if (tries >= 3) {
       _decryptFails.remove(h);
       unawaited(db.markSeenLong(h));
-      debugPrint('$lane: buried undecryptable after $tries tries');
+      dlog('$lane: buried undecryptable after $tries tries');
     } else if (_decryptFails.length > 512) {
       _decryptFails.clear();
     }
@@ -4546,13 +4539,13 @@ class AppState extends ChangeNotifier {
       final e = env.senderEdPub;
       if (h == null || e == null) {
         await signalSession.sessionStore.deleteSession(tempAddr);
-        debugPrint('back-pair: envelope missing identity fields');
+        dlog('back-pair: envelope missing identity fields');
         return null;
       }
       final derived = engine.idFromEdPub(e);
       if (derived != h) {
         await signalSession.sessionStore.deleteSession(tempAddr);
-        debugPrint('back-pair: HaloID mismatch');
+        dlog('back-pair: HaloID mismatch');
         return null;
       }
       // move session from temp to real HaloID
@@ -4579,10 +4572,10 @@ class AppState extends ChangeNotifier {
       await refreshContacts();
       notifyListeners();
       await forgetPeerFc(h);
-      debugPrint('back-pair: created contact for $h');
+      dlog('back-pair: created contact for $h');
       return h;
     } catch (e) {
-      debugPrint('back-pair error: $e');
+      dlog('back-pair error: $e');
       try {
         await signalSession.sessionStore.deleteSession(tempAddr);
       } catch (_) {}
@@ -4609,7 +4602,7 @@ class AppState extends ChangeNotifier {
     try {
       await _boot();
     } catch (e, st) {
-      debugPrint('BOOT failed: $e\n$st');
+      dlog('BOOT failed: $e\n$st');
       bootError = e.toString();
       _booting = false;
       notifyListeners();
@@ -4645,12 +4638,12 @@ class AppState extends ChangeNotifier {
       await db.saveIdentity(myId, engine.myEdPrivkey(), engine.myXPrivkey());
     }
     myXPub = engine.myXPubkey();
-    debugPrint('BOOT identity +${bsw.elapsedMilliseconds}ms');
+    dlog('BOOT identity +${bsw.elapsedMilliseconds}ms');
     _appLinks = AppLinks();
     _appLinks.uriLinkStream.listen((uri) async {
       if (uri.scheme == 'kryfo') {
         final result = await handleHaloUri(uri.toString());
-        debugPrint('deep link: $result');
+        dlog('deep link: $result');
         await refreshContacts();
         notifyListeners();
       }
@@ -4663,19 +4656,19 @@ class AppState extends ChangeNotifier {
           .then((uri) async {
             if (uri == null || uri.scheme != 'kryfo') return;
             final result = await handleHaloUri(uri.toString());
-            debugPrint('deep link (cold start): $result');
+            dlog('deep link (cold start): $result');
             await refreshContacts();
             notifyListeners();
           })
           .catchError((Object e) {
-            debugPrint('deep link (cold start) failed: $e');
+            dlog('deep link (cold start) failed: $e');
           }),
     );
 
     await refreshContacts();
-    debugPrint('BOOT contacts +${bsw.elapsedMilliseconds}ms');
+    dlog('BOOT contacts +${bsw.elapsedMilliseconds}ms');
     await refreshGroups();
-    debugPrint('BOOT groups +${bsw.elapsedMilliseconds}ms');
+    dlog('BOOT groups +${bsw.elapsedMilliseconds}ms');
     // paint the home as soon as contacts/groups are ready; notifications,
     // nostr subscriptions and ntfy keep warming up in the background.
     onboardingComplete =
@@ -4686,13 +4679,13 @@ class AppState extends ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 300));
     }
     ready = true;
-    debugPrint('BOOT ready +${bsw.elapsedMilliseconds}ms');
+    dlog('BOOT ready +${bsw.elapsedMilliseconds}ms');
     notifyListeners();
     // signal prekey gen is cpu-heavy (~5s on a fresh identity) and nothing
     // above needs it - defer it so the home paints first. tor + nostr also
     // start after this, and both take longer to warm than the prekeys, so
     // the session is ready well before any message can arrive.
-    _bootSignal().then((_) => debugPrint('BOOT signal (deferred) done'));
+    _bootSignal().then((_) => dlog('BOOT signal (deferred) done'));
     // outbox drainer: anything the wire never confirmed gets re-sent for the
     // life of the app, whatever screen you're on and across restarts.
     startOutboxDrain();
@@ -4737,7 +4730,7 @@ class AppState extends ChangeNotifier {
       if (st == TorStatus.off &&
           DateTime.now().difference(torKickedAt).inSeconds > 45) {
         torKickedAt = DateTime.now();
-        debugPrint('TOR_WATCHDOG: tor off, restarting listener');
+        dlog('TOR_WATCHDOG: tor off, restarting listener');
         _startListenerOnIsolate(docsDir.path).then((addr) {
           if (addr.isNotEmpty && !addr.startsWith('error')) {
             myOnion = addr;
@@ -4763,7 +4756,7 @@ class AppState extends ChangeNotifier {
     // the modes screen means the rest of the app never sees it.
     if (_sendMode == 'normal') await setSendMode('private');
     engine.setTransportMode(_sendMode);
-    debugPrint('transport: booting in $_sendMode');
+    dlog('transport: booting in $_sendMode');
     _nostrInitOnIsolate(relaysFor(_sendMode));
     // has to follow the relay list: the runner snapshots it on start and
     // gives up if it is empty.
@@ -4796,7 +4789,7 @@ class AppState extends ChangeNotifier {
       try {
         await _subscribeRooms();
       } catch (e) {
-        debugPrint('rooms: boot subscribe failed: $e');
+        dlog('rooms: boot subscribe failed: $e');
       }
       // introduced people we have not accepted yet listen too, or the
       // message that would turn them into a request never arrives.
@@ -4827,7 +4820,7 @@ class AppState extends ChangeNotifier {
     // ping, the existing 1s drain loop catches up - we just log for now.
     final mode = await loadPushMode();
     if (mode == PushMode.ntfy) {
-      _ntfyListener = NtfyListener(onPing: () {}, log: (m) => debugPrint(m));
+      _ntfyListener = NtfyListener(onPing: () {}, log: (m) => dlog(m));
       _ntfyListener!.start();
     }
 
@@ -4922,7 +4915,7 @@ class AppState extends ChangeNotifier {
                 await refreshContacts();
                 notifyListeners();
                 handled = true;
-                debugPrint('drain: recovered deleted peer $addr into requests');
+                dlog('drain: recovered deleted peer $addr into requests');
                 break;
               }
             }
@@ -4930,7 +4923,7 @@ class AppState extends ChangeNotifier {
           if (!handled && _isPreKeyWire(cipher)) {
             final paired = await backPairFromCipher(cipher);
             handled = paired != null;
-            debugPrint(
+            dlog(
               'drain: back-pair ${paired != null ? "ok $paired" : "failed"}',
             );
           }
@@ -4974,7 +4967,7 @@ class AppState extends ChangeNotifier {
             try {
               await _handleRoomFrame(m.peer, m.cipher);
             } catch (e) {
-              debugPrint('room frame: $e');
+              dlog('room frame: $e');
             }
             await db.markSeen(h);
             notifyListeners();
@@ -5049,7 +5042,7 @@ class AppState extends ChangeNotifier {
                   accepted: 0,
                 );
                 await refreshContacts();
-                debugPrint('relay: recovered deleted peer $addr into requests');
+                dlog('relay: recovered deleted peer $addr into requests');
                 break;
               }
             }
@@ -5060,7 +5053,7 @@ class AppState extends ChangeNotifier {
             var landed = false;
             if (_isPreKeyWire(m.cipher)) {
               final paired = await backPairFromCipher(m.cipher);
-              debugPrint(
+              dlog(
                 'nostr: back-pair ${paired != null ? "ok $paired" : "failed"}',
               );
               if (paired != null) {
@@ -5118,7 +5111,7 @@ class AppState extends ChangeNotifier {
       );
       _zeroBytes(xpb); // priv bytes consumed by bootstrap, wipe from ram
     } catch (e, st) {
-      debugPrint('signal bootstrap failed: $e\n$st');
+      dlog('signal bootstrap failed: $e\n$st');
     }
   }
 
@@ -5312,7 +5305,7 @@ class AppState extends ChangeNotifier {
       );
       await _sendOneEnvelope(toHaloId, wrapped);
     } catch (e) {
-      debugPrint('receipt for $uid failed: $e');
+      dlog('receipt for $uid failed: $e');
     }
   }
 
@@ -5337,10 +5330,10 @@ class AppState extends ChangeNotifier {
       final addr = SignalProtocolAddress(memberId, 1);
       await signalSession.sessionStore.deleteSession(addr);
       await processPeerBundle(memberId, bundle);
-      debugPrint('healed session for $memberId');
+      dlog('healed session for $memberId');
       return true;
     } catch (e) {
-      debugPrint('heal session failed for $memberId: $e');
+      dlog('heal session failed for $memberId: $e');
       return false;
     }
   }
@@ -5367,9 +5360,9 @@ class AppState extends ChangeNotifier {
         'want': want,
       });
       final r = await Future(() => engine.nostrSend(xpub, payload));
-      debugPrint('bundle ctl (want=$want) to $memberId: $r');
+      dlog('bundle ctl (want=$want) to $memberId: $r');
     } catch (e) {
-      debugPrint('bundle ctl to $memberId failed: $e');
+      dlog('bundle ctl to $memberId failed: $e');
     }
   }
 
@@ -5389,7 +5382,7 @@ class AppState extends ChangeNotifier {
       final contact = await db.getContact(from);
       if (contact == null) return;
       if ((contact['xpub'] as String? ?? '') != peerXPub) {
-        debugPrint('bundle ctl: xpub mismatch for $from, dropped');
+        dlog('bundle ctl: xpub mismatch for $from, dropped');
         return;
       }
       final bj =
@@ -5398,18 +5391,18 @@ class AppState extends ChangeNotifier {
       final addr = SignalProtocolAddress(from, 1);
       final known = await signalSession.identityStore.getIdentity(addr);
       if (known != null && !_eqBytes(known.serialize(), claimed)) {
-        debugPrint('bundle ctl: identity mismatch for $from, dropped');
+        dlog('bundle ctl: identity mismatch for $from, dropped');
         return;
       }
       await db.setPeerBundle(from, bundle);
       if (want || _healPending.remove(from)) {
         await signalSession.sessionStore.deleteSession(addr);
         await processPeerBundle(from, bundle);
-        debugPrint('healed session for $from (bundle exchange)');
+        dlog('healed session for $from (bundle exchange)');
       }
       if (want) unawaited(_sendBundleCtl(from, want: false));
     } catch (e) {
-      debugPrint('bundle ctl handle failed: $e');
+      dlog('bundle ctl handle failed: $e');
     } finally {
       await db.markSeen(h);
     }
@@ -5425,7 +5418,7 @@ class AppState extends ChangeNotifier {
     try {
       final contact = await db.getContact(memberId);
       if (contact == null) {
-        debugPrint('send: no contact for $memberId');
+        dlog('send: no contact for $memberId');
         return false;
       }
       String cipher;
@@ -5442,7 +5435,7 @@ class AppState extends ChangeNotifier {
           _healPending.add(memberId);
           unawaited(_sendBundleCtl(memberId, want: true));
         }
-        debugPrint('send: $memberId unreachable (no session/bundle), skipping');
+        dlog('send: $memberId unreachable (no session/bundle), skipping');
         return false;
       }
       try {
@@ -5470,7 +5463,7 @@ class AppState extends ChangeNotifier {
       if (backPaired || onion.isEmpty) {
         final n = await Future(() => engine.nostrSend(xpub, cipher));
         if (n == 'ok') return true;
-        debugPrint('send: nostr failed ($n)');
+        dlog('send: nostr failed ($n)');
         return false;
       }
 
@@ -5483,7 +5476,7 @@ class AppState extends ChangeNotifier {
         if (r == 'ok') {
           if (!done.isCompleted) done.complete(true);
         } else {
-          debugPrint('send: $tag failed ($r)');
+          dlog('send: $tag failed ($r)');
           if (--pending == 0 && !done.isCompleted) done.complete(false);
         }
       }
@@ -5499,7 +5492,7 @@ class AppState extends ChangeNotifier {
             .catchError((_) => settle('nostr', 'err')),
       );
       final fc = _peerFc[memberId];
-      debugPrint(
+      dlog(
         fc == null || fc.isEmpty
             ? 'send: no first-contact addr for $memberId (v2 invite?)'
             : 'send: racing onion + relay + first-contact for $memberId',
@@ -5515,7 +5508,7 @@ class AppState extends ChangeNotifier {
       }
       return done.future;
     } catch (e) {
-      debugPrint('send to $memberId failed: $e');
+      dlog('send to $memberId failed: $e');
       return false;
     }
   }
@@ -5528,7 +5521,7 @@ class AppState extends ChangeNotifier {
       final wrapped = await wrapMessage('', sender: _mySender());
       await _sendOneEnvelope(haloId, wrapped);
     } catch (e) {
-      debugPrint('accept ack failed: $e');
+      dlog('accept ack failed: $e');
     }
   }
 
@@ -5569,7 +5562,7 @@ class AppState extends ChangeNotifier {
         final wrapped = await wrapMessage('', intro: card, sender: _mySender());
         return await _sendOneEnvelope(to, wrapped);
       } catch (e) {
-        debugPrint('intro to $to failed: $e');
+        dlog('intro to $to failed: $e');
         return false;
       }
     }
@@ -5578,7 +5571,7 @@ class AppState extends ChangeNotifier {
       send(first, cardOfSecond),
       send(second, cardOfFirst),
     ]);
-    debugPrint('intro: $first<->$second first=${r[0]} second=${r[1]}');
+    dlog('intro: $first<->$second first=${r[0]} second=${r[1]}');
     return (toFirst: r[0], toSecond: r[1]);
   }
 
@@ -5612,7 +5605,7 @@ class AppState extends ChangeNotifier {
       memberId,
       _roomify(wrapped, room.pub),
     );
-    if (r != 'ok') debugPrint('room send: $r');
+    if (r != 'ok') dlog('room send: $r');
     return r == 'ok';
   }
 
@@ -5726,7 +5719,7 @@ class AppState extends ChangeNotifier {
       link.fcPk,
       wrapped,
     );
-    debugPrint('room join: $r');
+    dlog('room join: $r');
     return r == 'ok'
         ? 'joined ${link.name}'
         : 'joined ${link.name}, but the creator could not be reached yet';
@@ -5761,7 +5754,7 @@ class AppState extends ChangeNotifier {
     final cap = g['member_cap'] as int?;
     if (!members.contains(who)) {
       if (cap != null && members.length >= cap) {
-        debugPrint('room: full, ignoring join');
+        dlog('room: full, ignoring join');
         return;
       }
       await db.addGroupMember(groupId, who);
@@ -5800,7 +5793,7 @@ class AppState extends ChangeNotifier {
     final from = parts[2];
     if (env.senderHaloId != from) return;
     if (!(await db.getGroupMembers(groupId)).contains(from)) {
-      debugPrint('room: frame from a key not in the roster, dropped');
+      dlog('room: frame from a key not in the roster, dropped');
       return;
     }
     await _applyIncomingPayload(from, env);
@@ -5870,7 +5863,7 @@ class AppState extends ChangeNotifier {
       await _subscribeRoomMembers(gid);
     }
     if (rooms.isNotEmpty) _armRoomTimer();
-    debugPrint('rooms: listening to ${rooms.length}');
+    dlog('rooms: listening to ${rooms.length}');
   }
 
   Future<void> _sendControlToGroup(String groupId, GroupControl gc) async {
@@ -5939,9 +5932,7 @@ class AppState extends ChangeNotifier {
       supporterBadge: await sharedBadge(),
       sender: _mySender(),
     );
-    debugPrint(
-      'GRPSEND group=$groupId members=$members me=$myId admin=$amAdmin',
-    );
+    dlog('GRPSEND group=$groupId members=$members me=$myId admin=$amAdmin');
     final results = await Future.wait([
       for (final memberId in members)
         if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
@@ -6017,11 +6008,11 @@ class AppState extends ChangeNotifier {
         ]);
         chunkOk = results.any((ok) => ok);
         if (!chunkOk) {
-          debugPrint('GRP MEDIA chunk $i/$total try ${tryN + 1} failed');
+          dlog('GRP MEDIA chunk $i/$total try ${tryN + 1} failed');
           if (tryN < 2) await Future.delayed(const Duration(seconds: 1));
         }
       }
-      if (!chunkOk) debugPrint('GRP MEDIA chunk $i/$total gave up');
+      if (!chunkOk) dlog('GRP MEDIA chunk $i/$total gave up');
       return chunkOk;
     }
 
@@ -6036,7 +6027,7 @@ class AppState extends ChangeNotifier {
     _grpChunkDoneAt[msgUid] = now;
     final done = _grpChunkDone.putIfAbsent(msgUid, () => <int>{});
     if (done.isNotEmpty && total > 1) {
-      debugPrint('GRP MEDIA resume $msgUid: ${done.length}/$total already out');
+      dlog('GRP MEDIA resume $msgUid: ${done.length}/$total already out');
       mediaProgressUpdate(msgUid, done.length / total);
     }
     for (var i = 0; i < total; i++) {

@@ -45,6 +45,7 @@ import '../rooms.dart';
 import '../widgets/notice_banner.dart';
 import '../widgets/room_countdown.dart';
 import 'room_link_sheet.dart';
+import '../dlog.dart';
 
 final Map<String, String> _draftPerGroup = {};
 
@@ -789,7 +790,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     try {
       final html = await torGetOnIsolate(url);
       if (html.startsWith('error:') || html.isEmpty) {
-        debugPrint(
+        dlog(
           'preview: fetch failed for $url -> '
           '${html.isEmpty ? 'empty' : html.substring(0, html.length > 80 ? 80 : html.length)}',
         );
@@ -814,7 +815,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       final image = grab('og:image') ?? grab('twitter:image');
       final site = grab('og:site_name');
       if (title == null && image == null) {
-        debugPrint('preview: no og tags at $url');
+        dlog('preview: no og tags at $url');
         return;
       }
       String? imageData;
@@ -848,7 +849,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       await db.setMsgPreview(msgUid, jsonEncode(pv));
       await appState.sendGroupPreview(widget.groupId, msgUid, pv);
     } catch (e) {
-      debugPrint('preview enrich failed: $e');
+      dlog('preview enrich failed: $e');
     }
   }
 
@@ -897,7 +898,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     try {
       ok = await sendFut;
     } catch (e) {
-      debugPrint('group send failed: $e');
+      dlog('group send failed: $e');
     } finally {
       // always release the composer - a throw here used to leave _sending
       // stuck true, which silently killed every later send.
@@ -968,7 +969,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         burnSeconds: m.burnSecs,
       );
     } catch (e) {
-      debugPrint('group retry failed: $e');
+      dlog('group retry failed: $e');
     } finally {
       if (mounted) {
         final live = _liveMsg(uid) ?? m;
@@ -2238,7 +2239,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                             try {
                               return _buildGroupRow(i);
                             } catch (e) {
-                              debugPrint('group bubble failed: \$e');
+                              dlog('group bubble failed: \$e');
                               return Padding(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 6,
