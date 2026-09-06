@@ -371,6 +371,21 @@ func nostrSubscribeRunner(ctx context.Context, peerXPubHex string, peerArr [32]b
 }
 
 func nostrSubscribeRunnerMode(ctx context.Context, peerXPubHex string, peerArr [32]byte, rcvPk string, fc bool, fcCounter int) {
+	tag := peerXPubHex
+	unwrap := func(gw nostr2.Event) (string, error) { return nip17Unwrap(peerArr, gw) }
+	if fc {
+		tag = "firstcontact"
+		unwrap = func(gw nostr2.Event) (string, error) {
+			content, _, err := nip17UnwrapFirstContact(fcCounter, gw)
+			return content, err
+		}
+	}
+	nostrSubscribeRunnerFn(ctx, tag, rcvPk, unwrap)
+}
+
+// the general runner: one receive address, one way to open what lands on
+// it, one tag the inbox line carries so dart knows who it was for.
+func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwrap func(nostr2.Event) (string, error)) {
 	nostrMu.Lock()
 	urls := append([]string(nil), nostrRelays...)
 	nostrMu.Unlock()
@@ -456,26 +471,20 @@ func nostrSubscribeRunnerMode(ctx context.Context, peerXPubHex string, peerArr [
 			log.Printf("nostr: wrap parse failed: %v", err)
 			return
 		}
-		var content string
-		var err error
-		if fc {
-			content, _, err = nip17UnwrapFirstContact(fcCounter, gw)
-		} else {
-			content, err = nip17Unwrap(peerArr, gw)
-		}
+		content, err := unwrap(gw)
 		if err != nil {
 			log.Printf("nostr: unwrap dropped one: %v", err)
 			return
-		}
-		tag := peerXPubHex
-		if fc {
-			tag = "firstcontact"
 		}
 		noteRecv()
 		nostrMu.Lock()
 		nostrInbox = append(nostrInbox, tag+"|"+content)
 		nostrMu.Unlock()
-		log.Printf("nostr: received event %s for peer %s...", id[:12], peerXPubHex[:12])
+		short := tag
+		if len(short) > 12 {
+			short = short[:12]
+		}
+		log.Printf("nostr: received event %s for %s...", id[:12], short)
 	}
 
 	for i, url := range urls {

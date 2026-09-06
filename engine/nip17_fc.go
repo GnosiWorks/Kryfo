@@ -57,7 +57,11 @@ func nip17FirstContactKeys(counter int) (sk, pk string, err error) {
 // are the same verification as every other message applies. only the outer
 // wrap is addressed differently.
 func nip17WrapFirstContact(peer [32]byte, fcPk, msg string) (nostr2.Event, error) {
-	sndSk, sndPk, err := nip17DeriveRole(peer, nip17SndInfo, hex.EncodeToString(myXPub[:]))
+	return nip17WrapFirstContactAs(myXid(), peer, fcPk, msg)
+}
+
+func nip17WrapFirstContactAs(me xid, peer [32]byte, fcPk, msg string) (nostr2.Event, error) {
+	sndSk, sndPk, err := nip17DeriveRoleAs(me, peer, nip17SndInfo, hex.EncodeToString(me.pub[:]))
 	if err != nil {
 		return nostr2.Event{}, err
 	}
@@ -90,6 +94,10 @@ func nip17UnwrapFirstContact(counter int, gw nostr2.Event) (content, sealPk stri
 	if err != nil {
 		return "", "", err
 	}
+	return nip17UnwrapFirstContactWith(fcSk, gw)
+}
+
+func nip17UnwrapFirstContactWith(fcSk string, gw nostr2.Event) (content, sealPk string, err error) {
 	rumor, err := nip59.GiftUnwrap(gw, func(otherPk, ct string) (string, error) {
 		k, kerr := nip44.GenerateConversationKey(otherPk, fcSk)
 		if kerr != nil {
