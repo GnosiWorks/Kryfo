@@ -6,14 +6,12 @@
 // burns after a few minutes because an address nobody is listening to is not
 // worth leaving behind.
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../main.dart';
 import '../theme.dart';
-import '../widgets/motion.dart';
+import '../widgets/pair_code_panel.dart';
 
 class PairCodeScreen extends StatefulWidget {
   const PairCodeScreen({super.key});
@@ -110,167 +108,13 @@ class _Tab extends StatelessWidget {
 
 // ───────── show a code ─────────
 
-class _ShareSide extends StatefulWidget {
+class _ShareSide extends StatelessWidget {
   const _ShareSide();
   @override
-  State<_ShareSide> createState() => _ShareSideState();
-}
-
-class _ShareSideState extends State<_ShareSide> {
-  String? _code;
-  String _status = '';
-  int _left = 0;
-  Timer? _tick;
-  bool _busy = false;
-
-  @override
-  void dispose() {
-    _tick?.cancel();
-    super.dispose();
-  }
-
-  Future<void> _make() async {
-    if (_busy) return;
-    setState(() {
-      _busy = true;
-      _status = 'putting your invite in place…';
-    });
-
-    // Random.secure, because a guessable code is a code someone else can
-    // stand in front of.
-    final r = Random.secure();
-    final code = List.generate(6, (_) => r.nextInt(10)).join();
-
-    if (appState.myOnion.isEmpty) {
-      if (mounted) {
-        setState(() {
-          _busy = false;
-          _status = 'your invite is not ready yet';
-        });
-      }
-      return;
-    }
-    final uri = await buildHaloUriV3(
-      appState.myId,
-      appState.myOnion,
-      appState.fcCounter,
-    );
-
-    final res = await engine.pairCodePublish(code, uri);
-    if (!mounted) return;
-    if (res.startsWith('error')) {
-      setState(() {
-        _busy = false;
-        _status = res.replaceFirst('error: ', '');
-      });
-      return;
-    }
-
-    setState(() {
-      _busy = false;
-      _code = code;
-      _left = 300;
-      _status = '';
-    });
-    _tick?.cancel();
-    _tick = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) return t.cancel();
-      setState(() => _left--);
-      if (_left <= 0) {
-        t.cancel();
-        setState(() => _code = null);
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (_code == null) {
-      return ListView(
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-        children: [
-          Text(
-            'read six digits out loud and they can add you. nothing else '
-            'needs to change hands.',
-            style: HaloType.sans(size: 13.5, color: HaloColors.text2),
-          ),
-          const SizedBox(height: 22),
-          GestureDetector(
-            onTap: _make,
-            behavior: HitTestBehavior.opaque,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: _busy ? HaloColors.surface2 : HaloColors.amber,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                _busy ? 'working…' : 'make a code',
-                style: HaloType.mono(
-                  size: 12,
-                  weight: FontWeight.w600,
-                  color: _busy ? HaloColors.text3 : HaloColors.onAmber,
-                ),
-              ),
-            ),
-          ),
-          if (_status.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            Text(
-              _status,
-              style: HaloType.mono(size: 11, color: HaloColors.text3),
-            ),
-          ],
-        ],
-      );
-    }
-
-    final mm = (_left ~/ 60).toString();
-    final ss = (_left % 60).toString().padLeft(2, '0');
     return ListView(
-      padding: const EdgeInsets.fromLTRB(24, 34, 24, 24),
-      children: [
-        Center(
-          child: GestureDetector(
-            onTap: () {
-              HapticFeedback.selectionClick();
-              Clipboard.setData(ClipboardData(text: _code!));
-              showHaloToast(context, 'code copied');
-            },
-            child: Text(
-              '${_code!.substring(0, 3)} ${_code!.substring(3)}',
-              style: HaloType.mono(
-                size: 40,
-                weight: FontWeight.w600,
-                color: HaloColors.amber,
-                letter: 0.16,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 18),
-        Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              BreathDot(color: HaloColors.amber, size: 6),
-              const SizedBox(width: 8),
-              Text(
-                'burns in $mm:$ss',
-                style: HaloType.mono(size: 11, color: HaloColors.text3),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 30),
-        Text(
-          'they open kryfo, tap add, choose pairing code and type these six '
-          'digits. it works once and then the address is gone.',
-          textAlign: TextAlign.center,
-          style: HaloType.sans(size: 12.5, color: HaloColors.text3),
-        ),
-      ],
+      padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+      children: const [PairCodePanel()],
     );
   }
 }

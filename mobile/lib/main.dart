@@ -6597,7 +6597,7 @@ Future<void> showAddContact(BuildContext context) async {
                 Icon(Icons.qr_code_2, size: 16, color: HaloColors.amber),
                 const SizedBox(width: 7),
                 Text(
-                  'show my own code',
+                  'add someone',
                   style: HaloType.sans(
                     size: 13,
                     weight: FontWeight.w600,
