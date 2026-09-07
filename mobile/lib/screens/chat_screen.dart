@@ -18,6 +18,7 @@ import 'package:just_audio/just_audio.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'key_verification_screen.dart';
+import 'contact_screen.dart';
 import 'introduce_sheet.dart';
 import 'vouchers_sheet.dart';
 import 'shield_sheet.dart';
@@ -3627,17 +3628,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SheetHandle(),
-              // who vouched, if anyone we know did. nothing at all otherwise.
-              if (_vouched)
-                NoticeBanner(
-                  glyph: NoticeGlyph.people,
-                  text: vouchedByLine(_voucherNames),
-                  color: HaloColors.amber,
-                  margin: const EdgeInsets.fromLTRB(16, 14, 16, 4),
-                  onTap: () => Navigator.pop(ctx, 'vouchers'),
-                ),
+              // the person themselves: name, verification, vouches, media,
+              // all on one page now
               InkWell(
-                onTap: () => Navigator.pop(ctx, 'verify'),
+                onTap: () => Navigator.pop(ctx, 'contact'),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
@@ -3646,13 +3640,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   child: Row(
                     children: [
                       Icon(
-                        Icons.verified_user_outlined,
+                        Icons.person_outline,
                         size: 18,
                         color: HaloColors.amber,
                       ),
                       const SizedBox(width: 14),
                       Text(
-                        'verify safety number',
+                        'view contact',
                         style: HaloType.sans(size: 14, color: HaloColors.text),
                       ),
                     ],
@@ -3852,7 +3846,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       ),
     );
     if (!mounted) return;
-    if (action == 'verify') {
+    if (action == 'contact') {
+      _openContact();
+    } else if (action == 'verify') {
       _openKeyVerification();
     } else if (action == 'vouchers') {
       await showVouchersSheet(context, widget.peerHaloId);
@@ -3882,6 +3878,31 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     } else if (action == 'photos') {
       await _openMediaGallery();
     }
+  }
+
+  // the page for this person. the head taps land here, and the chat's own
+  // state reloads on the way back since a nickname or block may have changed
+  Future<void> _openContact() async {
+    await Navigator.of(context).push(
+      haloRoute(
+        ContactScreen(
+          haloId: widget.peerHaloId,
+          avatarSeed: widget.avatarSeed,
+          peerXPub: widget.peerXPub,
+          face: _peerFace,
+        ),
+      ),
+    );
+    if (!mounted) return;
+    final c = await db.getContact(widget.peerHaloId);
+    if (!mounted) return;
+    setState(() {
+      _nickname = c?['nickname'] as String?;
+      _muted = (c?['muted'] as int? ?? 0) == 1;
+      _verified = (c?['verified'] as int? ?? 0) == 1;
+      _blocked = (c?['blocked'] as int? ?? 0) == 1;
+    });
+    unawaited(appState.refreshContacts());
   }
 
   Future<void> _toggleContactPin() async {
@@ -4343,93 +4364,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
-  Future<void> _renameContact() async {
-    final ctrl = TextEditingController(text: _nickname ?? '');
-    final result = await showHaloSheet<String>(
-      context,
-      scroll: true,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SheetHandle(),
-            Text(
-              'name this contact',
-              style: HaloType.serif(
-                size: 20,
-                italic: true,
-                color: HaloColors.amber,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              widget.peerHaloId,
-              style: HaloType.mono(size: 11, color: HaloColors.text3),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: ctrl,
-              autofocus: true,
-              cursorColor: HaloColors.amber,
-              style: HaloType.sans(size: 15),
-              decoration: InputDecoration(
-                hintText: 'what should i call them?',
-                hintStyle: HaloType.serif(
-                  size: 15,
-                  italic: true,
-                  color: HaloColors.text3,
-                ),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: HaloColors.line2),
-                ),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: HaloColors.amber),
-                ),
-              ),
-              onSubmitted: (v) => Navigator.pop(ctx, v),
-            ),
-            const SizedBox(height: 18),
-            Row(
-              children: [
-                if ((_nickname ?? '').isNotEmpty)
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, ''),
-                    child: Text(
-                      'remove',
-                      style: HaloType.sans(size: 13, color: HaloColors.text2),
-                    ),
-                  ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, ctrl.text),
-                  child: Text(
-                    'save',
-                    style: HaloType.sans(
-                      size: 14,
-                      weight: FontWeight.w500,
-                      color: HaloColors.amber,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-    if (result == null) return;
-    final t = result.trim();
-    await db.setNickname(widget.peerHaloId, t.isEmpty ? null : t);
-    if (mounted) setState(() => _nickname = t.isEmpty ? null : t);
-  }
-
   void _onScroll() {
     if (!_scrollCtrl.hasClients) return;
     final pos = _scrollCtrl.position;
@@ -4569,12 +4503,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     note: _note,
                     verified: _verified,
                     supporterBadge: _peerBadge,
-                    onBlock: _chatActions,
+                    onBlock: _openContact,
+                    onMore: _chatActions,
                     avatarSeed: widget.avatarSeed,
                     face: _peerFace,
                     onBack: () => Navigator.pop(context),
                     onSearch: _openSearch,
-                    onRename: _renameContact,
+                    onRename: _openContact,
                     pinnedCount: _messages.where((m) => m.pinned).length,
                     onPinned: _showPinnedSheet,
                   ),
@@ -5257,6 +5192,7 @@ class _ChatHead extends StatelessWidget {
   final VoidCallback onSearch;
   final VoidCallback onRename;
   final VoidCallback onBlock;
+  final VoidCallback onMore;
   final int pinnedCount;
   final VoidCallback onPinned;
   final bool verified;
@@ -5270,6 +5206,7 @@ class _ChatHead extends StatelessWidget {
     required this.onBack,
     required this.onSearch,
     required this.onRename,
+    required this.onMore,
     required this.onBlock,
     this.pinnedCount = 0,
     required this.onPinned,
@@ -5448,7 +5385,7 @@ class _ChatHead extends StatelessWidget {
           IconButton(
             tooltip: 'contact options',
             icon: Icon(Icons.more_vert, color: HaloColors.text2, size: 21),
-            onPressed: onBlock,
+            onPressed: onMore,
           ),
         ],
       ),
