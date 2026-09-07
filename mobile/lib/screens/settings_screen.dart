@@ -18,8 +18,7 @@ import '../theme.dart';
 import 'modes_screen.dart';
 import 'blocked_screen.dart';
 import 'push_settings_screen.dart';
-import 'lock_setup_screen.dart';
-import 'panic_setup_screen.dart';
+import 'pins_screen.dart';
 import 'backup_screen.dart';
 import '../wipe.dart';
 import 'restore_screen.dart';
@@ -137,40 +136,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
     confirmCtrl.dispose();
     if (ok == true) await wipeHalo();
-  }
-
-  Future<void> _confirmDisableLock() async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: HaloColors.surface3,
-        title: Text(
-          'disable app lock?',
-          style: HaloType.serif(size: 18, color: HaloColors.text),
-        ),
-        content: Text(
-          'the pin will be removed. anyone with your phone will see kryfo when they open it.',
-          style: HaloType.sans(size: 13, color: HaloColors.text2),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(
-              'cancel',
-              style: HaloType.sans(size: 13, color: HaloColors.text2),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(
-              'disable',
-              style: HaloType.sans(size: 13, color: HaloColors.rose),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (ok == true) await lockState.disable();
   }
 
   bool _disguise = false;
@@ -332,90 +297,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           AnimatedBuilder(
             animation: lockState,
-            builder: (_, _) => Column(
-              children: [
-                _Row(
-                  icon: Icons.lock_outline,
-                  label: 'app lock',
-                  value: lockState.enabled ? 'on' : 'off',
-                  onTap: () async {
-                    if (lockState.enabled) {
-                      await _confirmDisableLock();
-                    } else {
-                      await Navigator.of(
-                        context,
-                      ).push(haloRoute(const LockSetupScreen()));
-                      setState(() {});
-                    }
-                  },
-                ),
-                if (lockState.enabled && lockState.bioSupported)
-                  _Row(
-                    icon: Icons.fingerprint,
-                    label: 'unlock with fingerprint',
-                    value: lockState.biometric ? 'on' : 'off',
-                    onTap: () => lockState.setBiometric(!lockState.biometric),
-                  ),
-                if (lockState.enabled)
-                  _Row(
-                    icon: Icons.warning_amber_rounded,
-                    label: 'panic pin',
-                    value: lockState.panicEnabled ? 'set' : 'off',
-                    onTap: () async {
-                      if (lockState.panicEnabled) {
-                        final disable = await showDialog<bool>(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            backgroundColor: HaloColors.surface3,
-                            title: Text(
-                              'panic pin is set',
-                              style: HaloType.serif(
-                                size: 18,
-                                color: HaloColors.text,
-                              ),
-                            ),
-                            content: Text(
-                              'remove the panic pin?',
-                              style: HaloType.sans(
-                                size: 13,
-                                color: HaloColors.text2,
-                              ),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.of(ctx).pop(false),
-                                child: Text(
-                                  'cancel',
-                                  style: HaloType.sans(
-                                    size: 13,
-                                    color: HaloColors.text2,
-                                  ),
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.of(ctx).pop(true),
-                                child: Text(
-                                  'remove',
-                                  style: HaloType.sans(
-                                    size: 13,
-                                    color: HaloColors.rose,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                        if (disable == true) {
-                          await lockState.disablePanicPin();
-                        }
-                      } else {
-                        await Navigator.of(
-                          context,
-                        ).push(haloRoute(PanicSetupScreen()));
-                      }
-                    },
-                  ),
-              ],
+            builder: (_, _) => _Row(
+              icon: Icons.lock_outline,
+              label: 'app lock',
+              hint: 'your pin, and a wipe pin',
+              value: !lockState.enabled
+                  ? 'off'
+                  : lockState.panicEnabled
+                  ? 'pin · wipe pin'
+                  : 'on',
+              onTap: () =>
+                  Navigator.of(context).push(haloRoute(const PinsScreen())),
             ),
           ),
           const SizedBox(height: 24),
