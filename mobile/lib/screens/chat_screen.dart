@@ -1586,6 +1586,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     await Future.delayed(const Duration(milliseconds: 560));
     await db.deleteMessage(m.msgUid!);
     if (mounted) setState(() => _messages.remove(m));
+    // the home row was still previewing the message just unsent
+    unawaited(appState.refreshContacts());
     try {
       final wrapped = await wrapMessage('', unsend: m.msgUid);
       final cipher = await signalEncrypt(widget.peerHaloId, wrapped);
