@@ -3275,6 +3275,7 @@ Future<void> openChatForHalo(String? haloId) async {
         peerOnion: row['onion'] as String,
         peerXPub: row['xpub'] as String,
         avatarSeed: haloId,
+        avatarChoice: (row['avatar'] as num?)?.toInt(),
       ),
     ),
   );
@@ -6491,6 +6492,7 @@ class _RootShellState extends State<RootShell> {
               peerOnion: row['onion'] as String,
               peerXPub: row['xpub'] as String,
               avatarSeed: id,
+              avatarChoice: (row['avatar'] as num?)?.toInt(),
             ),
           ),
         );

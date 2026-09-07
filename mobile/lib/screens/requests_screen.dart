@@ -100,6 +100,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
           peerOnion: (row['onion'] as String?) ?? '',
           peerXPub: (row['xpub'] as String?) ?? '',
           avatarSeed: id,
+          avatarChoice: (row['avatar'] as num?)?.toInt(),
         ),
       ),
     );

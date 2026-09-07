@@ -54,6 +54,7 @@ class _SavedScreenState extends State<SavedScreen> {
           peerOnion: (r['onion'] as String?) ?? '',
           peerXPub: (r['xpub'] as String?) ?? '',
           avatarSeed: peerId,
+          avatarChoice: (r['avatar'] as num?)?.toInt(),
           jumpToUid: uid,
         ),
       ),

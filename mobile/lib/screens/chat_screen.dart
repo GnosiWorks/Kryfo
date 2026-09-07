@@ -71,6 +71,9 @@ class ChatScreen extends StatefulWidget {
   final String peerOnion;
   final String peerXPub;
   final String avatarSeed;
+  // the face they picked, handed over so the hero never lands on the
+  // letter fallback while the row is still loading
+  final int? avatarChoice;
   final String? initialText;
   final String? jumpToUid;
 
@@ -80,6 +83,7 @@ class ChatScreen extends StatefulWidget {
     required this.peerOnion,
     required this.peerXPub,
     required this.avatarSeed,
+    this.avatarChoice,
     this.initialText,
     this.jumpToUid,
   });
@@ -519,7 +523,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   final GlobalKey _jumpKey = GlobalKey();
   int? _jumpIndex;
   String? _nickname;
-  int? _peerFace; // the face they picked, so the header matches the list
+  late int? _peerFace = widget.avatarChoice;
   bool _blocked = false;
   bool _muted = false;
   bool _verified = false;
@@ -4374,6 +4378,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           peerOnion: (row['onion'] as String?) ?? '',
           peerXPub: (row['xpub'] as String?) ?? '',
           avatarSeed: haloId,
+          avatarChoice: (row['avatar'] as num?)?.toInt(),
           initialText: m.text,
         ),
       ),
