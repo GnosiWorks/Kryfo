@@ -57,6 +57,7 @@ import 'dart:isolate';
 import 'dlog.dart';
 import 'stranger_gate.dart';
 import 'fast_gate.dart';
+import 'mentions.dart';
 import 'handle_lookup.dart';
 import 'widgets/sheet_handle.dart';
 import 'widgets/halo_sheet.dart';
@@ -833,7 +834,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 41,
+      version: 42,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -960,6 +961,15 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 42) {
+          // a group where someone wrote your three words after an @, so the
+          // home row can say so. cleared with the unread count.
+          try {
+            await db.execute(
+              'ALTER TABLE groups ADD COLUMN mentioned INTEGER NOT NULL DEFAULT 0',
+            );
+          } catch (_) {}
+        }
         if (oldV < 41) {
           // the proof-of-work a stranger's first message was sent with. the
           // outbox used to rebuild the envelope without it, so a retried
@@ -2493,11 +2503,21 @@ class HaloDb {
     );
   }
 
+  Future<void> setGroupMentioned(String groupId) async {
+    final db = await open();
+    await db.update(
+      'groups',
+      {'mentioned': 1},
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+    );
+  }
+
   Future<void> clearGroupUnread(String groupId) async {
     final db = await open();
     await db.update(
       'groups',
-      {'unread': 0},
+      {'unread': 0, 'mentioned': 0},
       where: 'group_id = ?',
       whereArgs: [groupId],
     );
@@ -3335,6 +3355,7 @@ class GroupPreview {
   final bool isAdmin;
   final DateTime createdAt;
   final int unread;
+  final bool mentioned; // someone wrote your three words since you last read
   final int? expiresAt; // a burner room's end, null for a group
   const GroupPreview({
     required this.groupId,
@@ -3343,6 +3364,7 @@ class GroupPreview {
     required this.isAdmin,
     required this.createdAt,
     this.unread = 0,
+    this.mentioned = false,
     this.expiresAt,
   });
 }
@@ -4208,6 +4230,9 @@ class AppState extends ChangeNotifier {
       final openGroup = 'group:${env.groupId}';
       if (currentChatPeer != openGroup) {
         await db.bumpGroupUnread(env.groupId!);
+        if (mentionsMe(env.message, myId)) {
+          await db.setGroupMentioned(env.groupId!);
+        }
       } else {
         await db.clearGroupUnread(env.groupId!);
       }
@@ -5352,6 +5377,7 @@ class AppState extends ChangeNotifier {
             r['created_at'] as int,
           ),
           unread: (r['unread'] as int? ?? 0),
+          mentioned: (r['mentioned'] as int? ?? 0) == 1,
           expiresAt: r['expires_at'] as int?,
         ),
       );
@@ -6571,6 +6597,7 @@ class _RootShellState extends State<RootShell> {
               name: g.name,
               memberCount: g.memberCount,
               unread: g.unread,
+              mentioned: g.mentioned,
               expiresAt: g.expiresAt,
             ),
           )
