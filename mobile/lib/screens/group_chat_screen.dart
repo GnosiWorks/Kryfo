@@ -1904,6 +1904,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           peerOnion: (row['onion'] as String?) ?? '',
           peerXPub: (row['xpub'] as String?) ?? '',
           avatarSeed: haloId,
+          avatarChoice: (row['avatar'] as num?)?.toInt(),
           initialText: m.text,
         ),
       ),
