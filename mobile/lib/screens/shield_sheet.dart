@@ -16,8 +16,14 @@ class ShieldFlag {
   final List<String> lines;
   const ShieldFlag(this.headline, this.lines);
 
+  // a row with no headline is the shield saying it looked and found
+  // nothing: shown as a quiet line, never as a flag
+  static bool cleanRow(Map<String, Object?>? r) =>
+      r != null && (r['headline'] as String? ?? '').isEmpty;
+
   static ShieldFlag? fromRow(Map<String, Object?>? r) {
     if (r == null || (r['dismissed'] as int? ?? 0) == 1) return null;
+    if (cleanRow(r)) return null;
     try {
       final lines = (jsonDecode(r['lines'] as String) as List)
           .map((e) => e.toString())

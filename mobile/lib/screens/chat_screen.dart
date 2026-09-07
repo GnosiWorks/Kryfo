@@ -557,6 +557,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool get _vouched => _voucherNames.isNotEmpty;
   // what the scam shield saw on this stranger, if anything and not ignored
   ShieldFlag? _flag;
+  // the shield looked at their opener and found nothing
+  bool _shieldClean = false;
   bool _showScrollDown = false;
   int _seenCount = 0;
   String? _rippleUid;
@@ -750,8 +752,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _loadShield() async {
     if (await db.isAccepted(widget.peerHaloId)) return;
-    final f = ShieldFlag.fromRow(await db.shieldFor(widget.peerHaloId));
-    if (mounted && f != _flag) setState(() => _flag = f);
+    final row = await db.shieldFor(widget.peerHaloId);
+    final f = ShieldFlag.fromRow(row);
+    final clean = ShieldFlag.cleanRow(row);
+    if (mounted && (f != _flag || clean != _shieldClean)) {
+      setState(() {
+        _flag = f;
+        _shieldClean = clean;
+      });
+    }
   }
 
   Future<void> _openShield() async {
@@ -4809,6 +4818,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 color: HaloColors.rose,
                 margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
                 onTap: _openShield,
+              )
+            else if (_shieldClean && !_accepted && !_blocked)
+              // the calm state. same banner, softest colour, nothing to tap
+              NoticeBanner(
+                glyph: NoticeGlyph.shield,
+                text: 'looks safe · nothing suspicious in their first message',
+                color: HaloColors.text2,
+                margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
               ),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 220),
