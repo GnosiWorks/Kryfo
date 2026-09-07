@@ -1699,16 +1699,28 @@ class _Row extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                           ],
-                          Text(
-                            (c.blocked ? 'blocked' : _relTime(c.when)),
-                            style: HaloType.serif(
-                              size: 11.5,
-                              italic: true,
-                              color: c.unread > 0
-                                  ? HaloColors.amber
-                                  : HaloColors.text3,
+                          // a message still in the outbox says so where the
+                          // time would be, so the row is honest about it
+                          if (!c.blocked && appState.queuedFor(c.haloId) > 0)
+                            Text(
+                              'queued',
+                              style: HaloType.mono(
+                                size: 10,
+                                color: HaloColors.text2,
+                                letter: 0.08,
+                              ),
+                            )
+                          else
+                            Text(
+                              (c.blocked ? 'blocked' : _relTime(c.when)),
+                              style: HaloType.serif(
+                                size: 11.5,
+                                italic: true,
+                                color: c.unread > 0
+                                    ? HaloColors.amber
+                                    : HaloColors.text3,
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ],
