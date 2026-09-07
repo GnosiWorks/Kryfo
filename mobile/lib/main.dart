@@ -56,6 +56,7 @@ import 'signal_session.dart';
 import 'dart:isolate';
 import 'dlog.dart';
 import 'stranger_gate.dart';
+import 'fast_gate.dart';
 import 'handle_lookup.dart';
 import 'widgets/sheet_handle.dart';
 import 'widgets/halo_sheet.dart';
@@ -3572,10 +3573,28 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> loadSendMode() async {
-    _sendMode =
+    final stored =
         await const FlutterSecureStorage().read(key: 'send_mode') ?? 'private';
+    // fast is off after every reinstall: its marker lives in app data, which
+    // an uninstall wipes, while the preference can come back from a backup
+    final marker = await _fastMarker;
+    _sendMode = sendModeAtBoot(stored, fastMarker: await marker.exists());
+    if (_sendMode != stored) {
+      await const FlutterSecureStorage().write(
+        key: 'send_mode',
+        value: _sendMode,
+      );
+    }
     notifyListeners();
   }
+
+  Future<File> get _fastMarker async {
+    final dir = await getApplicationDocumentsDirectory();
+    return File('${dir.path}/fast_ok');
+  }
+
+  Future<bool> fastConfirmedOnThisInstall() =>
+      _fastMarker.then((f) => f.exists());
 
   // private goes through tor to everything. balanced talks plain tls to our
   // own relay and nothing else, so only we see an ip. fast talks plain tls to
@@ -3604,6 +3623,13 @@ class AppState extends ChangeNotifier {
     _sendMode = m;
     notifyListeners();
     await const FlutterSecureStorage().write(key: 'send_mode', value: m);
+    if (m == 'fast') {
+      try {
+        await (await _fastMarker).writeAsString('1');
+      } catch (e) {
+        dlog('fast marker: $e');
+      }
+    }
     if (!changed) return;
     // the engine caches one http client per route, so the mode has to land
     // before the relay list is rebuilt or the first connection uses the old
