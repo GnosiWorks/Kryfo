@@ -65,8 +65,10 @@ List<T> mentionMatches<T>(
 bool mentionsMe(String text, String myId) =>
     myId.isNotEmpty && _idRe.allMatches(text).any((m) => m.group(1) == myId);
 
-// the message with its mentions in amber
-TextSpan mentionRich(String text, TextStyle base) {
+// the message with its mentions picked out. amber on a dark bubble; on the
+// sender's amber bubble amber would vanish, so there it is the bubble's own
+// text colour, heavier and underlined.
+TextSpan mentionRich(String text, TextStyle base, {Color? accent}) {
   final spans = <TextSpan>[];
   var last = 0;
   for (final m in _idRe.allMatches(text)) {
@@ -77,8 +79,10 @@ TextSpan mentionRich(String text, TextStyle base) {
       TextSpan(
         text: m.group(0),
         style: base.copyWith(
-          color: HaloColors.amber,
-          fontWeight: FontWeight.w600,
+          color: accent ?? HaloColors.amber,
+          fontWeight: FontWeight.w700,
+          decoration: accent == null ? null : TextDecoration.underline,
+          decorationColor: accent,
         ),
       ),
     );

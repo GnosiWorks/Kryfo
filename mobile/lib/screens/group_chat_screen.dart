@@ -3382,6 +3382,10 @@ class _GroupBubble extends StatelessWidget {
                                                   : HaloColors.text,
                                               height: 1.35,
                                             ),
+                                            accent:
+                                                (isOut && m.mediaPath == null)
+                                                ? HaloColors.onAmber
+                                                : null,
                                           ),
                                         ),
                                       ),
