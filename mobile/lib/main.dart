@@ -4239,7 +4239,13 @@ class AppState extends ChangeNotifier {
             ),
         ],
       );
-      if (!r.flagged) return;
+      // a clean check is recorded too, as an empty headline: the chat can
+      // then say it looked, which is most of what a shield is for
+      if (!r.flagged) {
+        await db.setShield(senderHaloId, '', const []);
+        notifyListeners();
+        return;
+      }
       await db.setShield(senderHaloId, r.headline!, [
         for (final h in r.hits) h.line,
       ]);
