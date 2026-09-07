@@ -170,41 +170,44 @@ class _NotesScreenState extends State<NotesScreen> {
 
   Widget _empty() {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 44),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 66,
-              height: 66,
-              decoration: BoxDecoration(
-                color: HaloColors.amberSoft,
-                shape: BoxShape.circle,
+      child: StaggerIn(
+        index: 0,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 44),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 66,
+                height: 66,
+                decoration: BoxDecoration(
+                  color: HaloColors.amberSoft,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.edit_note_rounded,
+                  color: HaloColors.amber,
+                  size: 30,
+                ),
               ),
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.edit_note_rounded,
-                color: HaloColors.amber,
-                size: 30,
+              const SizedBox(height: 22),
+              Text(
+                'a quiet place',
+                style: HaloType.serif(size: 24, color: HaloColors.text),
               ),
-            ),
-            const SizedBox(height: 22),
-            Text(
-              'a quiet place',
-              style: HaloType.serif(size: 24, color: HaloColors.text),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'jot anything down. it stays on this phone and never leaves.',
-              textAlign: TextAlign.center,
-              style: HaloType.sans(
-                size: 12.5,
-                color: HaloColors.text2,
-                height: 1.55,
+              const SizedBox(height: 10),
+              Text(
+                'jot anything down. it stays on this phone and never leaves.',
+                textAlign: TextAlign.center,
+                style: HaloType.sans(
+                  size: 12.5,
+                  color: HaloColors.text2,
+                  height: 1.55,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
