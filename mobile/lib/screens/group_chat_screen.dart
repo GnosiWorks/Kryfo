@@ -49,6 +49,7 @@ import 'room_link_sheet.dart';
 import '../dlog.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/menu_backdrop.dart';
+import '../mentions.dart';
 import '../widgets/halo_sheet.dart';
 
 final Map<String, String> _draftPerGroup = {};
@@ -68,6 +69,8 @@ class GroupChatScreen extends StatefulWidget {
 class _GroupChatScreenState extends State<GroupChatScreen>
     with WidgetsBindingObserver {
   final _msgCtrl = TextEditingController();
+  // the people @ can offer, refreshed with the roster
+  List<MentionCandidate> _mentionable = const [];
   final _scrollCtrl = ScrollController();
   final List<_GMsg> _messages = [];
   bool _showScrollDown = false;
@@ -466,10 +469,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       // local nickname is the display source of truth. fall back to the 3-word
       // id when we have no nickname for that member.
       final nickById = <String, String>{};
+      final faceById = <String, int?>{};
       for (final c in appState.contacts) {
         final n = c.nickname;
         if (n != null && n.isNotEmpty) nickById[c.haloId] = n;
+        faceById[c.haloId] = c.avatar;
       }
+      _mentionable = [
+        for (final id in members)
+          if (id != appState.myId)
+            MentionCandidate(id: id, name: nickById[id], avatar: faceById[id]),
+      ];
       if (!mounted) return;
       setState(() {
         _groupName = (g?['name'] as String?) ?? 'group';
@@ -2341,6 +2351,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             IncomingMediaBanner(chatKey: widget.groupId),
             _Composer(
               controller: _msgCtrl,
+              members: _mentionable,
               sending: _sending,
               ghost: _ghost,
               disguise: _disguise,
@@ -2675,7 +2686,10 @@ class _Composer extends StatelessWidget {
   final VoidCallback onAttach;
   final VoidCallback onToggleDisguise;
   final void Function(String path, int ms, bool cancelled) onVoiceComplete;
+  // who @ can offer
+  final List<MentionCandidate> members;
   const _Composer({
+    this.members = const [],
     required this.controller,
     required this.sending,
     required this.ghost,
@@ -2694,124 +2708,141 @@ class _Composer extends StatelessWidget {
         border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),
       ),
       padding: const EdgeInsets.fromLTRB(8, 8, 12, 12),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          GestureDetector(
-            onTap: onToggleGhost,
-            onLongPress: onLongPressGhost,
-            child: Container(
-              width: 38,
-              height: 38,
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.local_fire_department_rounded,
-                color: ghost ? HaloColors.amber : HaloColors.text3,
-                size: 22,
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: onAttach,
-            behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 10),
-              child: Icon(
-                Icons.add_photo_alternate_outlined,
-                size: 22,
-                color: HaloColors.text2,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-              decoration: BoxDecoration(
-                color: HaloColors.surface2,
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(
-                  color: HaloColors.amber.withValues(alpha: 0.4),
-                  width: 0.6,
-                ),
-              ),
-              child: TextField(
-                controller: controller,
-                style: HaloType.sans(size: 14, color: HaloColors.text),
-                cursorColor: HaloColors.amber,
-                decoration: InputDecoration(
-                  hintText: 'message',
-                  hintStyle: HaloType.sans(size: 14, color: HaloColors.text3),
-                  border: InputBorder.none,
-                  isCollapsed: true,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-                minLines: 1,
-                maxLines: 5,
-                onSubmitted: (_) => onSend(),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          ValueListenableBuilder<TextEditingValue>(
-            valueListenable: controller,
-            builder: (context, value, _) {
-              final hasText = value.text.trim().isNotEmpty;
-              // empty field: voice lane. text: the send pill.
-              if (!hasText && !sending) {
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    GestureDetector(
-                      onTap: onToggleDisguise,
-                      behavior: HitTestBehavior.opaque,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 12),
-                        child: Icon(
-                          disguise
-                              ? Icons.record_voice_over
-                              : Icons.voice_over_off,
-                          size: 20,
-                          color: disguise ? HaloColors.amber : HaloColors.text3,
-                        ),
-                      ),
-                    ),
-                    HoldToTalkMic(
-                      disguise: disguise,
-                      onToggleDisguise: onToggleDisguise,
-                      onComplete: onVoiceComplete,
-                    ),
-                  ],
-                );
-              }
-              final canSend = !sending && hasText;
-              return PressScale(
-                onTap: canSend ? onSend : null,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeOut,
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: canSend ? HaloColors.amber : HaloColors.surface3,
-                    shape: BoxShape.circle,
-                    boxShadow: canSend
-                        ? [
-                            BoxShadow(
-                              color: HaloColors.amber.withValues(alpha: 0.35),
-                              blurRadius: 12,
-                              spreadRadius: -1,
-                            ),
-                          ]
-                        : null,
-                  ),
+          _MentionPicker(controller: controller, members: members),
+          Row(
+            children: [
+              GestureDetector(
+                onTap: onToggleGhost,
+                onLongPress: onLongPressGhost,
+                child: Container(
+                  width: 38,
+                  height: 38,
                   alignment: Alignment.center,
                   child: Icon(
-                    Icons.arrow_upward_rounded,
-                    color: canSend ? HaloColors.onAmber : HaloColors.text3,
-                    size: 20,
+                    Icons.local_fire_department_rounded,
+                    color: ghost ? HaloColors.amber : HaloColors.text3,
+                    size: 22,
                   ),
                 ),
-              );
-            },
+              ),
+              GestureDetector(
+                onTap: onAttach,
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: Icon(
+                    Icons.add_photo_alternate_outlined,
+                    size: 22,
+                    color: HaloColors.text2,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: HaloColors.surface2,
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                      color: HaloColors.amber.withValues(alpha: 0.4),
+                      width: 0.6,
+                    ),
+                  ),
+                  child: TextField(
+                    controller: controller,
+                    style: HaloType.sans(size: 14, color: HaloColors.text),
+                    cursorColor: HaloColors.amber,
+                    decoration: InputDecoration(
+                      hintText: 'message',
+                      hintStyle: HaloType.sans(
+                        size: 14,
+                        color: HaloColors.text3,
+                      ),
+                      border: InputBorder.none,
+                      isCollapsed: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    minLines: 1,
+                    maxLines: 5,
+                    onSubmitted: (_) => onSend(),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: controller,
+                builder: (context, value, _) {
+                  final hasText = value.text.trim().isNotEmpty;
+                  // empty field: voice lane. text: the send pill.
+                  if (!hasText && !sending) {
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        GestureDetector(
+                          onTap: onToggleDisguise,
+                          behavior: HitTestBehavior.opaque,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 12),
+                            child: Icon(
+                              disguise
+                                  ? Icons.record_voice_over
+                                  : Icons.voice_over_off,
+                              size: 20,
+                              color: disguise
+                                  ? HaloColors.amber
+                                  : HaloColors.text3,
+                            ),
+                          ),
+                        ),
+                        HoldToTalkMic(
+                          disguise: disguise,
+                          onToggleDisguise: onToggleDisguise,
+                          onComplete: onVoiceComplete,
+                        ),
+                      ],
+                    );
+                  }
+                  final canSend = !sending && hasText;
+                  return PressScale(
+                    onTap: canSend ? onSend : null,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOut,
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: canSend ? HaloColors.amber : HaloColors.surface3,
+                        shape: BoxShape.circle,
+                        boxShadow: canSend
+                            ? [
+                                BoxShadow(
+                                  color: HaloColors.amber.withValues(
+                                    alpha: 0.35,
+                                  ),
+                                  blurRadius: 12,
+                                  spreadRadius: -1,
+                                ),
+                              ]
+                            : null,
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        Icons.arrow_upward_rounded,
+                        color: canSend ? HaloColors.onAmber : HaloColors.text3,
+                        size: 20,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
         ],
       ),
@@ -2892,6 +2923,111 @@ Widget _groupBubbleEntrance({
       ),
     ),
   );
+}
+
+// the names that come up when you type @. sits above the field, at most
+// five, ours first. a tap drops the three words in and keeps typing.
+class _MentionPicker extends StatelessWidget {
+  final TextEditingController controller;
+  final List<MentionCandidate> members;
+  const _MentionPicker({required this.controller, required this.members});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller,
+      builder: (context, v, _) {
+        final q = members.isEmpty
+            ? null
+            : mentionQuery(v.text, v.selection.baseOffset);
+        final hits = q == null
+            ? const <MentionCandidate>[]
+            : mentionMatches<MentionCandidate>(
+                q,
+                members,
+                (m) => m.id,
+                (m) => m.name,
+              ).take(5).toList();
+        return AnimatedSize(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.bottomCenter,
+          child: hits.isEmpty
+              ? const SizedBox(width: double.infinity)
+              : Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 0, 0, 8),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: HaloColors.surface2,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: HaloColors.line, width: 0.5),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (final m in hits)
+                          InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              final r = insertMention(
+                                v.text,
+                                v.selection.baseOffset,
+                                m.id,
+                              );
+                              controller.value = TextEditingValue(
+                                text: r.text,
+                                selection: TextSelection.collapsed(
+                                  offset: r.cursor,
+                                ),
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              child: Row(
+                                children: [
+                                  KryfoAvatar(
+                                    seed: m.id,
+                                    size: 26,
+                                    choice: m.avatar,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      m.name ?? m.id,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: HaloType.sans(
+                                        size: 13.5,
+                                        color: HaloColors.text,
+                                      ),
+                                    ),
+                                  ),
+                                  if (m.name != null) ...[
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      m.id,
+                                      style: HaloType.mono(
+                                        size: 10,
+                                        color: HaloColors.text3,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+        );
+      },
+    );
+  }
 }
 
 class _GroupBubble extends StatelessWidget {
@@ -3225,24 +3361,27 @@ class _GroupBubble extends StatelessWidget {
                                                 0,
                                               )
                                             : EdgeInsets.zero,
-                                        child: Text(
-                                          m.text,
-                                          style: HaloType.sans(
-                                            size: 14,
-                                            // captions get a touch more weight
-                                            // so they read over busy images.
-                                            weight: m.mediaPath != null
-                                                ? FontWeight.w600
-                                                : FontWeight.w400,
-                                            // a photo caption sits on a transparent
-                                            // bubble (no amber), so onAmber would be
-                                            // invisible - use the readable color.
-                                            // text-only out messages keep onAmber.
-                                            color:
-                                                (isOut && m.mediaPath == null)
-                                                ? HaloColors.onAmber
-                                                : HaloColors.text,
-                                            height: 1.35,
+                                        // @three-words in amber
+                                        child: Text.rich(
+                                          mentionRich(
+                                            m.text,
+                                            HaloType.sans(
+                                              size: 14,
+                                              // captions get a touch more weight
+                                              // so they read over busy images.
+                                              weight: m.mediaPath != null
+                                                  ? FontWeight.w600
+                                                  : FontWeight.w400,
+                                              // a photo caption sits on a transparent
+                                              // bubble (no amber), so onAmber would be
+                                              // invisible - use the readable color.
+                                              // text-only out messages keep onAmber.
+                                              color:
+                                                  (isOut && m.mediaPath == null)
+                                                  ? HaloColors.onAmber
+                                                  : HaloColors.text,
+                                              height: 1.35,
+                                            ),
                                           ),
                                         ),
                                       ),

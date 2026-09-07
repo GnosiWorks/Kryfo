@@ -198,12 +198,14 @@ class GroupSummary {
   final String name;
   final int memberCount;
   final int unread;
+  final bool mentioned;
   final int? expiresAt; // set for a burner room
   const GroupSummary({
     required this.groupId,
     required this.name,
     required this.memberCount,
     this.unread = 0,
+    this.mentioned = false,
     this.expiresAt,
   });
   bool get isRoom => expiresAt != null;
@@ -1348,6 +1350,17 @@ class _GroupRow extends StatelessWidget {
                     const SizedBox(height: 2),
                     if (g.isRoom)
                       RoomCountdown(expiresAt: g.expiresAt!, size: 10)
+                    else if (g.mentioned)
+                      // your three words came up in there
+                      Text(
+                        'mentioned you',
+                        style: HaloType.mono(
+                          size: 10,
+                          color: HaloColors.amber,
+                          weight: FontWeight.w600,
+                          letter: 0.06,
+                        ),
+                      )
                     else
                       Text(
                         '${g.memberCount} members',
