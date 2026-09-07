@@ -54,6 +54,7 @@ import '../widgets/motion.dart';
 import '../widgets/burn_fade.dart';
 import '../dlog.dart';
 import '../widgets/sheet_handle.dart';
+import '../widgets/halo_sheet.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
 // chunk indices already accepted by the peer, per media msg_uid. lets a
@@ -1437,12 +1438,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _showPinnedSheet() async {
     final pinned = _messages.where((m) => m.pinned).toList();
     if (pinned.isEmpty) return;
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: HaloColors.surface2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+    await showHaloSheet<void>(
+      context,
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1522,12 +1519,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // the confirm sheet hands focus back to the composer on close, which pops
     // the keyboard for no reason. let go of it now and again after.
     FocusManager.instance.primaryFocus?.unfocus();
-    final confirm = await showModalBottomSheet<bool>(
-      context: context,
-      backgroundColor: HaloColors.surface2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+    final confirm = await showHaloSheet<bool>(
+      context,
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1670,13 +1663,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
     if (!mounted) return;
     final ctrl = TextEditingController(text: m.text);
-    final result = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: HaloColors.surface2,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+    final result = await showHaloSheet<String>(
+      context,
+      scroll: true,
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(
           left: 20,
@@ -2223,12 +2212,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       3600: '1 hour',
       86400: '24 hours',
     };
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: HaloColors.surface2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+    showHaloSheet<void>(
+      context,
       builder: (ctx) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
@@ -2372,12 +2357,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // bottom sheet: camera or gallery, instead of jumping straight to gallery.
   void _showAttachSheet() {
     HapticFeedback.selectionClick();
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: HaloColors.surface2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+    showHaloSheet<void>(
+      context,
       builder: (sheetCtx) {
         Widget tile(IconData icon, String label, ImageSource source) {
           return ListTile(
@@ -2397,15 +2378,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: 10),
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: HaloColors.line,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+              const SheetHandle(),
               const SizedBox(height: 6),
               tile(Icons.photo_camera_outlined, 'camera', ImageSource.camera),
               ListTile(
@@ -2548,12 +2521,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<bool> _confirmBigSend(int bytes, String what) async {
     if (bytes < 512 * 1024) return true;
     if (!mounted) return false;
-    final ok = await showModalBottomSheet<bool>(
-      context: context,
-      backgroundColor: HaloColors.surface2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+    final ok = await showHaloSheet<bool>(
+      context,
       builder: (ctx) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(22, 20, 22, 16),
@@ -3636,13 +3605,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final contact = await db.getContact(widget.peerHaloId);
     final pinned = (contact?['pinned'] as int? ?? 0) == 1;
     if (!mounted) return;
-    final action = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: HaloColors.surface2,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+    final action = await showHaloSheet<String>(
+      context,
+      scroll: true,
       builder: (ctx) => SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -3921,13 +3886,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final current = (contact?['note'] as String?) ?? '';
     final ctrl = TextEditingController(text: current);
     if (!mounted) return;
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: HaloColors.surface2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+    await showHaloSheet<void>(
+      context,
+      scroll: true,
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(
           left: 20,
@@ -4008,12 +3969,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _pickAtmosphere() async {
-    final picked = await showModalBottomSheet<Atmo>(
-      context: context,
-      backgroundColor: HaloColors.surface2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+    final picked = await showHaloSheet<Atmo>(
+      context,
       builder: (ctx) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 22),
@@ -4091,12 +4048,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _clearConversation() async {
-    final confirm = await showModalBottomSheet<bool>(
-      context: context,
-      backgroundColor: HaloColors.surface2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+    final confirm = await showHaloSheet<bool>(
+      context,
       builder: (ctx) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
@@ -4183,12 +4136,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _blockContact() async {
-    final confirm = await showModalBottomSheet<bool>(
-      context: context,
-      backgroundColor: HaloColors.surface2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+    final confirm = await showHaloSheet<bool>(
+      context,
       builder: (ctx) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
@@ -4299,12 +4248,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _forwardMessage(_Msg m) async {
     final targets = appState.contacts.where((c) => !c.blocked).toList();
-    final haloId = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: HaloColors.surface2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+    final haloId = await showHaloSheet<String>(
+      context,
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -4387,13 +4332,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _renameContact() async {
     final ctrl = TextEditingController(text: _nickname ?? '');
-    final result = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: HaloColors.surface2,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+    final result = await showHaloSheet<String>(
+      context,
+      scroll: true,
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(
           left: 20,

@@ -7,6 +7,8 @@ import 'dart:convert';
 import '../main.dart' show db, appState;
 import '../theme.dart';
 import '../widgets/notice_banner.dart';
+import '../widgets/halo_sheet.dart';
+import '../widgets/sheet_handle.dart';
 
 // a stored flag, as the row in the shield table reads back.
 class ShieldFlag {
@@ -35,12 +37,8 @@ Future<ShieldChoice?> showShieldSheet(
   String haloId,
   ShieldFlag flag,
 ) async {
-  final choice = await showModalBottomSheet<ShieldChoice>(
-    context: context,
-    backgroundColor: HaloColors.surface2,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-    ),
+  final choice = await showHaloSheet<ShieldChoice>(
+    context,
     builder: (_) => _ShieldSheet(flag: flag),
   );
   if (choice == null) return null;
@@ -70,16 +68,7 @@ class _ShieldSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: HaloColors.line2,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
+            const SheetHandle(),
             const SizedBox(height: 18),
             NoticeBanner(
               glyph: NoticeGlyph.shield,

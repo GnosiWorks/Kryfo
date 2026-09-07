@@ -14,6 +14,7 @@ import 'donate_screen.dart';
 import 'my_kryfo_screen.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/sheet_handle.dart';
+import '../widgets/halo_sheet.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -91,13 +92,9 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Future<void> _editDisplayName() async {
     final ctrl = TextEditingController(text: appState.displayName);
-    final name = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: HaloColors.surface2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+    final name = await showHaloSheet<String>(
+      context,
+      scroll: true,
       builder: (ctx) => Padding(
         padding: EdgeInsets.fromLTRB(
           20,

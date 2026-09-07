@@ -19,6 +19,8 @@ import 'archived_screen.dart';
 import '../miui_autostart.dart';
 import '../main.dart';
 import '../widgets/motion.dart';
+import '../widgets/halo_sheet.dart';
+import '../widgets/sheet_handle.dart';
 
 bool _miuiPromptChecked = false;
 
@@ -1474,25 +1476,13 @@ class _SwipeRow extends StatelessWidget {
 
 void _chatMenu(BuildContext context, ContactPreview c) {
   HapticFeedback.mediumImpact();
-  showModalBottomSheet<void>(
-    context: context,
-    backgroundColor: HaloColors.surface2,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
+  showHaloSheet<void>(
+    context,
     builder: (sheetCtx) => SafeArea(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: 8),
-          Container(
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: HaloColors.text3.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
+          const SheetHandle(),
           const SizedBox(height: 14),
           ListTile(
             leading: Icon(

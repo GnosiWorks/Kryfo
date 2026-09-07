@@ -8,15 +8,13 @@ import '../rooms.dart';
 import '../theme.dart';
 import '../widgets/room_countdown.dart';
 import '../dlog.dart';
+import '../widgets/halo_sheet.dart';
+import '../widgets/sheet_handle.dart';
 
 Future<void> showRoomLinkSheet(BuildContext context, RoomLink link) {
-  return showModalBottomSheet<void>(
-    context: context,
-    backgroundColor: HaloColors.surface2,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-    ),
+  return showHaloSheet<void>(
+    context,
+    scroll: true,
     builder: (_) => _RoomLinkSheet(link: link),
   );
 }
@@ -59,16 +57,7 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: HaloColors.line2,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
+            const SheetHandle(),
             const SizedBox(height: 18),
             Text(
               widget.link.name,

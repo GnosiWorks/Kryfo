@@ -7,16 +7,14 @@ import '../main.dart' show appState;
 import '../rooms.dart';
 import '../theme.dart';
 import '../widgets/notice_banner.dart';
+import '../widgets/halo_sheet.dart';
+import '../widgets/sheet_handle.dart';
 
 // returns the new room's group id, or null if the sheet was dismissed
 Future<String?> showRoomCreateSheet(BuildContext context) {
-  return showModalBottomSheet<String>(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: HaloColors.surface2,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-    ),
+  return showHaloSheet<String>(
+    context,
+    scroll: true,
     builder: (_) => const _RoomCreateSheet(),
   );
 }
@@ -72,16 +70,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: HaloColors.line2,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
+              const SheetHandle(),
               const SizedBox(height: 18),
               Text(
                 'burner room',

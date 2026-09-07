@@ -11,6 +11,8 @@ import '../theme.dart';
 import '../vouch_text.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/notice_banner.dart';
+import '../widgets/halo_sheet.dart';
+import '../widgets/sheet_handle.dart';
 
 const _noteMax = 40;
 
@@ -21,13 +23,9 @@ Future<void> showIntroduceSheet(
   required String peerId,
   required String peerName,
 }) async {
-  final toast = await showModalBottomSheet<String>(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: HaloColors.surface2,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-    ),
+  final toast = await showHaloSheet<String>(
+    context,
+    scroll: true,
     builder: (_) => _IntroduceSheet(peerId: peerId, peerName: peerName),
   );
   if (toast != null && context.mounted) showHaloToast(context, toast);
@@ -126,17 +124,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 10),
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: HaloColors.line2,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
+            const SheetHandle(),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 4),
               child: Text(
