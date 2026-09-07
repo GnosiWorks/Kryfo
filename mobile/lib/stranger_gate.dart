@@ -33,3 +33,18 @@ List<Map<String, Object?>> bootSubscribeRows({
 // sender's own two-message cap, so a stranger could keep writing into a gate
 // that drops everything past two. only something they wrote counts.
 bool proofOfEngagement(UnwrappedMessage env) => env.deliveredUid == null;
+
+// the receiver's side of the cap: an unaccepted, unvouched sender already has
+// two messages in requests, so this one is not stored.
+bool strangerCapHolds({
+  required bool accepted,
+  required bool vouched,
+  required int have,
+}) => !accepted && !vouched && have >= 2;
+
+// thrown when the cap holds a message back. the poll loop must not mark the
+// event seen then: it stays on the relay, and the replay after accept brings
+// it in. marking it seen was the difference between delayed and lost.
+class CapHeld implements Exception {
+  const CapHeld();
+}
