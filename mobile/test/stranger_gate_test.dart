@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/stranger_gate.dart';
 
 Map<String, Object?> _row(String id, {int accepted = 1, int blocked = 0}) => {
@@ -36,6 +37,18 @@ void main() {
         pendingRequests: [_row('b', accepted: 0, blocked: 1)],
       );
       expect(rows, isEmpty);
+    });
+  });
+
+  group('proofOfEngagement', () {
+    test('a delivery receipt is not the peer talking to us', () {
+      expect(
+        proofOfEngagement(UnwrappedMessage('', deliveredUid: 'u1')),
+        isFalse,
+      );
+    });
+    test('a message is', () {
+      expect(proofOfEngagement(UnwrappedMessage('hi', msgUid: 'u2')), isTrue);
     });
   });
 }

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
+import 'message_envelope.dart';
+
 // the stranger gate, as plain decisions with no db or engine behind them, so
 // the rules can be tested and read in one place. a stranger is someone who
 // wrote to us before we accepted them: they get two messages into requests,
@@ -24,3 +26,10 @@ List<Map<String, Object?>> bootSubscribeRows({
   }
   return out;
 }
+
+// does this frame prove the peer is talking to us? a delivery receipt does
+// not: it means their phone stored our message, which is our own words
+// coming back. counting it flipped back-paired on the sender, and with it the
+// sender's own two-message cap, so a stranger could keep writing into a gate
+// that drops everything past two. only something they wrote counts.
+bool proofOfEngagement(UnwrappedMessage env) => env.deliveredUid == null;

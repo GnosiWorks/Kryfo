@@ -3871,19 +3871,22 @@ class AppState extends ChangeNotifier {
   }) async {
     _bumpChatRev(senderHaloId);
     if (env.groupId != null) _bumpChatRev('group:${env.groupId}');
-    await db.markBackPaired(senderHaloId);
     dlog(
       'INCOMING len=${env.message.length} hasPreview=${env.preview != null} uid=${env.msgUid}',
     );
     // delivery receipt: the peer stored a message we sent. flip its tick and
     // stop the outbox chasing it. handled before the stranger gate + dedup so
     // an ack is never itself treated as a message or counted toward the cap.
+    // it is also not the peer talking to us, so back-paired stays as it was:
+    // that flag lifts the sender-side cap, and a receipt lifting it let a
+    // stranger write past the two the other side will keep.
     if (env.deliveredUid != null) {
       await db.markDelivered(env.deliveredUid!);
       _bumpChatRev(senderHaloId);
       notifyListeners();
       return;
     }
+    if (proofOfEngagement(env)) await db.markBackPaired(senderHaloId);
     if (await db.isBlocked(senderHaloId)) return;
     // 1) group control
     if (env.groupControl != null) {
