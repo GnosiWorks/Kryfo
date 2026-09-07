@@ -13,7 +13,6 @@ import '../theme.dart';
 import '../widgets/room_countdown.dart';
 import '../widgets/kryfo_avatar.dart';
 import 'notes_screen.dart';
-import 'backup_screen.dart';
 import 'bridges_screen.dart';
 import 'archived_screen.dart';
 import '../miui_autostart.dart';
@@ -80,7 +79,6 @@ class HomeScreen extends StatelessWidget {
               onSettings: onOpenSettingsDirect,
             ),
             const _OfflineStrip(),
-            const _BackupNudge(),
             const _BridgeHint(),
             const _BridgeStuckHint(),
             const _RelayDownHint(),
@@ -694,98 +692,6 @@ class _BridgeHint extends StatelessWidget {
                       ),
                       child: Text(
                         'keep waiting',
-                        style: HaloType.mono(
-                          size: 11.5,
-                          color: HaloColors.text3,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _BackupNudge extends StatelessWidget {
-  const _BackupNudge();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: appState,
-      builder: (context, _) {
-        if (!appState.showBackupNudge) return const SizedBox.shrink();
-        return Container(
-          margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-          padding: const EdgeInsets.fromLTRB(15, 13, 15, 13),
-          decoration: BoxDecoration(
-            color: HaloColors.amber.withValues(alpha: 0.09),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: HaloColors.amber.withValues(alpha: 0.25)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'lose this phone, lose this account',
-                style: HaloType.sans(
-                  size: 13.5,
-                  color: HaloColors.text,
-                  weight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                'there is no password reset here, and no one to ask. a '
-                'backup takes a minute.',
-                style: HaloType.sans(size: 12, color: HaloColors.text3),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      Navigator.of(
-                        context,
-                      ).push(haloRoute(const BackupScreen()));
-                    },
-                    behavior: HitTestBehavior.opaque,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 15,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: HaloColors.amber,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        'back up now',
-                        style: HaloType.mono(
-                          size: 11.5,
-                          color: HaloColors.onAmber,
-                          weight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  GestureDetector(
-                    onTap: () => appState.dismissBackupNudge(),
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      child: Text(
-                        'not now',
                         style: HaloType.mono(
                           size: 11.5,
                           color: HaloColors.text3,
