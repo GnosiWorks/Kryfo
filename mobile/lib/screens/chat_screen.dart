@@ -6,7 +6,6 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -54,6 +53,7 @@ import '../widgets/motion.dart';
 import '../widgets/burn_fade.dart';
 import '../dlog.dart';
 import '../widgets/sheet_handle.dart';
+import '../widgets/menu_backdrop.dart';
 import '../widgets/halo_sheet.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
@@ -1112,7 +1112,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: dismiss,
-                child: const _MenuBackdrop(),
+                child: const MenuBackdrop(),
               ),
             ),
             Positioned(
@@ -1138,8 +1138,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               top: reactTop,
               left: alignRight ? null : 12,
               right: alignRight ? 12 : null,
-              child: _MenuPop(
-                side: alignRight,
+              child: MenuPop(
+                fromRight: alignRight,
                 child: _EmojiPickerBubble(
                   emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
                   selected: target.reactions[''],
@@ -1169,8 +1169,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               bottom: menuBottom,
               left: alignRight ? null : 12,
               right: alignRight ? 12 : null,
-              child: _MenuPop(
-                side: alignRight,
+              child: MenuPop(
+                fromRight: alignRight,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: target.direction == 'out'
@@ -5667,89 +5667,6 @@ class _NavBtn extends StatelessWidget {
   }
 }
 
-class _MenuPop extends StatefulWidget {
-  final bool side;
-  final Widget child;
-  const _MenuPop({required this.side, required this.child});
-
-  @override
-  State<_MenuPop> createState() => _MenuPopState();
-}
-
-class _MenuPopState extends State<_MenuPop>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 240),
-  )..forward();
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _c,
-      child: widget.child,
-      builder: (_, child) {
-        final v = _c.value.clamp(0.0, 1.0);
-        final t = Curves.easeOutBack.transform(v);
-        return Opacity(
-          opacity: v,
-          child: Transform.scale(
-            scale: 0.8 + 0.2 * t,
-            alignment: widget.side
-                ? Alignment.bottomRight
-                : Alignment.bottomLeft,
-            child: child,
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _MenuBackdrop extends StatefulWidget {
-  const _MenuBackdrop();
-
-  @override
-  State<_MenuBackdrop> createState() => _MenuBackdropState();
-}
-
-class _MenuBackdropState extends State<_MenuBackdrop>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 220),
-  )..forward();
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _c,
-      builder: (_, _) {
-        final t = Curves.easeOut.transform(_c.value);
-        // animate only the dark overlay (cheap). the blur sigma stays fixed -
-        // animating BackdropFilter blur recomputes the whole blur every frame
-        // and janks the long-press menu on weaker phones.
-        return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-          child: Container(color: Colors.black.withValues(alpha: 0.42 * t)),
-        );
-      },
-    );
-  }
-}
-
 class _Bubble extends StatelessWidget {
   // uids whose entrance animation already played, so a list rebuild doesn't
   // replay it (that was the periodic + on-open blink).
@@ -6805,7 +6722,7 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 220),
+      duration: const Duration(milliseconds: 240),
     )..forward();
   }
 
@@ -6817,7 +6734,11 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
 
   @override
   Widget build(BuildContext context) {
-    final scale = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+    // same growth as the menu under it, so the two read as one thing
+    final scale = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).chain(CurveTween(curve: Curves.easeOutBack)).animate(_ctrl);
     return Material(
       color: Colors.transparent,
       child: ScaleTransition(
