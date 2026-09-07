@@ -7,6 +7,10 @@
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../main.dart';
+import '../fast_gate.dart';
+import '../widgets/halo_sheet.dart';
+import '../widgets/sheet_handle.dart';
+import 'package:flutter/services.dart';
 
 class ModesScreen extends StatefulWidget {
   const ModesScreen({super.key});
@@ -32,6 +36,20 @@ class _ModesScreenState extends State<ModesScreen> {
   void _pick(String m) {
     setState(() => _mode = m);
     appState.setSendMode(m);
+  }
+
+  // fast is the one mode that costs something, so it asks to be typed for
+  Future<void> _pickFast() async {
+    if (_mode == 'fast') return;
+    final ok = await showHaloSheet<bool>(
+      context,
+      scroll: true,
+      builder: (_) => const _FastGateSheet(),
+    );
+    if (ok == true && mounted) {
+      HapticFeedback.mediumImpact();
+      _pick('fast');
+    }
   }
 
   @override
@@ -82,8 +100,9 @@ class _ModesScreenState extends State<ModesScreen> {
               warning:
                   'every relay you use knows the address you connect from, not '
                   'only ours. messages are still sealed, but the fact that you '
-                  'sent one is not. for low-stakes chats.',
-              onTap: () => _pick('fast'),
+                  'sent one is not. off by default, off again after every '
+                  'reinstall, never suggested.',
+              onTap: _pickFast,
             ),
             const Spacer(),
             const Padding(
@@ -380,6 +399,144 @@ class _Footnote extends StatelessWidget {
       'onion is the default and stays that way unless you change it. '
       'switching takes effect on the next message.',
       style: HaloType.mono(size: 10, color: HaloColors.text3),
+    );
+  }
+}
+
+// the gate. what fast costs, in plain words, then the phrase typed out
+class _FastGateSheet extends StatefulWidget {
+  const _FastGateSheet();
+  @override
+  State<_FastGateSheet> createState() => _FastGateSheetState();
+}
+
+class _FastGateSheetState extends State<_FastGateSheet> {
+  final _ctrl = TextEditingController();
+  bool _ok = false;
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final insets = MediaQuery.of(context).viewInsets.bottom;
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 160),
+      curve: Curves.easeOut,
+      padding: EdgeInsets.only(bottom: insets),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SheetHandle(),
+              const SizedBox(height: 12),
+              Text(
+                'fast mode costs something',
+                style: HaloType.serif(size: 20, color: HaloColors.text),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'plain connections to every relay. your ip address is visible '
+                'to each relay you use and to anyone watching your network.',
+                style: HaloType.sans(
+                  size: 13,
+                  color: HaloColors.text2,
+                  height: 1.45,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'messages stay end to end encrypted either way. fast mode '
+                'leaks the who, never the what.',
+                style: HaloType.sans(
+                  size: 13,
+                  color: HaloColors.text2,
+                  height: 1.45,
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'type $kFastGatePhrase to turn it on',
+                style: HaloType.mono(size: 11, color: HaloColors.text2),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: HaloColors.surface3,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _ok ? HaloColors.amber : HaloColors.line,
+                    width: 0.5,
+                  ),
+                ),
+                child: TextField(
+                  controller: _ctrl,
+                  autofocus: true,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  onChanged: (v) => setState(() => _ok = fastGateAccepts(v)),
+                  onSubmitted: (_) {
+                    if (_ok) Navigator.pop(context, true);
+                  },
+                  style: HaloType.mono(size: 14, color: HaloColors.text),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    hintText: kFastGatePhrase,
+                    hintStyle: HaloType.mono(size: 14, color: HaloColors.text3),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              GestureDetector(
+                onTap: _ok ? () => Navigator.pop(context, true) : null,
+                behavior: HitTestBehavior.opaque,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  height: 46,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: _ok ? HaloColors.amber : HaloColors.surface3,
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: Text(
+                    'turn on fast mode',
+                    style: HaloType.sans(
+                      size: 14,
+                      weight: FontWeight.w600,
+                      color: _ok ? HaloColors.onAmber : HaloColors.text3,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              GestureDetector(
+                onTap: () => Navigator.pop(context, false),
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Center(
+                    child: Text(
+                      'keep it off',
+                      style: HaloType.sans(size: 13, color: HaloColors.text2),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
