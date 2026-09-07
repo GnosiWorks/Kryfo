@@ -6,16 +6,14 @@ import 'package:intl/intl.dart';
 import '../main.dart' show db;
 import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
+import '../widgets/halo_sheet.dart';
+import '../widgets/sheet_handle.dart';
 
 Future<void> showVouchersSheet(BuildContext context, String haloId) async {
   final rows = await db.vouchesFor(haloId);
   if (!context.mounted || rows.isEmpty) return;
-  await showModalBottomSheet<void>(
-    context: context,
-    backgroundColor: HaloColors.surface2,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-    ),
+  await showHaloSheet<void>(
+    context,
     builder: (_) => _VouchersSheet(rows: rows),
   );
 }
@@ -41,17 +39,7 @@ class _VouchersSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 10),
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: HaloColors.line2,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
+          const SheetHandle(),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
             child: Text(

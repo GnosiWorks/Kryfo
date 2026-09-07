@@ -57,6 +57,7 @@ import 'dart:isolate';
 import 'dlog.dart';
 import 'handle_lookup.dart';
 import 'widgets/sheet_handle.dart';
+import 'widgets/halo_sheet.dart';
 
 typedef VoidFn = Void Function();
 typedef IntArgFn = Void Function(Int32);
@@ -6533,13 +6534,9 @@ class _RootShellState extends State<RootShell> {
 
 Future<void> showAddContact(BuildContext context) async {
   final ctrl = TextEditingController();
-  final action = await showModalBottomSheet<String>(
-    context: context,
-    backgroundColor: HaloColors.surface2,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
+  final action = await showHaloSheet<String>(
+    context,
+    scroll: true,
     builder: (sheetCtx) => Padding(
       padding: EdgeInsets.fromLTRB(
         22,
@@ -6552,17 +6549,7 @@ Future<void> showAddContact(BuildContext context) async {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SheetHandle(),
-          const SizedBox(height: 8),
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: HaloColors.line,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
+          const SheetHandle(),
           const SizedBox(height: 18),
           Text(
             'add a contact',
@@ -7396,13 +7383,9 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
   }
 
   void _explain() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: HaloColors.surface2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+    showHaloSheet(
+      context,
+      scroll: true,
       builder: (_) => AnimatedBuilder(
         animation: appState,
         builder: (context, _) {
@@ -7421,11 +7404,13 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
               ? 'ready to send · finishing setup'
               : 'connecting · $pct%';
           return Padding(
-            padding: const EdgeInsets.fromLTRB(22, 18, 22, 16),
+            padding: const EdgeInsets.fromLTRB(22, 0, 22, 16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SheetHandle(),
+                const SizedBox(height: 8),
                 Text(
                   'tor',
                   style: HaloType.serif(

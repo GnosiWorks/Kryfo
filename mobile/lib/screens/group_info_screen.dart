@@ -15,6 +15,7 @@ import 'chat_screen.dart'
     show MediaGalleryScreen, Atmo, atmoFromName, atmoAccent, atmoLabel;
 import '../widgets/stagger_in.dart';
 import '../widgets/sheet_handle.dart';
+import '../widgets/halo_sheet.dart';
 
 class GroupInfoScreen extends StatefulWidget {
   final String groupId;
@@ -100,13 +101,9 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       showHaloToast(context, 'no contacts to add');
       return;
     }
-    final picked = await showModalBottomSheet<Set<String>>(
-      context: context,
-      backgroundColor: HaloColors.surface2,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+    final picked = await showHaloSheet<Set<String>>(
+      context,
+      scroll: true,
       builder: (c) => _AddMemberSheet(available: available),
     );
     if (picked != null && picked.isNotEmpty) {
@@ -163,12 +160,8 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   Future<void> _pickAtmosphere() async {
     final current = atmoFromName(await db.getGroupAtmosphere(widget.groupId));
     if (!mounted) return;
-    final picked = await showModalBottomSheet<Atmo>(
-      context: context,
-      backgroundColor: HaloColors.surface2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+    final picked = await showHaloSheet<Atmo>(
+      context,
       builder: (ctx) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
@@ -709,15 +702,7 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: 8),
-          Container(
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: HaloColors.line2,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
+          const SheetHandle(),
           const SizedBox(height: 14),
           Row(
             children: [

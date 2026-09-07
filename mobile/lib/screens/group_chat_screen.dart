@@ -48,6 +48,7 @@ import '../widgets/swipe_to_reply.dart';
 import 'room_link_sheet.dart';
 import '../dlog.dart';
 import '../widgets/sheet_handle.dart';
+import '../widgets/halo_sheet.dart';
 
 final Map<String, String> _draftPerGroup = {};
 
@@ -998,12 +999,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   void _showAttachSheet() {
     FocusManager.instance.primaryFocus?.unfocus();
     HapticFeedback.selectionClick();
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: HaloColors.surface2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+    showHaloSheet<void>(
+      context,
       builder: (sheetCtx) {
         Widget tile(IconData icon, String label, VoidCallback go) {
           return ListTile(
@@ -1023,15 +1020,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: 10),
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: HaloColors.line,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+              const SheetHandle(),
               const SizedBox(height: 6),
               tile(
                 Icons.photo_camera_outlined,
@@ -1327,12 +1316,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   void _showBurnPicker() {
     FocusManager.instance.primaryFocus?.unfocus();
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: HaloColors.surface2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+    showHaloSheet(
+      context,
       builder: (c) {
         const options = [
           (30, '30 seconds'),
@@ -1345,15 +1330,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: 8),
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: HaloColors.line2,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+              const SheetHandle(),
               const SizedBox(height: 14),
               Text(
                 'burn timer',
@@ -1716,12 +1693,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   Future<void> _showGroupPinnedSheet() async {
     final pinned = _messages.where((m) => m.pinned).toList();
     if (pinned.isEmpty) return;
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: HaloColors.surface2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+    await showHaloSheet<void>(
+      context,
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1825,12 +1798,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   Future<void> _forwardGroupMessage(_GMsg m) async {
     final targets = appState.contacts.where((c) => !c.blocked).toList();
-    final haloId = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: HaloColors.surface2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+    final haloId = await showHaloSheet<String>(
+      context,
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1914,13 +1883,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   Future<void> _editGroupMessage(_GMsg m) async {
     if (m.msgUid == null) return;
     final ctrl = TextEditingController(text: m.text);
-    final result = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: HaloColors.surface2,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+    final result = await showHaloSheet<String>(
+      context,
+      scroll: true,
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(
           left: 20,
@@ -2000,12 +1965,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // the confirm sheet hands focus back to the composer, popping the
     // keyboard for no reason. drop it.
     FocusManager.instance.primaryFocus?.unfocus();
-    final confirm = await showModalBottomSheet<bool>(
-      context: context,
-      backgroundColor: HaloColors.surface2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
+    final confirm = await showHaloSheet<bool>(
+      context,
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
