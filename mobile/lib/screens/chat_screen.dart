@@ -3196,6 +3196,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       replyTo: replyToUid,
       sent: 0,
     );
+    // the home row moves up on what you sent too, not only on what arrived
+    unawaited(appState.refreshContacts());
     // best-effort link preview over tor, fire-and-forget so it never delays
     // the send. pops the card in when (if) it resolves.
     final url = firstUrl(text);
