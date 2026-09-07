@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// lock_setup_screen.dart - first-time pin setup. enter pin twice, confirm.
-
+// lock_setup_screen.dart - set or change the pin. four digits, then the
+// same four again.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../lock_state.dart';
 import '../theme.dart';
+import '../widgets/halo_sheet.dart';
+import '../widgets/pin_pad.dart';
+import '../widgets/sheet_handle.dart';
 
 class LockSetupScreen extends StatefulWidget {
   const LockSetupScreen({super.key});
@@ -12,207 +16,183 @@ class LockSetupScreen extends StatefulWidget {
   State<LockSetupScreen> createState() => _LockSetupScreenState();
 }
 
-class _LockSetupScreenState extends State<LockSetupScreen> {
+class _LockSetupScreenState extends State<LockSetupScreen>
+    with SingleTickerProviderStateMixin {
   String _first = '';
   String _pin = '';
   bool _confirming = false;
   bool _mismatch = false;
+  late final AnimationController _shake = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 420),
+  );
 
-  void _onDigit(String d) async {
+  @override
+  void dispose() {
+    _shake.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onDigit(String d) async {
     if (_pin.length >= 4) return;
     setState(() {
       _pin += d;
       _mismatch = false;
     });
-    HapticFeedback.selectionClick();
-    if (_pin.length == 4) {
-      if (!_confirming) {
-        await Future.delayed(const Duration(milliseconds: 200));
-        if (!mounted) return;
-        setState(() {
-          _first = _pin;
-          _pin = '';
-          _confirming = true;
-        });
-      } else {
-        if (_pin == _first) {
-          await lockState.setupPin(_pin);
-          if (mounted && lockState.bioSupported) {
-            final useBio = await showDialog<bool>(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                backgroundColor: HaloColors.surface3,
-                title: Text(
+    if (_pin.length != 4) return;
+    if (!_confirming) {
+      await Future.delayed(const Duration(milliseconds: 220));
+      if (!mounted) return;
+      setState(() {
+        _first = _pin;
+        _pin = '';
+        _confirming = true;
+      });
+      return;
+    }
+    if (_pin != _first) {
+      HapticFeedback.heavyImpact();
+      setState(() => _mismatch = true);
+      await _shake.forward(from: 0);
+      if (!mounted) return;
+      setState(() {
+        _first = '';
+        _pin = '';
+        _confirming = false;
+      });
+      return;
+    }
+    await lockState.setupPin(_pin);
+    HapticFeedback.mediumImpact();
+    if (mounted && lockState.bioSupported && !lockState.biometric) {
+      final useBio = await showHaloSheet<bool>(
+        context,
+        builder: (ctx) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SheetHandle(),
+                const SizedBox(height: 12),
+                Text(
                   'unlock with fingerprint?',
-                  style: HaloType.serif(size: 18, color: HaloColors.text),
+                  style: HaloType.serif(size: 20, color: HaloColors.text),
                 ),
-                content: Text(
-                  "you can still use your pin anytime - fingerprint is just faster.",
+                const SizedBox(height: 8),
+                Text(
+                  'the pin still works whenever you want it. this is just faster.',
                   style: HaloType.sans(size: 13, color: HaloColors.text2),
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(ctx).pop(false),
+                const SizedBox(height: 16),
+                GestureDetector(
+                  onTap: () => Navigator.pop(ctx, true),
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    height: 46,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: HaloColors.amber,
+                      borderRadius: BorderRadius.circular(13),
+                    ),
                     child: Text(
-                      'not now',
-                      style: HaloType.sans(size: 13, color: HaloColors.text2),
+                      'use fingerprint',
+                      style: HaloType.sans(
+                        size: 14,
+                        weight: FontWeight.w600,
+                        color: HaloColors.onAmber,
+                      ),
                     ),
                   ),
-                  TextButton(
-                    onPressed: () => Navigator.of(ctx).pop(true),
-                    child: Text(
-                      'enable',
-                      style: HaloType.sans(size: 13, color: HaloColors.amber),
+                ),
+                const SizedBox(height: 6),
+                GestureDetector(
+                  onTap: () => Navigator.pop(ctx, false),
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Center(
+                      child: Text(
+                        'pin only',
+                        style: HaloType.sans(size: 13, color: HaloColors.text2),
+                      ),
                     ),
                   ),
-                ],
-              ),
-            );
-            if (useBio == true) await lockState.setBiometric(true);
-          }
-          if (mounted) Navigator.of(context).pop();
-        } else {
-          HapticFeedback.heavyImpact();
-          setState(() {
-            _mismatch = true;
-            _first = '';
-            _pin = '';
-            _confirming = false;
-          });
-        }
-      }
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      if (useBio == true) await lockState.setBiometric(true);
     }
+    if (mounted) Navigator.of(context).pop();
   }
 
   void _back() {
     if (_pin.isEmpty) return;
     setState(() => _pin = _pin.substring(0, _pin.length - 1));
-    HapticFeedback.selectionClick();
   }
 
   @override
   Widget build(BuildContext context) {
-    final title = _confirming ? 'confirm pin' : 'set a pin';
+    final title = _confirming ? 'once more' : 'set a pin';
     final hint = _mismatch
-        ? "didn't match - try again"
-        : (_confirming
-              ? 'enter the same 4 digits'
-              : '4 digits, anything you can remember');
+        ? 'those were different. from the top.'
+        : _confirming
+        ? 'the same four digits'
+        : 'four digits, anything you will remember';
     return Scaffold(
       backgroundColor: HaloColors.ink,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: HaloColors.ink,
         elevation: 0,
-        leading: BackButton(color: HaloColors.text2),
-        title: Text(
-          'app lock',
-          style: HaloType.serif(size: 18, color: HaloColors.text, italic: true),
-        ),
+        iconTheme: IconThemeData(color: HaloColors.text2),
       ),
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 24),
-            Text(
-              title,
-              style: HaloType.serif(
-                size: 28,
-                color: HaloColors.text,
-                weight: FontWeight.w300,
+            const Spacer(flex: 2),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              switchInCurve: Curves.easeOutCubic,
+              transitionBuilder: (c, a) => FadeTransition(
+                opacity: a,
+                child: SlideTransition(
+                  position: Tween(
+                    begin: const Offset(0, 0.2),
+                    end: Offset.zero,
+                  ).animate(a),
+                  child: c,
+                ),
+              ),
+              child: Text(
+                title,
+                key: ValueKey(title),
+                style: HaloType.serif(size: 30, color: HaloColors.text),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               hint,
               style: HaloType.sans(
-                size: 12,
+                size: 13,
                 color: _mismatch ? HaloColors.rose : HaloColors.text2,
               ),
             ),
-            const SizedBox(height: 40),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(4, (i) {
-                final filled = i < _pin.length;
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 10),
-                  width: 14,
-                  height: 14,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: filled ? HaloColors.amber : Colors.transparent,
-                    border: Border.all(color: HaloColors.text3, width: 0.8),
-                  ),
-                );
-              }),
+            const SizedBox(height: 32),
+            PinDots(
+              filled: _pin.length,
+              color: HaloColors.amber,
+              wrong: _mismatch,
+              shake: _shake,
             ),
-            const Spacer(),
-            _SetupKeypad(onDigit: _onDigit, onBack: _back),
-            const SizedBox(height: 28),
+            const Spacer(flex: 3),
+            PinPad(onDigit: _onDigit, onBack: _back),
+            const SizedBox(height: 22),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _SetupKeypad extends StatelessWidget {
-  final Function(String) onDigit;
-  final VoidCallback onBack;
-  const _SetupKeypad({required this.onDigit, required this.onBack});
-
-  @override
-  Widget build(BuildContext context) {
-    Widget btn(String label, {VoidCallback? onTap, bool isBack = false}) =>
-        GestureDetector(
-          onTap: onTap ?? () => onDigit(label),
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            width: 72,
-            height: 72,
-            alignment: Alignment.center,
-            child: isBack
-                ? Icon(
-                    Icons.backspace_outlined,
-                    color: HaloColors.text2,
-                    size: 22,
-                  )
-                : Text(
-                    label,
-                    style: HaloType.serif(
-                      size: 30,
-                      color: HaloColors.text,
-                      weight: FontWeight.w300,
-                    ),
-                  ),
-          ),
-        );
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 36),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [btn('1'), btn('2'), btn('3')],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [btn('4'), btn('5'), btn('6')],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [btn('7'), btn('8'), btn('9')],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const SizedBox(width: 72, height: 72),
-              btn('0'),
-              btn('', onTap: onBack, isBack: true),
-            ],
-          ),
-        ],
       ),
     );
   }

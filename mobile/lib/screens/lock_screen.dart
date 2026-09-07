@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // lock_screen.dart - pin entry over the entire app when locked.
-// 4-digit pin, custom keypad, no system keyboard. wrong pin shakes.
+// 4-digit pin, the house pad, no system keyboard. wrong pin shakes.
 // when biometric is enabled, auto-fires the system fingerprint prompt
-// on screen entry; "use fingerprint" link re-fires it.
+// on screen entry; "use fingerprint" re-fires it.
+
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../lock_state.dart';
 import '../wipe.dart';
 import '../theme.dart';
+import '../widgets/pin_pad.dart';
 
 class LockScreen extends StatefulWidget {
   const LockScreen({super.key});
@@ -16,20 +19,22 @@ class LockScreen extends StatefulWidget {
   State<LockScreen> createState() => _LockScreenState();
 }
 
-class _LockScreenState extends State<LockScreen>
-    with SingleTickerProviderStateMixin {
+class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
   String _pin = '';
   bool _busy = false;
   bool _wrong = false;
-  late final AnimationController _shake;
+  late final AnimationController _shake = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 420),
+  );
+  late final AnimationController _breath = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 3600),
+  )..repeat();
 
   @override
   void initState() {
     super.initState();
-    _shake = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 380),
-    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (lockState.biometric && lockState.bioSupported) {
         lockState.tryBiometric();
@@ -40,13 +45,13 @@ class _LockScreenState extends State<LockScreen>
   @override
   void dispose() {
     _shake.dispose();
+    _breath.dispose();
     super.dispose();
   }
 
   Future<void> _onDigit(String d) async {
     if (_busy || _pin.length >= 4) return;
     setState(() => _pin += d);
-    HapticFeedback.selectionClick();
     if (_pin.length == 4) {
       setState(() => _busy = true);
       final result = await lockState.verifyPin(_pin);
@@ -57,177 +62,131 @@ class _LockScreenState extends State<LockScreen>
         return;
       }
       if (result == PinResult.invalid && mounted) {
-        setState(() {
-          _wrong = true;
-          _pin = '';
-          _busy = false;
-        });
+        setState(() => _wrong = true);
         HapticFeedback.heavyImpact();
         await _shake.forward(from: 0);
-        if (mounted) setState(() => _wrong = false);
+        if (mounted) {
+          setState(() {
+            _wrong = false;
+            _pin = '';
+            _busy = false;
+          });
+        }
       }
     }
   }
 
   void _back() {
-    if (_pin.isEmpty) return;
+    if (_pin.isEmpty || _busy) return;
     setState(() => _pin = _pin.substring(0, _pin.length - 1));
-    HapticFeedback.selectionClick();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: HaloColors.ink,
-      body: SafeArea(
-        child: AnimatedBuilder(
-          animation: lockState,
-          builder: (_, _) => Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(flex: 2),
-              Text(
-                'kryfo',
-                style: HaloType.serif(
-                  size: 36,
-                  color: HaloColors.amber,
-                  italic: true,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'enter your pin',
-                style: HaloType.sans(size: 13, color: HaloColors.text2),
-              ),
-              const SizedBox(height: 36),
-              AnimatedBuilder(
-                animation: _shake,
-                builder: (_, child) {
-                  final dx = _wrong
-                      ? (8 * (1 - _shake.value)) *
-                            (((_shake.value * 12) % 2).toInt() == 0 ? 1 : -1)
-                      : 0.0;
-                  return Transform.translate(
-                    offset: Offset(dx, 0),
-                    child: child,
-                  );
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(4, (i) {
-                    final filled = i < _pin.length;
-                    return Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 10),
-                      width: 14,
-                      height: 14,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: filled
-                            ? (_wrong ? HaloColors.rose : HaloColors.amber)
-                            : Colors.transparent,
-                        border: Border.all(color: HaloColors.text3, width: 0.8),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-              const SizedBox(height: 28),
-              if (lockState.biometric && lockState.bioSupported)
-                GestureDetector(
-                  onTap: () => lockState.tryBiometric(),
-                  behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 16,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.fingerprint,
-                          color: HaloColors.text2,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'use fingerprint',
-                          style: HaloType.sans(
-                            size: 13,
-                            color: HaloColors.text2,
-                          ),
-                        ),
+      body: Stack(
+        children: [
+          // a slow amber breath behind the wordmark, like the reveal
+          Positioned.fill(
+            child: AnimatedBuilder(
+              animation: _breath,
+              builder: (_, _) {
+                final a = 0.05 + 0.04 * math.sin(_breath.value * 2 * math.pi);
+                return DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: const Alignment(0, -0.55),
+                      radius: 0.8,
+                      colors: [
+                        HaloColors.amber.withValues(alpha: a),
+                        Colors.transparent,
                       ],
                     ),
                   ),
-                ),
-              const Spacer(flex: 1),
-              _Keypad(onDigit: _onDigit, onBack: _back),
-              const SizedBox(height: 28),
-            ],
+                );
+              },
+            ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Keypad extends StatelessWidget {
-  final Function(String) onDigit;
-  final VoidCallback onBack;
-  const _Keypad({required this.onDigit, required this.onBack});
-
-  @override
-  Widget build(BuildContext context) {
-    Widget btn(String label, {VoidCallback? onTap, bool isBack = false}) {
-      return GestureDetector(
-        onTap: onTap ?? () => onDigit(label),
-        behavior: HitTestBehavior.opaque,
-        child: Container(
-          width: 72,
-          height: 72,
-          alignment: Alignment.center,
-          child: isBack
-              ? Icon(
-                  Icons.backspace_outlined,
-                  color: HaloColors.text2,
-                  size: 22,
-                )
-              : Text(
-                  label,
-                  style: HaloType.serif(
-                    size: 30,
-                    color: HaloColors.text,
-                    weight: FontWeight.w300,
+          SafeArea(
+            child: AnimatedBuilder(
+              animation: lockState,
+              builder: (_, _) => Column(
+                children: [
+                  const Spacer(flex: 3),
+                  Text(
+                    'kryfo',
+                    style: HaloType.serif(
+                      size: 40,
+                      color: HaloColors.amber,
+                      italic: true,
+                    ),
                   ),
-                ),
-        ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 36),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [btn('1'), btn('2'), btn('3')],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [btn('4'), btn('5'), btn('6')],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [btn('7'), btn('8'), btn('9')],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const SizedBox(width: 72, height: 72),
-              btn('0'),
-              btn('', onTap: onBack, isBack: true),
-            ],
+                  const SizedBox(height: 14),
+                  Container(width: 28, height: 0.5, color: HaloColors.line2),
+                  const SizedBox(height: 18),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: Text(
+                      _wrong ? 'not it' : 'your pin',
+                      key: ValueKey(_wrong),
+                      style: HaloType.sans(
+                        size: 13,
+                        color: _wrong ? HaloColors.rose : HaloColors.text2,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  PinDots(
+                    filled: _pin.length,
+                    color: HaloColors.amber,
+                    wrong: _wrong,
+                    shake: _shake,
+                  ),
+                  const SizedBox(height: 26),
+                  if (lockState.biometric && lockState.bioSupported)
+                    GestureDetector(
+                      onTap: () => lockState.tryBiometric(),
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: HaloColors.surface2,
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(
+                            color: HaloColors.line,
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.fingerprint,
+                              color: HaloColors.amber,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'use fingerprint',
+                              style: HaloType.sans(
+                                size: 12.5,
+                                color: HaloColors.text,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  const Spacer(flex: 2),
+                  PinPad(onDigit: _onDigit, onBack: _back, enabled: !_busy),
+                  const SizedBox(height: 22),
+                ],
+              ),
+            ),
           ),
         ],
       ),
