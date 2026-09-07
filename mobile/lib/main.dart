@@ -3394,6 +3394,24 @@ class AppState extends ChangeNotifier {
   // re-send anything the wire never confirmed. cheap when there's nothing to
   // do (one indexed query). skipped entirely while tor can't carry traffic.
   Future<void> drainOutbox() async {
+    // count first, wire or no wire: the strip and the rows say what is
+    // waiting whether or not anything can move yet. the old order counted
+    // only once the route was up, so an offline phone said nothing waited.
+    final rows = await db.unsentOutbox();
+    final perPeer = <String, int>{};
+    for (final r in rows) {
+      // messages rows name the peer as peer_id; the old key never matched,
+      // so no row ever knew it had something waiting
+      final to = r['peer_id'] as String?;
+      if (to != null) perPeer[to] = (perPeer[to] ?? 0) + 1;
+    }
+    if (rows.length != _queued || !_sameCounts(perPeer, _queuedPerPeer)) {
+      _queued = rows.length;
+      _queuedPerPeer
+        ..clear()
+        ..addAll(perPeer);
+      notifyListeners();
+    }
     // torReady already knows the mode - outside onion there is nothing to
     // wait for and a queued message should just go.
     final ready = torReady;
@@ -3402,26 +3420,13 @@ class AppState extends ChangeNotifier {
       return;
     }
     _outboxWasReady = true;
-    final rows = await db.unsentOutbox();
     if (rows.isEmpty) {
       if (_outboxTries.isNotEmpty) {
         _outboxTries.clear();
         _outboxNextAt.clear();
       }
-      if (_queued != 0) {
-        _queued = 0;
-        _queuedPerPeer.clear();
-        notifyListeners();
-      }
       return;
     }
-    _queued = rows.length;
-    _queuedPerPeer.clear();
-    for (final r in rows) {
-      final to = r['to_halo_id'] as String?;
-      if (to != null) _queuedPerPeer[to] = (_queuedPerPeer[to] ?? 0) + 1;
-    }
-    notifyListeners();
     // anything that landed since the last sweep stops costing us bookkeeping.
     final live = {for (final r in rows) r['msg_uid'] as String?};
     _outboxTries.removeWhere((k, _) => !live.contains(k));
@@ -3447,6 +3452,14 @@ class AppState extends ChangeNotifier {
       _outboxInflight.add(uid);
       unawaited(_drainOne(r).whenComplete(() => _outboxInflight.remove(uid)));
     }
+  }
+
+  static bool _sameCounts(Map<String, int> a, Map<String, int> b) {
+    if (a.length != b.length) return false;
+    for (final e in a.entries) {
+      if (b[e.key] != e.value) return false;
+    }
+    return true;
   }
 
   Future<void> _drainOne(Map<String, Object?> r) async {
