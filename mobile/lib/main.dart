@@ -3992,9 +3992,9 @@ class AppState extends ChangeNotifier {
       // 2-message cap: a stranger gets 2 into requests, then the chat is locked
       // until we accept them. drop past the cap - no receipt.
       final have = vouched ? 0 : await db.countMessagesFrom(senderHaloId);
-      if (have >= 2) {
-        dlog('stranger lock: dropping from $senderHaloId (cap hit)');
-        return;
+      if (strangerCapHolds(accepted: false, vouched: vouched, have: have)) {
+        dlog('stranger lock: holding from $senderHaloId (cap hit)');
+        throw const CapHeld();
       }
     }
     // chunked media: a big image/file arrives as several envelopes sharing one
@@ -4593,7 +4593,11 @@ class AppState extends ChangeNotifier {
       if (env.endpoint != null) {
         await savePeerEndpoint(h, env.endpoint!);
       }
-      await _applyIncomingPayload(h, env, fromBackPair: true);
+      try {
+        await _applyIncomingPayload(h, env, fromBackPair: true);
+      } on CapHeld {
+        // the row exists now; the relay replays this after accept
+      }
       await refreshContacts();
       notifyListeners();
       await forgetPeerFc(h);
@@ -4896,7 +4900,11 @@ class AppState extends ChangeNotifier {
               if (env.endpoint != null) {
                 await savePeerEndpoint(c.haloId, env.endpoint!);
               }
-              await _applyIncomingPayload(c.haloId, env);
+              try {
+                await _applyIncomingPayload(c.haloId, env);
+              } on CapHeld {
+                // direct onion has no replay: past the cap it stays dropped
+              }
               notifyListeners();
               handled = true;
               break;
@@ -4910,7 +4918,11 @@ class AppState extends ChangeNotifier {
               final plain = await signalDecrypt(id, cipher);
               if (plain != null) {
                 final env = unwrapMessage(plain);
-                await _applyIncomingPayload(id, env);
+                try {
+                  await _applyIncomingPayload(id, env);
+                } on CapHeld {
+                  // direct onion has no replay: past the cap it stays dropped
+                }
                 notifyListeners();
                 handled = true;
                 break;
@@ -4940,7 +4952,11 @@ class AppState extends ChangeNotifier {
                 if (env.senderXPub != null && env.senderXPub!.isNotEmpty) {
                   _xPubToHaloId[env.senderXPub!] = addr;
                 }
-                await _applyIncomingPayload(addr, env);
+                try {
+                  await _applyIncomingPayload(addr, env);
+                } on CapHeld {
+                  // direct onion has no replay: past the cap it stays dropped
+                }
                 await refreshContacts();
                 notifyListeners();
                 handled = true;
@@ -5098,7 +5114,12 @@ class AppState extends ChangeNotifier {
           if (env.endpoint != null) {
             await savePeerEndpoint(haloId!, env.endpoint!);
           }
-          await _applyIncomingPayload(haloId!, env);
+          try {
+            await _applyIncomingPayload(haloId!, env);
+          } on CapHeld {
+            // not seen: it stays on the relay and lands once we accept them
+            continue;
+          }
           await db.markSeen(h);
           notifyListeners();
         }
@@ -5825,7 +5846,11 @@ class AppState extends ChangeNotifier {
       dlog('room: frame from a key not in the roster, dropped');
       return;
     }
-    await _applyIncomingPayload(from, env);
+    try {
+      await _applyIncomingPayload(from, env);
+    } on CapHeld {
+      // rooms are never strangers; here for completeness
+    }
     if (env.groupControl != null) await _subscribeRoomMembers(groupId);
   }
 

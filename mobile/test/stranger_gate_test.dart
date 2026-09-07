@@ -51,4 +51,27 @@ void main() {
       expect(proofOfEngagement(UnwrappedMessage('hi', msgUid: 'u2')), isTrue);
     });
   });
+
+  group('strangerCapHolds', () {
+    test('third message from an unaccepted stranger is held', () {
+      expect(
+        strangerCapHolds(accepted: false, vouched: false, have: 2),
+        isTrue,
+      );
+    });
+    test('accepted, vouched, or under the cap all pass', () {
+      expect(
+        strangerCapHolds(accepted: true, vouched: false, have: 9),
+        isFalse,
+      );
+      expect(
+        strangerCapHolds(accepted: false, vouched: true, have: 9),
+        isFalse,
+      );
+      expect(
+        strangerCapHolds(accepted: false, vouched: false, have: 1),
+        isFalse,
+      );
+    });
+  });
 }
