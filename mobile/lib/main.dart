@@ -55,6 +55,7 @@ import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
 import 'dart:isolate';
 import 'dlog.dart';
+import 'handle_lookup.dart';
 import 'widgets/sheet_handle.dart';
 
 typedef VoidFn = Void Function();
@@ -635,6 +636,23 @@ Future<String> _moatOnIsolate(String? challenge, String? answer) {
 }
 
 // publishing and fetching both wait on a relay, so they go off the ui thread.
+// one read through the engine's http route, off the ui thread. used for the
+// handle lookup, which can wait on tor.
+Future<String> _torGetJsonOnIsolate(String url) {
+  return Isolate.run(() {
+    final lib = Platform.isAndroid
+        ? DynamicLibrary.open('libhalo.so')
+        : DynamicLibrary.process();
+    final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetJSON');
+    final u = url.toNativeUtf8();
+    try {
+      return fn(u).toDartString();
+    } finally {
+      malloc.free(u);
+    }
+  });
+}
+
 Future<String> _pairCodeOnIsolate(String code, String? payload) {
   return Isolate.run(() {
     final lib = Platform.isAndroid
@@ -3117,6 +3135,14 @@ Future<String?> signalDecrypt(
 int _outboxGrind(String seed) => grindPow(seed, powBits);
 
 Future<String> handleHaloUri(String raw) async {
+  // @wren or the handle page link: ask the registry for the invite behind it
+  // and carry on as if that had been pasted
+  final h = handleFromInput(raw);
+  if (h != null) {
+    final r = await resolveHandle(h, _torGetJsonOnIsolate);
+    if (r.startsWith('error:')) return r.substring(7);
+    raw = r;
+  }
   final room = RoomLink.parse(raw);
   if (room != null) return appState.joinRoom(room);
   final parsed = parseHaloUri(raw);
@@ -6548,7 +6574,7 @@ Future<void> showAddContact(BuildContext context) async {
           ),
           const SizedBox(height: 6),
           Text(
-            'scan their code in person, or paste an invite link',
+            'scan their code in person, paste an invite link, or type a handle',
             style: HaloType.sans(size: 12.5, color: HaloColors.text),
           ),
           const SizedBox(height: 14),
@@ -6614,7 +6640,7 @@ Future<void> showAddContact(BuildContext context) async {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Text(
-                  'or paste a link',
+                  'or paste a link · type @handle',
                   style: HaloType.sans(size: 11, color: HaloColors.text2),
                 ),
               ),
@@ -6636,7 +6662,7 @@ Future<void> showAddContact(BuildContext context) async {
               style: HaloType.mono(size: 12, color: HaloColors.text),
               decoration: InputDecoration(
                 border: InputBorder.none,
-                hintText: 'kryfo://share?...',
+                hintText: 'kryfo://share?...  or  @wren',
                 hintStyle: HaloType.mono(size: 12, color: HaloColors.text3),
               ),
             ),
@@ -6652,7 +6678,7 @@ Future<void> showAddContact(BuildContext context) async {
               ),
               child: Center(
                 child: Text(
-                  'import from link',
+                  'add them',
                   style: HaloType.sans(
                     size: 13.5,
                     weight: FontWeight.w600,

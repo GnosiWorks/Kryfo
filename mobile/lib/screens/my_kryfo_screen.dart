@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../contact_card.dart';
 import '../dlog.dart';
+import '../handle_lookup.dart' show handleFromInput;
 import '../main.dart' show appState, buildHaloUriV3, handleHaloUri;
 import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -19,7 +20,7 @@ import '../widgets/stagger_in.dart';
 import 'handle_screen.dart';
 import 'scan_screen.dart';
 
-enum _Way { none, here, away }
+enum _Way { none, here, away, handle }
 
 class MyKryfoScreen extends StatefulWidget {
   const MyKryfoScreen({super.key});
@@ -41,6 +42,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
   @override
   void dispose() {
     appState.removeListener(_onState);
+    _handleCtrl.dispose();
     super.dispose();
   }
 
@@ -76,6 +78,35 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
     final status = await handleHaloUri(raw);
     await appState.refreshContacts();
     if (mounted) showHaloToast(context, status);
+  }
+
+  final _handleCtrl = TextEditingController();
+  bool _finding = false;
+
+  // @wren: the registry hands back the invite wren published, and it goes
+  // through the same add path as a scan
+  Future<void> _findHandle() async {
+    final typed = _handleCtrl.text.trim();
+    if (typed.isEmpty || _finding) return;
+    final raw = typed.startsWith('@') ? typed : '@$typed';
+    if (handleFromInput(raw) == null) {
+      showHaloToast(context, 'a handle is 3 to 20 letters, digits or _');
+      return;
+    }
+    HapticFeedback.selectionClick();
+    FocusScope.of(context).unfocus();
+    setState(() => _finding = true);
+    final status = await handleHaloUri(raw);
+    await appState.refreshContacts();
+    if (!mounted) return;
+    setState(() => _finding = false);
+    showHaloToast(context, status);
+    if (status.startsWith('added') || status.startsWith('already')) {
+      HapticFeedback.mediumImpact();
+      _handleCtrl.clear();
+      final nav = Navigator.of(context);
+      if (nav.canPop()) nav.pop();
+    }
   }
 
   void _copyLink() {
@@ -191,6 +222,16 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
                 HapticFeedback.selectionClick();
                 await shareContactVcf(haloId: appState.myId, uri: _uri!);
               },
+            ),
+            const SizedBox(height: 12),
+
+            // ---- way three: they told you a handle
+            _Way3Card(
+              open: _open == _Way.handle,
+              onToggle: () => _toggle(_Way.handle),
+              ctrl: _handleCtrl,
+              busy: _finding,
+              onFind: _findHandle,
             ),
             const SizedBox(height: 12),
 
@@ -450,6 +491,91 @@ class _Way2Card extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// someone said "i'm @wren". one field, one button. the registry only ever
+// sees the handle asked about.
+class _Way3Card extends StatelessWidget {
+  final bool open;
+  final VoidCallback onToggle;
+  final TextEditingController ctrl;
+  final bool busy;
+  final VoidCallback onFind;
+  const _Way3Card({
+    required this.open,
+    required this.onToggle,
+    required this.ctrl,
+    required this.busy,
+    required this.onFind,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _WayCard(
+      title: 'i know their handle',
+      line: 'type the @name they gave you. works if they claimed one.',
+      icon: Icons.alternate_email,
+      open: open,
+      onToggle: onToggle,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+            decoration: BoxDecoration(
+              color: HaloColors.surface3,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: HaloColors.line, width: 0.5),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  '@',
+                  style: HaloType.mono(size: 14, color: HaloColors.text3),
+                ),
+                const SizedBox(width: 2),
+                Expanded(
+                  child: TextField(
+                    controller: ctrl,
+                    maxLength: 20,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    textInputAction: TextInputAction.search,
+                    onSubmitted: (_) => onFind(),
+                    style: HaloType.mono(size: 14, color: HaloColors.text),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      counterText: '',
+                      hintText: 'wren',
+                      hintStyle: HaloType.mono(
+                        size: 14,
+                        color: HaloColors.text3,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'the lookup asks for that one name and nothing about you. their '
+            'first message from you still lands as a request on their side.',
+            style: HaloType.sans(
+              size: 12,
+              color: HaloColors.text2,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 14),
+          _Primary(
+            label: busy ? 'looking…' : 'find them',
+            onTap: busy ? null : onFind,
           ),
         ],
       ),
