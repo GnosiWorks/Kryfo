@@ -8,6 +8,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../main.dart';
 import '../theme.dart';
 import '../widgets/motion.dart';
@@ -40,6 +41,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
     _ctrl = TextEditingController(text: appState.bridgeLines);
     _on = appState.bridgesOn;
     _ctrl.addListener(() => setState(() {}));
+    _loadSource();
   }
 
   @override
@@ -156,11 +158,26 @@ class _BridgesScreenState extends State<BridgesScreen> {
     });
   }
 
+  // which card the saved lines came from. the connected state sits on that
+  // one. remembered so it survives reopening the screen.
+  String _source = 'moat';
+
+  Future<void> _loadSource() async {
+    final v = await const FlutterSecureStorage().read(key: 'bridge_source');
+    if (mounted && v != null) setState(() => _source = v);
+  }
+
+  Future<void> _setSource(String v) async {
+    setState(() => _source = v);
+    await const FlutterSecureStorage().write(key: 'bridge_source', value: v);
+  }
+
   @override
   Widget build(BuildContext context) {
     final n = _lineCount;
     final live = _on && n > 0;
-
+    // connected: bridges are saved, on, and tor is carrying traffic
+    final connected = live && appState.bridgesOn && appState.torReady;
     return Scaffold(
       backgroundColor: HaloColors.ink,
       appBar: AppBar(
@@ -175,7 +192,22 @@ class _BridgesScreenState extends State<BridgesScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
         children: staggerAll([
+          Text(
+            'tor is blocked where you are?',
+            style: HaloType.serif(size: 26, color: HaloColors.text),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'bridges disguise your connection so it can get out. pick one '
+            'way in, save, and tor reconnects through it.',
+            style: HaloType.sans(
+              size: 13,
+              color: HaloColors.text2,
+              height: 1.45,
+            ),
+          ),
           if (appState.sendMode != 'private') ...[
+            const SizedBox(height: 14),
             Container(
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 13),
               decoration: BoxDecoration(
@@ -190,70 +222,109 @@ class _BridgesScreenState extends State<BridgesScreen> {
                 style: HaloType.sans(size: 12.5, color: HaloColors.text2),
               ),
             ),
-            const SizedBox(height: 16),
           ],
-          // the state of things, said once, at the top
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: live
-                    ? [
-                        HaloColors.violet.withValues(alpha: 0.18),
-                        HaloColors.amber.withValues(alpha: 0.06),
-                      ]
-                    : [
-                        HaloColors.surface2,
-                        HaloColors.surface2.withValues(alpha: 0.4),
-                      ],
-              ),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: live
-                    ? HaloColors.violet.withValues(alpha: 0.45)
-                    : HaloColors.line,
-              ),
+          const SizedBox(height: 20),
+
+          // card one: obfs4 from the tor project, through the moat
+          _BridgeCard(
+            name: 'obfs4',
+            from: 'from the tor project',
+            looksLike: 'noise',
+            speed: 'good',
+            body:
+                'makes tor traffic look like nothing in particular. the best '
+                'default for most blocked networks. answers a captcha, then '
+                'hands you a few lines.',
+            active: _source == 'moat' && n > 0,
+            connected: connected && _source == 'moat',
+            reconnecting: _reconnecting && _source == 'moat',
+            child: _RequestBlock(
+              asking: _asking,
+              captcha: _captcha,
+              error: _askError,
+              answer: _answer,
+              onRequest: () {
+                _setSource('moat');
+                _request();
+              },
+              onSend: _sendAnswer,
             ),
+          ),
+          const SizedBox(height: 12),
+
+          // card two: a line someone gave you
+          _BridgeCard(
+            name: 'private bridge',
+            from: 'a line from a friend',
+            looksLike: 'whatever the line says',
+            speed: 'depends',
+            body:
+                'got a bridge line from someone you trust, or from '
+                'bridges.torproject.org? paste it here. obfs4 lines only, '
+                'kryfo does not speak the others yet.',
+            active: _source == 'paste' && n > 0,
+            connected: connected && _source == 'paste',
+            reconnecting: _reconnecting && _source == 'paste',
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
-                  children: [
-                    BreathDot(
-                      color: live ? HaloColors.violet : HaloColors.amber,
-                      size: 7,
+                Container(
+                  decoration: BoxDecoration(
+                    color: HaloColors.surface3,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: n > 0 && _source == 'paste'
+                          ? HaloColors.violet.withValues(alpha: 0.3)
+                          : HaloColors.line,
+                      width: 0.5,
                     ),
-                    const SizedBox(width: 9),
-                    Text(
-                      live ? 'going the quiet way' : 'straight to tor',
-                      style: HaloType.mono(
-                        size: 11,
-                        color: live ? HaloColors.violet : HaloColors.text2,
-                        weight: FontWeight.w600,
-                        letter: 0.12,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  child: TextField(
+                    controller: _ctrl,
+                    maxLines: 5,
+                    minLines: 3,
+                    onChanged: (_) {
+                      if (_source != 'paste') _setSource('paste');
+                    },
+                    style: HaloType.mono(size: 11, color: HaloColors.text),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText:
+                          'obfs4 1.2.3.4:443 FINGERPRINT cert=… iat-mode=0',
+                      hintStyle: HaloType.mono(
+                        size: 10.5,
+                        color: HaloColors.text3,
                       ),
                     ),
-                  ],
+                  ),
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  live
-                      ? 'your connection enters tor through a relay nobody has '
-                            'published, wrapped so it does not look like tor.'
-                      : 'fastest, and fine on almost every network. if tor is '
-                            'blocked where you are, it will not connect at all.',
-                  style: HaloType.sans(size: 13, color: HaloColors.text2),
+                const SizedBox(height: 10),
+                _Ghost(
+                  icon: Icons.content_paste_rounded,
+                  label: 'paste from clipboard',
+                  onTap: () async {
+                    final d = await Clipboard.getData('text/plain');
+                    final t = d?.text?.trim();
+                    if (t == null || t.isEmpty) return;
+                    HapticFeedback.selectionClick();
+                    setState(() {
+                      _ctrl.text = _ctrl.text.trim().isEmpty
+                          ? t
+                          : '${_ctrl.text.trim()}\n$t';
+                    });
+                    _setSource('paste');
+                  },
                 ),
               ],
             ),
           ),
-
           const SizedBox(height: 18),
 
-          // the switch
+          // the switch, and the lines it applies to
           GestureDetector(
             onTap: () {
               HapticFeedback.selectionClick();
@@ -274,115 +345,43 @@ class _BridgesScreenState extends State<BridgesScreen> {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      'use bridges',
-                      style: HaloType.sans(size: 14.5, color: HaloColors.text),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'use bridges',
+                          style: HaloType.sans(
+                            size: 14.5,
+                            color: HaloColors.text,
+                          ),
+                        ),
+                        Text(
+                          n == 0
+                              ? 'no lines yet'
+                              : n == 1
+                              ? '1 line saved'
+                              : '$n lines saved',
+                          style: HaloType.mono(
+                            size: 10.5,
+                            color: n > 0 ? HaloColors.violet : HaloColors.text3,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   Switch(
                     value: _on,
+                    activeThumbColor: HaloColors.violet,
                     onChanged: (v) {
                       HapticFeedback.selectionClick();
                       setState(() => _on = v);
                     },
-                    activeThumbColor: HaloColors.onAmber,
-                    activeTrackColor: HaloColors.violet,
                   ),
                 ],
               ),
             ),
           ),
-
-          const SizedBox(height: 26),
-          _RequestBlock(
-            asking: _asking,
-            captcha: _captcha,
-            error: _askError,
-            answer: _answer,
-            onRequest: _request,
-            onSend: _sendAnswer,
-          ),
-
-          const SizedBox(height: 26),
-          Row(
-            children: [
-              Container(
-                width: 3,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: HaloColors.violet,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'your bridges',
-                style: HaloType.mono(
-                  size: 11,
-                  color: HaloColors.text2,
-                  weight: FontWeight.w600,
-                  letter: 0.14,
-                ),
-              ),
-              const Spacer(),
-              if (n > 0)
-                Text(
-                  n == 1 ? '1 line' : '$n lines',
-                  style: HaloType.mono(size: 11, color: HaloColors.violet),
-                ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Container(
-            decoration: BoxDecoration(
-              color: HaloColors.surface2,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: n > 0
-                    ? HaloColors.violet.withValues(alpha: 0.3)
-                    : HaloColors.line,
-              ),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            child: TextField(
-              controller: _ctrl,
-              maxLines: 6,
-              minLines: 4,
-              style: HaloType.mono(size: 11.5, color: HaloColors.text),
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                hintText: 'obfs4 1.2.3.4:443 FINGERPRINT cert=… iat-mode=0',
-                hintStyle: HaloType.mono(size: 11, color: HaloColors.text3),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 12),
-          _Ghost(
-            icon: Icons.content_paste_rounded,
-            label: 'paste from clipboard',
-            onTap: () async {
-              final d = await Clipboard.getData('text/plain');
-              final t = d?.text?.trim();
-              if (t == null || t.isEmpty) return;
-              HapticFeedback.selectionClick();
-              setState(() {
-                _ctrl.text = _ctrl.text.trim().isEmpty
-                    ? t
-                    : '${_ctrl.text.trim()}\n$t';
-              });
-            },
-          ),
-
           const SizedBox(height: 20),
-          _Note(
-            'where to get them',
-            'bridges.torproject.org, or email bridges@torproject.org from a '
-                'gmail or riseup address. ask for obfs4 - kryfo does not speak '
-                'the others yet.',
-          ),
-
-          const SizedBox(height: 24),
           GestureDetector(
             onTap: _busy ? null : _save,
             behavior: HitTestBehavior.opaque,
@@ -396,7 +395,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                     : LinearGradient(
                         begin: Alignment.centerLeft,
                         end: Alignment.centerRight,
-                        colors: _on && _lineCount > 0
+                        colors: live
                             ? [HaloColors.violet, HaloColors.amber]
                             : [HaloColors.amber, HaloColors.amber],
                       ),
@@ -407,19 +406,6 @@ class _BridgesScreenState extends State<BridgesScreen> {
                       )
                     : null,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: _busy
-                    ? null
-                    : [
-                        BoxShadow(
-                          color:
-                              (_on && _lineCount > 0
-                                      ? HaloColors.violet
-                                      : HaloColors.amber)
-                                  .withValues(alpha: 0.28),
-                          blurRadius: 18,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
               ),
               child: _reconnecting
                   ? Row(
@@ -451,36 +437,182 @@ class _BridgesScreenState extends State<BridgesScreen> {
                   : Text(
                       _busy ? 'applying…' : 'save and reconnect',
                       style: HaloType.mono(
-                        size: 13,
-                        color: _busy ? HaloColors.text2 : HaloColors.onAmber,
-                        weight: FontWeight.w700,
-                        letter: 0.04,
+                        size: 12.5,
+                        color: HaloColors.onAmber,
+                        weight: FontWeight.w600,
+                        letter: 0.06,
                       ),
                     ),
             ),
           ),
-
-          if (_result != null) ...[
-            const SizedBox(height: 14),
-            Center(
-              child: Text(
-                _result!,
-                style: HaloType.mono(size: 11.5, color: HaloColors.text2),
-              ),
+          if (_result != null && _result != 'ok') ...[
+            const SizedBox(height: 10),
+            Text(
+              _result!.replaceFirst('error: ', ''),
+              style: HaloType.mono(size: 11, color: HaloColors.rose),
             ),
           ],
-
           const SizedBox(height: 22),
-          _Note(
-            'what changes',
-            'saving restarts tor, so the next connection takes longer than '
-                'usual. bridges are slower in general. if your network does not '
-                'block tor, leave this off.',
+          const _Note(
+            'what a bridge is',
+            'a tor entry point nobody has published, reached through a '
+                'wrapper so the connection does not look like tor. the rest '
+                'of the route is the usual three hops.',
           ),
         ]),
       ),
     );
   }
+}
+
+// one way in. what it looks like on the wire, how fast it tends to be, and
+// the state of things when it is the one in use.
+class _BridgeCard extends StatelessWidget {
+  final String name;
+  final String from;
+  final String looksLike;
+  final String speed;
+  final String body;
+  final bool active;
+  final bool connected;
+  final bool reconnecting;
+  final Widget child;
+  const _BridgeCard({
+    required this.name,
+    required this.from,
+    required this.looksLike,
+    required this.speed,
+    required this.body,
+    required this.active,
+    required this.connected,
+    required this.reconnecting,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tint = connected ? HaloColors.green : HaloColors.violet;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      decoration: BoxDecoration(
+        color: HaloColors.surface2,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: active ? tint.withValues(alpha: 0.5) : HaloColors.line,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                name,
+                style: HaloType.serif(size: 20, color: HaloColors.text),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  from,
+                  style: HaloType.sans(size: 12, color: HaloColors.text2),
+                ),
+              ),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: connected
+                    ? Row(
+                        key: const ValueKey('on'),
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          BreathDot(color: HaloColors.green, size: 6),
+                          const SizedBox(width: 6),
+                          Text(
+                            'connected',
+                            style: HaloType.mono(
+                              size: 10,
+                              color: HaloColors.green,
+                              weight: FontWeight.w600,
+                              letter: 0.1,
+                            ),
+                          ),
+                        ],
+                      )
+                    : reconnecting
+                    ? Text(
+                        key: const ValueKey('re'),
+                        'connecting',
+                        style: HaloType.mono(
+                          size: 10,
+                          color: HaloColors.violet,
+                          letter: 0.1,
+                        ),
+                      )
+                    : active
+                    ? Text(
+                        key: const ValueKey('saved'),
+                        'saved',
+                        style: HaloType.mono(
+                          size: 10,
+                          color: HaloColors.violet,
+                          letter: 0.1,
+                        ),
+                      )
+                    : const SizedBox.shrink(key: ValueKey('off')),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              _Meta(k: 'looks like', v: looksLike),
+              const SizedBox(width: 18),
+              _Meta(k: 'speed', v: speed),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            body,
+            style: HaloType.sans(
+              size: 12.5,
+              color: HaloColors.text2,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _Meta extends StatelessWidget {
+  final String k;
+  final String v;
+  const _Meta({required this.k, required this.v});
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        k,
+        style: HaloType.mono(size: 9.5, color: HaloColors.text3, letter: 0.1),
+      ),
+      const SizedBox(height: 2),
+      Text(
+        v,
+        style: HaloType.mono(
+          size: 11,
+          color: HaloColors.text,
+          weight: FontWeight.w600,
+        ),
+      ),
+    ],
+  );
 }
 
 class _RequestBlock extends StatelessWidget {
