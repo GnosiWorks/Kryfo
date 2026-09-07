@@ -11,8 +11,8 @@ import '../rooms.dart';
 import 'room_link_sheet.dart';
 import '../widgets/motion.dart' show haloRoute;
 import 'package:flutter/services.dart';
-import 'chat_screen.dart'
-    show MediaGalleryScreen, Atmo, atmoFromName, atmoAccent, atmoLabel;
+import 'chat_screen.dart' show MediaGalleryScreen, atmoFromName;
+import 'wallpaper_sheet.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/halo_sheet.dart';
@@ -160,78 +160,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   Future<void> _pickAtmosphere() async {
     final current = atmoFromName(await db.getGroupAtmosphere(widget.groupId));
     if (!mounted) return;
-    final picked = await showHaloSheet<Atmo>(
-      context,
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SheetHandle(),
-              const SizedBox(height: 8),
-              Text(
-                'atmosphere',
-                style: HaloType.serif(size: 18, color: HaloColors.text),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'a quiet wash behind this group. yours only.',
-                style: HaloType.sans(size: 12, color: HaloColors.text2),
-              ),
-              const SizedBox(height: 18),
-              Wrap(
-                spacing: 16,
-                runSpacing: 14,
-                children: Atmo.values.map((a) {
-                  final sel = a == current;
-                  final accent = atmoAccent(a);
-                  return GestureDetector(
-                    onTap: () => Navigator.pop(ctx, a),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 46,
-                          height: 46,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: a == Atmo.none
-                                ? HaloColors.surface3
-                                : accent.withValues(alpha: 0.18),
-                            border: Border.all(
-                              color: sel ? HaloColors.amber : HaloColors.line,
-                              width: sel ? 1.5 : 0.5,
-                            ),
-                          ),
-                          alignment: Alignment.center,
-                          child: a == Atmo.none
-                              ? Icon(
-                                  Icons.not_interested,
-                                  size: 16,
-                                  color: HaloColors.text3,
-                                )
-                              : null,
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          atmoLabel(a),
-                          style: HaloType.mono(
-                            size: 10,
-                            color: sel ? HaloColors.amber : HaloColors.text3,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+    final picked = await showWallpaperSheet(context, current);
     if (picked == null) return;
     HapticFeedback.selectionClick();
     await db.setGroupAtmosphere(widget.groupId, picked.name);
@@ -596,7 +525,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    'atmosphere',
+                    'wallpaper',
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w500,
