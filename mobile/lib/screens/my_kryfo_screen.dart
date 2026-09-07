@@ -235,6 +235,21 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
             ),
             const SizedBox(height: 12),
 
+            // ---- the third way in, not hidden: a friend can vouch
+            Padding(
+              padding: const EdgeInsets.fromLTRB(6, 4, 6, 6),
+              child: Text(
+                'already share a friend on kryfo? they can introduce you '
+                'both from their chat, and you skip the request.',
+                style: HaloType.sans(
+                  size: 12,
+                  color: HaloColors.text2,
+                  height: 1.45,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
             // ---- the handle: a public front door, if you want one
             _HandleRow(
               handle: handle,
