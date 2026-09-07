@@ -48,6 +48,7 @@ import '../widgets/swipe_to_reply.dart';
 import 'room_link_sheet.dart';
 import '../dlog.dart';
 import '../widgets/sheet_handle.dart';
+import '../widgets/menu_backdrop.dart';
 import '../widgets/halo_sheet.dart';
 
 final Map<String, String> _draftPerGroup = {};
@@ -81,6 +82,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   bool _sending = false;
   _GMsg? _replyTo;
   OverlayEntry? _menuEntry;
+  // the bubble under an open menu: hidden in the list, drawn lifted above
+  // the blur
+  String? _liftedUid;
   final GlobalKey _jumpKey = GlobalKey();
   String? _jumpUid;
   String? _rippleUid;
@@ -728,25 +732,37 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             active: animateIn,
             child: SwipeToReply(
               onReply: () => setState(() => _replyTo = m),
-              child: _GroupBubble(
-                m: m,
-                showSender: showSender,
-                senderBadge: _badgeFor(m.sender),
-                quotedText: quoted,
-                quotedAuthor: quotedAuthor,
-                onLongPress: (ctx) => _showEmojiPickerAt(ctx, m),
-                onRetry: m.failed ? () => _retryGroup(m) : null,
-                ripple: m.msgUid != null && m.msgUid == _rippleUid,
-                onReplyTap: m.replyTo == null
-                    ? null
-                    : () {
-                        for (final x in _messages) {
-                          if (x.msgUid != null && x.msgUid == m.replyTo) {
-                            _scrollToGroupMessage(x);
-                            break;
+              child: AnimatedOpacity(
+                opacity: (m.msgUid != null && m.msgUid == _liftedUid)
+                    ? 0.0
+                    : 1.0,
+                duration: const Duration(milliseconds: 200),
+                child: _GroupBubble(
+                  m: m,
+                  showSender: showSender,
+                  senderBadge: _badgeFor(m.sender),
+                  quotedText: quoted,
+                  quotedAuthor: quotedAuthor,
+                  onLongPress: (ctx) => _showEmojiPickerAt(
+                    ctx,
+                    m,
+                    showSender: showSender,
+                    quotedText: quoted,
+                    quotedAuthor: quotedAuthor,
+                  ),
+                  onRetry: m.failed ? () => _retryGroup(m) : null,
+                  ripple: m.msgUid != null && m.msgUid == _rippleUid,
+                  onReplyTap: m.replyTo == null
+                      ? null
+                      : () {
+                          for (final x in _messages) {
+                            if (x.msgUid != null && x.msgUid == m.replyTo) {
+                              _scrollToGroupMessage(x);
+                              break;
+                            }
                           }
-                        }
-                      },
+                        },
+                ),
               ),
             ),
           ),
@@ -1386,7 +1402,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     );
   }
 
-  Future<void> _showEmojiPickerAt(BuildContext bubbleCtx, _GMsg target) async {
+  Future<void> _showEmojiPickerAt(
+    BuildContext bubbleCtx,
+    _GMsg target, {
+    bool showSender = false,
+    String? quotedText,
+    String? quotedAuthor,
+  }) async {
     // drop composer focus BEFORE anything opens: routes capture the focused
     // node at open and restore it at close, which is what kept yanking the
     // keyboard up after unsend/edit/forward. captured nothing = restores
@@ -1397,6 +1419,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (renderBox == null) return;
     final pos = renderBox.localToGlobal(Offset.zero);
     final size = renderBox.size;
+    // the row that holds the bubble, avatar and sender line: the lifted copy
+    // is drawn over it at the same width so it lines up exactly
+    final rowBox = bubbleCtx
+        .findAncestorRenderObjectOfType<RenderRepaintBoundary>();
+    final rowPos = rowBox?.localToGlobal(Offset.zero) ?? pos;
+    final rowW = rowBox?.size.width ?? size.width;
     final isOut = target.direction == 'out';
     final screenH = MediaQuery.of(context).size.height;
     // anchor the menu just below the bubble, but if that would run off the
@@ -1404,10 +1432,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final belowTop = pos.dy + size.height + 8;
     final showAbove = belowTop > screenH - 220;
     final overlay = Overlay.of(context);
+    HapticFeedback.selectionClick();
+    if (mounted) setState(() => _liftedUid = target.msgUid);
     late OverlayEntry entry;
     void dismiss() {
       if (entry.mounted) entry.remove();
       _menuEntry = null;
+      if (mounted) setState(() => _liftedUid = null);
     }
 
     entry = OverlayEntry(
@@ -1416,8 +1447,38 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           children: [
             Positioned.fill(
               child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: dismiss,
-                child: Container(color: Colors.black.withValues(alpha: 0.18)),
+                child: const MenuBackdrop(),
+              ),
+            ),
+            Positioned(
+              left: rowPos.dx,
+              top: rowPos.dy,
+              width: rowW,
+              child: IgnorePointer(
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOut,
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: _GroupBubble(
+                      m: target,
+                      showSender: showSender,
+                      senderBadge: _badgeFor(target.sender),
+                      quotedText: quotedText,
+                      quotedAuthor: quotedAuthor,
+                    ),
+                  ),
+                  builder: (_, t, child) => Transform.scale(
+                    scale: 1.0 + 0.04 * t,
+                    alignment: isOut
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
+                    child: child,
+                  ),
+                ),
               ),
             ),
             Positioned(
@@ -3489,7 +3550,7 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 180),
+      duration: const Duration(milliseconds: 240),
     )..forward();
   }
 
@@ -3501,8 +3562,9 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
 
   @override
   Widget build(BuildContext context) {
+    // same growth as the chat's menu, so the two read as one thing
     final scale = Tween<double>(
-      begin: 0.7,
+      begin: 0.8,
       end: 1.0,
     ).chain(CurveTween(curve: Curves.easeOutBack)).animate(_ctrl);
     final fade = Tween<double>(begin: 0, end: 1).animate(_ctrl);
