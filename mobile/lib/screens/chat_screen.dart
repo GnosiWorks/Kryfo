@@ -19,6 +19,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'key_verification_screen.dart';
 import 'contact_screen.dart';
+import 'wallpaper_sheet.dart';
 import 'introduce_sheet.dart';
 import 'vouchers_sheet.dart';
 import 'shield_sheet.dart';
@@ -3744,7 +3745,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       const SizedBox(width: 14),
                       Text(
-                        'atmosphere',
+                        'wallpaper',
                         style: HaloType.sans(size: 14, color: HaloColors.text),
                       ),
                     ],
@@ -4003,77 +4004,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _pickAtmosphere() async {
-    final picked = await showHaloSheet<Atmo>(
-      context,
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 22),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SheetHandle(),
-              Text(
-                'atmosphere',
-                style: HaloType.serif(size: 18, color: HaloColors.text),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'a quiet wash behind this conversation. yours only.',
-                style: HaloType.sans(size: 12, color: HaloColors.text2),
-              ),
-              const SizedBox(height: 18),
-              Wrap(
-                spacing: 16,
-                runSpacing: 14,
-                children: Atmo.values.map((a) {
-                  final sel = a == _atmosphere;
-                  final accent = atmoAccent(a);
-                  return GestureDetector(
-                    onTap: () => Navigator.pop(ctx, a),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 46,
-                          height: 46,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: a == Atmo.none
-                                ? HaloColors.surface3
-                                : accent.withValues(alpha: 0.18),
-                            border: Border.all(
-                              color: sel ? HaloColors.amber : HaloColors.line,
-                              width: sel ? 1.5 : 0.5,
-                            ),
-                          ),
-                          alignment: Alignment.center,
-                          child: a == Atmo.none
-                              ? Icon(
-                                  Icons.not_interested,
-                                  size: 16,
-                                  color: HaloColors.text3,
-                                )
-                              : null,
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          atmoLabel(a),
-                          style: HaloType.mono(
-                            size: 10,
-                            color: sel ? HaloColors.amber : HaloColors.text3,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+    final picked = await showWallpaperSheet(context, _atmosphere);
     if (picked == null) return;
     HapticFeedback.selectionClick();
     await db.setAtmosphere(widget.peerHaloId, picked.name);
@@ -6798,21 +6729,31 @@ class _ActionTapState extends State<_ActionTap> {
   }
 }
 
-enum Atmo { none, ember, dusk, moss, rose }
+// the wallpaper behind a conversation: a gradient wash in one of the house
+// colours, or a quiet pattern in the line colour. stored per chat in the
+// encrypted db, never sent, gone on wipe.
+enum Atmo { none, ember, dusk, moss, rose, dots, grid, waves }
 
 Atmo atmoFromName(String? n) => switch (n) {
   'ember' => Atmo.ember,
   'dusk' => Atmo.dusk,
   'moss' => Atmo.moss,
   'rose' => Atmo.rose,
+  'dots' => Atmo.dots,
+  'grid' => Atmo.grid,
+  'waves' => Atmo.waves,
   _ => Atmo.none,
 };
+
+bool atmoIsPattern(Atmo a) =>
+    a == Atmo.dots || a == Atmo.grid || a == Atmo.waves;
 
 Color atmoAccent(Atmo a) => switch (a) {
   Atmo.ember => HaloColors.amber,
   Atmo.dusk => HaloColors.violet,
   Atmo.moss => HaloColors.green,
   Atmo.rose => HaloColors.rose,
+  Atmo.dots || Atmo.grid || Atmo.waves => HaloColors.text2,
   Atmo.none => HaloColors.surface,
 };
 
@@ -6822,7 +6763,62 @@ String atmoLabel(Atmo a) => switch (a) {
   Atmo.dusk => 'dusk',
   Atmo.moss => 'moss',
   Atmo.rose => 'rose',
+  Atmo.dots => 'dots',
+  Atmo.grid => 'grid',
+  Atmo.waves => 'waves',
 };
+
+// the patterns, drawn in the line colour so they sit behind the bubbles
+// without competing with them. scale lets the picker swatch show the same
+// thing smaller.
+class PatternPainter extends CustomPainter {
+  final Atmo atmo;
+  final double scale;
+  PatternPainter(this.atmo, {this.scale = 1});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final p = Paint()
+      ..color = HaloColors.line2.withValues(alpha: 0.55)
+      ..strokeWidth = 1 * scale
+      ..style = PaintingStyle.stroke;
+    switch (atmo) {
+      case Atmo.dots:
+        final step = 26.0 * scale;
+        final fill = Paint()..color = HaloColors.line2.withValues(alpha: 0.7);
+        for (var y = step / 2; y < size.height; y += step) {
+          for (var x = step / 2; x < size.width; x += step) {
+            canvas.drawCircle(Offset(x, y), 1.2 * scale, fill);
+          }
+        }
+      case Atmo.grid:
+        final step = 34.0 * scale;
+        for (var x = 0.0; x < size.width; x += step) {
+          canvas.drawLine(Offset(x, 0), Offset(x, size.height), p);
+        }
+        for (var y = 0.0; y < size.height; y += step) {
+          canvas.drawLine(Offset(0, y), Offset(size.width, y), p);
+        }
+      case Atmo.waves:
+        final step = 30.0 * scale;
+        final amp = 5.0 * scale;
+        final len = 48.0 * scale;
+        for (var y = step / 2; y < size.height + amp; y += step) {
+          final path = Path()..moveTo(0, y);
+          for (var x = 0.0; x <= size.width; x += 4) {
+            path.lineTo(x, y + amp * math.sin(x / len * 2 * math.pi));
+          }
+          canvas.drawPath(path, p);
+        }
+      default:
+        break;
+    }
+  }
+
+  @override
+  bool shouldRepaint(PatternPainter old) =>
+      old.atmo != atmo || old.scale != scale;
+}
 
 class AtmosphereWash extends StatelessWidget {
   final Atmo atmo;
@@ -6830,6 +6826,11 @@ class AtmosphereWash extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (atmo == Atmo.none) return const SizedBox.shrink();
+    if (atmoIsPattern(atmo)) {
+      return IgnorePointer(
+        child: CustomPaint(painter: PatternPainter(atmo), size: Size.infinite),
+      );
+    }
     final accent = atmoAccent(atmo);
     final deep = Color.lerp(accent, HaloColors.ink, 0.55)!;
     return IgnorePointer(
