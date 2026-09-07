@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import '../main.dart' show db, appState;
 import '../theme.dart';
+import '../widgets/stagger_in.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/intro_chip.dart';
 import '../vouch_text.dart';
@@ -163,28 +164,31 @@ class _RequestsScreenState extends State<RequestsScreen> {
 
   Widget _empty() {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const _BreathingInbox(),
-            const SizedBox(height: 14),
-            Text(
-              'no requests',
-              style: HaloType.serif(size: 18, color: HaloColors.text2),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'messages from people you have not added show up here first.',
-              textAlign: TextAlign.center,
-              style: HaloType.sans(
-                size: 13,
-                color: HaloColors.text3,
-                height: 1.5,
+      child: StaggerIn(
+        index: 0,
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const _BreathingInbox(),
+              const SizedBox(height: 14),
+              Text(
+                'no requests',
+                style: HaloType.serif(size: 18, color: HaloColors.text2),
               ),
-            ),
-          ],
+              const SizedBox(height: 6),
+              Text(
+                'messages from people you have not added show up here first.',
+                textAlign: TextAlign.center,
+                style: HaloType.sans(
+                  size: 13,
+                  color: HaloColors.text3,
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
