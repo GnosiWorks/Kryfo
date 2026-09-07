@@ -55,6 +55,7 @@ import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
 import 'dart:isolate';
 import 'dlog.dart';
+import 'stranger_gate.dart';
 import 'handle_lookup.dart';
 import 'widgets/sheet_handle.dart';
 import 'widgets/halo_sheet.dart';
@@ -4810,9 +4811,15 @@ class AppState extends ChangeNotifier {
       } catch (e) {
         dlog('rooms: boot subscribe failed: $e');
       }
-      // introduced people we have not accepted yet listen too, or the
-      // message that would turn them into a request never arrives.
-      final rows = [...await db.contacts(), ...await db.vouchedPending()];
+      // people we have not accepted yet listen too: someone a friend
+      // introduced, and any stranger already sitting in requests. their
+      // second message rides the pair address, and without this it waited
+      // on the relay until we accepted them.
+      final rows = bootSubscribeRows(
+        accepted: await db.contacts(),
+        vouchedPending: await db.vouchedPending(),
+        pendingRequests: await db.pendingRequests(),
+      );
       final fresh = <String, String>{};
       for (final r in rows) {
         final haloId = r['halo_id'] as String?;
