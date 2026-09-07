@@ -364,9 +364,12 @@ class _IdentityScreenState extends State<_IdentityScreen>
                       height: 1.55,
                     ),
                     children: [
-                      const TextSpan(text: 'no phone, no email. '),
+                      const TextSpan(
+                        text:
+                            'generated from a key that lives only on this phone. ',
+                      ),
                       TextSpan(
-                        text: 'these three words are your identity',
+                        text: 'memorable, unique, yours alone.',
                         style: HaloType.sans(
                           size: 11,
                           color: HaloColors.text2,
@@ -374,10 +377,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
                           height: 1.55,
                         ),
                       ),
-                      const TextSpan(
-                        text:
-                            ', derived from a key that lives only on this device.',
-                      ),
+                      const TextSpan(text: ' no one else has this.'),
                     ],
                   ),
                 ),
@@ -401,7 +401,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'regenerate',
+                        'try another',
                         style: HaloType.sans(size: 12, color: HaloColors.text2),
                       ),
                     ),
@@ -419,7 +419,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'this is me \u2192',
+                        'use this name \u2192',
                         style: HaloType.sans(
                           size: 12,
                           color: HaloColors.onAmber,
