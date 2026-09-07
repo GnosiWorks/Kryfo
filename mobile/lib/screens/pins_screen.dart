@@ -112,26 +112,18 @@ class PinsScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
             children: staggerAll([
               Text(
-                'two pins, two outcomes',
+                'two pins',
                 style: HaloType.serif(size: 26, color: HaloColors.text),
               ),
               const SizedBox(height: 6),
-              Text(
-                'whoever is holding your phone, you decide what they see.',
-                style: HaloType.sans(
-                  size: 13,
-                  color: HaloColors.text2,
-                  height: 1.45,
-                ),
-              ),
               const SizedBox(height: 20),
               _PinCard(
                 name: 'your pin',
                 state: on ? 'on' : 'off',
                 stateColor: on ? HaloColors.green : HaloColors.text3,
                 outcome:
-                    'opens your actual account. everything as you left it. '
-                    'four digits, asked for when kryfo comes to the front.',
+                    'opens kryfo. four digits, asked for when it comes '
+                    'to the front.',
                 primary: on ? 'change pin' : 'set a pin',
                 onPrimary: () async {
                   HapticFeedback.selectionClick();
@@ -174,10 +166,7 @@ class PinsScreen extends StatelessWidget {
                     ? 'set'
                     : 'off',
                 stateColor: wipe ? HaloColors.rose : HaloColors.text3,
-                outcome:
-                    'silently destroys keys and data. the app opens looking '
-                    'freshly installed, as if it had just crashed. for the '
-                    'moment someone makes you unlock it.',
+                outcome: 'the second pin wipes everything.',
                 primary: wipe ? 'change wipe pin' : 'set a wipe pin',
                 onPrimary: on
                     ? () async {
@@ -200,16 +189,6 @@ class PinsScreen extends StatelessWidget {
                         if (ok) await lockState.disablePanicPin();
                       }
                     : null,
-              ),
-              const SizedBox(height: 18),
-              Text(
-                'the two are indistinguishable at the lock screen: the same '
-                'four dots, the same pad, no tell. a wrong pin just shakes.',
-                style: HaloType.sans(
-                  size: 12.5,
-                  color: HaloColors.text2,
-                  height: 1.45,
-                ),
               ),
             ]),
           );
