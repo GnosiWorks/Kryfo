@@ -21,6 +21,7 @@ import '../main.dart';
 import '../widgets/motion.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
+import '../widgets/shift_in_place.dart';
 
 bool _miuiPromptChecked = false;
 
@@ -1183,20 +1184,30 @@ class _ContactList extends StatelessWidget {
               ),
             ),
           ),
+        // keyed, so a row that moves up on a new message glides there
         ...groups.asMap().entries.map(
-          (e) => _Enter(
-            index: 1 + e.key,
-            child: _GroupRow(
-              g: e.value,
-              onTap: () => onOpenGroup(e.value.groupId),
+          (e) => ShiftInPlace(
+            key: ValueKey('g-${e.value.groupId}'),
+            child: _Enter(
+              index: 1 + e.key,
+              child: _GroupRow(
+                g: e.value,
+                onTap: () => onOpenGroup(e.value.groupId),
+              ),
             ),
           ),
         ),
         if (rest.isNotEmpty) ...[
           ...rest.asMap().entries.map(
-            (e) => _Enter(
-              index: 1 + groups.length + e.key,
-              child: _SwipeRow(c: e.value, onTap: () => onTap(e.value.haloId)),
+            (e) => ShiftInPlace(
+              key: ValueKey('c-${e.value.haloId}'),
+              child: _Enter(
+                index: 1 + groups.length + e.key,
+                child: _SwipeRow(
+                  c: e.value,
+                  onTap: () => onTap(e.value.haloId),
+                ),
+              ),
             ),
           ),
         ],
