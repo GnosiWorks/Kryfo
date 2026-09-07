@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// kryfo onboarding flow - 6 screens shown on first launch, then never again.
-// welcome → identity reveal → pick a face → keep safe → staying connected →
-// first contact.
+// kryfo onboarding - shown once. three things in the first minute, everything
+// else when it is needed: your name is three words, nobody gets in unless
+// you let them, the first connection takes a minute.
+// welcome → identity reveal → pick a face → three things → one notification →
+// add someone.
 
 import 'dart:math' as math;
 import 'dart:ui' as ui;
@@ -15,6 +17,7 @@ import 'scan_screen.dart';
 import 'avatar_picker_screen.dart' show AvatarChoiceEditor;
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/motion.dart' show haloRoute;
+import '../widgets/stagger_in.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final AppState appState;
@@ -56,9 +59,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             _WelcomeScreen(onContinue: _next),
             _IdentityScreen(appState: widget.appState, onContinue: _next),
             _PickFaceScreen(onContinue: _next),
-            _KeepSafeScreen(onContinue: _next),
-            _StayingConnectedScreen(onContinue: _next),
-            _FirstContactScreen(onComplete: widget.onComplete),
+            _ThreeThingsScreen(onContinue: _next),
+            _NotificationScreen(onContinue: _next),
+            _AddSomeoneScreen(onComplete: widget.onComplete),
           ],
         ),
       ),
@@ -159,16 +162,19 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
             ),
           ),
           const SizedBox(height: 26),
-          _bullet('no phone, no email.', 'nothing tying this app to you.'),
-          const SizedBox(height: 13),
           _bullet(
-            'no servers.',
-            'messages travel directly between devices, end-to-end encrypted.',
+            'your name is three words.',
+            'no phone, no email, no address book.',
           ),
           const SizedBox(height: 13),
           _bullet(
-            'onion-routed.',
-            "your IP stays hidden. nobody sees who's talking to whom.",
+            'nobody gets in unless you let them.',
+            'there is no search. people are added by hand, both ways.',
+          ),
+          const SizedBox(height: 13),
+          _bullet(
+            'the first connection takes a minute.',
+            'kryfo builds a private route before it sends. quick after.',
           ),
           const Spacer(),
           GestureDetector(
@@ -659,10 +665,12 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 50, 28, 36),
+      padding: const EdgeInsets.fromLTRB(28, 44, 28, 36),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const _Step(3),
+          const SizedBox(height: 22),
           RichText(
             text: TextSpan(
               style: HaloType.serif(
@@ -754,214 +762,106 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
   }
 }
 
-// === 04 · KEEP SAFE ===
+// === 04 · THREE THINGS ===
+//
+// the same three points the welcome page opened with, each with its why.
+// nothing about rooms, vouching, the shield or modes: the app explains those
+// the first time they come up.
 
-class _KeepSafeScreen extends StatelessWidget {
+class _ThreeThingsScreen extends StatelessWidget {
   final VoidCallback onContinue;
-  const _KeepSafeScreen({required this.onContinue});
+  const _ThreeThingsScreen({required this.onContinue});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 50, 28, 36),
+      padding: const EdgeInsets.fromLTRB(28, 44, 28, 36),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              border: Border.all(color: HaloColors.amber, width: 0.5),
-              borderRadius: BorderRadius.circular(8),
+          const _Step(4),
+          const SizedBox(height: 22),
+          _headline('three things,\nthen ', "you're in"),
+          const SizedBox(height: 12),
+          Text(
+            'everything else the app will tell you when it matters.',
+            style: HaloType.sans(
+              size: 13.5,
+              color: HaloColors.text2,
+              height: 1.55,
             ),
-            alignment: Alignment.center,
-            child: Text(
-              '!',
+          ),
+          const SizedBox(height: 24),
+          ...staggerAll([
+            _Card(
+              num: '01',
+              title: 'your name is three words',
+              desc:
+                  'that is the whole identity. no number to leak, no email '
+                  'to phish, nothing to look up. people you talk to see '
+                  'these words and the face you picked.',
+            ),
+            const SizedBox(height: 12),
+            _Card(
+              num: '02',
+              title: 'nobody can reach you until you let them in',
+              desc:
+                  'a stranger with your words can only knock. their first '
+                  'message waits in requests until you say yes, and you can '
+                  'say no without them ever knowing.',
+            ),
+            const SizedBox(height: 12),
+            _Card(
+              num: '03',
+              title: 'the first connection takes a minute',
+              desc:
+                  'kryfo builds a private route before it sends anything. '
+                  'while you are offline, messages wait and arrive when you '
+                  'are back.',
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'your identity lives on this phone. back it up from settings '
+              'when you are ready.',
               style: HaloType.sans(
-                size: 16,
-                color: HaloColors.amber,
-                weight: FontWeight.w600,
+                size: 12,
+                color: HaloColors.text3,
+                height: 1.5,
               ),
             ),
-          ),
-          const SizedBox(height: 24),
-          RichText(
-            text: TextSpan(
-              style: HaloType.serif(
-                size: 30,
-                weight: FontWeight.w300,
-                color: HaloColors.text,
-                height: 1.05,
-              ),
-              children: [
-                const TextSpan(text: 'three things to '),
-                TextSpan(
-                  text: 'know',
-                  style: HaloType.serif(
-                    size: 30,
-                    weight: FontWeight.w300,
-                    italic: true,
-                    color: HaloColors.amber,
-                    height: 1.05,
-                  ),
-                ),
-                const TextSpan(text: '.'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'read these. they matter more than the app itself.',
-            style: HaloType.sans(
-              size: 13.5,
-              color: HaloColors.text2,
-              height: 1.55,
-            ),
-          ),
-          const SizedBox(height: 24),
-          _rule(
-            '01',
-            'write your kryfo down',
-            'your three words are the only key. paper, password manager, anywhere safe. losing them means losing this identity for good. there\'s no recovery, by design.',
-          ),
-          const SizedBox(height: 12),
-          _rule(
-            '02',
-            'first connection takes a few minutes',
-            'we\'re routing through anonymous relays so no one can see your IP. the first connection is slow because it\'s building your private route. quick after.',
-          ),
-          const SizedBox(height: 12),
-          _rule(
-            '03',
-            'both of you have to be online',
-            'messages travel directly, peer to peer. if your friend\'s app isn\'t open, your message waits in your outbox until they\'re back.',
-          ),
+          ], from: 1),
           const Spacer(),
-          GestureDetector(
-            onTap: onContinue,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              decoration: BoxDecoration(
-                color: HaloColors.amber,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                'i understand \u2192',
-                style: HaloType.sans(
-                  size: 14,
-                  color: HaloColors.onAmber,
-                  weight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ),
+          _Cta(label: 'i understand →', onTap: onContinue),
         ],
       ),
     );
   }
-
-  Widget _rule(String num, String title, String desc) => Container(
-    padding: const EdgeInsets.fromLTRB(15, 13, 15, 13),
-    decoration: BoxDecoration(
-      color: HaloColors.surface2,
-      border: Border.all(color: HaloColors.line, width: 0.5),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 2),
-          child: Text(
-            num,
-            style: HaloType.mono(
-              size: 10,
-              color: HaloColors.amber,
-            ).copyWith(letterSpacing: 2, fontWeight: FontWeight.w500),
-          ),
-        ),
-        const SizedBox(width: 13),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: HaloType.sans(
-                  size: 13,
-                  color: HaloColors.text,
-                  weight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                desc,
-                style: HaloType.sans(
-                  size: 12.5,
-                  color: HaloColors.text2,
-                  height: 1.55,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
 }
 
-// === 04b · STAYING CONNECTED ===
+// === 05 · ONE NOTIFICATION ===
+//
+// the one android fact worth a page: a background listener needs a visible
+// notification, so the tray will show one. two lines, then on.
 
-class _StayingConnectedScreen extends StatelessWidget {
+class _NotificationScreen extends StatelessWidget {
   final VoidCallback onContinue;
-  const _StayingConnectedScreen({required this.onContinue});
+  const _NotificationScreen({required this.onContinue});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 50, 28, 36),
+      padding: const EdgeInsets.fromLTRB(28, 44, 28, 36),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              border: Border.all(color: HaloColors.amber, width: 0.5),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            alignment: Alignment.center,
-            child: Icon(Icons.lock_outline, size: 18, color: HaloColors.amber),
-          ),
-          const SizedBox(height: 24),
-          RichText(
-            text: TextSpan(
-              style: HaloType.serif(
-                size: 30,
-                weight: FontWeight.w300,
-                color: HaloColors.text,
-                height: 1.05,
-              ),
-              children: [
-                const TextSpan(text: 'staying '),
-                TextSpan(
-                  text: 'connected',
-                  style: HaloType.serif(
-                    size: 30,
-                    weight: FontWeight.w300,
-                    italic: true,
-                    color: HaloColors.amber,
-                    height: 1.05,
-                  ),
-                ),
-                const TextSpan(text: '.'),
-              ],
-            ),
-          ),
+          const _Step(5),
+          const SizedBox(height: 22),
+          _headline('one quiet ', 'notification'),
           const SizedBox(height: 12),
           Text(
-            'kryfo keeps one small notification in your tray. here is what it is for.',
+            'android needs a visible notification while an app listens in '
+            'the background. that is how messages reach you when kryfo is '
+            'closed.',
             style: HaloType.sans(
               size: 13.5,
               color: HaloColors.text2,
@@ -969,131 +869,43 @@ class _StayingConnectedScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          _point(
-            'it keeps your line open',
-            'kryfo listens through tor in the background so encrypted messages reach you even when the app is closed. android requires a visible notification while it does that.',
-          ),
-          const SizedBox(height: 12),
-          _point(
-            'it is safe to leave on',
-            'the notification is silent and sits at the bottom of your shade. turning it off does not make kryfo lighter, it just stops messages arriving until you reopen the app.',
-          ),
-          const Spacer(),
-          GestureDetector(
-            onTap: onContinue,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              decoration: BoxDecoration(
-                color: HaloColors.amber,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                'got it →',
-                style: HaloType.sans(
-                  size: 14,
-                  color: HaloColors.onAmber,
-                  weight: FontWeight.w500,
-                ),
-              ),
+          ...staggerAll([
+            const _Card(
+              icon: Icons.notifications_none,
+              title: 'silent, and at the bottom of the shade',
+              desc:
+                  'it never buzzes. turn it off and messages wait until you '
+                  'open the app again.',
             ),
-          ),
+          ], from: 1),
+          const Spacer(),
+          _Cta(label: 'got it →', onTap: onContinue),
         ],
       ),
     );
   }
-
-  Widget _point(String title, String desc) => Container(
-    padding: const EdgeInsets.fromLTRB(15, 13, 15, 13),
-    decoration: BoxDecoration(
-      color: HaloColors.surface2,
-      border: Border.all(color: HaloColors.line, width: 0.5),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 5),
-          child: Container(
-            width: 5,
-            height: 5,
-            decoration: BoxDecoration(
-              color: HaloColors.amber,
-              shape: BoxShape.circle,
-            ),
-          ),
-        ),
-        const SizedBox(width: 13),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: HaloType.sans(
-                  size: 13,
-                  color: HaloColors.text,
-                  weight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                desc,
-                style: HaloType.sans(
-                  size: 12.5,
-                  color: HaloColors.text2,
-                  height: 1.55,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
 }
 
-// === 05 · FIRST CONTACT ===
+// === 06 · ADD SOMEONE ===
 
-class _FirstContactScreen extends StatelessWidget {
+class _AddSomeoneScreen extends StatelessWidget {
   final VoidCallback onComplete;
-  const _FirstContactScreen({required this.onComplete});
+  const _AddSomeoneScreen({required this.onComplete});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 50, 28, 36),
+      padding: const EdgeInsets.fromLTRB(28, 44, 28, 36),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          RichText(
-            text: TextSpan(
-              style: HaloType.serif(
-                size: 30,
-                weight: FontWeight.w300,
-                color: HaloColors.text,
-                height: 1.05,
-              ),
-              children: [
-                const TextSpan(text: 'now, '),
-                TextSpan(
-                  text: 'find someone',
-                  style: HaloType.serif(
-                    size: 30,
-                    weight: FontWeight.w300,
-                    italic: true,
-                    color: HaloColors.amber,
-                    height: 1.05,
-                  ),
-                ),
-                const TextSpan(text: '.'),
-              ],
-            ),
-          ),
+          const _Step(6),
+          const SizedBox(height: 22),
+          _headline('now, ', 'add someone'),
           const SizedBox(height: 12),
           Text(
-            'the app is ready. messages will be encrypted, onion-routed, and forgotten by everyone except you and them.',
+            'the app is ready. nobody can message you until you add them '
+            'or let them in.',
             style: HaloType.sans(
               size: 13.5,
               color: HaloColors.text2,
@@ -1101,30 +913,34 @@ class _FirstContactScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          _path(
-            'show my kryfo',
-            'share a QR code with someone next to you',
-            () async {
-              // open the QR screen first, then finish onboarding once it returns.
-              // completing first rebuilds the tree to home and eats the nav.
-              final nav = Navigator.of(context);
-              await nav.push(haloRoute(const MyKryfoScreen()));
-              onComplete();
-            },
-          ),
-          const SizedBox(height: 12),
-          _path(
-            'scan a kryfo',
-            "scan a friend's QR code or paste their three words",
-            () async {
-              // open the scanner first, then finish onboarding once it returns.
-              // marking onboarding done first rebuilt the tree to home and ate the
-              // navigation, dropping the user on home with no camera.
-              final nav = Navigator.of(context);
-              await nav.push(haloRoute(const ScanScreen()));
-              onComplete();
-            },
-          ),
+          ...staggerAll([
+            _Path(
+              icon: Icons.qr_code_2_outlined,
+              title: 'show my kryfo',
+              desc:
+                  'a code for someone next to you, a link for anyone else. '
+                  'or type the @handle they gave you.',
+              onTap: () async {
+                // open the page first, then finish onboarding once it
+                // returns. completing first rebuilds the tree to home and
+                // eats the nav.
+                final nav = Navigator.of(context);
+                await nav.push(haloRoute(const MyKryfoScreen()));
+                onComplete();
+              },
+            ),
+            const SizedBox(height: 12),
+            _Path(
+              icon: Icons.center_focus_weak,
+              title: 'scan theirs',
+              desc: 'point the camera at their code',
+              onTap: () async {
+                final nav = Navigator.of(context);
+                await nav.push(haloRoute(const ScanScreen()));
+                onComplete();
+              },
+            ),
+          ], from: 1),
           const Spacer(),
           Center(
             child: Text(
@@ -1141,22 +957,15 @@ class _FirstContactScreen extends StatelessWidget {
           Center(
             child: GestureDetector(
               onTap: onComplete,
-              child: Container(
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 22,
                   vertical: 12,
                 ),
-                decoration: BoxDecoration(
-                  color: HaloColors.amber,
-                  borderRadius: BorderRadius.circular(999),
-                ),
                 child: Text(
-                  'skip \u00b7 find people later',
-                  style: HaloType.sans(
-                    size: 12,
-                    color: HaloColors.onAmber,
-                    weight: FontWeight.w500,
-                  ),
+                  'not now · add people later',
+                  style: HaloType.sans(size: 12.5, color: HaloColors.text2),
                 ),
               ),
             ),
@@ -1165,8 +974,127 @@ class _FirstContactScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _path(String title, String desc, VoidCallback onTap) {
+// ───────── shared pieces ─────────
+
+// "04 / 06" in mono, so the pace is visible without a progress bar
+class _Step extends StatelessWidget {
+  final int n;
+  const _Step(this.n);
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      '0$n / 06',
+      style: HaloType.mono(
+        size: 10,
+        color: HaloColors.amber,
+      ).copyWith(letterSpacing: 3, fontWeight: FontWeight.w500),
+    );
+  }
+}
+
+Widget _headline(String plain, String accent) => RichText(
+  text: TextSpan(
+    style: HaloType.serif(
+      size: 30,
+      weight: FontWeight.w300,
+      color: HaloColors.text,
+      height: 1.05,
+    ),
+    children: [
+      TextSpan(text: plain),
+      TextSpan(
+        text: accent,
+        style: HaloType.serif(
+          size: 30,
+          weight: FontWeight.w300,
+          italic: true,
+          color: HaloColors.amber,
+          height: 1.05,
+        ),
+      ),
+      const TextSpan(text: '.'),
+    ],
+  ),
+);
+
+class _Card extends StatelessWidget {
+  final String? num;
+  final IconData? icon;
+  final String title;
+  final String desc;
+  const _Card({this.num, this.icon, required this.title, required this.desc});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(15, 13, 15, 13),
+      decoration: BoxDecoration(
+        color: HaloColors.surface2,
+        border: Border.all(color: HaloColors.line, width: 0.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: num != null
+                ? Text(
+                    num!,
+                    style: HaloType.mono(
+                      size: 10,
+                      color: HaloColors.amber,
+                    ).copyWith(letterSpacing: 2, fontWeight: FontWeight.w500),
+                  )
+                : Icon(icon, size: 16, color: HaloColors.amber),
+          ),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: HaloType.sans(
+                    size: 13,
+                    color: HaloColors.text,
+                    weight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  desc,
+                  style: HaloType.sans(
+                    size: 12.5,
+                    color: HaloColors.text2,
+                    height: 1.55,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Path extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String desc;
+  final VoidCallback onTap;
+  const _Path({
+    required this.icon,
+    required this.title,
+    required this.desc,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return PressScale(
       onTap: onTap,
       child: Container(
@@ -1187,10 +1115,7 @@ class _FirstContactScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               alignment: Alignment.center,
-              child: Text(
-                title.startsWith('show') ? '\u229E' : '\u2316',
-                style: HaloType.sans(size: 14, color: HaloColors.amber),
-              ),
+              child: Icon(icon, size: 16, color: HaloColors.amber),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -1217,11 +1142,37 @@ class _FirstContactScreen extends StatelessWidget {
                 ],
               ),
             ),
-            Text(
-              '\u2192',
-              style: HaloType.sans(size: 18, color: HaloColors.text3),
-            ),
+            Text('→', style: HaloType.sans(size: 18, color: HaloColors.text3)),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Cta extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _Cta({required this.label, required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    return PressScale(
+      scale: 0.97,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: HaloColors.amber,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: HaloType.sans(
+            size: 14,
+            color: HaloColors.onAmber,
+            weight: FontWeight.w500,
+          ),
         ),
       ),
     );
