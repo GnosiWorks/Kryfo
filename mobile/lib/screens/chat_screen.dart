@@ -693,9 +693,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           m.removing = true;
           // wait for the full _BurnFade dissolve (520ms) before pulling the
           // row, else the animation cuts off and the message pops away.
-          Future.delayed(const Duration(milliseconds: 560), () {
+          Future.delayed(const Duration(milliseconds: 560), () async {
             if (mounted) setState(() => _messages.remove(m));
-            if (m.msgUid != null) db.deleteMessage(m.msgUid!);
+            if (m.msgUid != null) await db.deleteMessage(m.msgUid!);
+            // the home row was previewing what just burned
+            unawaited(appState.refreshContacts());
           });
         }
         HapticFeedback.lightImpact();
@@ -4834,7 +4836,7 @@ class _AcceptRequestBar extends StatelessWidget {
         children: [
           Text(
             introducer == null
-                ? 'accept to reply - they can\'t message again until you do.'
+                ? 'accept to reply - they get one more message in until you do.'
                 : '$introducer introduced you. accept to reply.',
             textAlign: TextAlign.center,
             style: HaloType.sans(
