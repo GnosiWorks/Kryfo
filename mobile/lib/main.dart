@@ -6549,7 +6549,6 @@ Future<void> showAddContact(BuildContext context) async {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SheetHandle(),
-          const SheetHandle(),
           const SizedBox(height: 18),
           Text(
             'add a contact',
@@ -7491,7 +7490,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
               ? const Color(0xFFB79CFF)
               : HaloColors.amber;
           final t = _c.value;
-          final dot = SizedBox(
+          Widget dot(Color accent) => SizedBox(
             width: 18,
             height: 18,
             child: Stack(
@@ -7523,8 +7522,21 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
               ],
             ),
           );
+          // the state changes are the most watched thing on the screen: the
+          // colour slides to the new one and the words cross-fade, rather
+          // than both snapping
+          Widget tinted(Widget Function(Color) build) =>
+              TweenAnimationBuilder<Color?>(
+                tween: ColorTween(end: accent),
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutCubic,
+                builder: (_, c, _) => build(c ?? accent),
+              );
           if (!widget.label) {
-            return SizedBox(width: 20, height: 20, child: Center(child: dot));
+            return tinted(
+              (c) =>
+                  SizedBox(width: 20, height: 20, child: Center(child: dot(c))),
+            );
           }
           final mode = appState.sendMode;
           final txt = mode == 'balanced'
@@ -7536,13 +7548,34 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
               : (secured || usable)
               ? 'Tor Ready'
               : 'Connecting';
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              dot,
-              const SizedBox(width: 6),
-              Text(txt, style: HaloType.mono(size: 11, color: accent)),
-            ],
+          return tinted(
+            (c) => Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                dot(c),
+                const SizedBox(width: 6),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeIn,
+                  transitionBuilder: (child, anim) => FadeTransition(
+                    opacity: anim,
+                    child: SlideTransition(
+                      position: Tween(
+                        begin: const Offset(0, 0.35),
+                        end: Offset.zero,
+                      ).animate(anim),
+                      child: child,
+                    ),
+                  ),
+                  child: Text(
+                    txt,
+                    key: ValueKey(txt),
+                    style: HaloType.mono(size: 11, color: c),
+                  ),
+                ),
+              ],
+            ),
           );
         },
       ),
