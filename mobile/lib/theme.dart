@@ -172,6 +172,10 @@ ThemeData buildHaloTheme() {
     ),
     splashFactory: NoSplash.splashFactory,
     highlightColor: Colors.transparent,
+    // every app bar's back is the same chevron the custom bars draw
+    actionIconTheme: ActionIconThemeData(
+      backButtonIconBuilder: (_) => const Icon(Icons.chevron_left, size: 26),
+    ),
   );
 }
 
