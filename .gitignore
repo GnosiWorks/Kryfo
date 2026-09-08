@@ -69,3 +69,4 @@ relay-live/halo-relay
 relay-live/data/
 engine/vendor/**/builddeps/**/*.a
 engine/vendor/**/builddeps/**/*.la
+*.p12
