@@ -7,88 +7,14 @@ import 'package:flutter/services.dart';
 
 import '../lock_state.dart';
 import '../theme.dart';
-import '../widgets/halo_sheet.dart';
 import '../widgets/motion.dart' show haloRoute;
-import '../widgets/sheet_handle.dart';
 import '../widgets/stagger_in.dart';
 import 'lock_setup_screen.dart';
 import 'panic_setup_screen.dart';
+import '../widgets/confirm_sheet.dart';
 
 class PinsScreen extends StatelessWidget {
   const PinsScreen({super.key});
-
-  Future<bool> _confirm(
-    BuildContext context,
-    String title,
-    String line,
-    String yes,
-  ) async {
-    final ok = await showHaloSheet<bool>(
-      context,
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SheetHandle(),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: HaloType.serif(size: 20, color: HaloColors.text),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                line,
-                style: HaloType.sans(
-                  size: 13,
-                  color: HaloColors.text2,
-                  height: 1.45,
-                ),
-              ),
-              const SizedBox(height: 16),
-              GestureDetector(
-                onTap: () => Navigator.pop(ctx, true),
-                behavior: HitTestBehavior.opaque,
-                child: Container(
-                  height: 46,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: HaloColors.rose,
-                    borderRadius: BorderRadius.circular(13),
-                  ),
-                  child: Text(
-                    yes,
-                    style: HaloType.sans(
-                      size: 14,
-                      weight: FontWeight.w600,
-                      color: HaloColors.text,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 6),
-              GestureDetector(
-                onTap: () => Navigator.pop(ctx, false),
-                behavior: HitTestBehavior.opaque,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: Center(
-                    child: Text(
-                      'keep it',
-                      style: HaloType.sans(size: 13, color: HaloColors.text2),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-    return ok == true;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -134,12 +60,13 @@ class PinsScreen extends StatelessWidget {
                 secondary: on ? 'turn off' : null,
                 onSecondary: on
                     ? () async {
-                        final ok = await _confirm(
+                        final ok = await showConfirmSheet(
                           context,
-                          'turn off the app lock?',
-                          'the pin goes, and the wipe pin with it. anyone '
+                          title: 'turn off the app lock?',
+                          line:
+                              'the pin goes, and the wipe pin with it. anyone '
                               'holding your phone opens kryfo as you.',
-                          'turn off',
+                          yes: 'turn off',
                         );
                         if (!ok) return;
                         await lockState.disablePanicPin();
@@ -179,12 +106,13 @@ class PinsScreen extends StatelessWidget {
                 secondary: wipe ? 'remove' : null,
                 onSecondary: wipe
                     ? () async {
-                        final ok = await _confirm(
+                        final ok = await showConfirmSheet(
                           context,
-                          'remove the wipe pin?',
-                          'the lock screen keeps your pin. the wipe pin '
+                          title: 'remove the wipe pin?',
+                          line:
+                              'the lock screen keeps your pin. the wipe pin '
                               'stops doing anything.',
-                          'remove',
+                          yes: 'remove',
                         );
                         if (ok) await lockState.disablePanicPin();
                       }

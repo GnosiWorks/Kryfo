@@ -10,6 +10,7 @@ import '../main.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import 'package:flutter/services.dart';
+import '../widgets/stagger_in.dart';
 
 class ModesScreen extends StatefulWidget {
   const ModesScreen({super.key});
@@ -58,7 +59,7 @@ class _ModesScreenState extends State<ModesScreen> {
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+          children: staggerAll([
             _BackBar(onBack: () => Navigator.pop(context)),
             const _Head(),
             const SizedBox(height: 6),
@@ -108,7 +109,7 @@ class _ModesScreenState extends State<ModesScreen> {
               padding: EdgeInsets.fromLTRB(20, 0, 20, 24),
               child: _Footnote(),
             ),
-          ],
+          ]),
         ),
       ),
     );

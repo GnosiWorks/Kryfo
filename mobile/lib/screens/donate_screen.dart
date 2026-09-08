@@ -117,25 +117,25 @@ class _DonateScreenState extends State<DonateScreen> {
         Container(
           width: 84,
           height: 84,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+              colors: [HaloColors.amber, HaloColors.amberDeep],
             ),
             boxShadow: [
               BoxShadow(
-                color: Color(0x80F59E0B),
+                color: HaloColors.amber.withValues(alpha: 0.5),
                 blurRadius: 36,
                 spreadRadius: -6,
               ),
             ],
           ),
           alignment: Alignment.center,
-          child: const Text(
+          child: Text(
             '\u2726',
-            style: TextStyle(fontSize: 38, color: Color(0xFF1A0F04)),
+            style: TextStyle(fontSize: 38, color: HaloColors.onAmber),
           ),
         ),
         const SizedBox(height: 14),
@@ -204,7 +204,7 @@ class _DonateScreenState extends State<DonateScreen> {
         _tierCard(100, 'guardian', '\u2726', const [
           Color(0xFFF59E0B),
           Color(0xFFD97706),
-        ], const Color(0xFF1A0F04)),
+        ], HaloColors.onAmber),
       ],
     );
   }
@@ -327,7 +327,7 @@ class _DonateScreenState extends State<DonateScreen> {
             label,
             style: HaloType.mono(
               size: 12,
-              color: sel ? const Color(0xFF1A0F04) : HaloColors.text2,
+              color: sel ? HaloColors.onAmber : HaloColors.text2,
             ),
           ),
         ),
@@ -497,19 +497,7 @@ class _DonateScreenState extends State<DonateScreen> {
           GestureDetector(
             onTap: () {
               copySensitive(addr);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'address copied',
-                    style: HaloType.sans(
-                      size: 13,
-                      color: const Color(0xFF1A0F04),
-                    ),
-                  ),
-                  backgroundColor: HaloColors.amber,
-                  duration: const Duration(seconds: 2),
-                ),
-              );
+              showHaloToast(context, 'address copied');
             },
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 11),
@@ -520,7 +508,7 @@ class _DonateScreenState extends State<DonateScreen> {
               ),
               child: Text(
                 'copy address',
-                style: HaloType.mono(size: 12, color: const Color(0xFF1A0F04)),
+                style: HaloType.mono(size: 12, color: HaloColors.onAmber),
               ),
             ),
           ),
@@ -575,19 +563,7 @@ class _DonateScreenState extends State<DonateScreen> {
       children: [
         GestureDetector(
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'card payments coming soon',
-                  style: HaloType.sans(
-                    size: 13,
-                    color: const Color(0xFF1A0F04),
-                  ),
-                ),
-                backgroundColor: HaloColors.amber,
-                duration: const Duration(seconds: 2),
-              ),
-            );
+            showHaloToast(context, 'card payments coming soon');
           },
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 15),
@@ -598,7 +574,7 @@ class _DonateScreenState extends State<DonateScreen> {
             ),
             child: Text(
               'donate \$$_amount by card',
-              style: HaloType.sans(size: 14, color: const Color(0xFF1A0F04)),
+              style: HaloType.sans(size: 14, color: HaloColors.onAmber),
             ),
           ),
         ),
@@ -1017,16 +993,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
 
   void _copy(String v) {
     copySensitive(v);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'copied',
-          style: HaloType.sans(size: 13, color: const Color(0xFF1A0F04)),
-        ),
-        backgroundColor: HaloColors.amber,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    showHaloToast(context, 'copied');
   }
 
   Widget _fillButton(String label, VoidCallback onTap) {
@@ -1044,7 +1011,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           style: HaloType.sans(
             size: 13,
             weight: FontWeight.w600,
-            color: const Color(0xFF1A0F04),
+            color: HaloColors.onAmber,
           ),
         ),
       ),
@@ -1114,19 +1081,7 @@ class _StaticAddress extends StatelessWidget {
           PressScale(
             onTap: () {
               copySensitive(address);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'address copied',
-                    style: HaloType.sans(
-                      size: 13,
-                      color: const Color(0xFF1A0F04),
-                    ),
-                  ),
-                  backgroundColor: HaloColors.amber,
-                  duration: const Duration(seconds: 2),
-                ),
-              );
+              showHaloToast(context, 'address copied');
             },
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 11),
@@ -1137,7 +1092,7 @@ class _StaticAddress extends StatelessWidget {
               ),
               child: Text(
                 'copy address',
-                style: HaloType.mono(size: 12, color: const Color(0xFF1A0F04)),
+                style: HaloType.mono(size: 12, color: HaloColors.onAmber),
               ),
             ),
           ),
@@ -1274,7 +1229,7 @@ class _ConfirmedViewState extends State<_ConfirmedView>
           style: HaloType.sans(
             size: 14,
             weight: FontWeight.w600,
-            color: const Color(0xFF1A0F04),
+            color: HaloColors.onAmber,
           ),
         ),
       ),
@@ -1443,7 +1398,7 @@ class _ThankYouScreenState extends State<_ThankYouScreen>
                       style: HaloType.sans(
                         size: 14,
                         weight: FontWeight.w600,
-                        color: const Color(0xFF1A0F04),
+                        color: HaloColors.onAmber,
                       ),
                     ),
                   ),
@@ -1475,7 +1430,7 @@ class _ThankYouScreenState extends State<_ThankYouScreen>
                       style: HaloType.sans(
                         size: 14,
                         weight: FontWeight.w600,
-                        color: const Color(0xFF1A0F04),
+                        color: HaloColors.onAmber,
                       ),
                     ),
                   ),

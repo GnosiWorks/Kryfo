@@ -19,6 +19,7 @@ import '../widgets/stagger_in.dart';
 import 'chat_screen.dart' show MediaGalleryScreen;
 import 'key_verification_screen.dart';
 import 'vouchers_sheet.dart';
+import '../widgets/confirm_sheet.dart';
 
 class ContactScreen extends StatefulWidget {
   final String haloId;
@@ -162,47 +163,6 @@ class _ContactScreenState extends State<ContactScreen> {
     await appState.refreshContacts();
     HapticFeedback.selectionClick();
     await _load();
-  }
-
-  Future<bool> _confirm(String title, String line, String yes) async {
-    final ok = await showHaloSheet<bool>(
-      context,
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SheetHandle(),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: HaloType.serif(size: 20, color: HaloColors.text),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                line,
-                style: HaloType.sans(
-                  size: 13,
-                  color: HaloColors.text2,
-                  height: 1.45,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _Primary(
-                label: yes,
-                rose: true,
-                onTap: () => Navigator.pop(ctx, true),
-              ),
-              const SizedBox(height: 6),
-              _Ghost(label: 'keep', onTap: () => Navigator.pop(ctx, false)),
-            ],
-          ),
-        ),
-      ),
-    );
-    return ok == true;
   }
 
   @override
@@ -402,10 +362,11 @@ class _ContactScreenState extends State<ContactScreen> {
                 _load();
                 return;
               }
-              final ok = await _confirm(
-                'block $_name?',
-                'their messages stop arriving. they are not told.',
-                'block',
+              final ok = await showConfirmSheet(
+                context,
+                title: 'block $_name?',
+                line: 'their messages stop arriving. they are not told.',
+                yes: 'block',
               );
               if (!ok) return;
               await appState.block(widget.haloId);
@@ -420,11 +381,13 @@ class _ContactScreenState extends State<ContactScreen> {
             sub: 'messages and contact, gone from this phone',
             rose: true,
             onTap: () async {
-              final ok = await _confirm(
-                'delete this chat?',
-                'every message and the contact, gone from this phone. nothing '
+              final ok = await showConfirmSheet(
+                context,
+                title: 'delete this chat?',
+                line:
+                    'every message and the contact, gone from this phone. nothing '
                     'is sent to them.',
-                'delete',
+                yes: 'delete',
               );
               if (!ok) return;
               await appState.deleteConversation(widget.haloId);
@@ -464,11 +427,7 @@ class _Row extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 13),
         child: Row(
           children: [
-            Icon(
-              icon,
-              size: 19,
-              color: rose ? HaloColors.rose : HaloColors.amber,
-            ),
+            Icon(icon, size: 19, color: HaloColors.amber),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -565,9 +524,8 @@ class _MediaRow extends StatelessWidget {
 
 class _Primary extends StatelessWidget {
   final String label;
-  final bool rose;
   final VoidCallback onTap;
-  const _Primary({required this.label, this.rose = false, required this.onTap});
+  const _Primary({required this.label, required this.onTap});
   @override
   Widget build(BuildContext context) => GestureDetector(
     onTap: onTap,
@@ -576,7 +534,7 @@ class _Primary extends StatelessWidget {
       height: 46,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: rose ? HaloColors.rose : HaloColors.amber,
+        color: HaloColors.amber,
         borderRadius: BorderRadius.circular(13),
       ),
       child: Text(
@@ -584,7 +542,7 @@ class _Primary extends StatelessWidget {
         style: HaloType.sans(
           size: 14,
           weight: FontWeight.w600,
-          color: rose ? HaloColors.text : HaloColors.onAmber,
+          color: HaloColors.onAmber,
         ),
       ),
     ),
