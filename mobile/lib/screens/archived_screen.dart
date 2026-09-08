@@ -32,7 +32,7 @@ class ArchivedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: HaloColors.ink,
+      backgroundColor: HaloColors.surface,
       body: SafeArea(
         child: AnimatedBuilder(
           animation: appState,

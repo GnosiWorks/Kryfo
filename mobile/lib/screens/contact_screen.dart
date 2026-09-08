@@ -188,9 +188,9 @@ class _ContactScreenState extends State<ContactScreen> {
         : HaloColors.text2;
     final note = c?['note'] as String?;
     return Scaffold(
-      backgroundColor: HaloColors.ink,
+      backgroundColor: HaloColors.surface,
       appBar: AppBar(
-        backgroundColor: HaloColors.ink,
+        backgroundColor: HaloColors.surface,
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
       ),

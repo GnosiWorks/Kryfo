@@ -9,6 +9,7 @@ import '../push_mode.dart';
 import '../notifications.dart';
 import '../theme.dart';
 import '../widgets/stagger_in.dart';
+import '../widgets/halo_switch.dart';
 
 class PushSettingsScreen extends StatefulWidget {
   const PushSettingsScreen({super.key});
@@ -93,9 +94,8 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Switch(
+                          HaloSwitch(
                             value: _hideContent,
-                            activeThumbColor: HaloColors.amber,
                             onChanged: (v) {
                               setState(() => _hideContent = v);
                               setHideNotifContent(v);

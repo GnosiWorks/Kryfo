@@ -15,6 +15,7 @@ import 'my_kryfo_screen.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/sheet_handle.dart';
 import '../widgets/halo_sheet.dart';
+import '../widgets/halo_switch.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -177,9 +178,9 @@ class _ProfileScreenState extends State<ProfileScreen>
     final hasBadge = _tier != SupporterTier.none;
 
     return Scaffold(
-      backgroundColor: HaloColors.ink,
+      backgroundColor: HaloColors.surface,
       appBar: AppBar(
-        backgroundColor: HaloColors.ink,
+        backgroundColor: HaloColors.surface,
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
@@ -607,14 +608,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             ],
           ),
         ),
-        Switch(
-          value: value,
-          onChanged: (v) => onChanged(v),
-          activeThumbColor: HaloColors.onAmber,
-          activeTrackColor: HaloColors.amber,
-          inactiveThumbColor: HaloColors.text3,
-          inactiveTrackColor: HaloColors.surface3,
-        ),
+        HaloSwitch(value: value, onChanged: (v) => onChanged(v)),
       ],
     );
   }
