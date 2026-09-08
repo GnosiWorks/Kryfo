@@ -9,6 +9,7 @@ import '../theme.dart';
 import '../widgets/notice_banner.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
+import '../widgets/halo_switch.dart';
 
 // returns the new room's group id, or null if the sheet was dismissed
 Future<String?> showRoomCreateSheet(BuildContext context) {
@@ -168,16 +169,12 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
                       ],
                     ),
                   ),
-                  Switch(
+                  HaloSwitch(
                     value: _capOn,
                     onChanged: (v) {
                       HapticFeedback.selectionClick();
                       setState(() => _capOn = v);
                     },
-                    activeThumbColor: HaloColors.ink,
-                    activeTrackColor: HaloColors.violet,
-                    inactiveThumbColor: HaloColors.text3,
-                    inactiveTrackColor: HaloColors.surface3,
                   ),
                 ],
               ),

@@ -19,9 +19,9 @@ class PinsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: HaloColors.ink,
+      backgroundColor: HaloColors.surface,
       appBar: AppBar(
-        backgroundColor: HaloColors.ink,
+        backgroundColor: HaloColors.surface,
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(

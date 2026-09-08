@@ -13,6 +13,7 @@ import '../main.dart';
 import '../theme.dart';
 import '../widgets/motion.dart';
 import '../widgets/stagger_in.dart';
+import '../widgets/halo_switch.dart';
 
 class BridgesScreen extends StatefulWidget {
   const BridgesScreen({super.key});
@@ -179,9 +180,9 @@ class _BridgesScreenState extends State<BridgesScreen> {
     // connected: bridges are saved, on, and tor is carrying traffic
     final connected = live && appState.bridgesOn && appState.torReady;
     return Scaffold(
-      backgroundColor: HaloColors.ink,
+      backgroundColor: HaloColors.surface,
       appBar: AppBar(
-        backgroundColor: HaloColors.ink,
+        backgroundColor: HaloColors.surface,
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
@@ -369,9 +370,8 @@ class _BridgesScreenState extends State<BridgesScreen> {
                       ],
                     ),
                   ),
-                  Switch(
+                  HaloSwitch(
                     value: _on,
-                    activeThumbColor: HaloColors.violet,
                     onChanged: (v) {
                       HapticFeedback.selectionClick();
                       setState(() => _on = v);

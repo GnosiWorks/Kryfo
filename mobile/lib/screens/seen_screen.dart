@@ -23,9 +23,9 @@ class _SeenScreenState extends State<SeenScreen> {
     final mode = appState.sendMode;
     final col = mode == 'balanced' ? 1 : (mode == 'fast' ? 2 : 0);
     return Scaffold(
-      backgroundColor: HaloColors.ink,
+      backgroundColor: HaloColors.surface,
       appBar: AppBar(
-        backgroundColor: HaloColors.ink,
+        backgroundColor: HaloColors.surface,
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
