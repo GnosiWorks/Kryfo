@@ -2,6 +2,27 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.2] - 2026-09-08
+
+### Added
+- introductions. know two people who don't know each other? introduce them. both sides get a request that skips the usual first-contact wait, and each profile shows who vouched. only people you've already added count. a stranger vouched for by strangers shows nothing.
+- scam shield. tells you when a new request is using the name of someone you already know, lookalike letters included. flags the usual stuff in a stranger's first message. runs on your phone, talks to nothing, and never blocks anything for you.
+- burner rooms. group chats that expire and take everything with them. you join under an identity that only exists in that room, so leaving ends it completely. screenshots don't work while a room is open.
+- handles can be looked up now. you could claim one before but nobody could find it.
+- mentions in groups. wallpapers per chat.
+
+### Fixed
+- a first message to someone new could quietly never arrive. if the direct send failed and it queued, the retry went out without the proof it needed and the other side dropped it.
+- messages from someone you hadn't accepted stopped arriving after a restart, while the sender still saw them delivered.
+- a chat you'd left stayed in memory with everything still running.
+- home could say nothing was waiting while messages sat queued offline, and never showed queued on the row.
+
+### Changed
+- adding someone is rebuilt around what you're actually doing: scanning a code with someone next to you, or sending an invite to someone far away.
+- one page per contact. verification, shared media and vouches together instead of scattered.
+- bridges and the second pin explain themselves properly now.
+- setup rewritten.
+
 ## [0.2.1] - 2026-09-06
 
 Third pre-alpha. Friends can introduce you, strangers get looked at on your
