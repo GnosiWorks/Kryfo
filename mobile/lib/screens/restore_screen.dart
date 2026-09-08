@@ -9,6 +9,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import '../backup.dart';
 import '../theme.dart';
+import '../widgets/confirm_sheet.dart';
+import '../widgets/stagger_in.dart';
 
 class RestoreScreen extends StatefulWidget {
   // when non-null, called after a successful restore instead of the
@@ -62,37 +64,15 @@ class _RestoreScreenState extends State<RestoreScreen> {
         widget.onRestored!();
         return;
       }
-      await showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: HaloColors.surface3,
-          title: Text(
-            'restored',
-            style: HaloType.serif(size: 18, color: HaloColors.text),
-          ),
-          content: Text(
-            "kryfo will close now. tap the icon to reopen with your restored identity.",
-            style: HaloType.sans(size: 13, color: HaloColors.text2),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(ctx).pop();
-                // exit so the next launch boots fresh from restored db
-                Future.delayed(
-                  const Duration(milliseconds: 200),
-                  () => exit(0),
-                );
-              },
-              child: Text(
-                'reopen kryfo',
-                style: HaloType.sans(size: 13, color: HaloColors.amber),
-              ),
-            ),
-          ],
-        ),
+      await showNoticeSheet(
+        context,
+        title: 'restored',
+        line:
+            'kryfo will close now. tap the icon to reopen with your restored identity.',
+        ok: 'reopen kryfo',
       );
+      // exit so the next launch boots fresh from the restored db
+      Future.delayed(const Duration(milliseconds: 200), () => exit(0));
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
@@ -128,7 +108,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: staggerAll([
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
@@ -227,7 +207,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-            ],
+            ]),
           ),
         ),
       ),

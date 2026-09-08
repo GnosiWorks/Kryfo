@@ -21,6 +21,7 @@ import '../widgets/motion.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/shift_in_place.dart';
+import '../widgets/confirm_sheet.dart';
 
 bool _miuiPromptChecked = false;
 
@@ -1472,48 +1473,19 @@ void _chatMenu(BuildContext context, ContactPreview c) {
   );
 }
 
-void _confirmDelete(BuildContext context, ContactPreview c) {
-  showDialog<void>(
-    context: context,
-    builder: (dctx) => AlertDialog(
-      backgroundColor: HaloColors.surface2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      title: Text(
-        'delete this chat?',
-        style: HaloType.serif(size: 19, color: HaloColors.text),
-      ),
-      content: Text(
+Future<void> _confirmDelete(BuildContext context, ContactPreview c) async {
+  final ok = await showConfirmSheet(
+    context,
+    title: 'delete this chat?',
+    line:
         'every message with ${c.nickname ?? c.haloId} goes, and they stop '
         'being a contact. it only clears this phone - their copy stays with '
         'them. if they message again it lands in requests.',
-        style: HaloType.sans(size: 14, color: HaloColors.text2),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dctx),
-          child: Text(
-            'keep',
-            style: HaloType.sans(size: 14, color: HaloColors.text2),
-          ),
-        ),
-        TextButton(
-          onPressed: () async {
-            Navigator.pop(dctx);
-            HapticFeedback.heavyImpact();
-            await appState.deleteConversation(c.haloId);
-          },
-          child: Text(
-            'delete',
-            style: HaloType.sans(
-              size: 14,
-              color: HaloColors.rose,
-              weight: FontWeight.w700,
-            ),
-          ),
-        ),
-      ],
-    ),
+    yes: 'delete',
   );
+  if (!ok) return;
+  HapticFeedback.heavyImpact();
+  await appState.deleteConversation(c.haloId);
 }
 
 class _Row extends StatelessWidget {
@@ -2000,7 +1972,7 @@ class _RequestsPin extends StatelessWidget {
                 style: HaloType.sans(
                   size: 12,
                   weight: FontWeight.w700,
-                  color: const Color(0xFF1A0F04),
+                  color: HaloColors.onAmber,
                 ),
               ),
             ),

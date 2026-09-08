@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import '../theme.dart';
+import '../widgets/stagger_in.dart';
 
 class WhyKryfoScreen extends StatelessWidget {
   const WhyKryfoScreen({super.key});
@@ -23,7 +24,7 @@ class WhyKryfoScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: staggerAll([
               Text(
                 'kryfo · KREE-fo · greek for hidden.\n'
                 'a quiet place to talk, built so no one is watching.',
@@ -99,7 +100,7 @@ class WhyKryfoScreen extends StatelessWidget {
                   height: 1.5,
                 ),
               ),
-            ],
+            ]),
           ),
         ),
       ),

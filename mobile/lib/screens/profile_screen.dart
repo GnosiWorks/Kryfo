@@ -544,7 +544,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     final pill = Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: const Color(0x24F59E0B),
+        color: HaloColors.amberSoft,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: HaloColors.amber.withValues(alpha: 0.4)),
       ),

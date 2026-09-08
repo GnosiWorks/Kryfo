@@ -16,6 +16,7 @@ import 'wallpaper_sheet.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/halo_sheet.dart';
+import '../widgets/confirm_sheet.dart';
 
 class GroupInfoScreen extends StatefulWidget {
   final String groupId;
@@ -53,39 +54,11 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   }
 
   Future<void> _rename() async {
-    final ctrl = TextEditingController(text: _name);
-    final newName = await showDialog<String>(
-      context: context,
-      builder: (c) => AlertDialog(
-        backgroundColor: HaloColors.surface2,
-        title: Text(
-          'rename group',
-          style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
-        ),
-        content: TextField(
-          controller: ctrl,
-          autofocus: true,
-          style: HaloType.sans(size: 14, color: HaloColors.text),
-          cursorColor: HaloColors.amber,
-          decoration: const InputDecoration(border: UnderlineInputBorder()),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(c),
-            child: Text(
-              'cancel',
-              style: HaloType.sans(size: 13, color: HaloColors.text2),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(c, ctrl.text.trim()),
-            child: Text(
-              'save',
-              style: HaloType.sans(size: 13, color: HaloColors.amber),
-            ),
-          ),
-        ],
-      ),
+    final newName = await showInputSheet(
+      context,
+      title: 'rename group',
+      initial: _name,
+      save: 'rename',
     );
     if (newName != null && newName.isNotEmpty && newName != _name) {
       await appState.renameGroupAndAnnounce(widget.groupId, newName);
@@ -121,35 +94,11 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   }
 
   Future<void> _confirmRemove(String haloId) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        backgroundColor: HaloColors.surface2,
-        title: Text(
-          'remove $haloId?',
-          style: HaloType.serif(size: 16, italic: true, color: HaloColors.text),
-        ),
-        content: Text(
-          'they will stop receiving messages from this group.',
-          style: HaloType.sans(size: 13, color: HaloColors.text2),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(c, false),
-            child: Text(
-              'cancel',
-              style: HaloType.sans(size: 13, color: HaloColors.text2),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(c, true),
-            child: Text(
-              'remove',
-              style: HaloType.sans(size: 13, color: HaloColors.rose),
-            ),
-          ),
-        ],
-      ),
+    final ok = await showConfirmSheet(
+      context,
+      title: 'remove $haloId?',
+      line: 'they will stop receiving messages from this group.',
+      yes: 'remove',
     );
     if (ok == true) {
       await appState.removeMembersFromGroup(widget.groupId, [haloId]);
@@ -184,36 +133,13 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   }
 
   Future<void> _confirmClear() async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        backgroundColor: HaloColors.surface2,
-        title: Text(
-          'clear this conversation?',
-          style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
-        ),
-        content: Text(
+    final ok = await showConfirmSheet(
+      context,
+      title: 'clear this conversation?',
+      line:
           'every message here is erased from this phone. this only clears '
           'your copy, other members keep theirs.',
-          style: HaloType.sans(size: 13, color: HaloColors.text2),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(c, false),
-            child: Text(
-              'cancel',
-              style: HaloType.sans(size: 13, color: HaloColors.text2),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(c, true),
-            child: Text(
-              'clear',
-              style: HaloType.sans(size: 13, color: HaloColors.rose),
-            ),
-          ),
-        ],
-      ),
+      yes: 'clear',
     );
     if (ok == true) {
       await db.clearGroupConversation(widget.groupId);
@@ -223,37 +149,15 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   }
 
   Future<void> _confirmLeave() async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        backgroundColor: HaloColors.surface2,
-        title: Text(
-          _isRoom ? 'leave room?' : 'leave group?',
-          style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
-        ),
-        content: Text(
-          _isRoom
-              ? 'everything in it is wiped from this phone now, and the key you used here is gone for good.'
-              : 'you will stop receiving messages and other members will see you leave.',
-          style: HaloType.sans(size: 13, color: HaloColors.text2),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(c, false),
-            child: Text(
-              'cancel',
-              style: HaloType.sans(size: 13, color: HaloColors.text2),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(c, true),
-            child: Text(
-              'leave',
-              style: HaloType.sans(size: 13, color: HaloColors.rose),
-            ),
-          ),
-        ],
-      ),
+    final ok = await showConfirmSheet(
+      context,
+      title: _isRoom ? 'leave room?' : 'leave group?',
+      line: _isRoom
+          ? 'everything in it is wiped from this phone now, and the key you '
+                'used here is gone for good.'
+          : 'you will stop receiving messages and other members will see '
+                'you leave.',
+      yes: 'leave',
     );
     if (ok == true) {
       await appState.leaveGroupAndAnnounce(widget.groupId);

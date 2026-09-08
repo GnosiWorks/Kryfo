@@ -12,6 +12,7 @@ import 'package:share_plus/share_plus.dart';
 import '../backup.dart';
 import '../main.dart';
 import '../theme.dart';
+import '../widgets/stagger_in.dart';
 
 class BackupScreen extends StatefulWidget {
   const BackupScreen({super.key});
@@ -116,7 +117,7 @@ class _BackupScreenState extends State<BackupScreen> {
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: staggerAll([
               Text(
                 'an encrypted file with your identity, messages, contacts, and settings. you need both the file and the passphrase to restore.',
                 style: HaloType.sans(
@@ -157,7 +158,7 @@ class _BackupScreenState extends State<BackupScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-            ],
+            ]),
           ),
         ),
       ),

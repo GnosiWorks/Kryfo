@@ -8,6 +8,7 @@ import '../main.dart' show appState;
 import '../push_mode.dart';
 import '../notifications.dart';
 import '../theme.dart';
+import '../widgets/stagger_in.dart';
 
 class PushSettingsScreen extends StatefulWidget {
   const PushSettingsScreen({super.key});
@@ -61,7 +62,7 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
             : SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+                  children: staggerAll([
                     _BackBar(onBack: () => Navigator.pop(context)),
                     const _Head(),
                     const SizedBox(height: 6),
@@ -152,7 +153,7 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
                       padding: EdgeInsets.fromLTRB(20, 0, 20, 24),
                       child: _Footnote(),
                     ),
-                  ],
+                  ]),
                 ),
               ),
       ),
