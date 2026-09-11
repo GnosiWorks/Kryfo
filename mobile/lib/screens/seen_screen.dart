@@ -158,6 +158,18 @@ const _rows = [
         'the keys, the messages and the media are destroyed.',
   ),
   _Row(
+    'link previews',
+    [
+      _Cell('on ask', _Tone.good),
+      _Cell('on ask', _Tone.good),
+      _Cell('on ask', _Tone.good),
+    ],
+    'previews are off. a link shows its domain and nothing else until you '
+        'tap preview, which is one request to that site for its title, over '
+        'whatever route you are on. no image is ever loaded, and a stranger\'s '
+        'link is never offered.',
+  ),
+  _Row(
     'that a device fetched mail',
     [_timing, _timing, _timing],
     'a relay can tell that some address was checked, and when. it cannot '

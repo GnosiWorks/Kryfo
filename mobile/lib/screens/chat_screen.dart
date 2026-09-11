@@ -5,7 +5,6 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:async';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -48,7 +47,6 @@ import '../main.dart'
         appState,
         currentChatPeer,
         torGetOnIsolate,
-        torGetB64OnIsolate,
         TorHalo;
 import '../widgets/press_scale.dart';
 import '../widgets/motion.dart';
@@ -56,6 +54,8 @@ import '../widgets/burn_fade.dart';
 import '../dlog.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/menu_backdrop.dart';
+import '../widgets/link_stub.dart';
+import '../link_preview.dart' show domainOf, titleFromHtml;
 import '../widgets/halo_sheet.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
@@ -2198,12 +2198,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
           }
         });
-        // preview was lost when the first send failed; re-fetch off-thread so
-        // the card comes back on a successful retry.
-        final retryUrl = firstUrl(msg.text);
-        if (retryUrl != null && msg.preview == null && msg.msgUid != null) {
-          unawaited(_enrichPreview(msg, retryUrl, msg.msgUid!));
-        }
         loadPeerEndpoint(widget.peerHaloId).then((endpoint) {
           if (endpoint != null && endpoint.isNotEmpty) {
             Future(() => engine.ntfyPing(endpoint));
@@ -3051,126 +3045,37 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   // pull the first http(s) url out of a message, or null.
 
-  // fetch a link preview over tor (sender-side, so the receiver never has to
-  // fetch and leak their ip). best-effort: any failure just means no card.
-  // runs after the message is already sent, updates the row + ui when ready.
-  Future<void> _enrichPreview(_Msg msg, String url, String msgUid) async {
+  // a reader asked for a link's title. one request for the page over the
+  // current route, title only, remembered per url so a second ask is free.
+  // never offered from a stranger, never automatic, never an image.
+  final Set<String> _askingLinks = {};
+
+  Future<void> _askPreview(_Msg m) async {
+    final url = firstUrl(m.text);
+    final uid = m.msgUid;
+    if (url == null || uid == null || _askingLinks.contains(uid)) return;
+    if (!await askLinkPreviewConsent(context)) return;
+    if (!mounted) return;
+    setState(() => _askingLinks.add(uid));
     try {
-      final html = await torGetOnIsolate(url);
-      dlog(
-        'PREVIEW-FETCH url=$url len=${html.length} head=${html.substring(0, html.length < 60 ? html.length : 60)}',
-      );
-      if (html.startsWith('error:') || html.isEmpty) {
-        return;
-      }
-      String? grab(String prop) {
-        final re = RegExp(
-          '<meta[^>]+(?:property|name)=["\']${RegExp.escape(prop)}["\'][^>]+content=["\']([^"\']+)',
-          caseSensitive: false,
-        );
-        return re.firstMatch(html)?.group(1);
-      }
-
-      var title = grab('og:title') ?? grab('twitter:title');
+      var title = await db.getLinkTitle(url);
       if (title == null) {
-        final t = RegExp(
-          r'<title[^>]*>([^<]+)',
-          caseSensitive: false,
-        ).firstMatch(html);
-        title = t?.group(1)?.trim();
+        final html = await torGetOnIsolate(url);
+        if (!html.startsWith('error:')) title = titleFromHtml(html);
+        if (title != null) await db.setLinkTitle(url, title);
       }
-      final image = grab('og:image') ?? grab('twitter:image');
-      final site = grab('og:site_name');
-      if (title == null && image == null) {
-        return;
+      final pv = {'url': url, 'title': title ?? domainOf(url)};
+      await db.setMsgPreview(uid, jsonEncode(pv));
+      if (mounted) setState(() => m.preview = pv);
+      if (title == null && mounted) {
+        showHaloToast(context, 'no title came back');
       }
-      // fetch the thumbnail over tor too and embed the bytes, so the card
-      // renders from local data and never leaks an ip to the image host.
-      String? imageData;
-      if (image != null) {
-        try {
-          final raw = await torGetB64OnIsolate(image);
-          if (raw.startsWith('ok:')) imageData = raw.substring(3);
-        } catch (_) {}
-      }
-      final pv = <String, String>{
-        'url': url,
-        if (title != null) 'title': unescapeHtml(title),
-        'img': ?imageData,
-        if (site != null) 'site': unescapeHtml(site),
-      };
-      if (!mounted) return;
-      // show the full card (with image) live on the sender.
-      setState(() => msg.preview = pv);
-      // a big base64 image makes jsonEncode + the db write hitch the ui thread.
-      // store a capped copy: small images keep their thumbnail, huge ones drop
-      // it (card still shows title/site). avoids the send-time lag spike.
-      final stored = Map<String, String>.from(pv);
-      final simg = stored['img'];
-      if (simg != null && simg.length > 80 * 1024) stored.remove('img');
-      await db.setMsgPreview(msgUid, jsonEncode(stored));
-      // option A: re-send the original message (same uid) now carrying the
-      // resolved preview, over the normal message route. the empty-body control
-      // frame we used before kept vanishing over tor; a real message rides the
-      // reliable path. the peer's receiver dedups on uid - it patches the card
-      // onto the bubble it already has instead of making a second one.
-      try {
-        final pvOut = Map<String, String>.from(pv);
-        final img = pvOut['img'];
-        // three lanes for the thumbnail: small rides the text card whole;
-        // medium gets pulled out and chunked (pvImg); huge drops to text-only.
-        const pvWhole = 80 * 1024; // fits one envelope
-        const pvChunkCap = 150 * 1024; // above this, not worth the envelopes
-        final chunkThumb =
-            img != null && img.length > pvWhole && img.length <= pvChunkCap;
-        if (img != null && img.length > pvWhole) {
-          pvOut.remove('img'); // card goes without img; chunks carry it if any
-        }
-        dlog(
-          'PREVIEW-SEND resend uid=$msgUid keys=${pvOut.keys.toList()} chunkThumb=$chunkThumb',
-        );
-        Future<void> fire(String cipher) async {
-          final useDirectOnion = !_backPaired || _peerXPub == null;
-          final f = useDirectOnion
-              ? Future(() => engine.sendTo(widget.peerOnion, cipher))
-              : Future(() => engine.nostrSend(_peerXPub!, cipher));
-          await f;
-        }
-
-        // text card first, so the bubble patches instantly.
-        final wrapped = await wrapMessage(
-          msg.text,
-          msgUid: msgUid,
-          replyTo: msg.replyTo,
-          preview: pvOut,
-        );
-        await fire(await signalEncrypt(widget.peerHaloId, wrapped));
-        // then the thumbnail as pvImg chunks, reassembled onto the card.
-        if (chunkThumb) {
-          const cs = 16 * 1024;
-          final slices = <String>[];
-          for (var i = 0; i < img.length; i += cs) {
-            slices.add(img.substring(i, math.min(i + cs, img.length)));
-          }
-          final pvid = 'pv_$msgUid';
-          for (var i = 0; i < slices.length; i++) {
-            final w = await wrapMessage(
-              '',
-              msgUid: msgUid,
-              imageB64: slices[i],
-              mediaId: pvid,
-              chunkIndex: i,
-              chunkTotal: slices.length,
-              pvImg: true,
-            );
-            await fire(await signalEncrypt(widget.peerHaloId, w));
-          }
-        }
-      } catch (_) {}
-    } catch (_) {}
+    } catch (_) {
+      if (mounted) showHaloToast(context, "couldn't reach it");
+    } finally {
+      if (mounted) setState(() => _askingLinks.remove(uid));
+    }
   }
-
-  // minimal html entity cleanup for preview text.
 
   Future<void> _send() async {
     final text = _msgCtrl.text.trim();
@@ -3213,12 +3118,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
     // the home row moves up on what you sent too, not only on what arrived
     unawaited(appState.refreshContacts());
-    // best-effort link preview over tor, fire-and-forget so it never delays
-    // the send. pops the card in when (if) it resolves.
-    final url = firstUrl(text);
-    if (url != null) {
-      unawaited(_enrichPreview(msg, url, msgUid));
-    }
     // first-contact proof-of-work: grind a nonce (~2s, off the ui thread) while
     // the peer hasn't back-paired with us. until they reply they still see us as
     // a stranger and their gate requires the pow. once _peerEngaged flips we stop.
@@ -3510,6 +3409,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           ? _matchKeys[i]
                           : (i == _jumpIndex ? _jumpKey : null),
                       msg: m,
+                      linkTitle: m.preview?['title'],
+                      linkBusy:
+                          m.msgUid != null && _askingLinks.contains(m.msgUid),
+                      // a stranger's link is text and nothing more
+                      onAskLink: _accepted && !_blocked
+                          ? () => _askPreview(m)
+                          : null,
                       firstInGroup: firstInGroup,
                       lastInGroup: lastInGroup,
                       revealed: m.msgUid != null && m.msgUid == _revealedUid,
@@ -5578,6 +5484,10 @@ class _Bubble extends StatelessWidget {
   final VoidCallback? onReveal;
   final bool firstInGroup;
   final bool lastInGroup;
+  // a link in the text: the title once asked for, and the ask itself
+  final String? linkTitle;
+  final bool linkBusy;
+  final VoidCallback? onAskLink;
   const _Bubble({
     super.key,
     required this.msg,
@@ -5593,6 +5503,9 @@ class _Bubble extends StatelessWidget {
     this.ripple = false,
     this.revealed = false,
     this.onReveal,
+    this.linkTitle,
+    this.linkBusy = false,
+    this.onAskLink,
     this.firstInGroup = true,
     this.lastInGroup = true,
   });
@@ -6028,11 +5941,14 @@ class _Bubble extends StatelessWidget {
                                         isOut,
                                         image: msg.mediaPath != null,
                                       ),
-                                    if (msg.preview != null) ...[
+                                    if (firstUrl(msg.text) case final u?) ...[
                                       const SizedBox(height: 6),
-                                      LinkPreviewCard(
-                                        preview: msg.preview!,
+                                      LinkStub(
+                                        url: u,
                                         isOut: isOut,
+                                        title: linkTitle,
+                                        busy: linkBusy,
+                                        onAsk: onAskLink,
                                       ),
                                     ],
                                     if (showMeta && msg.mediaPath == null) ...[
@@ -8024,131 +7940,6 @@ Widget _bubbleEntrance({
 
 // a message burning away: the bubble dissolves bottom-up along a rising
 // edge while sparks peel off the burn line. one tween drives both.
-// link preview card. data is fetched sender-side over tor and embedded, so
-// rendering never makes a network request - the receiver's ip stays private.
-class LinkPreviewCard extends StatelessWidget {
-  final Map<String, String> preview;
-  final bool isOut;
-  final bool fill;
-  const LinkPreviewCard({
-    super.key,
-    required this.preview,
-    required this.isOut,
-    this.fill = false,
-  });
-
-  // decode each preview image once and keep the bytes, so list repaints (burn
-  // ticks, scroll) don't re-decode base64 every frame and make the card blink.
-  static final Map<String, Uint8List> _imgCache = {};
-  static Uint8List? _decode(String? b64) {
-    if (b64 == null) return null;
-    final hit = _imgCache[b64];
-    if (hit != null) return hit;
-    try {
-      final bytes = base64Decode(b64);
-      _imgCache[b64] = bytes;
-      return bytes;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final title = preview['title'];
-    final imgB64 = preview['img'];
-    final imgBytes = _decode(imgB64);
-    final site = preview['site'];
-    final url = preview['url'];
-    final fg = isOut ? HaloColors.onAmber : HaloColors.text;
-    final sub = isOut
-        ? HaloColors.onAmber.withValues(alpha: 0.7)
-        // text3 sank into the card - one step brighter reads without
-        // stealing weight from the title.
-        : HaloColors.text2;
-    final line = isOut
-        ? HaloColors.onAmber.withValues(alpha: 0.25)
-        : HaloColors.line;
-
-    return GestureDetector(
-      onTap: url == null
-          ? null
-          : () =>
-                launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
-      child: Container(
-        width: fill ? double.infinity : null,
-        constraints: fill ? null : const BoxConstraints(maxWidth: 240),
-        decoration: BoxDecoration(
-          border: Border.all(color: line, width: 0.75),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (imgBytes != null)
-              AspectRatio(
-                aspectRatio: 1.91,
-                child: Image.memory(
-                  imgBytes,
-                  fit: BoxFit.cover,
-                  gaplessPlayback: true,
-                  // decode at card width, not full res - lighter on weak phones
-                  // while scrolling (samsung).
-                  cacheWidth: 520,
-                  errorBuilder: (_, e, _) {
-                    dlog('gallery image failed: $e');
-                    return Container(
-                      color: Colors.black26,
-                      alignment: Alignment.center,
-                      child: Icon(
-                        Icons.broken_image_outlined,
-                        size: 18,
-                        color: HaloColors.text3,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (site != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 3),
-                      child: Text(
-                        site.toLowerCase(),
-                        style: HaloType.mono(
-                          size: 9.5,
-                          color: sub,
-                          letter: 0.04,
-                        ),
-                      ),
-                    ),
-                  if (title != null)
-                    Text(
-                      title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: HaloType.sans(
-                        size: 12.5,
-                        color: fg,
-                        weight: FontWeight.w600,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // map the saved mode string to the pill's enum. private = full tor (3 hops),
 // the real route for every message today.
@@ -8261,10 +8052,3 @@ String? firstUrl(String text) {
   final m = RegExp(r'https?://[^\s]+').firstMatch(text);
   return m?.group(0);
 }
-
-String unescapeHtml(String s) => s
-    .replaceAll('&amp;', '&')
-    .replaceAll('&quot;', '"')
-    .replaceAll('&#39;', "'")
-    .replaceAll('&lt;', '<')
-    .replaceAll('&gt;', '>');
