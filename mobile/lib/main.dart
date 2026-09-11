@@ -772,6 +772,39 @@ Future<String> _subscribeOnIsolate(String xPub) {
 // tor fetches run on a background isolate. the raw ffi call blocks for the whole
 // tor round-trip (5-8s), so doing it on the main isolate froze the ui while a
 // link preview resolved. re-open the lib inside the isolate, same as sends.
+// over tor or not at all: the sender-side link preview. "error: ..." when
+// tor is not up, never a plain request.
+// the json stored for a shipped preview, or null when there is none or
+// the sender is not someone accepted. only the url and a one-line title
+// survive; anything else the sender put in the map is dropped here
+String? shippedPreview(Map<String, String>? pv, {required bool accepted}) {
+  if (pv == null || !accepted) return null;
+  final url = pv['url'];
+  final title = pv['title'];
+  if (url == null || title == null || title.trim().isEmpty) return null;
+  final clean = title.replaceAll(RegExp(r'\s+'), ' ').trim();
+  return jsonEncode({
+    'url': url,
+    'title': clean.length > 120 ? clean.substring(0, 120) : clean,
+    'by': 'sender',
+  });
+}
+
+Future<String> torStrictGetOnIsolate(String url) {
+  return Isolate.run(() {
+    final lib = Platform.isAndroid
+        ? DynamicLibrary.open('libhalo.so')
+        : DynamicLibrary.process();
+    final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetStrict');
+    final p = url.toNativeUtf8();
+    try {
+      return fn(p).toDartString();
+    } finally {
+      malloc.free(p);
+    }
+  });
+}
+
 Future<String> torGetOnIsolate(String url) {
   return Isolate.run(() {
     final lib = Platform.isAndroid
@@ -4321,8 +4354,10 @@ class AppState extends ChangeNotifier {
       mediaPath: mediaPath,
       filePath: filePath,
       fileName: fileName,
-      // a sender's preview is never stored; titles come only on request
-      preview: null,
+      // a preview the sender fetched over tor and shipped inside the
+      // message. kept, title and url only, and only from someone accepted:
+      // a stranger's title is text they control and stays plain
+      preview: shippedPreview(env.preview, accepted: burnOk && !isGroup),
       secure: env.secure,
     );
     // remember the face they picked. cheap, and it arrives with every
@@ -5019,7 +5054,7 @@ class AppState extends ChangeNotifier {
     _loadFirstContact();
     await loadDisplayName();
     await loadScreenshotPref();
-    await loadLinkPreviewMode();
+    await loadLinkPreviewMode(); // loads the send switch too
     await initNotifications(onTap: openChatForHalo);
 
     // periodic sweep: delete messages whose burn_at has passed. a sweep
