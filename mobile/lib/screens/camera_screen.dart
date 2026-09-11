@@ -85,10 +85,13 @@ class _CameraScreenState extends State<CameraScreen>
     _cam = null;
     if (mounted) setState(() {});
     await old?.dispose();
+    // the microphone is only asked for once someone switches to video. a
+    // photo needs the camera and nothing else, and a second permission
+    // prompt on the way to a photo is a surprise
     final c = CameraController(
       _cams[_which],
       ResolutionPreset.high,
-      enableAudio: true,
+      enableAudio: _video,
       imageFormatGroup: ImageFormatGroup.jpeg,
     );
     try {
@@ -209,6 +212,15 @@ class _CameraScreenState extends State<CameraScreen>
     try {
       await c.dispose();
     } catch (_) {}
+  }
+
+  // video needs the microphone, which the photo controller never asked
+  // for. reopen with audio, which is where the prompt appears
+  Future<void> _toVideo() async {
+    if (_video) return;
+    setState(() => _video = true);
+    _retried = false;
+    await _open();
   }
 
   Future<void> _toggleRecord(CameraController c) async {
@@ -483,7 +495,7 @@ class _CameraScreenState extends State<CameraScreen>
           children: [
             _modeTab('photo', !_video, () => setState(() => _video = false)),
             const SizedBox(width: 18),
-            _modeTab('video', _video, () => setState(() => _video = true)),
+            _modeTab('video', _video, _toVideo),
           ],
         ),
         const SizedBox(height: 16),
