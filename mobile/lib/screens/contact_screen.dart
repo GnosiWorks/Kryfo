@@ -202,12 +202,19 @@ class _ContactScreenState extends State<ContactScreen> {
           Center(
             child: Column(
               children: [
-                Hero(
-                  tag: 'face-${widget.avatarSeed}',
-                  child: KryfoAvatar(
-                    seed: widget.avatarSeed,
-                    size: 96,
-                    choice: widget.face ?? (c?['avatar'] as num?)?.toInt(),
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.9, end: 1),
+                  duration: const Duration(milliseconds: 280),
+                  curve: Curves.easeOutBack,
+                  builder: (_, v, child) =>
+                      Transform.scale(scale: v, child: child),
+                  child: Hero(
+                    tag: 'face-${widget.avatarSeed}',
+                    child: KryfoAvatar(
+                      seed: widget.avatarSeed,
+                      size: 96,
+                      choice: widget.face ?? (c?['avatar'] as num?)?.toInt(),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
