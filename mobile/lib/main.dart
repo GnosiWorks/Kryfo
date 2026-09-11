@@ -4869,8 +4869,12 @@ class AppState extends ChangeNotifier {
     myXPub = engine.myXPubkey();
     dlog('BOOT identity +${bsw.elapsedMilliseconds}ms');
     _appLinks = AppLinks();
+    // a link carries a prekey bundle, and taking one needs the signal
+    // store, which boots after the home paints. both handlers wait for it,
+    // or a link tapped with kryfo closed was dropped with nothing shown
     _appLinks.uriLinkStream.listen((uri) async {
       if (uri.scheme == 'kryfo') {
+        await _signalReady.future;
         final result = await handleHaloUri(uri.toString());
         dlog('deep link: $result');
         await refreshContacts();
@@ -4884,6 +4888,7 @@ class AppState extends ChangeNotifier {
           .getInitialLink()
           .then((uri) async {
             if (uri == null || uri.scheme != 'kryfo') return;
+            await _signalReady.future;
             final result = await handleHaloUri(uri.toString());
             dlog('deep link (cold start): $result');
             await refreshContacts();
@@ -4914,7 +4919,10 @@ class AppState extends ChangeNotifier {
     // above needs it - defer it so the home paints first. tor + nostr also
     // start after this, and both take longer to warm than the prekeys, so
     // the session is ready well before any message can arrive.
-    _bootSignal().then((_) => dlog('BOOT signal (deferred) done'));
+    _bootSignal().whenComplete(() {
+      dlog('BOOT signal (deferred) done');
+      if (!_signalReady.isCompleted) _signalReady.complete();
+    });
     // outbox drainer: anything the wire never confirmed gets re-sent for the
     // life of the app, whatever screen you're on and across restarts.
     startOutboxDrain();
@@ -5367,6 +5375,10 @@ class AppState extends ChangeNotifier {
       }
     });
   }
+
+  // done once the signal store can take a bundle. a failed boot completes
+  // it too, so a waiting link fails loudly rather than hangs
+  final _signalReady = Completer<void>();
 
   Future<void> _bootSignal() async {
     try {
