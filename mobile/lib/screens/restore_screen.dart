@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 
 import '../backup.dart';
 import '../main.dart' show appState;
+import '../picked.dart';
 import '../theme.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/press_scale.dart';
@@ -49,6 +50,8 @@ class _RestoreScreenState extends State<RestoreScreen> {
     } catch (_) {
       setState(() => _error = 'this file is damaged and cannot be read');
       return;
+    } finally {
+      await shredPicked(result);
     }
     if (!(blob.startsWith('kryfo-backup:') ||
         blob.startsWith('halo-backup:'))) {

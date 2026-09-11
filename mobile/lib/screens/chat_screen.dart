@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import '../picked.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:record/record.dart';
 import 'package:just_audio/just_audio.dart';
@@ -2627,6 +2628,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (res == null || res.files.isEmpty) return;
     final data = res.files.first.bytes;
     final name = res.files.first.name;
+    await shredPicked(res);
     if (data == null) return;
     await _sendFileBytes(data, name);
   }
@@ -2857,6 +2859,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
     if (res == null || res.files.isEmpty) return;
     final data = res.files.first.bytes;
+    await shredPicked(res);
     if (data == null) return;
     // a gif must NOT be re-encoded (that kills the animation), so it skips the
     // image-quality resize path and sends raw bytes. big gifs choke tor on one
@@ -3036,6 +3039,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // one photo picked: same preview + caption screen the camera path gets.
     if (picked.length == 1) {
       final bytes = await picked.first.readAsBytes();
+      await shredPickedImages(picked);
       if (!mounted) return;
       final caption = await Navigator.of(
         context,
@@ -3044,8 +3048,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       await _sendOneImage(bytes, caption);
       return;
     }
-    for (final x in picked) {
-      final bytes = await x.readAsBytes();
+    final all = [for (final x in picked) await x.readAsBytes()];
+    await shredPickedImages(picked);
+    for (final bytes in all) {
       if (!mounted) return;
       await _sendOneImage(bytes, '');
     }
