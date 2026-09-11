@@ -8,6 +8,10 @@ void main() {
       RestoreFailure.notABackup,
     );
     expect(
+      classifyRestoreError('error: wrong passphrase or corrupt'),
+      RestoreFailure.wrongPassphrase,
+    );
+    expect(
       classifyRestoreError('error: gcm: cipher: message authentication failed'),
       RestoreFailure.wrongPassphrase,
     );
