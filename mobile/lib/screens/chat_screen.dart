@@ -7679,6 +7679,7 @@ class _Composer extends StatelessWidget {
                       : KeyedSubtree(
                           key: const ValueKey('send'),
                           child: PressScale(
+                            label: 'send',
                             onTap: canSend ? onSend : null,
                             scale: 0.86,
                             haptic: false, // _send already fires its own impact
