@@ -16,24 +16,16 @@ import 'chat_screen.dart'
     show
         disguiseWav,
         ChatScreen,
-        LinkPreviewCard,
         SearchHead,
         Atmo,
         AtmosphereWash,
         atmoFromName,
-        firstUrl,
-        unescapeHtml;
+        firstUrl;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import '../main.dart'
-    show
-        appState,
-        db,
-        currentChatPeer,
-        newMsgUid,
-        torGetOnIsolate,
-        torGetB64OnIsolate;
+    show appState, db, currentChatPeer, newMsgUid, torGetOnIsolate;
 import '../theme.dart';
 import '../media_progress.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -50,6 +42,8 @@ import '../dlog.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/menu_backdrop.dart';
 import '../mentions.dart';
+import '../widgets/link_stub.dart';
+import '../link_preview.dart' show domainOf, titleFromHtml;
 import '../widgets/halo_sheet.dart';
 
 final Map<String, String> _draftPerGroup = {};
@@ -752,6 +746,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                   m: m,
                   showSender: showSender,
                   senderBadge: _badgeFor(m.sender),
+                  linkTitle: m.preview?['title'],
+                  linkBusy: m.msgUid != null && _askingLinks.contains(m.msgUid),
+                  onAskLink: _canAskLink(m) && !_isRoom
+                      ? () => _askGroupPreview(m)
+                      : null,
                   quotedText: quoted,
                   quotedAuthor: quotedAuthor,
                   onLongPress: (ctx) => _showEmojiPickerAt(
@@ -811,75 +810,43 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
   }
 
-  Future<void> _enrichGroupPreview(
-    _GMsg msg,
-    String url,
-    String msgUid, [
-    Future<bool>? sendOk,
-  ]) async {
-    try {
-      final html = await torGetOnIsolate(url);
-      if (html.startsWith('error:') || html.isEmpty) {
-        dlog(
-          'preview: fetch failed for $url -> '
-          '${html.isEmpty ? 'empty' : html.substring(0, html.length > 80 ? 80 : html.length)}',
-        );
-        return;
-      }
-      String? grab(String prop) {
-        final re = RegExp(
-          '<meta[^>]+(?:property|name)=["\']${RegExp.escape(prop)}["\'][^>]+content=["\']([^"\']+)',
-          caseSensitive: false,
-        );
-        return re.firstMatch(html)?.group(1);
-      }
+  // a reader asked for a link's title. same rule as the chat: one request
+  // over the current route, title only, cached per url, only when the sender
+  // is someone we accepted. a room's members are per-room keys, so no offer.
+  final Set<String> _askingLinks = {};
 
-      var title = grab('og:title') ?? grab('twitter:title');
+  bool _canAskLink(_GMsg m) {
+    if (m.direction == 'out') return true;
+    return appState.contacts.any((c) => c.haloId == m.sender && !c.blocked);
+  }
+
+  Future<void> _askGroupPreview(_GMsg m) async {
+    final url = firstUrl(m.text);
+    final uid = m.msgUid;
+    if (url == null || uid == null || _askingLinks.contains(uid)) return;
+    if (!await askLinkPreviewConsent(context)) return;
+    if (!mounted) return;
+    setState(() => _askingLinks.add(uid));
+    try {
+      var title = await db.getLinkTitle(url);
       if (title == null) {
-        final t = RegExp(
-          r'<title[^>]*>([^<]+)',
-          caseSensitive: false,
-        ).firstMatch(html);
-        title = t?.group(1)?.trim();
+        final html = await torGetOnIsolate(url);
+        if (!html.startsWith('error:')) title = titleFromHtml(html);
+        if (title != null) await db.setLinkTitle(url, title);
       }
-      final image = grab('og:image') ?? grab('twitter:image');
-      final site = grab('og:site_name');
-      if (title == null && image == null) {
-        dlog('preview: no og tags at $url');
-        return;
-      }
-      String? imageData;
-      if (image != null) {
-        try {
-          final raw = await torGetB64OnIsolate(image);
-          if (raw.startsWith('ok:')) imageData = raw.substring(3);
-        } catch (_) {}
-      }
-      // small thumb rides whole, big one drops. no chunked lane here, the
-      // card still shows title/site.
-      if (imageData != null && imageData.length > 80 * 1024) imageData = null;
-      final pv = <String, String>{
-        'url': url,
-        if (title != null) 'title': unescapeHtml(title),
-        'img': ?imageData,
-        if (site != null) 'site': unescapeHtml(site),
-      };
-      // wait for the send verdict before showing/announcing - a preview for
-      // a message nobody got would confuse receivers.
-      if (sendOk != null && !(await sendOk)) return;
-      // paint locally FIRST - the announce is a full tor multicast and made
-      // the sender's own card trail the receiver's by seconds. then persist
-      // and announce, neither depending on the screen still being alive.
+      final pv = {'url': url, 'title': title ?? domainOf(url)};
+      await db.setMsgPreview(uid, jsonEncode(pv));
       if (mounted) {
-        // re-find by uid: a reload during the tor fetch replaces the list
-        // objects; painting the orphan showed nothing until a restart.
-        final live = _liveMsg(msgUid) ?? msg;
+        final live = _liveMsg(uid) ?? m;
         setState(() => live.preview = pv);
       }
-      await db.setMsgPreview(msgUid, jsonEncode(pv));
-      await appState.sendGroupPreview(widget.groupId, msgUid, pv);
-    } catch (e) {
-      dlog('preview enrich failed: $e');
+      if (title == null && mounted) {
+        showHaloToast(context, 'no title came back');
+      }
+    } catch (_) {
+      if (mounted) showHaloToast(context, "couldn't reach it");
+    } finally {
+      if (mounted) setState(() => _askingLinks.remove(uid));
     }
   }
 
@@ -918,13 +885,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       replyTo: replyToUid,
       burnSeconds: burnSeconds,
     );
-    // fetch the preview while the send is in flight - the tor page fetch
-    // dominates the wait, so stacking it after the send doubled the delay.
-    // the card is only shown/announced once the send confirms ok.
-    final url = firstUrl(text);
-    if (url != null) {
-      unawaited(_enrichGroupPreview(optimistic, url, uid, sendFut));
-    }
     try {
       ok = await sendFut;
     } catch (e) {
@@ -3041,6 +3001,9 @@ class _GroupBubble extends StatelessWidget {
   final VoidCallback? onRetry;
   final bool ripple;
   final VoidCallback? onReplyTap;
+  final String? linkTitle;
+  final bool linkBusy;
+  final VoidCallback? onAskLink;
   const _GroupBubble({
     required this.m,
     required this.showSender,
@@ -3051,6 +3014,9 @@ class _GroupBubble extends StatelessWidget {
     this.onRetry,
     this.ripple = false,
     this.onReplyTap,
+    this.linkTitle,
+    this.linkBusy = false,
+    this.onAskLink,
   });
 
   @override
@@ -3390,12 +3356,14 @@ class _GroupBubble extends StatelessWidget {
                                           ),
                                         ),
                                       ),
-                                    if (m.preview != null) ...[
+                                    if (firstUrl(m.text) case final u?) ...[
                                       const SizedBox(height: 6),
-                                      LinkPreviewCard(
-                                        preview: m.preview!,
+                                      LinkStub(
+                                        url: u,
                                         isOut: isOut,
-                                        fill: true,
+                                        title: linkTitle,
+                                        busy: linkBusy,
+                                        onAsk: onAskLink,
                                       ),
                                     ],
                                     const SizedBox(height: 2),

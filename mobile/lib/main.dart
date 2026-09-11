@@ -2624,6 +2624,27 @@ class HaloDb {
     return rows.isNotEmpty;
   }
 
+  Future<String?> getLinkTitle(String url) async {
+    final db = await open();
+    final rows = await db.query(
+      'link_titles',
+      columns: ['title'],
+      where: 'url = ?',
+      whereArgs: [url],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first['title'] as String?;
+  }
+
+  Future<void> setLinkTitle(String url, String title) async {
+    final db = await open();
+    await db.insert('link_titles', {
+      'url': url,
+      'title': title,
+      'at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
   Future<String?> getMsgPreview(String msgUid) async {
     final db = await open();
     final rows = await db.query(
@@ -2970,6 +2991,14 @@ Future<void> _shieldTable(Database db) async {
       headline TEXT NOT NULL,
       lines TEXT NOT NULL,
       dismissed INTEGER NOT NULL DEFAULT 0,
+      at INTEGER NOT NULL
+    )
+  ''');
+  // titles the reader asked for, by url, so a second ask costs no request
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS link_titles (
+      url TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
       at INTEGER NOT NULL
     )
   ''');
@@ -3411,7 +3440,6 @@ class AppState extends ChangeNotifier {
   final Set<String> _inflightUids = <String>{};
   // previews that arrived before their message (fetch runs parallel to the
   // send now, so the frames can race). patched on right after the row saves.
-  final Map<String, String> _pendingPreviews = {};
   // group media slices already accepted by at least one member, per msg_uid,
   // so tap-to-retry resumes instead of re-sending the whole file.
   final Map<String, Set<int>> _grpChunkDone = {};
@@ -4128,18 +4156,9 @@ class AppState extends ChangeNotifier {
       }
       await db.dropMediaChunks(mid);
       incomingMediaDone(progressKey);
-      // preview thumbnail: reassembled chunks patch onto the card of the
-      // message with this uid, not a new media bubble. update + refresh, done.
-      if (env.pvImg && env.msgUid != null) {
-        final existing = await db.getMsgPreview(env.msgUid!);
-        final pv = existing != null
-            ? Map<String, String>.from(jsonDecode(existing) as Map)
-            : <String, String>{};
-        pv['img'] = full.toString();
-        await db.setMsgPreview(env.msgUid!, jsonEncode(pv));
-        await refreshContacts();
-        return;
-      }
+      // a preview thumbnail from an older client: never drawn, never kept.
+      // titles are fetched here only when the reader asks, images never.
+      if (env.pvImg) return;
       // which field it belonged to: file if a name was sent, else image.
       if (env.fileName != null) {
         fileB64v = full.toString();
@@ -4175,21 +4194,15 @@ class AppState extends ChangeNotifier {
     final uid = env.msgUid;
     if (uid != null) {
       final known = _inflightUids.contains(uid) || await db.messageExists(uid);
-      // preview-only frame that beat its message here: saving it as a row
-      // would swallow the real text when it lands. stash and patch later.
+      // a preview-only frame from an older client carries nothing we draw:
+      // a sender never gets to put a title or an image on this screen
       final previewOnly =
           env.preview != null &&
           env.message.isEmpty &&
           env.imageB64 == null &&
           env.fileB64 == null;
-      if (previewOnly && !known) {
-        _pendingPreviews[uid] = jsonEncode(env.preview);
-        return;
-      }
+      if (previewOnly) return;
       if (known) {
-        if (env.preview != null) {
-          await db.setMsgPreview(uid, jsonEncode(env.preview));
-        }
         // already have it, but a re-send means our receipt never landed. ack
         // again so the sender's tick flips and the outbox stops redelivering.
         if (!isGroup &&
@@ -4224,7 +4237,8 @@ class AppState extends ChangeNotifier {
       mediaPath: mediaPath,
       filePath: filePath,
       fileName: fileName,
-      preview: env.preview != null ? jsonEncode(env.preview) : null,
+      // a sender's preview is never stored; titles come only on request
+      preview: null,
       secure: env.secure,
     );
     // remember the face they picked. cheap, and it arrives with every
@@ -4236,13 +4250,8 @@ class AppState extends ChangeNotifier {
     if (!isGroup && !burnOk) {
       unawaited(_runShield(senderHaloId, env.message, env.senderAvatar));
     }
-    // a preview that raced ahead of this message was stashed - patch it on.
-    if (uid != null) {
-      final pending = _pendingPreviews.remove(uid);
-      if (pending != null) await db.setMsgPreview(uid, pending);
-      // saved now, messageExists covers dedup from here - drop the guard
-      _inflightUids.remove(uid);
-    }
+    // saved now, messageExists covers dedup from here - drop the guard
+    if (uid != null) _inflightUids.remove(uid);
     // send a delivery receipt back for 1:1 messages we just stored, so the
     // sender's tick means "on your phone" not "a relay took it". groups skip
     // this (N acks per message is noise); receipts themselves carry no uid of
@@ -6296,24 +6305,6 @@ class AppState extends ChangeNotifier {
   // re-multicast a resolved link preview onto an already-sent group message.
   // same uid: every receiver takes the known-uid update path and patches the
   // card onto the bubble it already has.
-  Future<void> sendGroupPreview(
-    String groupId,
-    String targetMsgUid,
-    Map<String, String> pv,
-  ) async {
-    final wrapped = await wrapMessage(
-      '',
-      groupId: groupId,
-      msgUid: targetMsgUid,
-      preview: pv,
-      sender: _mySender(),
-    );
-    final members = await db.getGroupMembers(groupId);
-    await Future.wait([
-      for (final memberId in members)
-        if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
-    ]);
-  }
 
   // build participant info {h,o,x} for each halo_id we have as a contact
   // (or for our own kryfo). used to give group invites enough info that
