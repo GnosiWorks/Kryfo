@@ -47,6 +47,7 @@ class _CameraScreenState extends State<CameraScreen>
   bool _busy = false;
   FlashMode _flash = FlashMode.off;
   String? _error;
+  bool _retried = false;
   // the review step
   Uint8List? _shot;
   String? _clip;
@@ -93,9 +94,20 @@ class _CameraScreenState extends State<CameraScreen>
       await c.initialize();
       await c.setFlashMode(_flash);
     } catch (e) {
-      if (mounted) setState(() => _error = 'camera permission is off');
+      // the first open usually fails once, while the permission prompt is
+      // still up. one quiet retry covers that; after it the line stays and
+      // a tap tries again.
+      if (!mounted) return;
+      if (!_retried) {
+        _retried = true;
+        await Future.delayed(const Duration(milliseconds: 1500));
+        if (mounted) await _open();
+        return;
+      }
+      setState(() => _error = 'camera permission is off · tap to try again');
       return;
     }
+    _error = null;
     if (!mounted) {
       await c.dispose();
       return;
@@ -322,10 +334,17 @@ class _CameraScreenState extends State<CameraScreen>
       fit: StackFit.expand,
       children: [
         if (_error != null)
-          Center(
-            child: Text(
-              _error!,
-              style: HaloType.sans(size: 13, color: HaloColors.text2),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              _retried = true;
+              _open();
+            },
+            child: Center(
+              child: Text(
+                _error!,
+                style: HaloType.sans(size: 13, color: HaloColors.text2),
+              ),
             ),
           )
         else if (c == null || !c.value.isInitialized)
