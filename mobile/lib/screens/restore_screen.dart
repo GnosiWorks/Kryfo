@@ -48,11 +48,14 @@ class _RestoreScreenState extends State<RestoreScreen> {
     try {
       blob = await File(path).readAsString();
     } catch (_) {
-      setState(() => _error = 'this file is damaged and cannot be read');
+      if (mounted) {
+        setState(() => _error = 'this file is damaged and cannot be read');
+      }
       return;
     } finally {
       await shredPicked(result);
     }
+    if (!mounted) return;
     if (!(blob.startsWith('kryfo-backup:') ||
         blob.startsWith('halo-backup:'))) {
       setState(() => _error = 'that file is not a kryfo backup');
