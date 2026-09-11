@@ -44,6 +44,7 @@ import '../widgets/sheet_handle.dart';
 import '../widgets/menu_backdrop.dart';
 import '../mentions.dart';
 import '../widgets/link_stub.dart';
+import '../link_prefs.dart';
 import 'camera_screen.dart';
 import '../link_preview.dart' show domainOf, titleFromHtml;
 import '../widgets/halo_sheet.dart';
@@ -750,9 +751,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                   senderBadge: _badgeFor(m.sender),
                   linkTitle: m.preview?['title'],
                   linkBusy: m.msgUid != null && _askingLinks.contains(m.msgUid),
-                  onAskLink: _canAskLink(m) && !_isRoom
-                      ? () => _askGroupPreview(m)
-                      : null,
+                  onAskLink: _linkOffer(m),
                   quotedText: quoted,
                   quotedAuthor: quotedAuthor,
                   onLongPress: (ctx) => _showEmojiPickerAt(
@@ -816,17 +815,41 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // over the current route, title only, cached per url, only when the sender
   // is someone we accepted. a room's members are per-room keys, so no offer.
   final Set<String> _askingLinks = {};
+  final Set<String> _autoAsked = {};
 
   bool _canAskLink(_GMsg m) {
     if (m.direction == 'out') return true;
     return appState.contacts.any((c) => c.haloId == m.sender && !c.blocked);
   }
 
-  Future<void> _askGroupPreview(_GMsg m) async {
+  // the tap offer under a link, or null when there is none to make. in
+  // automatic mode the title is fetched as soon as the row is on screen
+  VoidCallback? _linkOffer(_GMsg m) {
+    if (_isRoom || !_canAskLink(m)) return null;
+    if (linkPreviewMode == LinkPreviewMode.off) return null;
+    if (linkPreviewMode == LinkPreviewMode.auto) {
+      final uid = m.msgUid;
+      if (uid != null &&
+          m.preview == null &&
+          !_autoAsked.contains(uid) &&
+          firstUrl(m.text) != null) {
+        _autoAsked.add(uid);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _askGroupPreview(m, quiet: true);
+        });
+      }
+    }
+    return () => _askGroupPreview(m);
+  }
+
+  Future<void> _askGroupPreview(_GMsg m, {bool quiet = false}) async {
     final url = firstUrl(m.text);
     final uid = m.msgUid;
     if (url == null || uid == null || _askingLinks.contains(uid)) return;
-    if (!await askLinkPreviewConsent(context)) return;
+    if (!quiet) {
+      final mode = await decideLinkPreviews(context);
+      if (mode == null || mode == LinkPreviewMode.off) return;
+    }
     if (!mounted) return;
     setState(() => _askingLinks.add(uid));
     try {
@@ -842,11 +865,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         final live = _liveMsg(uid) ?? m;
         setState(() => live.preview = pv);
       }
-      if (title == null && mounted) {
+      if (title == null && mounted && !quiet) {
         showHaloToast(context, 'no title came back');
       }
     } catch (_) {
-      if (mounted) showHaloToast(context, "couldn't reach it");
+      if (mounted && !quiet) showHaloToast(context, "couldn't reach it");
     } finally {
       if (mounted) setState(() => _askingLinks.remove(uid));
     }

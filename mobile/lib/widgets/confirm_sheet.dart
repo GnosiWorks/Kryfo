@@ -158,6 +158,79 @@ Future<String?> showInputSheet(
   ).whenComplete(ctrl.dispose);
 }
 
+class SheetChoice<T> {
+  final T value;
+  final String label;
+  final String? hint;
+  const SheetChoice(this.value, this.label, {this.hint});
+}
+
+// pick one of a few. the current one is marked. null when dismissed.
+Future<T?> showChoiceSheet<T>(
+  BuildContext context, {
+  required String title,
+  String? line,
+  required List<SheetChoice<T>> choices,
+  T? current,
+}) => showHaloSheet<T>(
+  context,
+  builder: (ctx) => _frame(ctx, [
+    _title(title),
+    if (line != null) ...[const SizedBox(height: 8), _line(line)],
+    const SizedBox(height: 14),
+    for (final c in choices) ...[
+      GestureDetector(
+        onTap: () => Navigator.pop(ctx, c.value),
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: HaloColors.surface3,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: c.value == current ? HaloColors.amber : HaloColors.line,
+              width: c.value == current ? 1.2 : 0.5,
+            ),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      c.label,
+                      style: HaloType.sans(
+                        size: 14,
+                        weight: FontWeight.w600,
+                        color: HaloColors.text,
+                      ),
+                    ),
+                    if (c.hint != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        c.hint!,
+                        style: HaloType.sans(
+                          size: 12,
+                          color: HaloColors.text2,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (c.value == current)
+                Icon(Icons.check, size: 16, color: HaloColors.amber),
+            ],
+          ),
+        ),
+      ),
+      const SizedBox(height: 8),
+    ],
+  ]),
+);
+
 // something to read, one button, no way past it
 Future<void> showNoticeSheet(
   BuildContext context, {

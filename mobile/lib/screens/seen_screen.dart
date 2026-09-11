@@ -160,14 +160,14 @@ const _rows = [
   _Row(
     'link previews',
     [
-      _Cell('on ask', _Tone.good),
-      _Cell('on ask', _Tone.good),
-      _Cell('on ask', _Tone.good),
+      _Cell('your choice', _Tone.good),
+      _Cell('your choice', _Tone.good),
+      _Cell('your choice', _Tone.good),
     ],
-    'previews are off. a link shows its domain and nothing else until you '
-        'tap preview, which is one request to that site for its title, over '
-        'whatever route you are on. no image is ever loaded, and a stranger\'s '
-        'link is never offered.',
+    'a preview is one request to that site for its title, over whatever '
+        'route you are on. you choose once whether that happens on its own, '
+        'when you tap, or never. no image is ever loaded, and a stranger\'s '
+        'link never gets one.',
   ),
   _Row(
     'that a device fetched mail',
