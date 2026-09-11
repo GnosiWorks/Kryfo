@@ -235,39 +235,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
               ),
               _Row(
-                icon: Icons.link,
-                label: 'link previews',
-                hint: 'a preview is one request to that website for its title',
-                value: linkPreviewLabel(linkPreviewMode),
-                onTap: () async {
-                  final pick = await showChoiceSheet<LinkPreviewMode>(
-                    context,
-                    title: 'link previews',
-                    current: linkPreviewMode,
-                    choices: const [
-                      SheetChoice(
-                        LinkPreviewMode.auto,
-                        'automatic',
-                        hint: 'titles appear on their own',
-                      ),
-                      SheetChoice(
-                        LinkPreviewMode.onTap,
-                        'when i tap',
-                        hint: 'a link stays plain until you ask',
-                      ),
-                      SheetChoice(
-                        LinkPreviewMode.off,
-                        'off',
-                        hint: 'links are text, nothing is fetched',
-                      ),
-                    ],
-                  );
-                  if (pick == null) return;
-                  await saveLinkPreviewMode(pick);
-                  if (mounted) setState(() {});
-                },
-              ),
-              _Row(
                 icon: Icons.travel_explore_outlined,
                 label: 'add link previews',
                 hint:

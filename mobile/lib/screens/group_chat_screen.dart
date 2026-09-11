@@ -32,7 +32,6 @@ import '../main.dart'
         db,
         currentChatPeer,
         newMsgUid,
-        torGetOnIsolate,
         torStrictGetOnIsolate,
         shredFile;
 import '../theme.dart';
@@ -54,7 +53,7 @@ import '../mentions.dart';
 import '../widgets/link_stub.dart';
 import '../link_prefs.dart';
 import 'camera_screen.dart';
-import '../link_preview.dart' show domainOf, titleFromHtml, senderPreview;
+import '../link_preview.dart' show titleFromHtml, senderPreview;
 import '../widgets/preview_strip.dart';
 import '../widgets/halo_sheet.dart';
 
@@ -764,8 +763,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                   senderBadge: _badgeFor(m.sender),
                   linkTitle: m.preview?['title'],
                   linkBySender: m.preview?['by'] == 'sender',
-                  linkBusy: m.msgUid != null && _askingLinks.contains(m.msgUid),
-                  onAskLink: _linkOffer(m),
                   quotedText: quoted,
                   quotedAuthor: quotedAuthor,
                   onLongPress: (ctx) => _showEmojiPickerAt(
@@ -825,12 +822,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
   }
 
-  // a reader asked for a link's title. same rule as the chat: one request
-  // over the current route, title only, cached per url, only when the sender
-  // is someone we accepted. a room's members are per-room keys, so no offer.
-  final Set<String> _askingLinks = {};
-  final Set<String> _autoAsked = {};
-
   // the sender side, as in a chat: fetched over tor on this phone, riding
   // inside the next message. never offered in a room
   Map<String, String>? _pendingPreview;
@@ -868,64 +859,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       }
     } finally {
       if (mounted) setState(() => _previewBusy = false);
-    }
-  }
-
-  bool _canAskLink(_GMsg m) {
-    if (m.direction == 'out') return true;
-    return appState.contacts.any((c) => c.haloId == m.sender && !c.blocked);
-  }
-
-  // the tap offer under a link, or null when there is none to make. in
-  // automatic mode the title is fetched as soon as the row is on screen
-  VoidCallback? _linkOffer(_GMsg m) {
-    if (_isRoom || !_canAskLink(m)) return null;
-    if (linkPreviewMode == LinkPreviewMode.off) return null;
-    if (linkPreviewMode == LinkPreviewMode.auto) {
-      final uid = m.msgUid;
-      if (uid != null &&
-          m.preview == null &&
-          !_autoAsked.contains(uid) &&
-          firstUrl(m.text) != null) {
-        _autoAsked.add(uid);
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) _askGroupPreview(m, quiet: true);
-        });
-      }
-    }
-    return () => _askGroupPreview(m);
-  }
-
-  Future<void> _askGroupPreview(_GMsg m, {bool quiet = false}) async {
-    final url = firstUrl(m.text);
-    final uid = m.msgUid;
-    if (url == null || uid == null || _askingLinks.contains(uid)) return;
-    if (!quiet) {
-      final mode = await decideLinkPreviews(context);
-      if (mode == null || mode == LinkPreviewMode.off) return;
-    }
-    if (!mounted) return;
-    setState(() => _askingLinks.add(uid));
-    try {
-      var title = await db.getLinkTitle(url);
-      if (title == null) {
-        final html = await torGetOnIsolate(url);
-        if (!html.startsWith('error:')) title = titleFromHtml(html);
-        if (title != null) await db.setLinkTitle(url, title);
-      }
-      final pv = {'url': url, 'title': title ?? domainOf(url)};
-      await db.setMsgPreview(uid, jsonEncode(pv));
-      if (mounted) {
-        final live = _liveMsg(uid) ?? m;
-        setState(() => live.preview = pv);
-      }
-      if (title == null && mounted && !quiet) {
-        showHaloToast(context, 'no title came back');
-      }
-    } catch (_) {
-      if (mounted && !quiet) showHaloToast(context, "couldn't reach it");
-    } finally {
-      if (mounted) setState(() => _askingLinks.remove(uid));
     }
   }
 
@@ -3158,8 +3091,6 @@ class _GroupBubble extends StatelessWidget {
   final VoidCallback? onReplyTap;
   final String? linkTitle;
   final bool linkBySender;
-  final bool linkBusy;
-  final VoidCallback? onAskLink;
   const _GroupBubble({
     required this.m,
     required this.showSender,
@@ -3172,8 +3103,6 @@ class _GroupBubble extends StatelessWidget {
     this.onReplyTap,
     this.linkTitle,
     this.linkBySender = false,
-    this.linkBusy = false,
-    this.onAskLink,
   });
 
   @override
@@ -3522,8 +3451,6 @@ class _GroupBubble extends StatelessWidget {
                                         url: u,
                                         isOut: isOut,
                                         title: linkTitle,
-                                        busy: linkBusy,
-                                        onAsk: onAskLink,
                                         bySender: linkBySender,
                                       ),
                                     ],

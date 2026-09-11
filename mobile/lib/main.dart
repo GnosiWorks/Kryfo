@@ -5055,7 +5055,7 @@ class AppState extends ChangeNotifier {
     _loadFirstContact();
     await loadDisplayName();
     await loadScreenshotPref();
-    await loadLinkPreviewMode(); // loads the send switch too
+    await loadLinkPrefs();
     await initNotifications(onTap: openChatForHalo);
 
     // periodic sweep: delete messages whose burn_at has passed. a sweep
