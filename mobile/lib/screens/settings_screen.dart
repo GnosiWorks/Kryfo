@@ -133,6 +133,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             listenable: Listenable.merge([appState, lockState]),
             builder: (_, _) {
               final tor = appState.torStatus == TorStatus.reachable;
+              // relay and fast modes never use tor, so "connecting" there
+              // would be a promise nothing is trying to keep
+              final onTor = appState.sendMode == 'private';
               return Container(
                 margin: const EdgeInsets.only(bottom: 24),
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
@@ -149,7 +152,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: HaloType.mono(size: 11, color: HaloColors.amber),
                     ),
                     const SizedBox(height: 10),
-                    _postureLine('tor routing', tor, 'connected', 'connecting'),
+                    _postureLine(
+                      'tor routing',
+                      onTor && tor,
+                      'connected',
+                      onTor
+                          ? 'connecting'
+                          : 'off · ${appState.sendMode == 'fast' ? 'fast' : 'relay'} mode',
+                    ),
                     _postureLine(
                       'screenshots',
                       appState.blockScreenshots,
