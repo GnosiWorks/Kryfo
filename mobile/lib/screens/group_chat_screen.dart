@@ -13,6 +13,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/media_bubbles.dart';
+import '../atmosphere.dart';
 import 'chat_screen.dart'
     show
         disguiseWav,
@@ -2267,87 +2268,91 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         ),
                       ),
                     )
-                  : Stack(
-                      children: [
-                        if (_atmosphere != Atmo.none)
-                          Positioned.fill(child: AtmosphereWash(_atmosphere)),
-                        _scrollDownButton(),
-                        ListView.builder(
-                          key: _listKey,
-                          controller: _scrollCtrl,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
-                          ),
-                          itemCount: _messages.length,
-                          itemBuilder: (_, i) {
-                            // one unbuildable message must not cost the
-                            // whole conversation.
-                            try {
-                              return _buildGroupRow(i);
-                            } catch (e) {
-                              dlog('group bubble failed: \$e');
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 6,
-                                ),
-                                child: Text(
-                                  "this message can't be shown",
-                                  style: HaloType.sans(
-                                    size: 12,
-                                    color: HaloColors.text3,
+                  : AtmoScope(
+                      atmo: _atmosphere,
+                      child: Stack(
+                        children: [
+                          if (_atmosphere != Atmo.none)
+                            Positioned.fill(child: AtmosphereWash(_atmosphere)),
+                          _scrollDownButton(),
+                          ListView.builder(
+                            key: _listKey,
+                            controller: _scrollCtrl,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                            itemCount: _messages.length,
+                            itemBuilder: (_, i) {
+                              // one unbuildable message must not cost the
+                              // whole conversation.
+                              try {
+                                return _buildGroupRow(i);
+                              } catch (e) {
+                                dlog('group bubble failed: \$e');
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 6,
                                   ),
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                        Positioned(
-                          top: 8,
-                          left: 0,
-                          right: 0,
-                          child: IgnorePointer(
-                            child: Center(
-                              child: ValueListenableBuilder<bool>(
-                                valueListenable: _stickyShown,
-                                builder: (_, shown, _) => AnimatedOpacity(
-                                  duration: const Duration(milliseconds: 220),
-                                  opacity: shown ? 1.0 : 0.0,
-                                  child: ValueListenableBuilder<String?>(
-                                    valueListenable: _stickyLabel,
-                                    builder: (_, label, _) => label == null
-                                        ? const SizedBox.shrink()
-                                        : Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 12,
-                                              vertical: 5,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: HaloColors.surface2
-                                                  .withValues(alpha: 0.92),
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                              border: Border.all(
-                                                color: HaloColors.line,
+                                  child: Text(
+                                    "this message can't be shown",
+                                    style: HaloType.sans(
+                                      size: 12,
+                                      color: HaloColors.text3,
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                          Positioned(
+                            top: 8,
+                            left: 0,
+                            right: 0,
+                            child: IgnorePointer(
+                              child: Center(
+                                child: ValueListenableBuilder<bool>(
+                                  valueListenable: _stickyShown,
+                                  builder: (_, shown, _) => AnimatedOpacity(
+                                    duration: const Duration(milliseconds: 220),
+                                    opacity: shown ? 1.0 : 0.0,
+                                    child: ValueListenableBuilder<String?>(
+                                      valueListenable: _stickyLabel,
+                                      builder: (_, label, _) => label == null
+                                          ? const SizedBox.shrink()
+                                          : Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 5,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: HaloColors.surface2
+                                                    .withValues(alpha: 0.92),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                border: Border.all(
+                                                  color: HaloColors.line,
+                                                ),
+                                              ),
+                                              child: Text(
+                                                label,
+                                                style: HaloType.serif(
+                                                  size: 12,
+                                                  italic: true,
+                                                  color: HaloColors.text,
+                                                  weight: FontWeight.w400,
+                                                ),
                                               ),
                                             ),
-                                            child: Text(
-                                              label,
-                                              style: HaloType.serif(
-                                                size: 12,
-                                                italic: true,
-                                                color: HaloColors.text,
-                                                weight: FontWeight.w400,
-                                              ),
-                                            ),
-                                          ),
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
             ),
             if (_replyTo != null)
@@ -3189,7 +3194,10 @@ class _GroupBubble extends StatelessWidget {
                                     ? Colors.transparent
                                     : (isOut
                                           ? HaloColors.amber
-                                          : HaloColors.surface2),
+                                          : atmoBubbleIn(
+                                              context,
+                                              HaloColors.surface2,
+                                            )),
                                 borderRadius: BorderRadius.only(
                                   topLeft: const Radius.circular(14),
                                   topRight: const Radius.circular(14),

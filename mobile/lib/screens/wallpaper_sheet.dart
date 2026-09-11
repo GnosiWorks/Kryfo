@@ -1,60 +1,127 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the wallpaper picker, shared by chats and groups. gradients and patterns,
-// stored on this phone in the encrypted db, gone on wipe. nothing here is
-// ever sent.
+// the atmosphere picker, shared by chats and groups. moods, gradients and
+// patterns, stored on this phone in the encrypted db, gone on wipe. nothing
+// here is ever sent: the other person sees their own. each tap previews
+// live behind the sheet; keep it to stay, back out to put the old one back.
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '../atmosphere.dart';
 import '../theme.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/halo_sheet.dart';
+import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
-import 'chat_screen.dart'
-    show Atmo, atmoAccent, atmoLabel, atmoIsPattern, PatternPainter;
 
-Future<Atmo?> showWallpaperSheet(BuildContext context, Atmo current) {
-  final gradients = Atmo.values.where((a) => !atmoIsPattern(a)).toList();
-  final patterns = Atmo.values.where(atmoIsPattern).toList();
+Future<Atmo?> showWallpaperSheet(
+  BuildContext context,
+  Atmo current, {
+  ValueChanged<Atmo>? onPreview,
+}) {
   return showHaloSheet<Atmo>(
     context,
-    builder: (ctx) => SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 22),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SheetHandle(),
-            const SizedBox(height: 10),
-            Text(
-              'wallpaper',
-              style: HaloType.serif(size: 18, color: HaloColors.text),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'behind this conversation, on this phone only. gone on wipe.',
-              style: HaloType.sans(size: 12, color: HaloColors.text2),
-            ),
-            const SizedBox(height: 16),
-            _Head('gradients'),
-            const SizedBox(height: 10),
-            _Swatches(
-              items: gradients,
-              current: current,
-              onPick: (a) => Navigator.pop(ctx, a),
-            ),
-            const SizedBox(height: 16),
-            _Head('patterns'),
-            const SizedBox(height: 10),
-            _Swatches(
-              items: patterns,
-              current: current,
-              onPick: (a) => Navigator.pop(ctx, a),
-            ),
-          ],
+    scroll: true,
+    builder: (ctx) => _Picker(current: current, onPreview: onPreview),
+  );
+}
+
+class _Picker extends StatefulWidget {
+  final Atmo current;
+  final ValueChanged<Atmo>? onPreview;
+  const _Picker({required this.current, this.onPreview});
+  @override
+  State<_Picker> createState() => _PickerState();
+}
+
+class _PickerState extends State<_Picker> {
+  late Atmo _pick = widget.current;
+
+  void _choose(Atmo a) {
+    HapticFeedback.selectionClick();
+    setState(() => _pick = a);
+    widget.onPreview?.call(a);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final moods = Atmo.values.where(atmoIsMood).toList();
+    final gradients = Atmo.values
+        .where((a) => a != Atmo.none && !atmoIsPattern(a) && !atmoIsMood(a))
+        .toList();
+    final patterns = Atmo.values.where(atmoIsPattern).toList();
+    return SafeArea(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SheetHandle(),
+              const SizedBox(height: 10),
+              Text(
+                'atmosphere',
+                style: HaloType.serif(size: 18, color: HaloColors.text),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'just for you. they see their own.',
+                style: HaloType.sans(size: 12, color: HaloColors.text2),
+              ),
+              const SizedBox(height: 16),
+              _Head('moods'),
+              const SizedBox(height: 10),
+              _Swatches(
+                items: [Atmo.none, ...moods],
+                current: _pick,
+                onPick: _choose,
+                from: 0,
+              ),
+              const SizedBox(height: 16),
+              _Head('gradients'),
+              const SizedBox(height: 10),
+              _Swatches(
+                items: gradients,
+                current: _pick,
+                onPick: _choose,
+                from: 7,
+              ),
+              const SizedBox(height: 16),
+              _Head('patterns'),
+              const SizedBox(height: 10),
+              _Swatches(
+                items: patterns,
+                current: _pick,
+                onPick: _choose,
+                from: 11,
+              ),
+              const SizedBox(height: 18),
+              PressScale(
+                label: 'keep it',
+                onTap: () => Navigator.pop(context, _pick),
+                child: Container(
+                  height: 46,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: HaloColors.amber,
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: Text(
+                    'keep it',
+                    style: HaloType.sans(
+                      size: 14,
+                      weight: FontWeight.w600,
+                      color: HaloColors.onAmber,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _Head extends StatelessWidget {
@@ -76,11 +143,24 @@ class _Swatches extends StatelessWidget {
   final List<Atmo> items;
   final Atmo current;
   final ValueChanged<Atmo> onPick;
+  final int from;
   const _Swatches({
     required this.items,
     required this.current,
     required this.onPick,
+    required this.from,
   });
+
+  Color _fill(Atmo a) {
+    if (a == Atmo.none) return HaloColors.surface3;
+    if (atmoIsPattern(a)) return HaloColors.surface2;
+    final mood = moodOf(a);
+    if (mood != null) {
+      return Color.lerp(HaloColors.surface2, mood.base, 0.55)!;
+    }
+    return atmoAccent(a).withValues(alpha: 0.18);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Wrap(
@@ -89,22 +169,20 @@ class _Swatches extends StatelessWidget {
       children: [
         for (final (i, a) in items.indexed)
           StaggerIn(
-            index: i,
+            index: from + i,
             child: GestureDetector(
               onTap: () => onPick(a),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOutBack,
                     width: 46,
                     height: 46,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: a == Atmo.none
-                          ? HaloColors.surface3
-                          : atmoIsPattern(a)
-                          ? HaloColors.surface2
-                          : atmoAccent(a).withValues(alpha: 0.18),
+                      color: _fill(a),
                       border: Border.all(
                         color: a == current
                             ? HaloColors.amber
@@ -128,11 +206,19 @@ class _Swatches extends StatelessWidget {
                         : null,
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    atmoLabel(a),
-                    style: HaloType.mono(
-                      size: 10,
-                      color: a == current ? HaloColors.amber : HaloColors.text3,
+                  SizedBox(
+                    width: 62,
+                    child: Text(
+                      atmoLabel(a),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: HaloType.mono(
+                        size: 9.5,
+                        color: a == current
+                            ? HaloColors.amber
+                            : HaloColors.text3,
+                      ),
                     ),
                   ),
                 ],
