@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import '../widgets/stagger_in.dart';
+import '../widgets/breathing_ring.dart';
 import '../main.dart';
 import '../theme.dart';
 
@@ -177,21 +178,25 @@ class _NotesScreenState extends State<NotesScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 66,
-                height: 66,
-                decoration: BoxDecoration(
-                  color: HaloColors.amberSoft,
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Icon(
-                  Icons.edit_note_rounded,
-                  color: HaloColors.amber,
-                  size: 30,
+              BreathingRing(
+                size: 98,
+                core: 66,
+                child: Container(
+                  width: 66,
+                  height: 66,
+                  decoration: BoxDecoration(
+                    color: HaloColors.amberSoft,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Icons.edit_note_rounded,
+                    color: HaloColors.amber,
+                    size: 30,
+                  ),
                 ),
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: 16),
               Text(
                 'a quiet place',
                 style: HaloType.serif(size: 24, color: HaloColors.text),

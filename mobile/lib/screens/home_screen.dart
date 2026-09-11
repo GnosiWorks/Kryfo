@@ -4,6 +4,8 @@
 
 import 'saved_screen.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/stagger_in.dart';
+import '../widgets/breathing_ring.dart';
 import 'requests_screen.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -73,31 +75,38 @@ class HomeScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            _HomeHead(
-              now: now,
-              haloId: haloId,
-              onAdd: onAddContact,
-              onSettings: onOpenSettingsDirect,
+            StaggerIn(
+              index: 0,
+              child: _HomeHead(
+                now: now,
+                haloId: haloId,
+                onAdd: onAddContact,
+                onSettings: onOpenSettingsDirect,
+              ),
             ),
             const _OfflineStrip(),
             const _BridgeHint(),
             const _BridgeStuckHint(),
             const _RelayDownHint(),
-            _NotesPin(
-              onTap: () =>
-                  Navigator.of(context).push(haloRoute(const NotesScreen())),
+            StaggerIn(
+              index: 1,
+              child: _QuickTiles(
+                onNotes: () =>
+                    Navigator.of(context).push(haloRoute(const NotesScreen())),
+                onSaved: () =>
+                    Navigator.of(context).push(haloRoute(const SavedScreen())),
+              ),
             ),
             if (pendingCount > 0)
-              _RequestsPin(
-                count: pendingCount,
-                onTap: () => Navigator.of(
-                  context,
-                ).push(haloRoute(const RequestsScreen())),
+              StaggerIn(
+                index: 2,
+                child: _RequestsPin(
+                  count: pendingCount,
+                  onTap: () => Navigator.of(
+                    context,
+                  ).push(haloRoute(const RequestsScreen())),
+                ),
               ),
-            _SavedPin(
-              onTap: () =>
-                  Navigator.of(context).push(haloRoute(const SavedScreen())),
-            ),
             if (hasArchived)
               _ArchivedPin(
                 count: contacts.where((c) => c.archived).length,
@@ -819,25 +828,7 @@ class _EmptyState extends StatefulWidget {
   State<_EmptyState> createState() => _EmptyStateState();
 }
 
-class _EmptyStateState extends State<_EmptyState>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulse = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2600),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _pulse.dispose();
-    super.dispose();
-  }
-
+class _EmptyStateState extends State<_EmptyState> {
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -846,47 +837,23 @@ class _EmptyStateState extends State<_EmptyState>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              width: 88,
-              height: 88,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // soft amber ring breathing outward - the app quietly waiting.
-                  AnimatedBuilder(
-                    animation: _pulse,
-                    builder: (_, _) {
-                      final t = Curves.easeOut.transform(_pulse.value);
-                      return Container(
-                        width: 56 + 22 * t,
-                        height: 56 + 22 * t,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: HaloColors.amber.withValues(
-                            alpha: 0.10 * (1 - t),
-                          ),
-                        ),
-                      );
-                    },
+            BreathingRing(
+              child: Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: HaloColors.amberSoft,
+                  border: Border.all(
+                    color: HaloColors.amber.withValues(alpha: 0.3),
+                    width: 0.5,
                   ),
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: HaloColors.amberSoft,
-                      border: Border.all(
-                        color: HaloColors.amber.withValues(alpha: 0.3),
-                        width: 0.5,
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.person_add_alt_1_outlined,
-                      color: HaloColors.amber,
-                      size: 26,
-                    ),
-                  ),
-                ],
+                ),
+                child: Icon(
+                  Icons.person_add_alt_1_outlined,
+                  color: HaloColors.amber,
+                  size: 26,
+                ),
               ),
             ),
             const SizedBox(height: 14),
@@ -1786,127 +1753,111 @@ class _Tab extends StatelessWidget {
   }
 }
 
-class _SavedPin extends StatelessWidget {
-  final VoidCallback onTap;
-  const _SavedPin({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: HaloColors.surface2,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: HaloColors.line, width: 0.5),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: HaloColors.amberSoft,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              alignment: Alignment.center,
-              child: Icon(Icons.bookmark, color: HaloColors.amber, size: 18),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'saved',
-                    style: HaloType.serif(
-                      size: 14,
-                      color: HaloColors.text,
-                      italic: true,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'messages you kept, from every chat',
-                    style: HaloType.sans(size: 11.5, color: HaloColors.text3),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: HaloColors.text3, size: 18),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _NotesPin extends StatelessWidget {
-  final VoidCallback onTap;
-  const _NotesPin({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: HaloColors.surface2,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: HaloColors.line, width: 0.5),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: HaloColors.amberSoft,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.bookmark_outline,
-                color: HaloColors.amber,
-                size: 18,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'note to self',
-                    style: HaloType.serif(
-                      size: 14,
-                      color: HaloColors.text,
-                      italic: true,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'a private space, only on this phone',
-                    style: HaloType.sans(size: 11.5, color: HaloColors.text3),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: HaloColors.text3, size: 18),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // unknown-sender requests. amber, shows a count, only rendered when > 0.
+// the two quiet places, side by side, so the chats start higher up
+class _QuickTiles extends StatelessWidget {
+  final VoidCallback onNotes;
+  final VoidCallback onSaved;
+  const _QuickTiles({required this.onNotes, required this.onSaved});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: _QuickTile(
+              icon: Icons.edit_note_rounded,
+              title: 'note to self',
+              line: 'only on this phone',
+              onTap: onNotes,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _QuickTile(
+              icon: Icons.bookmark,
+              title: 'saved',
+              line: 'kept from every chat',
+              onTap: onSaved,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String line;
+  final VoidCallback onTap;
+  const _QuickTile({
+    required this.icon,
+    required this.title,
+    required this.line,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return PressScale(
+      label: title,
+      onTap: onTap,
+      scale: 0.97,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(12, 11, 10, 11),
+        decoration: BoxDecoration(
+          color: HaloColors.surface2,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: HaloColors.line, width: 0.5),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: HaloColors.amberSoft,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              alignment: Alignment.center,
+              child: Icon(icon, color: HaloColors.amber, size: 16),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: HaloType.serif(
+                      size: 14,
+                      color: HaloColors.text,
+                      italic: true,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    line,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: HaloType.sans(size: 10.5, color: HaloColors.text3),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _RequestsPin extends StatelessWidget {
   final int count;
   final VoidCallback onTap;
