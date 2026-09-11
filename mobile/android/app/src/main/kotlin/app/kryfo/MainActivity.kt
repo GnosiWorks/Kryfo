@@ -142,8 +142,7 @@ class MainActivity : FlutterFragmentActivity() {
                 when (call.method) {
                     "isMiui" -> result.success(isMiuiDevice())
                     "openAutostartSettings" -> {
-                        openAutostartSettings()
-                        result.success(null)
+                        result.success(openAutostartSettings())
                     }
                     "setSecure" -> {
                         val on = call.argument<Boolean>("on") ?: false
@@ -202,7 +201,9 @@ class MainActivity : FlutterFragmentActivity() {
         return mfr == "xiaomi" || mfr == "redmi" || mfr == "poco"
     }
 
-    private fun openAutostartSettings() {
+    // true when some settings page opened. the miui page first, the app's
+    // own details page when that is missing, false when both fail
+    private fun openAutostartSettings(): Boolean {
         val miui = Intent().apply {
             setClassName(
                 "com.miui.securitycenter",
@@ -211,11 +212,18 @@ class MainActivity : FlutterFragmentActivity() {
         }
         try {
             startActivity(miui)
-        } catch (e: ActivityNotFoundException) {
+            return true
+        } catch (e: Exception) {
+            // fall through to the generic page
+        }
+        return try {
             val fallback = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                 data = Uri.parse("package:$packageName")
             }
             startActivity(fallback)
+            true
+        } catch (e: Exception) {
+            false
         }
     }
 }
