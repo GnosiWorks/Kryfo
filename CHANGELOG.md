@@ -2,6 +2,25 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.5] - 2026-09-12
+
+### Added
+- link previews that don't phone home. with "add link previews" on, typing a link offers a small add preview pill. tap it and your phone fetches the page title over tor and ships it inside the encrypted message. the other person's phone renders it and asks the network for nothing. their card says so: fetched over tor · by their device. offered only while tor is up, in chats and groups, never in a burner room. a stranger's preview stays plain text.
+- atmospheres. the wallpaper sheet is now the atmosphere picker: six moods, rain, late night, warm afternoon, snow, desert, paper, above the old gradients and patterns. each tap previews live behind the sheet. just for you, they see their own, nothing is ever sent.
+- the contact page shows the three facts as cards: verified, how many of your own contacts vouched, and how long you have been chatting. a zero is never drawn. message and verify keys sit at the bottom as buttons.
+
+### Changed
+- the reader's link preview setting is gone, along with the tap-to-fetch path. your phone never fetches a link someone sent you.
+- settings is grouped: one surface per section, icon tiles, values on the right, the danger zone in rose.
+- the home is tidier: note to self and saved are two small tiles, the chat list starts higher, and the tabs and status chip are lowercase.
+- the plus sheet is "add someone": scan their code, paste a link or handle, or open every way to add someone.
+- the protections card says off · relay mode instead of connecting forever when tor is not the route.
+
+### Fixed
+- a cold start showed nothing for several seconds on a new phone while the keystore was created. the splash paints first now and says what it is doing.
+- the empty home offered only scan. it offers scan, link and handle.
+- the camera asked for the microphone before a photo. it asks only when you switch to video.
+
 ## [0.2.4] - 2026-09-11
 
 ### Fixed

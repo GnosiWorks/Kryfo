@@ -1,0 +1,7 @@
+Link previews that don't phone home. Turn on "add link previews" and a small pill offers to fetch the page title over Tor on your phone and send it inside the encrypted message. The other person's phone never touches the link.
+
+Atmospheres. Pick a mood for a chat: rain, late night, warm afternoon, snow, desert or paper. Just for you, they see their own.
+
+The contact page shows verified, vouches from your own contacts, and how long you have been chatting. Settings and the home are tidier.
+
+Fixed: a blank screen on first launch, the camera asking for the microphone before a photo, and an empty home that only offered scan.
