@@ -48,6 +48,7 @@ class ArchivedScreen extends StatelessWidget {
                   child: Row(
                     children: [
                       IconButton(
+                        tooltip: 'back',
                         icon: Icon(
                           Icons.chevron_left,
                           color: HaloColors.text2,

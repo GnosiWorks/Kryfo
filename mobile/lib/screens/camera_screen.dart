@@ -383,7 +383,7 @@ class _CameraScreenState extends State<CameraScreen>
           right: 8,
           child: Row(
             children: [
-              _round(Icons.close, () => Navigator.of(context).pop()),
+              _round(Icons.close, 'close', () => Navigator.of(context).pop()),
               const Spacer(),
               if (_recording)
                 Container(
@@ -406,9 +406,9 @@ class _CameraScreenState extends State<CameraScreen>
                   ),
                 ),
               const Spacer(),
-              _round(_flashIcon(), _cycleFlash),
+              _round(_flashIcon(), 'flash', _cycleFlash),
               const SizedBox(width: 8),
-              _round(Icons.cameraswitch_outlined, _flip),
+              _round(Icons.cameraswitch_outlined, 'switch camera', _flip),
             ],
           ),
         ),
@@ -423,7 +423,8 @@ class _CameraScreenState extends State<CameraScreen>
     FlashMode.torch => Icons.flashlight_on,
   };
 
-  Widget _round(IconData icon, VoidCallback onTap) => PressScale(
+  Widget _round(IconData icon, String label, VoidCallback onTap) => PressScale(
+    label: label,
     onTap: onTap,
     scale: 0.88,
     child: Container(

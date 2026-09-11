@@ -242,34 +242,38 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 clipBehavior: Clip.none,
                 alignment: Alignment.center,
                 children: [
-                  GestureDetector(
-                    onTap: () {
-                      setState(() => _seenCount = _messages.length);
-                      _scrollToEnd();
-                    },
-                    child: Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: HaloColors.surface2,
-                        border: Border.all(
-                          color: HaloColors.amber.withValues(alpha: 0.5),
-                          width: 0.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: HaloColors.amber.withValues(alpha: 0.18),
-                            blurRadius: 14,
-                            spreadRadius: -2,
+                  Semantics(
+                    label: 'jump to the newest',
+                    button: true,
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() => _seenCount = _messages.length);
+                        _scrollToEnd();
+                      },
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: HaloColors.surface2,
+                          border: Border.all(
+                            color: HaloColors.amber.withValues(alpha: 0.5),
+                            width: 0.5,
                           ),
-                        ],
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        color: HaloColors.amber,
-                        size: 22,
+                          boxShadow: [
+                            BoxShadow(
+                              color: HaloColors.amber.withValues(alpha: 0.18),
+                              blurRadius: 14,
+                              spreadRadius: -2,
+                            ),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          color: HaloColors.amber,
+                          size: 22,
+                        ),
                       ),
                     ),
                   ),
@@ -1814,19 +1818,23 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         ),
                       ),
                       const SizedBox(width: 12),
-                      InkWell(
-                        onTap: () {
-                          FocusManager.instance.primaryFocus?.unfocus();
-                          Navigator.pop(ctx);
-                          _togglePinGroup(m);
-                        },
-                        borderRadius: BorderRadius.circular(999),
-                        child: Padding(
-                          padding: EdgeInsets.all(4),
-                          child: Icon(
-                            Icons.close,
-                            size: 16,
-                            color: HaloColors.text3,
+                      Semantics(
+                        label: 'close',
+                        button: true,
+                        child: InkWell(
+                          onTap: () {
+                            FocusManager.instance.primaryFocus?.unfocus();
+                            Navigator.pop(ctx);
+                            _togglePinGroup(m);
+                          },
+                          borderRadius: BorderRadius.circular(999),
+                          child: Padding(
+                            padding: EdgeInsets.all(4),
+                            child: Icon(
+                              Icons.close,
+                              size: 16,
+                              color: HaloColors.text3,
+                            ),
                           ),
                         ),
                       ),
@@ -2516,6 +2524,7 @@ class _Header extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
+            tooltip: 'back',
             icon: Icon(Icons.chevron_left, color: HaloColors.text, size: 26),
             onPressed: onBack,
           ),
@@ -2615,6 +2624,7 @@ class _Header extends StatelessWidget {
             ),
           if (onSearch != null)
             IconButton(
+              tooltip: 'search this chat',
               icon: Icon(Icons.search, color: HaloColors.text2, size: 21),
               onPressed: onSearch,
             ),
@@ -2666,6 +2676,7 @@ class _ReplyQuoteBar extends StatelessWidget {
             ),
           ),
           IconButton(
+            tooltip: 'close',
             icon: Icon(Icons.close_rounded, size: 18, color: HaloColors.text2),
             onPressed: onCancel,
           ),
@@ -2717,42 +2728,54 @@ class _Composer extends StatelessWidget {
           _MentionPicker(controller: controller, members: members),
           Row(
             children: [
-              GestureDetector(
-                onTap: onToggleGhost,
-                onLongPress: onLongPressGhost,
-                child: Container(
-                  width: 38,
-                  height: 38,
-                  alignment: Alignment.center,
-                  child: Icon(
-                    Icons.local_fire_department_rounded,
-                    color: ghost ? HaloColors.amber : HaloColors.text3,
-                    size: 22,
+              Semantics(
+                label: 'timed messages',
+                button: true,
+                child: GestureDetector(
+                  onTap: onToggleGhost,
+                  onLongPress: onLongPressGhost,
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.local_fire_department_rounded,
+                      color: ghost ? HaloColors.amber : HaloColors.text3,
+                      size: 22,
+                    ),
                   ),
                 ),
               ),
               // the camera that keeps its photos inside kryfo
-              GestureDetector(
-                onTap: onCamera,
-                behavior: HitTestBehavior.opaque,
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: Icon(
-                    Icons.photo_camera_outlined,
-                    size: 22,
-                    color: HaloColors.text2,
+              Semantics(
+                label: 'open the camera',
+                button: true,
+                child: GestureDetector(
+                  onTap: onCamera,
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: Icon(
+                      Icons.photo_camera_outlined,
+                      size: 22,
+                      color: HaloColors.text2,
+                    ),
                   ),
                 ),
               ),
-              GestureDetector(
-                onTap: onAttach,
-                behavior: HitTestBehavior.opaque,
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: Icon(
-                    Icons.add_photo_alternate_outlined,
-                    size: 22,
-                    color: HaloColors.text2,
+              Semantics(
+                label: 'attach a photo',
+                button: true,
+                child: GestureDetector(
+                  onTap: onAttach,
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: Icon(
+                      Icons.add_photo_alternate_outlined,
+                      size: 22,
+                      color: HaloColors.text2,
+                    ),
                   ),
                 ),
               ),
@@ -2800,19 +2823,23 @@ class _Composer extends StatelessWidget {
                     return Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        GestureDetector(
-                          onTap: onToggleDisguise,
-                          behavior: HitTestBehavior.opaque,
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 12),
-                            child: Icon(
-                              disguise
-                                  ? Icons.record_voice_over
-                                  : Icons.voice_over_off,
-                              size: 20,
-                              color: disguise
-                                  ? HaloColors.amber
-                                  : HaloColors.text3,
+                        Semantics(
+                          label: 'disguise voice',
+                          button: true,
+                          child: GestureDetector(
+                            onTap: onToggleDisguise,
+                            behavior: HitTestBehavior.opaque,
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 12),
+                              child: Icon(
+                                disguise
+                                    ? Icons.record_voice_over
+                                    : Icons.voice_over_off,
+                                size: 20,
+                                color: disguise
+                                    ? HaloColors.amber
+                                    : HaloColors.text3,
+                              ),
                             ),
                           ),
                         ),
@@ -3781,9 +3808,13 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       color: HaloColors.line2,
                     ),
-                    _ActionTap(
-                      icon: Icons.reply_rounded,
-                      onTap: widget.onReply,
+                    Semantics(
+                      label: 'reply',
+                      button: true,
+                      child: _ActionTap(
+                        icon: Icons.reply_rounded,
+                        onTap: widget.onReply,
+                      ),
                     ),
                   ],
                 ),

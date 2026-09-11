@@ -51,6 +51,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
               child: Row(
                 children: [
                   IconButton(
+                    tooltip: 'back',
                     icon: Icon(
                       Icons.chevron_left,
                       color: HaloColors.text2,

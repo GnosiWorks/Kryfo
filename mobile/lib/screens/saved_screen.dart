@@ -219,13 +219,17 @@ class _SavedScreenState extends State<SavedScreen> {
                   style: HaloType.mono(size: 9, color: HaloColors.text3),
                 ),
                 const Spacer(),
-                GestureDetector(
-                  onTap: uid == null ? null : () => _unsave(uid),
-                  behavior: HitTestBehavior.opaque,
-                  child: Icon(
-                    Icons.bookmark,
-                    size: 17,
-                    color: HaloColors.amber,
+                Semantics(
+                  label: 'saved',
+                  button: true,
+                  child: GestureDetector(
+                    onTap: uid == null ? null : () => _unsave(uid),
+                    behavior: HitTestBehavior.opaque,
+                    child: Icon(
+                      Icons.bookmark,
+                      size: 17,
+                      color: HaloColors.amber,
+                    ),
                   ),
                 ),
               ],
