@@ -3328,6 +3328,16 @@ Future<void> sweepCaptures() async {
           !n.contains('/kryfo-')) {
         await shredFile(f.path);
       }
+      // a backup copy that never got shredded, say the app died mid-save
+      if (n.contains('/kryfo-backup-')) await shredFile(f.path);
+    }
+    // the file picker keeps its own folder of copies
+    final picks = Directory('${tmp.path}/file_picker');
+    if (await picks.exists()) {
+      await for (final f in picks.list(recursive: true)) {
+        if (f is File) await shredFile(f.path);
+      }
+      await picks.delete(recursive: true);
     }
   } catch (e) {
     dlog('sweep: $e');

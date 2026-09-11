@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import '../picked.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../widgets/press_scale.dart';
@@ -1031,6 +1032,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (picked.isEmpty) return;
     if (picked.length == 1) {
       final bytes = await picked.first.readAsBytes();
+      await shredPickedImages(picked);
       if (!mounted) return;
       final caption = await Navigator.of(
         context,
@@ -1039,8 +1041,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       await _sendGroupImage(bytes, caption);
       return;
     }
-    for (final x in picked) {
-      final bytes = await x.readAsBytes();
+    final all = [for (final x in picked) await x.readAsBytes()];
+    await shredPickedImages(picked);
+    for (final bytes in all) {
       if (!mounted) return;
       await _sendGroupImage(bytes, '');
     }
@@ -1054,6 +1057,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     );
     if (res == null || res.files.isEmpty) return;
     final data = res.files.first.bytes;
+    await shredPicked(res);
     if (data == null) return;
     if (data.length > 8 * 1024 * 1024) {
       if (mounted) showHaloToast(context, 'gif too big · 8 mb max');
@@ -1170,6 +1174,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (res == null || res.files.isEmpty) return;
     final data = res.files.first.bytes;
     final name = res.files.first.name;
+    await shredPicked(res);
     if (data == null) return;
     await _sendGroupFileBytes(data, name);
   }

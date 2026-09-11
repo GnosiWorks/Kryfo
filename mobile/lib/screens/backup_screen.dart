@@ -79,6 +79,7 @@ class _BackupScreenState extends State<BackupScreen> {
       } else {
         showHaloToast(context, 'backup saved · keep the passphrase safe');
       }
+      await shredFile(path);
       await appState.markBackupMade();
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
