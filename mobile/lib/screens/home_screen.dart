@@ -277,31 +277,35 @@ class _GearButtonState extends State<_GearButton> {
   double _s = 1.0;
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTapDown: (_) => setState(() => _s = 0.9),
-      onTapUp: (_) => setState(() => _s = 1.0),
-      onTapCancel: () => setState(() => _s = 1.0),
-      onTap: () {
-        HapticFeedback.selectionClick();
-        widget.onTap();
-      },
-      child: AnimatedScale(
-        scale: _s,
-        duration: const Duration(milliseconds: 110),
-        curve: Curves.easeOut,
-        child: Container(
-          width: 38,
-          height: 38,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: HaloColors.line2, width: 1.4),
-          ),
-          child: Icon(
-            Icons.settings_outlined,
-            size: 19,
-            color: HaloColors.text2,
+    return Semantics(
+      label: 'settings',
+      button: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (_) => setState(() => _s = 0.9),
+        onTapUp: (_) => setState(() => _s = 1.0),
+        onTapCancel: () => setState(() => _s = 1.0),
+        onTap: () {
+          HapticFeedback.selectionClick();
+          widget.onTap();
+        },
+        child: AnimatedScale(
+          scale: _s,
+          duration: const Duration(milliseconds: 110),
+          curve: Curves.easeOut,
+          child: Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: HaloColors.line2, width: 1.4),
+            ),
+            child: Icon(
+              Icons.settings_outlined,
+              size: 19,
+              color: HaloColors.text2,
+            ),
           ),
         ),
       ),
