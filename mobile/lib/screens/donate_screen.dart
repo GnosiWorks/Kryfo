@@ -14,6 +14,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../address_text.dart';
+import '../main.dart' show appState;
+import 'modes_screen.dart';
 import 'package:flutter/services.dart';
 
 class DonateScreen extends StatefulWidget {
@@ -464,7 +466,14 @@ class _DonateScreenState extends State<DonateScreen> {
   // receipt checks out inside _InvoiceScreen, never on a tap. the static
   // address fallback lives in there too, for a donor whose tor cannot reach
   // the service.
+  // the badge service is an onion. off onion mode the engine has no tor to
+  // reach it with, and a plain client would first ask the local resolver
+  // for the onion's name: the one hostname this app must never leak. so no
+  // request at all unless we are on onion.
+  bool get _onOnion => appState.sendMode == 'private';
+
   Future<void> _openBitcoinInvoice() async {
+    if (!_onOnion) return;
     final tier = _tierFor(_amount);
     final tierKey = tier == SupporterTier.none ? 'supporter' : tierName(tier);
     HapticFeedback.mediumImpact();
@@ -555,7 +564,40 @@ class _DonateScreenState extends State<DonateScreen> {
           ),
           // only bitcoin has a next step: our node watches for it. the other
           // coins end here, since a button anyone can press proves nothing.
-          if (_coin == 'btc') ...[
+          if (_coin == 'btc' && !_onOnion) ...[
+            const SizedBox(height: 10),
+            Text(
+              'bitcoin badges need onion mode',
+              textAlign: TextAlign.center,
+              style: HaloType.sans(size: 13, color: HaloColors.text2),
+            ),
+            const SizedBox(height: 8),
+            PressScale(
+              onTap: () async {
+                HapticFeedback.selectionClick();
+                await Navigator.of(
+                  context,
+                ).push(haloRoute(const ModesScreen()));
+                if (mounted) setState(() {});
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: HaloColors.line),
+                ),
+                child: Text(
+                  'switch to onion',
+                  style: HaloType.sans(
+                    size: 13,
+                    weight: FontWeight.w600,
+                    color: HaloColors.text,
+                  ),
+                ),
+              ),
+            ),
+          ] else if (_coin == 'btc') ...[
             const SizedBox(height: 10),
             PressScale(
               onTap: _openBitcoinInvoice,
@@ -614,7 +656,7 @@ class _DonateScreenState extends State<DonateScreen> {
 
 // ─────────────────────── live bitcoin invoice flow ───────────────────────
 
-enum _Phase { loading, unreachable, invoice, confirmed, expired }
+enum _Phase { needsOnion, loading, unreachable, invoice, confirmed, expired }
 
 class _InvoiceScreen extends StatefulWidget {
   final SupporterTier tier;
@@ -657,6 +699,11 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
   }
 
   Future<void> _start() async {
+    // never touch the service off onion mode: no request, no lookup
+    if (appState.sendMode != 'private') {
+      setState(() => _phase = _Phase.needsOnion);
+      return;
+    }
     setState(() => _phase = _Phase.loading);
     final inv = await createInvoice(widget.tierKey);
     if (!mounted) return;
@@ -756,6 +803,8 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
 
   Widget _body() {
     switch (_phase) {
+      case _Phase.needsOnion:
+        return _needsOnionView();
       case _Phase.loading:
         return _loadingView();
       case _Phase.unreachable:
@@ -806,6 +855,42 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
             style: HaloType.mono(size: 11, color: HaloColors.text2),
           ),
         ],
+      ),
+    );
+  }
+
+  // ── off onion: nothing was asked ──
+  Widget _needsOnionView() {
+    return Center(
+      key: const ValueKey('onion'),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'bitcoin badges need onion mode',
+              textAlign: TextAlign.center,
+              style: HaloType.serif(size: 22, color: HaloColors.text),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'the payment service is an onion, and only onion mode can reach '
+              'it. nothing was sent.',
+              textAlign: TextAlign.center,
+              style: HaloType.sans(
+                size: 13,
+                color: HaloColors.text2,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            _fillButton('switch to onion', () async {
+              await Navigator.of(context).push(haloRoute(const ModesScreen()));
+              if (mounted) _start();
+            }),
+          ],
+        ),
       ),
     );
   }
