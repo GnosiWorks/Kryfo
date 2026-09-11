@@ -105,16 +105,16 @@ class AtmoMood {
 const _moods = <Atmo, AtmoMood>{
   Atmo.rain: AtmoMood(
     base: Color(0xFF2E3B4A),
-    wash: 0.42,
+    wash: 0.52,
     bubble: 0.35,
     dim: 0.12,
     drift: AtmoDrift.rain,
   ),
   Atmo.lateNight: AtmoMood(
     base: Color(0xFF1D1B33),
-    wash: 0.55,
-    bubble: 0.40,
-    dim: 0.26,
+    wash: 0.68,
+    bubble: 0.45,
+    dim: 0.30,
   ),
   Atmo.warmAfternoon: AtmoMood(
     base: Color(0xFF6B4416),
