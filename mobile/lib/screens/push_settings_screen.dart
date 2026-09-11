@@ -105,11 +105,11 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
                       ),
                     ),
                     _PushCard(
-                      name: 'Tor only',
+                      name: 'tor only',
                       accent: 'recommended',
                       active: _mode == PushMode.tor,
                       desc:
-                          'Kryfo polls Tor in the background. Nothing leaves your phone via any third party. Battery cost is small.',
+                          'kryfo polls tor in the background. nothing leaves your phone via any third party. the battery cost is small.',
                       badges: const ['no metadata', '~30s latency'],
                       onTap: () => _pick(PushMode.tor),
                     ),
@@ -117,7 +117,7 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
                       name: 'ntfy push',
                       active: _mode == PushMode.ntfy,
                       desc:
-                          'A wake-up ping is sent via a public ntfy server. The ping carries no message content, only a signal to fetch. Faster than Tor-only.',
+                          'a wake-up ping comes through a public ntfy server. the ping carries no message content, only a nudge to fetch. faster than tor only.',
                       badges: const [
                         'some metadata',
                         '~2s latency',
@@ -133,17 +133,17 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
                           : null,
                     ),
                     _PushCard(
-                      name: 'Via Google',
+                      name: 'via google',
                       active: false,
                       soon: true,
                       desc:
-                          'Google would send the wake-up ping. It never sees '
+                          'google would send the wake-up ping. it never sees '
                           'what you were sent, but it does learn that you were '
-                          'sent something, and when. We are looking at '
-                          'UnifiedPush instead - same speed, no Google.',
+                          'sent something, and when. we are looking at '
+                          'unifiedpush instead: same speed, no google.',
                       badges: const [
                         'not available',
-                        'needs Google Play',
+                        'needs google play',
                         'leaks timing',
                       ],
                       onTap: () {},
@@ -450,7 +450,7 @@ class _Footnote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'Tor only is the privacy default. Faster modes leak some metadata to your push provider; message content is always end-to-end encrypted.',
+      'tor only is the default. the faster modes leak some timing to your push provider. message content is end to end encrypted either way.',
       style: HaloType.sans(size: 11, color: HaloColors.text3, height: 1.6),
       textAlign: TextAlign.center,
     );

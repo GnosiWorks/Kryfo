@@ -64,23 +64,23 @@ class _ModesScreenState extends State<ModesScreen> {
             const _Head(),
             const SizedBox(height: 6),
             _ModeCard(
-              name: 'Onion',
+              name: 'onion',
               accent: '·',
               active: _mode == 'private',
               desc:
-                  'Full onion routing, 3 hops. A message takes 2–5 seconds. Nobody sees who you talk to.',
+                  'full onion routing, three hops. a message takes two to five seconds. nobody sees who you talk to.',
               speed: 'slower',
               hops: '3',
               ipVisible: false,
               onTap: () => _pick('private'),
             ),
             _ModeCard(
-              name: 'Relay',
+              name: 'relay',
               active: _mode == 'balanced',
               desc:
-                  'One sealed connection to Kryfo\'s own relay, like a VPN '
-                  'with nothing to log. Sends land in about a second, and it '
-                  'works where Tor is blocked.',
+                  "one sealed connection to kryfo's own relay, like a vpn "
+                  'with nothing to log. sends land in about a second, and it '
+                  'works where tor is blocked.',
               speed: 'quick',
               hops: '1',
               ipVisible: false,
@@ -89,10 +89,10 @@ class _ModesScreenState extends State<ModesScreen> {
               onTap: () => _pick('balanced'),
             ),
             _ModeCard(
-              name: 'Fast',
+              name: 'fast',
               active: _mode == 'fast',
               desc:
-                  'Plain connections to every relay. Near-instant, and the '
+                  'plain connections to every relay. near instant, and the '
                   'least private of the three.',
               speed: 'instant',
               hops: '0',
