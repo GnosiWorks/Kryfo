@@ -32,20 +32,28 @@ Widget _postureLine(String label, bool on, String onText, String offText) {
     padding: const EdgeInsets.symmetric(vertical: 6),
     child: Row(
       children: [
-        Icon(
-          on ? Icons.check_circle : Icons.radio_button_unchecked,
-          size: 16,
-          color: on ? HaloColors.green : HaloColors.text3,
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 240),
+          switchInCurve: Curves.easeOutBack,
+          transitionBuilder: (child, anim) =>
+              ScaleTransition(scale: anim, child: child),
+          child: Icon(
+            on ? Icons.check_circle : Icons.radio_button_unchecked,
+            key: ValueKey(on),
+            size: 16,
+            color: on ? HaloColors.amber : HaloColors.text3,
+          ),
         ),
         const SizedBox(width: 10),
         Text(label, style: HaloType.sans(size: 13, color: HaloColors.text)),
         const Spacer(),
-        Text(
-          on ? onText : offText,
+        AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 240),
           style: HaloType.mono(
             size: 10,
-            color: on ? HaloColors.green : HaloColors.text3,
+            color: on ? HaloColors.amber : HaloColors.text3,
           ),
+          child: Text(on ? onText : offText),
         ),
       ],
     ),
