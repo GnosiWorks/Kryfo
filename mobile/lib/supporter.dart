@@ -4,7 +4,7 @@
 // nothing here tracks who donated - it's a local choice only.
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'badge_client.dart' show verifyReceipt;
+import 'badge_client.dart' show verifyReceipt, fetchReceipt, ReceiptState;
 
 enum SupporterTier { none, supporter, patron, guardian }
 
@@ -110,4 +110,52 @@ Future<bool> loadShareBadge() async {
 Future<void> saveShareBadge(bool on) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setBool(_shareKey, on);
+}
+
+// the bitcoin invoice we last opened and never saw settle. the invoice
+// screen's clock and the service's window are not the same clock, so a
+// payment made at the edge can be honoured after the screen gave up.
+// remembered here, asked about once more the next time the donate screen
+// opens, and forgotten once the service answers either way.
+const _openInvoiceKey = 'badge_open_invoice';
+
+Future<void> saveOpenInvoice(String id, SupporterTier tier) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString(_openInvoiceKey, '$id|${tier.name}');
+}
+
+Future<void> clearOpenInvoice() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove(_openInvoiceKey);
+}
+
+// ask once about the remembered invoice. returns the tier if it turned out
+// paid (and grants it), null otherwise. leaves the record alone while the
+// service still says pending or cannot be reached.
+Future<SupporterTier?> settleOpenInvoice() async {
+  final prefs = await SharedPreferences.getInstance();
+  final raw = prefs.getString(_openInvoiceKey);
+  if (raw == null) return null;
+  final parts = raw.split('|');
+  if (parts.length != 2) {
+    await prefs.remove(_openInvoiceKey);
+    return null;
+  }
+  final tier = _parseTier(parts[1]);
+  final r = await fetchReceipt(parts[0]);
+  switch (r.state) {
+    case ReceiptState.paid:
+      await prefs.remove(_openInvoiceKey);
+      if (tier == SupporterTier.none) return null;
+      await saveSupporterTier(tier);
+      if (r.payload != null && r.sig != null) {
+        await saveBadgeReceipt(r.payload!, r.sig!);
+      }
+      return tier;
+    case ReceiptState.expired:
+      await prefs.remove(_openInvoiceKey);
+      return null;
+    default:
+      return null;
+  }
 }
