@@ -843,10 +843,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       final title = html.startsWith('error:') ? null : titleFromHtml(html);
       if (!mounted) return;
       if (title == null || title.trim().isEmpty) {
+        // three different failures, said apart: tor itself, the site, or a
+        // page that has no title to give
         showHaloToast(
           context,
           html.startsWith('error: tor')
               ? 'tor is not up yet · sending without'
+              : html.startsWith('error:')
+              ? "couldn't reach it · sending without"
               : 'no title came back · sending without',
         );
         return;
