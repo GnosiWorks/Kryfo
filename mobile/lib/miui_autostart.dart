@@ -2,10 +2,11 @@
 // miui_autostart.dart - onboarding nag for xiaomi devices.
 // miui kills background apps unless autostart is enabled per-app.
 // no way to enable it programmatically, so we explain + open the right
-// settings panel.
+// settings panel. both asks sit on the house sheet like every other ask.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'widgets/confirm_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'theme.dart';
@@ -47,7 +48,7 @@ Future<void> maybeShowBackgroundPrompt(BuildContext context) async {
     return;
   }
   if (!context.mounted) return;
-  await _showBatteryDialog(context);
+  await _askBattery(context);
   await prefs.setBool(_battPrefKey, true);
 }
 
@@ -55,89 +56,30 @@ Future<void> maybeShowBackgroundPrompt(BuildContext context) async {
 // seen-flag so it can be re-triggered any time, and re-checks grant state.
 Future<void> forceShowBackgroundPrompt(BuildContext context) async {
   if (await isMiui()) {
-    if (context.mounted) await _showDialog(context);
+    if (context.mounted) await _askAutostart(context);
     return;
   }
   if (await Permission.ignoreBatteryOptimizations.isGranted) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('already allowed to run in background')),
-      );
+      showHaloToast(context, 'already allowed to run in the background');
     }
     return;
   }
-  if (context.mounted) await _showBatteryDialog(context);
+  if (context.mounted) await _askBattery(context);
 }
 
-Future<void> _showBatteryDialog(BuildContext context) {
-  return showDialog<void>(
-    context: context,
-    barrierDismissible: false,
-    builder: (ctx) => Dialog(
-      backgroundColor: HaloColors.surface2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: HaloColors.line2),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'one more step',
-              style: HaloType.mono(color: HaloColors.amber, size: 11),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Let kryfo run in the background',
-              style: HaloType.serif(size: 22),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              "Your phone pauses apps to save battery. Without an exception, "
-              "kryfo can't receive messages while it's closed.",
-              style: HaloType.sans(color: HaloColors.text2, height: 1.55),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  style: TextButton.styleFrom(
-                    foregroundColor: HaloColors.text2,
-                  ),
-                  child: const Text('skip'),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () async {
-                    await Permission.ignoreBatteryOptimizations.request();
-                    if (ctx.mounted) Navigator.of(ctx).pop();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: HaloColors.amber,
-                    foregroundColor: HaloColors.onAmber,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text('allow'),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    ),
+Future<void> _askBattery(BuildContext context) async {
+  final ok = await showConfirmSheet(
+    context,
+    title: 'let kryfo run in the background',
+    line:
+        'your phone pauses apps to save battery. without an exception, '
+        'kryfo cannot receive messages while it is closed.',
+    yes: 'allow',
+    keep: 'skip',
+    rose: false,
   );
+  if (ok) await Permission.ignoreBatteryOptimizations.request();
 }
 
 Future<void> maybeShowMiuiPrompt(BuildContext context) async {
@@ -145,91 +87,28 @@ Future<void> maybeShowMiuiPrompt(BuildContext context) async {
   final prefs = await SharedPreferences.getInstance();
   if (prefs.getBool(_prefKey) ?? false) return;
   if (!context.mounted) return;
-  await _showDialog(context);
+  await _askAutostart(context);
   await prefs.setBool(_prefKey, true);
 }
 
-Future<void> _showDialog(BuildContext context) {
-  return showDialog<void>(
-    context: context,
-    barrierDismissible: false,
-    builder: (ctx) => Dialog(
-      backgroundColor: HaloColors.surface2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: HaloColors.line2),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'one more step',
-              style: HaloType.mono(color: HaloColors.amber, size: 11),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Let kryfo run in the background',
-              style: HaloType.serif(size: 22),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              'Xiaomi turns off background apps by default. Without autostart, kryfo can\'t deliver messages when the app is closed.',
-              style: HaloType.sans(color: HaloColors.text2, height: 1.55),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'On the next screen: find kryfo in the list and tap the toggle on.',
-              style: HaloType.sans(
-                color: HaloColors.text3,
-                height: 1.55,
-                size: 12,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  style: TextButton.styleFrom(
-                    foregroundColor: HaloColors.text2,
-                  ),
-                  child: const Text('skip'),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () async {
-                    final ok = await openAutostartSettings();
-                    if (ctx.mounted) Navigator.of(ctx).pop();
-                    if (!ok && context.mounted) {
-                      showHaloToast(
-                        context,
-                        "couldn't open it. look for autostart in phone settings",
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: HaloColors.amber,
-                    foregroundColor: HaloColors.onAmber,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text('open settings'),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    ),
+Future<void> _askAutostart(BuildContext context) async {
+  final ok = await showConfirmSheet(
+    context,
+    title: 'let kryfo run in the background',
+    line:
+        'xiaomi turns off background apps by default. without autostart, '
+        'kryfo cannot deliver messages when the app is closed. on the next '
+        'screen, find kryfo in the list and turn the toggle on.',
+    yes: 'open settings',
+    keep: 'skip',
+    rose: false,
   );
+  if (!ok) return;
+  final opened = await openAutostartSettings();
+  if (!opened && context.mounted) {
+    showHaloToast(
+      context,
+      "couldn't open it. look for autostart in phone settings",
+    );
+  }
 }
