@@ -5,13 +5,16 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
+import 'dart:isolate';
+import 'package:ffi/ffi.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
-import 'main.dart' show engine, shredFile;
+import 'main.dart' show TwoArgFn, TwoArgFnDart, engine, shredFile;
 import 'dlog.dart';
 
 const _kDbPassphrase = 'halo.db.passphrase';
@@ -72,11 +75,33 @@ class BackupSummary {
   });
 }
 
-Map<String, dynamic> _openPayload(String blob, String passphrase) {
+// scrypt takes a good second on a phone. it runs on its own isolate so the
+// screen keeps painting while it works.
+Future<String> _decryptOnIsolate(String blob, String passphrase) {
+  return Isolate.run(() {
+    final lib = Platform.isAndroid
+        ? DynamicLibrary.open('libhalo.so')
+        : DynamicLibrary.process();
+    final fn = lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloDecryptBackup');
+    final p1 = blob.toNativeUtf8();
+    final p2 = passphrase.toNativeUtf8();
+    try {
+      return fn(p1, p2).toDartString();
+    } finally {
+      calloc.free(p1);
+      calloc.free(p2);
+    }
+  });
+}
+
+Future<Map<String, dynamic>> _openPayload(
+  String blob,
+  String passphrase,
+) async {
   if (!(blob.startsWith('kryfo-backup:') || blob.startsWith('halo-backup:'))) {
     throw const RestoreError(RestoreFailure.notABackup);
   }
-  final result = engine.decryptBackup(blob, passphrase);
+  final result = await _decryptOnIsolate(blob, passphrase);
   if (result.startsWith('error:')) {
     throw RestoreError(classifyRestoreError(result));
   }
@@ -98,7 +123,7 @@ Map<String, dynamic> _openPayload(String blob, String passphrase) {
 // decrypt, look, say what is inside, touch nothing. the database bytes go
 // to a private temp file just long enough to be counted, then are shredded.
 Future<BackupSummary> inspectBackup(String blob, String passphrase) async {
-  final payload = _openPayload(blob, passphrase);
+  final payload = await _openPayload(blob, passphrase);
   final ts = payload['ts'];
   final when = ts is int ? DateTime.fromMillisecondsSinceEpoch(ts) : null;
   final dir = await getApplicationSupportDirectory();
@@ -225,7 +250,7 @@ Future<String> createBackupBlob(String passphrase) async {
 // engine has fully booted (specifically before identity is generated)
 // otherwise the new identity will clash.
 Future<void> restoreBackupBlob(String blob, String passphrase) async {
-  final payload = _openPayload(blob, passphrase);
+  final payload = await _openPayload(blob, passphrase);
 
   final docsDir = await getApplicationDocumentsDirectory();
 
