@@ -1,0 +1,9 @@
+Invite links now work when Kryfo is closed. Tapping one used to add nobody and say nothing.
+
+Fresh installs could not open a group properly. Fixed.
+
+A backup sent through the share sheet could arrive empty. It no longer can.
+
+The photo stripper refuses files it cannot read instead of passing them through, and an interrupted video is shredded on the spot.
+
+Every button has a name for screen readers, and a phone with no camera can install Kryfo.

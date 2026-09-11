@@ -2,6 +2,27 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.4] - 2026-09-11
+
+### Fixed
+- opening an invite link while kryfo was closed did nothing. the contact was never added and nothing said so. the link now waits for the app to finish starting.
+- on a clean install, opening any group threw underneath and its unread count never cleared. every phone we had tested on was an upgrade. fixed for new installs.
+- a backup handed to the share sheet could be zeroed while the other app was still reading it, leaving an empty file to discover at restore time. gone.
+- a link from someone you had not accepted could fetch its title on its own in automatic mode, in the moment before the app knew who they were. it waits now.
+- the photo stripper's self-check could be fooled by a legal but unusual jpeg, and a broken file was copied through untouched. one walker for both now, and a file it cannot read is refused.
+- a video interrupted by a call or a switch to another app left the clip on disk until the next cold start. it is stopped and shredded on the spot.
+- a backspace in the moment after the fourth digit of a new pin could shorten it and guarantee a mismatch.
+- a link followed by a full stop or a closing bracket previewed the wrong address.
+- an attachment that could not be saved, a full phone say, arrived as an empty bubble. the message now says so.
+- if timed messages stop clearing you are told, instead of nothing.
+- cached copies of every file you ever picked stayed in the app cache. shredded the moment they are read.
+
+### Changed
+- the link preview choice says why it exists, in plain words.
+- every icon-only button has a name for screen readers.
+- the two background prompts sit on the same sheet as every other ask.
+- a phone with no camera can install kryfo, and the legacy storage grant is gone from the listing.
+
 ## [0.2.3] - 2026-09-09
 
 ### Added
