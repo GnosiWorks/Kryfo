@@ -559,9 +559,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   // request-lock state: a stranger we haven't accepted, capped at 2 sent msgs.
   bool _accepted = true; // assume ok until loaded, so normal chats don't flash
-  // the assumption above is for the layout. anything that talks to the
-  // network on the sender's behalf waits for the real answer
-  bool _acceptedKnown = false;
   bool _peerEngaged = false; // they've replied/back-paired -> lock lifts
   int _sentCount = 0;
   int _recvCount =
@@ -677,12 +674,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // request lock: are they an accepted contact, have they engaged, and how
     // many messages have we already sent while unaccepted.
     db.isAccepted(widget.peerHaloId).then((v) {
-      if (mounted) {
-        setState(() {
-          _accepted = v;
-          _acceptedKnown = true;
-        });
-      }
+      if (mounted) setState(() => _accepted = v);
     });
     db.isBackPaired(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _peerEngaged = v);
@@ -3096,13 +3088,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   // pull the first http(s) url out of a message, or null.
 
-  // a reader asked for a link's title. one request for the page over the
-  // current route, title only, remembered per url so a second ask is free.
-  // never offered from a stranger, never automatic, never an image.
-  final Set<String> _askingLinks = {};
-  // uids already fetched on their own this visit, so a miss is not retried
-  final Set<String> _autoAsked = {};
-
   // the sender side: a preview fetched over tor by this phone, waiting to
   // ride inside the next message. null when nothing is attached
   Map<String, String>? _pendingPreview;
@@ -3140,57 +3125,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
     } finally {
       if (mounted) setState(() => _previewBusy = false);
-    }
-  }
-
-  // in automatic mode a link from someone accepted fetches its title as
-  // soon as it is on screen, once, quietly
-  void _autoPreview(_Msg m) {
-    if (linkPreviewMode != LinkPreviewMode.auto) return;
-    final uid = m.msgUid;
-    if (uid == null || m.preview != null || _autoAsked.contains(uid)) return;
-    if (firstUrl(m.text) == null) return;
-    _autoAsked.add(uid);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _askPreview(m, quiet: true);
-    });
-  }
-
-  // the tap offer under a link, or null when there is none to make
-  VoidCallback? _linkOffer(_Msg m) {
-    if (!_acceptedKnown || !_accepted || _blocked) return null;
-    if (linkPreviewMode == LinkPreviewMode.off) return null;
-    _autoPreview(m);
-    return () => _askPreview(m);
-  }
-
-  Future<void> _askPreview(_Msg m, {bool quiet = false}) async {
-    final url = firstUrl(m.text);
-    final uid = m.msgUid;
-    if (url == null || uid == null || _askingLinks.contains(uid)) return;
-    if (!quiet) {
-      final mode = await decideLinkPreviews(context);
-      if (mode == null || mode == LinkPreviewMode.off) return;
-    }
-    if (!mounted) return;
-    setState(() => _askingLinks.add(uid));
-    try {
-      var title = await db.getLinkTitle(url);
-      if (title == null) {
-        final html = await torGetOnIsolate(url);
-        if (!html.startsWith('error:')) title = titleFromHtml(html);
-        if (title != null) await db.setLinkTitle(url, title);
-      }
-      final pv = {'url': url, 'title': title ?? domainOf(url)};
-      await db.setMsgPreview(uid, jsonEncode(pv));
-      if (mounted) setState(() => m.preview = pv);
-      if (title == null && mounted && !quiet) {
-        showHaloToast(context, 'no title came back');
-      }
-    } catch (_) {
-      if (mounted && !quiet) showHaloToast(context, "couldn't reach it");
-    } finally {
-      if (mounted) setState(() => _askingLinks.remove(uid));
     }
   }
 
@@ -3537,10 +3471,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       msg: m,
                       linkTitle: m.preview?['title'],
                       linkBySender: m.preview?['by'] == 'sender',
-                      linkBusy:
-                          m.msgUid != null && _askingLinks.contains(m.msgUid),
-                      // a stranger's link is text and nothing more
-                      onAskLink: _linkOffer(m),
                       firstInGroup: firstInGroup,
                       lastInGroup: lastInGroup,
                       revealed: m.msgUid != null && m.msgUid == _revealedUid,
@@ -5665,11 +5595,9 @@ class _Bubble extends StatelessWidget {
   final VoidCallback? onReveal;
   final bool firstInGroup;
   final bool lastInGroup;
-  // a link in the text: the title once asked for, and the ask itself
+  // a link in the text: the title the sender shipped, if any
   final String? linkTitle;
-  final bool linkBusy;
   final bool linkBySender;
-  final VoidCallback? onAskLink;
   const _Bubble({
     super.key,
     required this.msg,
@@ -5687,8 +5615,6 @@ class _Bubble extends StatelessWidget {
     this.onReveal,
     this.linkTitle,
     this.linkBySender = false,
-    this.linkBusy = false,
-    this.onAskLink,
     this.firstInGroup = true,
     this.lastInGroup = true,
   });
@@ -6130,8 +6056,6 @@ class _Bubble extends StatelessWidget {
                                         url: u,
                                         isOut: isOut,
                                         title: linkTitle,
-                                        busy: linkBusy,
-                                        onAsk: onAskLink,
                                         bySender: linkBySender,
                                       ),
                                     ],
