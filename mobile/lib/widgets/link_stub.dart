@@ -23,9 +23,10 @@ Future<LinkPreviewMode?> decideLinkPreviews(BuildContext context) async {
     context,
     title: 'show link previews?',
     line:
-        'a preview puts the page title under the link. kryfo asks the '
-        'website for it, the way a browser would. you choose once, and '
-        'settings can change it later.',
+        'a preview puts the page title under the link. to get it, kryfo '
+        'asks the website, the way a browser would, so that site sees your '
+        'connection. most people are fine with that. if you would rather '
+        'it never happened, pick the last one. settings can change this later.',
     choices: const [
       SheetChoice(
         LinkPreviewMode.auto,
