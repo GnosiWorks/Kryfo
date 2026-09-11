@@ -51,6 +51,7 @@ import '../main.dart'
         shredFile,
         TorHalo;
 import '../widgets/press_scale.dart';
+import '../widgets/stagger_in.dart';
 import '../widgets/motion.dart';
 import '../widgets/burn_fade.dart';
 import '../dlog.dart';
@@ -3596,7 +3597,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [
+            children: staggerAll([
               const SheetHandle(),
               // the person themselves: name, verification, vouches, media,
               // all on one page now
@@ -3810,7 +3811,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 ),
               ),
               const SizedBox(height: 8),
-            ],
+            ]),
           ),
         ),
       ),
