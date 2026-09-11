@@ -188,6 +188,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
               child: Row(
                 children: [
                   IconButton(
+                    tooltip: 'back',
                     icon: Icon(
                       Icons.chevron_left,
                       color: HaloColors.text,
@@ -402,6 +403,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                           ),
                           if (_isAdmin && !isMe)
                             IconButton(
+                              tooltip: 'remove from group',
                               icon: Icon(
                                 Icons.remove_circle_outline,
                                 size: 18,

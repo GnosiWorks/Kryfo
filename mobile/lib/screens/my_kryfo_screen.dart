@@ -715,6 +715,7 @@ class _HandleRow extends StatelessWidget {
             ),
             if (onCopy != null)
               IconButton(
+                tooltip: 'copy',
                 onPressed: onCopy,
                 icon: Icon(
                   Icons.copy_outlined,

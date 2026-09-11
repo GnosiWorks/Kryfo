@@ -69,6 +69,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
               child: Row(
                 children: [
                   IconButton(
+                    tooltip: 'back',
                     icon: Icon(
                       Icons.chevron_left,
                       color: HaloColors.text,

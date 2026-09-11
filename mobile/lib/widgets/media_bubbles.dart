@@ -573,15 +573,19 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
                           ),
                         ),
                 ),
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: _abort,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: Icon(
-                      Icons.close_rounded,
-                      size: 20,
-                      color: HaloColors.text2,
+                Semantics(
+                  label: 'close',
+                  button: true,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: _abort,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: Icon(
+                        Icons.close_rounded,
+                        size: 20,
+                        color: HaloColors.text2,
+                      ),
                     ),
                   ),
                 ),
@@ -646,6 +650,7 @@ class ImageCaptionScreenState extends State<ImageCaptionScreen> {
               child: Row(
                 children: [
                   IconButton(
+                    tooltip: 'back',
                     icon: Icon(Icons.arrow_back, color: HaloColors.text2),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
@@ -703,23 +708,27 @@ class ImageCaptionScreenState extends State<ImageCaptionScreen> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  GestureDetector(
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      Navigator.of(context).pop(_ctrl.text.trim());
-                    },
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: HaloColors.amber,
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(
-                        Icons.arrow_upward,
-                        size: 20,
-                        color: HaloColors.onAmber,
+                  Semantics(
+                    label: 'send',
+                    button: true,
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.of(context).pop(_ctrl.text.trim());
+                      },
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: HaloColors.amber,
+                        ),
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.arrow_upward,
+                          size: 20,
+                          color: HaloColors.onAmber,
+                        ),
                       ),
                     ),
                   ),

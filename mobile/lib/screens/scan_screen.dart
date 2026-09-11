@@ -121,6 +121,7 @@ class _ScanScreenState extends State<ScanScreen>
                 child: Row(
                   children: [
                     IconButton(
+                      tooltip: 'back',
                       icon: const Icon(
                         Icons.chevron_left,
                         color: Colors.white,
@@ -139,6 +140,7 @@ class _ScanScreenState extends State<ScanScreen>
                       ),
                     ),
                     IconButton(
+                      tooltip: 'flash',
                       onPressed: () async {
                         final cam = _cam;
                         if (cam == null) return;

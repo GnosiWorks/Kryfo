@@ -1514,18 +1514,22 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      InkWell(
-                        onTap: () {
-                          Navigator.pop(ctx);
-                          _togglePin(m);
-                        },
-                        borderRadius: BorderRadius.circular(999),
-                        child: Padding(
-                          padding: EdgeInsets.all(4),
-                          child: Icon(
-                            Icons.close,
-                            size: 16,
-                            color: HaloColors.text3,
+                      Semantics(
+                        label: 'close',
+                        button: true,
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _togglePin(m);
+                          },
+                          borderRadius: BorderRadius.circular(999),
+                          child: Padding(
+                            padding: EdgeInsets.all(4),
+                            child: Icon(
+                              Icons.close,
+                              size: 16,
+                              color: HaloColors.text3,
+                            ),
                           ),
                         ),
                       ),
@@ -4491,35 +4495,39 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               clipBehavior: Clip.none,
                               alignment: Alignment.center,
                               children: [
-                                GestureDetector(
-                                  onTap: _scrollToBottom,
-                                  child: Container(
-                                    width: 38,
-                                    height: 38,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: HaloColors.surface2,
-                                      border: Border.all(
-                                        color: HaloColors.amber.withValues(
-                                          alpha: 0.5,
-                                        ),
-                                        width: 0.5,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
+                                Semantics(
+                                  label: 'jump to the newest',
+                                  button: true,
+                                  child: GestureDetector(
+                                    onTap: _scrollToBottom,
+                                    child: Container(
+                                      width: 38,
+                                      height: 38,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: HaloColors.surface2,
+                                        border: Border.all(
                                           color: HaloColors.amber.withValues(
-                                            alpha: 0.18,
+                                            alpha: 0.5,
                                           ),
-                                          blurRadius: 14,
-                                          spreadRadius: -2,
+                                          width: 0.5,
                                         ),
-                                      ],
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Icon(
-                                      Icons.keyboard_arrow_down_rounded,
-                                      color: HaloColors.amber,
-                                      size: 22,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: HaloColors.amber.withValues(
+                                              alpha: 0.18,
+                                            ),
+                                            blurRadius: 14,
+                                            spreadRadius: -2,
+                                          ),
+                                        ],
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Icon(
+                                        Icons.keyboard_arrow_down_rounded,
+                                        color: HaloColors.amber,
+                                        size: 22,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -5267,6 +5275,7 @@ class _ChatHead extends StatelessWidget {
 
           if (pinnedCount > 0)
             IconButton(
+              tooltip: 'pin',
               icon: Icon(
                 Icons.push_pin_outlined,
                 color: HaloColors.amber,
@@ -5360,6 +5369,7 @@ class _SearchHeadState extends State<SearchHead> {
             Row(
               children: [
                 IconButton(
+                  tooltip: 'close',
                   icon: Icon(
                     Icons.close_rounded,
                     color: HaloColors.text2,
@@ -5461,12 +5471,14 @@ class _SearchHeadState extends State<SearchHead> {
                           const Spacer(),
                           _NavBtn(
                             icon: Icons.keyboard_arrow_up_rounded,
+                            label: 'previous match',
                             enabled: widget.matchCount > 0,
                             onTap: widget.onPrev,
                           ),
                           const SizedBox(width: 5),
                           _NavBtn(
                             icon: Icons.keyboard_arrow_down_rounded,
+                            label: 'next match',
                             enabled: widget.matchCount > 0,
                             onTap: widget.onNext,
                           ),
@@ -5487,33 +5499,40 @@ class _NavBtn extends StatelessWidget {
   final IconData icon;
   final bool enabled;
   final VoidCallback onTap;
+  final String label;
   const _NavBtn({
     required this.icon,
+    required this.label,
     required this.enabled,
     required this.onTap,
   });
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: enabled ? onTap : null,
-      child: Container(
-        width: 24,
-        height: 24,
-        decoration: BoxDecoration(
-          color: enabled ? HaloColors.amberSoft : HaloColors.surface2,
-          borderRadius: BorderRadius.circular(7),
-          border: Border.all(
-            color: enabled
-                ? HaloColors.amber.withValues(alpha: 0.45)
-                : HaloColors.line2,
-            width: 0.5,
+    return Semantics(
+      label: label,
+      button: true,
+      enabled: enabled,
+      child: GestureDetector(
+        onTap: enabled ? onTap : null,
+        child: Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: enabled ? HaloColors.amberSoft : HaloColors.surface2,
+            borderRadius: BorderRadius.circular(7),
+            border: Border.all(
+              color: enabled
+                  ? HaloColors.amber.withValues(alpha: 0.45)
+                  : HaloColors.line2,
+              width: 0.5,
+            ),
           ),
-        ),
-        alignment: Alignment.center,
-        child: Icon(
-          icon,
-          size: 16,
-          color: enabled ? HaloColors.amber : HaloColors.text3,
+          alignment: Alignment.center,
+          child: Icon(
+            icon,
+            size: 16,
+            color: enabled ? HaloColors.amber : HaloColors.text3,
+          ),
         ),
       ),
     );
@@ -6544,6 +6563,7 @@ class _ReplyQuoteBar extends StatelessWidget {
             ),
           ),
           IconButton(
+            tooltip: 'close',
             iconSize: 18,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
@@ -6654,7 +6674,14 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   color: HaloColors.line2,
                 ),
-                _ActionTap(icon: Icons.reply_rounded, onTap: widget.onReply),
+                Semantics(
+                  label: 'reply',
+                  button: true,
+                  child: _ActionTap(
+                    icon: Icons.reply_rounded,
+                    onTap: widget.onReply,
+                  ),
+                ),
               ],
             ),
           ),
@@ -7412,15 +7439,19 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
                           ),
                         ),
                 ),
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: _abort,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: Icon(
-                      Icons.close_rounded,
-                      size: 20,
-                      color: HaloColors.text2,
+                Semantics(
+                  label: 'close',
+                  button: true,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: _abort,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: Icon(
+                        Icons.close_rounded,
+                        size: 20,
+                        color: HaloColors.text2,
+                      ),
                     ),
                   ),
                 ),
@@ -7559,6 +7590,7 @@ class _Composer extends StatelessWidget {
           Row(
             children: [
               PressScale(
+                label: 'timed messages',
                 onTap: onToggleGhost,
                 onLongPress: onPickBurn,
                 scale: 0.88,
@@ -7593,6 +7625,7 @@ class _Composer extends StatelessWidget {
               const SizedBox(width: 10),
               // the camera that keeps its photos inside kryfo
               PressScale(
+                label: 'open the camera',
                 onTap: onCamera,
                 scale: 0.86,
                 child: Icon(
@@ -7603,6 +7636,7 @@ class _Composer extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               PressScale(
+                label: 'attach a photo',
                 onTap: onAttach,
                 scale: 0.86,
                 child: Icon(
@@ -7660,19 +7694,23 @@ class _Composer extends StatelessWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              GestureDetector(
-                                onTap: onToggleDisguise,
-                                behavior: HitTestBehavior.opaque,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(right: 12),
-                                  child: Icon(
-                                    disguise
-                                        ? Icons.record_voice_over
-                                        : Icons.voice_over_off,
-                                    size: 20,
-                                    color: disguise
-                                        ? HaloColors.amber
-                                        : HaloColors.text3,
+                              Semantics(
+                                label: 'disguise voice',
+                                button: true,
+                                child: GestureDetector(
+                                  onTap: onToggleDisguise,
+                                  behavior: HitTestBehavior.opaque,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(right: 12),
+                                    child: Icon(
+                                      disguise
+                                          ? Icons.record_voice_over
+                                          : Icons.voice_over_off,
+                                      size: 20,
+                                      color: disguise
+                                          ? HaloColors.amber
+                                          : HaloColors.text3,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -7772,6 +7810,7 @@ class MediaGalleryScreen extends StatelessWidget {
         backgroundColor: HaloColors.surface,
         elevation: 0,
         leading: IconButton(
+          tooltip: 'back',
           icon: const Icon(Icons.arrow_back, size: 20),
           color: HaloColors.text,
           onPressed: () => Navigator.of(context).pop(),
@@ -7854,6 +7893,7 @@ class _ImageCaptionScreenState extends State<_ImageCaptionScreen> {
               child: Row(
                 children: [
                   IconButton(
+                    tooltip: 'back',
                     icon: Icon(Icons.arrow_back, color: HaloColors.text2),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
@@ -7911,23 +7951,27 @@ class _ImageCaptionScreenState extends State<_ImageCaptionScreen> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  GestureDetector(
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      Navigator.of(context).pop(_ctrl.text.trim());
-                    },
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: HaloColors.amber,
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(
-                        Icons.arrow_upward,
-                        size: 20,
-                        color: HaloColors.onAmber,
+                  Semantics(
+                    label: 'send',
+                    button: true,
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.of(context).pop(_ctrl.text.trim());
+                      },
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: HaloColors.amber,
+                        ),
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.arrow_upward,
+                          size: 20,
+                          color: HaloColors.onAmber,
+                        ),
                       ),
                     ),
                   ),

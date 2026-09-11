@@ -126,6 +126,7 @@ class _BackBar extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
+            tooltip: 'back',
             onPressed: onBack,
             icon: Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
           ),

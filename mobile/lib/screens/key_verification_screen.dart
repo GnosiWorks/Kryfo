@@ -89,6 +89,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
               child: Row(
                 children: [
                   IconButton(
+                    tooltip: 'back',
                     icon: Icon(
                       Icons.chevron_left,
                       color: HaloColors.text2,
