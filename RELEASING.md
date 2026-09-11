@@ -25,6 +25,8 @@ bottom. each step exists because skipping it has bitten us once.
 - `mobile/pubspec.yaml`: `version: X.Y.Z+N`. bump both. N is the build number
   and only ever goes up.
 - `cd mobile && flutter pub get` so `pubspec.lock` records the new version.
+- the version row in `mobile/lib/screens/settings_screen.dart` shows the same
+  number. it is a string, it does not read pubspec, so bump it by hand.
 - `CHANGELOG.md`: a new section at the top, dated, plain words, what a user
   notices. added, fixed, changed.
 - fastlane changelogs. the gradle split gives each abi its own versionCode:
