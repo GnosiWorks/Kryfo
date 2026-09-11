@@ -310,7 +310,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                   onTap: () async {
                     final d = await Clipboard.getData('text/plain');
                     final t = d?.text?.trim();
-                    if (t == null || t.isEmpty) return;
+                    if (t == null || t.isEmpty || !mounted) return;
                     HapticFeedback.selectionClick();
                     setState(() {
                       _ctrl.text = _ctrl.text.trim().isEmpty
