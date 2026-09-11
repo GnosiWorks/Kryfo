@@ -2,6 +2,23 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.3] - 2026-09-09
+
+### Added
+- in-app camera. photos get their exif, location and maker notes stripped before anything else touches them, and nothing lands in your gallery unless you tap keep a copy. video isn't stripped yet and the screen says so.
+- link previews are a choice now. first time you tap one you pick: show them on their own, only when i tap, or not at all. changeable in settings.
+
+### Fixed
+- your phone used to fetch every link you sent, twice, before the message went out, on a plain connection unless you were on onion mode. the site learned your address and that the request came from kryfo. gone.
+- the backup screen left the encrypted file sitting in a cache. so did the file picker, for everything you ever picked. both shredded now, and swept at boot.
+- decrypting a backup froze the screen while it worked.
+- links the keyboard had capitalised never matched, so they showed as plain text.
+
+### Changed
+- restore reads as three steps: the file, the passphrase, what comes back. it shows what's in the backup and when it was made before touching anything, and says which of four things went wrong instead of "an error occurred".
+- a stranger's link, and any link in a burner room, stays plain text. no preview offered.
+- previews never load images, only the title.
+
 ## [0.2.2] - 2026-09-08
 
 ### Added
