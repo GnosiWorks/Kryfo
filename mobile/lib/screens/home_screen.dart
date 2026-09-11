@@ -881,7 +881,7 @@ class _EmptyStateState extends State<_EmptyState>
                       ),
                     ),
                     child: Icon(
-                      Icons.qr_code_2_rounded,
+                      Icons.person_add_alt_1_outlined,
                       color: HaloColors.amber,
                       size: 26,
                     ),
@@ -902,7 +902,7 @@ class _EmptyStateState extends State<_EmptyState>
             ),
             const SizedBox(height: 8),
             Text(
-              'scan a QR to add your first one.',
+              'scan their code, send them a link, or type the @handle they gave you.',
               textAlign: TextAlign.center,
               style: HaloType.sans(size: 13, color: HaloColors.text2),
             ),
@@ -919,7 +919,7 @@ class _EmptyStateState extends State<_EmptyState>
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  'scan',
+                  'add someone',
                   style: HaloType.sans(
                     size: 13,
                     weight: FontWeight.w500,
