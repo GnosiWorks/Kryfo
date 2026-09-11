@@ -4,7 +4,9 @@ import android.Manifest
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
 import android.content.ComponentName
+import android.content.ContentValues
 import android.content.Context
+import android.provider.MediaStore
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -153,9 +155,46 @@ class MainActivity : FlutterFragmentActivity() {
                         }
                         result.success(null)
                     }
+                    "saveToPictures" -> {
+                        val bytes = call.argument<ByteArray>("bytes")
+                        val name = call.argument<String>("name") ?: "kryfo.jpg"
+                        val mime = call.argument<String>("mime") ?: "image/jpeg"
+                        result.success(bytes != null && saveToPictures(bytes, name, mime))
+                    }
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    // a copy into the phone's photos, through the media store, only when the
+    // person asked for it. android 10 and up: older releases would need the
+    // storage permission, and we would rather say no than ask for that.
+    private fun saveToPictures(bytes: ByteArray, name: String, mime: String): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false
+        return try {
+            val video = mime.startsWith("video/")
+            val collection = if (video)
+                MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            else
+                MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            val values = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+                put(MediaStore.MediaColumns.MIME_TYPE, mime)
+                put(
+                    MediaStore.MediaColumns.RELATIVE_PATH,
+                    if (video) "Movies/Kryfo" else "Pictures/Kryfo"
+                )
+                put(MediaStore.MediaColumns.IS_PENDING, 1)
+            }
+            val uri = contentResolver.insert(collection, values) ?: return false
+            contentResolver.openOutputStream(uri)?.use { it.write(bytes) } ?: return false
+            values.clear()
+            values.put(MediaStore.MediaColumns.IS_PENDING, 0)
+            contentResolver.update(uri, values, null, null)
+            true
+        } catch (e: Exception) {
+            false
+        }
     }
 
     private fun isMiuiDevice(): Boolean {

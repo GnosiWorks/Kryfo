@@ -3287,6 +3287,48 @@ Future<void> shredFile(String path) async {
   }
 }
 
+// a copy of a capture into the phone's photos, only when asked for. the
+// phone's own media store does the writing; below android 10 it says no.
+Future<bool> exportToPictures(Uint8List bytes, String name, String mime) async {
+  try {
+    final ok = await const MethodChannel('halo/platform').invokeMethod<bool>(
+      'saveToPictures',
+      {'bytes': bytes, 'name': name, 'mime': mime},
+    );
+    return ok == true;
+  } catch (e) {
+    dlog('export: $e');
+    return false;
+  }
+}
+
+// captures that never got sent: a force quit mid-shot leaves the plugin's
+// file in the cache and a clip in captures. gone at every boot.
+Future<void> sweepCaptures() async {
+  try {
+    final sup = await getApplicationSupportDirectory();
+    final caps = Directory('${sup.path}/captures');
+    if (await caps.exists()) {
+      await for (final f in caps.list()) {
+        if (f is File) await shredFile(f.path);
+      }
+    }
+    final tmp = await getTemporaryDirectory();
+    await for (final f in tmp.list()) {
+      if (f is! File) continue;
+      final n = f.path.toLowerCase();
+      // the plugin names its files itself; ours in here are cards and
+      // voice notes, which keep their own names
+      if ((n.endsWith('.jpg') || n.endsWith('.jpeg') || n.endsWith('.mp4')) &&
+          !n.contains('/kryfo-')) {
+        await shredFile(f.path);
+      }
+    }
+  } catch (e) {
+    dlog('sweep: $e');
+  }
+}
+
 Future<String> saveFileBytes(List<int> bytes, String uid, String name) async {
   final dir = await getApplicationDocumentsDirectory();
   final mediaDir = Directory('${dir.path}/media');
@@ -4929,6 +4971,7 @@ class AppState extends ChangeNotifier {
       } catch (e) {
         dlog('rooms: boot subscribe failed: $e');
       }
+      unawaited(sweepCaptures());
       // people we have not accepted yet listen too: someone a friend
       // introduced, and any stranger already sitting in requests. their
       // second message rides the pair address, and without this it waited
