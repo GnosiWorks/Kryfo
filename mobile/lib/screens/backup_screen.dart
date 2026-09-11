@@ -119,7 +119,10 @@ class _BackupScreenState extends State<BackupScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: staggerAll([
               Text(
-                'an encrypted file with your identity, messages, contacts, and settings. you need both the file and the passphrase to restore.',
+                'one encrypted file: your identity, your contacts, and the '
+                'messages on this phone right now. anything said after '
+                'today is not in it, so make another when it matters. to '
+                'restore you need the file and the passphrase, both.',
                 style: HaloType.sans(
                   size: 13.5,
                   color: HaloColors.text2,
