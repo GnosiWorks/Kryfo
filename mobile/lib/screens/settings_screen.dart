@@ -273,7 +273,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 hint:
                     'when you tap add preview, your phone fetches the page '
                     'title over tor and sends it inside the message. the '
-                    'other person\'s phone never touches the link.',
+                    'other person\'s phone never touches the link. offered '
+                    'only while tor is up, so on onion mode.',
                 value: sendLinkPreviews ? 'on' : 'off',
                 onTap: () async {
                   await saveSendLinkPreviews(!sendLinkPreviews);

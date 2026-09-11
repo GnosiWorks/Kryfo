@@ -3107,6 +3107,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Map<String, String>? _pendingPreview;
   bool _previewBusy = false;
 
+  bool get _torUp {
+    final s = appState.torStatus;
+    return s == TorStatus.bootstrapped ||
+        s == TorStatus.publishing ||
+        s == TorStatus.reachable;
+  }
+
   Future<void> _addPreview() async {
     final url = firstUrl(_msgCtrl.text);
     if (url == null || _previewBusy) return;
@@ -4795,8 +4802,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         children: [
                           ValueListenableBuilder<TextEditingValue>(
                             valueListenable: _msgCtrl,
+                            // offered only while tor is up: the fetch goes
+                            // over tor or not at all, so without it there is
+                            // nothing to offer
                             builder: (_, v, _) => _PreviewStrip(
-                              url: sendLinkPreviews && _accepted
+                              url: sendLinkPreviews && _accepted && _torUp
                                   ? firstUrl(v.text)
                                   : null,
                               pending: _pendingPreview,
