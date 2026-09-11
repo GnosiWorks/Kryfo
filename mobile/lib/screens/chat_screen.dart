@@ -62,6 +62,16 @@ import '../link_prefs.dart';
 import 'camera_screen.dart';
 import '../link_preview.dart' show domainOf, titleFromHtml, firstUrl;
 export '../link_preview.dart' show firstUrl;
+export '../atmosphere.dart'
+    show
+        Atmo,
+        atmoFromName,
+        atmoAccent,
+        atmoLabel,
+        atmoIsPattern,
+        PatternPainter,
+        AtmosphereWash;
+import '../atmosphere.dart';
 import '../widgets/halo_sheet.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
@@ -3973,9 +3983,22 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
+  // the sheet previews live: each swatch changes the room behind it, and
+  // backing out puts the old one back
   Future<void> _pickAtmosphere() async {
-    final picked = await showWallpaperSheet(context, _atmosphere);
-    if (picked == null) return;
+    final before = _atmosphere;
+    final picked = await showWallpaperSheet(
+      context,
+      before,
+      onPreview: (a) {
+        if (mounted) setState(() => _atmosphere = a);
+      },
+    );
+    if (!mounted) return;
+    if (picked == null) {
+      setState(() => _atmosphere = before);
+      return;
+    }
     HapticFeedback.selectionClick();
     await db.setAtmosphere(widget.peerHaloId, picked.name);
     if (!mounted) return;
@@ -4438,187 +4461,193 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 onDismiss: _dismissKeyChanged,
               ),
             Expanded(
-              child: Stack(
-                key: _listKey,
-                children: [
-                  if (_atmosphere != Atmo.none)
-                    Positioned.fill(child: AtmosphereWash(_atmosphere)),
-                  !_loaded
-                      ? const SizedBox.shrink()
-                      : _messages.isEmpty
-                      ? const _EmptyConversation()
-                      : ListView.builder(
-                          controller: _scrollCtrl,
-                          reverse: true,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          itemCount: _messages.length,
-                          itemBuilder: (c, i) {
-                            // one unbuildable message must never cost
-                            // the whole conversation. draw a stub and
-                            // carry on.
-                            try {
-                              return _buildRow(c, i, searchActive);
-                            } catch (e) {
-                              dlog('bubble failed: $e');
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 6,
-                                ),
-                                child: Text(
-                                  "this message can't be shown",
-                                  style: HaloType.sans(
-                                    size: 12,
-                                    color: HaloColors.text3,
+              child: AtmoScope(
+                atmo: _atmosphere,
+                child: Stack(
+                  key: _listKey,
+                  children: [
+                    if (_atmosphere != Atmo.none)
+                      Positioned.fill(child: AtmosphereWash(_atmosphere)),
+                    !_loaded
+                        ? const SizedBox.shrink()
+                        : _messages.isEmpty
+                        ? const _EmptyConversation()
+                        : ListView.builder(
+                            controller: _scrollCtrl,
+                            reverse: true,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            itemCount: _messages.length,
+                            itemBuilder: (c, i) {
+                              // one unbuildable message must never cost
+                              // the whole conversation. draw a stub and
+                              // carry on.
+                              try {
+                                return _buildRow(c, i, searchActive);
+                              } catch (e) {
+                                dlog('bubble failed: $e');
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 6,
                                   ),
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 12,
-                    child: IgnorePointer(
-                      ignoring: !_showScrollDown,
-                      child: AnimatedScale(
-                        scale: _showScrollDown ? 1.0 : 0.6,
-                        duration: const Duration(milliseconds: 200),
-                        curve: Curves.easeOutBack,
-                        child: AnimatedOpacity(
-                          opacity: _showScrollDown ? 1.0 : 0.0,
-                          duration: const Duration(milliseconds: 180),
-                          child: Center(
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              alignment: Alignment.center,
-                              children: [
-                                Semantics(
-                                  label: 'jump to the newest',
-                                  button: true,
-                                  child: GestureDetector(
-                                    onTap: _scrollToBottom,
-                                    child: Container(
-                                      width: 38,
-                                      height: 38,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: HaloColors.surface2,
-                                        border: Border.all(
-                                          color: HaloColors.amber.withValues(
-                                            alpha: 0.5,
-                                          ),
-                                          width: 0.5,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
+                                  child: Text(
+                                    "this message can't be shown",
+                                    style: HaloType.sans(
+                                      size: 12,
+                                      color: HaloColors.text3,
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 12,
+                      child: IgnorePointer(
+                        ignoring: !_showScrollDown,
+                        child: AnimatedScale(
+                          scale: _showScrollDown ? 1.0 : 0.6,
+                          duration: const Duration(milliseconds: 200),
+                          curve: Curves.easeOutBack,
+                          child: AnimatedOpacity(
+                            opacity: _showScrollDown ? 1.0 : 0.0,
+                            duration: const Duration(milliseconds: 180),
+                            child: Center(
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                alignment: Alignment.center,
+                                children: [
+                                  Semantics(
+                                    label: 'jump to the newest',
+                                    button: true,
+                                    child: GestureDetector(
+                                      onTap: _scrollToBottom,
+                                      child: Container(
+                                        width: 38,
+                                        height: 38,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: HaloColors.surface2,
+                                          border: Border.all(
                                             color: HaloColors.amber.withValues(
-                                              alpha: 0.18,
+                                              alpha: 0.5,
                                             ),
-                                            blurRadius: 14,
-                                            spreadRadius: -2,
+                                            width: 0.5,
                                           ),
-                                        ],
-                                      ),
-                                      alignment: Alignment.center,
-                                      child: Icon(
-                                        Icons.keyboard_arrow_down_rounded,
-                                        color: HaloColors.amber,
-                                        size: 22,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                if (_messages.length - _seenCount > 0)
-                                  Positioned(
-                                    top: -3,
-                                    right: -3,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 5,
-                                        vertical: 1,
-                                      ),
-                                      constraints: const BoxConstraints(
-                                        minWidth: 17,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: HaloColors.amber,
-                                        borderRadius: BorderRadius.circular(9),
-                                        border: Border.all(
-                                          color: HaloColors.surface,
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                      alignment: Alignment.center,
-                                      child: Text(
-                                        '${_messages.length - _seenCount}',
-                                        style:
-                                            HaloType.mono(
-                                              size: 9,
-                                              color: HaloColors.onAmber,
-                                            ).copyWith(
-                                              fontWeight: FontWeight.w700,
-                                              height: 1.2,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: HaloColors.amber
+                                                  .withValues(alpha: 0.18),
+                                              blurRadius: 14,
+                                              spreadRadius: -2,
                                             ),
+                                          ],
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Icon(
+                                          Icons.keyboard_arrow_down_rounded,
+                                          color: HaloColors.amber,
+                                          size: 22,
+                                        ),
                                       ),
                                     ),
                                   ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 6,
-                    left: 0,
-                    right: 0,
-                    child: IgnorePointer(
-                      child: Center(
-                        child: ValueListenableBuilder<bool>(
-                          valueListenable: _stickyShown,
-                          builder: (_, shown, _) => AnimatedOpacity(
-                            duration: const Duration(milliseconds: 220),
-                            opacity: shown ? 1.0 : 0.0,
-                            child: ValueListenableBuilder<String?>(
-                              valueListenable: _stickyLabel,
-                              builder: (_, label, _) => label == null
-                                  ? const SizedBox.shrink()
-                                  : Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 5,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: HaloColors.surface2.withValues(
-                                          alpha: 0.92,
+                                  if (_messages.length - _seenCount > 0)
+                                    Positioned(
+                                      top: -3,
+                                      right: -3,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 5,
+                                          vertical: 1,
                                         ),
-                                        borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(
-                                          color: HaloColors.line,
+                                        constraints: const BoxConstraints(
+                                          minWidth: 17,
                                         ),
-                                      ),
-                                      child: Text(
-                                        label,
-                                        style: HaloType.serif(
-                                          size: 12,
-                                          italic: true,
-                                          color: HaloColors.text2,
-                                          weight: FontWeight.w300,
+                                        decoration: BoxDecoration(
+                                          color: HaloColors.amber,
+                                          borderRadius: BorderRadius.circular(
+                                            9,
+                                          ),
+                                          border: Border.all(
+                                            color: HaloColors.surface,
+                                            width: 1.5,
+                                          ),
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          '${_messages.length - _seenCount}',
+                                          style:
+                                              HaloType.mono(
+                                                size: 9,
+                                                color: HaloColors.onAmber,
+                                              ).copyWith(
+                                                fontWeight: FontWeight.w700,
+                                                height: 1.2,
+                                              ),
                                         ),
                                       ),
                                     ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                    Positioned(
+                      top: 6,
+                      left: 0,
+                      right: 0,
+                      child: IgnorePointer(
+                        child: Center(
+                          child: ValueListenableBuilder<bool>(
+                            valueListenable: _stickyShown,
+                            builder: (_, shown, _) => AnimatedOpacity(
+                              duration: const Duration(milliseconds: 220),
+                              opacity: shown ? 1.0 : 0.0,
+                              child: ValueListenableBuilder<String?>(
+                                valueListenable: _stickyLabel,
+                                builder: (_, label, _) => label == null
+                                    ? const SizedBox.shrink()
+                                    : Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 5,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: HaloColors.surface2.withValues(
+                                            alpha: 0.92,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                          border: Border.all(
+                                            color: HaloColors.line,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          label,
+                                          style: HaloType.serif(
+                                            size: 12,
+                                            italic: true,
+                                            color: HaloColors.text2,
+                                            weight: FontWeight.w300,
+                                          ),
+                                        ),
+                                      ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             if (_status.isNotEmpty)
@@ -5711,7 +5740,7 @@ class _Bubble extends StatelessWidget {
                               ? null
                               : isOut
                               ? HaloColors.amber
-                              : const Color(0xFF3B332A),
+                              : atmoBubbleIn(context),
                           gradient: null,
                           borderRadius: BorderRadius.only(
                             topLeft: const Radius.circular(14),
@@ -6728,149 +6757,6 @@ class _ActionTapState extends State<_ActionTap> {
           alignment: Alignment.center,
           child: Icon(widget.icon, size: 20, color: HaloColors.amber),
         ),
-      ),
-    );
-  }
-}
-
-// the wallpaper behind a conversation: a gradient wash in one of the house
-// colours, or a quiet pattern in the line colour. stored per chat in the
-// encrypted db, never sent, gone on wipe.
-enum Atmo { none, ember, dusk, moss, rose, dots, grid, waves }
-
-Atmo atmoFromName(String? n) => switch (n) {
-  'ember' => Atmo.ember,
-  'dusk' => Atmo.dusk,
-  'moss' => Atmo.moss,
-  'rose' => Atmo.rose,
-  'dots' => Atmo.dots,
-  'grid' => Atmo.grid,
-  'waves' => Atmo.waves,
-  _ => Atmo.none,
-};
-
-bool atmoIsPattern(Atmo a) =>
-    a == Atmo.dots || a == Atmo.grid || a == Atmo.waves;
-
-Color atmoAccent(Atmo a) => switch (a) {
-  Atmo.ember => HaloColors.amber,
-  Atmo.dusk => HaloColors.violet,
-  Atmo.moss => HaloColors.green,
-  Atmo.rose => HaloColors.rose,
-  Atmo.dots || Atmo.grid || Atmo.waves => HaloColors.text2,
-  Atmo.none => HaloColors.surface,
-};
-
-String atmoLabel(Atmo a) => switch (a) {
-  Atmo.none => 'none',
-  Atmo.ember => 'ember',
-  Atmo.dusk => 'dusk',
-  Atmo.moss => 'moss',
-  Atmo.rose => 'rose',
-  Atmo.dots => 'dots',
-  Atmo.grid => 'grid',
-  Atmo.waves => 'waves',
-};
-
-// the patterns, drawn in the line colour so they sit behind the bubbles
-// without competing with them. scale lets the picker swatch show the same
-// thing smaller.
-class PatternPainter extends CustomPainter {
-  final Atmo atmo;
-  final double scale;
-  PatternPainter(this.atmo, {this.scale = 1});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final p = Paint()
-      ..color = HaloColors.line2.withValues(alpha: 0.55)
-      ..strokeWidth = 1 * scale
-      ..style = PaintingStyle.stroke;
-    switch (atmo) {
-      case Atmo.dots:
-        final step = 26.0 * scale;
-        final fill = Paint()..color = HaloColors.line2.withValues(alpha: 0.7);
-        for (var y = step / 2; y < size.height; y += step) {
-          for (var x = step / 2; x < size.width; x += step) {
-            canvas.drawCircle(Offset(x, y), 1.2 * scale, fill);
-          }
-        }
-      case Atmo.grid:
-        final step = 34.0 * scale;
-        for (var x = 0.0; x < size.width; x += step) {
-          canvas.drawLine(Offset(x, 0), Offset(x, size.height), p);
-        }
-        for (var y = 0.0; y < size.height; y += step) {
-          canvas.drawLine(Offset(0, y), Offset(size.width, y), p);
-        }
-      case Atmo.waves:
-        final step = 30.0 * scale;
-        final amp = 5.0 * scale;
-        final len = 48.0 * scale;
-        for (var y = step / 2; y < size.height + amp; y += step) {
-          final path = Path()..moveTo(0, y);
-          for (var x = 0.0; x <= size.width; x += 4) {
-            path.lineTo(x, y + amp * math.sin(x / len * 2 * math.pi));
-          }
-          canvas.drawPath(path, p);
-        }
-      default:
-        break;
-    }
-  }
-
-  @override
-  bool shouldRepaint(PatternPainter old) =>
-      old.atmo != atmo || old.scale != scale;
-}
-
-class AtmosphereWash extends StatelessWidget {
-  final Atmo atmo;
-  const AtmosphereWash(this.atmo, {super.key});
-  @override
-  Widget build(BuildContext context) {
-    if (atmo == Atmo.none) return const SizedBox.shrink();
-    if (atmoIsPattern(atmo)) {
-      return IgnorePointer(
-        child: CustomPaint(painter: PatternPainter(atmo), size: Size.infinite),
-      );
-    }
-    final accent = atmoAccent(atmo);
-    final deep = Color.lerp(accent, HaloColors.ink, 0.55)!;
-    return IgnorePointer(
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    accent.withValues(alpha: 0.17),
-                    accent.withValues(alpha: 0.05),
-                    deep.withValues(alpha: 0.13),
-                  ],
-                  stops: const [0.0, 0.5, 1.0],
-                ),
-              ),
-            ),
-          ),
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: const Alignment(-0.6, -1.0),
-                  radius: 1.2,
-                  colors: [
-                    accent.withValues(alpha: 0.15),
-                    accent.withValues(alpha: 0.0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
