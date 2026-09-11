@@ -160,14 +160,15 @@ const _rows = [
   _Row(
     'link previews',
     [
-      _Cell('your choice', _Tone.good),
-      _Cell('your choice', _Tone.good),
-      _Cell('your choice', _Tone.good),
+      _Cell('over tor', _Tone.good),
+      _Cell('over tor', _Tone.good),
+      _Cell('over tor', _Tone.good),
     ],
-    'a preview is one request to that site for its title, over whatever '
-        'route you are on. you choose once whether that happens on its own, '
-        'when you tap, or never. no image is ever loaded, and a stranger\'s '
-        'link never gets one.',
+    'a preview is fetched by the sender, over tor, and travels inside the '
+        'encrypted message. the receiving phone makes no request. the '
+        'website learns that someone using tor asked for a page, and '
+        'nothing else. no image is ever loaded, and a stranger\'s link '
+        'stays plain text.',
   ),
   _Row(
     'that a device fetched mail',
