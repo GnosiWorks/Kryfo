@@ -267,6 +267,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (mounted) setState(() {});
                 },
               ),
+              _Row(
+                icon: Icons.travel_explore_outlined,
+                label: 'add link previews',
+                hint:
+                    'when you tap add preview, your phone fetches the page '
+                    'title over tor and sends it inside the message. the '
+                    'other person\'s phone never touches the link.',
+                value: sendLinkPreviews ? 'on' : 'off',
+                onTap: () async {
+                  await saveSendLinkPreviews(!sendLinkPreviews);
+                  if (mounted) setState(() {});
+                },
+              ),
             ],
           ),
           const SizedBox(height: 24),
