@@ -44,9 +44,9 @@ const _coins = [
 const _addrs = {
   'btc': 'bc1qdewmhrwkh8elts8ldehfq5qaj68ymexfnzkk7j',
   'xmr':
-      '88kpDTcYhM52wFPGyAuoMaPSHMZkJsJLNSZ5mBATxB3HNUcZGnkXVun8WWgndhj1cPejchnyr38dZMmedV5omekHPp9BAEX',
-  'sol': '7FNXGk175vyybaDEzHhLeVdEeYoNPo6qyvkPM4F8Ueso',
-  'eth': '0xE99fc13b8FB146Ae9d909B8A842D0E918374c6f7',
+      '4ApyZS72ZYCG3z8rtwwX6JgdjSdAcphHSFRxiKrL5yLnYYz8fvXQayWMyw79AxFoQ7BXLfzEExk5f7Z2xPdEPWyRBXtVwiD',
+  'sol': 'DrxaQPM8wD63EErdGN9GrazGVnxwiCB9Pc6RYR3v2x4a',
+  'eth': '0x55014AF792d54E4350b7f4bfc7be7D62EbbCfE43',
 };
 
 class _DonateScreenState extends State<DonateScreen> {
