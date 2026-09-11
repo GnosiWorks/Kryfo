@@ -6869,7 +6869,7 @@ Future<void> showAddContact(BuildContext context) async {
           const SheetHandle(),
           const SizedBox(height: 18),
           Text(
-            'add a contact',
+            'add someone',
             style: HaloType.serif(
               size: 22,
               italic: true,
@@ -6878,24 +6878,17 @@ Future<void> showAddContact(BuildContext context) async {
           ),
           const SizedBox(height: 6),
           Text(
-            'scan their code in person, paste an invite link, or type a handle',
-            style: HaloType.sans(size: 12.5, color: HaloColors.text),
+            'scan their code, or paste the link or @handle they gave you.',
+            style: HaloType.sans(size: 12.5, color: HaloColors.text2),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           _Pressable(
             onTap: () => Navigator.pop(sheetCtx, 'scan'),
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 15),
+              height: 48,
               decoration: BoxDecoration(
                 color: HaloColors.amber,
                 borderRadius: BorderRadius.circular(14),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x33F59E0B),
-                    blurRadius: 14,
-                    offset: Offset(0, 5),
-                  ),
-                ],
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -6907,7 +6900,7 @@ Future<void> showAddContact(BuildContext context) async {
                   ),
                   const SizedBox(width: 9),
                   Text(
-                    'scan qr code',
+                    'scan their code',
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w600,
@@ -6917,39 +6910,6 @@ Future<void> showAddContact(BuildContext context) async {
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 12),
-          _Pressable(
-            onTap: () => Navigator.pop(sheetCtx, 'mine'),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.qr_code_2, size: 16, color: HaloColors.amber),
-                const SizedBox(width: 7),
-                Text(
-                  'add someone',
-                  style: HaloType.sans(
-                    size: 13,
-                    weight: FontWeight.w600,
-                    color: HaloColors.amber,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              Expanded(child: Divider(color: HaloColors.line, height: 1)),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Text(
-                  'or paste a link · type @handle',
-                  style: HaloType.sans(size: 11, color: HaloColors.text2),
-                ),
-              ),
-              Expanded(child: Divider(color: HaloColors.line, height: 1)),
-            ],
           ),
           const SizedBox(height: 14),
           Container(
@@ -6971,11 +6931,11 @@ Future<void> showAddContact(BuildContext context) async {
               ),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
           _Pressable(
             onTap: () => Navigator.pop(sheetCtx, 'paste'),
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 13),
+              height: 46,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: HaloColors.amber, width: 1),
@@ -6989,6 +6949,62 @@ Future<void> showAddContact(BuildContext context) async {
                     color: HaloColors.amber,
                   ),
                 ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          // the page with every way in: your own code, a link to send,
+          // handles, introductions
+          _Pressable(
+            onTap: () => Navigator.pop(sheetCtx, 'mine'),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+              decoration: BoxDecoration(
+                color: HaloColors.surface2,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: HaloColors.line, width: 0.5),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: HaloColors.amberSoft,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.qr_code_2,
+                      size: 16,
+                      color: HaloColors.amber,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'every way to add someone',
+                          style: HaloType.sans(
+                            size: 14,
+                            color: HaloColors.text,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'show your code, send a link, claim a handle',
+                          style: HaloType.sans(
+                            size: 11.5,
+                            color: HaloColors.text2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, size: 18, color: HaloColors.text3),
+                ],
               ),
             ),
           ),
