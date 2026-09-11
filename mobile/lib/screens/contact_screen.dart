@@ -16,6 +16,7 @@ import '../widgets/kryfo_avatar.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/sheet_handle.dart';
 import '../widgets/stagger_in.dart';
+import '../widgets/press_scale.dart';
 import 'chat_screen.dart' show MediaGalleryScreen;
 import 'key_verification_screen.dart';
 import 'vouchers_sheet.dart';
@@ -41,6 +42,7 @@ class ContactScreen extends StatefulWidget {
 class _ContactScreenState extends State<ContactScreen> {
   Map<String, Object?>? _c;
   List<String> _voucherNames = const [];
+  int? _since;
   List<String> _media = const [];
   Set<String> _secure = const {};
   int _mediaCount = 0;
@@ -56,8 +58,10 @@ class _ContactScreenState extends State<ContactScreen> {
       db.getContact(widget.haloId),
       db.vouchesFor(widget.haloId),
       db.mediaFor(widget.haloId),
+      db.firstMessageAt(widget.haloId),
     ]);
     final c = results[0] as Map<String, Object?>?;
+    final since = results[3] as int?;
     final vs = results[1] as List<Map<String, Object?>>;
     final rows = results[2] as List<Map<String, Object?>>;
     // a file that went missing draws as nothing; no stat per file up front
@@ -76,6 +80,7 @@ class _ContactScreenState extends State<ContactScreen> {
       _media = paths;
       _secure = secure;
       _mediaCount = paths.length;
+      _since = since;
     });
   }
 
@@ -196,8 +201,45 @@ class _ContactScreenState extends State<ContactScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
       ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: _Button(
+                  label: 'message',
+                  filled: true,
+                  onTap: () => Navigator.of(context).pop(),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _Button(
+                  label: verified ? 'keys verified' : 'verify keys',
+                  filled: false,
+                  onTap: () async {
+                    await Navigator.of(context).push(
+                      haloRoute(
+                        KeyVerificationScreen(
+                          peerHaloId: widget.haloId,
+                          peerName: _name,
+                          myXpub: engine.myXPubkey(),
+                          peerXpub: widget.peerXPub,
+                        ),
+                      ),
+                    );
+                    _load();
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
         children: staggerAll([
           Center(
             child: Column(
@@ -275,34 +317,14 @@ class _ContactScreenState extends State<ContactScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 26),
-          _Row(
-            icon: Icons.chat_bubble_outline,
-            label: 'message',
-            onTap: () => Navigator.of(context).pop(),
+          const SizedBox(height: 22),
+          _Stats(
+            verified: verified,
+            vouches: _voucherNames.length,
+            since: _since,
+            onVouches: () => showVouchersSheet(context, widget.haloId),
           ),
-          _Row(
-            icon: Icons.verified_user_outlined,
-            label: verified
-                ? 'safety number · verified'
-                : 'verify safety number',
-            sub: verified
-                ? 'you compared numbers in person'
-                : 'compare numbers in person, once',
-            onTap: () async {
-              await Navigator.of(context).push(
-                haloRoute(
-                  KeyVerificationScreen(
-                    peerHaloId: widget.haloId,
-                    peerName: _name,
-                    myXpub: engine.myXPubkey(),
-                    peerXpub: widget.peerXPub,
-                  ),
-                ),
-              );
-              _load();
-            },
-          ),
+          const SizedBox(height: 22),
           if (_voucherNames.isNotEmpty)
             _Row(
               icon: Icons.people_outline,
@@ -408,6 +430,144 @@ class _ContactScreenState extends State<ContactScreen> {
             },
           ),
         ]),
+      ),
+    );
+  }
+}
+
+// the three facts about a person, as the mockup draws them: a tick, a
+// count, a duration. each card only exists when there is something to
+// say, and a zero is never drawn. the vouch count is your own contacts
+// who vouched, never a global number.
+class _Stats extends StatelessWidget {
+  final bool verified;
+  final int vouches;
+  final int? since;
+  final VoidCallback onVouches;
+  const _Stats({
+    required this.verified,
+    required this.vouches,
+    required this.since,
+    required this.onVouches,
+  });
+
+  static String _age(int ms) {
+    final d = DateTime.now().difference(
+      DateTime.fromMillisecondsSinceEpoch(ms),
+    );
+    if (d.inDays < 1) return 'today';
+    if (d.inDays < 30) return '${d.inDays}d';
+    if (d.inDays < 365) return '${d.inDays ~/ 30}mo';
+    return '${d.inDays ~/ 365}y';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cards = <Widget>[
+      if (verified)
+        _StatCard(
+          label: 'verified',
+          child: Icon(Icons.check_rounded, size: 24, color: HaloColors.green),
+        ),
+      if (vouches > 0)
+        _StatCard(
+          label: 'vouches',
+          onTap: onVouches,
+          child: Text(
+            '$vouches',
+            style: HaloType.serif(size: 24, color: HaloColors.amber),
+          ),
+        ),
+      if (since != null)
+        _StatCard(
+          label: 'chatting',
+          child: Text(
+            _age(since!),
+            style: HaloType.serif(size: 24, color: HaloColors.text),
+          ),
+        ),
+    ];
+    if (cards.isEmpty) return const SizedBox.shrink();
+    return Row(
+      children: [
+        for (var i = 0; i < cards.length; i++) ...[
+          if (i > 0) const SizedBox(width: 10),
+          Expanded(child: cards[i]),
+        ],
+      ],
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  final String label;
+  final Widget child;
+  final VoidCallback? onTap;
+  const _StatCard({required this.label, required this.child, this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    return PressScale(
+      label: label,
+      onTap: onTap,
+      scale: 0.96,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: HaloColors.surface2,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: HaloColors.line, width: 0.5),
+        ),
+        child: Column(
+          children: [
+            SizedBox(height: 30, child: Center(child: child)),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: HaloType.mono(
+                size: 9.5,
+                color: HaloColors.text3,
+                letter: 0.12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// the two things you do with a person, at the bottom where a thumb is
+class _Button extends StatelessWidget {
+  final String label;
+  final bool filled;
+  final VoidCallback onTap;
+  const _Button({
+    required this.label,
+    required this.filled,
+    required this.onTap,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return PressScale(
+      label: label,
+      onTap: onTap,
+      scale: 0.96,
+      child: Container(
+        height: 46,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: filled ? HaloColors.amber : Colors.transparent,
+          borderRadius: BorderRadius.circular(13),
+          border: filled ? null : Border.all(color: HaloColors.amber, width: 1),
+        ),
+        child: Text(
+          label,
+          style: HaloType.sans(
+            size: 14,
+            weight: FontWeight.w600,
+            color: filled ? HaloColors.onAmber : HaloColors.amber,
+          ),
+        ),
       ),
     );
   }
