@@ -47,7 +47,6 @@ import '../main.dart'
         signalEncrypt,
         appState,
         currentChatPeer,
-        torGetOnIsolate,
         shredFile,
         torStrictGetOnIsolate,
         TorHalo;
@@ -62,8 +61,7 @@ import '../widgets/link_stub.dart';
 import '../widgets/preview_strip.dart';
 import '../link_prefs.dart';
 import 'camera_screen.dart';
-import '../link_preview.dart'
-    show domainOf, titleFromHtml, firstUrl, senderPreview;
+import '../link_preview.dart' show titleFromHtml, firstUrl, senderPreview;
 export '../link_preview.dart' show firstUrl;
 export '../atmosphere.dart'
     show
