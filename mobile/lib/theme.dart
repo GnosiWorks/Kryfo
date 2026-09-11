@@ -12,6 +12,7 @@ class _Palette {
   final Color text, text2, text3;
   final Color amber, amberDeep, amberSoft;
   final Color green, greenSoft, violet, rose, onAmber;
+  final Color bubbleIn;
   const _Palette({
     required this.ink,
     required this.surface,
@@ -30,6 +31,7 @@ class _Palette {
     required this.violet,
     required this.rose,
     required this.onAmber,
+    required this.bubbleIn,
   });
 }
 
@@ -51,6 +53,7 @@ const _dark = _Palette(
   violet: Color(0xFFA78BFA),
   rose: Color(0xFFF472B6),
   onAmber: Color(0xFF1A0F04),
+  bubbleIn: Color(0xFF3B332A),
 );
 
 const _light = _Palette(
@@ -71,6 +74,7 @@ const _light = _Palette(
   violet: Color(0xFF6F4FD1),
   rose: Color(0xFFCE3F84),
   onAmber: Color(0xFFFFFBF4),
+  bubbleIn: Color(0xFFDDD3BE),
 );
 
 class HaloColors {
@@ -88,6 +92,7 @@ class HaloColors {
   static Color get text2 => _p.text2;
   static Color get text3 => _p.text3;
   static Color get amber => _p.amber;
+  static Color get bubbleIn => _p.bubbleIn;
   static Color get amberDeep => _p.amberDeep;
   static Color get amberSoft => _p.amberSoft;
   static Color get green => _p.green;
