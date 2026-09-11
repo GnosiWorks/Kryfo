@@ -7813,14 +7813,14 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
           }
           final mode = appState.sendMode;
           final txt = mode == 'balanced'
-              ? (appState.online ? 'Via Relay' : 'Offline')
+              ? (appState.online ? 'via relay' : 'offline')
               : mode == 'fast'
-              ? (appState.online ? 'Fast' : 'Offline')
+              ? (appState.online ? 'fast' : 'offline')
               : off
-              ? 'Tor Off'
+              ? 'tor off'
               : (secured || usable)
-              ? 'Tor Ready'
-              : 'Connecting';
+              ? 'tor ready'
+              : 'connecting';
           return tinted(
             (c) => Row(
               mainAxisSize: MainAxisSize.min,

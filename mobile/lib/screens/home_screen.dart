@@ -1710,7 +1710,7 @@ class _NavTabs extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               child: Center(
-                child: _Tab(label: 'Chats', active: active == 'chats'),
+                child: _Tab(label: 'chats', active: active == 'chats'),
               ),
             ),
           ),
@@ -1724,7 +1724,7 @@ class _NavTabs extends StatelessWidget {
                   vertical: 8,
                 ),
                 child: Center(
-                  child: _Tab(label: 'Support', active: active == 'support'),
+                  child: _Tab(label: 'support', active: active == 'support'),
                 ),
               ),
             ),
@@ -1740,7 +1740,7 @@ class _NavTabs extends StatelessWidget {
                   vertical: 8,
                 ),
                 child: Center(
-                  child: _Tab(label: 'Me', active: active == 'me'),
+                  child: _Tab(label: 'me', active: active == 'me'),
                 ),
               ),
             ),
