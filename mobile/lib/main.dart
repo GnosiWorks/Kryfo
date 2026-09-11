@@ -2913,6 +2913,38 @@ class HaloDb {
 
   // newest message for a peer (or null) - drives the home-list preview and
   // ordering without loading the whole conversation.
+  // the newest 1:1 row per peer in one query, for the home list. the loop
+  // that asked per contact cost one query per row on every refresh, and a
+  // refresh now follows every send.
+  Future<Map<String, Map<String, Object?>>> lastMessages() async {
+    final db = await open();
+    final rows = await db.rawQuery('''
+      SELECT m.peer_id, m.direction, m.plaintext, m.media_path, m.file_name,
+             m.sent_at
+      FROM messages m
+      JOIN (
+        SELECT peer_id, MAX(rowid) AS r FROM messages
+        WHERE group_id IS NULL GROUP BY peer_id
+      ) x ON x.r = m.rowid
+    ''');
+    return {for (final r in rows) r['peer_id'] as String: r};
+  }
+
+  // the media a chat holds, newest first, and nothing else about the
+  // messages: a contact page has no use for the text.
+  Future<List<Map<String, Object?>>> mediaFor(String peerId) async {
+    final db = await open();
+    return db.query(
+      'messages',
+      columns: ['media_path', 'secure'],
+      where:
+          "peer_id = ? AND group_id IS NULL AND media_path IS NOT NULL "
+          "AND media_path != ''",
+      whereArgs: [peerId],
+      orderBy: 'rowid DESC',
+    );
+  }
+
   Future<Map<String, Object?>?> lastMessageFor(String peerId) async {
     final db = await open();
     // order by rowid (insertion order), not sent_at - a received note can carry
@@ -5299,10 +5331,11 @@ class AppState extends ChangeNotifier {
 
   Future<void> refreshContacts() async {
     final rows = await db.contacts();
+    final lasts = await db.lastMessages();
     final list = <ContactPreview>[];
     for (final r in rows) {
       final haloId = r['halo_id'] as String;
-      final last = await db.lastMessageFor(haloId);
+      final last = lasts[haloId];
       String? preview;
       // default to the contact's last_seen; a real message overrides it.
       DateTime when = DateTime.fromMillisecondsSinceEpoch(

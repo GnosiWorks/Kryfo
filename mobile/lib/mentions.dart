@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'theme.dart';
 
 final _idRe = RegExp(r'@([a-z]+-[a-z]+-[a-z]+)');
+final _ws = RegExp(r'\s');
 
 // someone the picker can offer: their id, our name for them, their face
 class MentionCandidate {
@@ -24,9 +25,9 @@ String? mentionQuery(String text, int cursor) {
   final head = text.substring(0, cursor);
   final at = head.lastIndexOf('@');
   if (at < 0) return null;
-  if (at > 0 && !RegExp(r'\s').hasMatch(head[at - 1])) return null;
+  if (at > 0 && !_ws.hasMatch(head[at - 1])) return null;
   final q = head.substring(at + 1);
-  if (RegExp(r'\s').hasMatch(q)) return null;
+  if (_ws.hasMatch(q)) return null;
   return q.toLowerCase();
 }
 
@@ -69,6 +70,8 @@ bool mentionsMe(String text, String myId) =>
 // sender's amber bubble amber would vanish, so there it is the bubble's own
 // text colour, heavier and underlined.
 TextSpan mentionRich(String text, TextStyle base, {Color? accent}) {
+  // nearly every message has no @ in it: no scan, no span list
+  if (!text.contains('@')) return TextSpan(text: text, style: base);
   final spans = <TextSpan>[];
   var last = 0;
   for (final m in _idRe.allMatches(text)) {

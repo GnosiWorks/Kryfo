@@ -5,9 +5,10 @@ import 'package:kryfo/widgets/shift_in_place.dart';
 Widget _list(List<String> order) => MaterialApp(
   home: ListView(
     children: [
-      for (final id in order)
+      for (final (i, id) in order.indexed)
         ShiftInPlace(
           key: ValueKey(id),
+          index: i,
           child: SizedBox(height: 60, child: Text(id)),
         ),
     ],

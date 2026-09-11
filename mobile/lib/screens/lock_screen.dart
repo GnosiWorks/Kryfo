@@ -4,8 +4,6 @@
 // when biometric is enabled, auto-fires the system fingerprint prompt
 // on screen entry; "use fingerprint" re-fires it.
 
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../lock_state.dart';
@@ -29,8 +27,12 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
   );
   late final AnimationController _breath = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 3600),
-  )..repeat();
+    duration: const Duration(milliseconds: 1800),
+  )..repeat(reverse: true);
+  late final Animation<double> _breathOpacity = Tween(
+    begin: 0.15,
+    end: 1.0,
+  ).animate(CurvedAnimation(parent: _breath, curve: Curves.easeInOut));
 
   @override
   void initState() {
@@ -87,25 +89,25 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
       backgroundColor: HaloColors.ink,
       body: Stack(
         children: [
-          // a slow amber breath behind the wordmark, like the reveal
+          // a slow amber breath behind the wordmark, like the reveal. one
+          // gradient, painted once; only its opacity moves, on the compositor
           Positioned.fill(
-            child: AnimatedBuilder(
-              animation: _breath,
-              builder: (_, _) {
-                final a = 0.05 + 0.04 * math.sin(_breath.value * 2 * math.pi);
-                return DecoratedBox(
+            child: RepaintBoundary(
+              child: FadeTransition(
+                opacity: _breathOpacity,
+                child: DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: RadialGradient(
                       center: const Alignment(0, -0.55),
                       radius: 0.8,
                       colors: [
-                        HaloColors.amber.withValues(alpha: a),
+                        HaloColors.amber.withValues(alpha: 0.09),
                         Colors.transparent,
                       ],
                     ),
                   ),
-                );
-              },
+                ),
+              ),
             ),
           ),
           SafeArea(

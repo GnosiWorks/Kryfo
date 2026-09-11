@@ -1097,6 +1097,7 @@ class _ContactList extends StatelessWidget {
         ...groups.asMap().entries.map(
           (e) => ShiftInPlace(
             key: ValueKey('g-${e.value.groupId}'),
+            index: e.key,
             child: _Enter(
               index: 1 + e.key,
               child: _GroupRow(
@@ -1110,6 +1111,7 @@ class _ContactList extends StatelessWidget {
           ...rest.asMap().entries.map(
             (e) => ShiftInPlace(
               key: ValueKey('c-${e.value.haloId}'),
+              index: groups.length + e.key,
               child: _Enter(
                 index: 1 + groups.length + e.key,
                 child: _SwipeRow(
