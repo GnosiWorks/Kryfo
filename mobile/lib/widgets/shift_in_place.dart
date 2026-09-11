@@ -9,8 +9,12 @@ import 'package:flutter/rendering.dart';
 class ShiftInPlace extends StatefulWidget {
   final Widget child;
   final Duration duration;
+  // the row's place in the list. a rebuild that keeps it costs nothing;
+  // only a change of place measures and glides.
+  final int index;
   const ShiftInPlace({
     super.key,
+    required this.index,
     required this.child,
     this.duration = const Duration(milliseconds: 280),
   });
@@ -38,7 +42,7 @@ class _ShiftInPlaceState extends State<ShiftInPlace>
   @override
   void didUpdateWidget(ShiftInPlace old) {
     super.didUpdateWidget(old);
-    _measure();
+    if (old.index != widget.index) _measure();
   }
 
   @override

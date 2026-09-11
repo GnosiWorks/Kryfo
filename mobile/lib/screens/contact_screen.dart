@@ -52,18 +52,20 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   Future<void> _load() async {
-    final c = await db.getContact(widget.haloId);
-    final vs = await db.vouchesFor(widget.haloId);
-    final rows = await db.messagesFor(widget.haloId);
-    final paths = <String>[];
-    final secure = <String>{};
-    for (final r in rows) {
-      final mp = r['media_path'] as String?;
-      if (mp != null && mp.isNotEmpty && await File(mp).exists()) {
-        paths.add(mp);
-        if ((r['secure'] as int? ?? 0) == 1) secure.add(mp);
-      }
-    }
+    final results = await Future.wait([
+      db.getContact(widget.haloId),
+      db.vouchesFor(widget.haloId),
+      db.mediaFor(widget.haloId),
+    ]);
+    final c = results[0] as Map<String, Object?>?;
+    final vs = results[1] as List<Map<String, Object?>>;
+    final rows = results[2] as List<Map<String, Object?>>;
+    // a file that went missing draws as nothing; no stat per file up front
+    final paths = [for (final r in rows) r['media_path'] as String];
+    final secure = {
+      for (final r in rows)
+        if ((r['secure'] as int? ?? 0) == 1) r['media_path'] as String,
+    };
     if (!mounted) return;
     setState(() {
       _c = c;
@@ -71,7 +73,7 @@ class _ContactScreenState extends State<ContactScreen> {
         for (final v in vs)
           (v['nickname'] as String?) ?? v['voucher_id'] as String,
       ];
-      _media = paths.reversed.toList();
+      _media = paths;
       _secure = secure;
       _mediaCount = paths.length;
     });
@@ -508,6 +510,8 @@ class _MediaRow extends StatelessWidget {
                             height: 56,
                             fit: BoxFit.cover,
                             cacheWidth: 112,
+                            errorBuilder: (_, _, _) =>
+                                const SizedBox(width: 56, height: 56),
                           ),
                         ),
                       ),

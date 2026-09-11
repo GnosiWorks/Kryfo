@@ -742,11 +742,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             active: animateIn,
             child: SwipeToReply(
               onReply: () => setState(() => _replyTo = m),
-              child: AnimatedOpacity(
+              // the lifted copy in the overlay is the one that animates;
+              // the row underneath just steps aside
+              child: Opacity(
                 opacity: (m.msgUid != null && m.msgUid == _liftedUid)
                     ? 0.0
                     : 1.0,
-                duration: const Duration(milliseconds: 200),
                 child: _GroupBubble(
                   m: m,
                   showSender: showSender,
