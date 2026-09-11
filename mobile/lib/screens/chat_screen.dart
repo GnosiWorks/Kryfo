@@ -57,7 +57,8 @@ import '../widgets/sheet_handle.dart';
 import '../widgets/menu_backdrop.dart';
 import '../widgets/link_stub.dart';
 import 'camera_screen.dart';
-import '../link_preview.dart' show domainOf, titleFromHtml;
+import '../link_preview.dart' show domainOf, titleFromHtml, firstUrl;
+export '../link_preview.dart' show firstUrl;
 import '../widgets/halo_sheet.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
@@ -8078,9 +8079,4 @@ class _KeyChangedBanner extends StatelessWidget {
       ),
     );
   }
-}
-
-String? firstUrl(String text) {
-  final m = RegExp(r'https?://[^\s]+').firstMatch(text);
-  return m?.group(0);
 }

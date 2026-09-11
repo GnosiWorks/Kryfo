@@ -4,6 +4,16 @@
 // page, over whatever route the app is on, and only the title comes back.
 // no image is ever loaded. these are the pure parts.
 
+// the first http(s) url in a message, scheme lowercased. keyboards
+// capitalise the first letter of a message, so "Https://" has to count.
+String? firstUrl(String text) {
+  final m = RegExp(r'https?://[^\s]+', caseSensitive: false).firstMatch(text);
+  if (m == null) return null;
+  final raw = m.group(0)!;
+  final colon = raw.indexOf('://');
+  return raw.substring(0, colon).toLowerCase() + raw.substring(colon);
+}
+
 // "example.com" for anything that parses, the raw text otherwise
 String domainOf(String url) {
   final u = Uri.tryParse(url.trim());
