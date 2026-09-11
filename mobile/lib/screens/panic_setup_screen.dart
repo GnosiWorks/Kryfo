@@ -44,20 +44,26 @@ class _PanicSetupScreenState extends State<PanicSetupScreen>
     });
   }
 
+  // the moment between the fourth digit and the confirm step. taps are
+  // ignored so a backspace cannot shorten the pin being kept
+  bool _hold = false;
+
   Future<void> _onDigit(String d) async {
-    if (_pin.length >= 4) return;
+    if (_hold || _pin.length >= 4) return;
     setState(() {
       _pin += d;
       _error = null;
     });
     if (_pin.length != 4) return;
     if (!_confirming) {
+      setState(() => _hold = true);
       await Future.delayed(const Duration(milliseconds: 220));
       if (!mounted) return;
       setState(() {
         _first = _pin;
         _pin = '';
         _confirming = true;
+        _hold = false;
       });
       return;
     }
@@ -132,7 +138,7 @@ class _PanicSetupScreenState extends State<PanicSetupScreen>
               shake: _shake,
             ),
             const Spacer(flex: 3),
-            PinPad(onDigit: _onDigit, onBack: _back),
+            PinPad(onDigit: _onDigit, onBack: _back, enabled: !_hold),
             const SizedBox(height: 22),
           ],
         ),
