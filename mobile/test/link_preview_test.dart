@@ -22,4 +22,10 @@ void main() {
     final t = titleFromHtml('<title>${'x' * 300}</title>')!;
     expect(t.length, 120);
   });
+
+  test('firstUrl finds a capitalised scheme and lowercases it', () {
+    expect(firstUrl('see Https://Example.com/A'), 'https://Example.com/A');
+    expect(firstUrl('HTTP://x.y/z ok'), 'http://x.y/z');
+    expect(firstUrl('no link here'), isNull);
+  });
 }
