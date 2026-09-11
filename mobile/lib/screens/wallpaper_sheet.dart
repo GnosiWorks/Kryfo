@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
+import '../widgets/stagger_in.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import 'chat_screen.dart'
@@ -86,51 +87,56 @@ class _Swatches extends StatelessWidget {
       spacing: 16,
       runSpacing: 14,
       children: [
-        for (final a in items)
-          GestureDetector(
-            onTap: () => onPick(a),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: a == Atmo.none
-                        ? HaloColors.surface3
+        for (final (i, a) in items.indexed)
+          StaggerIn(
+            index: i,
+            child: GestureDetector(
+              onTap: () => onPick(a),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: a == Atmo.none
+                          ? HaloColors.surface3
+                          : atmoIsPattern(a)
+                          ? HaloColors.surface2
+                          : atmoAccent(a).withValues(alpha: 0.18),
+                      border: Border.all(
+                        color: a == current
+                            ? HaloColors.amber
+                            : HaloColors.line,
+                        width: a == current ? 1.5 : 0.5,
+                      ),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    alignment: Alignment.center,
+                    child: a == Atmo.none
+                        ? Icon(
+                            Icons.not_interested,
+                            size: 16,
+                            color: HaloColors.text3,
+                          )
                         : atmoIsPattern(a)
-                        ? HaloColors.surface2
-                        : atmoAccent(a).withValues(alpha: 0.18),
-                    border: Border.all(
-                      color: a == current ? HaloColors.amber : HaloColors.line,
-                      width: a == current ? 1.5 : 0.5,
+                        ? CustomPaint(
+                            size: const Size(46, 46),
+                            painter: PatternPainter(a, scale: 0.55),
+                          )
+                        : null,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    atmoLabel(a),
+                    style: HaloType.mono(
+                      size: 10,
+                      color: a == current ? HaloColors.amber : HaloColors.text3,
                     ),
                   ),
-                  clipBehavior: Clip.antiAlias,
-                  alignment: Alignment.center,
-                  child: a == Atmo.none
-                      ? Icon(
-                          Icons.not_interested,
-                          size: 16,
-                          color: HaloColors.text3,
-                        )
-                      : atmoIsPattern(a)
-                      ? CustomPaint(
-                          size: const Size(46, 46),
-                          painter: PatternPainter(a, scale: 0.55),
-                        )
-                      : null,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  atmoLabel(a),
-                  style: HaloType.mono(
-                    size: 10,
-                    color: a == current ? HaloColors.amber : HaloColors.text3,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
       ],

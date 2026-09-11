@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 
 import '../main.dart';
 import '../theme.dart';
+import '../widgets/stagger_in.dart';
 import '../widgets/pair_code_panel.dart';
 
 class PairCodeScreen extends StatefulWidget {
@@ -33,7 +34,7 @@ class _PairCodeScreenState extends State<PairCodeScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(8, 8, 20, 0),
               child: Row(
-                children: [
+                children: staggerAll([
                   IconButton(
                     tooltip: 'back',
                     icon: Icon(Icons.arrow_back, color: HaloColors.text2),
@@ -43,7 +44,7 @@ class _PairCodeScreenState extends State<PairCodeScreen> {
                     'pairing code',
                     style: HaloType.serif(size: 22, italic: true),
                   ),
-                ],
+                ]),
               ),
             ),
             Padding(
