@@ -9,7 +9,20 @@
 String? firstUrl(String text) {
   final m = RegExp(r'https?://[^\s]+', caseSensitive: false).firstMatch(text);
   if (m == null) return null;
-  final raw = m.group(0)!;
+  var raw = m.group(0)!;
+  // a sentence's own punctuation after the link: "see https://x.y/z."
+  // a closing bracket stays only when the link opened one
+  while (raw.isNotEmpty) {
+    final last = raw[raw.length - 1];
+    final closes = last == ')' || last == ']';
+    final opens = last == ')' ? '(' : '[';
+    if ('.,;:!?\'"'.contains(last) || (closes && !raw.contains(opens))) {
+      raw = raw.substring(0, raw.length - 1);
+    } else {
+      break;
+    }
+  }
+  if (!raw.contains('://')) return null;
   final colon = raw.indexOf('://');
   return raw.substring(0, colon).toLowerCase() + raw.substring(colon);
 }
