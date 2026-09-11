@@ -4846,7 +4846,13 @@ class AppState extends ChangeNotifier {
     await boot();
   }
 
+  // what the splash says while boot runs. the keys and the database come
+  // first and take the longest on a new phone; tor starts once the home
+  // is ready to paint
+  String bootPhase = 'setting up your keys';
+
   Future<void> _boot() async {
+    dlog('LAUNCH boot');
     final bsw = Stopwatch()..start();
     // both _OnboardingGate and _RootShell call boot() on cold start, before
     // ready flips. without this guard they raced through generateIdentity +
@@ -4857,8 +4863,10 @@ class AppState extends ChangeNotifier {
     // key derivation + the first go ffi hop block the ui thread long enough
     // that android's anr watchdog fired on weak phones during cold start.
     await Future.delayed(const Duration(milliseconds: 16));
+    dlog('LAUNCH boot after yield');
     final docsDir = await getApplicationDocumentsDirectory();
     final saved = await db.loadIdentity();
+    dlog('LAUNCH identity loaded');
     if (saved != null) {
       myId = engine.restoreIdentity(saved['ed_priv']!, saved['x_priv']!);
       restored = true;
@@ -4868,6 +4876,8 @@ class AppState extends ChangeNotifier {
     }
     myXPub = engine.myXPubkey();
     dlog('BOOT identity +${bsw.elapsedMilliseconds}ms');
+    bootPhase = 'opening your chats';
+    notifyListeners();
     _appLinks = AppLinks();
     // a link carries a prekey bundle, and taking one needs the signal
     // store, which boots after the home paints. both handlers wait for it,
@@ -4913,6 +4923,7 @@ class AppState extends ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 300));
     }
     ready = true;
+    bootPhase = 'starting Tor';
     dlog('BOOT ready +${bsw.elapsedMilliseconds}ms');
     notifyListeners();
     // signal prekey gen is cpu-heavy (~5s on a fresh identity) and nothing
@@ -6616,9 +6627,12 @@ class AppState extends ChangeNotifier {
 final appState = AppState();
 
 void main() async {
+  dlog('LAUNCH main');
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  WidgetsBinding.instance.addPostFrameCallback((_) => dlog('LAUNCH frame'));
   runApp(const HaloApp());
+  dlog('LAUNCH runApp returned');
   // the theme pref sits in secure storage, and the first read on a new
   // phone creates the keystore key, which takes seconds. the splash paints
   // first, dark, and the light theme lands the moment the pref is read.

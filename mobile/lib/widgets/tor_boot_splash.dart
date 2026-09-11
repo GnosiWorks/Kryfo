@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
+import '../dlog.dart';
+import '../main.dart' show appState;
 import '../theme.dart';
 import 'onion_loader.dart';
 
@@ -34,6 +36,12 @@ class _TorBootSplashState extends State<TorBootSplash>
   }
 
   @override
+  void initState() {
+    super.initState();
+    dlog('LAUNCH splash');
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: HaloColors.ink,
@@ -53,22 +61,38 @@ class _TorBootSplashState extends State<TorBootSplash>
               ),
             ),
             const SizedBox(height: 20),
-            Text(
-              'starting Tor',
-              style: HaloType.mono(size: 12, color: HaloColors.amber),
-            ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: Text(
-                'the network that keeps you private is warming up',
-                textAlign: TextAlign.center,
-                style: HaloType.sans(
-                  size: 12,
-                  color: HaloColors.text2,
-                  height: 1.5,
-                ),
-              ),
+            ListenableBuilder(
+              listenable: appState,
+              builder: (_, _) {
+                final tor = appState.bootPhase == 'starting Tor';
+                return Column(
+                  children: [
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 220),
+                      child: Text(
+                        appState.bootPhase,
+                        key: ValueKey(appState.bootPhase),
+                        style: HaloType.mono(size: 12, color: HaloColors.amber),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40),
+                      child: Text(
+                        tor
+                            ? 'the network that keeps you private is warming up'
+                            : 'made on this phone. nothing is sent anywhere.',
+                        textAlign: TextAlign.center,
+                        style: HaloType.sans(
+                          size: 12,
+                          color: HaloColors.text2,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 22),
             AnimatedBuilder(
