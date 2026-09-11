@@ -44,12 +44,15 @@ class RestoreError implements Exception {
   String toString() => line;
 }
 
-// map what the engine says to one of the four. gcm is the authentication
-// check, and a wrong passphrase is the only ordinary way it fails.
+// map what the engine says to one of the four. the engine reports a
+// failed gcm auth as "wrong passphrase or corrupt", and a wrong
+// passphrase is by far the ordinary way to get there.
 RestoreFailure classifyRestoreError(String engineError) {
   final e = engineError.toLowerCase();
   if (e.contains('not a halo backup')) return RestoreFailure.notABackup;
-  if (e.contains('gcm')) return RestoreFailure.wrongPassphrase;
+  if (e.contains('wrong passphrase') || e.contains('gcm')) {
+    return RestoreFailure.wrongPassphrase;
+  }
   return RestoreFailure.damaged;
 }
 
