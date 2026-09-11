@@ -4,6 +4,7 @@
 // exif before anything else sees them, and only the stripped picture goes
 // on to the chat. nothing lands in the camera roll unless the person asks
 // for a copy. photo and video, front and back, flash. that is all.
+import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
@@ -121,9 +122,11 @@ class _CameraScreenState extends State<CameraScreen>
     // return. a capture in flight is dropped, nothing of it is kept.
     if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.paused) {
-      _cam?.dispose();
+      final c = _cam;
       _cam = null;
+      final wasRecording = _recording;
       _recording = false;
+      if (c != null) unawaited(_letGo(c, wasRecording));
     } else if (state == AppLifecycleState.resumed && _cam == null) {
       _open();
     }
@@ -192,6 +195,20 @@ class _CameraScreenState extends State<CameraScreen>
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  // the plugin's clip is stopped and destroyed before the controller goes,
+  // so nothing of an interrupted recording stays on disk
+  Future<void> _letGo(CameraController c, bool recording) async {
+    if (recording) {
+      try {
+        final x = await c.stopVideoRecording();
+        await shredFile(x.path);
+      } catch (_) {}
+    }
+    try {
+      await c.dispose();
+    } catch (_) {}
   }
 
   Future<void> _toggleRecord(CameraController c) async {
