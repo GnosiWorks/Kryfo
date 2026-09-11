@@ -4,7 +4,7 @@
 // nothing here tracks who donated - it's a local choice only.
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'badge_client.dart' show verifyReceipt, fetchReceipt, ReceiptState;
+import 'badge_client.dart' show fetchReceipt, ReceiptState;
 
 enum SupporterTier { none, supporter, patron, guardian }
 
@@ -77,17 +77,6 @@ Future<void> clearBadgeReceipt() async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.remove(_receiptPayloadKey);
   await prefs.remove(_receiptSigKey);
-}
-
-/// true only when a stored receipt verifies against the pinned key. false for
-/// the honour-system badge (card/monero), which is fine - that one is a
-/// personal choice, not a claim.
-Future<bool> badgeIsVerified() async {
-  final prefs = await SharedPreferences.getInstance();
-  final payload = prefs.getString(_receiptPayloadKey);
-  final sig = prefs.getString(_receiptSigKey);
-  if (payload == null || sig == null) return false;
-  return verifyReceipt(payload, sig);
 }
 
 // show the badge on my own screens (me header, profile)
