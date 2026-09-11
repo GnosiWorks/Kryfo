@@ -83,10 +83,15 @@ enum AtmoDrift { none, rain, snow, glow }
 
 // a mood is a handful of values, not an asset. base is the room's tint,
 // wash how strongly it lies over the surface, bubble how far the incoming
-// bubble leans toward it, dim how much ink lies over everything. these are
-// the only colours in the app that are not palette tokens, and they are
-// tints laid over the palette at low alpha, never something text sits on
-// at full strength.
+// bubble leans toward it, dim how much ink lies over everything.
+//
+// these tints live here and not in the palette on purpose. the palette is
+// what the interface is made of: every surface, line and word in the app
+// comes from it, and it is the list a reviewer checks. a mood is scenery.
+// it is laid over the palette at low alpha, chosen per chat, and never
+// something text sits on at full strength. keeping the six here says what
+// they are: a closed set of atmospheres, not six new colours for buttons
+// or text to borrow. add a mood by adding a line, not a token.
 class AtmoMood {
   final Color base;
   final double wash;
