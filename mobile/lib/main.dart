@@ -4224,14 +4224,20 @@ class AppState extends ChangeNotifier {
         imgB64 = full.toString();
       }
     }
+    // a save can fail, a full phone say. the message still lands, with a
+    // line saying what is missing, rather than an empty bubble
     String? mediaPath;
+    var unsaved = false;
     if (imgB64 != null && imgB64.isNotEmpty) {
       try {
         mediaPath = await saveMediaBytes(
           base64Decode(imgB64),
           env.msgUid ?? DateTime.now().millisecondsSinceEpoch.toString(),
         );
-      } catch (_) {}
+      } catch (e) {
+        dlog('recv: image not saved: $e');
+        unsaved = true;
+      }
     }
     String? filePath;
     final fileName = env.fileName;
@@ -4242,8 +4248,17 @@ class AppState extends ChangeNotifier {
           env.msgUid ?? DateTime.now().millisecondsSinceEpoch.toString(),
           fileName ?? 'file',
         );
-      } catch (_) {}
+      } catch (e) {
+        dlog('recv: file not saved: $e');
+        unsaved = true;
+      }
     }
+    final bodyText = unsaved
+        ? [
+            env.message,
+            'an attachment could not be saved on this phone',
+          ].where((s) => s.trim().isNotEmpty).join('\n')
+        : env.message;
     // dedup: a message can arrive twice - the original, then the preview re-send
     // (option A), and sometimes a manual retry too. the db check alone races when
     // two copies arrive in the same instant (both pass before either saves), so
@@ -4284,7 +4299,7 @@ class AppState extends ChangeNotifier {
     await db.saveMessage(
       senderHaloId,
       'in',
-      env.message,
+      bodyText,
       burnAt: burnOk && chunkBurn != null && chunkBurn > 0
           ? DateTime.now().millisecondsSinceEpoch + chunkBurn * 1000
           : null,
