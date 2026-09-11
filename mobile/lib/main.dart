@@ -928,7 +928,8 @@ class HaloDb {
             creator_pub TEXT,
             fc_pk TEXT,
             member_cap INTEGER,
-            room_seen INTEGER NOT NULL DEFAULT 0
+            room_seen INTEGER NOT NULL DEFAULT 0,
+            mentioned INTEGER NOT NULL DEFAULT 0
           )
         ''');
         await db.execute('''
