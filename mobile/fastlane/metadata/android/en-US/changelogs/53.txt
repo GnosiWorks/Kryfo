@@ -1,0 +1,7 @@
+Links no longer phone home. Your device used to fetch a page title and image before sending a link; that's gone, and previews are now your choice.
+
+New in-app camera. Photos are stripped of EXIF and location before anything sees them, and never touch your gallery unless you ask.
+
+Restore explains itself: what's in the file, when it was made, and what it will replace, before it replaces anything.
+
+Fixed: a few places that left files behind in caches after a backup.
