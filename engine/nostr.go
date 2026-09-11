@@ -899,6 +899,101 @@ func HaloTorGet(cUrl *C.char) *C.char {
 	return C.CString(string(body))
 }
 
+// a client that only ever dials through tor, whatever the send mode. the
+// shared client above goes direct in relay and fast modes, which is right
+// for relays and wrong for a link preview: a preview that cannot go over
+// tor does not go. built once, no redirects past two, and never a plain
+// fallback.
+var (
+	torOnlyMu     sync.Mutex
+	torOnlyClient *http.Client
+)
+
+func torOnlyHTTP() (*http.Client, error) {
+	torOnlyMu.Lock()
+	defer torOnlyMu.Unlock()
+	if torOnlyClient != nil {
+		return torOnlyClient, nil
+	}
+	mu.Lock()
+	t := torNode
+	mu.Unlock()
+	if t == nil {
+		return nil, fmt.Errorf("tor not started")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	built := make(chan *http.Client, 1)
+	fail := make(chan error, 1)
+	go func() {
+		d, e := t.Dialer(ctx, nil)
+		if e != nil {
+			fail <- e
+			return
+		}
+		built <- &http.Client{
+			Transport: &http.Transport{
+				DialContext:           d.DialContext,
+				TLSHandshakeTimeout:   10 * time.Second,
+				ResponseHeaderTimeout: 10 * time.Second,
+			},
+			Timeout: 15 * time.Second,
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				if len(via) >= 2 {
+					return fmt.Errorf("too many redirects")
+				}
+				return nil
+			},
+		}
+	}()
+	select {
+	case c := <-built:
+		torOnlyClient = c
+		return c, nil
+	case e := <-fail:
+		return nil, fmt.Errorf("tor dialer: %v", e)
+	case <-ctx.Done():
+		return nil, fmt.Errorf("tor dialer hung")
+	}
+}
+
+// GET a page over tor and nothing else, for the sender-side link preview.
+// capped at 128kb, html only, no user agent, "error: ..." on any failure
+// including tor not being up. the caller skips, it never falls back.
+//
+//export HaloTorGetStrict
+func HaloTorGetStrict(cUrl *C.char) *C.char {
+	url := C.GoString(cUrl)
+	if url == "" {
+		return C.CString("error: empty url")
+	}
+	client, err := torOnlyHTTP()
+	if err != nil {
+		return C.CString(fmt.Sprintf("error: tor: %v", err))
+	}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return C.CString(fmt.Sprintf("error: req: %v", err))
+	}
+	req.Header.Set("User-Agent", "")
+	req.Header.Set("Accept", "text/html")
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	resp, err := client.Do(req.WithContext(ctx))
+	if err != nil {
+		return C.CString(fmt.Sprintf("error: get: %v", err))
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return C.CString(fmt.Sprintf("error: status %d", resp.StatusCode))
+	}
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 128*1024))
+	if err != nil {
+		return C.CString(fmt.Sprintf("error: read: %v", err))
+	}
+	return C.CString(string(body))
+}
+
 // POST json over tor, returning the response body. used for the badge
 // service (creating a donation invoice) so the donor's ip never touches
 // anything. any non-2xx comes back as "error: ..." for the caller to skip.
