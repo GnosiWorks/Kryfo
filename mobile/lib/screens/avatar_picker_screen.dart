@@ -15,6 +15,7 @@ import 'package:flutter/services.dart';
 
 import '../main.dart' show appState;
 import '../theme.dart';
+import '../widgets/stagger_in.dart';
 import '../widgets/avatar_mark.dart';
 import '../widgets/kryfo_avatar.dart';
 
@@ -67,7 +68,7 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
     final id = appState.myId;
     return ListView(
       padding: widget.padding,
-      children: [
+      children: staggerAll([
         Center(
           child: KryfoAvatar(seed: id, size: 96, choice: _choice),
         ),
@@ -150,7 +151,7 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
             ],
           ),
         ],
-      ],
+      ]),
     );
   }
 }
