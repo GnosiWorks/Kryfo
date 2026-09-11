@@ -214,6 +214,12 @@ extern char* HaloNtfyPing(char* cEndpoint);
 //
 extern char* HaloTorGet(char* cUrl);
 
+// GET a page over tor and nothing else, for the sender-side link preview.
+// capped at 128kb, html only, no user agent, "error: ..." on any failure
+// including tor not being up. the caller skips, it never falls back.
+//
+extern char* HaloTorGetStrict(char* cUrl);
+
 // POST json over tor, returning the response body. used for the badge
 // service (creating a donation invoice) so the donor's ip never touches
 // anything. any non-2xx comes back as "error: ..." for the caller to skip.
