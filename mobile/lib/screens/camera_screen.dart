@@ -488,6 +488,9 @@ class _CameraScreenState extends State<CameraScreen>
         ),
         const SizedBox(height: 16),
         PressScale(
+          label: _video
+              ? (_recording ? 'stop recording' : 'start recording')
+              : 'take a photo',
           onTap: _shutter,
           scale: 0.9,
           child: AnimatedContainer(
