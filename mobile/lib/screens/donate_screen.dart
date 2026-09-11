@@ -345,7 +345,7 @@ class _DonateScreenState extends State<DonateScreen> {
               ),
               onChanged: (v) {
                 final n = int.tryParse(v) ?? 0;
-                setState(() => _amount = n);
+                setState(() => _amount = n < 0 ? 0 : n);
               },
             ),
           ),
