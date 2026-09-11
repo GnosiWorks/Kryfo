@@ -834,7 +834,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 42,
+      version: 43,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -961,6 +961,11 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 43) {
+          // the link title cache rides the same helper as the shield table
+          // (create if missing), so an existing phone gets it too
+          await _shieldTable(db);
+        }
         if (oldV < 42) {
           // a group where someone wrote your three words after an @, so the
           // home row can say so. cleared with the unread count.
