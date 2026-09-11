@@ -9,8 +9,20 @@ const _key = 'kryfo.linkpreviews';
 
 LinkPreviewMode? linkPreviewMode;
 
+// the sender side: whether the add-preview control is offered at all.
+// off by default, since it costs the sender a request over tor
+const _sendKey = 'kryfo.linkpreviews.send';
+bool sendLinkPreviews = false;
+
+Future<void> saveSendLinkPreviews(bool on) async {
+  sendLinkPreviews = on;
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool(_sendKey, on);
+}
+
 Future<LinkPreviewMode?> loadLinkPreviewMode() async {
   final prefs = await SharedPreferences.getInstance();
+  sendLinkPreviews = prefs.getBool(_sendKey) ?? false;
   final s = prefs.getString(_key);
   linkPreviewMode = switch (s) {
     'auto' => LinkPreviewMode.auto,

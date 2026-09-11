@@ -49,6 +49,7 @@ import '../main.dart'
         currentChatPeer,
         torGetOnIsolate,
         shredFile,
+        torStrictGetOnIsolate,
         TorHalo;
 import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
@@ -60,7 +61,8 @@ import '../widgets/menu_backdrop.dart';
 import '../widgets/link_stub.dart';
 import '../link_prefs.dart';
 import 'camera_screen.dart';
-import '../link_preview.dart' show domainOf, titleFromHtml, firstUrl;
+import '../link_preview.dart'
+    show domainOf, titleFromHtml, firstUrl, senderPreview;
 export '../link_preview.dart' show firstUrl;
 export '../atmosphere.dart'
     show
@@ -3100,6 +3102,39 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // uids already fetched on their own this visit, so a miss is not retried
   final Set<String> _autoAsked = {};
 
+  // the sender side: a preview fetched over tor by this phone, waiting to
+  // ride inside the next message. null when nothing is attached
+  Map<String, String>? _pendingPreview;
+  bool _previewBusy = false;
+
+  Future<void> _addPreview() async {
+    final url = firstUrl(_msgCtrl.text);
+    if (url == null || _previewBusy) return;
+    setState(() => _previewBusy = true);
+    try {
+      final html = await torStrictGetOnIsolate(url);
+      final title = html.startsWith('error:') ? null : titleFromHtml(html);
+      if (!mounted) return;
+      if (title == null || title.trim().isEmpty) {
+        showHaloToast(
+          context,
+          html.startsWith('error: tor')
+              ? 'tor is not up yet · sending without'
+              : 'no title came back · sending without',
+        );
+        return;
+      }
+      HapticFeedback.selectionClick();
+      setState(() => _pendingPreview = senderPreview(url, title));
+    } catch (_) {
+      if (mounted) {
+        showHaloToast(context, "couldn't fetch it · sending without");
+      }
+    } finally {
+      if (mounted) setState(() => _previewBusy = false);
+    }
+  }
+
   // in automatic mode a link from someone accepted fetches its title as
   // soon as it is on screen, once, quietly
   void _autoPreview(_Msg m) {
@@ -3160,6 +3195,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (_requestLocked) return;
     final msgUid = _newMsgUid();
     final replyToUid = _replyTo?.msgUid;
+    // a pending preview only belongs to a message that still holds its link
+    final url = firstUrl(text);
+    final preview = url != null && _pendingPreview?['url'] == url
+        ? _pendingPreview
+        : null;
     final msg = _Msg(
       'out',
       text,
@@ -3170,12 +3210,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       burnSecs: _ghost ? _burnSeconds : null,
       burnAt: null,
     );
+    msg.preview = preview;
     setState(() {
       _messages.add(msg);
       _normaliseMessages();
       _sending = true;
       _status = '';
       _replyTo = null;
+      _pendingPreview = null;
     });
     _msgCtrl.clear();
     _scrollToEnd();
@@ -3189,6 +3231,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       msgUid: msgUid,
       replyTo: replyToUid,
       sent: 0,
+      preview: preview == null ? null : jsonEncode(preview),
     );
     // the home row moves up on what you sent too, not only on what arrived
     unawaited(appState.refreshContacts());
@@ -3214,6 +3257,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         burnSeconds: _ghost ? _burnSeconds : null,
         msgUid: msgUid,
         replyTo: replyToUid,
+        preview: preview,
         supporterBadge: await appState.sharedBadge(),
         sender: SenderInfo(
           haloId: appState.myId,
@@ -3484,6 +3528,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           : (i == _jumpIndex ? _jumpKey : null),
                       msg: m,
                       linkTitle: m.preview?['title'],
+                      linkBySender: m.preview?['by'] == 'sender',
                       linkBusy:
                           m.msgUid != null && _askingLinks.contains(m.msgUid),
                       // a stranger's link is text and nothing more
@@ -4745,35 +4790,53 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       )
                     : _requestLocked
                     ? const _RequestLockBar()
-                    : _Composer(
-                        onAttach: _showAttachSheet,
-                        onCamera: _openCamera,
-                        ghost: _ghost,
-                        secure: _secureNext,
-                        onToggleSecure: () {
-                          HapticFeedback.selectionClick();
-                          setState(() => _secureNext = !_secureNext);
-                          showHaloToast(
-                            context,
-                            _secureNext
-                                ? 'the next photo you send opens protected · '
-                                      'they cannot screenshot it'
-                                : 'photo protection off',
-                          );
-                        },
-                        onToggleGhost: () => setState(() {
-                          _ghost = !_ghost;
-                          _lastGhost = _ghost;
-                          appState.saveGhostPref(_ghost, _burnSeconds);
-                        }),
-                        onPickBurn: _pickBurnDuration,
-                        burnSeconds: _burnSeconds,
-                        controller: _msgCtrl,
-                        sending: _sending,
-                        onSend: _send,
-                        disguise: _disguise,
-                        onToggleDisguise: _toggleDisguise,
-                        onVoiceComplete: _onVoiceComplete,
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ValueListenableBuilder<TextEditingValue>(
+                            valueListenable: _msgCtrl,
+                            builder: (_, v, _) => _PreviewStrip(
+                              url: sendLinkPreviews && _accepted
+                                  ? firstUrl(v.text)
+                                  : null,
+                              pending: _pendingPreview,
+                              busy: _previewBusy,
+                              onAdd: _addPreview,
+                              onDrop: () =>
+                                  setState(() => _pendingPreview = null),
+                            ),
+                          ),
+                          _Composer(
+                            onAttach: _showAttachSheet,
+                            onCamera: _openCamera,
+                            ghost: _ghost,
+                            secure: _secureNext,
+                            onToggleSecure: () {
+                              HapticFeedback.selectionClick();
+                              setState(() => _secureNext = !_secureNext);
+                              showHaloToast(
+                                context,
+                                _secureNext
+                                    ? 'the next photo you send opens protected · '
+                                          'they cannot screenshot it'
+                                    : 'photo protection off',
+                              );
+                            },
+                            onToggleGhost: () => setState(() {
+                              _ghost = !_ghost;
+                              _lastGhost = _ghost;
+                              appState.saveGhostPref(_ghost, _burnSeconds);
+                            }),
+                            onPickBurn: _pickBurnDuration,
+                            burnSeconds: _burnSeconds,
+                            controller: _msgCtrl,
+                            sending: _sending,
+                            onSend: _send,
+                            disguise: _disguise,
+                            onToggleDisguise: _toggleDisguise,
+                            onVoiceComplete: _onVoiceComplete,
+                          ),
+                        ],
                       ),
               ),
             ),
@@ -5594,6 +5657,7 @@ class _Bubble extends StatelessWidget {
   // a link in the text: the title once asked for, and the ask itself
   final String? linkTitle;
   final bool linkBusy;
+  final bool linkBySender;
   final VoidCallback? onAskLink;
   const _Bubble({
     super.key,
@@ -5611,6 +5675,7 @@ class _Bubble extends StatelessWidget {
     this.revealed = false,
     this.onReveal,
     this.linkTitle,
+    this.linkBySender = false,
     this.linkBusy = false,
     this.onAskLink,
     this.firstInGroup = true,
@@ -6056,6 +6121,7 @@ class _Bubble extends StatelessWidget {
                                         title: linkTitle,
                                         busy: linkBusy,
                                         onAsk: onAskLink,
+                                        bySender: linkBySender,
                                       ),
                                     ],
                                     if (showMeta && msg.mediaPath == null) ...[
@@ -7372,6 +7438,133 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
         _end();
       },
       child: Icon(Icons.mic_none_rounded, size: 22, color: HaloColors.text2),
+    );
+  }
+}
+
+// the sender's consent, above the composer: a link in the text offers
+// "add preview"; tapping it fetches the page title over tor on this phone
+// and shows what will ride inside the message. nothing happens on its own.
+class _PreviewStrip extends StatelessWidget {
+  final String? url;
+  final Map<String, String>? pending;
+  final bool busy;
+  final VoidCallback onAdd;
+  final VoidCallback onDrop;
+  const _PreviewStrip({
+    required this.url,
+    required this.pending,
+    required this.busy,
+    required this.onAdd,
+    required this.onDrop,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final p = pending;
+    final show = p != null || url != null;
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.bottomCenter,
+      child: !show
+          ? const SizedBox(width: double.infinity)
+          : Padding(
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+              child: p != null
+                  ? Container(
+                      padding: const EdgeInsets.fromLTRB(12, 8, 6, 8),
+                      decoration: BoxDecoration(
+                        color: HaloColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: HaloColors.line, width: 0.5),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.link, size: 14, color: HaloColors.amber),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  p['title'] ?? '',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: HaloType.sans(
+                                    size: 12.5,
+                                    weight: FontWeight.w600,
+                                    color: HaloColors.text,
+                                  ),
+                                ),
+                                Text(
+                                  '${domainOf(p['url'] ?? '')} · fetched over tor',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: HaloType.mono(
+                                    size: 9.5,
+                                    color: HaloColors.text3,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          PressScale(
+                            label: 'drop the preview',
+                            onTap: onDrop,
+                            child: Padding(
+                              padding: const EdgeInsets.all(6),
+                              child: Icon(
+                                Icons.close_rounded,
+                                size: 16,
+                                color: HaloColors.text2,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Align(
+                      alignment: Alignment.centerLeft,
+                      child: PressScale(
+                        label: 'add preview',
+                        onTap: busy ? null : onAdd,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 7,
+                          ),
+                          decoration: BoxDecoration(
+                            color: HaloColors.amberSoft,
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: HaloColors.amber.withValues(alpha: 0.35),
+                              width: 0.5,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                busy ? Icons.hourglass_top_rounded : Icons.link,
+                                size: 13,
+                                color: HaloColors.amber,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                busy ? 'fetching over tor…' : 'add preview',
+                                style: HaloType.mono(
+                                  size: 10.5,
+                                  color: HaloColors.amber,
+                                  weight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+            ),
     );
   }
 }

@@ -57,6 +57,8 @@ class LinkStub extends StatelessWidget {
   // null means no offer: the sender is not an accepted contact
   final VoidCallback? onAsk;
   final bool isOut;
+  // the title came inside the message, fetched by the sender over tor
+  final bool bySender;
   const LinkStub({
     super.key,
     required this.url,
@@ -64,6 +66,7 @@ class LinkStub extends StatelessWidget {
     this.title,
     this.busy = false,
     this.onAsk,
+    this.bySender = false,
   });
 
   @override
@@ -117,16 +120,37 @@ class LinkStub extends StatelessWidget {
             child: t != null
                 ? Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      t,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: HaloType.sans(
-                        size: 13,
-                        weight: FontWeight.w600,
-                        color: fg,
-                        height: 1.3,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          t,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: HaloType.sans(
+                            size: 13,
+                            weight: FontWeight.w600,
+                            color: fg,
+                            height: 1.3,
+                          ),
+                        ),
+                        if (bySender) ...[
+                          const SizedBox(height: 3),
+                          Text(
+                            isOut
+                                ? 'fetched over tor · by your device'
+                                : 'fetched over tor · by their device',
+                            style: HaloType.mono(
+                              size: 9.5,
+                              color: isOut
+                                  ? HaloColors.onAmber.withValues(alpha: 0.7)
+                                  : HaloColors.text3,
+                              letter: 0.02,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   )
                 : onAsk == null

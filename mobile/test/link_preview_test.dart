@@ -34,4 +34,12 @@ void main() {
     expect(firstUrl('https://x.y/w(1)'), 'https://x.y/w(1)');
     expect(firstUrl('is it https://x.y/q?'), 'https://x.y/q');
   });
+  test('senderPreview ships url, one-line capped title, and who fetched', () {
+    final pv = senderPreview('https://x.y/a', '  The  quiet\nfight  ');
+    expect(pv['url'], 'https://x.y/a');
+    expect(pv['title'], 'The quiet fight');
+    expect(pv['by'], 'sender');
+    final long = senderPreview('https://x.y', 'a' * 300);
+    expect(long['title']!.length, 120);
+  });
 }

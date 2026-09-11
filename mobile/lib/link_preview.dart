@@ -27,6 +27,21 @@ String? firstUrl(String text) {
   return raw.substring(0, colon).toLowerCase() + raw.substring(colon);
 }
 
+// what a sender ships inside the message: the url, its title on one line
+// and capped, and who fetched it. the receiver renders this and asks the
+// network for nothing.
+Map<String, String> senderPreview(String url, String title) => {
+  'url': url,
+  'title': title
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim()
+      .substring(
+        0,
+        title.replaceAll(RegExp(r'\s+'), ' ').trim().length.clamp(0, 120),
+      ),
+  'by': 'sender',
+};
+
 // "example.com" for anything that parses, the raw text otherwise
 String domainOf(String url) {
   final u = Uri.tryParse(url.trim());
