@@ -25,7 +25,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import '../main.dart'
-    show appState, db, currentChatPeer, newMsgUid, torGetOnIsolate;
+    show appState, db, currentChatPeer, newMsgUid, torGetOnIsolate, shredFile;
 import '../theme.dart';
 import '../media_progress.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -43,6 +43,7 @@ import '../widgets/sheet_handle.dart';
 import '../widgets/menu_backdrop.dart';
 import '../mentions.dart';
 import '../widgets/link_stub.dart';
+import 'camera_screen.dart';
 import '../link_preview.dart' show domainOf, titleFromHtml;
 import '../widgets/halo_sheet.dart';
 
@@ -1009,11 +1010,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             children: [
               const SheetHandle(),
               const SizedBox(height: 6),
-              tile(
-                Icons.photo_camera_outlined,
-                'camera',
-                () => _pickGroupImage(ImageSource.camera),
-              ),
+              tile(Icons.photo_camera_outlined, 'camera', _openGroupCamera),
               tile(Icons.photo_library_outlined, 'gallery', _pickGroupMultiple),
               tile(Icons.gif_box_outlined, 'gif from phone', _pickGroupGif),
               tile(Icons.attach_file, 'file', _pickGroupFile),
@@ -1023,23 +1020,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         );
       },
     );
-  }
-
-  Future<void> _pickGroupImage(ImageSource source) async {
-    final picked = await ImagePicker().pickImage(
-      source: source,
-      maxWidth: 1280,
-      maxHeight: 1280,
-      imageQuality: 70,
-    );
-    if (picked == null) return;
-    final bytes = await picked.readAsBytes();
-    if (!mounted) return;
-    final caption = await Navigator.of(
-      context,
-    ).push<String?>(haloRoute<String?>(ImageCaptionScreen(bytes: bytes)));
-    if (caption == null) return;
-    await _sendGroupImage(bytes, caption);
   }
 
   Future<void> _pickGroupMultiple() async {
@@ -1191,6 +1171,36 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final data = res.files.first.bytes;
     final name = res.files.first.name;
     if (data == null) return;
+    await _sendGroupFileBytes(data, name);
+  }
+
+  // the in-app camera: a stripped photo goes through the caption screen; a
+  // clip goes as a file and its private copy is shredded once read
+  Future<void> _openGroupCamera() async {
+    final r = await Navigator.of(
+      context,
+    ).push<CaptureResult>(haloRoute<CaptureResult>(const CameraScreen()));
+    if (r == null || !mounted) return;
+    if (r.photo != null) {
+      final caption = await Navigator.of(
+        context,
+      ).push<String?>(haloRoute<String?>(ImageCaptionScreen(bytes: r.photo!)));
+      if (caption == null) return;
+      await _sendGroupImage(r.photo!, caption);
+      return;
+    }
+    final path = r.videoPath;
+    if (path == null) return;
+    final data = await File(path).readAsBytes();
+    await shredFile(path);
+    if (!mounted) return;
+    await _sendGroupFileBytes(
+      data,
+      'clip_${DateTime.now().millisecondsSinceEpoch}.mp4',
+    );
+  }
+
+  Future<void> _sendGroupFileBytes(Uint8List data, String name) async {
     if (data.length > 8 * 1024 * 1024) {
       if (mounted) showHaloToast(context, 'file too big · 8 mb max');
       return;
@@ -2320,6 +2330,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               onLongPressGhost: _showBurnPicker,
               onSend: _send,
               onAttach: _showAttachSheet,
+              onCamera: _openGroupCamera,
               onToggleDisguise: _toggleDisguise,
               onVoiceComplete: _onVoiceComplete,
             ),
@@ -2645,6 +2656,7 @@ class _Composer extends StatelessWidget {
   final VoidCallback onLongPressGhost;
   final VoidCallback onSend;
   final VoidCallback onAttach;
+  final VoidCallback onCamera;
   final VoidCallback onToggleDisguise;
   final void Function(String path, int ms, bool cancelled) onVoiceComplete;
   // who @ can offer
@@ -2659,6 +2671,7 @@ class _Composer extends StatelessWidget {
     required this.onLongPressGhost,
     required this.onSend,
     required this.onAttach,
+    required this.onCamera,
     required this.onToggleDisguise,
     required this.onVoiceComplete,
   });
@@ -2687,6 +2700,19 @@ class _Composer extends StatelessWidget {
                     Icons.local_fire_department_rounded,
                     color: ghost ? HaloColors.amber : HaloColors.text3,
                     size: 22,
+                  ),
+                ),
+              ),
+              // the camera that keeps its photos inside kryfo
+              GestureDetector(
+                onTap: onCamera,
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: Icon(
+                    Icons.photo_camera_outlined,
+                    size: 22,
+                    color: HaloColors.text2,
                   ),
                 ),
               ),

@@ -47,6 +47,7 @@ import '../main.dart'
         appState,
         currentChatPeer,
         torGetOnIsolate,
+        shredFile,
         TorHalo;
 import '../widgets/press_scale.dart';
 import '../widgets/motion.dart';
@@ -55,6 +56,7 @@ import '../dlog.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/menu_backdrop.dart';
 import '../widgets/link_stub.dart';
+import 'camera_screen.dart';
 import '../link_preview.dart' show domainOf, titleFromHtml;
 import '../widgets/halo_sheet.dart';
 
@@ -2369,27 +2371,31 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     showHaloSheet<void>(
       context,
       builder: (sheetCtx) {
-        Widget tile(IconData icon, String label, ImageSource source) {
-          return ListTile(
-            leading: Icon(icon, color: HaloColors.amber, size: 22),
-            title: Text(
-              label,
-              style: HaloType.sans(size: 15, color: HaloColors.text),
-            ),
-            onTap: () {
-              Navigator.of(sheetCtx).pop();
-              _pickAndSendImage(source);
-            },
-          );
-        }
-
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const SheetHandle(),
               const SizedBox(height: 6),
-              tile(Icons.photo_camera_outlined, 'camera', ImageSource.camera),
+              ListTile(
+                leading: Icon(
+                  Icons.photo_camera_outlined,
+                  color: HaloColors.amber,
+                  size: 22,
+                ),
+                title: Text(
+                  'camera',
+                  style: HaloType.sans(size: 15, color: HaloColors.text),
+                ),
+                subtitle: Text(
+                  'no exif, never saved to your photos',
+                  style: HaloType.mono(size: 10, color: HaloColors.text3),
+                ),
+                onTap: () {
+                  Navigator.of(sheetCtx).pop();
+                  _openCamera();
+                },
+              ),
               ListTile(
                 leading: Icon(
                   Icons.photo_library_outlined,
@@ -2621,6 +2627,37 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final data = res.files.first.bytes;
     final name = res.files.first.name;
     if (data == null) return;
+    await _sendFileBytes(data, name);
+  }
+
+  // the in-app camera: a stripped photo goes through the caption screen like
+  // a picked one; a clip goes as a file and its private copy is shredded
+  // once it has been read
+  Future<void> _openCamera() async {
+    final r = await Navigator.of(
+      context,
+    ).push<CaptureResult>(haloRoute<CaptureResult>(const CameraScreen()));
+    if (r == null || !mounted) return;
+    if (r.photo != null) {
+      final caption = await Navigator.of(
+        context,
+      ).push<String?>(haloRoute<String?>(_ImageCaptionScreen(bytes: r.photo!)));
+      if (caption == null) return;
+      await _sendOneImage(r.photo!, caption);
+      return;
+    }
+    final path = r.videoPath;
+    if (path == null) return;
+    final data = await File(path).readAsBytes();
+    await shredFile(path);
+    if (!mounted) return;
+    await _sendFileBytes(
+      data,
+      'clip_${DateTime.now().millisecondsSinceEpoch}.mp4',
+    );
+  }
+
+  Future<void> _sendFileBytes(Uint8List data, String name) async {
     if (data.length > 8 * 1024 * 1024) {
       if (mounted) showHaloToast(context, 'file too big · 8 mb max');
       return;
@@ -3011,25 +3048,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (!mounted) return;
       await _sendOneImage(bytes, '');
     }
-  }
-
-  Future<void> _pickAndSendImage(ImageSource source) async {
-    final XFile? picked = await ImagePicker().pickImage(
-      source: source,
-      maxWidth: 1280,
-      maxHeight: 1280,
-      imageQuality: 70,
-    );
-    if (picked == null) return;
-    final bytes = await picked.readAsBytes();
-    if (!mounted) return;
-    // preview the photo and let the user add a caption before it sends.
-    // back = cancel; the send button returns the caption (may be empty).
-    final caption = await Navigator.of(
-      context,
-    ).push<String?>(haloRoute<String?>(_ImageCaptionScreen(bytes: bytes)));
-    if (caption == null) return;
-    await _sendOneImage(bytes, caption);
   }
 
   bool _torReadyToSend() {
@@ -4652,6 +4670,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     ? const _RequestLockBar()
                     : _Composer(
                         onAttach: _showAttachSheet,
+                        onCamera: _openCamera,
                         ghost: _ghost,
                         secure: _secureNext,
                         onToggleSecure: () {
@@ -7411,6 +7430,7 @@ class _Composer extends StatelessWidget {
   final VoidCallback onPickBurn;
   final int burnSeconds;
   final VoidCallback onAttach;
+  final VoidCallback onCamera;
   final bool disguise;
   final VoidCallback onToggleDisguise;
   final void Function(String path, int ms, bool cancelled) onVoiceComplete;
@@ -7426,6 +7446,7 @@ class _Composer extends StatelessWidget {
     required this.onPickBurn,
     required this.burnSeconds,
     required this.onAttach,
+    required this.onCamera,
     required this.disguise,
     required this.onToggleDisguise,
     required this.onVoiceComplete,
@@ -7530,6 +7551,17 @@ class _Composer extends StatelessWidget {
               // shield hidden until it can be verified end to end on a
               // device. the flag, the wire and the viewer are all still
               // wired - only the way to turn it on is gone.
+              const SizedBox(width: 10),
+              // the camera that keeps its photos inside kryfo
+              PressScale(
+                onTap: onCamera,
+                scale: 0.86,
+                child: Icon(
+                  Icons.photo_camera_outlined,
+                  size: 22,
+                  color: HaloColors.text2,
+                ),
+              ),
               const SizedBox(width: 10),
               PressScale(
                 onTap: onAttach,
