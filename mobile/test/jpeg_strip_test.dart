@@ -35,7 +35,7 @@ void main() {
   test('exif and comment go, picture data stays', () {
     final src = _sample();
     expect(jpegHasExif(src), isTrue);
-    final out = stripJpegMetadata(src);
+    final out = stripJpegMetadata(src)!;
     expect(jpegHasExif(out), isFalse);
     final text = String.fromCharCodes(out);
     expect(text.contains('GPSLatitude'), isFalse);
@@ -56,5 +56,29 @@ void main() {
   test('not a jpeg passes through untouched', () {
     final png = Uint8List.fromList([0x89, 0x50, 0x4E, 0x47, 1, 2, 3]);
     expect(stripJpegMetadata(png), png);
+  });
+  test('padding bytes before a segment do not hide exif', () {
+    final src = _sample();
+    // a legal fill byte between the app0 segment and the exif one
+    final app0End = 2 + 2 + 16;
+    final padded = Uint8List.fromList([
+      ...src.sublist(0, app0End),
+      0xFF,
+      ...src.sublist(app0End),
+    ]);
+    expect(jpegHasExif(padded), isTrue);
+    final out = stripJpegMetadata(padded)!;
+    expect(jpegHasExif(out), isFalse);
+    expect(String.fromCharCodes(out).contains('GPSLatitude'), isFalse);
+  });
+  test('a broken length is refused, not copied through', () {
+    final src = _sample();
+    final broken = Uint8List.fromList(src);
+    // the exif segment's length now points past the end of the file
+    final exifAt = 2 + 2 + 16;
+    broken[exifAt + 2] = 0xFF;
+    broken[exifAt + 3] = 0xFF;
+    expect(stripJpegMetadata(broken), isNull);
+    expect(jpegHasExif(broken), isTrue);
   });
 }

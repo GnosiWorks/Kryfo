@@ -177,13 +177,13 @@ class _CameraScreenState extends State<CameraScreen>
       // the plugin wrote a file with everything the sensor knows. it goes
       // now, and only the stripped bytes live on
       await shredFile(x.path);
-      var clean = stripJpegMetadata(raw);
-      if (jpegHasExif(clean)) {
-        // should not happen; refuse rather than pass a tagged file on
-        clean = stripJpegMetadata(clean);
-      }
+      final clean = stripJpegMetadata(raw);
       if (!mounted) return;
-      setState(() => _shot = jpegHasExif(clean) ? null : clean);
+      // a file the stripper could not walk, or one that still reads as
+      // tagged, is refused rather than passed on
+      setState(
+        () => _shot = clean == null || jpegHasExif(clean) ? null : clean,
+      );
       if (_shot == null) {
         showHaloToast(context, 'could not strip that photo, dropped it');
       }
