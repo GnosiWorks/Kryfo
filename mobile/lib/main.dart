@@ -4977,12 +4977,28 @@ class AppState extends ChangeNotifier {
     await loadLinkPreviewMode();
     await initNotifications(onTap: openChatForHalo);
 
-    // periodic sweep: delete messages whose burn_at has passed.
+    // periodic sweep: delete messages whose burn_at has passed. a sweep
+    // that keeps failing means burned messages are staying, which the
+    // user was promised would not happen, so after a minute of it say so
+    var sweepFails = 0;
     Timer.periodic(const Duration(seconds: 5), (_) async {
       if (haloWiping) return;
       try {
         await db.purgeExpired();
-      } catch (_) {}
+        sweepFails = 0;
+      } catch (e) {
+        sweepFails++;
+        dlog('burn sweep failed ($sweepFails): $e');
+        if (sweepFails == 12) {
+          final ctx = rootNavKey.currentContext;
+          if (ctx != null && ctx.mounted) {
+            showHaloToast(
+              ctx,
+              'timed messages are not clearing. restart kryfo',
+            );
+          }
+        }
+      }
     });
     // warm up signal sessions + nostr subs after the first frame. a cached
     // xpub→haloId map (encrypted) lets returning users skip the per-contact
