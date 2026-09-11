@@ -51,35 +51,18 @@ class _BackupScreenState extends State<BackupScreen> {
       final blob = await createBackupBlob(pw);
       final tempDir = await getTemporaryDirectory();
       final ts = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      final path = p.join(tempDir.path, 'kryfo-backup-$ts.txt');
+      final name = 'kryfo-backup-$ts.txt';
+      final path = p.join(tempDir.path, name);
       await File(path).writeAsString(blob, flush: true);
-      if (!mounted) return;
-      final bytes = await File(path).readAsBytes();
-      String? saved;
+      var shared = false;
       try {
-        saved = await FilePicker.saveFile(
-          dialogTitle: 'save your kryfo backup',
-          fileName: 'kryfo-backup-$ts.txt',
-          bytes: bytes,
-        );
-      } catch (_) {
-        saved = null;
+        shared = await _handOver(path, name);
+      } finally {
+        // a shared file is read by the other app after share() returns,
+        // so that one is left for the boot sweep. every other way out
+        // shreds the copy here
+        if (!shared) await shredFile(path);
       }
-      if (!mounted) return;
-      if (saved == null) {
-        // no save picker, or they backed out - share sheet still gets it out.
-        await SharePlus.instance.share(
-          ShareParams(
-            files: [XFile(path)],
-            subject: 'kryfo backup',
-            text:
-                'your encrypted kryfo backup. keep both this file AND your passphrase safe - you need both to restore.',
-          ),
-        );
-      } else {
-        showHaloToast(context, 'backup saved · keep the passphrase safe');
-      }
-      await shredFile(path);
       await appState.markBackupMade();
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
@@ -90,6 +73,37 @@ class _BackupScreenState extends State<BackupScreen> {
         });
       }
     }
+  }
+
+  // the save picker first, the share sheet when that is refused. true when
+  // the share sheet took it
+  Future<bool> _handOver(String path, String name) async {
+    if (!mounted) return false;
+    final bytes = await File(path).readAsBytes();
+    String? saved;
+    try {
+      saved = await FilePicker.saveFile(
+        dialogTitle: 'save your kryfo backup',
+        fileName: name,
+        bytes: bytes,
+      );
+    } catch (_) {
+      saved = null;
+    }
+    if (!mounted) return false;
+    if (saved != null) {
+      showHaloToast(context, 'backup saved · keep the passphrase safe');
+      return false;
+    }
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(path)],
+        subject: 'kryfo backup',
+        text:
+            'your encrypted kryfo backup. keep both this file AND your passphrase safe - you need both to restore.',
+      ),
+    );
+    return true;
   }
 
   @override
