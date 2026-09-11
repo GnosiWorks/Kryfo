@@ -4460,7 +4460,7 @@ class AppState extends ChangeNotifier {
     // a card is keys, not a session. listen for them and swap prekey bundles
     // now, so the first message either side types has a session to ride.
     await subscribePeer(h);
-    _healPending.add(h);
+    _wantHeal(h);
     unawaited(_sendBundleCtl(h, want: true));
     dlog('intro: $senderHaloId introduced $h');
     await refreshContacts();
@@ -4708,8 +4708,23 @@ class AppState extends ChangeNotifier {
   // bundle-exchange heal state: peers we asked for a fresh bundle, ctl
   // rate-limit stamps, and per-cipher decrypt-failure strikes so relay
   // backlog replays get buried instead of bad-mac spamming forever.
-  final Set<String> _healPending = {};
+  // peers waiting on a bundle swap, and when a bundle control last went to
+  // each. both forget anything older than an hour so they cannot grow with
+  // every peer ever seen
+  final Map<String, int> _healPending = {};
   final Map<String, int> _bundleCtlSentAt = {};
+  static const _healTtl = 60 * 60 * 1000;
+  void _pruneHeal() {
+    final cut = DateTime.now().millisecondsSinceEpoch - _healTtl;
+    _healPending.removeWhere((_, t) => t < cut);
+    _bundleCtlSentAt.removeWhere((_, t) => t < cut);
+  }
+
+  void _wantHeal(String peer) {
+    _pruneHeal();
+    _healPending[peer] = DateTime.now().millisecondsSinceEpoch;
+  }
+
   final Map<String, int> _decryptFails = {};
 
   // relay backlog replays any cipher we can't land on every reconnect. give
@@ -5602,6 +5617,7 @@ class AppState extends ChangeNotifier {
     if (now - (_bundleCtlSentAt[key] ?? 0) < 60000) {
       return; // 1/min, not 1/chunk
     }
+    _pruneHeal();
     _bundleCtlSentAt[key] = now;
     try {
       final contact = await db.getContact(memberId);
@@ -5650,7 +5666,7 @@ class AppState extends ChangeNotifier {
         return;
       }
       await db.setPeerBundle(from, bundle);
-      if (want || _healPending.remove(from)) {
+      if (want || _healPending.remove(from) != null) {
         await signalSession.sessionStore.deleteSession(addr);
         await processPeerBundle(from, bundle);
         dlog('healed session for $from (bundle exchange)');
@@ -5687,7 +5703,7 @@ class AppState extends ChangeNotifier {
         // an introduced peer whose bundle swap never landed: ask again, the
         // user's tap-to-retry goes through once it does.
         if (await db.isVouched(memberId)) {
-          _healPending.add(memberId);
+          _wantHeal(memberId);
           unawaited(_sendBundleCtl(memberId, want: true));
         }
         dlog('send: $memberId unreachable (no session/bundle), skipping');
@@ -5704,7 +5720,7 @@ class AppState extends ChangeNotifier {
           // no stored bundle (paired before v30 kept them). ask the peer
           // for a fresh one over the gift-wrap transport - the reply heals
           // the session and the user's tap-to-retry then goes through.
-          _healPending.add(memberId);
+          _wantHeal(memberId);
           unawaited(_sendBundleCtl(memberId, want: true));
           rethrow;
         }
