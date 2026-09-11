@@ -57,6 +57,25 @@ const _addrs = {
 
 class _DonateScreenState extends State<DonateScreen> {
   int _amount = 20;
+
+  @override
+  void initState() {
+    super.initState();
+    // an invoice the screen gave up on last time may have been honoured
+    // since. ask once, quietly, and say so if it was.
+    if (appState.sendMode == 'private') {
+      settleOpenInvoice().then((t) {
+        if (t != null && mounted) {
+          HapticFeedback.mediumImpact();
+          showHaloToast(
+            context,
+            'your earlier bitcoin payment was seen · ${tierName(t)} badge unlocked',
+          );
+        }
+      });
+    }
+  }
+
   final _customCtl = TextEditingController();
   bool _card = false; // false = crypto tab
   String _coin = 'btc';
@@ -475,7 +494,11 @@ class _DonateScreenState extends State<DonateScreen> {
   Future<void> _openBitcoinInvoice() async {
     if (!_onOnion) return;
     final tier = _tierFor(_amount);
-    final tierKey = tier == SupporterTier.none ? 'supporter' : tierName(tier);
+    // under twenty there is no tier, so there is no invoice to make: the
+    // old path asked the service for a supporter invoice anyway and then
+    // granted nothing for paying it
+    if (tier == SupporterTier.none) return;
+    final tierKey = tierName(tier);
     HapticFeedback.mediumImpact();
     Navigator.of(context).push(
       haloRoute(
@@ -599,24 +622,32 @@ class _DonateScreenState extends State<DonateScreen> {
             ),
           ] else if (_coin == 'btc') ...[
             const SizedBox(height: 10),
-            PressScale(
-              onTap: _openBitcoinInvoice,
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: HaloColors.amber, width: 1),
-                ),
-                child: Text(
-                  'pay with bitcoin  \u2192',
-                  style: HaloType.sans(
-                    size: 13,
-                    weight: FontWeight.w600,
-                    color: HaloColors.amber,
+            Builder(
+              builder: (_) {
+                final can = _tierFor(_amount) != SupporterTier.none;
+                return PressScale(
+                  onTap: can ? _openBitcoinInvoice : null,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: can ? HaloColors.amber : HaloColors.line,
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      can ? 'pay with bitcoin  \u2192' : 'badges start at \$20',
+                      style: HaloType.sans(
+                        size: 13,
+                        weight: FontWeight.w600,
+                        color: can ? HaloColors.amber : HaloColors.text3,
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ],
         ],
@@ -678,6 +709,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
   Timer? _poll;
   Timer? _tick;
   int _secsLeft = 15 * 60;
+  int _lateChecks = 0;
   late final AnimationController _pulse;
 
   @override
@@ -717,6 +749,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
       _inv = inv;
       _phase = _Phase.invoice;
     });
+    await saveOpenInvoice(inv.id, widget.tier);
     _secsLeft = 15 * 60;
     _tick?.cancel();
     _tick = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -732,6 +765,18 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           _tick?.cancel();
           _poll?.cancel();
           _phase = _Phase.expired;
+          // our clock ran out, not necessarily the service's. keep asking,
+          // slowly, for another quarter hour: a payment made at the edge
+          // can still be honoured, and money must never vanish quietly.
+          _lateChecks = 0;
+          _poll = Timer.periodic(const Duration(seconds: 60), (t) {
+            if (!mounted || _phase != _Phase.expired || _lateChecks++ >= 15) {
+              t.cancel();
+              return;
+            }
+            _check();
+          });
+          _check();
         }
       });
     });
@@ -747,6 +792,8 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
     switch (r.state) {
       case ReceiptState.paid:
         _poll?.cancel();
+        _tick?.cancel();
+        await clearOpenInvoice();
         // signature already verified inside fetchReceipt. grant the tier and
         // keep the receipt so the badge stays provable without the network.
         if (widget.tier != SupporterTier.none) {
@@ -759,8 +806,10 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
         setState(() => _phase = _Phase.confirmed);
         break;
       case ReceiptState.expired:
+        // the service itself says so: nothing left to wait for
         _poll?.cancel();
-        setState(() => _phase = _Phase.expired);
+        await clearOpenInvoice();
+        if (mounted) setState(() => _phase = _Phase.expired);
         break;
       default:
         break; // pending - keep polling
@@ -1037,8 +1086,10 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
             ),
             const SizedBox(height: 10),
             Text(
-              'no worries - bitcoin invoices time out for your privacy. '
-              'start a fresh one whenever you like.',
+              'invoices time out. if you already sent the payment, keep this '
+              'open: we ask the service again every minute for a while, and '
+              'the next time you open support. start a fresh one whenever '
+              'you like.',
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 13,
@@ -1048,6 +1099,8 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
             ),
             const SizedBox(height: 24),
             _fillButton('new invoice', _start),
+            const SizedBox(height: 10),
+            _ghostButton('i paid, check again', _check),
           ],
         ),
       ),
