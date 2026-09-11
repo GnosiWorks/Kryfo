@@ -249,25 +249,29 @@ class _NotesScreenState extends State<NotesScreen> {
           const SizedBox(width: 8),
           GestureDetector(
             onTap: _save,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 120),
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: HaloColors.amber,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: HaloColors.amber.withValues(alpha: 0.25),
-                    blurRadius: 12,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Icon(
-                Icons.arrow_upward_rounded,
-                color: HaloColors.onAmber,
-                size: 21,
+            child: Semantics(
+              label: 'save',
+              button: true,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 120),
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: HaloColors.amber,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: HaloColors.amber.withValues(alpha: 0.25),
+                      blurRadius: 12,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.arrow_upward_rounded,
+                  color: HaloColors.onAmber,
+                  size: 21,
+                ),
               ),
             ),
           ),

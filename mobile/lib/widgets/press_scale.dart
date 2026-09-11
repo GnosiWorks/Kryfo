@@ -10,6 +10,8 @@ class PressScale extends StatefulWidget {
   final VoidCallback? onLongPress;
   final double scale;
   final bool haptic;
+  // what a screen reader calls it. null leaves the child's own words
+  final String? label;
   const PressScale({
     super.key,
     required this.child,
@@ -17,6 +19,7 @@ class PressScale extends StatefulWidget {
     this.onLongPress,
     this.scale = 0.95,
     this.haptic = true,
+    this.label,
   });
 
   @override
@@ -34,7 +37,7 @@ class _PressScaleState extends State<PressScale> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final w = GestureDetector(
       onTapDown: (_) => _set(true),
       onTapUp: (_) => _set(false),
       onTapCancel: () => _set(false),
@@ -58,5 +61,7 @@ class _PressScaleState extends State<PressScale> {
         child: widget.child,
       ),
     );
+    if (widget.label == null) return w;
+    return Semantics(label: widget.label, button: true, child: w);
   }
 }

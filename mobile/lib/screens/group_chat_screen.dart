@@ -2826,6 +2826,7 @@ class _Composer extends StatelessWidget {
                   }
                   final canSend = !sending && hasText;
                   return PressScale(
+                    label: 'send',
                     onTap: canSend ? onSend : null,
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
