@@ -54,12 +54,12 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   }
 
   Future<void> _rename() async {
-    final newName = await showInputSheet(
+    final newName = (await showInputSheet(
       context,
       title: 'rename group',
       initial: _name,
       save: 'rename',
-    );
+    ))?.trim();
     if (newName != null && newName.isNotEmpty && newName != _name) {
       await appState.renameGroupAndAnnounce(widget.groupId, newName);
       await _load();
