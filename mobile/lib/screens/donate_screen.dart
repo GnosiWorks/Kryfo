@@ -87,9 +87,12 @@ class _DonateScreenState extends State<DonateScreen> {
     return SupporterTier.none;
   }
 
+  int _lastTier = 20;
+
   void _pickTier(int amt) {
     setState(() {
       _amount = amt;
+      _lastTier = amt;
       _customCtl.clear();
     });
   }
@@ -122,8 +125,6 @@ class _DonateScreenState extends State<DonateScreen> {
               _hero(),
               const SizedBox(height: 22),
               _tiers(),
-              const SizedBox(height: 10),
-              _customField(),
               const SizedBox(height: 22),
               _methodTabs(),
               const SizedBox(height: 14),
@@ -358,7 +359,15 @@ class _DonateScreenState extends State<DonateScreen> {
       children: [
         _tab('crypto', !_card, () {
           HapticFeedback.selectionClick();
-          setState(() => _card = false);
+          setState(() {
+            _card = false;
+            // back to the tiers: whatever was typed for the card is not an
+            // amount bitcoin can use
+            if (_customCtl.text.isNotEmpty) {
+              _customCtl.clear();
+              _amount = _lastTier;
+            }
+          });
         }),
         const SizedBox(width: 8),
         _tab('card', _card, () {
@@ -659,6 +668,11 @@ class _DonateScreenState extends State<DonateScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // any amount by card. on crypto the tiers are the amounts, since a
+        // bitcoin invoice is made per tier and the other coins are plain
+        // addresses, so a typed number had nowhere to go there
+        _customField(),
+        const SizedBox(height: 10),
         PressScale(
           onTap: () => showHaloToast(context, 'card payments coming soon'),
           child: Container(
