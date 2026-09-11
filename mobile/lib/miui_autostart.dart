@@ -22,10 +22,14 @@ Future<bool> isMiui() async {
   }
 }
 
-Future<void> openAutostartSettings() async {
+// true when a settings page opened. false means neither the miui page
+// nor the app details page could be launched, and the caller says so
+Future<bool> openAutostartSettings() async {
   try {
-    await _channel.invokeMethod('openAutostartSettings');
-  } catch (_) {}
+    return await _channel.invokeMethod<bool>('openAutostartSettings') ?? false;
+  } catch (_) {
+    return false;
+  }
 }
 
 // non-xiaomi phones (samsung etc) kill background apps via battery
@@ -198,8 +202,14 @@ Future<void> _showDialog(BuildContext context) {
                 const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: () async {
-                    await openAutostartSettings();
+                    final ok = await openAutostartSettings();
                     if (ctx.mounted) Navigator.of(ctx).pop();
+                    if (!ok && context.mounted) {
+                      showHaloToast(
+                        context,
+                        "couldn't open it. look for autostart in phone settings",
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: HaloColors.amber,
