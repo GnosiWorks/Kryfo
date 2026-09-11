@@ -545,6 +545,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   // request-lock state: a stranger we haven't accepted, capped at 2 sent msgs.
   bool _accepted = true; // assume ok until loaded, so normal chats don't flash
+  // the assumption above is for the layout. anything that talks to the
+  // network on the sender's behalf waits for the real answer
+  bool _acceptedKnown = false;
   bool _peerEngaged = false; // they've replied/back-paired -> lock lifts
   int _sentCount = 0;
   int _recvCount =
@@ -660,7 +663,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // request lock: are they an accepted contact, have they engaged, and how
     // many messages have we already sent while unaccepted.
     db.isAccepted(widget.peerHaloId).then((v) {
-      if (mounted) setState(() => _accepted = v);
+      if (mounted) {
+        setState(() {
+          _accepted = v;
+          _acceptedKnown = true;
+        });
+      }
     });
     db.isBackPaired(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _peerEngaged = v);
@@ -3092,7 +3100,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   // the tap offer under a link, or null when there is none to make
   VoidCallback? _linkOffer(_Msg m) {
-    if (!_accepted || _blocked) return null;
+    if (!_acceptedKnown || !_accepted || _blocked) return null;
     if (linkPreviewMode == LinkPreviewMode.off) return null;
     _autoPreview(m);
     return () => _askPreview(m);
