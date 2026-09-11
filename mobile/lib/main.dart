@@ -2973,6 +2973,16 @@ class HaloDb {
     );
   }
 
+  // when the first message with a peer was, either way. null before any.
+  Future<int?> firstMessageAt(String peerId) async {
+    final db = await open();
+    final r = await db.rawQuery(
+      'SELECT MIN(sent_at) t FROM messages WHERE peer_id = ? AND group_id IS NULL',
+      [peerId],
+    );
+    return r.isEmpty ? null : r.first['t'] as int?;
+  }
+
   Future<Map<String, Object?>?> lastMessageFor(String peerId) async {
     final db = await open();
     // order by rowid (insertion order), not sent_at - a received note can carry
