@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // backing screen. badge hero + tiers + custom amount + crypto addresses + card stub.
 // real wallets in _addrs. payments are off-device; this shows where to send.
-// badge unlock is honor-system until btcpay watches the chain (needs the vps).
+// only bitcoin can earn a badge, and only through the signed receipt the
+// invoice screen checks against our pinned key. the other coins end at the
+// address: nothing to press, nothing to claim.
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../theme.dart';
@@ -11,6 +13,8 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/motion.dart' show haloRoute;
+import '../address_text.dart';
+import 'package:flutter/services.dart';
 
 class DonateScreen extends StatefulWidget {
   const DonateScreen({super.key});
@@ -102,7 +106,15 @@ class _DonateScreenState extends State<DonateScreen> {
               const SizedBox(height: 22),
               _methodTabs(),
               const SizedBox(height: 14),
-              if (!_card) _cryptoPane() else _cardPane(),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 240),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeIn,
+                child: KeyedSubtree(
+                  key: ValueKey(_card),
+                  child: !_card ? _cryptoPane() : _cardPane(),
+                ),
+              ),
               const SizedBox(height: 26),
             ],
           ),
@@ -218,45 +230,66 @@ class _DonateScreenState extends State<DonateScreen> {
   ) {
     final sel = _amount == amt && _customCtl.text.isEmpty;
     return Expanded(
+      // the chosen tier grows a touch and gets its amber ring, like a face
+      // picked on the introduce sheet
       child: PressScale(
-        onTap: () => _pickTier(amt),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 6),
-          decoration: BoxDecoration(
-            color: sel ? const Color(0x24F59E0B) : HaloColors.surface,
-            borderRadius: BorderRadius.circular(13),
-            border: Border.all(color: sel ? HaloColors.amber : HaloColors.line),
-          ),
-          child: Column(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(colors: grad),
-                ),
-                alignment: Alignment.center,
-                child: Text(glyph, style: TextStyle(fontSize: 13, color: fg)),
+        onTap: () {
+          HapticFeedback.selectionClick();
+          _pickTier(amt);
+        },
+        child: AnimatedScale(
+          scale: sel ? 1.05 : 1.0,
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOutBack,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+            padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 6),
+            decoration: BoxDecoration(
+              color: sel ? HaloColors.amberSoft : HaloColors.surface,
+              borderRadius: BorderRadius.circular(13),
+              border: Border.all(
+                color: sel ? HaloColors.amber : HaloColors.line,
+                width: sel ? 1.4 : 1,
               ),
-              const SizedBox(height: 7),
-              Text(
-                '\$$amt',
-                style: HaloType.serif(
-                  size: 17,
-                  color: sel ? HaloColors.amber : HaloColors.text,
+              boxShadow: sel
+                  ? [
+                      BoxShadow(
+                        color: HaloColors.amber.withValues(alpha: 0.25),
+                        blurRadius: 14,
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(colors: grad),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(glyph, style: TextStyle(fontSize: 13, color: fg)),
                 ),
-              ),
-              Text(
-                name,
-                style: HaloType.mono(
-                  size: 8,
-                  color: sel ? HaloColors.amber : HaloColors.text2,
+                const SizedBox(height: 7),
+                Text(
+                  '\$$amt',
+                  style: HaloType.serif(
+                    size: 17,
+                    color: sel ? HaloColors.amber : HaloColors.text,
+                  ),
                 ),
-              ),
-            ],
+                Text(
+                  name,
+                  style: HaloType.mono(
+                    size: 8,
+                    color: sel ? HaloColors.amber : HaloColors.text2,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -302,9 +335,15 @@ class _DonateScreenState extends State<DonateScreen> {
   Widget _methodTabs() {
     return Row(
       children: [
-        _tab('crypto', !_card, () => setState(() => _card = false)),
+        _tab('crypto', !_card, () {
+          HapticFeedback.selectionClick();
+          setState(() => _card = false);
+        }),
         const SizedBox(width: 8),
-        _tab('card', _card, () => setState(() => _card = true)),
+        _tab('card', _card, () {
+          HapticFeedback.selectionClick();
+          setState(() => _card = true);
+        }),
       ],
     );
   }
@@ -355,7 +394,12 @@ class _DonateScreenState extends State<DonateScreen> {
           ],
         ),
         const SizedBox(height: 10),
-        _addressBox(),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 240),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeIn,
+          child: KeyedSubtree(key: ValueKey(_coin), child: _addressBox()),
+        ),
       ],
     );
   }
@@ -364,7 +408,10 @@ class _DonateScreenState extends State<DonateScreen> {
     final sel = _coin == c.key;
     return Expanded(
       child: PressScale(
-        onTap: () => setState(() => _coin = c.key),
+        onTap: () {
+          HapticFeedback.selectionClick();
+          setState(() => _coin = c.key);
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
@@ -413,21 +460,14 @@ class _DonateScreenState extends State<DonateScreen> {
     );
   }
 
-  // BTC opens the live, verified invoice flow. the badge is granted only
-  // when a signed receipt checks out (inside _InvoiceScreen) - no more
-  // trusting the tap. the static-address fallback lives in there too, so a
-  // donor whose tor can't reach the service can still pay manually.
-  Future<void> _onSentIt() async {
+  // bitcoin only: the live invoice flow. the badge is granted when a signed
+  // receipt checks out inside _InvoiceScreen, never on a tap. the static
+  // address fallback lives in there too, for a donor whose tor cannot reach
+  // the service.
+  Future<void> _openBitcoinInvoice() async {
     final tier = _tierFor(_amount);
     final tierKey = tier == SupporterTier.none ? 'supporter' : tierName(tier);
-    // non-btc chains have no verification path, so they keep the plain
-    // thank-you rather than pretending to watch for a payment.
-    if (_coin != 'btc') {
-      Navigator.of(
-        context,
-      ).push(haloRoute(const _ThankYouScreen(tier: SupporterTier.none)));
-      return;
-    }
+    HapticFeedback.mediumImpact();
     Navigator.of(context).push(
       haloRoute(
         _InvoiceScreen(
@@ -452,32 +492,11 @@ class _DonateScreenState extends State<DonateScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Center(
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: QrImageView(
-                data: addr,
-                version: QrVersions.auto,
-                size: 168,
-                backgroundColor: Colors.white,
-                eyeStyle: const QrEyeStyle(
-                  eyeShape: QrEyeShape.square,
-                  color: Color(0xFF0D0B09),
-                ),
-                dataModuleStyle: const QrDataModuleStyle(
-                  dataModuleShape: QrDataModuleShape.square,
-                  color: Color(0xFF0D0B09),
-                ),
-              ),
-            ),
-          ),
+          // the qr leads: a scan cannot be swapped by a clipboard hijacker
+          Center(child: _QrCard(data: addr, size: 168)),
           const SizedBox(height: 12),
           Text(
-            '${coin.name} address',
+            '${coin.name} address · check it against your wallet',
             style: HaloType.mono(size: 10, color: HaloColors.text2),
           ),
           const SizedBox(height: 8),
@@ -489,15 +508,19 @@ class _DonateScreenState extends State<DonateScreen> {
               border: Border.all(color: HaloColors.line),
             ),
             child: Text(
-              addr,
-              style: HaloType.mono(size: 11, color: HaloColors.amber),
+              chunkAddress(addr),
+              style: HaloType.mono(
+                size: 11.5,
+                color: HaloColors.amber,
+              ).copyWith(height: 1.6),
             ),
           ),
           const SizedBox(height: 10),
-          GestureDetector(
+          PressScale(
             onTap: () {
+              HapticFeedback.mediumImpact();
               copySensitive(addr);
-              showHaloToast(context, 'address copied');
+              showHaloToast(context, 'address copied · clears in 60s');
             },
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 11),
@@ -525,33 +548,35 @@ class _DonateScreenState extends State<DonateScreen> {
                   ? 'bitcoin is verified by our own node, so your badge '
                         'unlocks by itself once the payment lands.'
                   : "we can't verify this chain without asking an outside "
-                        'service about you, so we don\'t. send it manually if '
-                        'you like \u2014 it just won\'t unlock a badge.',
+                        "service about you, so we don't. send it if you like. "
+                        "it won't unlock a badge.",
               style: HaloType.mono(size: 9.5, color: HaloColors.text2),
             ),
           ),
-          const SizedBox(height: 10),
-          GestureDetector(
-            onTap: _onSentIt,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: HaloColors.amber, width: 1),
-              ),
-              child: Text(
-                _coin == 'btc'
-                    ? 'pay with bitcoin  \u2192'
-                    : "i've sent it  \u2192",
-                style: HaloType.sans(
-                  size: 13,
-                  weight: FontWeight.w600,
-                  color: HaloColors.amber,
+          // only bitcoin has a next step: our node watches for it. the other
+          // coins end here, since a button anyone can press proves nothing.
+          if (_coin == 'btc') ...[
+            const SizedBox(height: 10),
+            PressScale(
+              onTap: _openBitcoinInvoice,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: HaloColors.amber, width: 1),
+                ),
+                child: Text(
+                  'pay with bitcoin  \u2192',
+                  style: HaloType.sans(
+                    size: 13,
+                    weight: FontWeight.w600,
+                    color: HaloColors.amber,
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -561,10 +586,8 @@ class _DonateScreenState extends State<DonateScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        GestureDetector(
-          onTap: () {
-            showHaloToast(context, 'card payments coming soon');
-          },
+        PressScale(
+          onTap: () => showHaloToast(context, 'card payments coming soon'),
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 15),
             alignment: Alignment.center,
@@ -588,9 +611,6 @@ class _DonateScreenState extends State<DonateScreen> {
     );
   }
 }
-
-// the thank-you moment after someone gives. glowing badge, warm line,
-// then the choice: wear the badge or stay quiet about it.
 
 // ─────────────────────── live bitcoin invoice flow ───────────────────────
 
@@ -849,29 +869,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
             ),
           ),
           const SizedBox(height: 16),
-          Center(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: QrImageView(
-                data: inv.uri,
-                version: QrVersions.auto,
-                size: 190,
-                backgroundColor: Colors.white,
-                eyeStyle: const QrEyeStyle(
-                  eyeShape: QrEyeShape.square,
-                  color: Color(0xFF0D0B09),
-                ),
-                dataModuleStyle: const QrDataModuleStyle(
-                  dataModuleShape: QrDataModuleShape.square,
-                  color: Color(0xFF0D0B09),
-                ),
-              ),
-            ),
-          ),
+          Center(child: _QrCard(data: inv.uri, size: 190)),
           const SizedBox(height: 16),
           _copyRow('address', inv.address),
           const SizedBox(height: 14),
@@ -985,15 +983,22 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
         children: [
           Text(label, style: HaloType.mono(size: 10, color: HaloColors.text2)),
           const SizedBox(height: 6),
-          Text(value, style: HaloType.mono(size: 11, color: HaloColors.amber)),
+          Text(
+            chunkAddress(value),
+            style: HaloType.mono(
+              size: 11.5,
+              color: HaloColors.amber,
+            ).copyWith(height: 1.6),
+          ),
         ],
       ),
     );
   }
 
   void _copy(String v) {
+    HapticFeedback.mediumImpact();
     copySensitive(v);
-    showHaloToast(context, 'copied');
+    showHaloToast(context, 'address copied · clears in 60s');
   }
 
   Widget _fillButton(String label, VoidCallback onTap) {
@@ -1057,31 +1062,21 @@ class _StaticAddress extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Center(
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: QrImageView(
-                data: address,
-                version: QrVersions.auto,
-                size: 168,
-                backgroundColor: Colors.white,
-              ),
-            ),
-          ),
+          Center(child: _QrCard(data: address, size: 168)),
           const SizedBox(height: 10),
           Text(
-            address,
-            style: HaloType.mono(size: 11, color: HaloColors.amber),
+            chunkAddress(address),
+            style: HaloType.mono(
+              size: 11.5,
+              color: HaloColors.amber,
+            ).copyWith(height: 1.6),
           ),
           const SizedBox(height: 10),
           PressScale(
             onTap: () {
+              HapticFeedback.mediumImpact();
               copySensitive(address);
-              showHaloToast(context, 'address copied');
+              showHaloToast(context, 'address copied · clears in 60s');
             },
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 11),
@@ -1281,161 +1276,55 @@ class _CheckPainter extends CustomPainter {
   bool shouldRepaint(_CheckPainter old) => old.t != t;
 }
 
-class _ThankYouScreen extends StatefulWidget {
-  final SupporterTier tier;
-  const _ThankYouScreen({required this.tier});
+// a qr on the light card, settling in the way the my kryfo one does: the
+// frame first, then the code fades and eases up into it
+class _QrCard extends StatefulWidget {
+  final String data;
+  final double size;
+  const _QrCard({required this.data, required this.size});
   @override
-  State<_ThankYouScreen> createState() => _ThankYouScreenState();
+  State<_QrCard> createState() => _QrCardState();
 }
 
-class _ThankYouScreenState extends State<_ThankYouScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _glow;
-
+class _QrCardState extends State<_QrCard> {
+  bool _shown = false;
   @override
   void initState() {
     super.initState();
-    _glow = AnimationController(
-      duration: const Duration(milliseconds: 1900),
-      vsync: this,
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _glow.dispose();
-    super.dispose();
-  }
-
-  Future<void> _choose(bool show) async {
-    if (show) {
-      await saveShowBadgeSelf(true);
-    }
-    if (!mounted) return;
-    // pop back to profile/support root
-    Navigator.of(context).popUntil((r) => r.isFirst);
+    Future.delayed(const Duration(milliseconds: 160), () {
+      if (mounted) setState(() => _shown = true);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final t = widget.tier;
-    final none = t == SupporterTier.none;
-    return Scaffold(
-      backgroundColor: HaloColors.surface,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (!none) ...[
-                AnimatedBuilder(
-                  animation: _glow,
-                  builder: (context, _) {
-                    final g = 0.35 + _glow.value * 0.45;
-                    return Center(
-                      child: Container(
-                        width: 96,
-                        height: 96,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: HaloColors.amberSoft,
-                          boxShadow: [
-                            BoxShadow(
-                              color: HaloColors.amber.withValues(
-                                alpha: g * 0.5,
-                              ),
-                              blurRadius: 30 + _glow.value * 18,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          tierGlyph(t),
-                          style: HaloType.serif(
-                            size: 40,
-                            color: HaloColors.amber,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 28),
-              ],
-              Text(
-                none ? 'thank you' : 'kryfo runs because of you',
-                textAlign: TextAlign.center,
-                style: HaloType.serif(size: 26, color: HaloColors.text),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                none
-                    ? 'every bit keeps kryfo independent. no ads, no trackers, no one buying your attention.'
-                    : "you're a ${tierName(t)} now. no ads, no trackers, no one selling you out. just people keeping this alive.",
-                textAlign: TextAlign.center,
-                style: HaloType.sans(
-                  size: 14,
-                  color: HaloColors.text2,
-                  height: 1.55,
-                ),
-              ),
-              const SizedBox(height: 40),
-              if (!none) ...[
-                GestureDetector(
-                  onTap: () => _choose(true),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: HaloColors.amber,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      'wear my badge',
-                      style: HaloType.sans(
-                        size: 14,
-                        weight: FontWeight.w600,
-                        color: HaloColors.onAmber,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                GestureDetector(
-                  onTap: () => _choose(false),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    alignment: Alignment.center,
-                    child: Text(
-                      "just glad to help",
-                      style: HaloType.sans(size: 14, color: HaloColors.text2),
-                    ),
-                  ),
-                ),
-              ] else
-                GestureDetector(
-                  onTap: () => Navigator.of(context).popUntil((r) => r.isFirst),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: HaloColors.amber,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      'done',
-                      style: HaloType.sans(
-                        size: 14,
-                        weight: FontWeight.w600,
-                        color: HaloColors.onAmber,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: HaloColors.text,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: AnimatedOpacity(
+        opacity: _shown ? 1 : 0,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOut,
+        child: AnimatedScale(
+          scale: _shown ? 1 : 0.94,
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutBack,
+          child: QrImageView(
+            data: widget.data,
+            version: QrVersions.auto,
+            size: widget.size,
+            backgroundColor: HaloColors.text,
+            eyeStyle: QrEyeStyle(
+              eyeShape: QrEyeShape.square,
+              color: HaloColors.ink,
+            ),
+            dataModuleStyle: QrDataModuleStyle(
+              dataModuleShape: QrDataModuleShape.square,
+              color: HaloColors.ink,
+            ),
           ),
         ),
       ),
