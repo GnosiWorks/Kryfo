@@ -57,6 +57,7 @@ import '../dlog.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/menu_backdrop.dart';
 import '../widgets/link_stub.dart';
+import '../link_prefs.dart';
 import 'camera_screen.dart';
 import '../link_preview.dart' show domainOf, titleFromHtml, firstUrl;
 export '../link_preview.dart' show firstUrl;
@@ -3073,12 +3074,38 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // current route, title only, remembered per url so a second ask is free.
   // never offered from a stranger, never automatic, never an image.
   final Set<String> _askingLinks = {};
+  // uids already fetched on their own this visit, so a miss is not retried
+  final Set<String> _autoAsked = {};
 
-  Future<void> _askPreview(_Msg m) async {
+  // in automatic mode a link from someone accepted fetches its title as
+  // soon as it is on screen, once, quietly
+  void _autoPreview(_Msg m) {
+    if (linkPreviewMode != LinkPreviewMode.auto) return;
+    final uid = m.msgUid;
+    if (uid == null || m.preview != null || _autoAsked.contains(uid)) return;
+    if (firstUrl(m.text) == null) return;
+    _autoAsked.add(uid);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _askPreview(m, quiet: true);
+    });
+  }
+
+  // the tap offer under a link, or null when there is none to make
+  VoidCallback? _linkOffer(_Msg m) {
+    if (!_accepted || _blocked) return null;
+    if (linkPreviewMode == LinkPreviewMode.off) return null;
+    _autoPreview(m);
+    return () => _askPreview(m);
+  }
+
+  Future<void> _askPreview(_Msg m, {bool quiet = false}) async {
     final url = firstUrl(m.text);
     final uid = m.msgUid;
     if (url == null || uid == null || _askingLinks.contains(uid)) return;
-    if (!await askLinkPreviewConsent(context)) return;
+    if (!quiet) {
+      final mode = await decideLinkPreviews(context);
+      if (mode == null || mode == LinkPreviewMode.off) return;
+    }
     if (!mounted) return;
     setState(() => _askingLinks.add(uid));
     try {
@@ -3091,11 +3118,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       final pv = {'url': url, 'title': title ?? domainOf(url)};
       await db.setMsgPreview(uid, jsonEncode(pv));
       if (mounted) setState(() => m.preview = pv);
-      if (title == null && mounted) {
+      if (title == null && mounted && !quiet) {
         showHaloToast(context, 'no title came back');
       }
     } catch (_) {
-      if (mounted) showHaloToast(context, "couldn't reach it");
+      if (mounted && !quiet) showHaloToast(context, "couldn't reach it");
     } finally {
       if (mounted) setState(() => _askingLinks.remove(uid));
     }
@@ -3437,9 +3464,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       linkBusy:
                           m.msgUid != null && _askingLinks.contains(m.msgUid),
                       // a stranger's link is text and nothing more
-                      onAskLink: _accepted && !_blocked
-                          ? () => _askPreview(m)
-                          : null,
+                      onAskLink: _linkOffer(m),
                       firstInGroup: firstInGroup,
                       lastInGroup: lastInGroup,
                       revealed: m.msgUid != null && m.msgUid == _revealedUid,

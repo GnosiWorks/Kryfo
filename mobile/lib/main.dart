@@ -43,6 +43,7 @@ import 'screens/lock_setup_screen.dart';
 import 'push_mode.dart';
 import 'intro_prefs.dart';
 import 'scam_prefs.dart';
+import 'link_prefs.dart';
 import 'scam_shield.dart';
 import 'rooms.dart';
 import 'outbox.dart';
@@ -4958,6 +4959,7 @@ class AppState extends ChangeNotifier {
     _loadFirstContact();
     await loadDisplayName();
     await loadScreenshotPref();
+    await loadLinkPreviewMode();
     await initNotifications(onTap: openChatForHalo);
 
     // periodic sweep: delete messages whose burn_at has passed.

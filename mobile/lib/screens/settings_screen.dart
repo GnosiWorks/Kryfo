@@ -8,6 +8,7 @@ import '../main.dart' show appState;
 import '../lock_state.dart';
 import '../intro_prefs.dart';
 import '../scam_prefs.dart';
+import '../link_prefs.dart';
 import '../miui_autostart.dart';
 import '../widgets/motion.dart' show TorStatus, haloRoute;
 import 'why_kryfo_screen.dart';
@@ -208,6 +209,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () async {
               setState(() => _shieldOn = !_shieldOn);
               await saveScamShieldOn(_shieldOn);
+            },
+          ),
+          _Row(
+            icon: Icons.link,
+            label: 'link previews',
+            hint: 'a preview is one request to that website for its title',
+            value: linkPreviewLabel(linkPreviewMode),
+            onTap: () async {
+              final pick = await showChoiceSheet<LinkPreviewMode>(
+                context,
+                title: 'link previews',
+                current: linkPreviewMode,
+                choices: const [
+                  SheetChoice(
+                    LinkPreviewMode.auto,
+                    'automatic',
+                    hint: 'titles appear on their own',
+                  ),
+                  SheetChoice(
+                    LinkPreviewMode.onTap,
+                    'when i tap',
+                    hint: 'a link stays plain until you ask',
+                  ),
+                  SheetChoice(
+                    LinkPreviewMode.off,
+                    'off',
+                    hint: 'links are text, nothing is fetched',
+                  ),
+                ],
+              );
+              if (pick == null) return;
+              await saveLinkPreviewMode(pick);
+              if (mounted) setState(() {});
             },
           ),
           const SizedBox(height: 24),

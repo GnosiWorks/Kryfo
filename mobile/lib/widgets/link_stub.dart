@@ -1,89 +1,52 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the line under a bubble that holds a link: the bare domain, and either
-// the title the reader asked for or the offer to ask. previews are off; a
-// tap is consent to one request for the page's title, over the current
-// route. nothing is fetched on its own, and no image ever is.
+// the page title or the offer to fetch it. a title is one request for the
+// page over the current route, and no image is ever loaded. whether that
+// happens on its own or on a tap is the reader's one-time choice.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../link_prefs.dart';
 import '../link_preview.dart';
 import '../theme.dart';
-import 'halo_sheet.dart';
-import 'sheet_handle.dart';
+import 'confirm_sheet.dart';
 
-// said once per run, on the first ask
-bool _toldThisRun = false;
-
-Future<bool> askLinkPreviewConsent(BuildContext context) async {
-  if (_toldThisRun) return true;
-  final ok = await showHaloSheet<bool>(
+// the first tap on a link asks once how previews should work from now on.
+// after that the answer is kept and settings can change it. returns the
+// mode in force, or null when the sheet was dismissed without choosing.
+Future<LinkPreviewMode?> decideLinkPreviews(BuildContext context) async {
+  final known = linkPreviewMode ?? await loadLinkPreviewMode();
+  if (known != null) return known;
+  if (!context.mounted) return null;
+  final pick = await showChoiceSheet<LinkPreviewMode>(
     context,
-    builder: (ctx) => SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SheetHandle(),
-            const SizedBox(height: 12),
-            Text(
-              'preview this link?',
-              style: HaloType.serif(size: 20, color: HaloColors.text),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'previews are off. tapping one asks that website for its title, '
-              'and it will see you did.',
-              style: HaloType.sans(
-                size: 13,
-                color: HaloColors.text2,
-                height: 1.45,
-              ),
-            ),
-            const SizedBox(height: 16),
-            GestureDetector(
-              onTap: () => Navigator.pop(ctx, true),
-              behavior: HitTestBehavior.opaque,
-              child: Container(
-                height: 46,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: HaloColors.amber,
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: Text(
-                  'ask for the title',
-                  style: HaloType.sans(
-                    size: 14,
-                    weight: FontWeight.w600,
-                    color: HaloColors.onAmber,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 6),
-            GestureDetector(
-              onTap: () => Navigator.pop(ctx, false),
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Center(
-                  child: Text(
-                    'not now',
-                    style: HaloType.sans(size: 13, color: HaloColors.text2),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+    title: 'show link previews?',
+    line:
+        'a preview puts the page title under the link. kryfo asks the '
+        'website for it, the way a browser would. you choose once, and '
+        'settings can change it later.',
+    choices: const [
+      SheetChoice(
+        LinkPreviewMode.auto,
+        'show them',
+        hint: 'titles appear on their own',
       ),
-    ),
+      SheetChoice(
+        LinkPreviewMode.onTap,
+        'only when i tap',
+        hint: 'a link stays plain until you ask',
+      ),
+      SheetChoice(
+        LinkPreviewMode.off,
+        'not at all',
+        hint: 'links stay plain text',
+      ),
+    ],
   );
-  if (ok == true) _toldThisRun = true;
-  return ok == true;
+  if (pick == null) return null;
+  await saveLinkPreviewMode(pick);
+  return pick;
 }
 
 class LinkStub extends StatelessWidget {
