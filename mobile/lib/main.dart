@@ -6618,8 +6618,16 @@ final appState = AppState();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  await appState.loadThemePref();
   runApp(const HaloApp());
+  // the theme pref sits in secure storage, and the first read on a new
+  // phone creates the keystore key, which takes seconds. the splash paints
+  // first, dark, and the light theme lands the moment the pref is read.
+  // before this the screen stayed empty until the key existed.
+  unawaited(
+    appState.loadThemePref().then((_) {
+      if (HaloColors.isLight) themeRevision.value++;
+    }),
+  );
   // cold-start: if launched from a notification tap, open the chat
   // after the first frame so rootNavKey has a navigator.
   WidgetsBinding.instance.addPostFrameCallback((_) async {
