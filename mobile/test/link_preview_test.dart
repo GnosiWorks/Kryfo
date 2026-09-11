@@ -28,4 +28,10 @@ void main() {
     expect(firstUrl('HTTP://x.y/z ok'), 'http://x.y/z');
     expect(firstUrl('no link here'), isNull);
   });
+  test('firstUrl leaves the sentence its punctuation', () {
+    expect(firstUrl('see https://x.y/z.'), 'https://x.y/z');
+    expect(firstUrl('(https://x.y/p).'), 'https://x.y/p');
+    expect(firstUrl('https://x.y/w(1)'), 'https://x.y/w(1)');
+    expect(firstUrl('is it https://x.y/q?'), 'https://x.y/q');
+  });
 }
