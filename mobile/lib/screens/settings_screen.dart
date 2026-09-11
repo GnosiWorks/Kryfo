@@ -216,7 +216,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _Row(
             icon: Icons.photo_camera_back_outlined,
             label: 'screen security',
-            hint: 'hides kryfo from recents and blocks screenshots here',
+            hint:
+                'no screenshots while a chat is open. the rest of the app stays as it is',
             value: appState.secureChats ? 'on' : 'off',
             onTap: () async {
               await appState.setSecureChats(!appState.secureChats);
@@ -226,7 +227,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _Row(
             icon: Icons.visibility_off_outlined,
             label: 'block screenshots',
-            hint: 'hides kryfo from the recents view and screenshots',
+            hint:
+                'the whole app. hidden from recents, no screenshots on any screen',
             value: appState.blockScreenshots ? 'on' : 'off',
             onTap: () async {
               await appState.setBlockScreenshots(!appState.blockScreenshots);
