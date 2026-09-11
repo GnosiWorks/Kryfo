@@ -4339,7 +4339,8 @@ class AppState extends ChangeNotifier {
     // seen. burn only counts once they're accepted.
     // a deleted (parked) peer writing again surfaces as a fresh request.
     if (!isGroup) await db.unparkIfArchived(senderHaloId);
-    final burnOk = isGroup || await db.isAccepted(senderHaloId);
+    final senderAccepted = await db.isAccepted(senderHaloId);
+    final burnOk = isGroup || senderAccepted;
     await db.saveMessage(
       senderHaloId,
       'in',
@@ -4357,7 +4358,7 @@ class AppState extends ChangeNotifier {
       // a preview the sender fetched over tor and shipped inside the
       // message. kept, title and url only, and only from someone accepted:
       // a stranger's title is text they control and stays plain
-      preview: shippedPreview(env.preview, accepted: burnOk && !isGroup),
+      preview: shippedPreview(env.preview, accepted: senderAccepted),
       secure: env.secure,
     );
     // remember the face they picked. cheap, and it arrives with every
@@ -6232,6 +6233,7 @@ class AppState extends ChangeNotifier {
     String? msgUid,
     String? replyTo,
     int? burnSeconds,
+    Map<String, String>? preview,
   }) async {
     msgUid ??= newMsgUid();
     final burnAt = (burnSeconds != null && burnSeconds > 0)
@@ -6253,6 +6255,7 @@ class AppState extends ChangeNotifier {
         // born UNSENT: the default sent=1 made a dead send reload as a
         // ticked message nobody ever received. media already does this.
         sent: 0,
+        preview: preview == null ? null : jsonEncode(preview),
       );
     }
     final members = await db.getGroupMembers(groupId);
@@ -6269,6 +6272,7 @@ class AppState extends ChangeNotifier {
       msgUid: msgUid,
       replyTo: replyTo,
       burnSeconds: burnSeconds,
+      preview: preview,
       groupId: groupId,
       roster: amAdmin ? members : null,
       rosterParticipants: rosterParts,

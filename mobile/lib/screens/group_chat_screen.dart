@@ -27,7 +27,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import '../main.dart'
-    show appState, db, currentChatPeer, newMsgUid, torGetOnIsolate, shredFile;
+    show
+        appState,
+        db,
+        currentChatPeer,
+        newMsgUid,
+        torGetOnIsolate,
+        torStrictGetOnIsolate,
+        shredFile;
 import '../theme.dart';
 import '../media_progress.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -47,7 +54,8 @@ import '../mentions.dart';
 import '../widgets/link_stub.dart';
 import '../link_prefs.dart';
 import 'camera_screen.dart';
-import '../link_preview.dart' show domainOf, titleFromHtml;
+import '../link_preview.dart' show domainOf, titleFromHtml, senderPreview;
+import '../widgets/preview_strip.dart';
 import '../widgets/halo_sheet.dart';
 
 final Map<String, String> _draftPerGroup = {};
@@ -755,6 +763,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                   showSender: showSender,
                   senderBadge: _badgeFor(m.sender),
                   linkTitle: m.preview?['title'],
+                  linkBySender: m.preview?['by'] == 'sender',
                   linkBusy: m.msgUid != null && _askingLinks.contains(m.msgUid),
                   onAskLink: _linkOffer(m),
                   quotedText: quoted,
@@ -822,6 +831,46 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   final Set<String> _askingLinks = {};
   final Set<String> _autoAsked = {};
 
+  // the sender side, as in a chat: fetched over tor on this phone, riding
+  // inside the next message. never offered in a room
+  Map<String, String>? _pendingPreview;
+  bool _previewBusy = false;
+
+  bool get _torUp {
+    final s = appState.torStatus;
+    return s == TorStatus.bootstrapped ||
+        s == TorStatus.publishing ||
+        s == TorStatus.reachable;
+  }
+
+  Future<void> _addPreview() async {
+    final url = firstUrl(_msgCtrl.text);
+    if (url == null || _previewBusy) return;
+    setState(() => _previewBusy = true);
+    try {
+      final html = await torStrictGetOnIsolate(url);
+      final title = html.startsWith('error:') ? null : titleFromHtml(html);
+      if (!mounted) return;
+      if (title == null || title.trim().isEmpty) {
+        showHaloToast(
+          context,
+          html.startsWith('error: tor')
+              ? 'tor is not up yet · sending without'
+              : 'no title came back · sending without',
+        );
+        return;
+      }
+      HapticFeedback.selectionClick();
+      setState(() => _pendingPreview = senderPreview(url, title));
+    } catch (_) {
+      if (mounted) {
+        showHaloToast(context, "couldn't fetch it · sending without");
+      }
+    } finally {
+      if (mounted) setState(() => _previewBusy = false);
+    }
+  }
+
   bool _canAskLink(_GMsg m) {
     if (m.direction == 'out') return true;
     return appState.contacts.any((c) => c.haloId == m.sender && !c.blocked);
@@ -888,6 +937,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final uid = newMsgUid();
     final replyToUid = _replyTo?.msgUid;
     final burnSeconds = _ghost ? _burnSeconds : null;
+    final url = firstUrl(text);
+    final preview = url != null && _pendingPreview?['url'] == url
+        ? _pendingPreview
+        : null;
     final optimistic = _GMsg(
       sender: appState.myId,
       direction: 'out',
@@ -901,10 +954,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           ? DateTime.now().millisecondsSinceEpoch + _burnSeconds * 1000
           : null,
     )..fresh = true;
+    optimistic.preview = preview;
     setState(() {
       _messages.add(optimistic);
       _normaliseMessages();
       _replyTo = null;
+      _pendingPreview = null;
     });
     _scrollToEnd();
     var ok = false;
@@ -914,6 +969,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       msgUid: uid,
       replyTo: replyToUid,
       burnSeconds: burnSeconds,
+      preview: preview,
     );
     try {
       ok = await sendFut;
@@ -2361,6 +2417,18 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 onCancel: () => setState(() => _replyTo = null),
               ),
             IncomingMediaBanner(chatKey: widget.groupId),
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _msgCtrl,
+              builder: (_, v, _) => PreviewStrip(
+                url: sendLinkPreviews && !_isRoom && _torUp
+                    ? firstUrl(v.text)
+                    : null,
+                pending: _pendingPreview,
+                busy: _previewBusy,
+                onAdd: _addPreview,
+                onDrop: () => setState(() => _pendingPreview = null),
+              ),
+            ),
             _Composer(
               controller: _msgCtrl,
               members: _mentionable,
@@ -3089,6 +3157,7 @@ class _GroupBubble extends StatelessWidget {
   final bool ripple;
   final VoidCallback? onReplyTap;
   final String? linkTitle;
+  final bool linkBySender;
   final bool linkBusy;
   final VoidCallback? onAskLink;
   const _GroupBubble({
@@ -3102,6 +3171,7 @@ class _GroupBubble extends StatelessWidget {
     this.ripple = false,
     this.onReplyTap,
     this.linkTitle,
+    this.linkBySender = false,
     this.linkBusy = false,
     this.onAskLink,
   });
@@ -3454,6 +3524,7 @@ class _GroupBubble extends StatelessWidget {
                                         title: linkTitle,
                                         busy: linkBusy,
                                         onAsk: onAskLink,
+                                        bySender: linkBySender,
                                       ),
                                     ],
                                     const SizedBox(height: 2),
