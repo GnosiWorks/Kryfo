@@ -938,8 +938,10 @@ func torOnlyHTTP() (*http.Client, error) {
 				ResponseHeaderTimeout: 10 * time.Second,
 			},
 			Timeout: 15 * time.Second,
+			// two redirects at most: a shortener into a canonical url is
+			// ordinary, a longer chain is not worth following
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				if len(via) >= 2 {
+				if len(via) > 2 {
 					return fmt.Errorf("too many redirects")
 				}
 				return nil
