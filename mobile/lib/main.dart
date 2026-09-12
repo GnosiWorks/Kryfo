@@ -4120,13 +4120,16 @@ class AppState extends ChangeNotifier {
     if (_myHandle != null) unawaited(_repointHandle());
   }
 
-  Future<void> setMyHandle(String? h) async {
+  Future<void> setMyHandle(String? h, {String bio = ''}) async {
     _myHandle = h;
     final st = const FlutterSecureStorage();
     if (h == null) {
       await st.delete(key: 'my_handle');
+      await st.delete(key: 'my_handle_bio');
     } else {
       await st.write(key: 'my_handle', value: h);
+      // kept so a republish carries the same bio rather than a blank one
+      await st.write(key: 'my_handle_bio', value: bio);
     }
     notifyListeners();
   }
@@ -4502,7 +4505,9 @@ class AppState extends ChangeNotifier {
     if (h == null) return;
     try {
       final uri = await buildHaloUriV3(myId, myOnion, _fcCounter);
-      engine.handleClaim(h, uri, '');
+      final bio =
+          await const FlutterSecureStorage().read(key: 'my_handle_bio') ?? '';
+      engine.handleClaim(h, uri, bio);
     } catch (_) {
       // offline, or the registry is down. the handle stays claimed and
       // stale rather than lost, and the next claim fixes it.

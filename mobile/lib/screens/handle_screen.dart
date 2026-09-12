@@ -73,7 +73,7 @@ class _HandleScreenState extends State<HandleScreen> {
     if (!mounted) return;
     setState(() => _busy = false);
     if (r == 'ok') {
-      await appState.setMyHandle(h);
+      await appState.setMyHandle(h, bio: _bio.text.trim());
       if (!mounted) return;
       setState(() => _claimed = h);
       showHaloToast(context, 'You are @$h');
