@@ -9,6 +9,9 @@ bottom. each step exists because skipping it has bitten us once.
   infos (flutter_secure_storage's `encryptedSharedPreferences`). a warning
   or an error stops the release.
 - `flutter test` passes.
+- `cd mobile/android && ./gradlew --offline :app:lintDebug :app:lintVitalAnalyzeRelease`
+  passes. warnings fail it on purpose; the first run of it found two style
+  attributes above our minimum api.
 - every `ALTER TABLE` in `mobile/lib/main.dart` sits inside a `try {} catch (_) {}`.
   a bare one hangs the app on boot for anyone whose database already has the
   column. `grep -n "ALTER TABLE" mobile/lib/main.dart` and eyeball each.
