@@ -392,15 +392,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _Row(
                 icon: Icons.autorenew,
                 label: 'Reset my invite link',
-                hint: 'Old qr codes and links stop working',
+                hint: 'Old links and codes stop working, for everyone',
                 onTap: () async {
                   final ok = await showConfirmSheet(
                     context,
                     title: 'Reset invite link?',
                     line:
-                        'Anyone holding an old qr code or link stops being able '
-                        'to reach you. Your contacts, chats and history are not '
-                        'touched.',
+                        'Anyone with an old code or link stops being able to '
+                        'reach you, on every route. People who have it but '
+                        'never used it will need a new one from you. Contacts, '
+                        'chats and history stay.',
                     yes: 'Reset',
                   );
                   if (!ok) return;

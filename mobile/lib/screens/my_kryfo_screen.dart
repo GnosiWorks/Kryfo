@@ -227,6 +227,14 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
                 await shareContactVcf(haloId: appState.myId, uri: _uri!);
               },
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(6, 8, 6, 0),
+              child: Text(
+                'If this link ends up somewhere you did not mean, reset it '
+                'in settings. Everyone who has it needs a new one then.',
+                style: HaloType.mono(size: 10, color: HaloColors.text3),
+              ),
+            ),
             const SizedBox(height: 12),
 
             // ---- way three: they told you a handle
