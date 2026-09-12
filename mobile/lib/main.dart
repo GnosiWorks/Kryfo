@@ -4860,6 +4860,14 @@ class AppState extends ChangeNotifier {
     if (existing != null && (existing['accepted'] as int? ?? 0) == 1) return;
     await db.upsertContactStub(h, card.onion, card.xPub);
     // the note is the introducer's one line about them. it lives on the
+    } else if (!senderAccepted) {
+      // a stranger chose these words; they do not go on a lock screen
+      // where anyone nearby reads them. that a request arrived is enough.
+      notifTitle = 'New request';
+      notifBody = 'Someone you have not added wrote to you';
+      notifPayload = senderHaloId;
+      suppress =
+          currentChatPeer == senderHaloId || await db.isMuted(senderHaloId);
     // vouch, so two introducers can each say their piece.
     await db.addVouch(h, senderHaloId, card.note);
     if (card.avatar != null) await db.setContactAvatar(h, card.avatar);
