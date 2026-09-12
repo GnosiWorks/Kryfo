@@ -125,9 +125,6 @@ class HaloEngine {
   late final CStrFnDart _bridgeState;
   late final CStrFnDart _restartTor;
   late final OneArgFnDart _setMode;
-  late final OneArgFnDart _handleCheck;
-  late final ThreeArgFnDart _handleClaim;
-  late final OneArgFnDart _handleRelease;
   late final OneArgFnDart _ntfyPing;
   late final OneArgFnDart _torGet;
   late final OneArgFnDart _torGetJson;
@@ -179,15 +176,6 @@ class HaloEngine {
     _restartTor = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloRestartTor');
     _setMode = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
       'HaloSetTransportMode',
-    );
-    _handleCheck = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
-      'HaloHandleCheck',
-    );
-    _handleClaim = _lib.lookupFunction<ThreeArgFn, ThreeArgFnDart>(
-      'HaloHandleClaim',
-    );
-    _handleRelease = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
-      'HaloHandleRelease',
     );
     _ntfyPing = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNtfyPing');
     _torGet = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGet');
@@ -327,36 +315,15 @@ class HaloEngine {
 
   void restartTor() => _restartTor();
 
-  String handleCheck(String h) {
-    final p = h.toNativeUtf8();
-    try {
-      return _handleCheck(p).toDartString();
-    } finally {
-      malloc.free(p);
-    }
-  }
+  // the registry is a request over tor: off the ui thread, or claiming a
+  // handle froze the screen until it answered and android called it an anr
+  Future<String> handleCheck(String h) => _ffiOnIsolate('HaloHandleCheck', [h]);
 
-  String handleClaim(String h, String invite, String bio) {
-    final a = h.toNativeUtf8();
-    final b = invite.toNativeUtf8();
-    final c = bio.toNativeUtf8();
-    try {
-      return _handleClaim(a, b, c).toDartString();
-    } finally {
-      malloc.free(a);
-      malloc.free(b);
-      malloc.free(c);
-    }
-  }
+  Future<String> handleClaim(String h, String invite, String bio) =>
+      _ffiOnIsolate('HaloHandleClaim', [h, invite, bio]);
 
-  String handleRelease(String h) {
-    final p = h.toNativeUtf8();
-    try {
-      return _handleRelease(p).toDartString();
-    } finally {
-      malloc.free(p);
-    }
-  }
+  Future<String> handleRelease(String h) =>
+      _ffiOnIsolate('HaloHandleRelease', [h]);
 
   // tell the engine whether to route through tor. it decides the route; the
   // relay list for each mode is chosen below.
@@ -752,6 +719,44 @@ Future<String> _startListenerOnIsolate(String dataDir) {
       malloc.free(p);
     }
   });
+}
+
+// one, two or three strings in, one string out, on a background isolate
+// with a ceiling so a registry that never answers cannot hold a screen
+Future<String> _ffiOnIsolate(String symbol, List<String> args) {
+  return Isolate.run(() {
+    final lib = Platform.isAndroid
+        ? DynamicLibrary.open('libhalo.so')
+        : DynamicLibrary.process();
+    final ps = [for (final a in args) a.toNativeUtf8()];
+    try {
+      switch (ps.length) {
+        case 1:
+          return lib
+              .lookupFunction<OneArgFn, OneArgFnDart>(symbol)(ps[0])
+              .toDartString();
+        case 2:
+          return lib
+              .lookupFunction<TwoArgFn, TwoArgFnDart>(symbol)(ps[0], ps[1])
+              .toDartString();
+        default:
+          return lib
+              .lookupFunction<ThreeArgFn, ThreeArgFnDart>(symbol)(
+                ps[0],
+                ps[1],
+                ps[2],
+              )
+              .toDartString();
+      }
+    } finally {
+      for (final p in ps) {
+        malloc.free(p);
+      }
+    }
+  }).timeout(
+    const Duration(seconds: 45),
+    onTimeout: () => 'error: registry timeout',
+  );
 }
 
 Future<String> _sendOnIsolate(({bool nostr, String a, String b}) args) {
@@ -4507,7 +4512,7 @@ class AppState extends ChangeNotifier {
       final uri = await buildHaloUriV3(myId, myOnion, _fcCounter);
       final bio =
           await const FlutterSecureStorage().read(key: 'my_handle_bio') ?? '';
-      engine.handleClaim(h, uri, bio);
+      await engine.handleClaim(h, uri, bio);
     } catch (_) {
       // offline, or the registry is down. the handle stays claimed and
       // stale rather than lost, and the next claim fixes it.
