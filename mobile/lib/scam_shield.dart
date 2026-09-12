@@ -26,11 +26,22 @@ class ShieldResult {
   final List<ShieldHit> hits;
   // impersonation flags on its own; content needs two rules to agree
   final bool impersonation;
-  const ShieldResult(this.hits, {this.impersonation = false});
-  bool get flagged => impersonation ? hits.isNotEmpty : hits.length >= 2;
+  // a group verdict: already decided, content only, the name a footnote
+  final bool group;
+  const ShieldResult(
+    this.hits, {
+    this.impersonation = false,
+    this.group = false,
+  });
+  bool get flagged => group
+      ? hits.isNotEmpty
+      : impersonation
+      ? hits.isNotEmpty
+      : hits.length >= 2;
   // the banner line. the name one is the sharper of the two on purpose.
   String? get headline {
     if (!flagged) return null;
+    if (group) return 'Looks like a scam';
     for (final h in hits) {
       if (h.code == 'name_match') {
         return h.line.replaceFirst(
@@ -321,4 +332,35 @@ ShieldResult shieldCheck({
     return ShieldResult([...who.hits, ...what.hits], impersonation: true);
   }
   return what;
+}
+
+// the rules that decide on their own in a group: an ask for a secret or a
+// wallet address. "add me on telegram" is not enough by itself.
+const _strongAlone = {'secret_ask', 'crypto_address'};
+
+// a group member you never added. their id is on every bubble, so a
+// look-alike name proves less there: content decides, two rules or one
+// strong one, and a name match rides along as a footnote, not the reason.
+ShieldResult shieldCheckInGroup({
+  required String strangerId,
+  required int? strangerAvatar,
+  required String firstMessage,
+  required Iterable<ShieldContact> contacts,
+}) {
+  final what = scanFirstMessage(firstMessage);
+  final strong = what.hits.any((h) => _strongAlone.contains(h.code));
+  if (what.hits.length < 2 && !strong) return const ShieldResult([]);
+  final lines = [...what.hits];
+  final who = checkImpersonation(strangerId, strangerAvatar, contacts);
+  for (final h in who.hits) {
+    if (h.code == 'name_match') {
+      lines.add(
+        ShieldHit(
+          'name_note',
+          'Also: ${h.line[0].toLowerCase()}${h.line.substring(1)}',
+        ),
+      );
+    }
+  }
+  return ShieldResult(lines, group: true);
 }
