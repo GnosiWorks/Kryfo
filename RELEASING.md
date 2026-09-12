@@ -5,18 +5,27 @@ bottom. each step exists because skipping it has bitten us once.
 
 ## 1. before anything
 
-- `cd mobile && flutter analyze` is clean. warnings count.
+- `cd mobile && flutter analyze` shows nothing but the known deprecation
+  infos (flutter_secure_storage's `encryptedSharedPreferences`). a warning
+  or an error stops the release.
 - `flutter test` passes.
 - every `ALTER TABLE` in `mobile/lib/main.dart` sits inside a `try {} catch (_) {}`.
   a bare one hangs the app on boot for anyone whose database already has the
   column. `grep -n "ALTER TABLE" mobile/lib/main.dart` and eyeball each.
-- every column a migration adds is also in the `CREATE TABLE` for fresh
-  installs. upgrades and clean installs must end with the same schema.
+- every column a migration adds is also in every `CREATE TABLE` for that
+  table, the fresh-install one and the one inside the old `oldV < 7` block.
+  `flutter test test/schema_parity_test.dart` checks it; it found a real gap
+  the first time it ran.
 - no id, onion or message text reaches logcat in release: every log line goes
   through `dlog`, which is silent unless `kDebugMode`.
   `grep -rn "print(" mobile/lib | grep -v dlog` should be empty.
 - the engine builds both architectures from a clean tree:
-  `rm -rf engine/.gocache && cd engine && bash build.sh`.
+  `rm -rf engine/.gocache && cd engine && bash build.sh`. about twelve
+  minutes; raise the file limit first (`ulimit -n 65536`) or cgo dies with
+  "too many open files".
+- the shipped manifest still says what you think. after any plugin change,
+  build once and read `build/app/intermediates/merged_manifests/debug/processDebugManifest/AndroidManifest.xml`,
+  not the source one: plugins merge permissions and components in silently.
 - a fresh clone resolves the lockfile with no changes:
   `git clone . /tmp/kryfo-check && cd /tmp/kryfo-check/mobile && flutter pub get --enforce-lockfile`.
 
@@ -24,7 +33,8 @@ bottom. each step exists because skipping it has bitten us once.
 
 - `mobile/pubspec.yaml`: `version: X.Y.Z+N`. bump both. N is the build number
   and only ever goes up.
-- `cd mobile && flutter pub get` so `pubspec.lock` records the new version.
+- `cd mobile && flutter pub get`, so the lockfile is confirmed unchanged
+  against the bumped pubspec before it is committed.
 - the version row in `mobile/lib/screens/settings_screen.dart` shows the same
   number. it is a string, it does not read pubspec, so bump it by hand.
 - `CHANGELOG.md`: a new section at the top, dated, plain words, what a user
