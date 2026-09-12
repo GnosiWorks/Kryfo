@@ -2,9 +2,12 @@
 // what the network is actually doing. built after a night spent guessing at
 // state that was already known internally: the phone had zero relay
 // subscriptions and nothing anywhere said so.
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../main.dart';
+import '../miui_autostart.dart' show forceShowBackgroundPrompt;
 import '../theme.dart';
 import '../widgets/motion.dart';
 import '../widgets/stagger_in.dart';
@@ -47,6 +50,10 @@ class TransportScreen extends StatelessWidget {
                 'engine uses to decide what to do.',
                 style: HaloType.mono(size: 12, color: HaloColors.text3),
               ),
+              const SizedBox(height: 24),
+
+              _Head('staying alive'),
+              const _Alive(),
               const SizedBox(height: 24),
 
               _Head('tor'),
@@ -254,4 +261,116 @@ class _Line extends StatelessWidget {
       ],
     ),
   );
+}
+
+// the lines that tell asleep from killed from listening. listening is the
+// heartbeat the relay drain writes; a gap means the phone slept through it
+// or the process was gone. the exemption is the thing that lets it stay
+// awake at all, and it is tappable because it is usually the fix.
+class _Alive extends StatefulWidget {
+  const _Alive();
+  @override
+  State<_Alive> createState() => _AliveState();
+}
+
+class _AliveState extends State<_Alive> {
+  bool? _exempt;
+  int? _uptimeMs;
+  Map<String, dynamic>? _exit;
+  Map<String, dynamic> _mem = const {};
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final exempt = await appState.isBatteryExempt();
+    final up = await appState.processUptimeMs();
+    final exit = await appState.lastExit();
+    final mem = engine.memStats();
+    if (!mounted) return;
+    setState(() {
+      _exempt = exempt;
+      _uptimeMs = up;
+      _exit = exit;
+      _mem = mem;
+    });
+  }
+
+  static String _ago(int ms) {
+    if (ms <= 0) return 'never';
+    final d = DateTime.now().difference(
+      DateTime.fromMillisecondsSinceEpoch(ms),
+    );
+    if (d.inSeconds < 90) return 'just now';
+    if (d.inMinutes < 60) return '${d.inMinutes}m ago';
+    if (d.inHours < 48) return '${d.inHours}h ago';
+    return '${d.inDays}d ago';
+  }
+
+  static String _span(int ms) {
+    final d = Duration(milliseconds: ms);
+    if (d.inMinutes < 60) return '${d.inMinutes}m';
+    if (d.inHours < 48) return '${d.inHours}h ${d.inMinutes % 60}m';
+    return '${d.inDays}d';
+  }
+
+  static String _mb(num? b) => b == null ? '?' : '${(b / 1048576).round()} mb';
+
+  @override
+  Widget build(BuildContext context) {
+    final listen = appState.lastListenAt;
+    final gap = DateTime.now().millisecondsSinceEpoch - listen;
+    final listening = listen > 0 && gap < 90000;
+    final exit = _exit;
+    final exitAt = exit?['at'] as int?;
+    final rss = ProcessInfo.currentRss;
+    return Column(
+      children: [
+        _Line(
+          'listening',
+          listening ? 'yes · checked just now' : 'no · last ${_ago(listen)}',
+          listening ? HaloColors.green : HaloColors.rose,
+        ),
+        _Line('last message in', _ago(appState.lastDrainAt), HaloColors.text),
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: _exempt == false
+              ? () async {
+                  await forceShowBackgroundPrompt(context);
+                  _load();
+                }
+              : null,
+          child: _Line(
+            'battery exemption',
+            _exempt == null
+                ? 'unknown'
+                : _exempt!
+                ? 'exempt'
+                : 'not exempt · tap to fix',
+            _exempt == null
+                ? HaloColors.text2
+                : _exempt!
+                ? HaloColors.green
+                : HaloColors.rose,
+          ),
+        ),
+        if (_uptimeMs != null)
+          _Line('process up', _span(_uptimeMs!), HaloColors.text),
+        if (exit != null)
+          _Line(
+            'last stop',
+            '${exit['word']} · ${exitAt == null ? '' : _ago(exitAt)}',
+            (exit['reason'] as int?) == 2 ? HaloColors.rose : HaloColors.text2,
+          ),
+        _Line(
+          'memory',
+          '${_mb(rss)} · engine ${_mb(_mem['heapAlloc'] as num?)}',
+          HaloColors.text,
+        ),
+      ],
+    );
+  }
 }
