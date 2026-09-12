@@ -746,10 +746,17 @@ class _OfflineStrip extends StatelessWidget {
         final head = offline ? 'Offline' : 'waiting';
         // the old strip said "offline" and stopped, which left people
         // guessing whether anything was queued or lost.
+        // rows parked for someone who has not added you back are waiting
+        // on them, not on the wire. "sending now" for those never ended.
+        final p = appState.parkedQueued;
         final tail = n == 0
             ? 'Nothing waiting to send'
             : offline
             ? "$n waiting · sends when you're back"
+            : p >= n
+            ? '$n waiting · for them to add you back'
+            : p > 0
+            ? '$n waiting · $p for them to add you back'
             : '$n waiting · sending now';
 
         return Container(
