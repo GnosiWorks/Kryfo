@@ -3276,6 +3276,10 @@ Future<String> signalEncryptSerial(String peerId, String plaintext) {
   return out;
 }
 
+// no session yet with this peer: the next message is an opener
+Future<bool> hasSessionWith(String peerId) => signalSession.sessionStore
+    .containsSession(SignalProtocolAddress(peerId, 1));
+
 Future<String> signalEncrypt(String peerId, String plaintext) async {
   final addr = SignalProtocolAddress(peerId, 1);
   final cipher = SessionCipher(
@@ -5725,9 +5729,12 @@ class AppState extends ChangeNotifier {
                   _xPubToHaloId[env.senderXPub!] = addr;
                 }
                 try {
-                  await _applyIncomingPayload(addr, env);
+                  // an opener from someone we let go: the same proof a cold
+                  // stranger owes. their client grinds for any fresh
+                  // session, so an honest re-add still lands.
+                  await _applyIncomingPayload(addr, env, fromBackPair: true);
                 } on CapHeld {
-                  // direct onion has no replay: past the cap it stays dropped
+                  await db.holdCipher(addr, cipher);
                 }
                 await refreshContacts();
                 notifyListeners();

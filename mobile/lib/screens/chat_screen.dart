@@ -46,6 +46,7 @@ import '../main.dart'
         db,
         signalEncrypt,
         signalEncryptSerial,
+        hasSessionWith,
         appState,
         currentChatPeer,
         shredFile,
@@ -2819,13 +2820,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     bool voiceDisguised = false,
     int? burnSeconds,
     bool secure = false,
-  }) {
+  }) async {
     return sendChunkedMediaTo(
       peerId: widget.peerHaloId,
       peerOnion: widget.peerOnion,
       peerXPub: _peerXPub ?? (widget.peerXPub.isEmpty ? null : widget.peerXPub),
       backPaired: _backPaired,
-      needPow: _recvCount == 0,
+      needPow: _recvCount == 0 || !await hasSessionWith(widget.peerHaloId),
       b64: b64,
       msgUid: msgUid,
       caption: caption,
@@ -3100,7 +3101,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     int? powNonce;
     final String cipher;
     try {
-      if (_recvCount == 0) {
+      // a fresh session is an opener whatever the history: the far side
+      // may have let us go and its gate asks again
+      final fresh = !await hasSessionWith(widget.peerHaloId);
+      if (_recvCount == 0 || fresh) {
         final n = await compute(_grindPowTask, text);
         powNonce = n;
         // kept on the row so a retry from the outbox carries the same nonce
