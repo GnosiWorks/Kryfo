@@ -8,6 +8,7 @@ import 'package:kryfo/scam_shield.dart';
 List<String> _codes(ShieldResult r) => r.hits.map((h) => h.code).toList();
 
 void main() {
+  _groupTests();
   group('normalise', () {
     test('folds case, accents, homoglyphs and whitespace', () {
       expect(normaliseName('  Alice   Müller '), 'alice muller');
@@ -187,5 +188,55 @@ void main() {
     expect(r.flagged, true);
     expect(_codes(r), ['name_match', 'secret_ask']);
     expect(r.headline, 'This name matches alice');
+  });
+}
+
+// in a group the id sits on every bubble, so the name proves less: content
+// decides, and a strong rule decides alone
+void _groupTests() {
+  const contacts = [
+    ShieldContact('thumb-behave-boring', nickname: 'alice', avatar: 7),
+  ];
+  group('in a group', () {
+    test('a secret ask flags on its own', () {
+      final r = shieldCheckInGroup(
+        strangerId: 'quiet-lamp-river',
+        strangerAvatar: 1,
+        firstMessage: 'send me your seed phrase to sync',
+        contacts: contacts,
+      );
+      expect(r.flagged, true);
+      expect(r.headline, 'Looks like a scam');
+    });
+    test('one weak rule does not', () {
+      final r = shieldCheckInGroup(
+        strangerId: 'quiet-lamp-river',
+        strangerAvatar: 1,
+        firstMessage: 'add me on telegram',
+        contacts: contacts,
+      );
+      expect(r.flagged, false);
+    });
+    test('a matching name alone is not a flag', () {
+      final r = shieldCheckInGroup(
+        strangerId: 'thumb-behave-b0ring',
+        strangerAvatar: 7,
+        firstMessage: 'hello everyone',
+        contacts: contacts,
+      );
+      expect(r.flagged, false);
+    });
+    test('a matching name rides a content flag as a footnote', () {
+      final r = shieldCheckInGroup(
+        strangerId: 'thumb-behave-b0ring',
+        strangerAvatar: 7,
+        firstMessage: 'send me your seed phrase to sync',
+        contacts: contacts,
+      );
+      expect(r.flagged, true);
+      expect(r.headline, 'Looks like a scam');
+      expect(r.hits.last.code, 'name_note');
+      expect(r.hits.last.line, startsWith('Also: name matches'));
+    });
   });
 }
