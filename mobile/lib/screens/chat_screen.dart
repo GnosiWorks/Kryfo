@@ -260,7 +260,11 @@ void _openFullImage(BuildContext context, String path, {bool secure = false}) {
   // the flag is per-window, so it can only be on while this screen is up.
   // that is exactly the granularity we want: the photo is protected, the
   // conversation around it is not.
-  if (secure) appState.forceSecure(true);
+  // a screen that already forced the flag (a room, a marked chat) keeps
+  // it: the flag is one bool, and dropping it here left the room open to
+  // screenshots for the rest of the session
+  final wasForced = appState.secureForced;
+  if (secure && !wasForced) appState.forceSecure(true);
   Navigator.of(context)
       .push(
         MaterialPageRoute(
@@ -283,7 +287,7 @@ void _openFullImage(BuildContext context, String path, {bool secure = false}) {
         ),
       )
       .then((_) {
-        if (secure) appState.forceSecure(false);
+        if (secure && !wasForced) appState.forceSecure(false);
         FocusManager.instance.primaryFocus?.unfocus();
       });
 }
@@ -1037,6 +1041,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   void _openSearch() {
     setState(() => _searching = true);
+    // the page holds the last sixty; a search wants all of it
+    _loadMessages();
   }
 
   void _closeSearch() {
@@ -1805,6 +1811,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         ),
       ),
     );
+    ctrl.dispose();
     if (result == null) return;
     final newText = result.trim();
     if (newText.isEmpty || newText == m.text) return;
@@ -2013,6 +2020,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         } else {
           m.parked = true;
         }
+      }
+    }
+    // a reload rebuilds every row; the retry count rides across, or a
+    // failed send never reached its cap
+    final carry = {
+      for (final m in _messages)
+        if (m.msgUid != null) m.msgUid!: (m.autoRetries, m.gaveUp),
+    };
+    for (final m in loaded) {
+      final c = carry[m.msgUid];
+      if (c != null) {
+        m.autoRetries = c.$1;
+        m.gaveUp = c.$2;
       }
     }
     setState(() {
@@ -2414,7 +2434,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _sendChunkedMedia(
       b64: b64,
       msgUid: msgUid,
+      caption: msg.text,
       burnSeconds: msg.burnSecs,
+      secure: msg.secure,
     ).then((result) => _finishMediaSend(msg, result));
   }
 
@@ -2829,6 +2851,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _finishMediaSend(_Msg msg, String result) async {
+    // another sender already has this one; its verdict comes later
+    if (result == 'busy') return;
     if (msg.msgUid != null) mediaProgressEnd(msg.msgUid!);
     if (result == 'ok' && msg.msgUid != null) await db.markSent(msg.msgUid!);
     if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
@@ -3047,16 +3071,29 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _scrollToEnd();
     HapticFeedback.lightImpact();
 
-    await db.saveMessage(
-      widget.peerHaloId,
-      'out',
-      text,
-      burnAt: msg.burnAt,
-      msgUid: msgUid,
-      replyTo: replyToUid,
-      sent: 0,
-      preview: preview == null ? null : jsonEncode(preview),
-    );
+    try {
+      await db.saveMessage(
+        widget.peerHaloId,
+        'out',
+        text,
+        burnAt: msg.burnAt,
+        msgUid: msgUid,
+        replyTo: replyToUid,
+        sent: 0,
+        preview: preview == null ? null : jsonEncode(preview),
+      );
+    } catch (e) {
+      // a throw here used to leave _sending true, which disabled the
+      // composer and the auto retry until the chat was reopened
+      dlog('send: save failed: $e');
+      if (!mounted) return;
+      setState(() {
+        msg.sending = false;
+        msg.failed = true;
+        _sending = false;
+      });
+      return;
+    }
     // the home row moves up on what you sent too, not only on what arrived
     unawaited(appState.refreshContacts());
     // first-contact proof-of-work: grind a nonce (~2s, off the ui thread) while
@@ -3066,14 +3103,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // banner flash) and races the db load, so it would skip the grind on a fast
     // first send. seed is the raw text - matches the receiver's verifyPow.
     int? powNonce;
-    if (_recvCount == 0) {
-      final n = await compute(_grindPowTask, text);
-      powNonce = n;
-      // kept on the row so a retry from the outbox carries the same nonce
-      await db.setPowNonce(msgUid, n);
-    }
     final String cipher;
     try {
+      if (_recvCount == 0) {
+        final n = await compute(_grindPowTask, text);
+        powNonce = n;
+        // kept on the row so a retry from the outbox carries the same nonce
+        await db.setPowNonce(msgUid, n);
+      }
       final wrapped = await wrapMessage(
         text,
         powNonce: powNonce,
