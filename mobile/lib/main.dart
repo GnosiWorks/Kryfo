@@ -886,7 +886,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 44,
+      version: 45,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1012,9 +1012,14 @@ class HaloDb {
         ''');
         await _vouchTable(db);
         await _shieldTable(db);
+        await _editsTable(db);
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 45) {
+          // edits that have not reached the other side yet
+          await _editsTable(db);
+        }
         if (oldV < 44) {
           // the burn window a queued message was sent with. burn_at is only
           // set on delivery, so a row the outbox carried lost its timer.
@@ -2711,6 +2716,26 @@ class HaloDb {
     await _scrubMedia(media);
   }
 
+  Future<void> queueEdit(String msgUid, String peerId, String newText) async {
+    final db = await open();
+    await db.insert('edits_out', {
+      'msg_uid': msgUid,
+      'peer_id': peerId,
+      'new_text': newText,
+      'at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<List<Map<String, Object?>>> unsentEdits() async {
+    final db = await open();
+    return db.query('edits_out', orderBy: 'at ASC', limit: 40);
+  }
+
+  Future<void> dropEdit(String msgUid) async {
+    final db = await open();
+    await db.delete('edits_out', where: 'msg_uid = ?', whereArgs: [msgUid]);
+  }
+
   // did this sender write this row. what edit and unsend frames check.
   Future<bool> isTheirs(String msgUid, String sender) async {
     final db = await open();
@@ -3118,6 +3143,19 @@ class HaloDb {
     );
     return rows.isEmpty ? null : rows.first;
   }
+}
+
+// an edit made offline used to be one attempt and a log line: shown as
+// edited here, never seen there. it queues like a message now.
+Future<void> _editsTable(Database db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS edits_out (
+      msg_uid TEXT PRIMARY KEY,
+      peer_id TEXT NOT NULL,
+      new_text TEXT NOT NULL,
+      at INTEGER NOT NULL
+    )
+  ''');
 }
 
 Future<void> _shieldTable(Database db) async {
@@ -3723,6 +3761,7 @@ class AppState extends ChangeNotifier {
       }
       return;
     }
+    unawaited(_drainEdits());
     // anything that landed since the last sweep stops costing us bookkeeping.
     final live = {for (final r in rows) r['msg_uid'] as String?};
     _outboxTries.removeWhere((k, _) => !live.contains(k));
@@ -3752,6 +3791,44 @@ class AppState extends ChangeNotifier {
       _outboxTries[uid] = tries + 1;
       _outboxInflight.add(uid);
       unawaited(_drainOne(r).whenComplete(() => _outboxInflight.remove(uid)));
+    }
+  }
+
+  // one attempt per edit per pass, oldest first. the chat sends an edit
+  // the moment it is made; this is for the ones that did not get through.
+  final Set<String> _editsInflight = {};
+  Future<void> _drainEdits() async {
+    final rows = await db.unsentEdits();
+    for (final r in rows) {
+      final uid = r['msg_uid'] as String;
+      final age = DateTime.now().millisecondsSinceEpoch - (r['at'] as int);
+      if (age < 45000 || _editsInflight.contains(uid)) continue;
+      _editsInflight.add(uid);
+      unawaited(
+        sendEdit(
+          r['peer_id'] as String,
+          uid,
+          r['new_text'] as String,
+        ).whenComplete(() => _editsInflight.remove(uid)),
+      );
+    }
+  }
+
+  // the edit frame, through the same routes a message takes. true when a
+  // route that reaches them took it; the queued row goes with it.
+  Future<bool> sendEdit(String peer, String uid, String newText) async {
+    try {
+      final wrapped = await wrapMessage(
+        '',
+        edit: EditFrame(targetUid: uid, newText: newText),
+        sender: _mySender(),
+      );
+      final ok = await _sendOneEnvelope(peer, wrapped);
+      if (ok) await db.dropEdit(uid);
+      return ok;
+    } catch (e) {
+      dlog('edit: $uid still stuck ($e)');
+      return false;
     }
   }
 
@@ -4783,6 +4860,14 @@ class AppState extends ChangeNotifier {
       notifBody = '$who: $gBody';
       notifPayload = 'group:${env.groupId}';
       suppress = currentChatPeer == notifPayload;
+    } else if (!senderAccepted) {
+      // a stranger chose these words; they do not go on a lock screen
+      // where anyone nearby reads them. that a request arrived is enough.
+      notifTitle = 'New request';
+      notifBody = 'Someone you have not added wrote to you';
+      notifPayload = senderHaloId;
+      suppress =
+          currentChatPeer == senderHaloId || await db.isMuted(senderHaloId);
     } else {
       notifTitle = senderHaloId;
       notifBody = env.message.isNotEmpty
@@ -4860,14 +4945,6 @@ class AppState extends ChangeNotifier {
     if (existing != null && (existing['accepted'] as int? ?? 0) == 1) return;
     await db.upsertContactStub(h, card.onion, card.xPub);
     // the note is the introducer's one line about them. it lives on the
-    } else if (!senderAccepted) {
-      // a stranger chose these words; they do not go on a lock screen
-      // where anyone nearby reads them. that a request arrived is enough.
-      notifTitle = 'New request';
-      notifBody = 'Someone you have not added wrote to you';
-      notifPayload = senderHaloId;
-      suppress =
-          currentChatPeer == senderHaloId || await db.isMuted(senderHaloId);
     // vouch, so two introducers can each say their piece.
     await db.addVouch(h, senderHaloId, card.note);
     if (card.avatar != null) await db.setContactAvatar(h, card.avatar);
