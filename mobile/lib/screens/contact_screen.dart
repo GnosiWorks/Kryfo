@@ -352,7 +352,7 @@ class _ContactScreenState extends State<ContactScreen> {
             icon: muted
                 ? Icons.notifications_off_outlined
                 : Icons.notifications_none,
-            label: muted ? 'Unmute' : 'mute',
+            label: muted ? 'Unmute' : 'Mute',
             onTap: () async {
               HapticFeedback.selectionClick();
               if (muted) {
@@ -365,7 +365,7 @@ class _ContactScreenState extends State<ContactScreen> {
           ),
           _Row(
             icon: pinned ? Icons.push_pin : Icons.push_pin_outlined,
-            label: pinned ? 'Unpin' : 'pin to top',
+            label: pinned ? 'Unpin' : 'Pin to top',
             onTap: () async {
               HapticFeedback.selectionClick();
               await db.setContactPinned(widget.haloId, !pinned);
@@ -385,7 +385,7 @@ class _ContactScreenState extends State<ContactScreen> {
           ),
           _Row(
             icon: Icons.block,
-            label: blocked ? 'Unblock' : 'block',
+            label: blocked ? 'Unblock' : 'Block',
             rose: !blocked,
             onTap: () async {
               if (blocked) {

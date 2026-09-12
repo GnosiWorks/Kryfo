@@ -264,7 +264,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
       text = '$_left of $introBudgetMax introductions left this week';
     } else {
       final until = Duration(milliseconds: refill - _now);
-      text = 'no introductions left. Next one frees up ${refillPhrase(until)}';
+      text = 'No introductions left. Next one frees up ${refillPhrase(until)}';
     }
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 200),
