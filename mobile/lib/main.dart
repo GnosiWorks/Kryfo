@@ -6783,18 +6783,40 @@ final appState = AppState();
 void main() async {
   dlog('LAUNCH main');
   WidgetsFlutterBinding.ensureInitialized();
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  WidgetsBinding.instance.addPostFrameCallback((_) => dlog('LAUNCH frame'));
-  runApp(const HaloApp());
-  dlog('LAUNCH runApp returned');
-  // the periodic job knocks here every fifteen minutes. it exists whether
-  // or not a screen is attached, which is the point: after a kill the
-  // system restarts the process for the job and this is all that is here.
+  // not awaited: this is a platform call, and with no activity attached it
+  // never answers. awaiting it is how main() stopped on its second line in
+  // every process the service brought back.
+  unawaited(
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]),
+  );
+  // the periodic job knocks here every fifteen minutes. registered before
+  // anything that could fail, and whether or not a screen is attached:
+  // after a kill the system restarts the process for the service or the
+  // job, and this handler is what is there to answer.
   const MethodChannel('halo/job').setMethodCallHandler((call) async {
     if (call.method != 'drain') return null;
     dlog('job: drain asked');
     return appState.drainNow();
   });
+  // no window: the process was brought back by the service or the job,
+  // not by a tap. runApp would throw without a view and take the rest of
+  // main with it, which is how a restarted process sat with a "kryfo is
+  // on" notification and nothing listening behind it. boot the engine
+  // here, and put the interface up the moment a window arrives.
+  if (PlatformDispatcher.instance.implicitView == null) {
+    dlog('LAUNCH headless');
+    unawaited(appState.boot());
+    Timer.periodic(const Duration(milliseconds: 400), (t) {
+      if (PlatformDispatcher.instance.implicitView == null) return;
+      t.cancel();
+      dlog('LAUNCH window arrived');
+      runApp(const HaloApp());
+    });
+    return;
+  }
+  WidgetsBinding.instance.addPostFrameCallback((_) => dlog('LAUNCH frame'));
+  runApp(const HaloApp());
+  dlog('LAUNCH runApp returned');
   // the theme pref sits in secure storage, and the first read on a new
   // phone creates the keystore key, which takes seconds. the splash paints
   // first, dark, and the light theme lands the moment the pref is read.

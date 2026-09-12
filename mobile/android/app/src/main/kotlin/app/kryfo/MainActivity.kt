@@ -38,23 +38,17 @@ class MainActivity : FlutterFragmentActivity() {
         const val ENGINE_ID = "halo_engine"
     }
 
-    // reuse the cached engine if we already have one. returning null on the
-    // very first launch is deliberate: the activity then builds an engine the
-    // normal way (attached to native properly), and configureFlutterEngine
-    // below puts it in the cache for next time. this is the hook a
-    // FlutterFragmentActivity actually honours.
+    // one engine per process, made by HaloApplication when the process
+    // starts, and every activity attaches to that one. the old rule here
+    // built a fresh engine whenever the cached one was not drawing, which
+    // is every reopen after a recents swipe: each reopen ran a second
+    // main(), a second boot, a second set of relay subscriptions, and the
+    // old engine was never let go. two reopens put the process past 400
+    // mb, which is what xiaomi's killer picks. the detached-renderer crash
+    // that rule worked around has not reproduced on this flutter.
     override fun getCachedEngineId(): String? {
         val cache = FlutterEngineCache.getInstance()
-        val eng = cache.get(ENGINE_ID) ?: return null
-        // the crash was FlutterView.onSizeChanged pushing viewport metrics into
-        // an engine whose renderer had detached (window surface torn down on a
-        // recents swipe, activity recreated before reattach). reusing that
-        // engine here is what blew up. only claim the cached engine when its
-        // renderer is actually displaying; otherwise return null so the
-        // framework builds and cleanly attaches a fresh one for this window.
-        // the background isolate + tor keep running on the cached engine
-        // regardless - this only governs which engine drives THIS activity.
-        return if (eng.renderer.isDisplayingFlutterUi) ENGINE_ID else null
+        return if (cache.get(ENGINE_ID) != null) ENGINE_ID else null
     }
 
     // keep the engine when this screen goes away, so the dart isolate and the
