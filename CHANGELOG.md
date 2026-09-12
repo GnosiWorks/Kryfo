@@ -2,6 +2,18 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.6] - 2026-09-12
+
+### Fixed
+- after the system closed kryfo in the background, it could come back showing "kryfo is on" while receiving nothing at all, until you opened it again. the process the system restarted had no engine in it. it boots on its own now, screen or no screen.
+- every time you reopened kryfo after swiping it out of recents, a second copy of the whole app started inside the same process, and the first one never stopped. two reopens doubled the memory, which is what xiaomi's killer looks for.
+- xiaomi phones were asked for autostart but never for the battery exemption, so they slept through the night with a green notification up. both are asked now.
+- messages already on the phone in onion mode waited for tor's state before being read. they are read as soon as they arrive.
+
+### Added
+- a floor under delivery: every fifteen minutes the system runs a short job that reconnects every relay and pulls what is waiting, even after a kill, even in deep sleep windows.
+- transport shows a "staying alive" section: whether the app is listening, when it last checked, when the last message came in, the battery exemption, how long the process has been up, and why it last stopped, in the system's own words. enough to tell asleep from killed without a cable.
+
 ## [0.2.5] - 2026-09-12
 
 ### Added
