@@ -370,7 +370,71 @@ class _AliveState extends State<_Alive> {
           '${_mb(rss)} · engine ${_mb(_mem['heapAlloc'] as num?)}',
           HaloColors.text,
         ),
+        const SizedBox(height: 14),
+        // the night, read back: how the last message travelled, how often
+        // the fifteen-minute job knocked, and every stretch with no
+        // heartbeat. together they say whether a late message was waiting
+        // at the relay, and whether the phone slept or the process died
+        _Line('last message travel', _travel(), HaloColors.text),
+        _Line(
+          'job runs',
+          appState.jobRuns == 0
+              ? 'none yet'
+              : '${appState.jobRuns} · last ${_ago(appState.lastJobAt)}',
+          appState.jobRuns == 0 ? HaloColors.text2 : HaloColors.text,
+        ),
+        _Line(
+          'quiet stretches',
+          appState.gaps.isEmpty ? 'none' : '${appState.gaps.length}',
+          appState.gaps.isEmpty ? HaloColors.green : HaloColors.rose,
+        ),
+        for (final g in appState.gaps.reversed.take(8)) _gapLine(g),
+        if (appState.gaps.isNotEmpty || appState.jobRuns > 0)
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () async {
+              await appState.clearHeartbeatHistory();
+              if (mounted) setState(() {});
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Text(
+                'clear this record',
+                style: HaloType.mono(size: 11, color: HaloColors.text3),
+              ),
+            ),
+          ),
       ],
     );
+  }
+
+  // sent-to-received for the newest arrival, from the relay event's own
+  // timestamp. a long travel with a short listening gap means it waited
+  // at the relay while this phone slept
+  String _travel() {
+    final at = (_mem['lastEvAt'] as num?)?.toInt() ?? 0;
+    final recv = (_mem['lastEvRecv'] as num?)?.toInt() ?? 0;
+    if (at <= 0 || recv <= 0) return 'nothing yet this process';
+    final lag = recv - at;
+    final when = DateTime.fromMillisecondsSinceEpoch(recv * 1000);
+    final hhmm =
+        '${when.hour.toString().padLeft(2, '0')}:${when.minute.toString().padLeft(2, '0')}';
+    if (lag < 90) return 'arrived $hhmm · ${lag}s after sending';
+    if (lag < 3600) return 'arrived $hhmm · ${lag ~/ 60}m after sending';
+    return 'arrived $hhmm · ${lag ~/ 3600}h ${(lag % 3600) ~/ 60}m after sending';
+  }
+
+  Widget _gapLine(String g) {
+    final parts = g.split('-');
+    if (parts.length != 2) return const SizedBox.shrink();
+    final from = DateTime.fromMillisecondsSinceEpoch(
+      int.tryParse(parts[0]) ?? 0,
+    );
+    final to = DateTime.fromMillisecondsSinceEpoch(int.tryParse(parts[1]) ?? 0);
+    String t(DateTime d) =>
+        '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+    final mins = to.difference(from).inMinutes;
+    final len = mins < 60 ? '${mins}m' : '${mins ~/ 60}h ${mins % 60}m';
+    return _Line('  ${t(from)} to ${t(to)}', len, HaloColors.text2);
   }
 }

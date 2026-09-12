@@ -64,6 +64,15 @@ var (
 	kickCh = make(chan struct{})
 )
 
+// the newest relay event: when the sender's relay stamped it and when it
+// reached this phone. the difference is how long it waited out there,
+// which is what tells a late message from a lost one.
+var (
+	lastEvMu   sync.Mutex
+	lastEvAt   int64
+	lastEvRecv int64
+)
+
 func kickChan() chan struct{} {
 	kickMu.Lock()
 	defer kickMu.Unlock()
@@ -481,6 +490,10 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 		if dup {
 			return
 		}
+		lastEvMu.Lock()
+		lastEvAt = int64(ev.CreatedAt)
+		lastEvRecv = time.Now().Unix()
+		lastEvMu.Unlock()
 		saveSeen(id)
 		var gw nostr2.Event
 		if err := easyjson.Unmarshal([]byte(ev.String()), &gw); err != nil {
@@ -863,9 +876,12 @@ func HaloMemStats() *C.char {
 	subs := len(nostrSubs)
 	sent := len(nostrSentIDs)
 	nostrMu.Unlock()
+	lastEvMu.Lock()
+	evAt, evRecv := lastEvAt, lastEvRecv
+	lastEvMu.Unlock()
 	return C.CString(fmt.Sprintf(
-		`{"heapAlloc":%d,"heapSys":%d,"heapIdle":%d,"sys":%d,"numGC":%d,"goroutines":%d,"inbox":%d,"subs":%d,"sentIds":%d}`,
-		m.HeapAlloc, m.HeapSys, m.HeapIdle, m.Sys, m.NumGC, runtime.NumGoroutine(), inbox, subs, sent,
+		`{"heapAlloc":%d,"heapSys":%d,"heapIdle":%d,"sys":%d,"numGC":%d,"goroutines":%d,"inbox":%d,"subs":%d,"sentIds":%d,"lastEvAt":%d,"lastEvRecv":%d}`,
+		m.HeapAlloc, m.HeapSys, m.HeapIdle, m.Sys, m.NumGC, runtime.NumGoroutine(), inbox, subs, sent, evAt, evRecv,
 	))
 }
 

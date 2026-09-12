@@ -3917,13 +3917,35 @@ class AppState extends ChangeNotifier {
   int lastListenAt = 0;
   int lastDrainAt = 0;
   int _beatWritten = 0;
+  // every stretch of five minutes or more with no heartbeat, newest last,
+  // as "from-to" pairs. a night's sleep shows up here as its gaps, and a
+  // kill shows up as the gap between the last beat and the next boot
+  final List<String> gaps = [];
+  // how many times the fifteen-minute job knocked, and when it last did
+  int jobRuns = 0;
+  int lastJobAt = 0;
+
   void _beat() {
     final now = DateTime.now().millisecondsSinceEpoch;
+    if (lastListenAt > 0 && now - lastListenAt > 5 * 60 * 1000) {
+      gaps.add('$lastListenAt-$now');
+      while (gaps.length > 24) {
+        gaps.removeAt(0);
+      }
+      dlog('heartbeat: gap of ${(now - lastListenAt) ~/ 60000}m');
+      unawaited(_writeBeat());
+    }
     lastListenAt = now;
     if (now - _beatWritten > 60000) {
       _beatWritten = now;
       unawaited(_writeBeat());
     }
+  }
+
+  void noteJobRun() {
+    jobRuns++;
+    lastJobAt = DateTime.now().millisecondsSinceEpoch;
+    unawaited(_writeBeat());
   }
 
   void _noteDrain() {
@@ -3936,6 +3958,9 @@ class AppState extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('hb.listen', lastListenAt);
       await prefs.setInt('hb.drain', lastDrainAt);
+      await prefs.setStringList('hb.gaps', gaps);
+      await prefs.setInt('hb.jobs', jobRuns);
+      await prefs.setInt('hb.jobAt', lastJobAt);
     } catch (_) {}
   }
 
@@ -3960,7 +3985,20 @@ class AppState extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       lastListenAt = prefs.getInt('hb.listen') ?? 0;
       lastDrainAt = prefs.getInt('hb.drain') ?? 0;
+      gaps
+        ..clear()
+        ..addAll(prefs.getStringList('hb.gaps') ?? const []);
+      jobRuns = prefs.getInt('hb.jobs') ?? 0;
+      lastJobAt = prefs.getInt('hb.jobAt') ?? 0;
     } catch (_) {}
+  }
+
+  // wipes the night's record so a new test starts clean
+  Future<void> clearHeartbeatHistory() async {
+    gaps.clear();
+    jobRuns = 0;
+    lastJobAt = 0;
+    await _writeBeat();
   }
 
   // the periodic job's window: kick every relay socket so a night's dead
@@ -6812,6 +6850,7 @@ void main() async {
   const MethodChannel('halo/job').setMethodCallHandler((call) async {
     if (call.method != 'drain') return null;
     dlog('job: drain asked');
+    appState.noteJobRun();
     return appState.drainNow();
   });
   // no window: the process was brought back by the service or the job,
