@@ -91,7 +91,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
     if (typed.isEmpty || _finding) return;
     final raw = typed.startsWith('@') ? typed : '@$typed';
     if (handleFromInput(raw) == null) {
-      showHaloToast(context, 'a handle is 3 to 20 letters, digits or _');
+      showHaloToast(context, 'A handle is 3 to 20 letters, digits or _');
       return;
     }
     HapticFeedback.selectionClick();
@@ -114,7 +114,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
     if (_uri == null) return;
     HapticFeedback.mediumImpact();
     copySensitive(_uri!);
-    showHaloToast(context, 'invite copied · clears in 60s');
+    showHaloToast(context, 'Invite copied · clears in 60s');
   }
 
   void _shareLink() {
@@ -127,7 +127,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
               "add me on kryfo. my id is ${appState.myId}\n\n"
               "tap to add me:\n$_uri\n\n"
               "kryfo is a private messenger. no phone number, no email.",
-          subject: 'add me on kryfo',
+          subject: 'Add me on kryfo',
         ),
       ),
     );
@@ -144,7 +144,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
-          'add someone',
+          'Add someone',
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
@@ -242,7 +242,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(6, 4, 6, 6),
               child: Text(
-                'already share a friend on kryfo? they can introduce you '
+                'Already share a friend on kryfo? They can introduce you '
                 'both from their chat, and you skip the request.',
                 style: HaloType.sans(
                   size: 12,
@@ -265,7 +265,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
                   : () {
                       HapticFeedback.selectionClick();
                       Clipboard.setData(ClipboardData(text: '@$handle'));
-                      showHaloToast(context, 'handle copied');
+                      showHaloToast(context, 'Handle copied');
                     },
             ),
           ]),
@@ -398,7 +398,7 @@ class _Way1Card extends StatelessWidget {
   Widget build(BuildContext context) {
     return _WayCard(
       title: "they're here with me",
-      line: 'point your phones at each other. nothing goes through a server.',
+      line: 'Point your phones at each other. Nothing goes through a server.',
       icon: Icons.qr_code_2_outlined,
       open: open,
       onToggle: onToggle,
@@ -410,7 +410,7 @@ class _Way1Card extends StatelessWidget {
           const SizedBox(height: 14),
           _Ghost(
             icon: Icons.center_focus_strong_outlined,
-            label: 'scan theirs instead',
+            label: 'Scan theirs instead',
             onTap: onScan,
           ),
         ],
@@ -442,7 +442,7 @@ class _Way2Card extends StatelessWidget {
     final ready = uri != null;
     return _WayCard(
       title: "they're somewhere else",
-      line: 'send them a link. it opens straight into add.',
+      line: 'Send them a link. It opens straight into add.',
       icon: Icons.send_outlined,
       open: open,
       onToggle: onToggle,
@@ -461,7 +461,7 @@ class _Way2Card extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      ready ? uri! : 'your link appears once you are connected',
+                      ready ? uri! : 'Your link appears once you are connected',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: HaloType.mono(
@@ -478,8 +478,8 @@ class _Way2Card extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'the link carries your id, your address and the keys to start a '
-            'chat. it works until you reset it in settings.',
+            'The link carries your id, your address and the keys to start a '
+            'chat. It works until you reset it in settings.',
             style: HaloType.sans(
               size: 12,
               color: HaloColors.text2,
@@ -487,15 +487,15 @@ class _Way2Card extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          _Primary(label: 'send the link', onTap: ready ? onShare : null),
+          _Primary(label: 'Send the link', onTap: ready ? onShare : null),
           const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
                 child: _Ghost(
                   icon: Icons.badge_outlined,
-                  label: 'as a card',
-                  sub: 'an image with the qr',
+                  label: 'As a card',
+                  sub: 'An image with the qr',
                   onTap: ready ? onCard : null,
                 ),
               ),
@@ -503,8 +503,8 @@ class _Way2Card extends StatelessWidget {
               Expanded(
                 child: _Ghost(
                   icon: Icons.contact_page_outlined,
-                  label: 'as a file',
-                  sub: 'contact file',
+                  label: 'As a file',
+                  sub: 'Contact file',
                   onTap: ready ? onFile : null,
                 ),
               ),
@@ -535,8 +535,8 @@ class _Way3Card extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _WayCard(
-      title: 'i know their handle',
-      line: 'type the @name they gave you. works if they claimed one.',
+      title: 'I know their handle',
+      line: 'Type the @name they gave you. Works if they claimed one.',
       icon: Icons.alternate_email,
       open: open,
       onToggle: onToggle,
@@ -569,7 +569,7 @@ class _Way3Card extends StatelessWidget {
                     decoration: InputDecoration(
                       border: InputBorder.none,
                       counterText: '',
-                      hintText: 'wren',
+                      hintText: 'Wren',
                       hintStyle: HaloType.mono(
                         size: 14,
                         color: HaloColors.text3,
@@ -582,7 +582,7 @@ class _Way3Card extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'the lookup asks for that one name and nothing about you. their '
+            'The lookup asks for that one name and nothing about you. Their '
             'first message from you still lands as a request on their side.',
             style: HaloType.sans(
               size: 12,
@@ -592,7 +592,7 @@ class _Way3Card extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           _Primary(
-            label: busy ? 'looking…' : 'find them',
+            label: busy ? 'looking…' : 'Find them',
             onTap: busy ? null : onFind,
           ),
         ],
@@ -642,7 +642,7 @@ class _QrFrameState extends State<_QrFrame> {
           child: widget.uri == null
               ? Center(
                   child: Text(
-                    'your address appears once you are connected',
+                    'Your address appears once you are connected',
                     textAlign: TextAlign.center,
                     style: HaloType.sans(size: 12, color: HaloColors.ink),
                   ),
@@ -693,7 +693,7 @@ class _HandleRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    claimed ? '@$handle' : 'a public handle',
+                    claimed ? '@$handle' : 'A public handle',
                     style: claimed
                         ? HaloType.mono(size: 16, color: HaloColors.text)
                         : HaloType.serif(
@@ -705,8 +705,8 @@ class _HandleRow extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     claimed
-                        ? 'put it in a bio. anyone who knows it can find you.'
-                        : 'a name people can find you by. off until you claim one.',
+                        ? 'Put it in a bio. Anyone who knows it can find you.'
+                        : 'A name people can find you by. Off until you claim one.',
                     style: HaloType.sans(
                       size: 12.5,
                       color: HaloColors.text2,
@@ -718,7 +718,7 @@ class _HandleRow extends StatelessWidget {
             ),
             if (onCopy != null)
               IconButton(
-                tooltip: 'copy',
+                tooltip: 'Copy',
                 onPressed: onCopy,
                 icon: Icon(
                   Icons.copy_outlined,

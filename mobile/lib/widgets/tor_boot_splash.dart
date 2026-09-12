@@ -52,7 +52,7 @@ class _TorBootSplashState extends State<TorBootSplash>
             const OnionLoader(size: 132),
             const SizedBox(height: 26),
             Text(
-              'no shortcuts, no traces',
+              'No shortcuts, no traces',
               style: HaloType.serif(
                 size: 23,
                 weight: FontWeight.w400,
@@ -80,8 +80,8 @@ class _TorBootSplashState extends State<TorBootSplash>
                       padding: const EdgeInsets.symmetric(horizontal: 40),
                       child: Text(
                         tor
-                            ? 'the network that keeps you private is warming up'
-                            : 'made on this phone. nothing is sent anywhere.',
+                            ? 'The network that keeps you private is warming up'
+                            : 'Made on this phone. Nothing is sent anywhere.',
                         textAlign: TextAlign.center,
                         style: HaloType.sans(
                           size: 12,
@@ -112,7 +112,7 @@ class _TorBootSplashState extends State<TorBootSplash>
             Padding(
               padding: const EdgeInsets.only(bottom: 28),
               child: Text(
-                'first launch takes a moment · only on startup',
+                'First launch takes a moment · only on startup',
                 style: HaloType.mono(size: 10, color: HaloColors.text3),
               ),
             ),

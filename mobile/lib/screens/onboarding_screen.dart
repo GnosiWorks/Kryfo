@@ -146,9 +146,9 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
                 height: 1.05,
               ),
               children: [
-                const TextSpan(text: 'private messaging,\n'),
+                const TextSpan(text: 'Private messaging,\n'),
                 TextSpan(
-                  text: 'without the catch',
+                  text: 'Without the catch',
                   style: HaloType.serif(
                     size: 38,
                     weight: FontWeight.w300,
@@ -163,18 +163,18 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
           ),
           const SizedBox(height: 26),
           _bullet(
-            'your name is three words.',
-            'no phone, no email, no address book.',
+            'Your name is three words.',
+            'No phone, no email, no address book.',
           ),
           const SizedBox(height: 13),
           _bullet(
-            'nobody gets in unless you let them.',
-            'there is no search. people are added by hand, both ways.',
+            'Nobody gets in unless you let them.',
+            'There is no search. People are added by hand, both ways.',
           ),
           const SizedBox(height: 13),
           _bullet(
-            'the first connection takes a minute.',
-            'kryfo builds a private route before it sends. quick after.',
+            'The first connection takes a minute.',
+            'Kryfo builds a private route before it sends. Quick after.',
           ),
           const Spacer(),
           GestureDetector(
@@ -187,7 +187,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
               ),
               alignment: Alignment.center,
               child: Text(
-                'begin',
+                'Begin',
                 style: HaloType.sans(
                   size: 14,
                   color: HaloColors.onAmber,
@@ -203,7 +203,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
                 Navigator.of(context).push(haloRoute(const RestoreScreen()));
               },
               child: Text(
-                'have a backup? restore →',
+                'Have a backup? Restore →',
                 style: HaloType.sans(size: 12, color: HaloColors.text2),
               ),
             ),
@@ -211,7 +211,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
           const SizedBox(height: 14),
           Center(
             child: Text(
-              'kryfo is open source',
+              'Kryfo is open source',
               style: HaloType.mono(
                 size: 10,
                 color: HaloColors.text3,
@@ -366,10 +366,10 @@ class _IdentityScreenState extends State<_IdentityScreen>
                     children: [
                       const TextSpan(
                         text:
-                            'generated from a key that lives only on this phone. ',
+                            'Generated from a key that lives only on this phone. ',
                       ),
                       TextSpan(
-                        text: 'memorable, unique, yours alone.',
+                        text: 'Memorable, unique, yours alone.',
                         style: HaloType.sans(
                           size: 11,
                           color: HaloColors.text2,
@@ -401,7 +401,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'try another',
+                        'Try another',
                         style: HaloType.sans(size: 12, color: HaloColors.text2),
                       ),
                     ),
@@ -419,7 +419,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'use this name \u2192',
+                        'Use this name \u2192',
                         style: HaloType.sans(
                           size: 12,
                           color: HaloColors.onAmber,
@@ -484,9 +484,9 @@ class _IdentityScreenState extends State<_IdentityScreen>
         height: 1.25,
       ),
       children: [
-        const TextSpan(text: 'three words. '),
+        const TextSpan(text: 'Three words. '),
         TextSpan(
-          text: 'yours alone.',
+          text: 'Yours alone.',
           style: HaloType.serif(
             size: 19,
             weight: FontWeight.w300,
@@ -680,7 +680,7 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
                 height: 1.05,
               ),
               children: [
-                const TextSpan(text: 'pick a '),
+                const TextSpan(text: 'Pick a '),
                 TextSpan(
                   text: 'face',
                   style: HaloType.serif(
@@ -697,8 +697,8 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'drawn on this phone from a number, never uploaded. '
-            'change it whenever you like.',
+            'Drawn on this phone from a number, never uploaded. '
+            'Change it whenever you like.',
             style: HaloType.sans(
               size: 13.5,
               color: HaloColors.text2,
@@ -709,7 +709,7 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
           Expanded(
             child: AvatarChoiceEditor(
               padding: const EdgeInsets.only(top: 12, bottom: 12),
-              caption: 'the people you message see this too',
+              caption: 'The people you message see this too',
               onChanged: (c) => setState(() {
                 _choice = c;
                 _touched = true;
@@ -727,7 +727,7 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
                     vertical: 11,
                   ),
                   child: Text(
-                    'keep my initial',
+                    'Keep my initial',
                     style: HaloType.sans(size: 12, color: HaloColors.text2),
                   ),
                 ),
@@ -745,7 +745,7 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    _touched ? 'that one →' : 'continue →',
+                    _touched ? 'That one →' : 'Continue →',
                     style: HaloType.sans(
                       size: 12,
                       color: HaloColors.onAmber,
@@ -781,10 +781,10 @@ class _ThreeThingsScreen extends StatelessWidget {
         children: [
           const _Step(4),
           const SizedBox(height: 22),
-          _headline('three things,\nthen ', "you're in"),
+          _headline('Three things,\nthen ', "you're in"),
           const SizedBox(height: 12),
           Text(
-            'everything else the app will tell you when it matters.',
+            'Everything else the app will tell you when it matters.',
             style: HaloType.sans(
               size: 13.5,
               color: HaloColors.text2,
@@ -795,33 +795,33 @@ class _ThreeThingsScreen extends StatelessWidget {
           ...staggerAll([
             _Card(
               num: '01',
-              title: 'your name is three words',
+              title: 'Your name is three words',
               desc:
-                  'that is the whole identity. no number to leak, no email '
-                  'to phish, nothing to look up. people you talk to see '
+                  'That is the whole identity. No number to leak, no email '
+                  'to phish, nothing to look up. People you talk to see '
                   'these words and the face you picked.',
             ),
             const SizedBox(height: 12),
             _Card(
               num: '02',
-              title: 'nobody can reach you until you let them in',
+              title: 'Nobody can reach you until you let them in',
               desc:
-                  'a stranger with your words can only knock. their first '
+                  'A stranger with your words can only knock. Their first '
                   'message waits in requests until you say yes, and you can '
                   'say no without them ever knowing.',
             ),
             const SizedBox(height: 12),
             _Card(
               num: '03',
-              title: 'the first connection takes a minute',
+              title: 'The first connection takes a minute',
               desc:
-                  'kryfo builds a private route before it sends anything. '
-                  'while you are offline, messages wait and arrive when you '
+                  'Kryfo builds a private route before it sends anything. '
+                  'While you are offline, messages wait and arrive when you '
                   'are back.',
             ),
             const SizedBox(height: 16),
             Text(
-              'your identity lives on this phone. back it up from settings '
+              'Your identity lives on this phone. Back it up from settings '
               'when you are ready.',
               style: HaloType.sans(
                 size: 12,
@@ -831,7 +831,7 @@ class _ThreeThingsScreen extends StatelessWidget {
             ),
           ], from: 1),
           const Spacer(),
-          _Cta(label: 'i understand →', onTap: onContinue),
+          _Cta(label: 'I understand →', onTap: onContinue),
         ],
       ),
     );
@@ -856,11 +856,11 @@ class _NotificationScreen extends StatelessWidget {
         children: [
           const _Step(5),
           const SizedBox(height: 22),
-          _headline('one quiet ', 'notification'),
+          _headline('One quiet ', 'notification'),
           const SizedBox(height: 12),
           Text(
-            'android needs a visible notification while an app listens in '
-            'the background. that is how messages reach you when kryfo is '
+            'Android needs a visible notification while an app listens in '
+            'the background. That is how messages reach you when kryfo is '
             'closed.',
             style: HaloType.sans(
               size: 13.5,
@@ -872,14 +872,14 @@ class _NotificationScreen extends StatelessWidget {
           ...staggerAll([
             const _Card(
               icon: Icons.notifications_none,
-              title: 'silent, and at the bottom of the shade',
+              title: 'Silent, and at the bottom of the shade',
               desc:
-                  'it never buzzes. turn it off and messages wait until you '
+                  'It never buzzes. Turn it off and messages wait until you '
                   'open the app again.',
             ),
           ], from: 1),
           const Spacer(),
-          _Cta(label: 'got it →', onTap: onContinue),
+          _Cta(label: 'Got it →', onTap: onContinue),
         ],
       ),
     );
@@ -901,10 +901,10 @@ class _AddSomeoneScreen extends StatelessWidget {
         children: [
           const _Step(6),
           const SizedBox(height: 22),
-          _headline('now, ', 'add someone'),
+          _headline('Now, ', 'add someone'),
           const SizedBox(height: 12),
           Text(
-            'the app is ready. nobody can message you until you add them '
+            'The app is ready. Nobody can message you until you add them '
             'or let them in.',
             style: HaloType.sans(
               size: 13.5,
@@ -916,9 +916,9 @@ class _AddSomeoneScreen extends StatelessWidget {
           ...staggerAll([
             _Path(
               icon: Icons.qr_code_2_outlined,
-              title: 'every way to add someone',
+              title: 'Every way to add someone',
               desc:
-                  'show your code, send them a link, or type the @handle '
+                  'Show your code, send them a link, or type the @handle '
                   'they gave you.',
               onTap: () async {
                 // open the page first, then finish onboarding once it
@@ -932,8 +932,8 @@ class _AddSomeoneScreen extends StatelessWidget {
             const SizedBox(height: 12),
             _Path(
               icon: Icons.center_focus_weak,
-              title: 'scan theirs',
-              desc: 'point the camera at their code',
+              title: 'Scan theirs',
+              desc: 'Point the camera at their code',
               onTap: () async {
                 final nav = Navigator.of(context);
                 await nav.push(haloRoute(const ScanScreen()));
@@ -944,7 +944,7 @@ class _AddSomeoneScreen extends StatelessWidget {
           const Spacer(),
           Center(
             child: Text(
-              'the app is ready when you are.',
+              'The app is ready when you are.',
               style: HaloType.serif(
                 size: 16,
                 weight: FontWeight.w300,
@@ -964,7 +964,7 @@ class _AddSomeoneScreen extends StatelessWidget {
                   vertical: 12,
                 ),
                 child: Text(
-                  'not now · add people later',
+                  'Not now · add people later',
                   style: HaloType.sans(size: 12.5, color: HaloColors.text2),
                 ),
               ),

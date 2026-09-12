@@ -207,13 +207,13 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   String get _italic {
     switch (widget.status) {
       case TorStatus.off:
-        return 'preparing to connect';
+        return 'Preparing to connect';
       case TorStatus.starting:
-        return 'finding a private path';
+        return 'Finding a private path';
       case TorStatus.bootstrapped:
-        return 'carving the path';
+        return 'Carving the path';
       case TorStatus.publishing:
-        return 'announcing your arrival';
+        return 'Announcing your arrival';
       case TorStatus.reachable:
         return "you're anonymous";
     }
@@ -222,15 +222,15 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   String get _help {
     switch (widget.status) {
       case TorStatus.off:
-        return 'tor is starting in the background. this graph lights up as the connection forms.';
+        return 'Tor is starting in the background. This graph lights up as the connection forms.';
       case TorStatus.starting:
-        return 'making a fresh route through anonymous relays.';
+        return 'Making a fresh route through anonymous relays.';
       case TorStatus.bootstrapped:
-        return 'bouncing through relays so no one can trace this back to you.';
+        return 'Bouncing through relays so no one can trace this back to you.';
       case TorStatus.publishing:
         return "telling the network you're online \u2014 without revealing where.";
       case TorStatus.reachable:
-        return 'your ip is hidden. only people with your kryfo can reach you.';
+        return 'Your ip is hidden. Only people with your kryfo can reach you.';
     }
   }
 
@@ -357,7 +357,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
                       letterSpacing: 0.4,
                     ),
                     children: [
-                      const TextSpan(text: 'circuit \u00b7 '),
+                      const TextSpan(text: 'Circuit \u00b7 '),
                       TextSpan(
                         text: _circuit,
                         style: TextStyle(

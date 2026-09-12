@@ -76,7 +76,7 @@ class _HandleScreenState extends State<HandleScreen> {
       await appState.setMyHandle(h);
       if (!mounted) return;
       setState(() => _claimed = h);
-      showHaloToast(context, 'you are @$h');
+      showHaloToast(context, 'You are @$h');
     } else {
       showHaloToast(context, r.replaceFirst('error: ', ''));
     }
@@ -97,7 +97,7 @@ class _HandleScreenState extends State<HandleScreen> {
         _ctrl.clear();
         _state = '';
       });
-      showHaloToast(context, 'handle deleted · the page is gone');
+      showHaloToast(context, 'Handle deleted · the page is gone');
     } else {
       showHaloToast(context, r.replaceFirst('error: ', ''));
     }
@@ -110,7 +110,7 @@ class _HandleScreenState extends State<HandleScreen> {
       appBar: AppBar(
         backgroundColor: HaloColors.surface,
         elevation: 0,
-        title: Text('public handle', style: HaloType.serif(size: 18)),
+        title: Text('Public handle', style: HaloType.serif(size: 18)),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
@@ -120,13 +120,13 @@ class _HandleScreenState extends State<HandleScreen> {
             const SizedBox(height: 22),
           ] else ...[
             Text(
-              'optional. your three words keep working either way.',
+              'optional. Your three words keep working either way.',
               style: HaloType.sans(size: 13.5, color: HaloColors.text2),
             ),
             const SizedBox(height: 20),
             _Field(
               ctrl: _ctrl,
-              hint: 'wren',
+              hint: 'Wren',
               prefix: '@',
               onChanged: _onTyped,
               max: 20,
@@ -136,7 +136,7 @@ class _HandleScreenState extends State<HandleScreen> {
             const SizedBox(height: 18),
             _Field(
               ctrl: _bio,
-              hint: 'a line about you · optional',
+              hint: 'A line about you · optional',
               max: 200,
               lines: 2,
             ),
@@ -161,7 +161,7 @@ class _HandleScreenState extends State<HandleScreen> {
                   ),
                 ),
                 child: Text(
-                  _busy ? 'claiming…' : 'claim this handle',
+                  _busy ? 'claiming…' : 'Claim this handle',
                   style: HaloType.mono(
                     size: 12.5,
                     weight: FontWeight.w600,
@@ -207,7 +207,7 @@ class _ClaimedCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'anyone with this link can start a private chat with you. it '
+            'Anyone with this link can start a private chat with you. It '
             'carries your invite and nothing else.',
             style: HaloType.sans(size: 13, color: HaloColors.text2),
           ),
@@ -216,7 +216,7 @@ class _ClaimedCard extends StatelessWidget {
             onTap: () {
               HapticFeedback.selectionClick();
               Clipboard.setData(ClipboardData(text: url));
-              showHaloToast(context, 'link copied');
+              showHaloToast(context, 'Link copied');
             },
             behavior: HitTestBehavior.opaque,
             child: Container(
@@ -245,7 +245,7 @@ class _ClaimedCard extends StatelessWidget {
             onTap: onRelease,
             behavior: HitTestBehavior.opaque,
             child: Text(
-              'delete this handle',
+              'Delete this handle',
               style: HaloType.mono(size: 11.5, color: HaloColors.rose),
             ),
           ),
@@ -300,7 +300,7 @@ class _RiskBlock extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'what a handle does',
+            'What a handle does',
             style: HaloType.mono(
               size: 11,
               color: HaloColors.amber,
@@ -310,9 +310,9 @@ class _RiskBlock extends StatelessWidget {
           ),
           const SizedBox(height: 9),
           Text(
-            'anyone who knows it can ask to message you, which is the point '
-            'of having one. the page holds your invite and the line you '
-            'wrote, nothing else, and keeps no record of who reads it. you '
+            'Anyone who knows it can ask to message you, which is the point '
+            'of having one. The page holds your invite and the line you '
+            'wrote, nothing else, and keeps no record of who reads it. You '
             'can delete it whenever you like.',
             style: HaloType.sans(size: 12.5, color: HaloColors.text2),
           ),

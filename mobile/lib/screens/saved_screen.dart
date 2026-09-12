@@ -110,7 +110,7 @@ class _SavedScreenState extends State<SavedScreen> {
         elevation: 0,
         leading: BackButton(color: HaloColors.text2),
         title: Text(
-          'saved',
+          'Saved',
           style: HaloType.serif(size: 22, color: HaloColors.text, italic: true),
         ),
       ),
@@ -154,7 +154,7 @@ class _SavedScreenState extends State<SavedScreen> {
             StaggerIn(
               index: 0,
               child: Text(
-                'nothing saved yet',
+                'Nothing saved yet',
                 style: HaloType.serif(size: 24, color: HaloColors.text),
               ),
             ),
@@ -220,7 +220,7 @@ class _SavedScreenState extends State<SavedScreen> {
                 ),
                 const Spacer(),
                 Semantics(
-                  label: 'saved',
+                  label: 'Saved',
                   button: true,
                   child: GestureDetector(
                     onTap: uid == null ? null : () => _unsave(uid),
@@ -260,7 +260,7 @@ class _SavedScreenState extends State<SavedScreen> {
                 ),
                 const SizedBox(width: 5),
                 Text(
-                  'view in chat',
+                  'View in chat',
                   style: HaloType.mono(size: 8.5, color: HaloColors.text3),
                 ),
               ],
@@ -304,7 +304,7 @@ class _SavedScreenState extends State<SavedScreen> {
         child: Icon(Icons.image_outlined, size: 18, color: HaloColors.text3),
       ),
       const SizedBox(width: 10),
-      Text('photo', style: HaloType.sans(size: 13, color: HaloColors.text2)),
+      Text('Photo', style: HaloType.sans(size: 13, color: HaloColors.text2)),
     ],
   );
 }

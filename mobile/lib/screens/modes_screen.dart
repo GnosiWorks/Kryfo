@@ -64,7 +64,7 @@ class _ModesScreenState extends State<ModesScreen> {
               accent: '·',
               active: _mode == 'private',
               desc:
-                  'full onion routing, three hops. a message takes two to five seconds. nobody sees who you talk to.',
+                  'Full onion routing, three hops. A message takes two to five seconds. Nobody sees who you talk to.',
               speed: 'slower',
               hops: '3',
               ipVisible: false,
@@ -75,12 +75,12 @@ class _ModesScreenState extends State<ModesScreen> {
               active: _mode == 'balanced',
               desc:
                   "one sealed connection to kryfo's own relay, like a vpn "
-                  'with nothing to log. sends land in about a second, and it '
+                  'With nothing to log. Sends land in about a second, and it '
                   'works where tor is blocked.',
               speed: 'quick',
               hops: '1',
               ipVisible: false,
-              ipText: 'relay only',
+              ipText: 'Relay only',
               ipWarn: true,
               onTap: () => _pick('balanced'),
             ),
@@ -88,15 +88,15 @@ class _ModesScreenState extends State<ModesScreen> {
               name: 'fast',
               active: _mode == 'fast',
               desc:
-                  'plain connections to every relay. near instant, and the '
+                  'Plain connections to every relay. Near instant, and the '
                   'least private of the three.',
               speed: 'instant',
               hops: '0',
               ipVisible: true,
               warning:
-                  'every relay you use knows the address you connect from, not '
-                  'only ours. messages are still sealed, but the fact that you '
-                  'sent one is not. off by default, and off again after a '
+                  'Every relay you use knows the address you connect from, not '
+                  'only ours. Messages are still sealed, but the fact that you '
+                  'sent one is not. Off by default, and off again after a '
                   'reinstall.',
               onTap: _pickFast,
             ),
@@ -122,7 +122,7 @@ class _BackBar extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            tooltip: 'back',
+            tooltip: 'Back',
             onPressed: onBack,
             icon: Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
           ),
@@ -146,7 +146,7 @@ class _Head extends StatelessWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                'speed',
+                'Speed',
                 style: HaloType.serif(size: 30, weight: FontWeight.w400),
               ),
               const SizedBox(width: 8),
@@ -163,7 +163,7 @@ class _Head extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'change globally, or per chat',
+            'Change globally, or per chat',
             style: HaloType.sans(size: 11, color: HaloColors.text2),
           ),
         ],
@@ -239,7 +239,7 @@ class _ModeCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        'soon',
+                        'Soon',
                         style: HaloType.mono(
                           size: 9,
                           color: HaloColors.amber,
@@ -272,7 +272,7 @@ class _ModeCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'active',
+                        'Active',
                         style: HaloType.mono(
                           size: 10,
                           weight: FontWeight.w500,
@@ -300,7 +300,7 @@ class _ModeCard extends StatelessWidget {
                   const SizedBox(width: 14),
                   _Meta(
                     k: 'ip',
-                    v: ipText ?? (ipVisible ? 'visible' : 'hidden'),
+                    v: ipText ?? (ipVisible ? 'Visible' : 'hidden'),
                     red: ipVisible,
                     warn: ipWarn,
                   ),
@@ -330,7 +330,7 @@ class _ModeCard extends StatelessWidget {
                       ),
                       children: [
                         TextSpan(
-                          text: 'heads up: ',
+                          text: 'Heads up: ',
                           style: HaloType.sans(
                             size: 10,
                             weight: FontWeight.w500,
@@ -393,8 +393,8 @@ class _Footnote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'onion is the default and stays that way unless you change it. '
-      'switching takes effect on the next message.',
+      'Onion is the default and stays that way unless you change it. '
+      'Switching takes effect on the next message.',
       style: HaloType.mono(size: 10, color: HaloColors.text3),
     );
   }
@@ -427,13 +427,13 @@ class _FastGateSheet extends StatelessWidget {
             const SheetHandle(),
             const SizedBox(height: 12),
             Text(
-              'fast mode',
+              'Fast mode',
               style: HaloType.serif(size: 20, color: HaloColors.text),
             ),
             const SizedBox(height: 10),
             Text(
-              'plain connections to every relay. quicker, and the relays can '
-              'see your ip address. messages stay end to end encrypted '
+              'Plain connections to every relay. Quicker, and the relays can '
+              'see your ip address. Messages stay end to end encrypted '
               'either way.',
               style: HaloType.sans(
                 size: 13,
@@ -453,7 +453,7 @@ class _FastGateSheet extends StatelessWidget {
                   borderRadius: BorderRadius.circular(13),
                 ),
                 child: Text(
-                  'turn on fast mode',
+                  'Turn on fast mode',
                   style: HaloType.sans(
                     size: 14,
                     weight: FontWeight.w600,
@@ -470,7 +470,7 @@ class _FastGateSheet extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 child: Center(
                   child: Text(
-                    'keep it off',
+                    'Keep it off',
                     style: HaloType.sans(size: 13, color: HaloColors.text2),
                   ),
                 ),

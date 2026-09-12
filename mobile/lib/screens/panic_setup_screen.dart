@@ -68,12 +68,12 @@ class _PanicSetupScreenState extends State<PanicSetupScreen>
       return;
     }
     if (_pin != _first) {
-      await _fail('those were different. from the top.');
+      await _fail('Those were different. From the top.');
       return;
     }
     final ok = await lockState.setupPanicPin(_pin);
     if (!ok) {
-      await _fail('that is your real pin. pick another.');
+      await _fail('That is your real pin. Pick another.');
       return;
     }
     HapticFeedback.mediumImpact();
@@ -87,7 +87,7 @@ class _PanicSetupScreenState extends State<PanicSetupScreen>
 
   @override
   Widget build(BuildContext context) {
-    final title = _confirming ? 'once more' : 'set a wipe pin';
+    final title = _confirming ? 'Once more' : 'Set a wipe pin';
     return Scaffold(
       backgroundColor: HaloColors.ink,
       appBar: AppBar(
@@ -122,8 +122,8 @@ class _PanicSetupScreenState extends State<PanicSetupScreen>
             Text(
               _error ??
                   (_confirming
-                      ? 'the same four digits'
-                      : 'the second pin wipes everything.'),
+                      ? 'The same four digits'
+                      : 'The second pin wipes everything.'),
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 13,

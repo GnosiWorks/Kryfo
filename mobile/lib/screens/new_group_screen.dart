@@ -38,7 +38,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
         setState(() => _creating = false);
         showHaloToast(
           context,
-          e is StateError ? e.message : 'could not create',
+          e is StateError ? e.message : 'Could not create',
         );
       }
       return;
@@ -69,7 +69,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    tooltip: 'back',
+                    tooltip: 'Back',
                     icon: Icon(
                       Icons.chevron_left,
                       color: HaloColors.text,
@@ -79,7 +79,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                   ),
                   Expanded(
                     child: Text(
-                      'new group',
+                      'New group',
                       style: HaloType.serif(
                         size: 18,
                         italic: true,
@@ -123,7 +123,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                 style: HaloType.sans(size: 16, color: HaloColors.text),
                 cursorColor: HaloColors.amber,
                 decoration: InputDecoration(
-                  hintText: 'group name',
+                  hintText: 'Group name',
                   hintStyle: HaloType.serif(
                     size: 16,
                     italic: true,
@@ -147,7 +147,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
               child: Row(
                 children: [
                   Text(
-                    'members',
+                    'Members',
                     style: HaloType.mono(
                       size: 10,
                       color: HaloColors.text3,
@@ -157,7 +157,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                   const Spacer(),
                   Text(
                     _selected.isEmpty
-                        ? 'pick at least one'
+                        ? 'Pick at least one'
                         : '${_selected.length} selected',
                     style: HaloType.mono(
                       size: 10,
@@ -174,7 +174,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 40),
                         child: Text(
-                          'add at least one contact first before creating a group.',
+                          'Add at least one contact first before creating a group.',
                           textAlign: TextAlign.center,
                           style: HaloType.sans(
                             size: 13,

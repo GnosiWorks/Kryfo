@@ -29,7 +29,7 @@ class _SeenScreenState extends State<SeenScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
-          'what we can see',
+          'What we can see',
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
@@ -37,8 +37,8 @@ class _SeenScreenState extends State<SeenScreen> {
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 44),
         children: staggerAll([
           Text(
-            'every messenger claims privacy. this is the specific list, by '
-            'route, including the parts that do not flatter us. tap a row '
+            'Every messenger claims privacy. This is the specific list, by '
+            'route, including the parts that do not flatter us. Tap a row '
             'for the why.',
             style: HaloType.mono(size: 12, color: HaloColors.text3),
           ),
@@ -63,9 +63,9 @@ class _SeenScreenState extends State<SeenScreen> {
               border: Border.all(color: HaloColors.line),
             ),
             child: Text(
-              'honest about the last rows: that is what the app lock, the '
+              'Honest about the last rows: that is what the app lock, the '
               'panic pin and encrypted storage are for, and no tool saves you '
-              'from someone holding your open phone. the full threat model '
+              'from someone holding your open phone. The full threat model '
               'lives in THREAT_MODEL.md in the repo, written against '
               'LINDDUN. the code is open, so none of this has to be taken on '
               'trust.',
@@ -102,30 +102,30 @@ const _unaudited = _Cell('unaudited', _Tone.bad);
 
 const _rows = [
   _Row(
-    'who you talk to',
+    'Who you talk to',
     [_hidden, _hidden, _hidden],
-    'each conversation gets its own address, derived from both keys. a relay '
+    'Each conversation gets its own address, derived from both keys. A relay '
         'sees unrelated drop boxes, not a pair of people.',
   ),
   _Row(
     'what you say',
     [_hidden, _hidden, _hidden],
-    'end to end encrypted with the signal double ratchet, then sealed again '
-        'inside a gift wrap. we could not read it if we tried.',
+    'End to end encrypted with the signal double ratchet, then sealed again '
+        'inside a gift wrap. We could not read it if we tried.',
   ),
   _Row(
-    'your ip address',
+    'Your ip address',
     [_hidden, _Cell('our relay', _Tone.warn), _Cell('every relay', _Tone.bad)],
-    'on onion everything leaves through tor and the relay sees an exit node, '
-        'never you. on relay mode the connection goes straight to our own '
+    'On onion everything leaves through tor and the relay sees an exit node, '
+        'never you. On relay mode the connection goes straight to our own '
         'relay: nothing forwards your address and nothing is written down, '
-        'but that one connection is ours to see. on fast every public relay '
+        'but that one connection is ours to see. On fast every public relay '
         'learns that you connected, though not to whom or what you said.',
   ),
   _Row(
-    'your contact graph',
+    'Your contact graph',
     [_never, _never, _never],
-    'kryfo does not scan your contacts. that is the point. no phone number '
+    'Kryfo does not scan your contacts. That is the point. No phone number '
         'exists here to leak.',
   ),
   _Row(
@@ -135,15 +135,15 @@ const _rows = [
       _Cell('introducer', _Tone.good),
       _Cell('introducer', _Tone.good),
     ],
-    'when a contact introduces you to someone, that contact learns the two '
-        'of you are now connected. nobody else does. the relay sees '
+    'When a contact introduces you to someone, that contact learns the two '
+        'of you are now connected. Nobody else does. The relay sees '
         'ciphertext, and no server ever sees the graph.',
   ),
   _Row(
-    'the scam shield',
+    'The scam shield',
     [_onDevice, _onDevice, _onDevice],
-    'runs on your phone with rules that ship in the app. no network, no list '
-        'downloads. it only reads the first message from a stranger and '
+    'Runs on your phone with rules that ship in the app. No network, no list '
+        'downloads. It only reads the first message from a stranger and '
         'cannot see anything a contact sends you.',
   ),
   _Row(
@@ -153,8 +153,8 @@ const _rows = [
       _Cell('room keys', _Tone.good),
       _Cell('room keys', _Tone.good),
     ],
-    'you join a room under a key made for it, so the people inside learn '
-        'nothing that works elsewhere. late joiners get no history. at expiry '
+    'You join a room under a key made for it, so the people inside learn '
+        'nothing that works elsewhere. Late joiners get no history. At expiry '
         'the keys, the messages and the media are destroyed.',
   ),
   _Row(
@@ -164,30 +164,30 @@ const _rows = [
       _Cell('over tor', _Tone.good),
       _Cell('over tor', _Tone.good),
     ],
-    'a preview is fetched by the sender, over tor, and travels inside the '
-        'encrypted message. the receiving phone makes no request. the '
+    'A preview is fetched by the sender, over tor, and travels inside the '
+        'encrypted message. The receiving phone makes no request. The '
         'website learns that someone using tor asked for a page, and '
-        'nothing else. no image is ever loaded, and a stranger\'s link '
+        'nothing else. No image is ever loaded, and a stranger\'s link '
         'stays plain text.',
   ),
   _Row(
-    'that a device fetched mail',
+    'That a device fetched mail',
     [_timing, _timing, _timing],
-    'a relay can tell that some address was checked, and when. it cannot '
+    'A relay can tell that some address was checked, and when. It cannot '
         'tell whose, or from where.',
   ),
   _Row(
-    'a seized unlocked phone',
+    'A seized unlocked phone',
     [_yours, _yours, _yours],
-    'if someone holds your phone open, they read your messages. the app '
+    'If someone holds your phone open, they read your messages. The app '
         'lock, panic pin and encrypted storage help before that point, not '
         'after it.',
   ),
   _Row(
-    'the crypto itself',
+    'The crypto itself',
     [_unaudited, _unaudited, _unaudited],
-    'the ratchet and storage layers are standard. the layer joining them is '
-        'ours and no one independent has reviewed it. treat this as alpha, '
+    'The ratchet and storage layers are standard. The layer joining them is '
+        'ours and no one independent has reviewed it. Treat this as alpha, '
         'because it is.',
   ),
 ];
@@ -205,7 +205,7 @@ class _Header extends StatelessWidget {
   const _Header({required this.active});
   @override
   Widget build(BuildContext context) {
-    const names = ['onion', 'relay', 'fast'];
+    const names = ['Onion', 'relay', 'fast'];
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(

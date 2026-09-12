@@ -24,7 +24,7 @@ class TransportScreen extends StatelessWidget {
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
-          'transport',
+          'Transport',
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
@@ -46,7 +46,7 @@ class TransportScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
             children: staggerAll([
               Text(
-                'nothing here leaves the phone. it is the same state the '
+                'Nothing here leaves the phone. It is the same state the '
                 'engine uses to decide what to do.',
                 style: HaloType.mono(size: 12, color: HaloColors.text3),
               ),
@@ -62,7 +62,7 @@ class TransportScreen extends StatelessWidget {
                 _Line('bootstrap', '$pct%', HaloColors.amber),
               _Line(
                 'can send',
-                appState.torReady ? 'yes' : 'not yet',
+                appState.torReady ? 'Yes' : 'not yet',
                 appState.torReady ? HaloColors.green : HaloColors.rose,
               ),
 
@@ -70,7 +70,7 @@ class TransportScreen extends StatelessWidget {
               _Head('network'),
               _Line(
                 'connectivity',
-                appState.online ? 'online' : 'offline',
+                appState.online ? 'Online' : 'offline',
                 appState.online ? HaloColors.green : HaloColors.rose,
               ),
               _Line(
@@ -80,13 +80,13 @@ class TransportScreen extends StatelessWidget {
               ),
 
               _Line(
-                'onion published',
+                'Onion published',
 
                 uploads > 0
-                    ? 'yes ($uploads)'
+                    ? 'Yes ($uploads)'
                     : pubFor > 0
-                    ? 'trying ${pubFor}s'
-                    : 'not yet',
+                    ? 'Trying ${pubFor}s'
+                    : 'Not yet',
 
                 uploads > 0 ? HaloColors.green : HaloColors.rose,
               ),
@@ -100,7 +100,7 @@ class TransportScreen extends StatelessWidget {
                   _relayLabel(r['url'] as String? ?? ''),
 
                   r['benched'] == true
-                      ? 'benched ${r['bench_for_s']}s'
+                      ? 'Benched ${r['bench_for_s']}s'
                       : (r['fails'] as int? ?? 0) > 0
                       ? '${r['fails']} fails'
                       : 'ok',
@@ -117,7 +117,7 @@ class TransportScreen extends StatelessWidget {
               _Head('traffic'),
 
               _Line(
-                'relay subscriptions',
+                'Relay subscriptions',
 
                 '$subs',
 
@@ -126,13 +126,13 @@ class TransportScreen extends StatelessWidget {
 
               _Line(
                 'last sent',
-                sx < 0 ? 'never' : '${sx}s ago',
+                sx < 0 ? 'Never' : '${sx}s ago',
                 HaloColors.text2,
               ),
 
               _Line(
                 'last received',
-                rx < 0 ? 'never' : '${rx}s ago',
+                rx < 0 ? 'Never' : '${rx}s ago',
                 HaloColors.text2,
               ),
 
@@ -149,8 +149,8 @@ class TransportScreen extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 10),
                   child: Text(
-                    'with no contacts the app subscribes to no relay '
-                    'addresses, so no message can reach you. scan someone '
+                    'With no contacts the app subscribes to no relay '
+                    'addresses, so no message can reach you. Scan someone '
                     'to fix it.',
                     style: HaloType.mono(
                       size: 11.5,
@@ -175,7 +175,7 @@ class TransportScreen extends StatelessWidget {
                     border: Border.all(color: HaloColors.line),
                   ),
                   child: Text(
-                    'send anything waiting, now',
+                    'Send anything waiting, now',
                     style: HaloType.mono(
                       size: 12.5,
                       color: HaloColors.amber,
@@ -196,7 +196,7 @@ String _torWord(TorStatus t) => switch (t) {
   TorStatus.off => 'off',
   TorStatus.starting => 'starting',
   TorStatus.bootstrapped => 'bootstrapped',
-  TorStatus.publishing => 'publishing address',
+  TorStatus.publishing => 'Publishing address',
   TorStatus.reachable => 'reachable',
 };
 
@@ -304,7 +304,7 @@ class _AliveState extends State<_Alive> {
     final d = DateTime.now().difference(
       DateTime.fromMillisecondsSinceEpoch(ms),
     );
-    if (d.inSeconds < 90) return 'just now';
+    if (d.inSeconds < 90) return 'Just now';
     if (d.inMinutes < 60) return '${d.inMinutes}m ago';
     if (d.inHours < 48) return '${d.inHours}h ago';
     return '${d.inDays}d ago';
@@ -331,10 +331,10 @@ class _AliveState extends State<_Alive> {
       children: [
         _Line(
           'listening',
-          listening ? 'yes · checked just now' : 'no · last ${_ago(listen)}',
+          listening ? 'Yes · checked just now' : 'No · last ${_ago(listen)}',
           listening ? HaloColors.green : HaloColors.rose,
         ),
-        _Line('last message in', _ago(appState.lastDrainAt), HaloColors.text),
+        _Line('Last message in', _ago(appState.lastDrainAt), HaloColors.text),
         GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: _exempt == false
@@ -344,12 +344,12 @@ class _AliveState extends State<_Alive> {
                 }
               : null,
           child: _Line(
-            'battery exemption',
+            'Battery exemption',
             _exempt == null
                 ? 'unknown'
                 : _exempt!
                 ? 'exempt'
-                : 'not exempt · tap to fix',
+                : 'Not exempt · tap to fix',
             _exempt == null
                 ? HaloColors.text2
                 : _exempt!
@@ -375,17 +375,17 @@ class _AliveState extends State<_Alive> {
         // the fifteen-minute job knocked, and every stretch with no
         // heartbeat. together they say whether a late message was waiting
         // at the relay, and whether the phone slept or the process died
-        _Line('last relay arrival', _travel(), HaloColors.text),
+        _Line('Last relay arrival', _travel(), HaloColors.text),
         _Line(
           'job runs',
           appState.jobRuns == 0
-              ? 'none yet'
+              ? 'None yet'
               : '${appState.jobRuns} · last ${_ago(appState.lastJobAt)}',
           appState.jobRuns == 0 ? HaloColors.text2 : HaloColors.text,
         ),
         _Line(
-          'quiet stretches',
-          appState.gaps.isEmpty ? 'none' : '${appState.gaps.length}',
+          'Quiet stretches',
+          appState.gaps.isEmpty ? 'None' : '${appState.gaps.length}',
           appState.gaps.isEmpty ? HaloColors.green : HaloColors.rose,
         ),
         for (final g in appState.gaps.reversed.take(8)) _gapLine(g),
@@ -399,7 +399,7 @@ class _AliveState extends State<_Alive> {
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 10),
               child: Text(
-                'clear this record',
+                'Clear this record',
                 style: HaloType.mono(size: 11, color: HaloColors.text3),
               ),
             ),
@@ -414,7 +414,7 @@ class _AliveState extends State<_Alive> {
   // above, and a late one shows as a long gap ending at this time
   String _travel() {
     final recv = (_mem['lastEvRecv'] as num?)?.toInt() ?? 0;
-    if (recv <= 0) return 'nothing yet this process';
+    if (recv <= 0) return 'Nothing yet this process';
     final when = DateTime.fromMillisecondsSinceEpoch(recv * 1000);
     final hhmm =
         '${when.hour.toString().padLeft(2, '0')}:${when.minute.toString().padLeft(2, '0')}';

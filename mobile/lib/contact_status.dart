@@ -10,8 +10,8 @@ String contactStatusLine({
   required bool accepted,
 }) {
   if (blocked) return 'blocked';
-  if (verified) return 'keys verified in person';
+  if (verified) return 'Keys verified in person';
   if (voucherNames.isNotEmpty) return vouchedByLine(voucherNames);
-  if (!accepted) return 'waiting in requests';
-  return 'added by hand';
+  if (!accepted) return 'Waiting in requests';
+  return 'Added by hand';
 }

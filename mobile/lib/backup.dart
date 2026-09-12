@@ -37,11 +37,11 @@ class RestoreError implements Exception {
   final RestoreFailure why;
   const RestoreError(this.why);
   String get line => switch (why) {
-    RestoreFailure.wrongPassphrase => 'that passphrase does not open this file',
-    RestoreFailure.notABackup => 'that file is not a kryfo backup',
+    RestoreFailure.wrongPassphrase => 'That passphrase does not open this file',
+    RestoreFailure.notABackup => 'That file is not a kryfo backup',
     RestoreFailure.newerVersion =>
-      'this backup is from a newer kryfo. update the app, then try again',
-    RestoreFailure.damaged => 'this file is damaged and cannot be read',
+      'This backup is from a newer kryfo. Update the app, then try again',
+    RestoreFailure.damaged => 'This file is damaged and cannot be read',
   };
   @override
   String toString() => line;

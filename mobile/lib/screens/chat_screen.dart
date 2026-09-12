@@ -1014,7 +1014,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Text(
-              'new messages',
+              'New messages',
               style: HaloType.mono(
                 size: 9.5,
                 color: HaloColors.amber,
@@ -1282,7 +1282,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                target.saved ? 'unsave' : 'save',
+                                target.saved ? 'Unsave' : 'save',
                                 style: HaloType.sans(
                                   size: 13,
                                   color: HaloColors.text,
@@ -1317,7 +1317,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
-                            'forward',
+                            'Forward',
                             style: HaloType.sans(
                               size: 13,
                               color: HaloColors.text,
@@ -1352,7 +1352,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
-                              'copy',
+                              'Copy',
                               style: HaloType.sans(
                                 size: 13,
                                 color: HaloColors.text,
@@ -1386,7 +1386,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
-                            target.pinned ? 'unpin' : 'pin',
+                            target.pinned ? 'Unpin' : 'pin',
                             style: HaloType.sans(
                               size: 13,
                               color: HaloColors.text,
@@ -1429,7 +1429,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  'unsend',
+                                  'Unsend',
                                   style: HaloType.sans(
                                     size: 12,
                                     weight: FontWeight.w500,
@@ -1480,7 +1480,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  'edit',
+                                  'Edit',
                                   style: HaloType.sans(
                                     size: 12,
                                     weight: FontWeight.w500,
@@ -1518,7 +1518,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Text(
-                'pinned messages',
+                'Pinned messages',
                 style: HaloType.mono(
                   size: 10,
                   color: HaloColors.text3,
@@ -1558,7 +1558,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       const SizedBox(width: 12),
                       Semantics(
-                        label: 'close',
+                        label: 'Close',
                         button: true,
                         child: InkWell(
                           onTap: () {
@@ -1603,7 +1603,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
               child: Text(
-                'unsend message',
+                'Unsend message',
                 style: HaloType.serif(size: 18, color: HaloColors.text),
               ),
             ),
@@ -1630,7 +1630,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     ),
                     const SizedBox(width: 14),
                     Text(
-                      'unsend',
+                      'Unsend',
                       style: HaloType.sans(size: 14, color: HaloColors.rose),
                     ),
                   ],
@@ -1670,7 +1670,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       final count = _messages.where((x) => x.pinned).length;
       if (count >= 3) {
         if (mounted) {
-          showHaloToast(context, 'max 3 pinned');
+          showHaloToast(context, 'Max 3 pinned');
         }
         return;
       }
@@ -1754,7 +1754,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           children: [
             const SheetHandle(),
             Text(
-              'edit message',
+              'Edit message',
               style: HaloType.serif(
                 size: 20,
                 italic: true,
@@ -1783,7 +1783,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
                   child: Text(
-                    'cancel',
+                    'Cancel',
                     style: HaloType.sans(size: 13, color: HaloColors.text2),
                   ),
                 ),
@@ -1791,7 +1791,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, ctrl.text),
                   child: Text(
-                    'save',
+                    'Save',
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w500,
@@ -2306,7 +2306,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'ghost timer',
+                    'Ghost timer',
                     style: HaloType.serif(
                       size: 16,
                       color: HaloColors.text,
@@ -2317,7 +2317,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
               const SizedBox(height: 4),
               Text(
-                'how long before sent messages burn?',
+                'How long before sent messages burn?',
                 style: HaloType.mono(size: 11, color: HaloColors.text3),
               ),
               const SizedBox(height: 12),
@@ -2448,11 +2448,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   size: 22,
                 ),
                 title: Text(
-                  'camera',
+                  'Camera',
                   style: HaloType.sans(size: 15, color: HaloColors.text),
                 ),
                 subtitle: Text(
-                  'no exif, never saved to your photos',
+                  'No exif, never saved to your photos',
                   style: HaloType.mono(size: 10, color: HaloColors.text3),
                 ),
                 onTap: () {
@@ -2467,7 +2467,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   size: 22,
                 ),
                 title: Text(
-                  'gallery',
+                  'Gallery',
                   style: HaloType.sans(size: 15, color: HaloColors.text),
                 ),
                 onTap: () {
@@ -2482,7 +2482,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   size: 22,
                 ),
                 title: Text(
-                  'gif from phone',
+                  'Gif from phone',
                   style: HaloType.sans(size: 15, color: HaloColors.text),
                 ),
                 onTap: () {
@@ -2497,7 +2497,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   size: 22,
                 ),
                 title: Text(
-                  'file',
+                  'File',
                   style: HaloType.sans(size: 15, color: HaloColors.text),
                 ),
                 onTap: () {
@@ -2583,10 +2583,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   String _wireEstimate(int bytes) {
     final slices = ((bytes * 4 / 3) / (16 * 1024)).ceil();
     final secs = (slices * 1.1).round();
-    if (secs < 20) return 'a few seconds';
-    if (secs < 90) return 'under a minute';
+    if (secs < 20) return 'A few seconds';
+    if (secs < 90) return 'Under a minute';
     final mins = (secs / 60).round();
-    return 'roughly $mins min';
+    return 'Roughly $mins min';
   }
 
   String _humanBytes(int b) {
@@ -2611,7 +2611,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             children: [
               const SheetHandle(),
               Text(
-                'send this $what?',
+                'Send this $what?',
                 style: HaloType.serif(size: 19, color: HaloColors.text),
               ),
               const SizedBox(height: 8),
@@ -2623,8 +2623,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
               const SizedBox(height: 6),
               Text(
-                'big files go out in small encrypted pieces, so they take a '
-                'while. keep the app open and it keeps going.',
+                'Big files go out in small encrypted pieces, so they take a '
+                'while. Keep the app open and it keeps going.',
                 style: HaloType.sans(
                   size: 12,
                   color: HaloColors.text2,
@@ -2644,7 +2644,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           borderRadius: BorderRadius.circular(11),
                         ),
                         child: Text(
-                          'cancel',
+                          'Cancel',
                           style: HaloType.sans(
                             size: 13,
                             color: HaloColors.text2,
@@ -2665,7 +2665,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           borderRadius: BorderRadius.circular(11),
                         ),
                         child: Text(
-                          'send it',
+                          'Send it',
                           style: HaloType.sans(
                             size: 13,
                             color: HaloColors.onAmber,
@@ -2726,7 +2726,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _sendFileBytes(Uint8List data, String name) async {
     if (data.length > 8 * 1024 * 1024) {
-      if (mounted) showHaloToast(context, 'file too big · 8 mb max');
+      if (mounted) showHaloToast(context, 'File too big · 8 mb max');
       return;
     }
     if (!await _confirmBigSend(data.length, 'file')) return;
@@ -2933,7 +2933,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // chunked transfer splits big media across envelopes, so gifs can be larger
     // now. still cap to keep send time + memory sane over tor on weak phones.
     if (data.length > 8 * 1024 * 1024) {
-      if (mounted) showHaloToast(context, 'gif too big · 8 mb max');
+      if (mounted) showHaloToast(context, 'Gif too big · 8 mb max');
       return;
     }
     // send raw through the image path - Image.memory animates gifs by the bytes,
@@ -3163,10 +3163,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         showHaloToast(
           context,
           html.startsWith('error: tor')
-              ? 'tor is not up yet · sending without'
+              ? 'Tor is not up yet · sending without'
               : html.startsWith('error:')
               ? "couldn't reach it · sending without"
-              : 'no title came back · sending without',
+              : 'No title came back · sending without',
         );
         return;
       }
@@ -3276,7 +3276,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         msg.sending = false;
         msg.failed = true;
         _sending = false;
-        _status = 'no signal session - re-pair';
+        _status = 'No signal session - re-pair';
       });
       return;
     }
@@ -3448,7 +3448,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (m.replyTo != null) {
       final original = _byUid[m.replyTo];
       if (original == null) {
-        quoted = 'message unavailable';
+        quoted = 'Message unavailable';
       } else {
         quotedAuthor = original.direction == 'out' ? 'you' : 'them';
         if (original.text.isNotEmpty) {
@@ -3460,7 +3460,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         } else if (original.fileName != null) {
           quoted = original.fileName;
         } else {
-          quoted = 'message unavailable';
+          quoted = 'Message unavailable';
           quotedAuthor = null;
         }
       }
@@ -3664,7 +3664,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       const SizedBox(width: 14),
                       Text(
-                        'view contact',
+                        'View contact',
                         style: HaloType.sans(size: 14, color: HaloColors.text),
                       ),
                     ],
@@ -3691,7 +3691,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       const SizedBox(width: 14),
                       Text(
-                        'shared photos',
+                        'Shared photos',
                         style: HaloType.sans(size: 14, color: HaloColors.text),
                       ),
                     ],
@@ -3716,7 +3716,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       const SizedBox(width: 14),
                       Text(
-                        _muted ? 'unmute notifications' : 'mute notifications',
+                        _muted ? 'Unmute notifications' : 'Mute notifications',
                         style: HaloType.sans(size: 14, color: HaloColors.text),
                       ),
                     ],
@@ -3739,7 +3739,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       const SizedBox(width: 14),
                       Text(
-                        'archive chat',
+                        'Archive chat',
                         style: HaloType.sans(size: 14, color: HaloColors.text),
                       ),
                     ],
@@ -3762,7 +3762,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       const SizedBox(width: 14),
                       Text(
-                        'wallpaper',
+                        'Wallpaper',
                         style: HaloType.sans(size: 14, color: HaloColors.text),
                       ),
                     ],
@@ -3785,7 +3785,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       const SizedBox(width: 14),
                       Text(
-                        'clear conversation',
+                        'Clear conversation',
                         style: HaloType.sans(size: 14, color: HaloColors.text),
                       ),
                     ],
@@ -3808,7 +3808,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       const SizedBox(width: 14),
                       Text(
-                        'note on this contact',
+                        'Note on this contact',
                         style: HaloType.sans(size: 14, color: HaloColors.text),
                       ),
                     ],
@@ -3831,7 +3831,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       const SizedBox(width: 14),
                       Text(
-                        pinned ? 'unpin' : 'pin to top',
+                        pinned ? 'Unpin' : 'pin to top',
                         style: HaloType.sans(size: 14, color: HaloColors.text),
                       ),
                     ],
@@ -3850,7 +3850,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       Icon(Icons.block, size: 18, color: HaloColors.rose),
                       const SizedBox(width: 14),
                       Text(
-                        'block contact',
+                        'Block contact',
                         style: HaloType.sans(size: 14, color: HaloColors.rose),
                       ),
                     ],
@@ -3929,7 +3929,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     await db.setContactPinned(widget.peerHaloId, !pinned);
     await appState.refreshContacts();
     if (mounted) {
-      showHaloToast(context, pinned ? 'unpinned' : 'pinned to top');
+      showHaloToast(context, pinned ? 'Unpinned' : 'pinned to top');
     }
   }
 
@@ -3954,12 +3954,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           children: [
             const SheetHandle(),
             Text(
-              'note on this contact',
+              'Note on this contact',
               style: HaloType.serif(size: 18, color: HaloColors.text),
             ),
             const SizedBox(height: 4),
             Text(
-              'just for you. never sent, never leaves this phone.',
+              'Just for you. Never sent, never leaves this phone.',
               style: HaloType.sans(size: 12, color: HaloColors.text2),
             ),
             const SizedBox(height: 16),
@@ -3975,7 +3975,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 color: HaloColors.text,
               ),
               decoration: InputDecoration(
-                hintText: 'a quiet reminder…',
+                hintText: 'A quiet reminder…',
                 hintStyle: HaloType.serif(
                   size: 16,
                   italic: true,
@@ -3992,7 +3992,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   await db.setNote(widget.peerHaloId, ctrl.text.trim());
                   if (!ctx.mounted) return;
                   Navigator.pop(ctx);
-                  if (mounted) showHaloToast(context, 'note saved');
+                  if (mounted) showHaloToast(context, 'Note saved');
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(
@@ -4004,7 +4004,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    'save',
+                    'Save',
                     style: HaloType.sans(
                       size: 13,
                       weight: FontWeight.w600,
@@ -4054,12 +4054,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             children: [
               const SheetHandle(),
               Text(
-                'clear this conversation?',
+                'Clear this conversation?',
                 style: HaloType.serif(size: 18, color: HaloColors.text),
               ),
               const SizedBox(height: 8),
               Text(
-                'every message here is erased from this phone. this only '
+                'Every message here is erased from this phone. This only '
                 'clears your copy - it does not touch their device.',
                 style: HaloType.sans(
                   size: 13,
@@ -4074,7 +4074,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   TextButton(
                     onPressed: () => Navigator.pop(ctx, false),
                     child: Text(
-                      'cancel',
+                      'Cancel',
                       style: HaloType.sans(size: 14, color: HaloColors.text2),
                     ),
                   ),
@@ -4082,7 +4082,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   TextButton(
                     onPressed: () => Navigator.pop(ctx, true),
                     child: Text(
-                      'clear',
+                      'Clear',
                       style: HaloType.sans(
                         size: 14,
                         weight: FontWeight.w600,
@@ -4146,7 +4146,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   Icon(Icons.block, size: 15, color: HaloColors.amber),
                   const SizedBox(width: 8),
                   Text(
-                    'block this contact?',
+                    'Block this contact?',
                     style: HaloType.serif(
                       size: 18,
                       italic: true,
@@ -4157,7 +4157,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
               const SizedBox(height: 8),
               Text(
-                'their messages stop arriving and they disappear from your chats. '
+                'Their messages stop arriving and they disappear from your chats. '
                 "they're never told. you can unblock anytime from settings.",
                 style: HaloType.sans(
                   size: 13,
@@ -4171,7 +4171,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   TextButton(
                     onPressed: () => Navigator.pop(ctx, false),
                     child: Text(
-                      'cancel',
+                      'Cancel',
                       style: HaloType.sans(size: 14, color: HaloColors.text2),
                     ),
                   ),
@@ -4179,7 +4179,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   TextButton(
                     onPressed: () => Navigator.pop(ctx, true),
                     child: Text(
-                      'block',
+                      'Block',
                       style: HaloType.sans(
                         size: 14,
                         weight: FontWeight.w500,
@@ -4237,7 +4237,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     setState(() => m.saved = next);
     await db.setSaved(m.msgUid!, next);
     if (mounted) {
-      showHaloToast(context, next ? 'saved' : 'removed from saved');
+      showHaloToast(context, next ? 'Saved' : 'Removed from saved');
     }
   }
 
@@ -4254,7 +4254,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
               child: Text(
-                'forward to',
+                'Forward to',
                 style: HaloType.serif(
                   size: 18,
                   italic: true,
@@ -4266,7 +4266,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
                 child: Text(
-                  'no contacts to forward to',
+                  'No contacts to forward to',
                   style: HaloType.sans(size: 13, color: HaloColors.text2),
                 ),
               )
@@ -4559,7 +4559,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                 alignment: Alignment.center,
                                 children: [
                                   Semantics(
-                                    label: 'jump to the newest',
+                                    label: 'Jump to the newest',
                                     button: true,
                                     child: GestureDetector(
                                       onTap: _scrollToBottom,
@@ -4707,8 +4707,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     const SizedBox(width: 7),
                     Flexible(
                       child: Text(
-                        'building a private route · first connect is the slow '
-                        'one, later ones are quick. anything you send now is '
+                        'Building a private route · first connect is the slow '
+                        'one, later ones are quick. Anything you send now is '
                         'queued and delivers itself.',
                         style: HaloType.sans(
                           size: 10.5,
@@ -4731,7 +4731,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               // the calm state. same banner, softest colour, nothing to tap
               NoticeBanner(
                 glyph: NoticeGlyph.shield,
-                text: 'looks safe · nothing suspicious in their first message',
+                text: 'Looks safe · nothing suspicious in their first message',
                 color: HaloColors.text2,
                 margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
               ),
@@ -4812,9 +4812,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               showHaloToast(
                                 context,
                                 _secureNext
-                                    ? 'the next photo you send opens protected · '
+                                    ? 'The next photo you send opens protected · '
                                           'they cannot screenshot it'
-                                    : 'photo protection off',
+                                    : 'Photo protection off',
                               );
                             },
                             onToggleGhost: () => setState(() {
@@ -4896,8 +4896,8 @@ class _AcceptRequestBar extends StatelessWidget {
         children: [
           Text(
             introducer == null
-                ? 'accept to reply - they get one more message in until you do.'
-                : '$introducer introduced you. accept to reply.',
+                ? 'Accept to reply - they get one more message in until you do.'
+                : '$introducer introduced you. Accept to reply.',
             textAlign: TextAlign.center,
             style: HaloType.sans(
               size: 12.5,
@@ -5000,7 +5000,7 @@ class _IntroBanner extends StatelessWidget {
           ),
           const SizedBox(height: 7),
           Text(
-            '${vouchNames(names)} introduced you. say hello - they got your card too.',
+            '${vouchNames(names)} introduced you. Say hello - they got your card too.',
             style: HaloType.sans(
               size: 12.5,
               color: HaloColors.text2,
@@ -5040,7 +5040,7 @@ class _IntroduceRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'introduce to...',
+                    'Introduce to...',
                     style: HaloType.sans(
                       size: 14,
                       color: enabled ? HaloColors.text : HaloColors.text3,
@@ -5048,7 +5048,7 @@ class _IntroduceRow extends StatelessWidget {
                   ),
                   if (!enabled)
                     Text(
-                      'accept them first',
+                      'Accept them first',
                       style: HaloType.mono(size: 9.5, color: HaloColors.text3),
                     ),
                 ],
@@ -5083,14 +5083,14 @@ class _RequestBanner extends StatelessWidget {
               Icon(Icons.schedule, size: 13, color: HaloColors.amber),
               const SizedBox(width: 7),
               Text(
-                'message request',
+                'Message request',
                 style: HaloType.serif(size: 13, color: HaloColors.text),
               ),
             ],
           ),
           const SizedBox(height: 5),
           Text(
-            'they need to accept before you can keep chatting.',
+            'They need to accept before you can keep chatting.',
             style: HaloType.sans(
               size: 12.5,
               color: HaloColors.text2,
@@ -5122,7 +5122,7 @@ class _RequestLockBar extends StatelessWidget {
               const SizedBox(width: 9),
               Expanded(
                 child: Text(
-                  'waiting for them to accept your request',
+                  'Waiting for them to accept your request',
                   style: HaloType.sans(size: 13, color: HaloColors.text2),
                 ),
               ),
@@ -5151,7 +5151,7 @@ class _BlockedBar extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'you blocked this contact',
+              'You blocked this contact',
               style: HaloType.serif(
                 size: 14,
                 italic: true,
@@ -5162,7 +5162,7 @@ class _BlockedBar extends StatelessWidget {
           TextButton(
             onPressed: onUnblock,
             child: Text(
-              'unblock',
+              'Unblock',
               style: HaloType.sans(
                 size: 14,
                 weight: FontWeight.w500,
@@ -5218,7 +5218,7 @@ class _ChatHead extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            tooltip: 'back',
+            tooltip: 'Back',
             icon: Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
             onPressed: onBack,
           ),
@@ -5289,7 +5289,7 @@ class _ChatHead extends StatelessWidget {
                             ),
                           ),
                           child: Text(
-                            'supporter',
+                            'Supporter',
                             style: HaloType.mono(
                               size: 7.5,
                               color: HaloColors.amber,
@@ -5317,10 +5317,10 @@ class _ChatHead extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           appState.sendMode == 'balanced'
-                              ? 'encrypted · via relay'
+                              ? 'Encrypted · via relay'
                               : appState.sendMode == 'fast'
-                              ? 'encrypted · direct'
-                              : 'encrypted · over tor',
+                              ? 'Encrypted · direct'
+                              : 'Encrypted · over tor',
                           style: HaloType.mono(
                             size: 10,
                             color: HaloColors.text2,
@@ -5363,7 +5363,7 @@ class _ChatHead extends StatelessWidget {
 
           if (pinnedCount > 0)
             IconButton(
-              tooltip: 'pin',
+              tooltip: 'Pin',
               icon: Icon(
                 Icons.push_pin_outlined,
                 color: HaloColors.amber,
@@ -5372,12 +5372,12 @@ class _ChatHead extends StatelessWidget {
               onPressed: onPinned,
             ),
           IconButton(
-            tooltip: 'search this chat',
+            tooltip: 'Search this chat',
             icon: Icon(Icons.search_rounded, color: HaloColors.text2, size: 21),
             onPressed: onSearch,
           ),
           IconButton(
-            tooltip: 'contact options',
+            tooltip: 'Contact options',
             icon: Icon(Icons.more_vert, color: HaloColors.text2, size: 21),
             onPressed: onMore,
           ),
@@ -5457,7 +5457,7 @@ class _SearchHeadState extends State<SearchHead> {
             Row(
               children: [
                 IconButton(
-                  tooltip: 'close',
+                  tooltip: 'Close',
                   icon: Icon(
                     Icons.close_rounded,
                     color: HaloColors.text2,
@@ -5498,7 +5498,7 @@ class _SearchHeadState extends State<SearchHead> {
                             decoration: InputDecoration(
                               isDense: true,
                               border: InputBorder.none,
-                              hintText: 'find in conversation',
+                              hintText: 'Find in conversation',
                               hintStyle: HaloType.serif(
                                 size: 13,
                                 italic: true,
@@ -5538,7 +5538,7 @@ class _SearchHeadState extends State<SearchHead> {
                               children: [
                                 TextSpan(
                                   text: widget.matchCount == 0
-                                      ? 'no matches'
+                                      ? 'No matches'
                                       : '${widget.matchPos}',
                                   style: HaloType.mono(
                                     size: 10,
@@ -5559,14 +5559,14 @@ class _SearchHeadState extends State<SearchHead> {
                           const Spacer(),
                           _NavBtn(
                             icon: Icons.keyboard_arrow_up_rounded,
-                            label: 'previous match',
+                            label: 'Previous match',
                             enabled: widget.matchCount > 0,
                             onTap: widget.onPrev,
                           ),
                           const SizedBox(width: 5),
                           _NavBtn(
                             icon: Icons.keyboard_arrow_down_rounded,
-                            label: 'next match',
+                            label: 'Next match',
                             enabled: widget.matchCount > 0,
                             onTap: widget.onNext,
                           ),
@@ -5995,7 +5995,7 @@ class _Bubble extends StatelessWidget {
                                               fit: BoxFit.cover,
                                               errorBuilder: (_, e, _) {
                                                 dlog(
-                                                  'image failed: '
+                                                  'Image failed: '
                                                   '${msg.mediaPath} / $e',
                                                 );
                                                 return Container(
@@ -6003,7 +6003,7 @@ class _Bubble extends StatelessWidget {
                                                   alignment: Alignment.center,
                                                   color: Colors.black26,
                                                   child: Text(
-                                                    'photo unavailable',
+                                                    'Photo unavailable',
                                                     style: HaloType.mono(
                                                       size: 11,
                                                       color: HaloColors.text2,
@@ -6060,7 +6060,7 @@ class _Bubble extends StatelessWidget {
                                                     if (msg.delivered) ...[
                                                       const SizedBox(width: 4),
                                                       const Text(
-                                                        'delivered',
+                                                        'Delivered',
                                                         style: TextStyle(
                                                           fontFamily:
                                                               'JetBrains Mono',
@@ -6142,7 +6142,7 @@ class _Bubble extends StatelessWidget {
                                           if (msg.edited) ...[
                                             const SizedBox(width: 5),
                                             Text(
-                                              'edited',
+                                              'Edited',
                                               style: TextStyle(
                                                 fontFamily: 'JetBrains Mono',
                                                 fontSize: 9,
@@ -6165,7 +6165,7 @@ class _Bubble extends StatelessWidget {
                                           if (msg.delivered) ...[
                                             const SizedBox(width: 4),
                                             Text(
-                                              'delivered',
+                                              'Delivered',
                                               style: TextStyle(
                                                 fontFamily: 'JetBrains Mono',
                                                 fontSize: 8.5,
@@ -6201,7 +6201,7 @@ class _Bubble extends StatelessWidget {
                                         msg.mediaPath == null) ...[
                                       const SizedBox(height: 2),
                                       Text(
-                                        'edited',
+                                        'Edited',
                                         style: TextStyle(
                                           fontFamily: 'JetBrains Mono',
                                           fontSize: 9,
@@ -6256,7 +6256,7 @@ class _Bubble extends StatelessWidget {
                                     if (failedShown) ...[
                                       const SizedBox(height: 4),
                                       Text(
-                                        'failed · tap to retry',
+                                        'Failed · tap to retry',
                                         style: TextStyle(
                                           fontFamily: 'JetBrains Mono',
                                           fontSize: 10,
@@ -6522,7 +6522,7 @@ class _PinnedBar extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'pinned',
+                      'Pinned',
                       style: HaloType.mono(
                         size: 9.5,
                         color: HaloColors.amber,
@@ -6630,7 +6630,7 @@ class _ReplyQuoteBar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'replying to ${target.direction == 'out' ? 'yourself' : 'them'}',
+                  'Replying to ${target.direction == 'out' ? 'yourself' : 'them'}',
                   style: HaloType.mono(
                     size: 9.5,
                     color: HaloColors.amber,
@@ -6652,7 +6652,7 @@ class _ReplyQuoteBar extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'close',
+            tooltip: 'Close',
             iconSize: 18,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
@@ -6764,7 +6764,7 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
                   color: HaloColors.line2,
                 ),
                 Semantics(
-                  label: 'reply',
+                  label: 'Reply',
                   button: true,
                   child: _ActionTap(
                     icon: Icons.reply_rounded,
@@ -6868,7 +6868,7 @@ class _EmptyConversation extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               Text(
-                'say hi.',
+                'Say hi.',
                 textAlign: TextAlign.center,
                 style: HaloType.serif(
                   size: 24,
@@ -6879,7 +6879,7 @@ class _EmptyConversation extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'just the two of you, end-to-end encrypted.',
+                'Just the two of you, end-to-end encrypted.',
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 13,
@@ -7092,7 +7092,7 @@ class _VoiceBubbleState extends State<_VoiceBubble> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'audio unavailable',
+                    'Audio unavailable',
                     style: HaloType.mono(
                       size: 11,
                       color: fg.withValues(alpha: 0.55),
@@ -7145,7 +7145,7 @@ class _VoiceBubbleState extends State<_VoiceBubble> {
                               ),
                               const SizedBox(width: 3),
                               Text(
-                                'hidden',
+                                'Hidden',
                                 style: HaloType.mono(
                                   size: 9,
                                   color: widget.isOut
@@ -7204,7 +7204,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
     _busy = true;
     if (!await _rec.hasPermission()) {
       _busy = false;
-      if (mounted) showHaloToast(context, 'mic permission needed');
+      if (mounted) showHaloToast(context, 'Mic permission needed');
       return;
     }
     // the permission prompt eats the long-press: by the time the user grants,
@@ -7337,7 +7337,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
                   child: cancel
                       ? Center(
                           child: Text(
-                            'release to cancel',
+                            'Release to cancel',
                             style: HaloType.mono(
                               size: 12,
                               color: HaloColors.rose,
@@ -7359,7 +7359,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
                                       ),
                                       const SizedBox(width: 6),
                                       Text(
-                                        'voice hidden · slide to cancel',
+                                        'Voice hidden · slide to cancel',
                                         style: HaloType.mono(
                                           size: 11,
                                           color: HaloColors.amber,
@@ -7373,7 +7373,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
                                         color: HaloColors.text3,
                                       ),
                                       Text(
-                                        'slide to cancel',
+                                        'Slide to cancel',
                                         style: HaloType.mono(
                                           size: 11,
                                           color: HaloColors.text3,
@@ -7385,7 +7385,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
                         ),
                 ),
                 Semantics(
-                  label: 'close',
+                  label: 'Close',
                   button: true,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
@@ -7512,7 +7512,7 @@ class _Composer extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          'ghost mode',
+                          'Ghost mode',
                           style: HaloType.serif(
                             size: 12,
                             color: HaloColors.amber,
@@ -7521,7 +7521,7 @@ class _Composer extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'messages burn after ${_humanBurn(burnSeconds)}',
+                          'Messages burn after ${_humanBurn(burnSeconds)}',
                           style: HaloType.mono(
                             size: 10.5,
                             color: HaloColors.text3,
@@ -7535,7 +7535,7 @@ class _Composer extends StatelessWidget {
           Row(
             children: [
               PressScale(
-                label: 'timed messages',
+                label: 'Timed messages',
                 onTap: onToggleGhost,
                 onLongPress: onPickBurn,
                 scale: 0.88,
@@ -7570,7 +7570,7 @@ class _Composer extends StatelessWidget {
               const SizedBox(width: 10),
               // the camera that keeps its photos inside kryfo
               PressScale(
-                label: 'open the camera',
+                label: 'Open the camera',
                 onTap: onCamera,
                 scale: 0.86,
                 child: Icon(
@@ -7581,7 +7581,7 @@ class _Composer extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               PressScale(
-                label: 'attach a photo',
+                label: 'Attach a photo',
                 onTap: onAttach,
                 scale: 0.86,
                 child: Icon(
@@ -7598,7 +7598,7 @@ class _Composer extends StatelessWidget {
                   minLines: 1,
                   maxLines: 4,
                   decoration: InputDecoration(
-                    hintText: 'message',
+                    hintText: 'Message',
                     hintStyle: HaloType.sans(size: 14, color: HaloColors.text3),
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
@@ -7640,7 +7640,7 @@ class _Composer extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Semantics(
-                                label: 'disguise voice',
+                                label: 'Disguise voice',
                                 button: true,
                                 child: GestureDetector(
                                   onTap: onToggleDisguise,
@@ -7670,7 +7670,7 @@ class _Composer extends StatelessWidget {
                       : KeyedSubtree(
                           key: const ValueKey('send'),
                           child: PressScale(
-                            label: 'send',
+                            label: 'Send',
                             onTap: canSend ? onSend : null,
                             scale: 0.86,
                             haptic: false, // _send already fires its own impact
@@ -7755,7 +7755,7 @@ class MediaGalleryScreen extends StatelessWidget {
         backgroundColor: HaloColors.surface,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'back',
+          tooltip: 'Back',
           icon: const Icon(Icons.arrow_back, size: 20),
           color: HaloColors.text,
           onPressed: () => Navigator.of(context).pop(),
@@ -7765,7 +7765,7 @@ class MediaGalleryScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'shared photos',
+              'Shared photos',
               style: HaloType.serif(size: 17, color: HaloColors.text),
             ),
             Text(
@@ -7778,7 +7778,7 @@ class MediaGalleryScreen extends StatelessWidget {
       body: paths.isEmpty
           ? Center(
               child: Text(
-                'no photos in this chat yet',
+                'No photos in this chat yet',
                 style: HaloType.sans(size: 13, color: HaloColors.text3),
               ),
             )
@@ -7838,12 +7838,12 @@ class _ImageCaptionScreenState extends State<_ImageCaptionScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    tooltip: 'back',
+                    tooltip: 'Back',
                     icon: Icon(Icons.arrow_back, color: HaloColors.text2),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   Text(
-                    'send photo',
+                    'Send photo',
                     style: HaloType.serif(
                       size: 16,
                       italic: true,
@@ -7876,7 +7876,7 @@ class _ImageCaptionScreenState extends State<_ImageCaptionScreen> {
                       minLines: 1,
                       maxLines: 4,
                       decoration: InputDecoration(
-                        hintText: 'add a caption…',
+                        hintText: 'Add a caption…',
                         hintStyle: HaloType.sans(
                           size: 14,
                           color: HaloColors.text3,
@@ -7897,7 +7897,7 @@ class _ImageCaptionScreenState extends State<_ImageCaptionScreen> {
                   ),
                   const SizedBox(width: 10),
                   Semantics(
-                    label: 'send',
+                    label: 'Send',
                     button: true,
                     child: GestureDetector(
                       onTap: () {
@@ -8041,7 +8041,7 @@ class _KeyChangedBanner extends StatelessWidget {
               Icon(Icons.gpp_maybe_outlined, size: 15, color: HaloColors.amber),
               const SizedBox(width: 7),
               Text(
-                'security code changed',
+                'Security code changed',
                 style: TextStyle(
                   color: HaloColors.amber,
                   fontSize: 12.5,
@@ -8052,7 +8052,7 @@ class _KeyChangedBanner extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           Text(
-            '$peerName may have reinstalled, or someone could be impersonating them. compare safety numbers to be sure.',
+            '$peerName may have reinstalled, or someone could be impersonating them. Compare safety numbers to be sure.',
             style: TextStyle(
               color: HaloColors.text.withValues(alpha: 0.8),
               fontSize: 12,
@@ -8074,7 +8074,7 @@ class _KeyChangedBanner extends StatelessWidget {
                     borderRadius: BorderRadius.circular(9),
                   ),
                   child: Text(
-                    'ok',
+                    'Ok',
                     style: TextStyle(color: HaloColors.text, fontSize: 12.5),
                   ),
                 ),
@@ -8091,7 +8091,7 @@ class _KeyChangedBanner extends StatelessWidget {
                       borderRadius: BorderRadius.circular(9),
                     ),
                     child: Text(
-                      'verify',
+                      'Verify',
                       style: TextStyle(
                         color: HaloColors.ink,
                         fontSize: 12.5,

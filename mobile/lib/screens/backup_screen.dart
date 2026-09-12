@@ -84,7 +84,7 @@ class _BackupScreenState extends State<BackupScreen> {
     try {
       saved = await lockState.hold(
         () => FilePicker.saveFile(
-          dialogTitle: 'save your kryfo backup',
+          dialogTitle: 'Save your kryfo backup',
           fileName: name,
           bytes: bytes,
         ),
@@ -94,16 +94,16 @@ class _BackupScreenState extends State<BackupScreen> {
     }
     if (!mounted) return false;
     if (saved != null) {
-      showHaloToast(context, 'backup saved · keep the passphrase safe');
+      showHaloToast(context, 'Backup saved · keep the passphrase safe');
       return false;
     }
     await lockState.hold(
       () => SharePlus.instance.share(
         ShareParams(
           files: [XFile(path)],
-          subject: 'kryfo backup',
+          subject: 'Kryfo backup',
           text:
-              'your encrypted kryfo backup. keep both this file AND your passphrase safe - you need both to restore.',
+              'Your encrypted kryfo backup. Keep both this file AND your passphrase safe - you need both to restore.',
         ),
       ),
     );
@@ -127,7 +127,7 @@ class _BackupScreenState extends State<BackupScreen> {
         elevation: 0,
         leading: BackButton(color: HaloColors.text2),
         title: Text(
-          'back up kryfo',
+          'Back up kryfo',
           style: HaloType.serif(size: 22, color: HaloColors.text, italic: true),
         ),
       ),
@@ -138,9 +138,9 @@ class _BackupScreenState extends State<BackupScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: staggerAll([
               Text(
-                'one encrypted file: your identity, your contacts, and the '
-                'messages on this phone right now. anything said after '
-                'today is not in it, so make another when it matters. to '
+                'One encrypted file: your identity, your contacts, and the '
+                'messages on this phone right now. Anything said after '
+                'today is not in it, so make another when it matters. To '
                 'restore you need the file and the passphrase, both.',
                 style: HaloType.sans(
                   size: 13.5,
@@ -149,9 +149,9 @@ class _BackupScreenState extends State<BackupScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              _PinField(label: 'passphrase', controller: _p1),
+              _PinField(label: 'Passphrase', controller: _p1),
               const SizedBox(height: 12),
-              _PinField(label: 'confirm passphrase', controller: _p2),
+              _PinField(label: 'Confirm passphrase', controller: _p2),
               const SizedBox(height: 12),
               if (_error != null)
                 Text(
@@ -170,7 +170,7 @@ class _BackupScreenState extends State<BackupScreen> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    _busy ? 'creating…' : 'create backup',
+                    _busy ? 'creating…' : 'Create backup',
                     style: HaloType.sans(
                       size: 14,
                       color: _busy ? HaloColors.text2 : HaloColors.onAmber,

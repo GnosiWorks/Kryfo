@@ -89,7 +89,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    tooltip: 'back',
+                    tooltip: 'Back',
                     icon: Icon(
                       Icons.chevron_left,
                       color: HaloColors.text2,
@@ -98,7 +98,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   Text(
-                    'safety number',
+                    'Safety number',
                     style: HaloType.serif(size: 22, color: HaloColors.text),
                   ),
                 ],
@@ -111,7 +111,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                   StaggerIn(
                     index: 0,
                     child: Text(
-                      'with ${widget.peerName}',
+                      'With ${widget.peerName}',
                       style: HaloType.sans(size: 14, color: HaloColors.text2),
                     ),
                   ),
@@ -155,7 +155,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                   StaggerIn(
                     index: 4,
                     child: Text(
-                      'if ${widget.peerName} sees the same number, your messages are private to just the two of you. comparing in person or over a call you trust is the surest way to be sure - but it is optional, never required to chat.',
+                      'If ${widget.peerName} sees the same number, your messages are private to just the two of you. Comparing in person or over a call you trust is the surest way to be sure - but it is optional, never required to chat.',
                       style: HaloType.sans(
                         size: 13,
                         color: HaloColors.text2,
@@ -223,7 +223,7 @@ class _VerifyButton extends StatelessWidget {
                 weight: FontWeight.w500,
                 color: verified ? HaloColors.green : HaloColors.text,
               ),
-              child: Text(verified ? 'verified' : 'mark as verified'),
+              child: Text(verified ? 'Verified' : 'Mark as verified'),
             ),
           ],
         ),

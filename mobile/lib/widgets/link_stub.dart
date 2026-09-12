@@ -93,8 +93,8 @@ class LinkStub extends StatelessWidget {
                           const SizedBox(height: 3),
                           Text(
                             isOut
-                                ? 'fetched over tor · by your device'
-                                : 'fetched over tor · by their device',
+                                ? 'Fetched over tor · by your device'
+                                : 'Fetched over tor · by their device',
                             style: HaloType.mono(
                               size: 9.5,
                               color: isOut

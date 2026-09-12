@@ -86,7 +86,7 @@ class _ShieldSheet extends StatelessWidget {
               _Line(order: i, text: flag.lines[i]),
             const SizedBox(height: 6),
             Text(
-              'checked on this phone. nothing was sent anywhere.',
+              'Checked on this phone. Nothing was sent anywhere.',
               style: HaloType.mono(size: 10, color: HaloColors.text3),
             ),
             const SizedBox(height: 16),

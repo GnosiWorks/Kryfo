@@ -36,12 +36,12 @@ class _PairCodeScreenState extends State<PairCodeScreen> {
               child: Row(
                 children: staggerAll([
                   IconButton(
-                    tooltip: 'back',
+                    tooltip: 'Back',
                     icon: Icon(Icons.arrow_back, color: HaloColors.text2),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   Text(
-                    'pairing code',
+                    'Pairing code',
                     style: HaloType.serif(size: 22, italic: true),
                   ),
                 ]),
@@ -52,13 +52,13 @@ class _PairCodeScreenState extends State<PairCodeScreen> {
               child: Row(
                 children: [
                   _Tab(
-                    label: 'show a code',
+                    label: 'Show a code',
                     on: _sharing,
                     onTap: () => setState(() => _sharing = true),
                   ),
                   const SizedBox(width: 8),
                   _Tab(
-                    label: 'enter one',
+                    label: 'Enter one',
                     on: !_sharing,
                     onTap: () => setState(() => _sharing = false),
                   ),
@@ -142,7 +142,7 @@ class _JoinSideState extends State<_JoinSide> {
   Future<void> _join() async {
     final code = _ctrl.text.replaceAll(RegExp(r'\D'), '');
     if (code.length != 6) {
-      setState(() => _status = 'six digits');
+      setState(() => _status = 'Six digits');
       return;
     }
     setState(() {
@@ -172,7 +172,7 @@ class _JoinSideState extends State<_JoinSide> {
         return;
       }
       if (attempt < 2) {
-        setState(() => _status = 'nothing there yet · trying again');
+        setState(() => _status = 'Nothing there yet · trying again');
         await Future<void>.delayed(const Duration(seconds: 4));
       }
     }
@@ -180,7 +180,7 @@ class _JoinSideState extends State<_JoinSide> {
     setState(() {
       _busy = false;
       _status =
-          'nothing at that code. it may have burned, or they have not '
+          'Nothing at that code. It may have burned, or they have not '
           'shared it yet.';
     });
   }
@@ -191,7 +191,7 @@ class _JoinSideState extends State<_JoinSide> {
       padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
       children: [
         Text(
-          'type the six digits they read out.',
+          'Type the six digits they read out.',
           style: HaloType.sans(size: 13.5, color: HaloColors.text2),
         ),
         const SizedBox(height: 20),
@@ -234,7 +234,7 @@ class _JoinSideState extends State<_JoinSide> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              _busy ? 'looking…' : 'add them',
+              _busy ? 'looking…' : 'Add them',
               style: HaloType.mono(
                 size: 12,
                 weight: FontWeight.w600,

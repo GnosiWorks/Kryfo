@@ -34,12 +34,12 @@ class ShieldResult {
     for (final h in hits) {
       if (h.code == 'name_match') {
         return h.line.replaceFirst(
-          'name matches your contact',
-          'this name matches',
+          'Name matches your contact',
+          'This name matches',
         );
       }
     }
-    return 'looks like a scam';
+    return 'Looks like a scam';
   }
 }
 
@@ -249,7 +249,7 @@ ShieldResult scanFirstMessage(String text) {
       _btcBech32.hasMatch(t) ||
       _eth.hasMatch(t) ||
       _xmr.hasMatch(t)) {
-    hits.add(const ShieldHit('crypto_address', 'contains a crypto address'));
+    hits.add(const ShieldHit('crypto_address', 'Contains a crypto address'));
   }
 
   var rush = false;
@@ -265,12 +265,12 @@ ShieldResult scanFirstMessage(String text) {
   }
   if (rush) {
     hits.add(
-      const ShieldHit('money_rush', 'mentions money and urgency together'),
+      const ShieldHit('money_rush', 'Mentions money and urgency together'),
     );
   }
 
   if (_appAsk.hasMatch(t)) {
-    hits.add(const ShieldHit('move_app', 'asks you to move to another app'));
+    hits.add(const ShieldHit('move_app', 'Asks you to move to another app'));
   }
 
   for (final m in _host.allMatches(t)) {
@@ -280,7 +280,7 @@ ShieldResult scanFirstMessage(String text) {
       hits.add(
         const ShieldHit(
           'lookalike_url',
-          'links to a lookalike of a well-known site',
+          'Links to a lookalike of a well-known site',
         ),
       );
       break;
@@ -291,7 +291,7 @@ ShieldResult scanFirstMessage(String text) {
     hits.add(
       const ShieldHit(
         'long_opener',
-        'a long opener from someone with no history',
+        'A long opener from someone with no history',
       ),
     );
   }
@@ -300,7 +300,7 @@ ShieldResult scanFirstMessage(String text) {
     hits.add(
       const ShieldHit(
         'secret_ask',
-        'asks for a code, seed phrase or recovery file',
+        'Asks for a code, seed phrase or recovery file',
       ),
     );
   }

@@ -280,7 +280,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'audio unavailable',
+                    'Audio unavailable',
                     style: HaloType.mono(
                       size: 11,
                       color: fg.withValues(alpha: 0.55),
@@ -333,7 +333,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
                               ),
                               const SizedBox(width: 3),
                               Text(
-                                'hidden',
+                                'Hidden',
                                 style: HaloType.mono(
                                   size: 9,
                                   color: widget.isOut
@@ -393,7 +393,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     _busy = true;
     if (!await _rec.hasPermission()) {
       _busy = false;
-      if (mounted) showHaloToast(context, 'mic permission needed');
+      if (mounted) showHaloToast(context, 'Mic permission needed');
       return;
     }
     // the permission prompt eats the long-press: by the time the user grants,
@@ -526,7 +526,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
                   child: cancel
                       ? Center(
                           child: Text(
-                            'release to cancel',
+                            'Release to cancel',
                             style: HaloType.mono(
                               size: 12,
                               color: HaloColors.rose,
@@ -548,7 +548,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
                                       ),
                                       const SizedBox(width: 6),
                                       Text(
-                                        'voice hidden · slide to cancel',
+                                        'Voice hidden · slide to cancel',
                                         style: HaloType.mono(
                                           size: 11,
                                           color: HaloColors.amber,
@@ -562,7 +562,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
                                         color: HaloColors.text3,
                                       ),
                                       Text(
-                                        'slide to cancel',
+                                        'Slide to cancel',
                                         style: HaloType.mono(
                                           size: 11,
                                           color: HaloColors.text3,
@@ -574,7 +574,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
                         ),
                 ),
                 Semantics(
-                  label: 'close',
+                  label: 'Close',
                   button: true,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
@@ -650,12 +650,12 @@ class ImageCaptionScreenState extends State<ImageCaptionScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    tooltip: 'back',
+                    tooltip: 'Back',
                     icon: Icon(Icons.arrow_back, color: HaloColors.text2),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   Text(
-                    'send photo',
+                    'Send photo',
                     style: HaloType.serif(
                       size: 16,
                       italic: true,
@@ -688,7 +688,7 @@ class ImageCaptionScreenState extends State<ImageCaptionScreen> {
                       minLines: 1,
                       maxLines: 4,
                       decoration: InputDecoration(
-                        hintText: 'add a caption…',
+                        hintText: 'Add a caption…',
                         hintStyle: HaloType.sans(
                           size: 14,
                           color: HaloColors.text3,
@@ -709,7 +709,7 @@ class ImageCaptionScreenState extends State<ImageCaptionScreen> {
                   ),
                   const SizedBox(width: 10),
                   Semantics(
-                    label: 'send',
+                    label: 'Send',
                     button: true,
                     child: GestureDetector(
                       onTap: () {

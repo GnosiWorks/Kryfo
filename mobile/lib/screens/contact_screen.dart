@@ -104,12 +104,12 @@ class _ContactScreenState extends State<ContactScreen> {
                 const SheetHandle(),
                 const SizedBox(height: 12),
                 Text(
-                  'your name for them',
+                  'Your name for them',
                   style: HaloType.serif(size: 20, color: HaloColors.text),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'stays on this phone. they never see it.',
+                  'Stays on this phone. They never see it.',
                   style: HaloType.sans(size: 12.5, color: HaloColors.text2),
                 ),
                 const SizedBox(height: 14),
@@ -144,7 +144,7 @@ class _ContactScreenState extends State<ContactScreen> {
                   children: [
                     Expanded(
                       child: _Ghost(
-                        label: 'clear',
+                        label: 'Clear',
                         onTap: () => Navigator.pop(ctx, ''),
                       ),
                     ),
@@ -152,7 +152,7 @@ class _ContactScreenState extends State<ContactScreen> {
                     Expanded(
                       flex: 2,
                       child: _Primary(
-                        label: 'save',
+                        label: 'Save',
                         onTap: () => Navigator.pop(ctx, ctrl.text),
                       ),
                     ),
@@ -209,7 +209,7 @@ class _ContactScreenState extends State<ContactScreen> {
             children: [
               Expanded(
                 child: _Button(
-                  label: 'message',
+                  label: 'Message',
                   filled: true,
                   onTap: () => Navigator.of(context).pop(),
                 ),
@@ -217,7 +217,7 @@ class _ContactScreenState extends State<ContactScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: _Button(
-                  label: verified ? 'keys verified' : 'verify keys',
+                  label: verified ? 'Keys verified' : 'Verify keys',
                   filled: false,
                   onTap: () async {
                     await Navigator.of(context).push(
@@ -328,7 +328,7 @@ class _ContactScreenState extends State<ContactScreen> {
           if (_voucherNames.isNotEmpty)
             _Row(
               icon: Icons.people_outline,
-              label: 'vouches',
+              label: 'Vouches',
               sub: status,
               onTap: () => showVouchersSheet(context, widget.haloId),
             ),
@@ -352,7 +352,7 @@ class _ContactScreenState extends State<ContactScreen> {
             icon: muted
                 ? Icons.notifications_off_outlined
                 : Icons.notifications_none,
-            label: muted ? 'unmute' : 'mute',
+            label: muted ? 'Unmute' : 'mute',
             onTap: () async {
               HapticFeedback.selectionClick();
               if (muted) {
@@ -365,7 +365,7 @@ class _ContactScreenState extends State<ContactScreen> {
           ),
           _Row(
             icon: pinned ? Icons.push_pin : Icons.push_pin_outlined,
-            label: pinned ? 'unpin' : 'pin to top',
+            label: pinned ? 'Unpin' : 'pin to top',
             onTap: () async {
               HapticFeedback.selectionClick();
               await db.setContactPinned(widget.haloId, !pinned);
@@ -375,8 +375,8 @@ class _ContactScreenState extends State<ContactScreen> {
           ),
           _Row(
             icon: Icons.archive_outlined,
-            label: 'archive',
-            sub: 'out of the list until they write again',
+            label: 'Archive',
+            sub: 'Out of the list until they write again',
             onTap: () async {
               await appState.archive(widget.haloId);
               if (!context.mounted) return;
@@ -385,7 +385,7 @@ class _ContactScreenState extends State<ContactScreen> {
           ),
           _Row(
             icon: Icons.block,
-            label: blocked ? 'unblock' : 'block',
+            label: blocked ? 'Unblock' : 'block',
             rose: !blocked,
             onTap: () async {
               if (blocked) {
@@ -395,9 +395,9 @@ class _ContactScreenState extends State<ContactScreen> {
               }
               final ok = await showConfirmSheet(
                 context,
-                title: 'block $_name?',
-                line: 'their messages stop arriving. they are not told.',
-                yes: 'block',
+                title: 'Block $_name?',
+                line: 'Their messages stop arriving. They are not told.',
+                yes: 'Block',
               );
               if (!ok) return;
               await appState.block(widget.haloId);
@@ -408,17 +408,17 @@ class _ContactScreenState extends State<ContactScreen> {
           ),
           _Row(
             icon: Icons.delete_outline,
-            label: 'delete chat',
-            sub: 'messages and contact, gone from this phone',
+            label: 'Delete chat',
+            sub: 'Messages and contact, gone from this phone',
             rose: true,
             onTap: () async {
               final ok = await showConfirmSheet(
                 context,
-                title: 'delete this chat?',
+                title: 'Delete this chat?',
                 line:
-                    'every message and the contact, gone from this phone. nothing '
+                    'Every message and the contact, gone from this phone. Nothing '
                     'is sent to them.',
-                yes: 'delete',
+                yes: 'Delete',
               );
               if (!ok) return;
               await appState.deleteConversation(widget.haloId);
@@ -466,12 +466,12 @@ class _Stats extends StatelessWidget {
     final cards = <Widget>[
       if (verified)
         _StatCard(
-          label: 'verified',
+          label: 'Verified',
           child: Icon(Icons.check_rounded, size: 24, color: HaloColors.green),
         ),
       if (vouches > 0)
         _StatCard(
-          label: 'vouches',
+          label: 'Vouches',
           onTap: onVouches,
           child: Text(
             '$vouches',
@@ -480,7 +480,7 @@ class _Stats extends StatelessWidget {
         ),
       if (since != null)
         _StatCard(
-          label: 'chatting',
+          label: 'Chatting',
           child: Text(
             _age(since!),
             style: HaloType.serif(size: 24, color: HaloColors.text),

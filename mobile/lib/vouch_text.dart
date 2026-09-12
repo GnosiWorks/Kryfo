@@ -12,10 +12,10 @@ String vouchNames(List<String> names) {
 }
 
 String vouchedByLine(List<String> names) =>
-    names.isEmpty ? '' : 'vouched by ${vouchNames(names)}';
+    names.isEmpty ? '' : 'Vouched by ${vouchNames(names)}';
 
 String introducedByLine(List<String> names) =>
-    names.isEmpty ? '' : 'introduced by ${vouchNames(names)}';
+    names.isEmpty ? '' : 'Introduced by ${vouchNames(names)}';
 
 // "this shares alice's address with bob"
 String shareWarning(String a, String b) => "this shares $a's address with $b";

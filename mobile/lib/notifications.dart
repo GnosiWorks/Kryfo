@@ -31,7 +31,7 @@ Future<void> initNotifications({void Function(String? payload)? onTap}) async {
   const channel = AndroidNotificationChannel(
     'halo_messages_v2',
     'messages',
-    description: 'new encrypted messages from your contacts',
+    description: 'New encrypted messages from your contacts',
     importance: Importance.max,
     playSound: true,
     enableVibration: true,
@@ -90,7 +90,7 @@ Future<void> showMessageNotification({
     ledColor: const Color(0xFFF59E0B),
     ledOnMs: 600,
     ledOffMs: 2000,
-    ticker: hidden ? 'new message' : '$title: $body',
+    ticker: hidden ? 'New message' : '$title: $body',
     autoCancel: true,
     when: DateTime.now().millisecondsSinceEpoch,
     // sender on top, message underneath, expands for long text

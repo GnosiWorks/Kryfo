@@ -12,6 +12,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'donate_screen.dart';
 import 'package:flutter/services.dart';
+import '../copy.dart';
 import '../theme.dart';
 import '../widgets/room_countdown.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -267,7 +268,7 @@ class _AddScanButton extends StatelessWidget {
           ),
         ),
         child: Semantics(
-          label: 'add a contact',
+          label: 'Add a contact',
           button: true,
           child: Icon(Icons.add, size: 20, color: HaloColors.amber),
         ),
@@ -288,7 +289,7 @@ class _GearButtonState extends State<_GearButton> {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'settings',
+      label: 'Settings',
       button: true,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -370,7 +371,7 @@ class _HomeHead extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'your kryfo',
+                  'Your kryfo',
                   style: HaloType.mono(
                     size: 9.5,
                     color: HaloColors.text3,
@@ -434,7 +435,7 @@ class _RelayDownHint extends StatelessWidget {
                   BreathDot(color: HaloColors.amber, size: 7),
                   const SizedBox(width: 9),
                   Text(
-                    'our relay is quiet',
+                    'Our relay is quiet',
                     style: HaloType.mono(
                       size: 11,
                       color: HaloColors.amber,
@@ -463,7 +464,7 @@ class _RelayDownHint extends StatelessWidget {
                       if (!ok || !context.mounted) return;
                       await appState.setSendMode('fast');
                       if (context.mounted) {
-                        showHaloToast(context, 'switched to fast');
+                        showHaloToast(context, 'Switched to fast');
                       }
                     },
                     behavior: HitTestBehavior.opaque,
@@ -477,7 +478,7 @@ class _RelayDownHint extends StatelessWidget {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'use fast mode',
+                        'Use fast mode',
                         style: HaloType.mono(
                           size: 11.5,
                           color: HaloColors.ink,
@@ -496,7 +497,7 @@ class _RelayDownHint extends StatelessWidget {
                         vertical: 8,
                       ),
                       child: Text(
-                        'keep waiting',
+                        'Keep waiting',
                         style: HaloType.mono(
                           size: 11.5,
                           color: HaloColors.text3,
@@ -539,7 +540,7 @@ class _BridgeStuckHint extends StatelessWidget {
                   BreathDot(color: HaloColors.rose, size: 7),
                   const SizedBox(width: 9),
                   Text(
-                    'not connecting',
+                    'Not connecting',
                     style: HaloType.mono(
                       size: 11,
                       color: HaloColors.rose,
@@ -563,7 +564,7 @@ class _BridgeStuckHint extends StatelessWidget {
                   await appState.applyBridges(appState.bridgeLines, false);
                   engine.restartTor();
                   if (context.mounted) {
-                    showHaloToast(context, 'going direct · reconnecting');
+                    showHaloToast(context, 'Going direct · reconnecting');
                   }
                 },
                 behavior: HitTestBehavior.opaque,
@@ -577,7 +578,7 @@ class _BridgeStuckHint extends StatelessWidget {
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    'turn bridges off',
+                    'Turn bridges off',
                     style: HaloType.mono(
                       size: 11.5,
                       color: HaloColors.text,
@@ -628,7 +629,7 @@ class _BridgeHint extends StatelessWidget {
                   BreathDot(color: HaloColors.violet, size: 7),
                   const SizedBox(width: 9),
                   Text(
-                    'still trying',
+                    'Still trying',
                     style: HaloType.mono(
                       size: 11,
                       color: HaloColors.violet,
@@ -653,7 +654,7 @@ class _BridgeHint extends StatelessWidget {
                       HapticFeedback.selectionClick();
                       await appState.setSendMode('balanced');
                       if (context.mounted) {
-                        showHaloToast(context, 'switched to relay');
+                        showHaloToast(context, 'Switched to relay');
                       }
                     },
                     behavior: HitTestBehavior.opaque,
@@ -667,7 +668,7 @@ class _BridgeHint extends StatelessWidget {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'use our relay',
+                        'Use our relay',
                         style: HaloType.mono(
                           size: 11.5,
                           color: HaloColors.ink,
@@ -691,7 +692,7 @@ class _BridgeHint extends StatelessWidget {
                         vertical: 8,
                       ),
                       child: Text(
-                        'bridges',
+                        'Bridges',
                         style: HaloType.mono(
                           size: 11.5,
                           color: HaloColors.violet,
@@ -710,7 +711,7 @@ class _BridgeHint extends StatelessWidget {
                         vertical: 8,
                       ),
                       child: Text(
-                        'keep waiting',
+                        'Keep waiting',
                         style: HaloType.mono(
                           size: 11.5,
                           color: HaloColors.text3,
@@ -742,11 +743,11 @@ class _OfflineStrip extends StatelessWidget {
 
         final offline = !appState.online;
         final tint = offline ? HaloColors.rose : HaloColors.amber;
-        final head = offline ? 'offline' : 'waiting';
+        final head = offline ? 'Offline' : 'waiting';
         // the old strip said "offline" and stopped, which left people
         // guessing whether anything was queued or lost.
         final tail = n == 0
-            ? 'nothing waiting to send'
+            ? 'Nothing waiting to send'
             : offline
             ? "$n waiting · sends when you're back"
             : '$n waiting · sending now';
@@ -807,7 +808,7 @@ class _OfflineStrip extends StatelessWidget {
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
-                      'retry',
+                      'Retry',
                       style: HaloType.mono(
                         size: 11,
                         color: tint,
@@ -863,7 +864,7 @@ class _EmptyStateState extends State<_EmptyState> {
             ),
             const SizedBox(height: 14),
             Text(
-              'no kryfos yet.',
+              'No kryfos yet.',
               textAlign: TextAlign.center,
               style: HaloType.serif(
                 size: 22,
@@ -874,7 +875,7 @@ class _EmptyStateState extends State<_EmptyState> {
             ),
             const SizedBox(height: 8),
             Text(
-              'scan their code, send them a link, or type the @handle they gave you.',
+              'Scan their code, send them a link, or type the @handle they gave you.',
               textAlign: TextAlign.center,
               style: HaloType.sans(size: 13, color: HaloColors.text2),
             ),
@@ -891,7 +892,7 @@ class _EmptyStateState extends State<_EmptyState> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  'add someone',
+                  'Add someone',
                   style: HaloType.sans(
                     size: 13,
                     weight: FontWeight.w500,
@@ -946,7 +947,7 @@ class _ArchivedPin extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'archived',
+                        'Archived',
                         style: HaloType.sans(
                           size: 14,
                           weight: FontWeight.w500,
@@ -1001,7 +1002,7 @@ class _ContactList extends StatelessWidget {
           child: Row(
             children: [
               Text(
-                'groups',
+                'Groups',
                 style: HaloType.mono(
                   size: 10,
                   color: HaloColors.text3,
@@ -1024,7 +1025,7 @@ class _ContactList extends StatelessWidget {
                       ),
                       const SizedBox(width: 3),
                       Text(
-                        'room',
+                        'Room',
                         style: HaloType.mono(
                           size: 10,
                           color: HaloColors.violet,
@@ -1044,7 +1045,7 @@ class _ContactList extends StatelessWidget {
                     Icon(Icons.add_rounded, size: 14, color: HaloColors.amber),
                     const SizedBox(width: 3),
                     Text(
-                      'new',
+                      'New',
                       style: HaloType.mono(
                         size: 10,
                         color: HaloColors.amber,
@@ -1238,7 +1239,7 @@ class _GroupRow extends StatelessWidget {
                     else if (g.mentioned)
                       // your three words came up in there
                       Text(
-                        'mentioned you',
+                        'Mentioned you',
                         style: HaloType.mono(
                           size: 10,
                           color: HaloColors.amber,
@@ -1310,7 +1311,7 @@ Widget _supporterPill() {
       border: Border.all(color: HaloColors.amber.withValues(alpha: 0.4)),
     ),
     child: Text(
-      'supporter',
+      'Supporter',
       style: HaloType.mono(size: 8, color: HaloColors.amber),
     ),
   );
@@ -1359,7 +1360,7 @@ class _SwipeRow extends StatelessWidget {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 24),
         child: Semantics(
-          label: 'archived chats',
+          label: 'Archived chats',
           button: true,
           child: Icon(
             Icons.archive_outlined,
@@ -1402,7 +1403,7 @@ void _chatMenu(BuildContext context, ContactPreview c) {
               size: 22,
             ),
             title: Text(
-              c.muted ? 'unmute' : 'mute',
+              c.muted ? 'Unmute' : 'mute',
               style: HaloType.sans(size: 15, color: HaloColors.text),
             ),
             onTap: () {
@@ -1417,7 +1418,7 @@ void _chatMenu(BuildContext context, ContactPreview c) {
               size: 22,
             ),
             title: Text(
-              'archive',
+              'Archive',
               style: HaloType.sans(size: 15, color: HaloColors.text),
             ),
             onTap: () {
@@ -1432,11 +1433,11 @@ void _chatMenu(BuildContext context, ContactPreview c) {
               size: 22,
             ),
             title: Text(
-              'delete chat',
+              'Delete chat',
               style: HaloType.sans(size: 15, color: HaloColors.rose),
             ),
             subtitle: Text(
-              'messages and contact, gone from this phone',
+              'Messages and contact, gone from this phone',
               style: HaloType.mono(size: 11, color: HaloColors.text3),
             ),
             onTap: () {
@@ -1454,12 +1455,12 @@ void _chatMenu(BuildContext context, ContactPreview c) {
 Future<void> _confirmDelete(BuildContext context, ContactPreview c) async {
   final ok = await showConfirmSheet(
     context,
-    title: 'delete this chat?',
+    title: 'Delete this chat?',
     line:
-        'every message with ${c.nickname ?? c.haloId} goes, and they stop '
-        'being a contact. it only clears this phone - their copy stays with '
-        'them. if they message again it lands in requests.',
-    yes: 'delete',
+        'Every message with ${c.nickname ?? c.haloId} goes, and they stop '
+        'being a contact. It only clears this phone - their copy stays with '
+        'them. If they message again it lands in requests.',
+    yes: 'Delete',
   );
   if (!ok) return;
   HapticFeedback.heavyImpact();
@@ -1572,7 +1573,7 @@ class _Row extends StatelessWidget {
                           // time would be, so the row is honest about it
                           if (!c.blocked && appState.queuedFor(c.haloId) > 0)
                             Text(
-                              'queued',
+                              'Queued',
                               style: HaloType.mono(
                                 size: 10,
                                 color: HaloColors.text2,
@@ -1682,7 +1683,7 @@ class _NavTabs extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               child: Center(
-                child: _Tab(label: 'chats', active: active == 'chats'),
+                child: _Tab(label: 'Chats', active: active == 'chats'),
               ),
             ),
           ),
@@ -1696,7 +1697,7 @@ class _NavTabs extends StatelessWidget {
                   vertical: 8,
                 ),
                 child: Center(
-                  child: _Tab(label: 'support', active: active == 'support'),
+                  child: _Tab(label: 'Support', active: active == 'support'),
                 ),
               ),
             ),
@@ -1712,7 +1713,7 @@ class _NavTabs extends StatelessWidget {
                   vertical: 8,
                 ),
                 child: Center(
-                  child: _Tab(label: 'me', active: active == 'me'),
+                  child: _Tab(label: 'Me', active: active == 'me'),
                 ),
               ),
             ),
@@ -1739,7 +1740,7 @@ class _Tab extends StatelessWidget {
             weight: active ? FontWeight.w500 : FontWeight.w400,
             color: active ? HaloColors.text : HaloColors.text2,
           ),
-          child: Text(label),
+          child: Text(sentence(label)),
         ),
         const SizedBox(height: 4),
         // a short amber mark that grows under the tab you are on
@@ -1774,8 +1775,8 @@ class _QuickTiles extends StatelessWidget {
           Expanded(
             child: _QuickTile(
               icon: Icons.edit_note_rounded,
-              title: 'note to self',
-              line: 'only on this phone',
+              title: 'Note to self',
+              line: 'Only on this phone',
               onTap: onNotes,
             ),
           ),
@@ -1783,8 +1784,8 @@ class _QuickTiles extends StatelessWidget {
           Expanded(
             child: _QuickTile(
               icon: Icons.bookmark,
-              title: 'saved',
-              line: 'kept from every chat',
+              title: 'Saved',
+              line: 'Kept from every chat',
               onTap: onSaved,
             ),
           ),
@@ -1906,7 +1907,7 @@ class _RequestsPin extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'requests',
+                    'Requests',
                     style: HaloType.serif(
                       size: 14,
                       color: HaloColors.text,

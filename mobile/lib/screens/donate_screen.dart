@@ -112,7 +112,7 @@ class _DonateScreenState extends State<DonateScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
-          'support',
+          'Support',
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
@@ -176,7 +176,7 @@ class _DonateScreenState extends State<DonateScreen> {
         Text.rich(
           TextSpan(
             children: [
-              const TextSpan(text: 'keep kryfo '),
+              const TextSpan(text: 'Keep kryfo '),
               TextSpan(
                 text: 'independent',
                 style: HaloType.serif(
@@ -192,7 +192,7 @@ class _DonateScreenState extends State<DonateScreen> {
         ),
         const SizedBox(height: 6),
         Text(
-          'no ads, no investors, nothing to sell. it runs on what backers give.',
+          'No ads, no investors, nothing to sell. It runs on what backers give.',
           textAlign: TextAlign.center,
           style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.5),
         ),
@@ -207,9 +207,9 @@ class _DonateScreenState extends State<DonateScreen> {
           child: Text.rich(
             TextSpan(
               children: [
-                const TextSpan(text: 'back it anonymously. badge opt-in.\n'),
+                const TextSpan(text: 'Back it anonymously. Badge opt-in.\n'),
                 TextSpan(
-                  text: 'privacy is never behind a paywall.',
+                  text: 'Privacy is never behind a paywall.',
                   style: HaloType.mono(size: 11, color: HaloColors.amber),
                 ),
               ],
@@ -340,7 +340,7 @@ class _DonateScreenState extends State<DonateScreen> {
                 isCollapsed: true,
                 contentPadding: const EdgeInsets.symmetric(vertical: 14),
                 border: InputBorder.none,
-                hintText: 'other amount',
+                hintText: 'Other amount',
                 hintStyle: HaloType.serif(size: 16, color: HaloColors.text2),
               ),
               onChanged: (v) {
@@ -370,7 +370,7 @@ class _DonateScreenState extends State<DonateScreen> {
           });
         }),
         const SizedBox(width: 8),
-        _tab('card · not yet', _card, () {
+        _tab('Card · not yet', _card, () {
           HapticFeedback.selectionClick();
           setState(() => _card = true);
         }),
@@ -561,7 +561,7 @@ class _DonateScreenState extends State<DonateScreen> {
             onTap: () {
               HapticFeedback.mediumImpact();
               copySensitive(addr);
-              showHaloToast(context, 'address copied · clears in 60s');
+              showHaloToast(context, 'Address copied · clears in 60s');
             },
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 11),
@@ -571,7 +571,7 @@ class _DonateScreenState extends State<DonateScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                'copy address',
+                'Copy address',
                 style: HaloType.mono(size: 12, color: HaloColors.onAmber),
               ),
             ),
@@ -586,7 +586,7 @@ class _DonateScreenState extends State<DonateScreen> {
             ),
             child: Text(
               _coin == 'btc'
-                  ? 'bitcoin is verified by our own node, so your badge '
+                  ? 'Bitcoin is verified by our own node, so your badge '
                         'unlocks by itself once the payment lands.'
                   : "we can't verify this chain without asking an outside "
                         "service about you, so we don't. send it if you like. "
@@ -599,7 +599,7 @@ class _DonateScreenState extends State<DonateScreen> {
           if (_coin == 'btc' && !_onOnion) ...[
             const SizedBox(height: 10),
             Text(
-              'bitcoin badges need onion mode',
+              'Bitcoin badges need onion mode',
               textAlign: TextAlign.center,
               style: HaloType.sans(size: 13, color: HaloColors.text2),
             ),
@@ -620,7 +620,7 @@ class _DonateScreenState extends State<DonateScreen> {
                   border: Border.all(color: HaloColors.line),
                 ),
                 child: Text(
-                  'switch to onion',
+                  'Switch to onion',
                   style: HaloType.sans(
                     size: 13,
                     weight: FontWeight.w600,
@@ -683,8 +683,8 @@ class _DonateScreenState extends State<DonateScreen> {
             border: Border.all(color: HaloColors.line, width: 0.5),
           ),
           child: Text(
-            'card payments are not set up yet. nothing happens if you '
-            'try. crypto works today, and the badge comes with bitcoin.',
+            'Card payments are not set up yet. Nothing happens if you '
+            'try. Crypto works today, and the badge comes with bitcoin.',
             style: HaloType.sans(
               size: 13,
               color: HaloColors.text2,
@@ -694,7 +694,7 @@ class _DonateScreenState extends State<DonateScreen> {
         ),
         const SizedBox(height: 10),
         Text(
-          'a card is not anonymous. use crypto, monero especially, if that matters to you.',
+          'A card is not anonymous. Use crypto, monero especially, if that matters to you.',
           textAlign: TextAlign.center,
           style: HaloType.mono(size: 11, color: HaloColors.text2),
         ),
@@ -843,7 +843,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
-          'bitcoin',
+          'Bitcoin',
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
@@ -918,7 +918,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           ),
           const SizedBox(height: 18),
           Text(
-            'reaching the payment service over tor…',
+            'Reaching the payment service over tor…',
             style: HaloType.mono(size: 11, color: HaloColors.text2),
           ),
         ],
@@ -936,14 +936,14 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'bitcoin badges need onion mode',
+              'Bitcoin badges need onion mode',
               textAlign: TextAlign.center,
               style: HaloType.serif(size: 22, color: HaloColors.text),
             ),
             const SizedBox(height: 10),
             Text(
-              'the payment service is an onion, and only onion mode can reach '
-              'it. nothing was sent.',
+              'The payment service is an onion, and only onion mode can reach '
+              'it. Nothing was sent.',
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 13,
@@ -952,7 +952,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
               ),
             ),
             const SizedBox(height: 24),
-            _fillButton('switch to onion', () async {
+            _fillButton('Switch to onion', () async {
               await Navigator.of(context).push(haloRoute(const ModesScreen()));
               if (mounted) _start();
             }),
@@ -1016,7 +1016,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           const SizedBox(height: 2),
           Center(
             child: Text(
-              'send exactly this amount \u00b7 expires in ${_fmtLeft()}',
+              'Send exactly this amount \u00b7 expires in ${_fmtLeft()}',
               style: HaloType.mono(size: 10, color: HaloColors.text2),
             ),
           ),
@@ -1044,8 +1044,8 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           const SizedBox(height: 18),
           Center(
             child: Text(
-              'this screen updates itself the moment your payment is seen.\n'
-              'keep it open - nothing is stored, nothing identifies you.',
+              'This screen updates itself the moment your payment is seen.\n'
+              'Keep it open - nothing is stored, nothing identifies you.',
               textAlign: TextAlign.center,
               style: HaloType.mono(size: 9.5, color: HaloColors.text2),
             ),
@@ -1080,7 +1080,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
             ),
             const SizedBox(width: 10),
             Text(
-              'watching the chain for your payment',
+              'Watching the chain for your payment',
               style: HaloType.mono(size: 11, color: HaloColors.text2),
             ),
           ],
@@ -1099,14 +1099,14 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'this invoice expired',
+              'This invoice expired',
               style: HaloType.serif(size: 22, color: HaloColors.text),
             ),
             const SizedBox(height: 10),
             Text(
-              'invoices time out. if you already sent the payment, keep this '
+              'Invoices time out. If you already sent the payment, keep this '
               'open: we ask the service again every minute for a while, and '
-              'the next time you open support. start a fresh one whenever '
+              'the next time you open support. Start a fresh one whenever '
               'you like.',
               textAlign: TextAlign.center,
               style: HaloType.sans(
@@ -1118,7 +1118,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
             const SizedBox(height: 24),
             _fillButton('new invoice', _start),
             const SizedBox(height: 10),
-            _ghostButton('i paid, check again', _check),
+            _ghostButton('I paid, check again', _check),
           ],
         ),
       ),
@@ -1154,7 +1154,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
   void _copy(String v) {
     HapticFeedback.mediumImpact();
     copySensitive(v);
-    showHaloToast(context, 'address copied · clears in 60s');
+    showHaloToast(context, 'Address copied · clears in 60s');
   }
 
   Widget _fillButton(String label, VoidCallback onTap) {
@@ -1232,7 +1232,7 @@ class _StaticAddress extends StatelessWidget {
             onTap: () {
               HapticFeedback.mediumImpact();
               copySensitive(address);
-              showHaloToast(context, 'address copied · clears in 60s');
+              showHaloToast(context, 'Address copied · clears in 60s');
             },
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 11),
@@ -1242,7 +1242,7 @@ class _StaticAddress extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                'copy address',
+                'Copy address',
                 style: HaloType.mono(size: 12, color: HaloColors.onAmber),
               ),
             ),
@@ -1314,16 +1314,16 @@ class _ConfirmedViewState extends State<_ConfirmedView>
             ),
             const SizedBox(height: 24),
             Text(
-              'payment confirmed',
+              'Payment confirmed',
               textAlign: TextAlign.center,
               style: HaloType.serif(size: 24, color: HaloColors.text),
             ),
             const SizedBox(height: 10),
             Text(
               t == SupporterTier.none
-                  ? 'thank you for keeping kryfo independent.'
+                  ? 'Thank you for keeping kryfo independent.'
                   : "verified on-chain - you're a ${tierName(t)} now. "
-                        'no one can take that off you.',
+                        'No one can take that off you.',
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 13.5,
@@ -1347,7 +1347,7 @@ class _ConfirmedViewState extends State<_ConfirmedView>
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             alignment: Alignment.center,
                             child: Text(
-                              'just glad to help',
+                              'Just glad to help',
                               style: HaloType.sans(
                                 size: 14,
                                 color: HaloColors.text2,

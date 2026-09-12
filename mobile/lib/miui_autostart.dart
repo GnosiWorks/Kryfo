@@ -64,7 +64,7 @@ Future<void> forceShowBackgroundPrompt(BuildContext context) async {
   }
   if (await Permission.ignoreBatteryOptimizations.isGranted) {
     if (context.mounted) {
-      showHaloToast(context, 'already allowed to run in the background');
+      showHaloToast(context, 'Already allowed to run in the background');
     }
     return;
   }
@@ -74,12 +74,12 @@ Future<void> forceShowBackgroundPrompt(BuildContext context) async {
 Future<void> _askBattery(BuildContext context) async {
   final ok = await showConfirmSheet(
     context,
-    title: 'let kryfo run in the background',
+    title: 'Let kryfo run in the background',
     line:
-        'your phone pauses apps to save battery. without an exception, '
+        'Your phone pauses apps to save battery. Without an exception, '
         'kryfo cannot receive messages while it is closed.',
-    yes: 'allow',
-    keep: 'skip',
+    yes: 'Allow',
+    keep: 'Skip',
     rose: false,
   );
   if (ok) await Permission.ignoreBatteryOptimizations.request();
@@ -97,13 +97,13 @@ Future<void> maybeShowMiuiPrompt(BuildContext context) async {
 Future<void> _askAutostart(BuildContext context) async {
   final ok = await showConfirmSheet(
     context,
-    title: 'let kryfo run in the background',
+    title: 'Let kryfo run in the background',
     line:
-        'xiaomi turns off background apps by default. without autostart, '
-        'kryfo cannot deliver messages when the app is closed. on the next '
+        'Xiaomi turns off background apps by default. Without autostart, '
+        'kryfo cannot deliver messages when the app is closed. On the next '
         'screen, find kryfo in the list and turn the toggle on.',
-    yes: 'open settings',
-    keep: 'skip',
+    yes: 'Open settings',
+    keep: 'Skip',
     rose: false,
   );
   if (!ok) return;
