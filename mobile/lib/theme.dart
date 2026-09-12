@@ -192,8 +192,18 @@ ThemeData buildHaloTheme() {
 // otherwise we'd be wiping something the user copied since.
 Timer? _clipTimer;
 
-void copySensitive(String value) {
-  Clipboard.setData(ClipboardData(text: value));
+Future<void> copySensitive(String value) async {
+  // marked sensitive for the keyboard's history and the android 13
+  // preview; the plain clipboard is the fallback
+  var done = false;
+  try {
+    done =
+        await const MethodChannel(
+          'halo/platform',
+        ).invokeMethod<bool>('copySensitive', {'text': value}) ??
+        false;
+  } catch (_) {}
+  if (!done) await Clipboard.setData(ClipboardData(text: value));
   _clipTimer?.cancel();
   _clipTimer = Timer(const Duration(seconds: 60), () async {
     try {

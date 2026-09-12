@@ -157,7 +157,7 @@ class _PairCodePanelState extends State<PairCodePanel> {
         GestureDetector(
           onTap: () {
             HapticFeedback.selectionClick();
-            Clipboard.setData(ClipboardData(text: _code!));
+            copySensitive(_code!);
             showHaloToast(context, 'Code copied');
           },
           child: Text(
