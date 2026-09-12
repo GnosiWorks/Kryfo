@@ -916,10 +916,10 @@ class _AddSomeoneScreen extends StatelessWidget {
           ...staggerAll([
             _Path(
               icon: Icons.qr_code_2_outlined,
-              title: 'show my kryfo',
+              title: 'every way to add someone',
               desc:
-                  'a code for someone next to you, a link for anyone else. '
-                  'or type the @handle they gave you.',
+                  'show your code, send them a link, or type the @handle '
+                  'they gave you.',
               onTap: () async {
                 // open the page first, then finish onboarding once it
                 // returns. completing first rebuilds the tree to home and
