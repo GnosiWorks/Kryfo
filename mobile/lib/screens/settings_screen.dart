@@ -196,6 +196,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
               ),
               _Row(
+                icon: Icons.vpn_lock_outlined,
+                label: 'Bridges',
+                hint: 'For networks that block tor',
+                value: appState.bridgesOn ? 'On' : 'Off',
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    haloRoute(const BridgesScreen()),
+                  );
+                  setState(() {});
+                },
+              ),
+              _Row(
                 icon: Icons.notifications_none,
                 label: 'Notifications',
                 value: appState.sendMode == 'private' ? 'over tor' : 'in app',
@@ -210,6 +223,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () => forceShowBackgroundPrompt(context),
               ),
               _Row(
+                icon: Icons.lan_outlined,
+                label: 'Transport',
+                value: 'What the network is doing',
+                onTap: () =>
+                    Navigator.push(context, haloRoute(const TransportScreen())),
+              ),
+              _Row(
                 icon: Icons.block,
                 label: 'Blocked',
                 onTap: () => Navigator.of(
@@ -220,7 +240,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.people_outline,
                 label: 'Accept introductions',
                 hint: 'Friends can introduce you to theirs',
-                value: _acceptIntros ? 'On' : 'off',
+                value: _acceptIntros ? 'On' : 'Off',
                 onTap: () async {
                   setState(() => _acceptIntros = !_acceptIntros);
                   await saveAcceptIntros(_acceptIntros);
@@ -230,7 +250,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.shield_outlined,
                 label: 'Scam shield',
                 hint: 'Checks strangers on your phone. Nothing leaves it',
-                value: _shieldOn ? 'On' : 'off',
+                value: _shieldOn ? 'On' : 'Off',
                 onTap: () async {
                   setState(() => _shieldOn = !_shieldOn);
                   await saveScamShieldOn(_shieldOn);
@@ -241,7 +261,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 label: 'Add link previews',
                 hint:
                     'You fetch the title over tor and send it along. Onion mode only',
-                value: sendLinkPreviews ? 'On' : 'off',
+                value: sendLinkPreviews ? 'On' : 'Off',
                 onTap: () async {
                   await saveSendLinkPreviews(!sendLinkPreviews);
                   if (mounted) setState(() {});
@@ -258,7 +278,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.photo_camera_back_outlined,
                 label: 'Screen security',
                 hint: 'No screenshots inside chats',
-                value: appState.secureChats ? 'On' : 'off',
+                value: appState.secureChats ? 'On' : 'Off',
                 onTap: () async {
                   await appState.setSecureChats(!appState.secureChats);
                   if (mounted) setState(() {});
@@ -268,7 +288,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.visibility_off_outlined,
                 label: 'Block screenshots',
                 hint: 'Whole app hidden from recents and screenshots',
-                value: appState.blockScreenshots ? 'On' : 'off',
+                value: appState.blockScreenshots ? 'On' : 'Off',
                 onTap: () async {
                   await appState.setBlockScreenshots(
                     !appState.blockScreenshots,
@@ -280,7 +300,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.light_mode_outlined,
                 label: 'Light theme',
                 hint: 'Same protection, brighter',
-                value: HaloColors.isLight ? 'On' : 'off',
+                value: HaloColors.isLight ? 'On' : 'Off',
                 onTap: () async {
                   await appState.setLight(!HaloColors.isLight);
                   if (mounted) setState(() {});
@@ -334,7 +354,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.record_voice_over,
                 label: 'Disguise voice',
                 hint: 'Shifts your pitch before a voice note leaves',
-                value: _disguise ? 'On' : 'off',
+                value: _disguise ? 'On' : 'Off',
                 onTap: () async {
                   setState(() => _disguise = !_disguise);
                   await appState.saveDisguisePref(_disguise);
@@ -381,26 +401,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 value: 'The honest list',
                 onTap: () =>
                     Navigator.push(context, haloRoute(const SeenScreen())),
-              ),
-              _Row(
-                icon: Icons.vpn_lock_outlined,
-                label: 'Bridges',
-                hint: 'For networks that block tor',
-                value: appState.bridgesOn ? 'On' : 'off',
-                onTap: () async {
-                  await Navigator.push(
-                    context,
-                    haloRoute(const BridgesScreen()),
-                  );
-                  setState(() {});
-                },
-              ),
-              _Row(
-                icon: Icons.lan_outlined,
-                label: 'Transport',
-                value: 'What the network is doing',
-                onTap: () =>
-                    Navigator.push(context, haloRoute(const TransportScreen())),
               ),
               _Row(
                 icon: Icons.info_outline,
