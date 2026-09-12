@@ -72,3 +72,4 @@ CLAUDE_CODE_BRIEF.md
 engine/vendor/**/builddeps/**/*.a
 engine/vendor/**/builddeps/**/*.la
 *.p12
+.claude/
