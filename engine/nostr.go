@@ -34,6 +34,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -53,6 +54,21 @@ var (
 	nostrInbox   []string
 	nostrSentIDs = map[string]bool{}
 )
+
+// a kick makes every relay runner drop its socket and reconnect now, with
+// the since window, instead of waiting out the quiet timer. the periodic
+// job uses it: after a night asleep the sockets are dead and nothing knows
+// yet, and a job window is too short to wait for the idle timer.
+var (
+	kickMu sync.Mutex
+	kickCh = make(chan struct{})
+)
+
+func kickChan() chan struct{} {
+	kickMu.Lock()
+	defer kickMu.Unlock()
+	return kickCh
+}
 
 // relay health. a relay that will not answer still costs a full tor circuit
 // on every attempt, and with one subscribe goroutine per relay per contact
@@ -495,6 +511,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 			retry := 10 * time.Second
 			rejoin := 5 * time.Second
 			deaf := 4 * time.Minute
+			kicked := false
 			if own {
 				retry = 3 * time.Second
 				rejoin = 2 * time.Second
@@ -612,6 +629,12 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 						// genuinely unusable tor shows up as dial failures, which
 						// restartTor already watches for.
 						goto reconnect
+					case <-kickChan():
+						log.Printf("nostr: %s kicked, reconnecting now", u)
+						idle.Stop()
+						r.Close()
+						kicked = true
+						goto reconnect
 					case <-ctx.Done():
 						idle.Stop()
 						r.Close()
@@ -619,7 +642,11 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 					}
 				}
 			reconnect:
-				time.Sleep(rejoin)
+				if kicked {
+					kicked = false
+				} else {
+					time.Sleep(rejoin)
+				}
 			}
 		}(url)
 	}
@@ -811,6 +838,35 @@ func HaloNostrSendFirstContact(cPeerXPubHex, cFcPk, cMsg *C.char) *C.char {
 	}
 	log.Printf("nostr: sent first-contact %s to %d relays, addr %s...", ev.ID.Hex()[:12], ok, fcPk[:12])
 	return C.CString("ok")
+}
+
+// drop every relay socket and reconnect now. returns "ok".
+//
+//export HaloNostrKick
+func HaloNostrKick() *C.char {
+	kickMu.Lock()
+	close(kickCh)
+	kickCh = make(chan struct{})
+	kickMu.Unlock()
+	return C.CString("ok")
+}
+
+// what the go side is holding, for the transport screen and for finding
+// out what grows. json, bytes.
+//
+//export HaloMemStats
+func HaloMemStats() *C.char {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	nostrMu.Lock()
+	inbox := len(nostrInbox)
+	subs := len(nostrSubs)
+	sent := len(nostrSentIDs)
+	nostrMu.Unlock()
+	return C.CString(fmt.Sprintf(
+		`{"heapAlloc":%d,"heapSys":%d,"heapIdle":%d,"sys":%d,"numGC":%d,"goroutines":%d,"inbox":%d,"subs":%d,"sentIds":%d}`,
+		m.HeapAlloc, m.HeapSys, m.HeapIdle, m.Sys, m.NumGC, runtime.NumGoroutine(), inbox, subs, sent,
+	))
 }
 
 //export HaloNostrPoll

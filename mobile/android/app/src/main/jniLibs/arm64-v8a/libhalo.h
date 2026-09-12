@@ -200,6 +200,15 @@ extern char* HaloNostrSubscribeFirstContact(int counter);
 // verification applies to everything after this.
 //
 extern char* HaloNostrSendFirstContact(char* cPeerXPubHex, char* cFcPk, char* cMsg);
+
+// drop every relay socket and reconnect now. returns "ok".
+//
+extern char* HaloNostrKick(void);
+
+// what the go side is holding, for the transport screen and for finding
+// out what grows. json, bytes.
+//
+extern char* HaloMemStats(void);
 extern char* HaloNostrPoll(void);
 
 // posts a wake-up trigger to the peer's ntfy endpoint via tor. fire-and-
