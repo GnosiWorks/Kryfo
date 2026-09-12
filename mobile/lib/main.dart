@@ -5328,6 +5328,9 @@ class AppState extends ChangeNotifier {
       try {
         final ciphers = engine.drainInbox();
         if (ciphers.isEmpty) return;
+        // the onion lane counts as an arrival too, or the night's record
+        // would call a phone that only heard direct messages deaf
+        _noteDrain();
         for (final cipher in ciphers) {
           // dedup: same msg can arrive twice (tor late + nostr, or a retry).
           // the first copy consumes the one-time prekey; a duplicate would
