@@ -33,7 +33,6 @@ import '../message_envelope.dart'
         wrapMessage,
         SenderInfo,
         ReactionFrame,
-        EditFrame,
         loadPeerEndpoint,
         grindPow,
         powBits;
@@ -1821,20 +1820,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       m.edited = true;
     });
     await db.editMessage(m.msgUid!, newText);
-    try {
-      final wrapped = await wrapMessage(
-        '',
-        edit: EditFrame(targetUid: m.msgUid!, newText: newText),
-      );
-      final cipher = await signalEncrypt(widget.peerHaloId, wrapped);
-      final useDirectOnion = !_backPaired || _peerXPub == null;
-      final f = useDirectOnion
-          ? Future(() => engine.sendTo(widget.peerOnion, cipher))
-          : Future(() => engine.nostrSend(_peerXPub!, cipher));
-      await f;
-    } catch (e) {
-      dlog('edit send failed: $e');
-    }
+    // queued first, sent now: if the route is down the outbox carries it,
+    // the way it carries a message. the home row shows the new text too.
+    await db.queueEdit(m.msgUid!, widget.peerHaloId, newText);
+    unawaited(appState.refreshContacts());
+    unawaited(appState.sendEdit(widget.peerHaloId, m.msgUid!, newText));
   }
 
   // toggle a reaction on a message. tap same emoji again to remove.
