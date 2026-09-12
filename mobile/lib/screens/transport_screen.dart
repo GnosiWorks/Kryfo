@@ -375,7 +375,7 @@ class _AliveState extends State<_Alive> {
         // the fifteen-minute job knocked, and every stretch with no
         // heartbeat. together they say whether a late message was waiting
         // at the relay, and whether the phone slept or the process died
-        _Line('last message travel', _travel(), HaloColors.text),
+        _Line('last relay arrival', _travel(), HaloColors.text),
         _Line(
           'job runs',
           appState.jobRuns == 0
@@ -408,20 +408,17 @@ class _AliveState extends State<_Alive> {
     );
   }
 
-  // sent-to-received for the newest arrival, from the relay event's own
-  // timestamp. a long travel with a short listening gap means it waited
-  // at the relay while this phone slept
+  // when the newest relay event reached this phone. the wrap's own stamp
+  // is jittered by hours on purpose, so no travel time is claimed from it:
+  // set this against when the message was sent and the quiet stretches
+  // above, and a late one shows as a long gap ending at this time
   String _travel() {
-    final at = (_mem['lastEvAt'] as num?)?.toInt() ?? 0;
     final recv = (_mem['lastEvRecv'] as num?)?.toInt() ?? 0;
-    if (at <= 0 || recv <= 0) return 'nothing yet this process';
-    final lag = recv - at;
+    if (recv <= 0) return 'nothing yet this process';
     final when = DateTime.fromMillisecondsSinceEpoch(recv * 1000);
     final hhmm =
         '${when.hour.toString().padLeft(2, '0')}:${when.minute.toString().padLeft(2, '0')}';
-    if (lag < 90) return 'arrived $hhmm · ${lag}s after sending';
-    if (lag < 3600) return 'arrived $hhmm · ${lag ~/ 60}m after sending';
-    return 'arrived $hhmm · ${lag ~/ 3600}h ${(lag % 3600) ~/ 60}m after sending';
+    return '$hhmm · ${_ago(recv * 1000)}';
   }
 
   Widget _gapLine(String g) {
