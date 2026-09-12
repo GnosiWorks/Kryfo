@@ -2,7 +2,10 @@
 // message requests from people not in your contacts. unknown senders land
 // here first. tap one to open the conversation, read what they sent, then
 // accept / decline / block from inside the chat.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../main.dart' show db, appState;
 import '../theme.dart';
 import '../widgets/stagger_in.dart';
@@ -10,6 +13,7 @@ import '../widgets/kryfo_avatar.dart';
 import '../widgets/intro_chip.dart';
 import '../vouch_text.dart';
 import '../widgets/notice_banner.dart';
+import '../widgets/confirm_sheet.dart';
 import 'chat_screen.dart';
 import 'shield_sheet.dart';
 import '../widgets/motion.dart' show haloRoute;
@@ -120,6 +124,41 @@ class _RequestsScreenState extends State<RequestsScreen> {
     await _load();
   }
 
+  // the three answers live here, on the list. opening a chat to decline
+  // someone was backwards.
+  Future<void> _accept(String id) async {
+    HapticFeedback.selectionClick();
+    await db.acceptRequest(id);
+    unawaited(appState.subscribePeer(id));
+    unawaited(appState.sendAcceptAck(id));
+    await appState.refreshContacts();
+    if (mounted) showHaloToast(context, 'Accepted');
+    await _load();
+  }
+
+  Future<void> _decline(String id) async {
+    HapticFeedback.selectionClick();
+    await db.declineRequest(id);
+    await appState.refreshContacts();
+    await _load();
+  }
+
+  Future<void> _block(String id) async {
+    final ok = await showConfirmSheet(
+      context,
+      title: 'Block $id?',
+      line:
+          'Nothing more from them reaches you. Their request and its '
+          'messages go.',
+      yes: 'Block',
+    );
+    if (!ok || !mounted) return;
+    await appState.block(id);
+    await db.clearUnread(id);
+    await appState.refreshContacts();
+    await _load();
+  }
+
   Future<void> _shield(String id) async {
     final flag = _flags[id];
     if (flag == null) return;
@@ -166,6 +205,9 @@ class _RequestsScreenState extends State<RequestsScreen> {
                   clean: _clean.contains(id),
                   onShield: () => _shield(id),
                   onTap: () => _open(row),
+                  onAccept: () => _accept(id),
+                  onDecline: () => _decline(id),
+                  onBlock: () => _block(id),
                 );
               },
             ),
@@ -217,6 +259,9 @@ class _RequestCard extends StatefulWidget {
   final bool clean;
   final VoidCallback? onShield;
   final VoidCallback onTap;
+  final VoidCallback onAccept;
+  final VoidCallback onDecline;
+  final VoidCallback onBlock;
   const _RequestCard({
     super.key,
     required this.order,
@@ -228,6 +273,9 @@ class _RequestCard extends StatefulWidget {
     this.clean = false,
     this.onShield,
     required this.onTap,
+    required this.onAccept,
+    required this.onDecline,
+    required this.onBlock,
   });
   @override
   State<_RequestCard> createState() => _RequestCardState();
@@ -352,6 +400,24 @@ class _RequestCardState extends State<_RequestCard>
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            _Answer(
+                              label: 'Accept',
+                              filled: true,
+                              onTap: widget.onAccept,
+                            ),
+                            const SizedBox(width: 8),
+                            _Answer(label: 'Decline', onTap: widget.onDecline),
+                            const SizedBox(width: 8),
+                            _Answer(
+                              label: 'Block',
+                              color: HaloColors.rose,
+                              onTap: widget.onBlock,
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -361,6 +427,42 @@ class _RequestCardState extends State<_RequestCard>
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// one answer on a request card: amber filled for accept, quiet for the rest
+class _Answer extends StatelessWidget {
+  final String label;
+  final bool filled;
+  final Color? color;
+  final VoidCallback onTap;
+  const _Answer({
+    required this.label,
+    required this.onTap,
+    this.filled = false,
+    this.color,
+  });
+  @override
+  Widget build(BuildContext context) {
+    final c = color ?? (filled ? HaloColors.onAmber : HaloColors.text2);
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: filled ? HaloColors.amber : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
+          border: filled ? null : Border.all(color: HaloColors.line),
+        ),
+        child: Text(
+          label,
+          style: HaloType.sans(size: 12.5, weight: FontWeight.w600, color: c),
         ),
       ),
     );
