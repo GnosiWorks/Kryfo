@@ -154,6 +154,20 @@ class MainActivity : FlutterFragmentActivity() {
                         }
                         result.success(null)
                     }
+                    // the wipe. clearing our own data is what the settings
+                    // "clear storage" button does: every file and preference
+                    // gone in one synchronous call, the process force-stopped
+                    // so the sticky service does not resurrect it, and the
+                    // next launch is onboarding. dart-side deletes plus
+                    // exit() lost a race: the preference clears were still
+                    // queued for disk when the process died, so the pin and
+                    // the onboarding flag came back.
+                    "wipe" -> {
+                        val am = applicationContext
+                            .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+                        val ok = try { am.clearApplicationUserData() } catch (e: Exception) { false }
+                        result.success(ok)
+                    }
                     "saveToPictures" -> {
                         val bytes = call.argument<ByteArray>("bytes")
                         val name = call.argument<String>("name") ?: "kryfo.jpg"
