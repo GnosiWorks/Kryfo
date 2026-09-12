@@ -77,8 +77,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context,
       title: 'Wipe kryfo?',
       line:
-          'This deletes your identity, all messages, all contacts, and every '
-          'setting on this phone. Unrecoverable unless you have a backup.',
+          'Identity, messages, contacts and settings on this phone. '
+          'Gone for good unless you have a backup.',
       yes: 'Continue',
       keep: 'Cancel',
     );
@@ -219,7 +219,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _Row(
                 icon: Icons.people_outline,
                 label: 'Accept introductions',
-                hint: 'Friends can introduce you to their friends. Off means introductions are dropped.',
+                hint: 'Friends can introduce you to theirs',
                 value: _acceptIntros ? 'On' : 'off',
                 onTap: () async {
                   setState(() => _acceptIntros = !_acceptIntros);
@@ -229,7 +229,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _Row(
                 icon: Icons.shield_outlined,
                 label: 'Scam shield',
-                hint: 'Checks messages from strangers on your phone. Nothing is sent anywhere.',
+                hint: 'Checks strangers on your phone. Nothing leaves it',
                 value: _shieldOn ? 'On' : 'off',
                 onTap: () async {
                   setState(() => _shieldOn = !_shieldOn);
@@ -240,7 +240,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.travel_explore_outlined,
                 label: 'Add link previews',
                 hint:
-                    'When you tap add preview, your phone fetches the page title over tor and sends it inside the message. The other person\'s phone never touches the link. Offered only while tor is up, so on onion mode.',
+                    'You fetch the title over tor and send it along. Onion mode only',
                 value: sendLinkPreviews ? 'On' : 'off',
                 onTap: () async {
                   await saveSendLinkPreviews(!sendLinkPreviews);
@@ -257,7 +257,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _Row(
                 icon: Icons.photo_camera_back_outlined,
                 label: 'Screen security',
-                hint: 'No screenshots while a chat is open. The rest of the app stays as it is',
+                hint: 'No screenshots inside chats',
                 value: appState.secureChats ? 'On' : 'off',
                 onTap: () async {
                   await appState.setSecureChats(!appState.secureChats);
@@ -267,7 +267,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _Row(
                 icon: Icons.visibility_off_outlined,
                 label: 'Block screenshots',
-                hint: 'The whole app. Hidden from recents, no screenshots on any screen',
+                hint: 'Whole app hidden from recents and screenshots',
                 value: appState.blockScreenshots ? 'On' : 'off',
                 onTap: () async {
                   await appState.setBlockScreenshots(
