@@ -886,7 +886,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 43,
+      version: 44,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -945,6 +945,7 @@ class HaloDb {
             delivered INTEGER NOT NULL DEFAULT 0,
             preview TEXT,
             pow_nonce INTEGER,
+            burn_secs INTEGER,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
         ''');
@@ -1014,6 +1015,15 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 44) {
+          // the burn window a queued message was sent with. burn_at is only
+          // set on delivery, so a row the outbox carried lost its timer.
+          try {
+            await db.execute(
+              'ALTER TABLE messages ADD COLUMN burn_secs INTEGER',
+            );
+          } catch (_) {}
+        }
         if (oldV < 43) {
           // the link title cache rides the same helper as the shield table
           // (create if missing), so an existing phone gets it too
@@ -2060,6 +2070,7 @@ class HaloDb {
     String direction,
     String plaintext, {
     int? burnAt,
+    int? burnSecs,
     String? msgUid,
     String? replyTo,
     String? groupId,
@@ -2079,6 +2090,7 @@ class HaloDb {
       'plaintext': plaintext,
       'sent_at': DateTime.now().millisecondsSinceEpoch,
       'burn_at': burnAt,
+      'burn_secs': burnSecs,
       'msg_uid': msgUid,
       'reply_to': replyTo,
       'group_id': groupId,
@@ -3751,6 +3763,7 @@ class AppState extends ChangeNotifier {
       if (ok) {
         dlog('OUTBOX: redelivered $uid');
         await db.markSent(uid);
+        await _lightBurn(r, uid);
         // an open chat reloads and drops the waiting line
         _bumpChatRev(peer);
         notifyListeners();
@@ -3758,6 +3771,17 @@ class AppState extends ChangeNotifier {
     } catch (e) {
       dlog('OUTBOX: $uid still stuck ($e)');
     }
+  }
+
+  // a timed message's clock starts when it is actually sent, and the
+  // outbox is sometimes the one that sends it
+  Future<void> _lightBurn(Map<String, Object?> r, String uid) async {
+    final secs = (r['burn_secs'] as num?)?.toInt();
+    if (secs == null || r['burn_at'] != null) return;
+    await db.setMsgBurnAt(
+      uid,
+      DateTime.now().millisecondsSinceEpoch + secs * 1000,
+    );
   }
 
   Future<void> _drainMedia(
@@ -3785,12 +3809,14 @@ class AppState extends ChangeNotifier {
       fileName: fileName,
       voice: fileName == 'voice.wav',
       voiceDisguised: ((r['voice_disguised'] as int?) ?? 0) == 1,
+      burnSeconds: (r['burn_secs'] as num?)?.toInt(),
       secure: ((r['secure'] as int?) ?? 0) == 1,
       sender: _mySender(),
     );
     if (res == 'ok') {
       dlog('OUTBOX: media redelivered $uid');
       await db.markSent(uid);
+      await _lightBurn(r, uid);
       _bumpChatRev(peer);
       notifyListeners();
     } else {

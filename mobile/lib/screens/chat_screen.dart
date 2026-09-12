@@ -2602,6 +2602,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       fileName: 'voice.wav',
       voiceDisguised: _disguise,
       burnAt: msg.burnAt,
+      burnSecs: msg.burnSecs,
       sent: 0,
     );
     _sendChunkedMedia(
@@ -2802,6 +2803,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       filePath: filePath,
       fileName: name,
       burnAt: msg.burnAt,
+      burnSecs: msg.burnSecs,
       sent: 0,
     );
     _sendChunkedMedia(
@@ -2933,6 +2935,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       msgUid: msgUid,
       mediaPath: mediaPath,
       burnAt: msg.burnAt,
+      burnSecs: msg.burnSecs,
       sent: 0,
       secure: wantSecure,
     );
@@ -3077,6 +3080,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         'out',
         text,
         burnAt: msg.burnAt,
+        burnSecs: msg.burnSecs,
         msgUid: msgUid,
         replyTo: replyToUid,
         sent: 0,

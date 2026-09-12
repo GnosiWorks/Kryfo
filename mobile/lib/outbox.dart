@@ -42,6 +42,9 @@ Future<String> wrapRedelivery(
     preview: preview,
     groupId: groupId == null || groupId.isEmpty ? null : groupId,
     supporterBadge: badge,
+    // the timer rides the retry too, or a disappearing message the outbox
+    // carried stayed forever on both phones
+    burnSeconds: (row['burn_secs'] as num?)?.toInt(),
     powNonce: nonce,
     powBitsUsed: nonce == null ? null : powBits,
     sender: sender,
