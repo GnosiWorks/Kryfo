@@ -56,7 +56,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   Future<void> _rename() async {
     final newName = (await showInputSheet(
       context,
-      title: 'rename group',
+      title: 'Rename group',
       initial: _name,
       save: 'rename',
     ))?.trim();
@@ -71,7 +71,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
         .where((c) => !_members.contains(c.haloId))
         .toList();
     if (available.isEmpty) {
-      showHaloToast(context, 'no contacts to add');
+      showHaloToast(context, 'No contacts to add');
       return;
     }
     final picked = await showHaloSheet<Set<String>>(
@@ -85,7 +85,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       } catch (e) {
         // group full toast
         if (mounted) {
-          showHaloToast(context, e is StateError ? e.message : 'could not add');
+          showHaloToast(context, e is StateError ? e.message : 'Could not add');
         }
         return;
       }
@@ -96,9 +96,9 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   Future<void> _confirmRemove(String haloId) async {
     final ok = await showConfirmSheet(
       context,
-      title: 'remove $haloId?',
-      line: 'they will stop receiving messages from this group.',
-      yes: 'remove',
+      title: 'Remove $haloId?',
+      line: 'They will stop receiving messages from this group.',
+      yes: 'Remove',
     );
     if (ok == true) {
       await appState.removeMembersFromGroup(widget.groupId, [haloId]);
@@ -135,29 +135,29 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   Future<void> _confirmClear() async {
     final ok = await showConfirmSheet(
       context,
-      title: 'clear this conversation?',
+      title: 'Clear this conversation?',
       line:
-          'every message here is erased from this phone. this only clears '
+          'Every message here is erased from this phone. This only clears '
           'your copy, other members keep theirs.',
-      yes: 'clear',
+      yes: 'Clear',
     );
     if (ok == true) {
       await db.clearGroupConversation(widget.groupId);
       if (!mounted) return;
-      showHaloToast(context, 'conversation cleared');
+      showHaloToast(context, 'Conversation cleared');
     }
   }
 
   Future<void> _confirmLeave() async {
     final ok = await showConfirmSheet(
       context,
-      title: _isRoom ? 'leave room?' : 'leave group?',
+      title: _isRoom ? 'Leave room?' : 'Leave group?',
       line: _isRoom
-          ? 'everything in it is wiped from this phone now, and the key you '
+          ? 'Everything in it is wiped from this phone now, and the key you '
                 'used here is gone for good.'
-          : 'you will stop receiving messages and other members will see '
+          : 'You will stop receiving messages and other members will see '
                 'you leave.',
-      yes: 'leave',
+      yes: 'Leave',
     );
     if (ok == true) {
       await appState.leaveGroupAndAnnounce(widget.groupId);
@@ -188,7 +188,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    tooltip: 'back',
+                    tooltip: 'Back',
                     icon: Icon(
                       Icons.chevron_left,
                       color: HaloColors.text,
@@ -198,7 +198,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   ),
                   Expanded(
                     child: Text(
-                      'group info',
+                      'Group info',
                       style: HaloType.serif(
                         size: 18,
                         italic: true,
@@ -274,7 +274,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   if (_isAdmin) ...[
                     const SizedBox(height: 4),
                     Text(
-                      'admin',
+                      'Admin',
                       style: HaloType.mono(
                         size: 10,
                         color: HaloColors.amber,
@@ -292,7 +292,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
               child: Row(
                 children: [
                   Text(
-                    'members',
+                    'Members',
                     style: HaloType.mono(
                       size: 10,
                       color: HaloColors.text3,
@@ -319,7 +319,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'invite',
+                            'Invite',
                             style: HaloType.mono(
                               size: 10,
                               color: HaloColors.violet,
@@ -342,7 +342,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                           ),
                           const SizedBox(width: 3),
                           Text(
-                            'add',
+                            'Add',
                             style: HaloType.mono(
                               size: 10,
                               color: HaloColors.amber,
@@ -391,7 +391,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                                 ),
                                 if (isMe)
                                   Text(
-                                    'you',
+                                    'You',
                                     style: HaloType.mono(
                                       size: 10,
                                       color: HaloColors.amber,
@@ -403,7 +403,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                           ),
                           if (_isAdmin && !isMe)
                             IconButton(
-                              tooltip: 'remove from group',
+                              tooltip: 'Remove from group',
                               icon: Icon(
                                 Icons.remove_circle_outline,
                                 size: 18,
@@ -431,7 +431,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    'wallpaper',
+                    'Wallpaper',
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w500,
@@ -454,7 +454,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    'shared media',
+                    'Shared media',
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w500,
@@ -477,7 +477,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    'clear conversation',
+                    'Clear conversation',
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w500,
@@ -505,7 +505,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    _isRoom ? 'leave room' : 'leave group',
+                    _isRoom ? 'Leave room' : 'Leave group',
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w500,
@@ -543,7 +543,7 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
             children: [
               const SizedBox(width: 20),
               Text(
-                'add members',
+                'Add members',
                 style: HaloType.serif(
                   size: 16,
                   italic: true,
@@ -556,7 +556,7 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                     ? null
                     : () => Navigator.pop(context, _picked),
                 child: Text(
-                  'add ${_picked.length}',
+                  'Add ${_picked.length}',
                   style: HaloType.sans(
                     size: 13,
                     color: _picked.isEmpty

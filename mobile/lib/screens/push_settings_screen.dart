@@ -76,7 +76,7 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'hide message preview',
+                                  'Hide message preview',
                                   style: HaloType.sans(
                                     size: 14,
                                     color: HaloColors.text,
@@ -84,7 +84,7 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  'lock screen shows a generic alert, no sender or message text',
+                                  'Lock screen shows a generic alert, no sender or message text',
                                   style: HaloType.sans(
                                     size: 12,
                                     color: HaloColors.text3,
@@ -105,19 +105,19 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
                       ),
                     ),
                     _PushCard(
-                      name: 'tor only',
+                      name: 'Tor only',
                       accent: 'recommended',
                       active: _mode == PushMode.tor,
                       desc:
-                          'kryfo polls tor in the background. nothing leaves your phone via any third party. the battery cost is small.',
+                          'Kryfo polls tor in the background. Nothing leaves your phone via any third party. The battery cost is small.',
                       badges: const ['no metadata', '~30s latency'],
                       onTap: () => _pick(PushMode.tor),
                     ),
                     _PushCard(
-                      name: 'ntfy push',
+                      name: 'Ntfy push',
                       active: _mode == PushMode.ntfy,
                       desc:
-                          'a wake-up ping comes through a public ntfy server. the ping carries no message content, only a nudge to fetch. faster than tor only.',
+                          'A wake-up ping comes through a public ntfy server. The ping carries no message content, only a nudge to fetch. Faster than tor only.',
                       badges: const [
                         'some metadata',
                         '~2s latency',
@@ -133,17 +133,17 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
                           : null,
                     ),
                     _PushCard(
-                      name: 'via google',
+                      name: 'Via google',
                       active: false,
                       soon: true,
                       desc:
-                          'google would send the wake-up ping. it never sees '
+                          'Google would send the wake-up ping. It never sees '
                           'what you were sent, but it does learn that you were '
-                          'sent something, and when. we are looking at '
+                          'sent something, and when. We are looking at '
                           'unifiedpush instead: same speed, no google.',
                       badges: const [
                         'not available',
-                        'needs google play',
+                        'Needs google play',
                         'leaks timing',
                       ],
                       onTap: () {},
@@ -171,7 +171,7 @@ class _BackBar extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            tooltip: 'back',
+            tooltip: 'Back',
             onPressed: onBack,
             icon: Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
           ),
@@ -195,7 +195,7 @@ class _Head extends StatelessWidget {
             spacing: 8,
             children: [
               Text(
-                'notifications',
+                'Notifications',
                 style: HaloType.serif(size: 30, weight: FontWeight.w400),
               ),
               Text(
@@ -211,7 +211,7 @@ class _Head extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'how kryfo learns a message has arrived',
+            'How kryfo learns a message has arrived',
             style: HaloType.sans(size: 11, color: HaloColors.text2),
           ),
         ],
@@ -291,7 +291,7 @@ class _PushCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        'soon',
+                        'Soon',
                         style: HaloType.mono(
                           size: 9,
                           color: HaloColors.text3,
@@ -384,7 +384,7 @@ class _ServerFieldState extends State<_ServerField> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'server',
+          'Server',
           style: HaloType.mono(size: 10, color: HaloColors.text3, letter: 0.1),
         ),
         const SizedBox(height: 4),
@@ -413,13 +413,13 @@ class _ServerFieldState extends State<_ServerField> {
         ),
         const SizedBox(height: 4),
         Text(
-          'use https://ntfy.sh (default) or your own self-hosted instance',
+          'Use https://ntfy.sh (default) or your own self-hosted instance',
           style: HaloType.sans(size: 10, color: HaloColors.text3, height: 1.4),
         ),
         if (widget.topic.isNotEmpty) ...[
           const SizedBox(height: 12),
           Text(
-            'your endpoint',
+            'Your endpoint',
             style: HaloType.mono(
               size: 10,
               color: HaloColors.text3,
@@ -451,7 +451,7 @@ class _Footnote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'tor only is the default. the faster modes leak some timing to your push provider. message content is end to end encrypted either way.',
+      'Tor only is the default. The faster modes leak some timing to your push provider. Message content is end to end encrypted either way.',
       style: HaloType.sans(size: 11, color: HaloColors.text3, height: 1.6),
       textAlign: TextAlign.center,
     );

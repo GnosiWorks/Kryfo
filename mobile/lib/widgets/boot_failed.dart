@@ -26,14 +26,14 @@ class BootFailedScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'kryfo could not start',
+                'Kryfo could not start',
                 textAlign: TextAlign.center,
                 style: HaloType.serif(size: 22, color: HaloColors.text),
               ),
               const SizedBox(height: 10),
               Text(
-                'this is a fault on this device, not the network. '
-                'tor is not involved.',
+                'This is a fault on this device, not the network. '
+                'Tor is not involved.',
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 13,
@@ -62,7 +62,7 @@ class BootFailedScreen extends StatelessWidget {
                     onPressed: () =>
                         Clipboard.setData(ClipboardData(text: error)),
                     child: Text(
-                      'copy',
+                      'Copy',
                       style: HaloType.mono(size: 12, color: HaloColors.text3),
                     ),
                   ),
@@ -81,7 +81,7 @@ class BootFailedScreen extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      'try again',
+                      'Try again',
                       style: HaloType.sans(size: 14, color: HaloColors.onAmber),
                     ),
                   ),

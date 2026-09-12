@@ -2461,7 +2461,7 @@ class HaloDb {
           ? 'group_id = ?'
           : 'group_id = ? AND rowid < ?',
       whereArgs: beforeRowid == null ? [groupId] : [groupId, beforeRowid],
-      orderBy: 'rowid DESC',
+      orderBy: 'Rowid DESC',
       limit: limit,
     );
     return rows.reversed.toList();
@@ -2903,7 +2903,7 @@ class HaloDb {
       columns: ['slice'],
       where: 'media_id = ?',
       whereArgs: [mediaId],
-      orderBy: 'idx ASC',
+      orderBy: 'Idx ASC',
     );
     return [for (final row in r) (row['slice'] as String?) ?? ''];
   }
@@ -2993,7 +2993,7 @@ class HaloDb {
           ? 'peer_id = ? AND group_id IS NULL'
           : 'peer_id = ? AND group_id IS NULL AND rowid < ?',
       whereArgs: beforeRowid == null ? [peerId] : [peerId, beforeRowid],
-      orderBy: 'rowid DESC',
+      orderBy: 'Rowid DESC',
       limit: limit,
     );
     return rows.reversed.toList();
@@ -3014,7 +3014,7 @@ class HaloDb {
       columns: ['*', 'rowid'],
       where: "peer_id = ? AND group_id IS NULL AND rowid > ?",
       whereArgs: [peerId, afterRowid],
-      orderBy: 'rowid ASC',
+      orderBy: 'Rowid ASC',
     );
   }
 
@@ -3048,7 +3048,7 @@ class HaloDb {
           "peer_id = ? AND group_id IS NULL AND media_path IS NOT NULL "
           "AND media_path != ''",
       whereArgs: [peerId],
-      orderBy: 'rowid DESC',
+      orderBy: 'Rowid DESC',
     );
   }
 
@@ -3073,7 +3073,7 @@ class HaloDb {
       'messages',
       where: 'peer_id = ? AND group_id IS NULL',
       whereArgs: [peerId],
-      orderBy: 'rowid DESC',
+      orderBy: 'Rowid DESC',
       limit: 1,
     );
     return rows.isEmpty ? null : rows.first;
@@ -3136,7 +3136,7 @@ Future<void> _signalTables(Database db) async {
 Future<String> makePreKeyBundleB64() async {
   final spk = await signalSession.signedPreKeyStore.loadSignedPreKey(1);
   final database = await db.open();
-  final pkRows = await database.query('prekeys', limit: 1, orderBy: 'id ASC');
+  final pkRows = await database.query('prekeys', limit: 1, orderBy: 'Id ASC');
   if (pkRows.isEmpty) throw 'no prekeys';
   final pk = await signalSession.preKeyStore.loadPreKey(
     pkRows.first['id'] as int,
@@ -3332,7 +3332,7 @@ Future<String> handleHaloUri(String raw) async {
     try {
       await processPeerBundle(parsed['id']!, parsed['bundle']!);
     } catch (e) {
-      return 'bundle error: $e';
+      return 'Bundle error: $e';
     }
     await db.upsertContact(parsed['id']!, parsed['onion']!, '');
     await db.setPeerBundle(parsed['id']!, parsed['bundle']!);
@@ -3347,12 +3347,12 @@ Future<String> handleHaloUri(String raw) async {
     }
     await appState.subscribePeer(parsed['id']!);
     return already
-        ? 'already saved: ${parsed['id']}'
-        : 'added ${parsed['id']} · you can message them now';
+        ? 'Already saved: ${parsed['id']}'
+        : 'Added ${parsed['id']} · you can message them now';
   } else {
     await db.upsertContact(parsed['id']!, parsed['onion']!, parsed['xpub']!);
     await appState.subscribePeer(parsed['id']!);
-    return 'peer imported (v1): ${parsed['id']}';
+    return 'Peer imported (v1): ${parsed['id']}';
   }
 }
 
@@ -4465,7 +4465,7 @@ class AppState extends ChangeNotifier {
     final bodyText = unsaved
         ? [
             env.message,
-            'an attachment could not be saved on this phone',
+            'An attachment could not be saved on this phone',
           ].where((s) => s.trim().isNotEmpty).join('\n')
         : env.message;
     // dedup: a message can arrive twice - the original, then the preview re-send
@@ -4580,7 +4580,7 @@ class AppState extends ChangeNotifier {
       final gBody = env.message.isNotEmpty
           ? env.message
           : (fileName == 'voice.wav'
-                ? 'voice message'
+                ? 'Voice message'
                 : fileName ?? (mediaPath != null ? 'photo' : ''));
       final who = looksLikeRoomKey(senderHaloId)
           ? roomTag(senderHaloId)
@@ -5065,7 +5065,7 @@ class AppState extends ChangeNotifier {
   // what the splash says while boot runs. the keys and the database come
   // first and take the longest on a new phone; tor starts once the home
   // is ready to paint
-  String bootPhase = 'setting up your keys';
+  String bootPhase = 'Setting up your keys';
 
   Future<void> _boot() async {
     dlog('LAUNCH boot');
@@ -5092,7 +5092,7 @@ class AppState extends ChangeNotifier {
     }
     myXPub = engine.myXPubkey();
     dlog('BOOT identity +${bsw.elapsedMilliseconds}ms');
-    bootPhase = 'opening your chats';
+    bootPhase = 'Opening your chats';
     notifyListeners();
     _appLinks = AppLinks();
     // a link carries a prekey bundle, and taking one needs the signal
@@ -5251,7 +5251,7 @@ class AppState extends ChangeNotifier {
           if (ctx != null && ctx.mounted) {
             showHaloToast(
               ctx,
-              'timed messages are not clearing. restart kryfo',
+              'Timed messages are not clearing. Restart kryfo',
             );
           }
         }
@@ -6012,7 +6012,7 @@ class AppState extends ChangeNotifier {
           engine
               .sendFirstContact(xpub, fc, cipher)
               .then((r) => settle('firstcontact', r))
-              .catchError((_) => settle('firstcontact', 'err')),
+              .catchError((_) => settle('Firstcontact', 'err')),
         );
       }
       return done.future;
@@ -6192,9 +6192,9 @@ class AppState extends ChangeNotifier {
   // them and opens the rest.
   Future<String> joinRoom(RoomLink link) async {
     final now = DateTime.now().millisecondsSinceEpoch;
-    if (link.expiresAt <= now) return 'this room has already expired';
+    if (link.expiresAt <= now) return 'This room has already expired';
     if (await db.groupExists(link.roomId)) {
-      return 'you are already in this room';
+      return 'You are already in this room';
     }
     final k = engine.roomKeygen();
     if (k == null) return 'could not make a room key';
@@ -6230,8 +6230,8 @@ class AppState extends ChangeNotifier {
     );
     dlog('room join: $r');
     return r == 'ok'
-        ? 'joined ${link.name}'
-        : 'joined ${link.name}, but the creator could not be reached yet';
+        ? 'Joined ${link.name}'
+        : 'Joined ${link.name}, but the creator could not be reached yet';
   }
 
   // open a subscription for every member key we do not listen to yet
@@ -7008,7 +7008,7 @@ class _RootShellState extends State<RootShell> {
           child: Text(
             appState.onboardingComplete
                 ? 'booting...'
-                : 'setting up your identity...',
+                : 'Setting up your identity...',
             style: HaloType.mono(size: 11, color: HaloColors.text2),
           ),
         ),
@@ -7086,7 +7086,7 @@ Future<void> showAddContact(BuildContext context) async {
           const SheetHandle(),
           const SizedBox(height: 18),
           Text(
-            'add someone',
+            'Add someone',
             style: HaloType.serif(
               size: 22,
               italic: true,
@@ -7095,7 +7095,7 @@ Future<void> showAddContact(BuildContext context) async {
           ),
           const SizedBox(height: 6),
           Text(
-            'scan their code, or paste the link or @handle they gave you.',
+            'Scan their code, or paste the link or @handle they gave you.',
             style: HaloType.sans(size: 12.5, color: HaloColors.text2),
           ),
           const SizedBox(height: 16),
@@ -7117,7 +7117,7 @@ Future<void> showAddContact(BuildContext context) async {
                   ),
                   const SizedBox(width: 9),
                   Text(
-                    'scan their code',
+                    'Scan their code',
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w600,
@@ -7159,7 +7159,7 @@ Future<void> showAddContact(BuildContext context) async {
               ),
               child: Center(
                 child: Text(
-                  'add them',
+                  'Add them',
                   style: HaloType.sans(
                     size: 13.5,
                     weight: FontWeight.w600,
@@ -7203,7 +7203,7 @@ Future<void> showAddContact(BuildContext context) async {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'every way to add someone',
+                          'Every way to add someone',
                           style: HaloType.sans(
                             size: 14,
                             color: HaloColors.text,
@@ -7211,7 +7211,7 @@ Future<void> showAddContact(BuildContext context) async {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'show your code, send a link, claim a handle',
+                          'Show your code, send a link, claim a handle',
                           style: HaloType.sans(
                             size: 11.5,
                             color: HaloColors.text2,
@@ -7293,7 +7293,7 @@ class DevScreen extends StatefulWidget {
 }
 
 class _DevScreenState extends State<DevScreen> {
-  final _msgCtrl = TextEditingController(text: 'hello from the other side');
+  final _msgCtrl = TextEditingController(text: 'Hello from the other side');
   String _myAddr = '';
   String _status = '';
   TorStatus _torStatus = TorStatus.off;
@@ -7307,7 +7307,7 @@ class _DevScreenState extends State<DevScreen> {
   @override
   void initState() {
     super.initState();
-    _status = appState.restored ? 'identity restored' : 'identity created';
+    _status = appState.restored ? 'Identity restored' : 'Identity created';
     _loadLastPeer();
   }
 
@@ -7322,7 +7322,7 @@ class _DevScreenState extends State<DevScreen> {
   }
 
   Future<void> _startListener() async {
-    setState(() => _status = 'starting tor (~30s)...');
+    setState(() => _status = 'Starting tor (~30s)...');
     final docsDir = await getApplicationDocumentsDirectory();
     // must run off the ui thread - starting tor blocks on socket i/o long
     // enough that android anr'd the onboarding page. isolate twin already
@@ -7363,7 +7363,7 @@ class _DevScreenState extends State<DevScreen> {
       setState(() => _status = 'scan or import a peer first');
       return;
     }
-    setState(() => _status = 'encrypting + sending (~30s)...');
+    setState(() => _status = 'Encrypting + sending (~30s)...');
     final plain = _msgCtrl.text;
     final cipher = engine.encryptFor(_peerXPub, plain);
     if (cipher.startsWith('error')) {
@@ -7379,7 +7379,7 @@ class _DevScreenState extends State<DevScreen> {
 
   Future<void> _showMyQr() async {
     if (_myAddr.isEmpty) {
-      setState(() => _status = 'tap start listening first');
+      setState(() => _status = 'Tap start listening first');
       return;
     }
     final uri = await buildHaloUriV3(
@@ -7398,7 +7398,7 @@ class _DevScreenState extends State<DevScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'your kryfo',
+                'Your kryfo',
                 style: HaloType.serif(
                   size: 14,
                   italic: true,
@@ -7438,10 +7438,10 @@ class _DevScreenState extends State<DevScreen> {
               TextButton(
                 onPressed: () {
                   copySensitive(uri);
-                  showHaloToast(context, 'uri copied');
+                  showHaloToast(context, 'Uri copied');
                 },
                 child: Text(
-                  'copy uri',
+                  'Copy uri',
                   style: HaloType.sans(color: HaloColors.amber),
                 ),
               ),
@@ -7459,7 +7459,7 @@ class _DevScreenState extends State<DevScreen> {
       builder: (_) => AlertDialog(
         backgroundColor: HaloColors.surface2,
         title: Text(
-          'add a kryfo',
+          'Add a kryfo',
           style: HaloType.sans(color: HaloColors.amber),
         ),
         content: Column(
@@ -7470,7 +7470,7 @@ class _DevScreenState extends State<DevScreen> {
               child: ElevatedButton.icon(
                 onPressed: () => Navigator.pop(context, 'scan'),
                 icon: const Icon(Icons.qr_code_scanner),
-                label: const Text('scan qr'),
+                label: const Text('Scan qr'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: HaloColors.amber,
                   foregroundColor: HaloColors.onAmber,
@@ -7483,7 +7483,7 @@ class _DevScreenState extends State<DevScreen> {
               child: OutlinedButton.icon(
                 onPressed: () => Navigator.pop(context, 'code'),
                 icon: const Icon(Icons.dialpad, size: 18),
-                label: const Text('pairing code'),
+                label: const Text('Pairing code'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: HaloColors.text2,
                   side: BorderSide(color: HaloColors.line),
@@ -7510,12 +7510,12 @@ class _DevScreenState extends State<DevScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, null),
-            child: const Text('cancel'),
+            child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, 'paste'),
             child: Text(
-              'import',
+              'Import',
               style: HaloType.sans(color: HaloColors.amber),
             ),
           ),
@@ -7569,7 +7569,7 @@ class _DevScreenState extends State<DevScreen> {
         backgroundColor: HaloColors.surface,
         elevation: 0,
         title: Text(
-          'dev',
+          'Dev',
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
@@ -7597,7 +7597,7 @@ class _DevScreenState extends State<DevScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'your kryfo:',
+                'Your kryfo:',
                 style: HaloType.sans(size: 11, color: HaloColors.text2),
               ),
               Container(
@@ -7621,7 +7621,7 @@ class _DevScreenState extends State<DevScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
-                    'restored from disk',
+                    'Restored from disk',
                     style: HaloType.mono(size: 9, color: HaloColors.green),
                   ),
                 ),
@@ -7633,7 +7633,7 @@ class _DevScreenState extends State<DevScreen> {
                   foregroundColor: HaloColors.onAmber,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-                child: Text(_myAddr.isEmpty ? 'start listening' : 'listening'),
+                child: Text(_myAddr.isEmpty ? 'Start listening' : 'listening'),
               ),
               const SizedBox(height: 12),
               Row(
@@ -7641,7 +7641,7 @@ class _DevScreenState extends State<DevScreen> {
                   Expanded(
                     child: OutlinedButton.icon(
                       icon: Icon(Icons.qr_code, color: HaloColors.amber),
-                      label: const Text('show my qr'),
+                      label: const Text('Show my qr'),
                       onPressed: _showMyQr,
                     ),
                   ),
@@ -7649,7 +7649,7 @@ class _DevScreenState extends State<DevScreen> {
                   Expanded(
                     child: OutlinedButton.icon(
                       icon: Icon(Icons.content_paste, color: HaloColors.violet),
-                      label: const Text('import peer'),
+                      label: const Text('Import peer'),
                       onPressed: _importPeer,
                     ),
                   ),
@@ -7680,7 +7680,7 @@ class _DevScreenState extends State<DevScreen> {
                 controller: _msgCtrl,
                 style: HaloType.sans(color: HaloColors.text),
                 decoration: InputDecoration(
-                  labelText: 'message (will be encrypted)',
+                  labelText: 'Message (will be encrypted)',
                   labelStyle: HaloType.sans(color: HaloColors.text2),
                   border: const OutlineInputBorder(),
                 ),
@@ -7695,7 +7695,7 @@ class _DevScreenState extends State<DevScreen> {
                   foregroundColor: HaloColors.onAmber,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
-                child: const Text('encrypt + send'),
+                child: const Text('Encrypt + send'),
               ),
               const SizedBox(height: 16),
               TorWarmupGraph(status: _torStatus, bootstrapPct: _bootstrapPct),
@@ -7710,7 +7710,7 @@ class _DevScreenState extends State<DevScreen> {
                 onTap: () =>
                     Navigator.of(context).push(haloRoute(const ModesScreen())),
                 child: Text(
-                  'speed & privacy →',
+                  'Speed & privacy →',
                   style: HaloType.mono(size: 11, color: HaloColors.amber),
                 ),
               ),
@@ -7720,7 +7720,7 @@ class _DevScreenState extends State<DevScreen> {
                   context,
                 ).push(haloRoute(const PushSettingsScreen())),
                 child: Text(
-                  'notifications →',
+                  'Notifications →',
                   style: HaloType.mono(size: 11, color: HaloColors.amber),
                 ),
               ),
@@ -7733,14 +7733,14 @@ class _DevScreenState extends State<DevScreen> {
                       builder: (ctx) => AlertDialog(
                         backgroundColor: HaloColors.surface3,
                         title: Text(
-                          'disable app lock?',
+                          'Disable app lock?',
                           style: HaloType.serif(
                             size: 18,
                             color: HaloColors.text,
                           ),
                         ),
                         content: Text(
-                          'the pin will be removed. anyone with your phone will see kryfo when they open it.',
+                          'The pin will be removed. Anyone with your phone will see kryfo when they open it.',
                           style: HaloType.sans(
                             size: 13,
                             color: HaloColors.text2,
@@ -7750,7 +7750,7 @@ class _DevScreenState extends State<DevScreen> {
                           TextButton(
                             onPressed: () => Navigator.of(ctx).pop(false),
                             child: Text(
-                              'cancel',
+                              'Cancel',
                               style: HaloType.sans(
                                 size: 13,
                                 color: HaloColors.text2,
@@ -7760,7 +7760,7 @@ class _DevScreenState extends State<DevScreen> {
                           TextButton(
                             onPressed: () => Navigator.of(ctx).pop(true),
                             child: Text(
-                              'disable',
+                              'Disable',
                               style: HaloType.sans(
                                 size: 13,
                                 color: HaloColors.rose,
@@ -7780,7 +7780,7 @@ class _DevScreenState extends State<DevScreen> {
                 child: AnimatedBuilder(
                   animation: lockState,
                   builder: (_, _) => Text(
-                    lockState.enabled ? 'app lock · on →' : 'app lock · off →',
+                    lockState.enabled ? 'App lock · on →' : 'App lock · off →',
                     style: HaloType.mono(size: 11, color: HaloColors.amber),
                   ),
                 ),
@@ -7964,14 +7964,14 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
           // messages send and arrive over relays, full 3 hops. the remaining
           // wait only publishes our own address so peers can dial us direct.
           final line = s == TorStatus.off
-              ? 'tor is off'
+              ? 'Tor is off'
               : s == TorStatus.reachable
-              ? 'connected · routed through 3 relays'
+              ? 'Connected · routed through 3 relays'
               : s == TorStatus.publishing
-              ? 'ready to send · publishing your address'
+              ? 'Ready to send · publishing your address'
               : s == TorStatus.bootstrapped
-              ? 'ready to send · finishing setup'
-              : 'connecting · $pct%';
+              ? 'Ready to send · finishing setup'
+              : 'Connecting · $pct%';
           return Padding(
             padding: const EdgeInsets.fromLTRB(22, 0, 22, 16),
             child: Column(
@@ -7981,7 +7981,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                 const SheetHandle(),
                 const SizedBox(height: 8),
                 Text(
-                  'tor',
+                  'Tor',
                   style: HaloType.serif(
                     size: 20,
                     italic: true,
@@ -7999,8 +7999,8 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                   const SizedBox(height: 16),
                   Text(
                     s == TorStatus.off
-                        ? 'tor is off. turn it on to connect privately.'
-                        : 'the first connection takes a minute or two while tor builds a private route. after that it is cached, so opening kryfo later is much faster.',
+                        ? 'Tor is off. Turn it on to connect privately.'
+                        : 'The first connection takes a minute or two while tor builds a private route. After that it is cached, so opening kryfo later is much faster.',
                     style: HaloType.sans(
                       size: 12.5,
                       color: HaloColors.text,
@@ -8008,7 +8008,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'a faster mode that skips tor (and reveals your ip) is coming soon.',
+                    'A faster mode that skips tor (and reveals your ip) is coming soon.',
                     style: HaloType.sans(size: 11, color: HaloColors.text2),
                   ),
                 ],
@@ -8110,13 +8110,13 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
           }
           final mode = appState.sendMode;
           final txt = mode == 'balanced'
-              ? (appState.online ? 'via relay' : 'offline')
+              ? (appState.online ? 'Via relay' : 'offline')
               : mode == 'fast'
-              ? (appState.online ? 'fast' : 'offline')
+              ? (appState.online ? 'Fast' : 'offline')
               : off
-              ? 'tor off'
+              ? 'Tor off'
               : (secured || usable)
-              ? 'tor ready'
+              ? 'Tor ready'
               : 'connecting';
           return tinted(
             (c) => Row(

@@ -252,7 +252,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 alignment: Alignment.center,
                 children: [
                   Semantics(
-                    label: 'jump to the newest',
+                    label: 'Jump to the newest',
                     button: true,
                     child: GestureDetector(
                       onTap: () {
@@ -733,7 +733,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       } else if (orig.fileName != null) {
         quoted = orig.fileName;
       } else {
-        quoted = 'message unavailable';
+        quoted = 'Message unavailable';
         quotedAuthor = null;
       }
     }
@@ -849,10 +849,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         showHaloToast(
           context,
           html.startsWith('error: tor')
-              ? 'tor is not up yet · sending without'
+              ? 'Tor is not up yet · sending without'
               : html.startsWith('error:')
               ? "couldn't reach it · sending without"
-              : 'no title came back · sending without',
+              : 'No title came back · sending without',
         );
         return;
       }
@@ -1087,7 +1087,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     await shredPicked(res);
     if (data == null) return;
     if (data.length > 8 * 1024 * 1024) {
-      if (mounted) showHaloToast(context, 'gif too big · 8 mb max');
+      if (mounted) showHaloToast(context, 'Gif too big · 8 mb max');
       return;
     }
     // raw bytes through the image lane - re-encoding kills the animation.
@@ -1236,7 +1236,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   Future<void> _sendGroupFileBytes(Uint8List data, String name) async {
     if (data.length > 8 * 1024 * 1024) {
-      if (mounted) showHaloToast(context, 'file too big · 8 mb max');
+      if (mounted) showHaloToast(context, 'File too big · 8 mb max');
       return;
     }
     final uid = newMsgUid();
@@ -1364,7 +1364,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               const SheetHandle(),
               const SizedBox(height: 14),
               Text(
-                'burn timer',
+                'Burn timer',
                 style: HaloType.serif(
                   size: 16,
                   italic: true,
@@ -1373,7 +1373,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               ),
               const SizedBox(height: 6),
               Text(
-                'new messages disappear after this',
+                'New messages disappear after this',
                 style: HaloType.sans(size: 11, color: HaloColors.text3),
               ),
               const SizedBox(height: 12),
@@ -1780,7 +1780,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Text(
-                'pinned messages',
+                'Pinned messages',
                 style: HaloType.mono(
                   size: 11,
                   color: HaloColors.text3,
@@ -1821,7 +1821,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       ),
                       const SizedBox(width: 12),
                       Semantics(
-                        label: 'close',
+                        label: 'Close',
                         button: true,
                         child: InkWell(
                           onTap: () {
@@ -1859,7 +1859,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (!m.pinned) {
       final count = _messages.where((x) => x.pinned).length;
       if (count >= 3) {
-        if (mounted) showHaloToast(context, 'max 3 pinned');
+        if (mounted) showHaloToast(context, 'Max 3 pinned');
         return;
       }
     }
@@ -1873,7 +1873,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final next = !m.saved;
     setState(() => m.saved = next);
     await db.setSaved(m.msgUid!, next);
-    if (mounted) showHaloToast(context, next ? 'saved' : 'removed from saved');
+    if (mounted) showHaloToast(context, next ? 'Saved' : 'Removed from saved');
   }
 
   Future<void> _forwardGroupMessage(_GMsg m) async {
@@ -1889,7 +1889,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
               child: Text(
-                'forward to',
+                'Forward to',
                 style: HaloType.serif(
                   size: 18,
                   italic: true,
@@ -1901,7 +1901,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
                 child: Text(
-                  'no contacts to forward to',
+                  'No contacts to forward to',
                   style: HaloType.sans(size: 13, color: HaloColors.text2),
                 ),
               )
@@ -1979,7 +1979,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           children: [
             const SheetHandle(),
             Text(
-              'edit message',
+              'Edit message',
               style: HaloType.serif(
                 size: 20,
                 italic: true,
@@ -2008,7 +2008,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
                   child: Text(
-                    'cancel',
+                    'Cancel',
                     style: HaloType.sans(size: 13, color: HaloColors.text2),
                   ),
                 ),
@@ -2016,7 +2016,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, ctrl.text),
                   child: Text(
-                    'save',
+                    'Save',
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w500,
@@ -2056,7 +2056,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
               child: Text(
-                'unsend message',
+                'Unsend message',
                 style: HaloType.serif(size: 18, color: HaloColors.text),
               ),
             ),
@@ -2083,7 +2083,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     ),
                     const SizedBox(width: 14),
                     Text(
-                      'unsend',
+                      'Unsend',
                       style: HaloType.sans(size: 14, color: HaloColors.rose),
                     ),
                   ],
@@ -2216,7 +2216,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               NoticeBanner(
                 glyph: NoticeGlyph.clock,
                 text:
-                    'this room and everything in it disappears in '
+                    'This room and everything in it disappears in '
                     '${expiryWords(DateTime.fromMillisecondsSinceEpoch(_roomExpiresAt!).difference(DateTime.now()))}',
                 color: HaloColors.violet,
                 margin: const EdgeInsets.fromLTRB(12, 6, 12, 2),
@@ -2244,7 +2244,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'ghost mode on · burns in ${_fmtBurn(_burnSeconds)}',
+                      'Ghost mode on · burns in ${_fmtBurn(_burnSeconds)}',
                       style: HaloType.mono(
                         size: 10,
                         color: HaloColors.amber,
@@ -2260,8 +2260,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                   ? Center(
                       child: Text(
                         _isAdmin
-                            ? 'group created. say hi.'
-                            : 'no messages yet.',
+                            ? 'Group created. Say hi.'
+                            : 'No messages yet.',
                         style: HaloType.serif(
                           size: 14,
                           italic: true,
@@ -2488,7 +2488,7 @@ class _GroupPinnedBar extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'pinned',
+                      'Pinned',
                       style: HaloType.mono(
                         size: 9.5,
                         color: HaloColors.amber,
@@ -2542,7 +2542,7 @@ class _Header extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            tooltip: 'back',
+            tooltip: 'Back',
             icon: Icon(Icons.chevron_left, color: HaloColors.text, size: 26),
             onPressed: onBack,
           ),
@@ -2642,7 +2642,7 @@ class _Header extends StatelessWidget {
             ),
           if (onSearch != null)
             IconButton(
-              tooltip: 'search this chat',
+              tooltip: 'Search this chat',
               icon: Icon(Icons.search, color: HaloColors.text2, size: 21),
               onPressed: onSearch,
             ),
@@ -2676,7 +2676,7 @@ class _ReplyQuoteBar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'replying to ${target.direction == "out" ? "you" : target.senderName}',
+                  'Replying to ${target.direction == "out" ? "you" : target.senderName}',
                   style: HaloType.mono(
                     size: 9.5,
                     color: HaloColors.amber,
@@ -2694,7 +2694,7 @@ class _ReplyQuoteBar extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'close',
+            tooltip: 'Close',
             icon: Icon(Icons.close_rounded, size: 18, color: HaloColors.text2),
             onPressed: onCancel,
           ),
@@ -2747,7 +2747,7 @@ class _Composer extends StatelessWidget {
           Row(
             children: [
               Semantics(
-                label: 'timed messages',
+                label: 'Timed messages',
                 button: true,
                 child: GestureDetector(
                   onTap: onToggleGhost,
@@ -2766,7 +2766,7 @@ class _Composer extends StatelessWidget {
               ),
               // the camera that keeps its photos inside kryfo
               Semantics(
-                label: 'open the camera',
+                label: 'Open the camera',
                 button: true,
                 child: GestureDetector(
                   onTap: onCamera,
@@ -2782,7 +2782,7 @@ class _Composer extends StatelessWidget {
                 ),
               ),
               Semantics(
-                label: 'attach a photo',
+                label: 'Attach a photo',
                 button: true,
                 child: GestureDetector(
                   onTap: onAttach,
@@ -2816,7 +2816,7 @@ class _Composer extends StatelessWidget {
                     style: HaloType.sans(size: 14, color: HaloColors.text),
                     cursorColor: HaloColors.amber,
                     decoration: InputDecoration(
-                      hintText: 'message',
+                      hintText: 'Message',
                       hintStyle: HaloType.sans(
                         size: 14,
                         color: HaloColors.text3,
@@ -2842,7 +2842,7 @@ class _Composer extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Semantics(
-                          label: 'disguise voice',
+                          label: 'Disguise voice',
                           button: true,
                           child: GestureDetector(
                             onTap: onToggleDisguise,
@@ -2871,7 +2871,7 @@ class _Composer extends StatelessWidget {
                   }
                   final canSend = !sending && hasText;
                   return PressScale(
-                    label: 'send',
+                    label: 'Send',
                     onTap: canSend ? onSend : null,
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
@@ -3173,7 +3173,7 @@ class _GroupBubble extends StatelessWidget {
                                 ),
                               ),
                               child: Text(
-                                'supporter',
+                                'Supporter',
                                 style: HaloType.mono(
                                   size: 7.5,
                                   color: HaloColors.amber,
@@ -3508,7 +3508,7 @@ class _GroupBubble extends StatelessWidget {
                                         ],
                                         if (m.edited) ...[
                                           Text(
-                                            'edited ',
+                                            'Edited ',
                                             style: HaloType.mono(
                                               size: 9,
                                               color:
@@ -3829,7 +3829,7 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
                       color: HaloColors.line2,
                     ),
                     Semantics(
-                      label: 'reply',
+                      label: 'Reply',
                       button: true,
                       child: _ActionTap(
                         icon: Icons.reply_rounded,
@@ -3879,10 +3879,10 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
       );
     }
 
-    add(Icons.push_pin_outlined, widget.pinned ? 'unpin' : 'pin', widget.onPin);
+    add(Icons.push_pin_outlined, widget.pinned ? 'Unpin' : 'pin', widget.onPin);
     add(
       widget.saved ? Icons.bookmark : Icons.bookmark_outline,
-      widget.saved ? 'unsave' : 'save',
+      widget.saved ? 'Unsave' : 'save',
       widget.onSave,
     );
     add(Icons.copy_rounded, 'copy', widget.onCopy);

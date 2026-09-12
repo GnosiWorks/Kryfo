@@ -121,7 +121,7 @@ class _ScanScreenState extends State<ScanScreen>
                 child: Row(
                   children: [
                     IconButton(
-                      tooltip: 'back',
+                      tooltip: 'Back',
                       icon: const Icon(
                         Icons.chevron_left,
                         color: Colors.white,
@@ -131,7 +131,7 @@ class _ScanScreenState extends State<ScanScreen>
                     ),
                     Expanded(
                       child: Text(
-                        'scan a kryfo qr',
+                        'Scan a kryfo qr',
                         style: HaloType.serif(
                           size: 18,
                           italic: true,
@@ -140,7 +140,7 @@ class _ScanScreenState extends State<ScanScreen>
                       ),
                     ),
                     IconButton(
-                      tooltip: 'flash',
+                      tooltip: 'Flash',
                       onPressed: () async {
                         final cam = _cam;
                         if (cam == null) return;
@@ -195,7 +195,7 @@ class _ScanScreenState extends State<ScanScreen>
                     ),
                     child: Text(
                       _hint ??
-                          'point at a kryfo qr · nothing leaves your phone',
+                          'Point at a kryfo qr · nothing leaves your phone',
                       textAlign: TextAlign.center,
                       style: HaloType.sans(
                         size: 12.5,

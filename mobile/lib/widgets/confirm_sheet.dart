@@ -4,6 +4,7 @@
 // sheet, so a confirmation on the group page feels like one on settings.
 import 'package:flutter/material.dart';
 
+import '../copy.dart';
 import '../theme.dart';
 import 'halo_sheet.dart';
 import 'sheet_handle.dart';
@@ -30,7 +31,7 @@ Widget _title(String t, {Color? color}) =>
     Text(t, style: HaloType.serif(size: 20, color: color ?? HaloColors.text));
 
 Widget _line(String t) => Text(
-  t,
+  sentence(t),
   style: HaloType.sans(size: 13, color: HaloColors.text2, height: 1.45),
 );
 
@@ -52,7 +53,7 @@ Widget _primary(String label, VoidCallback? onTap, {bool rose = false}) {
         borderRadius: BorderRadius.circular(13),
       ),
       child: Text(
-        label,
+        sentence(label),
         style: HaloType.sans(
           size: 14,
           weight: FontWeight.w600,
@@ -74,7 +75,7 @@ Widget _quiet(String label, VoidCallback onTap) => GestureDetector(
     padding: const EdgeInsets.symmetric(vertical: 10),
     child: Center(
       child: Text(
-        label,
+        sentence(label),
         style: HaloType.sans(size: 13, color: HaloColors.text2),
       ),
     ),
@@ -199,7 +200,7 @@ Future<T?> showChoiceSheet<T>(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      c.label,
+                      sentence(c.label),
                       style: HaloType.sans(
                         size: 14,
                         weight: FontWeight.w600,
@@ -209,7 +210,7 @@ Future<T?> showChoiceSheet<T>(
                     if (c.hint != null) ...[
                       const SizedBox(height: 2),
                       Text(
-                        c.hint!,
+                        sentence(c.hint!),
                         style: HaloType.sans(
                           size: 12,
                           color: HaloColors.text2,

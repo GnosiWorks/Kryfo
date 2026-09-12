@@ -51,7 +51,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    tooltip: 'back',
+                    tooltip: 'Back',
                     icon: Icon(
                       Icons.chevron_left,
                       color: HaloColors.text2,
@@ -60,7 +60,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   Text(
-                    'blocked',
+                    'Blocked',
                     style: HaloType.serif(size: 22, color: HaloColors.text),
                   ),
                 ],
@@ -74,7 +74,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
                       child: StaggerIn(
                         index: 0,
                         child: Text(
-                          'no one is blocked',
+                          'No one is blocked',
                           style: HaloType.serif(
                             size: 18,
                             italic: true,
@@ -122,7 +122,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
                                   TextButton(
                                     onPressed: () => _unblock(c.haloId),
                                     child: Text(
-                                      'unblock',
+                                      'Unblock',
                                       style: HaloType.sans(
                                         size: 13,
                                         weight: FontWeight.w500,

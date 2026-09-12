@@ -130,7 +130,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 200),
                     child: Text(
-                      _wrong ? 'not it' : 'your pin',
+                      _wrong ? 'Not it' : 'Your pin',
                       key: ValueKey(_wrong),
                       style: HaloType.sans(
                         size: 13,
@@ -173,7 +173,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'use fingerprint',
+                              'Use fingerprint',
                               style: HaloType.sans(
                                 size: 12.5,
                                 color: HaloColors.text,

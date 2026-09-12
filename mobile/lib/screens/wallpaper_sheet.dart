@@ -60,12 +60,12 @@ class _PickerState extends State<_Picker> {
               const SheetHandle(),
               const SizedBox(height: 10),
               Text(
-                'atmosphere',
+                'Atmosphere',
                 style: HaloType.serif(size: 18, color: HaloColors.text),
               ),
               const SizedBox(height: 4),
               Text(
-                'just for you. they see their own.',
+                'Just for you. They see their own.',
                 style: HaloType.sans(size: 12, color: HaloColors.text2),
               ),
               const SizedBox(height: 16),
@@ -97,7 +97,7 @@ class _PickerState extends State<_Picker> {
               ),
               const SizedBox(height: 18),
               PressScale(
-                label: 'keep it',
+                label: 'Keep it',
                 onTap: () => Navigator.pop(context, _pick),
                 child: Container(
                   height: 46,
@@ -107,7 +107,7 @@ class _PickerState extends State<_Picker> {
                     borderRadius: BorderRadius.circular(13),
                   ),
                   child: Text(
-                    'keep it',
+                    'Keep it',
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w600,

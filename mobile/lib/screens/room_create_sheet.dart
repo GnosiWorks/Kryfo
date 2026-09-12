@@ -53,7 +53,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _creating = false);
-      showHaloToast(context, 'could not create the room');
+      showHaloToast(context, 'Could not create the room');
     }
   }
 
@@ -74,7 +74,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
               const SheetHandle(),
               const SizedBox(height: 18),
               Text(
-                'burner room',
+                'Burner room',
                 style: HaloType.serif(
                   size: 22,
                   italic: true,
@@ -83,7 +83,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
               ),
               const SizedBox(height: 4),
               Text(
-                'a room that ends. everyone joins under a key made for it, '
+                'A room that ends. Everyone joins under a key made for it, '
                 'and when it ends nothing is left on any phone.',
                 style: HaloType.sans(
                   size: 12,
@@ -99,7 +99,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
                 style: HaloType.sans(size: 16, color: HaloColors.text),
                 cursorColor: HaloColors.violet,
                 decoration: InputDecoration(
-                  hintText: 'room name',
+                  hintText: 'Room name',
                   hintStyle: HaloType.serif(
                     size: 16,
                     italic: true,
@@ -120,7 +120,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
               ),
               const SizedBox(height: 16),
               Text(
-                'ends after',
+                'Ends after',
                 style: HaloType.mono(
                   size: 10,
                   color: HaloColors.text3,
@@ -151,7 +151,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'member cap',
+                          'Member cap',
                           style: HaloType.sans(
                             size: 13,
                             color: HaloColors.text,
@@ -159,8 +159,8 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
                         ),
                         Text(
                           _capOn
-                              ? 'no one past the first $_cap'
-                              : 'off. anyone with the link',
+                              ? 'No one past the first $_cap'
+                              : 'off. Anyone with the link',
                           style: HaloType.mono(
                             size: 9.5,
                             color: HaloColors.text3,
@@ -207,12 +207,12 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
               NoticeBanner(
                 glyph: NoticeGlyph.clock,
                 text:
-                    'this room and everything in it disappears in ${expiryWords(_expiry)}',
+                    'This room and everything in it disappears in ${expiryWords(_expiry)}',
                 color: HaloColors.violet,
               ),
               const SizedBox(height: 14),
               _GoButton(
-                label: _creating ? 'creating...' : 'create room',
+                label: _creating ? 'creating...' : 'Create room',
                 enabled: !_creating,
                 onTap: _create,
               ),

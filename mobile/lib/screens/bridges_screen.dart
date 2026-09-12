@@ -95,7 +95,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
     if (r == 'wrong') {
       // a wrong or stale captcha is a normal outcome, not a failure. fetch a
       // new one rather than making them tap again.
-      setState(() => _askError = 'that was not it. here is another.');
+      setState(() => _askError = 'That was not it. Here is another.');
       await _request();
       return;
     }
@@ -118,7 +118,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
     });
     HapticFeedback.mediumImpact();
     if (mounted) {
-      showHaloToast(context, 'got bridges · save to use them');
+      showHaloToast(context, 'Got bridges · save to use them');
     }
   }
 
@@ -186,7 +186,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
-          'bridges',
+          'Bridges',
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
@@ -194,12 +194,12 @@ class _BridgesScreenState extends State<BridgesScreen> {
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
         children: staggerAll([
           Text(
-            'tor is blocked where you are?',
+            'Tor is blocked where you are?',
             style: HaloType.serif(size: 26, color: HaloColors.text),
           ),
           const SizedBox(height: 6),
           Text(
-            'bridges disguise your connection so it can get out. pick one '
+            'Bridges disguise your connection so it can get out. Pick one '
             'way in, save, and tor reconnects through it.',
             style: HaloType.sans(
               size: 13,
@@ -217,8 +217,8 @@ class _BridgesScreenState extends State<BridgesScreen> {
                 border: Border.all(color: HaloColors.line),
               ),
               child: Text(
-                'bridges only change how tor connects, and you are not on '
-                'onion mode right now. what you set here is saved, it just '
+                'Bridges only change how tor connects, and you are not on '
+                'onion mode right now. What you set here is saved, it just '
                 'does nothing until you switch back.',
                 style: HaloType.sans(size: 12.5, color: HaloColors.text2),
               ),
@@ -229,12 +229,12 @@ class _BridgesScreenState extends State<BridgesScreen> {
           // card one: obfs4 from the tor project, through the moat
           _BridgeCard(
             name: 'obfs4',
-            from: 'from the tor project',
+            from: 'From the tor project',
             looksLike: 'noise',
             speed: 'good',
             body:
-                'makes tor traffic look like nothing in particular. the best '
-                'default for most blocked networks. answers a captcha, then '
+                'Makes tor traffic look like nothing in particular. The best '
+                'default for most blocked networks. Answers a captcha, then '
                 'hands you a few lines.',
             active: _source == 'moat' && n > 0,
             connected: connected && _source == 'moat',
@@ -255,13 +255,13 @@ class _BridgesScreenState extends State<BridgesScreen> {
 
           // card two: a line someone gave you
           _BridgeCard(
-            name: 'private bridge',
-            from: 'a line from a friend',
-            looksLike: 'whatever the line says',
+            name: 'Private bridge',
+            from: 'A line from a friend',
+            looksLike: 'Whatever the line says',
             speed: 'depends',
             body:
-                'got a bridge line from someone you trust, or from '
-                'bridges.torproject.org? paste it here. obfs4 lines only, '
+                'Got a bridge line from someone you trust, or from '
+                'bridges.torproject.org? Paste it here. Obfs4 lines only, '
                 'kryfo does not speak the others yet.',
             active: _source == 'paste' && n > 0,
             connected: connected && _source == 'paste',
@@ -306,7 +306,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                 const SizedBox(height: 10),
                 _Ghost(
                   icon: Icons.content_paste_rounded,
-                  label: 'paste from clipboard',
+                  label: 'Paste from clipboard',
                   onTap: () async {
                     final d = await Clipboard.getData('text/plain');
                     final t = d?.text?.trim();
@@ -350,7 +350,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'use bridges',
+                          'Use bridges',
                           style: HaloType.sans(
                             size: 14.5,
                             color: HaloColors.text,
@@ -358,7 +358,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                         ),
                         Text(
                           n == 0
-                              ? 'no lines yet'
+                              ? 'No lines yet'
                               : n == 1
                               ? '1 line saved'
                               : '$n lines saved',
@@ -422,10 +422,10 @@ class _BridgesScreenState extends State<BridgesScreen> {
                         const SizedBox(width: 11),
                         Text(
                           _elapsed < 20
-                              ? 'restarting tor…'
+                              ? 'Restarting tor…'
                               : _elapsed < 60
-                              ? 'finding a bridge… ${_elapsed}s'
-                              : 'still trying… ${_elapsed}s',
+                              ? 'Finding a bridge… ${_elapsed}s'
+                              : 'Still trying… ${_elapsed}s',
                           style: HaloType.mono(
                             size: 12.5,
                             color: HaloColors.text2,
@@ -435,7 +435,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                       ],
                     )
                   : Text(
-                      _busy ? 'applying…' : 'save and reconnect',
+                      _busy ? 'applying…' : 'Save and reconnect',
                       style: HaloType.mono(
                         size: 12.5,
                         color: HaloColors.onAmber,
@@ -454,9 +454,9 @@ class _BridgesScreenState extends State<BridgesScreen> {
           ],
           const SizedBox(height: 22),
           const _Note(
-            'what a bridge is',
-            'a tor entry point nobody has published, reached through a '
-                'wrapper so the connection does not look like tor. the rest '
+            'What a bridge is',
+            'A tor entry point nobody has published, reached through a '
+                'wrapper so the connection does not look like tor. The rest '
                 'of the route is the usual three hops.',
           ),
         ]),
@@ -531,7 +531,7 @@ class _BridgeCard extends StatelessWidget {
                           BreathDot(color: HaloColors.green, size: 6),
                           const SizedBox(width: 6),
                           Text(
-                            'connected',
+                            'Connected',
                             style: HaloType.mono(
                               size: 10,
                               color: HaloColors.green,
@@ -568,7 +568,7 @@ class _BridgeCard extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              _Meta(k: 'looks like', v: looksLike),
+              _Meta(k: 'Looks like', v: looksLike),
               const SizedBox(width: 18),
               _Meta(k: 'speed', v: speed),
             ],
@@ -648,7 +648,7 @@ class _RequestBlock extends StatelessWidget {
               Icon(Icons.download_rounded, size: 16, color: HaloColors.violet),
               const SizedBox(width: 8),
               Text(
-                'get bridges',
+                'Get bridges',
                 style: HaloType.sans(
                   size: 14.5,
                   color: HaloColors.text,
@@ -660,7 +660,7 @@ class _RequestBlock extends StatelessWidget {
           const SizedBox(height: 5),
           Text(
             captcha == null
-                ? 'ask the tor project directly. you solve a puzzle so bots '
+                ? 'Ask the tor project directly. You solve a puzzle so bots '
                       'cannot drain the supply.'
                 : 'type what you see. lowercase is fine.',
             style: HaloType.sans(size: 12.5, color: HaloColors.text2),
@@ -687,9 +687,9 @@ class _RequestBlock extends StatelessWidget {
                   const SizedBox(width: 9),
                   Expanded(
                     child: Text(
-                      'this one request does not go through tor - it cannot, '
-                      'since tor is what is not working. whoever runs your '
-                      'network will see you contacting the tor project. if '
+                      'This one request does not go through tor - it cannot, '
+                      'since tor is what is not working. Whoever runs your '
+                      'network will see you contacting the tor project. If '
                       'that alone is a problem where you are, get bridges '
                       'somewhere else and paste them below.',
                       style: HaloType.sans(size: 12, color: HaloColors.text2),
@@ -708,7 +708,7 @@ class _RequestBlock extends StatelessWidget {
                 fit: BoxFit.contain,
                 height: 90,
                 errorBuilder: (_, _, _) => Text(
-                  'could not draw the puzzle',
+                  'Could not draw the puzzle',
                   style: HaloType.mono(size: 11, color: HaloColors.rose),
                 ),
               ),
@@ -732,7 +732,7 @@ class _RequestBlock extends StatelessWidget {
                       style: HaloType.mono(size: 13, color: HaloColors.text),
                       decoration: InputDecoration(
                         border: InputBorder.none,
-                        hintText: 'answer',
+                        hintText: 'Answer',
                         hintStyle: HaloType.mono(
                           size: 12,
                           color: HaloColors.text3,
@@ -781,8 +781,8 @@ class _RequestBlock extends StatelessWidget {
             label: asking
                 ? 'asking…'
                 : captcha == null
-                ? 'request bridges'
-                : 'different puzzle',
+                ? 'Request bridges'
+                : 'Different puzzle',
             onTap: asking ? () {} : onRequest,
           ),
         ],

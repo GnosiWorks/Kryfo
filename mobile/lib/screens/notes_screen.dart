@@ -115,7 +115,7 @@ class _NotesScreenState extends State<NotesScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'note to self',
+              'Note to self',
               style: HaloType.serif(
                 size: 20,
                 color: HaloColors.text,
@@ -123,7 +123,7 @@ class _NotesScreenState extends State<NotesScreen> {
               ),
             ),
             Text(
-              'only on this phone',
+              'Only on this phone',
               style: HaloType.mono(size: 9.5, color: HaloColors.text3),
             ),
           ],
@@ -198,12 +198,12 @@ class _NotesScreenState extends State<NotesScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'a quiet place',
+                'A quiet place',
                 style: HaloType.serif(size: 24, color: HaloColors.text),
               ),
               const SizedBox(height: 10),
               Text(
-                'jot anything down. it stays on this phone and never leaves.',
+                'Jot anything down. It stays on this phone and never leaves.',
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 12.5,
@@ -242,7 +242,7 @@ class _NotesScreenState extends State<NotesScreen> {
                 minLines: 1,
                 style: HaloType.sans(size: 14, color: HaloColors.text),
                 decoration: InputDecoration(
-                  hintText: 'jot something down…',
+                  hintText: 'Jot something down…',
                   hintStyle: HaloType.sans(size: 13, color: HaloColors.text3),
                   border: InputBorder.none,
                   isDense: true,
@@ -255,7 +255,7 @@ class _NotesScreenState extends State<NotesScreen> {
           GestureDetector(
             onTap: _save,
             child: Semantics(
-              label: 'save',
+              label: 'Save',
               button: true,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 120),

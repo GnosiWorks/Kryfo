@@ -50,7 +50,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
       blob = await File(path).readAsString();
     } catch (_) {
       if (mounted) {
-        setState(() => _error = 'this file is damaged and cannot be read');
+        setState(() => _error = 'This file is damaged and cannot be read');
       }
       return;
     } finally {
@@ -59,7 +59,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
     if (!mounted) return;
     if (!(blob.startsWith('kryfo-backup:') ||
         blob.startsWith('halo-backup:'))) {
-      setState(() => _error = 'that file is not a kryfo backup');
+      setState(() => _error = 'That file is not a kryfo backup');
       return;
     }
     HapticFeedback.selectionClick();
@@ -75,7 +75,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
     if (blob == null) return;
     final pw = _passCtrl.text.trim();
     if (pw.isEmpty) {
-      setState(() => _error = 'type the passphrase the file was made with');
+      setState(() => _error = 'Type the passphrase the file was made with');
       return;
     }
     setState(() {
@@ -100,7 +100,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'this file is damaged and cannot be read';
+        _error = 'This file is damaged and cannot be read';
         _busy = false;
       });
     }
@@ -113,11 +113,11 @@ class _RestoreScreenState extends State<RestoreScreen> {
     if (appState.onboardingComplete) {
       final ok = await showConfirmSheet(
         context,
-        title: 'replace the account on this phone?',
+        title: 'Replace the account on this phone?',
         line:
-            'what is here now, its identity, contacts and messages, goes. '
-            'the file takes its place. this cannot be undone.',
-        yes: 'replace it',
+            'What is here now, its identity, contacts and messages, goes. '
+            'The file takes its place. This cannot be undone.',
+        yes: 'Replace it',
       );
       if (!ok) return;
     }
@@ -135,9 +135,9 @@ class _RestoreScreenState extends State<RestoreScreen> {
       }
       await showNoticeSheet(
         context,
-        title: 'restored',
-        line: 'kryfo will close now. tap the icon to reopen as ${s.haloId}.',
-        ok: 'reopen kryfo',
+        title: 'Restored',
+        line: 'Kryfo will close now. Tap the icon to reopen as ${s.haloId}.',
+        ok: 'Reopen kryfo',
       );
       // exit so the next launch boots fresh from the restored db
       Future.delayed(const Duration(milliseconds: 200), () => exit(0));
@@ -151,7 +151,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'the restore did not finish. nothing was changed';
+        _error = 'The restore did not finish. Nothing was changed';
         _busy = false;
       });
     }
@@ -173,7 +173,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
-          'restore',
+          'Restore',
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
@@ -182,14 +182,14 @@ class _RestoreScreenState extends State<RestoreScreen> {
           padding: const EdgeInsets.fromLTRB(22, 4, 22, 32),
           children: staggerAll([
             Text(
-              'from a backup file',
+              'From a backup file',
               style: HaloType.serif(size: 26, color: HaloColors.text),
             ),
             const SizedBox(height: 8),
             Text(
-              'a backup brings back your identity and your contacts, and the '
+              'A backup brings back your identity and your contacts, and the '
               'messages that were on the phone when the file was made. '
-              'anything said since is not in it.',
+              'Anything said since is not in it.',
               style: HaloType.sans(
                 size: 13,
                 color: HaloColors.text2,
@@ -199,7 +199,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
             const SizedBox(height: 22),
             _Step(
               n: '1',
-              label: 'the file',
+              label: 'The file',
               child: PressScale(
                 onTap: _busy ? null : _pick,
                 child: Container(
@@ -225,7 +225,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          _fileName ?? 'pick the backup file',
+                          _fileName ?? 'Pick the backup file',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: HaloType.sans(
@@ -250,7 +250,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                   ? const SizedBox(width: double.infinity)
                   : _Step(
                       n: '2',
-                      label: 'the passphrase',
+                      label: 'The passphrase',
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 14,
@@ -277,7 +277,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                           ),
                           decoration: InputDecoration(
                             border: InputBorder.none,
-                            hintText: 'the one the file was made with',
+                            hintText: 'The one the file was made with',
                             hintStyle: HaloType.mono(
                               size: 12.5,
                               color: HaloColors.text3,
@@ -311,7 +311,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                       padding: const EdgeInsets.only(top: 14),
                       child: _Step(
                         n: '3',
-                        label: 'what comes back',
+                        label: 'What comes back',
                         child: _SummaryCard(summary: s),
                       ),
                     ),
@@ -319,7 +319,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
             const SizedBox(height: 22),
             if (s == null)
               _Primary(
-                label: _busy ? 'checking…' : 'check the file',
+                label: _busy ? 'checking…' : 'Check the file',
                 onTap: _busy || _blob == null ? null : _check,
               )
             else
@@ -341,7 +341,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     child: Text(
-                      'not this one',
+                      'Not this one',
                       style: HaloType.sans(size: 13, color: HaloColors.text2),
                     ),
                   ),
@@ -399,7 +399,7 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final w = summary.when;
     final date = w == null
-        ? 'date unknown'
+        ? 'Date unknown'
         : '${w.day} ${_month(w.month)} ${w.year}, '
               '${w.hour.toString().padLeft(2, '0')}:${w.minute.toString().padLeft(2, '0')}';
     return Container(
@@ -413,7 +413,7 @@ class _SummaryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            summary.haloId.isEmpty ? 'an identity' : summary.haloId,
+            summary.haloId.isEmpty ? 'An identity' : summary.haloId,
             style: HaloType.mono(
               size: 16,
               weight: FontWeight.w600,
@@ -426,7 +426,7 @@ class _SummaryCard extends StatelessWidget {
           _line('messages', '${summary.messages}'),
           const SizedBox(height: 8),
           Text(
-            'messages sent or received after that date are not in this file.',
+            'Messages sent or received after that date are not in this file.',
             style: HaloType.sans(
               size: 12,
               color: HaloColors.text2,

@@ -15,6 +15,7 @@ import 'why_kryfo_screen.dart';
 import 'transport_screen.dart';
 import 'bridges_screen.dart';
 import 'seen_screen.dart';
+import '../copy.dart';
 import '../theme.dart';
 import 'modes_screen.dart';
 import 'blocked_screen.dart';
@@ -45,7 +46,10 @@ Widget _postureLine(String label, bool on, String onText, String offText) {
           ),
         ),
         const SizedBox(width: 10),
-        Text(label, style: HaloType.sans(size: 13, color: HaloColors.text)),
+        Text(
+          sentence(label),
+          style: HaloType.sans(size: 13, color: HaloColors.text),
+        ),
         const Spacer(),
         AnimatedDefaultTextStyle(
           duration: const Duration(milliseconds: 240),
@@ -53,7 +57,7 @@ Widget _postureLine(String label, bool on, String onText, String offText) {
             size: 10,
             color: on ? HaloColors.amber : HaloColors.text3,
           ),
-          child: Text(on ? onText : offText),
+          child: Text(sentence(on ? onText : offText)),
         ),
       ],
     ),
@@ -71,12 +75,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // step 1: explain what's about to happen
     final go = await showConfirmSheet(
       context,
-      title: 'wipe kryfo?',
+      title: 'Wipe kryfo?',
       line:
-          'this deletes your identity, all messages, all contacts, and every '
-          'setting on this phone. unrecoverable unless you have a backup.',
-      yes: 'continue',
-      keep: 'cancel',
+          'This deletes your identity, all messages, all contacts, and every '
+          'setting on this phone. Unrecoverable unless you have a backup.',
+      yes: 'Continue',
+      keep: 'Cancel',
     );
     if (!go || !mounted) return;
 
@@ -85,11 +89,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         (await showInputSheet(
           context,
           title: "type 'wipe' to confirm",
-          line: 'the last step. nothing survives it.',
-          hint: 'wipe',
+          line: 'The last step. Nothing survives it.',
+          hint: 'Wipe',
           mono: true,
           rose: true,
-          save: 'wipe kryfo',
+          save: 'Wipe kryfo',
         ))?.trim().toLowerCase() ==
         'wipe';
     if (ok) await wipeHalo();
@@ -122,7 +126,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         elevation: 0,
         leading: BackButton(color: HaloColors.text2),
         title: Text(
-          'settings',
+          'Settings',
           style: HaloType.serif(size: 22, color: HaloColors.text, italic: true),
         ),
       ),
@@ -148,7 +152,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'your protections',
+                      'Your protections',
                       style: HaloType.mono(size: 11, color: HaloColors.amber),
                     ),
                     const SizedBox(height: 10),
@@ -178,12 +182,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               _Row(
                 icon: Icons.shield_outlined,
-                label: 'speed & privacy',
+                label: 'Speed & privacy',
                 value: appState.sendMode == 'fast'
                     ? 'fast'
                     : appState.sendMode == 'balanced'
-                    ? 'relay · 1 hop'
-                    : 'onion · 3 hops',
+                    ? 'Relay · 1 hop'
+                    : 'Onion · 3 hops',
                 onTap: () async {
                   await Navigator.of(
                     context,
@@ -193,7 +197,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _Row(
                 icon: Icons.notifications_none,
-                label: 'notifications',
+                label: 'Notifications',
                 value: appState.sendMode == 'private' ? 'over tor' : 'in app',
                 onTap: () => Navigator.of(
                   context,
@@ -201,23 +205,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _Row(
                 icon: Icons.battery_saver,
-                label: 'run in background',
-                value: 'so messages arrive',
+                label: 'Run in background',
+                value: 'So messages arrive',
                 onTap: () => forceShowBackgroundPrompt(context),
               ),
               _Row(
                 icon: Icons.block,
-                label: 'blocked',
+                label: 'Blocked',
                 onTap: () => Navigator.of(
                   context,
                 ).push(haloRoute(const BlockedScreen())),
               ),
               _Row(
                 icon: Icons.people_outline,
-                label: 'accept introductions',
-                hint:
-                    'friends can introduce you to their friends. off means introductions are dropped.',
-                value: _acceptIntros ? 'on' : 'off',
+                label: 'Accept introductions',
+                hint: 'Friends can introduce you to their friends. Off means introductions are dropped.',
+                value: _acceptIntros ? 'On' : 'off',
                 onTap: () async {
                   setState(() => _acceptIntros = !_acceptIntros);
                   await saveAcceptIntros(_acceptIntros);
@@ -225,10 +228,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _Row(
                 icon: Icons.shield_outlined,
-                label: 'scam shield',
-                hint:
-                    'checks messages from strangers on your phone. nothing is sent anywhere.',
-                value: _shieldOn ? 'on' : 'off',
+                label: 'Scam shield',
+                hint: 'Checks messages from strangers on your phone. Nothing is sent anywhere.',
+                value: _shieldOn ? 'On' : 'off',
                 onTap: () async {
                   setState(() => _shieldOn = !_shieldOn);
                   await saveScamShieldOn(_shieldOn);
@@ -236,13 +238,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _Row(
                 icon: Icons.travel_explore_outlined,
-                label: 'add link previews',
+                label: 'Add link previews',
                 hint:
-                    'when you tap add preview, your phone fetches the page '
-                    'title over tor and sends it inside the message. the '
-                    'other person\'s phone never touches the link. offered '
-                    'only while tor is up, so on onion mode.',
-                value: sendLinkPreviews ? 'on' : 'off',
+                    'When you tap add preview, your phone fetches the page title over tor and sends it inside the message. The other person\'s phone never touches the link. Offered only while tor is up, so on onion mode.',
+                value: sendLinkPreviews ? 'On' : 'off',
                 onTap: () async {
                   await saveSendLinkPreviews(!sendLinkPreviews);
                   if (mounted) setState(() {});
@@ -257,10 +256,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               _Row(
                 icon: Icons.photo_camera_back_outlined,
-                label: 'screen security',
-                hint:
-                    'no screenshots while a chat is open. the rest of the app stays as it is',
-                value: appState.secureChats ? 'on' : 'off',
+                label: 'Screen security',
+                hint: 'No screenshots while a chat is open. The rest of the app stays as it is',
+                value: appState.secureChats ? 'On' : 'off',
                 onTap: () async {
                   await appState.setSecureChats(!appState.secureChats);
                   if (mounted) setState(() {});
@@ -268,10 +266,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _Row(
                 icon: Icons.visibility_off_outlined,
-                label: 'block screenshots',
-                hint:
-                    'the whole app. hidden from recents, no screenshots on any screen',
-                value: appState.blockScreenshots ? 'on' : 'off',
+                label: 'Block screenshots',
+                hint: 'The whole app. Hidden from recents, no screenshots on any screen',
+                value: appState.blockScreenshots ? 'On' : 'off',
                 onTap: () async {
                   await appState.setBlockScreenshots(
                     !appState.blockScreenshots,
@@ -281,9 +278,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _Row(
                 icon: Icons.light_mode_outlined,
-                label: 'light theme',
-                hint: 'same protection, brighter',
-                value: HaloColors.isLight ? 'on' : 'off',
+                label: 'Light theme',
+                hint: 'Same protection, brighter',
+                value: HaloColors.isLight ? 'On' : 'off',
                 onTap: () async {
                   await appState.setLight(!HaloColors.isLight);
                   if (mounted) setState(() {});
@@ -293,12 +290,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 animation: lockState,
                 builder: (_, _) => _Row(
                   icon: Icons.lock_outline,
-                  label: 'app lock',
-                  hint: 'your pin, and a wipe pin',
+                  label: 'App lock',
+                  hint: 'Your pin, and a wipe pin',
                   value: !lockState.enabled
                       ? 'off'
                       : lockState.panicEnabled
-                      ? 'pin · wipe pin'
+                      ? 'Pin · wipe pin'
                       : 'on',
                   onTap: () =>
                       Navigator.of(context).push(haloRoute(const PinsScreen())),
@@ -313,15 +310,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               _Row(
                 icon: Icons.save_alt,
-                label: 'back up identity',
-                value: 'encrypted file',
+                label: 'Back up identity',
+                value: 'Encrypted file',
                 onTap: () =>
                     Navigator.of(context).push(haloRoute(const BackupScreen())),
               ),
               _Row(
                 icon: Icons.restore,
-                label: 'restore from backup',
-                value: 'replace current',
+                label: 'Restore from backup',
+                value: 'Replace current',
                 onTap: () => Navigator.of(
                   context,
                 ).push(haloRoute(const RestoreScreen())),
@@ -335,9 +332,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               _Row(
                 icon: Icons.record_voice_over,
-                label: 'disguise voice',
-                hint: 'shifts your pitch before a voice note leaves',
-                value: _disguise ? 'on' : 'off',
+                label: 'Disguise voice',
+                hint: 'Shifts your pitch before a voice note leaves',
+                value: _disguise ? 'On' : 'off',
                 onTap: () async {
                   setState(() => _disguise = !_disguise);
                   await appState.saveDisguisePref(_disguise);
@@ -352,44 +349,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               _Row(
                 icon: Icons.help_outline,
-                label: 'why kryfo',
-                value: 'how it protects you',
+                label: 'Why kryfo',
+                value: 'How it protects you',
                 onTap: () =>
                     Navigator.push(context, haloRoute(const WhyKryfoScreen())),
               ),
               _Row(
                 icon: Icons.autorenew,
-                label: 'reset my invite link',
-                hint: 'old qr codes and links stop working',
+                label: 'Reset my invite link',
+                hint: 'Old qr codes and links stop working',
                 onTap: () async {
                   final ok = await showConfirmSheet(
                     context,
-                    title: 'reset invite link?',
+                    title: 'Reset invite link?',
                     line:
-                        'anyone holding an old qr code or link stops being able '
-                        'to reach you. your contacts, chats and history are not '
+                        'Anyone holding an old qr code or link stops being able '
+                        'to reach you. Your contacts, chats and history are not '
                         'touched.',
-                    yes: 'reset',
+                    yes: 'Reset',
                   );
                   if (!ok) return;
                   await appState.resetInviteAddress();
                   if (context.mounted) {
-                    showHaloToast(context, 'invite reset · share the new code');
+                    showHaloToast(context, 'Invite reset · share the new code');
                   }
                 },
               ),
               _Row(
                 icon: Icons.visibility_outlined,
-                label: 'what we can see',
-                value: 'the honest list',
+                label: 'What we can see',
+                value: 'The honest list',
                 onTap: () =>
                     Navigator.push(context, haloRoute(const SeenScreen())),
               ),
               _Row(
                 icon: Icons.vpn_lock_outlined,
-                label: 'bridges',
-                hint: 'for networks that block tor',
-                value: appState.bridgesOn ? 'on' : 'off',
+                label: 'Bridges',
+                hint: 'For networks that block tor',
+                value: appState.bridgesOn ? 'On' : 'off',
                 onTap: () async {
                   await Navigator.push(
                     context,
@@ -400,20 +397,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _Row(
                 icon: Icons.lan_outlined,
-                label: 'transport',
-                value: 'what the network is doing',
+                label: 'Transport',
+                value: 'What the network is doing',
                 onTap: () =>
                     Navigator.push(context, haloRoute(const TransportScreen())),
               ),
               _Row(
                 icon: Icons.info_outline,
-                label: 'version',
+                label: 'Version',
                 value: '0.2.6 · alpha',
               ),
               _Row(
                 icon: Icons.flag_outlined,
-                label: 'report an issue',
-                value: 'bug or security flaw',
+                label: 'Report an issue',
+                value: 'Bug or security flaw',
                 onTap: () => launchUrl(
                   Uri.parse(
                     'mailto:gnosiworks@proton.me?subject=Kryfo%20report',
@@ -423,7 +420,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _Row(
                 icon: Icons.code,
-                label: 'open source',
+                label: 'Open source',
                 value: 'github.com/GnosiWorks/Kryfo',
               ),
             ],
@@ -431,7 +428,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(4, 10, 12, 0),
             child: Text(
-              'not independently audited. pre-alpha - good for testing, '
+              'Not independently audited. Pre-alpha - good for testing, '
               'not yet for high-stakes use.',
               style: HaloType.sans(
                 size: 12,
@@ -448,7 +445,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               _Row(
                 icon: Icons.delete_outline,
-                label: 'wipe kryfo from this phone',
+                label: 'Wipe kryfo from this phone',
                 rose: true,
                 onTap: _confirmWipe,
               ),
@@ -469,7 +466,7 @@ class _Section extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(6, 4, 4, 8),
       child: Text(
-        label,
+        sentence(label),
         style: HaloType.mono(size: 10.5, color: HaloColors.text3, letter: 0.06),
       ),
     );
@@ -567,12 +564,15 @@ class _Row extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(label, style: HaloType.sans(size: 14, color: fg)),
+                  Text(
+                    sentence(label),
+                    style: HaloType.sans(size: 14, color: fg),
+                  ),
                   if (hint != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 3, right: 10),
                       child: Text(
-                        hint!,
+                        sentence(hint!),
                         style: HaloType.mono(
                           size: 10.5,
                           color: HaloColors.text3,
@@ -592,7 +592,10 @@ class _Row extends StatelessWidget {
             ),
             if (v.isNotEmpty && !stacked) ...[
               const SizedBox(width: 8),
-              Text(v, style: HaloType.sans(size: 13, color: HaloColors.text2)),
+              Text(
+                sentence(v),
+                style: HaloType.sans(size: 13, color: HaloColors.text2),
+              ),
             ],
             if (onTap != null) ...[
               const SizedBox(width: 6),

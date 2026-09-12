@@ -48,7 +48,7 @@ class ArchivedScreen extends StatelessWidget {
                   child: Row(
                     children: [
                       IconButton(
-                        tooltip: 'back',
+                        tooltip: 'Back',
                         icon: Icon(
                           Icons.chevron_left,
                           color: HaloColors.text2,
@@ -57,7 +57,7 @@ class ArchivedScreen extends StatelessWidget {
                         onPressed: () => Navigator.of(context).pop(),
                       ),
                       Text(
-                        'archived',
+                        'Archived',
                         style: HaloType.serif(size: 22, color: HaloColors.text),
                       ),
                     ],
@@ -79,8 +79,8 @@ class ArchivedScreen extends StatelessWidget {
                           ),
                           TextSpan(
                             text: archived.length == 1
-                                ? 'chat resting here. it stays quiet until they write, then comes back to the top.'
-                                : 'chats resting here. they stay quiet until someone writes, then come back to the top.',
+                                ? 'Chat resting here. It stays quiet until they write, then comes back to the top.'
+                                : 'Chats resting here. They stay quiet until someone writes, then come back to the top.',
                             style: HaloType.sans(
                               size: 12.5,
                               color: HaloColors.text3,
@@ -97,7 +97,7 @@ class ArchivedScreen extends StatelessWidget {
                           child: StaggerIn(
                             index: 0,
                             child: Text(
-                              'nothing archived',
+                              'Nothing archived',
                               style: HaloType.serif(
                                 size: 18,
                                 italic: true,
@@ -128,7 +128,7 @@ class ArchivedScreen extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      'archived chats are still end-to-end encrypted',
+                      'Archived chats are still end-to-end encrypted',
                       textAlign: TextAlign.center,
                       style: HaloType.mono(
                         size: 10,
@@ -254,7 +254,7 @@ class _ArchivedRowState extends State<_ArchivedRow> {
                 padding: const EdgeInsets.symmetric(horizontal: 10),
               ),
               child: Text(
-                'unarchive',
+                'Unarchive',
                 style: HaloType.mono(
                   size: 9,
                   color: HaloColors.amber,

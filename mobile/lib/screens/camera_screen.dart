@@ -67,7 +67,7 @@ class _CameraScreenState extends State<CameraScreen>
     try {
       _cams = await availableCameras();
       if (_cams.isEmpty) {
-        setState(() => _error = 'no camera on this phone');
+        setState(() => _error = 'No camera on this phone');
         return;
       }
       // back camera first
@@ -77,7 +77,7 @@ class _CameraScreenState extends State<CameraScreen>
       if (_which < 0) _which = 0;
       await _open();
     } catch (e) {
-      if (mounted) setState(() => _error = 'camera not available');
+      if (mounted) setState(() => _error = 'Camera not available');
     }
   }
 
@@ -109,7 +109,7 @@ class _CameraScreenState extends State<CameraScreen>
         if (mounted) await _open();
         return;
       }
-      setState(() => _error = 'camera permission is off · tap to try again');
+      setState(() => _error = 'Camera permission is off · tap to try again');
       return;
     }
     _error = null;
@@ -194,10 +194,10 @@ class _CameraScreenState extends State<CameraScreen>
         () => _shot = clean == null || jpegHasExif(clean) ? null : clean,
       );
       if (_shot == null) {
-        showHaloToast(context, 'could not strip that photo, dropped it');
+        showHaloToast(context, 'Could not strip that photo, dropped it');
       }
     } catch (_) {
-      if (mounted) showHaloToast(context, 'no photo came out');
+      if (mounted) showHaloToast(context, 'No photo came out');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -240,7 +240,7 @@ class _CameraScreenState extends State<CameraScreen>
           _recStart = DateTime.now();
         });
       } catch (_) {
-        if (mounted) showHaloToast(context, 'could not start recording');
+        if (mounted) showHaloToast(context, 'Could not start recording');
       }
       return;
     }
@@ -266,7 +266,7 @@ class _CameraScreenState extends State<CameraScreen>
     } catch (_) {
       if (mounted) {
         setState(() => _recording = false);
-        showHaloToast(context, 'the recording was lost');
+        showHaloToast(context, 'The recording was lost');
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -301,7 +301,7 @@ class _CameraScreenState extends State<CameraScreen>
     if (!mounted) return;
     showHaloToast(
       context,
-      ok ? 'a copy is in your photos' : 'could not save a copy on this phone',
+      ok ? 'A copy is in your photos' : 'Could not save a copy on this phone',
     );
   }
 
@@ -314,7 +314,7 @@ class _CameraScreenState extends State<CameraScreen>
     final c = _clip;
     if (c == null) return;
     if (_clipBytes > 8 * 1024 * 1024) {
-      showHaloToast(context, 'too long for a message · 8 mb max');
+      showHaloToast(context, 'Too long for a message · 8 mb max');
       return;
     }
     // handed over: the caller shreds it once sent
@@ -346,8 +346,8 @@ class _CameraScreenState extends State<CameraScreen>
             const SizedBox(height: 14),
             Text(
               _video
-                  ? 'never saved to your photos'
-                  : 'no exif, never saved to your photos',
+                  ? 'Never saved to your photos'
+                  : 'No exif, never saved to your photos',
               style: HaloType.mono(
                 size: 10.5,
                 color: HaloColors.text2,
@@ -415,7 +415,7 @@ class _CameraScreenState extends State<CameraScreen>
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    'rec',
+                    'Rec',
                     style: HaloType.mono(
                       size: 10,
                       color: HaloColors.text,
@@ -478,13 +478,13 @@ class _CameraScreenState extends State<CameraScreen>
           Icon(Icons.movie_outlined, size: 44, color: HaloColors.amber),
           const SizedBox(height: 12),
           Text(
-            'clip · ${secs}s · $mb mb',
+            'Clip · ${secs}s · $mb mb',
             style: HaloType.mono(size: 12, color: HaloColors.text2),
           ),
           if (_clipBytes > 8 * 1024 * 1024) ...[
             const SizedBox(height: 8),
             Text(
-              'too long for a message · 8 mb max',
+              'Too long for a message · 8 mb max',
               style: HaloType.mono(size: 11, color: HaloColors.rose),
             ),
           ],
@@ -508,8 +508,8 @@ class _CameraScreenState extends State<CameraScreen>
         const SizedBox(height: 16),
         PressScale(
           label: _video
-              ? (_recording ? 'stop recording' : 'start recording')
-              : 'take a photo',
+              ? (_recording ? 'Stop recording' : 'Start recording')
+              : 'Take a photo',
           onTap: _shutter,
           scale: 0.9,
           child: AnimatedContainer(
@@ -592,7 +592,7 @@ class _CameraScreenState extends State<CameraScreen>
                 borderRadius: BorderRadius.circular(13),
               ),
               child: Text(
-                'use this',
+                'Use this',
                 style: HaloType.sans(
                   size: 14,
                   weight: FontWeight.w600,

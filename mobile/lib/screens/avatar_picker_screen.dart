@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../main.dart' show appState;
+import '../copy.dart';
 import '../theme.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/avatar_mark.dart';
@@ -29,7 +30,7 @@ class AvatarChoiceEditor extends StatefulWidget {
     super.key,
     required this.onChanged,
     this.padding = const EdgeInsets.fromLTRB(20, 4, 20, 32),
-    this.caption = 'the people you message see this too',
+    this.caption = 'The people you message see this too',
   });
 
   @override
@@ -182,12 +183,12 @@ class _AvatarPickerScreenState extends State<AvatarPickerScreen> {
       appBar: AppBar(
         backgroundColor: HaloColors.surface,
         elevation: 0,
-        title: Text('pick a face', style: HaloType.serif(size: 18)),
+        title: Text('Pick a face', style: HaloType.serif(size: 18)),
         actions: [
           TextButton(
             onPressed: _save,
             child: Text(
-              'save',
+              'Save',
               style: HaloType.mono(
                 size: 12.5,
                 color: HaloColors.amber,
@@ -207,7 +208,7 @@ class _Label extends StatelessWidget {
   const _Label(this.text);
   @override
   Widget build(BuildContext context) => Text(
-    text,
+    sentence(text),
     style: HaloType.mono(
       size: 11,
       color: HaloColors.text2,

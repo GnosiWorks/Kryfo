@@ -74,7 +74,7 @@ class PreviewStrip extends StatelessWidget {
                             ),
                           ),
                           PressScale(
-                            label: 'drop the preview',
+                            label: 'Drop the preview',
                             onTap: onDrop,
                             child: Padding(
                               padding: const EdgeInsets.all(6),
@@ -91,7 +91,7 @@ class PreviewStrip extends StatelessWidget {
                   : Align(
                       alignment: Alignment.centerLeft,
                       child: PressScale(
-                        label: 'add preview',
+                        label: 'Add preview',
                         onTap: busy ? null : onAdd,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
@@ -116,7 +116,7 @@ class PreviewStrip extends StatelessWidget {
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                busy ? 'fetching over tor…' : 'add preview',
+                                busy ? 'Fetching over tor…' : 'Add preview',
                                 style: HaloType.mono(
                                   size: 10.5,
                                   color: HaloColors.amber,

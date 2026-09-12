@@ -71,7 +71,7 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet>
             Row(
               children: [
                 Text(
-                  'ends in ',
+                  'Ends in ',
                   style: HaloType.mono(size: 10, color: HaloColors.text3),
                 ),
                 RoomCountdown(expiresAt: widget.link.expiresAt, size: 10),
@@ -106,7 +106,7 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet>
             ),
             const SizedBox(height: 14),
             Text(
-              'anyone with this can join until the room ends. they come in '
+              'Anyone with this can join until the room ends. They come in '
               'under a key made for this room, and see nothing sent before '
               'they arrived.',
               textAlign: TextAlign.center,
@@ -121,7 +121,7 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet>
               onTap: () {
                 copySensitive(uri);
                 HapticFeedback.selectionClick();
-                showHaloToast(context, 'room link copied');
+                showHaloToast(context, 'Room link copied');
               },
             ),
           ],
@@ -158,7 +158,7 @@ class _CopyButtonState extends State<_CopyButton> {
             borderRadius: BorderRadius.circular(14),
           ),
           child: Text(
-            'copy room link',
+            'Copy room link',
             style: HaloType.sans(
               size: 14,
               weight: FontWeight.w600,

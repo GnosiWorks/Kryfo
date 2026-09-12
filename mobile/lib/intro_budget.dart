@@ -61,5 +61,5 @@ String refillPhrase(Duration until) {
     final h = (until.inMinutes / 60).ceil();
     return h == 1 ? 'in an hour' : 'in $h hours';
   }
-  return 'in a few minutes';
+  return 'In a few minutes';
 }

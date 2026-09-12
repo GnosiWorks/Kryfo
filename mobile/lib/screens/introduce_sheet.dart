@@ -105,7 +105,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
       );
     } else {
       setState(() => _sending = false);
-      showHaloToast(context, 'could not reach either of them. try again later');
+      showHaloToast(context, 'Could not reach either of them. Try again later');
     }
   }
 
@@ -128,7 +128,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 4),
               child: Text(
-                'introduce ${widget.peerName} to...',
+                'Introduce ${widget.peerName} to...',
                 style: HaloType.serif(size: 20, color: HaloColors.text),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -137,7 +137,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
               child: Text(
-                'both of them get the other\'s card. neither sees your name for the other.',
+                'Both of them get the other\'s card. Neither sees your name for the other.',
                 style: HaloType.sans(
                   size: 12,
                   color: HaloColors.text2,
@@ -150,7 +150,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
                   ? Padding(
                       padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
                       child: Text(
-                        'no one else to introduce yet. add another contact first.',
+                        'No one else to introduce yet. Add another contact first.',
                         style: HaloType.sans(size: 13, color: HaloColors.text2),
                       ),
                     )
@@ -189,7 +189,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
                 style: HaloType.sans(size: 14, color: HaloColors.text),
                 cursorColor: HaloColors.amber,
                 decoration: InputDecoration(
-                  hintText: 'a note, like "my cousin" - optional',
+                  hintText: 'A note, like "my cousin" - optional',
                   hintStyle: HaloType.serif(
                     size: 14,
                     italic: true,
@@ -264,7 +264,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
       text = '$_left of $introBudgetMax introductions left this week';
     } else {
       final until = Duration(milliseconds: refill - _now);
-      text = 'no introductions left. next one frees up ${refillPhrase(until)}';
+      text = 'no introductions left. Next one frees up ${refillPhrase(until)}';
     }
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 200),
@@ -431,7 +431,7 @@ class _GoButtonState extends State<_GoButton> {
                   ),
                 )
               : Text(
-                  'introduce',
+                  'Introduce',
                   style: HaloType.sans(
                     size: 15,
                     weight: FontWeight.w600,

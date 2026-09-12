@@ -110,12 +110,12 @@ class _ProfileScreenState extends State<ProfileScreen>
             const SheetHandle(),
             const SizedBox(height: 8),
             Text(
-              'display name',
+              'Display name',
               style: HaloType.serif(size: 18, color: HaloColors.text),
             ),
             const SizedBox(height: 6),
             Text(
-              'a name you choose for yourself. it never leaves this phone - contacts always see the name they gave you, never this one. that way nobody can impersonate someone just by renaming themselves.',
+              'A name you choose for yourself. It never leaves this phone - contacts always see the name they gave you, never this one. That way nobody can impersonate someone just by renaming themselves.',
               style: HaloType.sans(
                 size: 12,
                 color: HaloColors.text2,
@@ -134,7 +134,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
               cursorColor: HaloColors.amber,
               decoration: InputDecoration(
-                hintText: 'your name',
+                hintText: 'Your name',
                 counterText: '',
                 enabledBorder: UnderlineInputBorder(
                   borderSide: BorderSide(color: HaloColors.line, width: 0.5),
@@ -152,7 +152,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
                   child: Text(
-                    'save',
+                    'Save',
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w600,
@@ -184,12 +184,12 @@ class _ProfileScreenState extends State<ProfileScreen>
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
-          'profile',
+          'Profile',
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
         actions: [
           IconButton(
-            tooltip: 'settings',
+            tooltip: 'Settings',
             icon: Icon(Icons.settings_outlined, color: HaloColors.text2),
             onPressed: () =>
                 Navigator.of(context).push(haloRoute(SettingsScreen())),
@@ -217,7 +217,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           ),
                         ),
                         child: Semantics(
-                          label: 'edit name',
+                          label: 'Edit name',
                           button: true,
                           child: GestureDetector(
                             behavior: HitTestBehavior.opaque,
@@ -266,7 +266,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               behavior: HitTestBehavior.opaque,
                               onTap: _editDisplayName,
                               child: Text(
-                                name.isEmpty ? 'no name set' : name,
+                                name.isEmpty ? 'No name set' : name,
                                 style: HaloType.serif(
                                   size: 22,
                                   color: name.isEmpty
@@ -358,7 +358,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               const SizedBox(height: 24),
 
               if (hasBadge) ...[
-                _reveal(2, const _Section('supporter badge')),
+                _reveal(2, const _Section('Supporter badge')),
                 _reveal(
                   2,
                   Container(
@@ -376,7 +376,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
-                                'you are a ${tierName(_tier)}. thank you.',
+                                'You are a ${tierName(_tier)}. thank you.',
                                 style: HaloType.sans(
                                   size: 13,
                                   color: HaloColors.text2,
@@ -388,7 +388,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         const SizedBox(height: 14),
                         _toggleRow(
                           'show my badge',
-                          'on my own screens',
+                          'On my own screens',
                           _showSelf,
                           (v) async {
                             await saveShowBadgeSelf(v);
@@ -397,7 +397,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         ),
                         const SizedBox(height: 10),
                         _toggleRow(
-                          'let contacts see it',
+                          'Let contacts see it',
                           'off by default',
                           _share,
                           (v) async {
@@ -437,7 +437,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'my kryfo code',
+                            'My kryfo code',
                             style: HaloType.sans(
                               size: 14,
                               color: HaloColors.text,
@@ -476,7 +476,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'add contact',
+                            'Add contact',
                             style: HaloType.sans(
                               size: 14,
                               color: HaloColors.text,
@@ -494,7 +494,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
               ),
               const SizedBox(height: 24),
-              _reveal(3, _Section(hasBadge ? 'give again' : 'support kryfo')),
+              _reveal(3, _Section(hasBadge ? 'Give again' : 'Support kryfo')),
               _reveal(
                 3,
                 _PressRow(
@@ -521,8 +521,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                         Expanded(
                           child: Text(
                             hasBadge
-                                ? 'kryfo runs on what people give'
-                                : 'keep kryfo independent',
+                                ? 'Kryfo runs on what people give'
+                                : 'Keep kryfo independent',
                             style: HaloType.sans(
                               size: 14,
                               color: HaloColors.text,

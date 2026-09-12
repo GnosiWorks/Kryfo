@@ -62,9 +62,9 @@ class _RequestsScreenState extends State<RequestsScreen> {
       if (msgs.isNotEmpty) {
         final last = msgs.last;
         final text = (last['plaintext'] as String?) ?? '';
-        previews[id] = text.isEmpty ? 'sent an attachment' : text;
+        previews[id] = text.isEmpty ? 'Sent an attachment' : text;
       } else {
-        previews[id] = 'wants to connect';
+        previews[id] = 'Wants to connect';
       }
       // an introduced row names the friends who vouched. only vouchers we
       // still hold as contacts come back, so a deleted one just drops off.
@@ -140,7 +140,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
         elevation: 0,
         leading: BackButton(color: HaloColors.text),
         title: Text(
-          'requests',
+          'Requests',
           style: HaloType.serif(size: 18, color: HaloColors.text),
         ),
       ),
@@ -184,12 +184,12 @@ class _RequestsScreenState extends State<RequestsScreen> {
               const _BreathingInbox(),
               const SizedBox(height: 14),
               Text(
-                'no requests',
+                'No requests',
                 style: HaloType.serif(size: 18, color: HaloColors.text2),
               ),
               const SizedBox(height: 6),
               Text(
-                'messages from people you have not added show up here first.',
+                'Messages from people you have not added show up here first.',
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 13,
@@ -335,7 +335,7 @@ class _RequestCardState extends State<_RequestCard>
                           NoticeBanner(
                             glyph: NoticeGlyph.shield,
                             text:
-                                'looks safe · nothing suspicious in their first message',
+                                'Looks safe · nothing suspicious in their first message',
                             color: HaloColors.green,
                             delay: Duration(
                               milliseconds: 60 * widget.order + 220,

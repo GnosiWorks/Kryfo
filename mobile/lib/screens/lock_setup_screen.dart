@@ -83,12 +83,12 @@ class _LockSetupScreenState extends State<LockSetupScreen>
                 const SheetHandle(),
                 const SizedBox(height: 12),
                 Text(
-                  'unlock with fingerprint?',
+                  'Unlock with fingerprint?',
                   style: HaloType.serif(size: 20, color: HaloColors.text),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'the pin still works whenever you want it. this is just faster.',
+                  'The pin still works whenever you want it. This is just faster.',
                   style: HaloType.sans(size: 13, color: HaloColors.text2),
                 ),
                 const SizedBox(height: 16),
@@ -103,7 +103,7 @@ class _LockSetupScreenState extends State<LockSetupScreen>
                       borderRadius: BorderRadius.circular(13),
                     ),
                     child: Text(
-                      'use fingerprint',
+                      'Use fingerprint',
                       style: HaloType.sans(
                         size: 14,
                         weight: FontWeight.w600,
@@ -120,7 +120,7 @@ class _LockSetupScreenState extends State<LockSetupScreen>
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     child: Center(
                       child: Text(
-                        'pin only',
+                        'Pin only',
                         style: HaloType.sans(size: 13, color: HaloColors.text2),
                       ),
                     ),
@@ -143,12 +143,12 @@ class _LockSetupScreenState extends State<LockSetupScreen>
 
   @override
   Widget build(BuildContext context) {
-    final title = _confirming ? 'once more' : 'set a pin';
+    final title = _confirming ? 'Once more' : 'Set a pin';
     final hint = _mismatch
-        ? 'those were different. from the top.'
+        ? 'Those were different. From the top.'
         : _confirming
-        ? 'the same four digits'
-        : 'four digits, anything you will remember';
+        ? 'The same four digits'
+        : 'Four digits, anything you will remember';
     return Scaffold(
       backgroundColor: HaloColors.ink,
       appBar: AppBar(
