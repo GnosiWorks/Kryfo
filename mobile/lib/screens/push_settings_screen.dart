@@ -31,6 +31,7 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
     Future.wait([loadPushMode(), loadNtfyServer(), loadNtfyTopic()]).then((
       vals,
     ) {
+      if (!mounted) return;
       setState(() {
         _mode = vals[0] as PushMode;
         _ntfyServer = vals[1] as String;

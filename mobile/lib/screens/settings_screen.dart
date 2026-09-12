@@ -26,6 +26,7 @@ import 'backup_screen.dart';
 import '../wipe.dart';
 import 'restore_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../push_mode.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/confirm_sheet.dart';
 
@@ -72,6 +73,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  PushMode? _push;
   Future<void> _confirmWipe() async {
     // step 1: explain what's about to happen
     final go = await showConfirmSheet(
@@ -107,6 +109,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
+    loadPushMode().then((v) {
+      if (mounted) setState(() => _push = v);
+    });
     appState.loadDisguisePref().then((d) {
       if (mounted) setState(() => _disguise = d);
     });
@@ -206,16 +211,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     context,
                     haloRoute(const BridgesScreen()),
                   );
-                  setState(() {});
+                  if (mounted) setState(() {});
                 },
               ),
               _Row(
                 icon: Icons.notifications_none,
                 label: 'Notifications',
-                value: appState.sendMode == 'private' ? 'over tor' : 'in app',
-                onTap: () => Navigator.of(
-                  context,
-                ).push(haloRoute(const PushSettingsScreen())),
+                value: switch (_push) {
+                  null => '',
+                  PushMode.tor => 'Over tor',
+                  PushMode.fcm => 'Google push',
+                  PushMode.ntfy => 'Ntfy push',
+                },
+                onTap: () async {
+                  await Navigator.of(
+                    context,
+                  ).push(haloRoute(const PushSettingsScreen()));
+                  final v = await loadPushMode();
+                  if (mounted) setState(() => _push = v);
+                },
               ),
               _Row(
                 icon: Icons.battery_saver,
@@ -595,7 +609,7 @@ class _Row extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 4, right: 10),
                       child: Text(
-                        v,
+                        sentence(v),
                         style: HaloType.sans(size: 13, color: HaloColors.text2),
                       ),
                     ),
