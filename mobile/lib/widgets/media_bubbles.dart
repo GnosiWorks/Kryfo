@@ -13,6 +13,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../main.dart' show shredFile;
 import '../theme.dart';
 
 String _humanSize(int bytes) {
@@ -438,9 +439,8 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     if (cancel) {
       final p = path ?? _path;
       if (p != null) {
-        try {
-          await File(p).delete();
-        } catch (_) {}
+        // a cancelled note is still a recording of a voice: shredded
+        await shredFile(p);
       }
       HapticFeedback.lightImpact();
       widget.onComplete('', 0, true);

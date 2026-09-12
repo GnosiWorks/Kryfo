@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
+import 'dlog.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 final FlutterLocalNotificationsPlugin notifPlugin =
@@ -43,7 +44,9 @@ Future<void> initNotifications({void Function(String? payload)? onTap}) async {
   // boot down. the activity asks natively on resume anyway.
   try {
     await android?.requestNotificationsPermission();
-  } catch (_) {}
+  } catch (e) {
+    dlog('notifications: permission ask skipped: $e');
+  }
 }
 
 const _hideContentKey = 'notif_hide_content';

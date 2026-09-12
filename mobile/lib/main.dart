@@ -4071,7 +4071,9 @@ class AppState extends ChangeNotifier {
           (await const FlutterSecureStorage().read(key: 'theme_light')) ==
           'true';
       HaloColors.setLight(v);
-    } catch (_) {}
+    } catch (e) {
+      dlog('theme pref: $e');
+    }
   }
 
   Future<void> setLight(bool v) async {
@@ -4137,7 +4139,9 @@ class AppState extends ChangeNotifier {
           _peerFc[k] = v as String;
         });
       }
-    } catch (_) {}
+    } catch (e) {
+      dlog('peer fc map unreadable, starting empty: $e');
+    }
     engine.subscribeFirstContactBg(_fcCounter);
     notifyListeners();
   }
@@ -4201,7 +4205,9 @@ class AppState extends ChangeNotifier {
       await _platformChannel.invokeMethod('setSecure', {
         'on': on || _blockScreenshots,
       });
-    } catch (_) {}
+    } catch (e) {
+      dlog('setSecure: $e');
+    }
   }
 
   Future<void> _applyScreenSecure() async {
@@ -4209,7 +4215,9 @@ class AppState extends ChangeNotifier {
       await _platformChannel.invokeMethod('setSecure', {
         'on': _blockScreenshots || _secureForced,
       });
-    } catch (_) {}
+    } catch (e) {
+      dlog('setSecure: $e');
+    }
   }
 
   NtfyListener? _ntfyListener;
@@ -5011,7 +5019,9 @@ class AppState extends ChangeNotifier {
         key: 'xpub_cache',
         value: jsonEncode(cache),
       );
-    } catch (_) {}
+    } catch (e) {
+      dlog('xpub cache write: $e');
+    }
   }
 
   // anything that threw in boot left ready false for good, behind a splash
@@ -5567,7 +5577,9 @@ class AppState extends ChangeNotifier {
       final init = await Connectivity().checkConnectivity();
       _online = init.any((r) => r != ConnectivityResult.none);
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      dlog('connectivity init: $e');
+    }
     Connectivity().onConnectivityChanged.listen((results) {
       final on = results.any((r) => r != ConnectivityResult.none);
       if (on != _online) {
@@ -6319,7 +6331,9 @@ class AppState extends ChangeNotifier {
   Future<void> leaveRoom(String groupId) async {
     try {
       await _sendControlToGroup(groupId, const GroupControl(type: 'leave'));
-    } catch (_) {}
+    } catch (e) {
+      dlog('leave control not sent: $e');
+    }
     await _destroyRoom(groupId);
   }
 
