@@ -37,9 +37,12 @@ Future<bool> openAutostartSettings() async {
 // optimization. ask android to exempt us so messages still land when
 // kryfo is closed. miui keeps the autostart flow below.
 Future<void> maybeShowBackgroundPrompt(BuildContext context) async {
+  // xiaomi needs both: autostart so the system may bring kryfo back, and
+  // the battery exemption so it is allowed to stay awake once it is back.
+  // this used to stop after the autostart page, and a redmi that had said
+  // yes to autostart slept through a whole night unexempted.
   if (await isMiui()) {
     if (context.mounted) await maybeShowMiuiPrompt(context);
-    return;
   }
   final prefs = await SharedPreferences.getInstance();
   if (prefs.getBool(_battPrefKey) ?? false) return;
@@ -57,7 +60,7 @@ Future<void> maybeShowBackgroundPrompt(BuildContext context) async {
 Future<void> forceShowBackgroundPrompt(BuildContext context) async {
   if (await isMiui()) {
     if (context.mounted) await _askAutostart(context);
-    return;
+    if (!context.mounted) return;
   }
   if (await Permission.ignoreBatteryOptimizations.isGranted) {
     if (context.mounted) {
