@@ -2,7 +2,6 @@
 // chat screen. message bubbles, composer, live receive over tor.
 // matches 08_complete_spec.html "the everyday" chat tile.
 
-import 'dart:math' as math;
 import '../lock_state.dart';
 import 'dart:typed_data';
 import 'dart:async';
@@ -40,6 +39,7 @@ import '../message_envelope.dart'
         powBits;
 import '../theme.dart';
 import '../media_progress.dart';
+import '../media_send.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../main.dart'
     show
@@ -79,9 +79,6 @@ import '../widgets/halo_sheet.dart';
 // persists last-seen cipher per peer across ChatScreen instances
 // chunk indices already accepted by the peer, per media msg_uid. lets a
 // retry resume instead of re-uploading the whole file over tor.
-final Map<String, Set<int>> _chunkDone = {};
-// when each resume record was last touched, so a stale one can be dropped.
-final Map<String, int> _chunkDoneAt = {};
 // unsent drafts kept per peer so text survives leaving a chat.
 final Map<String, String> _draftPerPeer = {};
 // newest message ms seen when the chat was last left, per peer.
@@ -131,6 +128,9 @@ class _Msg {
   // only way on.
   int autoRetries = 0;
   bool gaveUp = false;
+  // stored at an address they do not read yet: not sent, not failed. the
+  // outbox keeps trying routes that reach them until they add us back.
+  bool parked = false;
   bool delivered;
   bool edited;
   bool pinned;
@@ -298,7 +298,7 @@ bool _cannotSend() => !appState.online || !appState.torReady;
 bool _sendLooksFailed(_Msg m) => m.failed && (m.gaveUp || _cannotSend());
 
 String _friendlyStatus(String raw) {
-  if (raw.isEmpty) return '';
+  if (raw.isEmpty || raw == 'parked') return '';
   if (!appState.online && raw.startsWith('error:')) {
     return "you are offline · this sends itself when you reconnect";
   }
@@ -1999,6 +1999,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // publish sits at 'publishing' for good, so this never ran and the
     // pill stayed a zombie. carrying traffic is what matters here.
     final torUp = appState.torReady;
+    final backPaired = await db.isBackPaired(widget.peerHaloId);
     for (final m in loaded) {
       // under a minute old the send future may still be running in the
       // background - marking it failed here caused dup resends.
@@ -2007,7 +2008,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           m.sending &&
           m.when.isBefore(staleCutoff)) {
         m.sending = false;
-        m.failed = true;
+        if (backPaired) {
+          m.failed = true;
+        } else {
+          m.parked = true;
+        }
       }
     }
     setState(() {
@@ -2242,7 +2247,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           if (fr == 'ok') return 'ok';
           dlog('chat send: first-contact failed ($fr)');
         }
-        return await Future(() => engine.nostrSend(xpub!, cipher));
+        final r = await Future(() => engine.nostrSend(xpub!, cipher));
+        // the pair address is a drop box they read only once they add us
+        // back. stored there is not delivered.
+        if (r == 'ok' && !_backPaired) return 'parked';
+        return r;
       }
       return tor ?? 'error: no transport';
     });
@@ -2259,6 +2268,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (result == 'ok') {
         setState(() {
           msg.sending = false;
+          msg.parked = false;
           if (msg.burnSecs != null) {
             msg.burnAt =
                 DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
@@ -2268,6 +2278,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           if (endpoint != null && endpoint.isNotEmpty) {
             Future(() => engine.ntfyPing(endpoint));
           }
+        });
+      } else if (result == 'parked') {
+        setState(() {
+          msg.sending = false;
+          msg.parked = true;
         });
       } else {
         setState(() {
@@ -2779,6 +2794,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // over every public relay's event cap, so they bounced. this is the same
   // 16kb slicing + per-chunk retries + xpub re-fetch the image path uses.
   // fileName == null means image lane (imageB64), else file lane (fileB64).
+  // the shared sender does the work; this hands it what the screen knows
   Future<String> _sendChunkedMedia({
     required String b64,
     required String msgUid,
@@ -2787,114 +2803,29 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     bool voice = false,
     bool voiceDisguised = false,
     int? burnSeconds,
-  }) async {
-    var torWait = 0;
-    while (!_torReadyToSend() && torWait < 300000) {
-      await Future.delayed(const Duration(milliseconds: 400));
-      torWait += 400;
-    }
-    if (!_torReadyToSend()) return 'error: tor not ready';
-    const chunkSize = 16 * 1024;
-    final chunks = <String>[];
-    for (var i = 0; i < b64.length; i += chunkSize) {
-      chunks.add(b64.substring(i, math.min(i + chunkSize, b64.length)));
-    }
-    final total = chunks.length;
-    // a voice note is a couple of seconds of audio. the strip is for photos
-    // and files, where the wait is long enough to wonder about.
-    final showProgress = total > 1 && !voice;
-    if (showProgress) mediaProgressStart(msgUid, chatKey: widget.peerHaloId);
-    // stranger gate wants pow on every envelope. two grinds max: one for the
-    // chunk-0 payload, one for the '' the rest carry.
-    int? powCap;
-    int? powRest;
-    if (_recvCount == 0) {
-      powCap = await compute(_grindPowTask, caption);
-      powRest = powCap; // caption rides every chunk, one seed fits all
-    }
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final since = now - (_chunkDoneAt[msgUid] ?? now);
-    if (since > 240000) {
-      // too old to trust - the peer may have restarted and lost its buffer.
-      _chunkDone.remove(msgUid);
-    }
-    _chunkDoneAt[msgUid] = now;
-    final done = _chunkDone.putIfAbsent(msgUid, () => <int>{});
-    if (done.isNotEmpty && total > 1) {
-      dlog('MEDIA resume $msgUid: ${done.length}/$total already landed');
-      if (showProgress) mediaProgressUpdate(msgUid, done.length / total);
-    }
-    for (var i = 0; i < total; i++) {
-      if (done.contains(i)) continue; // peer already has this slice
-      final String cipher;
-      try {
-        // name + voice flags ride every slice: the receiver rebuilds off
-        // whichever chunk lands last, and that one decides file vs image.
-        final wrapped = await wrapMessage(
-          caption,
-          msgUid: msgUid,
-          imageB64: fileName == null ? chunks[i] : null,
-          fileB64: fileName != null ? chunks[i] : null,
-          fileName: fileName,
-          voice: voice,
-          voiceDisguised: voiceDisguised,
-          mediaId: total > 1 ? msgUid : null,
-          chunkIndex: total > 1 ? i : null,
-          chunkTotal: total > 1 ? total : null,
-          burnSeconds: burnSeconds,
-          powNonce: i == 0 ? powCap : powRest,
-          powBitsUsed: (i == 0 ? powCap : powRest) == null ? null : powBits,
-          supporterBadge: await appState.sharedBadge(),
-          sender: SenderInfo(
-            haloId: appState.myId,
-            edPub: engine.myEdPubkey(),
-            onion: appState.myOnion,
-            xPub: engine.myXPubkey(),
-          ),
-        );
-        cipher = await signalEncrypt(widget.peerHaloId, wrapped);
-      } catch (e) {
-        return 'error: encrypt';
-      }
-      var sent = false;
-      String lastErr = 'error: no transport';
-      for (var attempt = 0; attempt < 3 && !sent; attempt++) {
-        String? tor;
-        if (!_backPaired && widget.peerOnion.isNotEmpty) {
-          tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
-          if (tor == 'ok') {
-            sent = true;
-            break;
-          }
-          if (tor != null) lastErr = tor;
-        }
-        var xpub = _peerXPub;
-        xpub ??= widget.peerXPub.isEmpty ? null : widget.peerXPub;
-        xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
-        if (xpub != null) {
-          _peerXPub = xpub;
-          final r = await Future(() => engine.nostrSend(xpub!, cipher));
-          if (r == 'ok') {
-            sent = true;
-            break;
-          }
-          lastErr = r;
-        }
-        if (!sent) await Future.delayed(const Duration(milliseconds: 600));
-      }
-      if (!sent) {
-        dlog('MEDIA CHUNK $i/$total failed: $lastErr');
-        // keep what landed so tap-to-retry resumes from here.
-        return lastErr;
-      }
-      done.add(i);
-      _chunkDoneAt[msgUid] = DateTime.now().millisecondsSinceEpoch;
-      if (showProgress) mediaProgressUpdate(msgUid, done.length / total);
-    }
-    // whole file is across - drop the resume record.
-    _chunkDone.remove(msgUid);
-    _chunkDoneAt.remove(msgUid);
-    return 'ok';
+    bool secure = false,
+  }) {
+    return sendChunkedMediaTo(
+      peerId: widget.peerHaloId,
+      peerOnion: widget.peerOnion,
+      peerXPub: _peerXPub ?? (widget.peerXPub.isEmpty ? null : widget.peerXPub),
+      backPaired: _backPaired,
+      needPow: _recvCount == 0,
+      b64: b64,
+      msgUid: msgUid,
+      caption: caption,
+      fileName: fileName,
+      voice: voice,
+      voiceDisguised: voiceDisguised,
+      burnSeconds: burnSeconds,
+      secure: secure,
+      sender: SenderInfo(
+        haloId: appState.myId,
+        edPub: engine.myEdPubkey(),
+        onion: appState.myOnion,
+        xPub: engine.myXPubkey(),
+      ),
+    );
   }
 
   Future<void> _finishMediaSend(_Msg msg, String result) async {
@@ -2908,7 +2839,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (!mounted) return;
     setState(() {
       msg.sending = false;
-      if (result != 'ok') {
+      msg.parked = result == 'parked';
+      if (result != 'ok' && result != 'parked') {
         msg.failed = true;
         _status = result;
       }
@@ -2981,118 +2913,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       secure: wantSecure,
     );
     if (wantSecure && mounted) setState(() => _secureNext = false);
-    // chunk the base64 so no single envelope exceeds the transport limit. small
-    // images stay one chunk and behave exactly as before. big ones split into
-    // ~60kb slices that the receiver reassembles by mediaId.
-    // 30kb keeps each chunk + envelope overhead under the public relay event
-    // size limit (many cap ~32-64kb). bigger chunks got 'no relays accepted'.
-    // gift wrap doubles the payload on the wire - 16k keeps the wrapped
-    // event under relay size caps.
-    const chunkSize = 16 * 1024;
-    final chunks = <String>[];
-    for (var i = 0; i < b64.length; i += chunkSize) {
-      chunks.add(b64.substring(i, math.min(i + chunkSize, b64.length)));
-    }
-    final total = chunks.length;
-    final sendFuture = Future<String>(() async {
-      var torWait = 0;
-      while (!_torReadyToSend() && torWait < 300000) {
-        await Future.delayed(const Duration(milliseconds: 400));
-        torWait += 400;
-      }
-      if (!_torReadyToSend()) return 'error: tor not ready';
-      // send each chunk in order. caption + burn ride chunk 0 only so the
-      // reassembled message carries them once. any chunk failing fails the send.
-      for (var i = 0; i < total; i++) {
-        final String cipher;
-        try {
-          final wrapped = await wrapMessage(
-            caption,
-            msgUid: msgUid,
-            imageB64: chunks[i],
-            mediaId: total > 1 ? msgUid : null,
-            chunkIndex: total > 1 ? i : null,
-            chunkTotal: total > 1 ? total : null,
-            // every chunk carries the burn, not just the first: the receiver
-            // rebuilds off the last slice to land, and that one used to arrive
-            // with no burn at all, so ghost images never expired on their side.
-            burnSeconds: _ghost ? _burnSeconds : null,
-            secure: wantSecure,
-            supporterBadge: await appState.sharedBadge(),
-            sender: SenderInfo(
-              haloId: appState.myId,
-              edPub: engine.myEdPubkey(),
-              onion: appState.myOnion,
-              xPub: engine.myXPubkey(),
-            ),
-          );
-          cipher = await signalEncrypt(widget.peerHaloId, wrapped);
-        } catch (e) {
-          return 'error: encrypt';
-        }
-        // each chunk gets a few tries - a single tor hiccup shouldn't kill the
-        // whole multi-chunk send (the slow samsung path drops one now and then).
-        var sent = false;
-        String lastErr = 'error: no transport';
-        for (var attempt = 0; attempt < 3 && !sent; attempt++) {
-          String? tor;
-          if (!_backPaired && widget.peerOnion.isNotEmpty) {
-            tor = await Future(() => engine.sendTo(widget.peerOnion, cipher));
-            if (tor == 'ok') {
-              sent = true;
-              break;
-            }
-            if (tor != null) lastErr = tor;
-          }
-          var xpub = _peerXPub;
-          xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
-          if (xpub != null) {
-            _peerXPub = xpub;
-            final r = await Future(() => engine.nostrSend(xpub!, cipher));
-            if (r == 'ok') {
-              sent = true;
-              break;
-            }
-            lastErr = r;
-          }
-          if (!sent) await Future.delayed(const Duration(milliseconds: 600));
-        }
-        if (!sent) {
-          dlog('CHUNK $i/$total failed after retries: $lastErr');
-          return lastErr;
-        }
-      }
-      return 'ok';
-    });
-    sendFuture.then((result) async {
-      if (result == 'ok' && msg.msgUid != null) {
-        await db.markSent(msg.msgUid!);
-      }
-      if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
-        final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
-        await db.setMsgBurnAt(msg.msgUid!, ba);
-        msg.burnAt = ba;
-      }
-      if (!mounted) return;
-      if (result == 'ok') {
-        setState(() {
-          msg.sending = false;
-          if (msg.burnSecs != null) {
-            msg.burnAt =
-                DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
-          }
-        });
-        if (msg.burnAt != null) {
-          await db.setMsgBurnAt(msgUid, msg.burnAt!);
-        }
-      } else {
-        setState(() {
-          msg.sending = false;
-          msg.failed = true;
-          _status = result;
-        });
-      }
-    });
+    unawaited(
+      _sendChunkedMedia(
+        b64: b64,
+        msgUid: msgUid,
+        caption: caption,
+        burnSeconds: _ghost ? _burnSeconds : null,
+        secure: wantSecure,
+      ).then((r) => _finishMediaSend(msg, r)),
+    );
   }
 
   Future<void> _pickAndSendMultiple() async {
@@ -3322,7 +3151,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           if (fr == 'ok') return 'ok';
           dlog('chat send: first-contact failed ($fr)');
         }
-        return await Future(() => engine.nostrSend(xpub!, cipher));
+        final r = await Future(() => engine.nostrSend(xpub!, cipher));
+        // the pair address is a drop box they read only once they add us
+        // back. stored there is not delivered.
+        if (r == 'ok' && !_backPaired) return 'parked';
+        return r;
       }
       return tor ?? 'error: no transport';
     });
@@ -3339,6 +3172,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (result == 'ok') {
         setState(() {
           msg.sending = false;
+          msg.parked = false;
           if (msg.burnSecs != null) {
             msg.burnAt =
                 DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
@@ -3351,6 +3185,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           if (endpoint != null && endpoint.isNotEmpty) {
             Future(() => engine.ntfyPing(endpoint));
           }
+        });
+      } else if (result == 'parked') {
+        setState(() {
+          msg.sending = false;
+          msg.parked = true;
         });
       } else {
         setState(() {
@@ -5719,8 +5558,9 @@ class _Bubble extends StatelessWidget {
     final isOut = msg.direction == 'out';
     final isImage = msg.mediaPath != null;
     final failedShown = _sendLooksFailed(msg);
+    final parked = msg.parked && !msg.sending && !msg.failed;
     final pending = msg.sending || (msg.failed && !failedShown);
-    final showMeta = isOut && !pending && !failedShown;
+    final showMeta = isOut && !pending && !failedShown && !parked;
     final showPill = isOut && pending;
     final metaColor = (isOut && !isImage)
         ? HaloColors.onAmber.withValues(alpha: 0.55)
@@ -5762,7 +5602,9 @@ class _Bubble extends StatelessWidget {
       opacity: dimmed ? 0.28 : 1.0,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: failedShown && onRetry != null ? () => onRetry!(msg) : onReveal,
+        onTap: (failedShown || parked) && onRetry != null
+            ? () => onRetry!(msg)
+            : onReveal,
         onLongPress: onLongPress == null ? null : () => onLongPress!(context),
         child: Padding(
           padding: EdgeInsets.only(
@@ -6253,10 +6095,12 @@ class _Bubble extends StatelessWidget {
                                         ),
                                       ),
                                     ],
-                                    if (failedShown) ...[
+                                    if (failedShown || parked) ...[
                                       const SizedBox(height: 4),
                                       Text(
-                                        'Failed · tap to retry',
+                                        parked
+                                            ? 'Waiting for them to come online or add you back'
+                                            : 'Failed · tap to retry',
                                         style: TextStyle(
                                           fontFamily: 'JetBrains Mono',
                                           fontSize: 10,

@@ -24,6 +24,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'theme.dart';
 import 'wipe.dart';
 import 'media_progress.dart';
+import 'media_send.dart';
 import 'screens/home_screen.dart';
 import 'screens/new_group_screen.dart';
 import 'screens/room_create_sheet.dart';
@@ -3668,7 +3669,12 @@ class AppState extends ChangeNotifier {
       final age = DateTime.now().millisecondsSinceEpoch - (r['sent_at'] as int);
       if (age < 45000) continue;
       final tries = _outboxTries[uid] ?? 0;
-      if (tries >= 8) continue;
+      // the cap is for a route that exists and fails. a peer who has not
+      // added us back yet keeps their rows going at the ten-minute gap.
+      if (tries >= 8) {
+        final peer = r['peer_id'] as String?;
+        if (peer == null || await db.isBackPaired(peer)) continue;
+      }
       final now = DateTime.now().millisecondsSinceEpoch;
       final nextAt = _outboxNextAt[uid];
       if (nextAt != null && now < nextAt) continue;
@@ -3696,10 +3702,21 @@ class AppState extends ChangeNotifier {
     final uid = r['msg_uid'] as String;
     final peer = r['peer_id'] as String;
     final groupId = r['group_id'] as String?;
-    // media rows re-send through their own chunked path; text is what the
-    // drainer owns. a stranded media row stays tap-to-retry in the chat.
-    if ((r['media_path'] as String?) != null ||
-        (r['file_path'] as String?) != null) {
+    // a photo or file that never finished goes through the shared chunked
+    // sender, which remembers the slices that landed. groups resend from
+    // their own screen still.
+    final mediaPath = r['media_path'] as String?;
+    final filePath = r['file_path'] as String?;
+    if (mediaPath != null || filePath != null) {
+      if (groupId == null) {
+        await _drainMedia(
+          r,
+          peer,
+          uid,
+          mediaPath ?? filePath!,
+          isFile: mediaPath == null,
+        );
+      }
       return;
     }
     try {
@@ -3734,10 +3751,50 @@ class AppState extends ChangeNotifier {
       if (ok) {
         dlog('OUTBOX: redelivered $uid');
         await db.markSent(uid);
+        // an open chat reloads and drops the waiting line
+        _bumpChatRev(peer);
         notifyListeners();
       }
     } catch (e) {
       dlog('OUTBOX: $uid still stuck ($e)');
+    }
+  }
+
+  Future<void> _drainMedia(
+    Map<String, Object?> r,
+    String peer,
+    String uid,
+    String path, {
+    required bool isFile,
+  }) async {
+    final f = File(path);
+    if (!await f.exists()) return;
+    final contact = await db.getContact(peer);
+    if (contact == null) return;
+    final backPaired = await db.isBackPaired(peer);
+    final fileName = isFile ? r['file_name'] as String? : null;
+    final res = await sendChunkedMediaTo(
+      peerId: peer,
+      peerOnion: (contact['onion'] as String?) ?? '',
+      peerXPub: contact['xpub'] as String?,
+      backPaired: backPaired,
+      needPow: !backPaired,
+      b64: base64Encode(await f.readAsBytes()),
+      msgUid: uid,
+      caption: (r['plaintext'] as String?) ?? '',
+      fileName: fileName,
+      voice: fileName == 'voice.wav',
+      voiceDisguised: ((r['voice_disguised'] as int?) ?? 0) == 1,
+      secure: ((r['secure'] as int?) ?? 0) == 1,
+      sender: _mySender(),
+    );
+    if (res == 'ok') {
+      dlog('OUTBOX: media redelivered $uid');
+      await db.markSent(uid);
+      _bumpChatRev(peer);
+      notifyListeners();
+    } else {
+      dlog('OUTBOX: media $uid still stuck ($res)');
     }
   }
 
@@ -4274,7 +4331,17 @@ class AppState extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    if (proofOfEngagement(env)) await db.markBackPaired(senderHaloId);
+    if (proofOfEngagement(env)) {
+      final was = await db.isBackPaired(senderHaloId);
+      await db.markBackPaired(senderHaloId);
+      if (!was) {
+        // the door just opened: rows parked for them go now, not when the
+        // backoff runs out
+        _outboxTries.clear();
+        _outboxNextAt.clear();
+        unawaited(drainOutbox());
+      }
+    }
     if (await db.isBlocked(senderHaloId)) return;
     // 1) group control
     if (env.groupControl != null) {
@@ -5971,7 +6038,9 @@ class AppState extends ChangeNotifier {
       // back-paired: onion-only, already fast and leaks the least.
       if (backPaired || onion.isEmpty) {
         final n = await Future(() => engine.nostrSend(xpub, cipher));
-        if (n == 'ok') return true;
+        // the pair address is a drop box they read only once they add us
+        // back. stored there is parked, not delivered.
+        if (n == 'ok') return backPaired;
         dlog('send: nostr failed ($n)');
         return false;
       }
@@ -5982,10 +6051,12 @@ class AppState extends ChangeNotifier {
       final done = Completer<bool>();
       var pending = 2;
       void settle(String tag, String r) {
-        if (r == 'ok') {
+        // a relay taking it for the pair address is not delivery here:
+        // they read that address only after adding us back
+        if (r == 'ok' && tag != 'nostr') {
           if (!done.isCompleted) done.complete(true);
         } else {
-          dlog('send: $tag failed ($r)');
+          if (r != 'ok') dlog('send: $tag failed ($r)');
           if (--pending == 0 && !done.isCompleted) done.complete(false);
         }
       }
