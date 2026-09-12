@@ -4,6 +4,7 @@
 // mechanism sits under each as a detail. this is the one screen that grows
 // kryfo, so it gets the room and the type of a front door.
 import 'package:flutter/material.dart';
+import '../lock_state.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
@@ -119,13 +120,15 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
   void _shareLink() {
     if (_uri == null) return;
     HapticFeedback.selectionClick();
-    SharePlus.instance.share(
-      ShareParams(
-        text:
-            "add me on kryfo. my id is ${appState.myId}\n\n"
-            "tap to add me:\n$_uri\n\n"
-            "kryfo is a private messenger. no phone number, no email.",
-        subject: 'add me on kryfo',
+    lockState.hold(
+      () => SharePlus.instance.share(
+        ShareParams(
+          text:
+              "add me on kryfo. my id is ${appState.myId}\n\n"
+              "tap to add me:\n$_uri\n\n"
+              "kryfo is a private messenger. no phone number, no email.",
+          subject: 'add me on kryfo',
+        ),
       ),
     );
   }

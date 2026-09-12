@@ -158,8 +158,30 @@ class LockState extends ChangeNotifier {
     }
   }
 
+  // set while the app itself sent the user out to a system picker, the
+  // camera or a share sheet. the pause that follows is ours, not a leave,
+  // so it does not lock. cleared the moment that call returns, and by a
+  // deadline in case it never does.
+  DateTime? _holdUntil;
+  bool get holding =>
+      _holdUntil != null && DateTime.now().isBefore(_holdUntil!);
+
+  Future<T> hold<T>(Future<T> Function() body) async {
+    _holdUntil = DateTime.now().add(const Duration(minutes: 5));
+    try {
+      return await body();
+    } finally {
+      // a beat past the return: the resume event trails the picker's
+      // result and must not see the hold already dropped
+      Future.delayed(const Duration(seconds: 2), () {
+        _holdUntil = null;
+      });
+    }
+  }
+
   void lock() {
-    if (_enabled) {
+    if (!_enabled || holding) return;
+    if (!_locked) {
       _locked = true;
       notifyListeners();
     }

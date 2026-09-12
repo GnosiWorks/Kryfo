@@ -6926,14 +6926,18 @@ class HaloApp extends StatelessWidget {
                 maxScaleFactor: 1.6,
               ),
             ),
-            child: child ?? const SizedBox.shrink(),
+            // the lock sits here, above the navigator, so it covers
+            // whatever screen was open. as the home route it only covered
+            // home: pause from settings or a chat and the pin never showed
+            // until you walked back.
+            child: _LockGate(child: child ?? const SizedBox.shrink()),
           );
         },
         // one scroll feel everywhere: ios-style rubber-band on every
         // platform, no stretch-glow. the single biggest "premium" tell,
         // and it was unset so android fell back to the clamp+glow default.
         scrollBehavior: const _HaloScrollBehavior(),
-        home: _LockGate(child: _OnboardingGate(child: RootShell())),
+        home: _OnboardingGate(child: RootShell()),
       ),
     );
   }
@@ -7853,10 +7857,17 @@ class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // paused and hidden mean the user left. inactive also fires for a
+    // permission prompt or a pulled-down shade, and locking behind those
+    // put a pin between someone and the camera they just allowed.
     if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.hidden ||
-        state == AppLifecycleState.inactive) {
+        state == AppLifecycleState.hidden) {
+      final was = lockState.locked;
       lockState.lock();
+      // a composer left focused would keep its keyboard up under the pin
+      if (!was && lockState.locked) {
+        FocusManager.instance.primaryFocus?.unfocus();
+      }
     }
   }
 
@@ -7865,8 +7876,20 @@ class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
     return AnimatedBuilder(
       animation: lockState,
       builder: (_, _) {
-        if (lockState.locked) return const LockScreen();
-        return widget.child;
+        final locked = lockState.locked;
+        // the app stays in the tree so the screen you were on is still
+        // there after the pin. offstage: not painted, not tappable, and
+        // its tickers stop so nothing moves behind the lock.
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            TickerMode(
+              enabled: !locked,
+              child: Offstage(offstage: locked, child: widget.child),
+            ),
+            if (locked) const LockScreen(),
+          ],
+        );
       },
     );
   }

@@ -4,6 +4,7 @@
 // gestures.
 
 import 'dart:async';
+import '../lock_state.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
@@ -1046,10 +1047,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   Future<void> _pickGroupMultiple() async {
-    final picked = await ImagePicker().pickMultiImage(
-      maxWidth: 1280,
-      maxHeight: 1280,
-      imageQuality: 70,
+    final picked = await lockState.hold(
+      () => ImagePicker().pickMultiImage(
+        maxWidth: 1280,
+        maxHeight: 1280,
+        imageQuality: 70,
+      ),
     );
     if (picked.isEmpty) return;
     if (picked.length == 1) {
@@ -1072,10 +1075,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   Future<void> _pickGroupGif() async {
-    final res = await FilePicker.pickFiles(
-      withData: true,
-      type: FileType.custom,
-      allowedExtensions: ['gif'],
+    final res = await lockState.hold(
+      () => FilePicker.pickFiles(
+        withData: true,
+        type: FileType.custom,
+        allowedExtensions: ['gif'],
+      ),
     );
     if (res == null || res.files.isEmpty) return;
     final data = res.files.first.bytes;
@@ -1192,7 +1197,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   Future<void> _pickGroupFile() async {
-    final res = await FilePicker.pickFiles(withData: true);
+    final res = await lockState.hold(
+      () => FilePicker.pickFiles(withData: true),
+    );
     if (res == null || res.files.isEmpty) return;
     final data = res.files.first.bytes;
     final name = res.files.first.name;
@@ -3314,9 +3321,11 @@ class _GroupBubble extends StatelessWidget {
                                         behavior: HitTestBehavior.opaque,
                                         onTap: () {
                                           if (m.filePath != null) {
-                                            SharePlus.instance.share(
-                                              ShareParams(
-                                                files: [XFile(m.filePath!)],
+                                            lockState.hold(
+                                              () => SharePlus.instance.share(
+                                                ShareParams(
+                                                  files: [XFile(m.filePath!)],
+                                                ),
                                               ),
                                             );
                                           }

@@ -6,6 +6,7 @@
 // signal, email, a printed sheet on a noticeboard. the qr is the same invite
 // the app already builds, so scanning it takes an existing path.
 import 'dart:io';
+import 'lock_state.dart';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -142,10 +143,12 @@ Future<void> shareContactCard({
     final file = File('${dir.path}/kryfo-$haloId.png');
     await file.writeAsBytes(bytes.buffer.asUint8List(), flush: true);
 
-    await SharePlus.instance.share(
-      ShareParams(
-        files: [XFile(file.path)],
-        text: 'message me on kryfo · $haloId',
+    await lockState.hold(
+      () => SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          text: 'message me on kryfo · $haloId',
+        ),
       ),
     );
   } finally {
@@ -169,5 +172,7 @@ Future<void> shareContactVcf({
   final dir = await getTemporaryDirectory();
   final file = File('${dir.path}/kryfo-$haloId.vcf');
   await file.writeAsString(vcf, flush: true);
-  await SharePlus.instance.share(ShareParams(files: [XFile(file.path)]));
+  await lockState.hold(
+    () => SharePlus.instance.share(ShareParams(files: [XFile(file.path)])),
+  );
 }
