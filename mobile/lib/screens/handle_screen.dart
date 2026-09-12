@@ -52,7 +52,7 @@ class _HandleScreenState extends State<HandleScreen> {
     // the registry is one request away and someone types fast. wait for them
     // to stop before asking.
     _debounce = Timer(const Duration(milliseconds: 500), () async {
-      final r = engine.handleCheck(h);
+      final r = await engine.handleCheck(h);
       if (!mounted) return;
       setState(() => _state = r);
     });
@@ -69,7 +69,7 @@ class _HandleScreenState extends State<HandleScreen> {
       appState.myOnion,
       appState.fcCounter,
     );
-    final r = engine.handleClaim(h, uri, _bio.text.trim());
+    final r = await engine.handleClaim(h, uri, _bio.text.trim());
     if (!mounted) return;
     setState(() => _busy = false);
     if (r == 'ok') {
@@ -86,7 +86,7 @@ class _HandleScreenState extends State<HandleScreen> {
     final h = _claimed;
     if (h == null) return;
     setState(() => _busy = true);
-    final r = engine.handleRelease(h);
+    final r = await engine.handleRelease(h);
     if (!mounted) return;
     setState(() => _busy = false);
     if (r == 'ok') {
@@ -120,13 +120,13 @@ class _HandleScreenState extends State<HandleScreen> {
             const SizedBox(height: 22),
           ] else ...[
             Text(
-              'optional. Your three words keep working either way.',
+              'Optional. Your three words keep working either way.',
               style: HaloType.sans(size: 13.5, color: HaloColors.text2),
             ),
             const SizedBox(height: 20),
             _Field(
               ctrl: _ctrl,
-              hint: 'Wren',
+              hint: 'wren',
               prefix: '@',
               onChanged: _onTyped,
               max: 20,
