@@ -38,7 +38,7 @@ Future<void> wipeHalo() async {
     final h = await const FlutterSecureStorage().read(key: 'my_handle');
     if (h != null && h.isNotEmpty) {
       await Future.any([
-        Future(() => engine.handleRelease(h)),
+        engine.handleRelease(h),
         Future.delayed(const Duration(seconds: 4)),
       ]);
     }
