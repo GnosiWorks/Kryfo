@@ -1,0 +1,7 @@
+After the system closed Kryfo in the background it could show "kryfo is on" while receiving nothing until you opened it again. Fixed: it now boots on its own, screen or no screen.
+
+Reopening after a recents swipe used to start a second copy of the app inside the same process, doubling memory. Fixed.
+
+Xiaomi phones are now asked for the battery exemption, not only autostart.
+
+New: a fifteen-minute job that reconnects and pulls waiting messages even after a kill, and a "staying alive" section in transport that says whether the app is listening, when it last checked, and why it last stopped.
