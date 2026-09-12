@@ -3228,6 +3228,17 @@ void _zeroBytes(List<int> b) {
   }
 }
 
+// one encryption at a time per peer. the ratchet steps on every call, and
+// two calls reading the same chain state minted the same message number.
+// the chat's text path and the media workers both go through here.
+final Map<String, Future<void>> _encryptChain = {};
+Future<String> signalEncryptSerial(String peerId, String plaintext) {
+  final prev = _encryptChain[peerId] ?? Future.value();
+  final out = prev.then((_) => signalEncrypt(peerId, plaintext));
+  _encryptChain[peerId] = out.then((_) {}, onError: (_) {});
+  return out;
+}
+
 Future<String> signalEncrypt(String peerId, String plaintext) async {
   final addr = SignalProtocolAddress(peerId, 1);
   final cipher = SessionCipher(

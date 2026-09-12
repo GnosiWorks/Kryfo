@@ -46,6 +46,7 @@ import '../main.dart'
         engine,
         db,
         signalEncrypt,
+        signalEncryptSerial,
         appState,
         currentChatPeer,
         shredFile,
@@ -3136,7 +3137,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       _encryptGate = gate.future;
       try {
         await prev;
-        cipher = await signalEncrypt(widget.peerHaloId, wrapped);
+        cipher = await signalEncryptSerial(widget.peerHaloId, wrapped);
       } finally {
         gate.complete();
       }
