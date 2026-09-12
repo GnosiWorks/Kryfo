@@ -5239,8 +5239,13 @@ class AppState extends ChangeNotifier {
     Timer.periodic(const Duration(seconds: 5), (_) async {
       if (haloWiping) return;
       try {
-        await db.purgeExpired();
+        final gone = await db.purgeExpired();
         sweepFails = 0;
+        // a row whose newest message just burned needs a new preview
+        if (gone > 0) {
+          unawaited(refreshContacts());
+          unawaited(refreshGroups());
+        }
       } catch (e) {
         sweepFails++;
         dlog('burn sweep failed ($sweepFails): $e');
