@@ -4269,6 +4269,7 @@ class AppState extends ChangeNotifier {
   // the flag on whatever the user picked in settings, and hands it back on
   // the way out.
   bool _secureForced = false;
+  bool get secureForced => _secureForced;
   Future<void> forceSecure(bool on) async {
     _secureForced = on;
     try {
