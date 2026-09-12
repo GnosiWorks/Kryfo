@@ -20,6 +20,9 @@ class HaloPeriodicJobService : JobService() {
     private var done = false
 
     override fun onStartJob(params: JobParameters?): Boolean {
+        // the same service instance serves every firing in a warm process,
+        // so this has to be reset here or the second run never finishes
+        done = false
         Log.i("halo-engine", "periodic job: start")
         // bring the listener back if something took it. not allowed from
         // the background on newer androids, and that is fine: the engine
