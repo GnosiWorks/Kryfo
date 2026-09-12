@@ -4,6 +4,7 @@
 // opens dev for technical use.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../main.dart' show appState;
 import '../lock_state.dart';
 import '../intro_prefs.dart';
@@ -418,10 +419,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   mode: LaunchMode.externalApplication,
                 ),
               ),
+              // copies, never opens: a browser hop would hand github the
+              // phone's address
               _Row(
                 icon: Icons.code,
                 label: 'Open source',
                 value: 'github.com/GnosiWorks/Kryfo',
+                hint: 'Tap to copy the link',
+                onTap: () async {
+                  await Clipboard.setData(
+                    const ClipboardData(
+                      text: 'https://github.com/GnosiWorks/Kryfo',
+                    ),
+                  );
+                  if (context.mounted) showHaloToast(context, 'Link copied');
+                },
               ),
             ],
           ),
