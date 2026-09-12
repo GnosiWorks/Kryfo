@@ -55,57 +55,65 @@ class _ModesScreenState extends State<ModesScreen> {
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: staggerAll([
-            _BackBar(onBack: () => Navigator.pop(context)),
-            const _Head(),
-            const SizedBox(height: 6),
-            _ModeCard(
-              name: 'onion',
-              accent: '·',
-              active: _mode == 'private',
-              desc:
-                  'Full onion routing, three hops. A message takes two to five seconds. Nobody sees who you talk to.',
-              speed: 'slower',
-              hops: '3',
-              ipVisible: false,
-              onTap: () => _pick('private'),
-            ),
-            _ModeCard(
-              name: 'relay',
-              active: _mode == 'balanced',
-              desc:
-                  "one sealed connection to kryfo's own relay, like a vpn "
-                  'With nothing to log. Sends land in about a second, and it '
-                  'works where tor is blocked.',
-              speed: 'quick',
-              hops: '1',
-              ipVisible: false,
-              ipText: 'Relay only',
-              ipWarn: true,
-              onTap: () => _pick('balanced'),
-            ),
-            _ModeCard(
-              name: 'fast',
-              active: _mode == 'fast',
-              desc:
-                  'Plain connections to every relay. Near instant, and the '
-                  'least private of the three.',
-              speed: 'instant',
-              hops: '0',
-              ipVisible: true,
-              warning:
-                  'Every relay you use knows the address you connect from, not '
-                  'only ours. Messages are still sealed, but the fact that you '
-                  'sent one is not. Off by default, and off again after a '
-                  'reinstall.',
-              onTap: _pickFast,
-            ),
+          children: [
+            // the spacer stays a direct child of the column. wrapped by the
+            // stagger it threw a parent-data error, which release paints as
+            // a light box: the "half white" bottom this screen had.
+            ...staggerAll([
+              _BackBar(onBack: () => Navigator.pop(context)),
+              const _Head(),
+              const SizedBox(height: 6),
+              _ModeCard(
+                name: 'onion',
+                accent: '·',
+                active: _mode == 'private',
+                desc:
+                    'Full onion routing, three hops. A message takes two to five seconds. Nobody sees who you talk to.',
+                speed: 'slower',
+                hops: '3',
+                ipVisible: false,
+                onTap: () => _pick('private'),
+              ),
+              _ModeCard(
+                name: 'relay',
+                active: _mode == 'balanced',
+                desc:
+                    "One sealed connection to kryfo's own relay, like a vpn "
+                    'with nothing to log. Sends land in about a second, and it '
+                    'works where tor is blocked.',
+                speed: 'quick',
+                hops: '1',
+                ipVisible: false,
+                ipText: 'Relay only',
+                ipWarn: true,
+                onTap: () => _pick('balanced'),
+              ),
+              _ModeCard(
+                name: 'fast',
+                active: _mode == 'fast',
+                desc:
+                    'Plain connections to every relay. Near instant, and the '
+                    'least private of the three.',
+                speed: 'instant',
+                hops: '0',
+                ipVisible: true,
+                warning:
+                    'Every relay you use knows the address you connect from, not '
+                    'only ours. Messages are still sealed, but the fact that you '
+                    'sent one is not. Off by default, and off again after a '
+                    'reinstall.',
+                onTap: _pickFast,
+              ),
+            ]),
             const Spacer(),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 0, 20, 24),
-              child: _Footnote(),
+            const StaggerIn(
+              index: 5,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(20, 0, 20, 24),
+                child: _Footnote(),
+              ),
             ),
-          ]),
+          ],
         ),
       ),
     );
