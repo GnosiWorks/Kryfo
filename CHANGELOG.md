@@ -11,7 +11,23 @@ All notable user-facing changes to kryfo will land here. Format loosely follows 
 - a message to someone who has not added you back yet could show a tick while it sat at an address they never read. it now says "waiting for them to come online or add you back" and keeps trying until they do. a false tick is worse than an honest wait.
 - a manual retry of your first message to a stranger was silently dropped by their phone. it carries what their gate needs now.
 - a photo that stalled at 98% and then "dropped": nothing was dropped. the pieces stay on the receiving phone for a week; the banner just vanished. it now says paused, with the count, and the sender resumes from the missing piece instead of starting over, chat open or not.
-- switching screenshots on or off, and opening the backup screen, flashed white. the window behind the app was painted white; it is dark now.
+- switching screenshots on or off flashed white. the window behind the app was painted white; it is dark now.
+- the speed & privacy and backup screens had a light box across the bottom. a layout error the release build paints as a plain box. fixed.
+- disappearing messages that went through the queue (tor warming up, a retry) arrived with no timer and stayed forever on both phones. the timer rides along now.
+- changing your pin to the same digits as your wipe pin quietly disarmed the wipe while the page said it was set. refused now.
+- a stranger who could reach you could edit or delete any message in your history by id, and a group created by someone you never accepted appeared in your list. both need the author, or an accepted contact, now.
+- someone you declined stopped being listened for after a restart, so their next message never resurfaced the request. they are listened for again.
+- adding by @handle left the sheet open after it had worked.
+- retrying a photo dropped its caption and its no-screenshot mark. searching a chat only searched the last sixty messages. the offline strip said "sending now" forever for a message waiting on someone who has not added you back.
+- copying your id, a pairing code or a link is marked sensitive, so keyboards with a clipboard history and the android 13 preview treat it as such.
+- the notifications row in settings shows the push mode you actually picked.
+- a four digit pin could be guessed at pad speed with no limit. five wrong pins now hold the pad for thirty seconds, then a minute, then two, across restarts. the wipe pin is never held.
+- a request notification showed the stranger's own words on the lock screen. it says a request arrived, nothing more.
+- an edit made offline was one attempt and then silently lost. edits queue and retry like messages now.
+- accept, decline and block are on the requests list, not only inside the chat.
+- the scam shield now reads the first message of a group member you never added. a flagged member gets a small mark on their own bubbles, nothing above the thread. tap it for the reasons, block or ignore. in a group the content decides; a look-alike name is a footnote, since the id is on every bubble.
+
+- photos and files send five slices at a time instead of one after another, and once the other phone's onion stops answering the rest of that send goes straight to the relay instead of waiting out the dial every slice. camera shots are brought to the same size and quality as gallery picks before sending, which halves them. debug builds log the time each slice took.
 
 ### Changed
 - a slow send while online no longer shows "failed · tap to retry". it retries itself and stays pending; failed shows only when the phone cannot send at all, or after six goes.
