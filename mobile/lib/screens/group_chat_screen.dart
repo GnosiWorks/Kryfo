@@ -192,6 +192,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (mounted) setState(() => _disguise = d);
     });
     appState.addListener(_onAppStateChanged);
+    _autoRetryTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _autoRetryTick(),
+    );
     _burnTick = Timer.periodic(const Duration(milliseconds: 100), (_) {
       if (!mounted) return;
       final now = DateTime.now().millisecondsSinceEpoch;
@@ -773,7 +777,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     quotedText: quoted,
                     quotedAuthor: quotedAuthor,
                   ),
-                  onRetry: m.failed ? () => _retryGroup(m) : null,
+                  onRetry: m.looksFailed
+                      ? () {
+                          m.autoRetries = 0;
+                          m.gaveUp = false;
+                          _retryGroup(m);
+                        }
+                      : null,
                   ripple: m.msgUid != null && m.msgUid == _rippleUid,
                   onReplyTap: m.replyTo == null
                       ? null
@@ -935,6 +945,24 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // re-send a failed group message, reusing its uid/reply/burn so it stays
   // the same logical message. media rows re-read their saved file and go
   // back through the chunked multicast.
+  Timer? _autoRetryTimer;
+  // online, a failed send goes again on its own: half a minute apart, six
+  // goes, then it is shown as failed with the tap
+  void _autoRetryTick() {
+    if (!mounted || _sending || _cannotSend()) return;
+    for (final m in _messages) {
+      if (m.direction != 'out' || !m.failed || m.gaveUp || m.msgUid == null) {
+        continue;
+      }
+      if (m.autoRetries >= 6) {
+        setState(() => m.gaveUp = true);
+        continue;
+      }
+      m.autoRetries++;
+      _retryGroup(m);
+    }
+  }
+
   Future<void> _retryGroup(_GMsg m) async {
     if (m.msgUid == null) return;
     setState(() {
@@ -2174,6 +2202,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (currentChatPeer == 'group:${widget.groupId}') currentChatPeer = null;
     appState.removeListener(_onAppStateChanged);
     _burnTick?.cancel();
+    _autoRetryTimer?.cancel();
     _msgCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
@@ -2402,6 +2431,9 @@ String _fmtBurn(int s) {
   return '${s ~/ 86400}d';
 }
 
+// the phone cannot send at all: no network, or onion mode without a route
+bool _cannotSend() => !appState.online || !appState.torReady;
+
 class _GMsg {
   final String sender;
   final String senderName;
@@ -2414,6 +2446,12 @@ class _GMsg {
   final String? replyTo;
   bool sending;
   bool failed = false;
+  // online, a failed row retries itself and reads as pending; the count
+  // stops that after six goes
+  int autoRetries = 0;
+  bool gaveUp = false;
+  bool get looksFailed => failed && (gaveUp || _cannotSend());
+  bool get pending => sending || (failed && !looksFailed);
   bool removing = false;
   bool fresh = false; // one-shot: animate entrance, then cleared on first build
   String? mediaPath;
@@ -3526,7 +3564,7 @@ class _GroupBubble extends StatelessWidget {
                                         // a doubled timestamp.
                                         if (!(m.mediaPath != null &&
                                             m.text.isEmpty &&
-                                            !m.failed))
+                                            !m.looksFailed))
                                           Text(
                                             _fmtTime(m.when),
                                             style: HaloType.mono(
@@ -3548,8 +3586,8 @@ class _GroupBubble extends StatelessWidget {
                                         // image there). photo bubble is
                                         // transparent so use a readable color.
                                         if (isOut &&
-                                            !m.sending &&
-                                            !m.failed &&
+                                            !m.pending &&
+                                            !m.looksFailed &&
                                             !(m.mediaPath != null &&
                                                 m.text.isEmpty)) ...[
                                           const SizedBox(width: 3),
@@ -3567,7 +3605,7 @@ class _GroupBubble extends StatelessWidget {
                                             ),
                                           ),
                                         ],
-                                        if (m.failed) ...[
+                                        if (m.looksFailed) ...[
                                           const SizedBox(width: 6),
                                           Text(
                                             '! tap to retry',
@@ -3637,7 +3675,7 @@ class _GroupBubble extends StatelessWidget {
                     ],
                   ),
                   if (m.reactions.isNotEmpty) const SizedBox(height: 10),
-                  if (isOut && m.sending) ...[
+                  if (isOut && m.pending) ...[
                     const SizedBox(height: 4),
                     Padding(
                       padding: const EdgeInsets.only(right: 4),
