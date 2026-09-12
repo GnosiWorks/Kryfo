@@ -13,6 +13,9 @@ import android.content.ContentValues
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.os.PersistableBundle
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import java.io.ByteArrayOutputStream
 import android.content.Context
 import android.provider.MediaStore
 import android.content.Intent
@@ -97,6 +100,26 @@ class MainActivity : FlutterFragmentActivity() {
     // told directly, and on the way off it is recreated, which is the one
     // thing that reliably drops the bit.
     private var secureNow = false
+    private fun shrinkJpeg(bytes: ByteArray, maxEdge: Int, quality: Int): ByteArray? {
+        return try {
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+            var sample = 1
+            while (maxOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= maxEdge) sample *= 2
+            val opts = BitmapFactory.Options().apply { inSampleSize = sample }
+            val bm = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts) ?: return null
+            val scale = maxEdge.toFloat() / maxOf(bm.width, bm.height)
+            val out = if (scale < 1f) {
+                Bitmap.createScaledBitmap(bm, (bm.width * scale).toInt(), (bm.height * scale).toInt(), true)
+            } else bm
+            val bos = ByteArrayOutputStream()
+            out.compress(Bitmap.CompressFormat.JPEG, quality, bos)
+            bos.toByteArray()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     private fun setSecureWindow(on: Boolean) {
         android.util.Log.i("kryfo", "setSecure on=$on was=$secureNow")
         if (on) {
@@ -191,6 +214,15 @@ class MainActivity : FlutterFragmentActivity() {
                         }
                         cm.setPrimaryClip(clip)
                         result.success(true)
+                    }
+                    // a camera shot at the sensor's own size and quality,
+                    // brought to what a gallery pick gets: 1280 on the long
+                    // edge, jpeg 70. decoded pixels carry no metadata.
+                    "shrinkJpeg" -> {
+                        val bytes = call.argument<ByteArray>("bytes")
+                        val maxEdge = call.argument<Int>("maxEdge") ?: 1280
+                        val quality = call.argument<Int>("quality") ?: 70
+                        result.success(if (bytes == null) null else shrinkJpeg(bytes, maxEdge, quality))
                     }
                     "saveToPictures" -> {
                         val bytes = call.argument<ByteArray>("bytes")
