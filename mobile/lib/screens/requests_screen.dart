@@ -35,6 +35,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
   final Map<String, String> _previews = {};
   final Map<String, _Introducer> _introducers = {};
   final Map<String, ShieldFlag> _flags = {};
+  final Set<String> _clean = {};
   bool _loading = true;
 
   @override
@@ -48,10 +49,15 @@ class _RequestsScreenState extends State<RequestsScreen> {
     final previews = <String, String>{};
     final introducers = <String, _Introducer>{};
     final flags = <String, ShieldFlag>{};
+    final clean = <String>{};
     for (final r in rows) {
       final id = r['halo_id'] as String;
-      final flag = ShieldFlag.fromRow(await db.shieldFor(id));
+      final shieldRow = await db.shieldFor(id);
+      final flag = ShieldFlag.fromRow(shieldRow);
       if (flag != null) flags[id] = flag;
+      // the shield ran and found nothing: worth a line here, since this is
+      // the screen where a stranger is judged
+      if (flag == null && ShieldFlag.cleanRow(shieldRow)) clean.add(id);
       final msgs = await db.messagesFor(id);
       if (msgs.isNotEmpty) {
         final last = msgs.last;
@@ -88,6 +94,9 @@ class _RequestsScreenState extends State<RequestsScreen> {
       _flags
         ..clear()
         ..addAll(flags);
+      _clean
+        ..clear()
+        ..addAll(clean);
       _loading = false;
     });
   }
@@ -154,6 +163,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
                   preview: _previews[id] ?? '',
                   introducer: _introducers[id],
                   flag: _flags[id],
+                  clean: _clean.contains(id),
                   onShield: () => _shield(id),
                   onTap: () => _open(row),
                 );
@@ -204,6 +214,7 @@ class _RequestCard extends StatefulWidget {
   final String preview;
   final _Introducer? introducer;
   final ShieldFlag? flag;
+  final bool clean;
   final VoidCallback? onShield;
   final VoidCallback onTap;
   const _RequestCard({
@@ -214,6 +225,7 @@ class _RequestCard extends StatefulWidget {
     required this.preview,
     this.introducer,
     this.flag,
+    this.clean = false,
     this.onShield,
     required this.onTap,
   });
@@ -317,6 +329,17 @@ class _RequestCardState extends State<_RequestCard>
                               milliseconds: 60 * widget.order + 220,
                             ),
                             onTap: widget.onShield,
+                          ),
+                        ] else if (widget.clean) ...[
+                          const SizedBox(height: 7),
+                          NoticeBanner(
+                            glyph: NoticeGlyph.shield,
+                            text:
+                                'looks safe · nothing suspicious in their first message',
+                            color: HaloColors.green,
+                            delay: Duration(
+                              milliseconds: 60 * widget.order + 220,
+                            ),
                           ),
                         ],
                         const SizedBox(height: 4),
