@@ -1956,6 +1956,16 @@ class HaloDb {
     );
   }
 
+  // declined and parked: out of the inbox, but a second message still has
+  // to reach us so the row can resurface
+  Future<List<Map<String, Object?>>> parkedRequests() async {
+    final db = await open();
+    return db.query(
+      'contacts',
+      where: 'accepted = 0 AND blocked = 0 AND IFNULL(archived, 0) = 1',
+    );
+  }
+
   Future<int> pendingRequestCount() async {
     final db = await open();
     final r = await db.rawQuery(
@@ -5403,7 +5413,10 @@ class AppState extends ChangeNotifier {
       final rows = bootSubscribeRows(
         accepted: await db.contacts(),
         vouchedPending: await db.vouchedPending(),
-        pendingRequests: await db.pendingRequests(),
+        pendingRequests: [
+          ...await db.pendingRequests(),
+          ...await db.parkedRequests(),
+        ],
       );
       final fresh = <String, String>{};
       for (final r in rows) {

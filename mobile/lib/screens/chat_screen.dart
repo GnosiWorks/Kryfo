@@ -4087,6 +4087,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _acceptRequestPeer() async {
     HapticFeedback.selectionClick();
     await db.acceptRequest(widget.peerHaloId);
+    // the subscription was made at back-pair time; a row that came in by
+    // another door has none yet
+    unawaited(appState.subscribePeer(widget.peerHaloId));
     await appState.refreshContacts();
     if (mounted) {
       setState(() {
@@ -4106,7 +4109,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _blockRequestPeer() async {
     HapticFeedback.selectionClick();
-    await db.setBlocked(widget.peerHaloId, true);
+    await appState.block(widget.peerHaloId);
+    await db.clearUnread(widget.peerHaloId);
     await appState.refreshContacts();
     if (mounted) Navigator.pop(context);
   }
