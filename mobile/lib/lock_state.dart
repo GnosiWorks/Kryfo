@@ -9,6 +9,8 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+import 'dlog.dart';
 import 'package:local_auth/local_auth.dart';
 
 enum PinResult { normal, panic, invalid }
@@ -26,6 +28,10 @@ class LockState extends ChangeNotifier {
   static const _kPanicEnabled = 'halo.lock.panic_enabled';
 
   bool _enabled = false;
+  // until the first read lands nothing is known, and the gate paints ink
+  // rather than a home screen that may be about to lock
+  bool _loaded = false;
+  bool get loaded => _loaded;
   bool _panicEnabled = false;
   bool _locked = true;
   bool _biometric = false;
@@ -40,10 +46,18 @@ class LockState extends ChangeNotifier {
   bool get panicEnabled => _panicEnabled;
 
   Future<void> load() async {
-    _enabled = (await _storage.read(key: _kEnabled)) == 'true';
-    _biometric = (await _storage.read(key: _kBio)) == 'true';
-    _panicEnabled = (await _storage.read(key: _kPanicEnabled)) == 'true';
+    try {
+      _enabled = (await _storage.read(key: _kEnabled)) == 'true';
+      _biometric = (await _storage.read(key: _kBio)) == 'true';
+      _panicEnabled = (await _storage.read(key: _kPanicEnabled)) == 'true';
+    } catch (e) {
+      // a keystore that will not answer. fail open, since a pin that can
+      // never verify would lock the person out of their own messages, and
+      // say so in the debug log
+      dlog('lock: storage read failed: $e');
+    }
     _locked = _enabled;
+    _loaded = true;
     try {
       final auth = LocalAuthentication();
       final canCheck = await auth.canCheckBiometrics;
@@ -55,7 +69,14 @@ class LockState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setupPin(String pin) async {
+  // false when the pin is the wipe pin: verify tries the normal pin first,
+  // so that would have quietly disarmed the wipe while the page said set
+  Future<bool> setupPin(String pin) async {
+    if (_panicEnabled) {
+      final ph = await _storage.read(key: _kPanicHash);
+      final ps = await _storage.read(key: _kPanicSalt);
+      if (ph != null && ps != null && _hashPin(pin, ps) == ph) return false;
+    }
     final salt = _randomSalt();
     final hash = _hashPin(pin, salt);
     await _storage.write(key: _kHash, value: hash);
@@ -64,6 +85,7 @@ class LockState extends ChangeNotifier {
     _enabled = true;
     _locked = false;
     notifyListeners();
+    return true;
   }
 
   Future<PinResult> verifyPin(String pin) async {
@@ -163,18 +185,21 @@ class LockState extends ChangeNotifier {
   // so it does not lock. cleared the moment that call returns, and by a
   // deadline in case it never does.
   DateTime? _holdUntil;
+  int _holdGen = 0;
   bool get holding =>
       _holdUntil != null && DateTime.now().isBefore(_holdUntil!);
 
   Future<T> hold<T>(Future<T> Function() body) async {
     _holdUntil = DateTime.now().add(const Duration(minutes: 5));
+    final gen = ++_holdGen;
     try {
       return await body();
     } finally {
       // a beat past the return: the resume event trails the picker's
-      // result and must not see the hold already dropped
+      // result and must not see the hold already dropped. a newer hold
+      // (save picker, then share sheet) keeps its own deadline.
       Future.delayed(const Duration(seconds: 2), () {
-        _holdUntil = null;
+        if (gen == _holdGen) _holdUntil = null;
       });
     }
   }

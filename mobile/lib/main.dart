@@ -7926,32 +7926,69 @@ class _LockGate extends StatefulWidget {
 }
 
 class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
+  // the lock is a route on the root navigator: it covers whatever is open,
+  // takes the back button, and leaves the screen underneath where it was.
+  // as a sibling in a stack the hidden navigator still answered back
+  // presses, and an open chat still counted as the one being read.
+  Route<void>? _lockRoute;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    lockState.addListener(_sync);
     lockState.load();
   }
 
   @override
   void dispose() {
+    lockState.removeListener(_sync);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _sync() {
+    final nav = rootNavKey.currentState;
+    if (nav == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _sync());
+      return;
+    }
+    final locked = lockState.locked;
+    if (locked && _lockRoute == null) {
+      // a composer left focused would keep its keyboard up under the pin
+      FocusManager.instance.primaryFocus?.unfocus();
+      final r = PageRouteBuilder<void>(
+        opaque: true,
+        settings: const RouteSettings(name: 'lock'),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: const Duration(milliseconds: 220),
+        pageBuilder: (_, _, _) =>
+            const PopScope(canPop: false, child: LockScreen()),
+        transitionsBuilder: (_, a, _, child) =>
+            FadeTransition(opacity: a, child: child),
+      );
+      _lockRoute = r;
+      nav.push(r);
+    } else if (!locked && _lockRoute != null) {
+      final r = _lockRoute!;
+      _lockRoute = null;
+      if (r.isCurrent) {
+        nav.pop();
+      } else if (r.isActive) {
+        nav.removeRoute(r);
+      }
+    }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // paused and hidden mean the user left. inactive also fires for a
-    // permission prompt or a pulled-down shade, and locking behind those
-    // put a pin between someone and the camera they just allowed.
+    // permission prompt, a screenshot toolbar or a pulled-down shade, and
+    // locking behind those put a pin between someone and the camera they
+    // just allowed.
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
-      final was = lockState.locked;
       lockState.lock();
-      // a composer left focused would keep its keyboard up under the pin
-      if (!was && lockState.locked) {
-        FocusManager.instance.primaryFocus?.unfocus();
-      }
     }
   }
 
@@ -7959,22 +7996,15 @@ class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: lockState,
-      builder: (_, _) {
-        final locked = lockState.locked;
-        // the app stays in the tree so the screen you were on is still
-        // there after the pin. offstage: not painted, not tappable, and
-        // its tickers stop so nothing moves behind the lock.
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            TickerMode(
-              enabled: !locked,
-              child: Offstage(offstage: locked, child: widget.child),
-            ),
-            if (locked) const LockScreen(),
-          ],
-        );
-      },
+      builder: (_, _) => Stack(
+        fit: StackFit.expand,
+        children: [
+          widget.child,
+          // nothing is known before the first read: paint ink, not a home
+          // screen that is about to lock
+          if (!lockState.loaded) ColoredBox(color: HaloColors.ink),
+        ],
+      ),
     );
   }
 }

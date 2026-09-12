@@ -68,7 +68,18 @@ class _LockSetupScreenState extends State<LockSetupScreen>
       });
       return;
     }
-    await lockState.setupPin(_pin);
+    final ok = await lockState.setupPin(_pin);
+    if (!ok) {
+      HapticFeedback.heavyImpact();
+      if (!mounted) return;
+      showHaloToast(context, 'That is your wipe pin. Pick another.');
+      setState(() {
+        _first = '';
+        _pin = '';
+        _confirming = false;
+      });
+      return;
+    }
     HapticFeedback.mediumImpact();
     if (mounted && lockState.bioSupported && !lockState.biometric) {
       final useBio = await showHaloSheet<bool>(
