@@ -13,7 +13,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dlog.dart';
 import 'package:local_auth/local_auth.dart';
 
-enum PinResult { normal, panic, invalid }
+enum PinResult { normal, panic, invalid, throttled }
 
 class LockState extends ChangeNotifier {
   static const _storage = FlutterSecureStorage(
@@ -26,6 +26,8 @@ class LockState extends ChangeNotifier {
   static const _kPanicHash = 'halo.lock.panic_hash';
   static const _kPanicSalt = 'halo.lock.panic_salt';
   static const _kPanicEnabled = 'halo.lock.panic_enabled';
+  static const _kMisses = 'halo.lock.misses';
+  static const _kUntil = 'halo.lock.until';
 
   bool _enabled = false;
   // until the first read lands nothing is known, and the gate paints ink
@@ -34,6 +36,16 @@ class LockState extends ChangeNotifier {
   bool get loaded => _loaded;
   bool _panicEnabled = false;
   bool _locked = true;
+  // wrong pins in a row, and the moment the pad opens again. a four digit
+  // pin at pad speed is ten thousand tries; five misses cost thirty
+  // seconds, then a minute, then two. the wipe pin is never held back.
+  int _misses = 0;
+  int _until = 0;
+  Duration get throttleLeft {
+    final left = _until - DateTime.now().millisecondsSinceEpoch;
+    return left > 0 ? Duration(milliseconds: left) : Duration.zero;
+  }
+
   bool _biometric = false;
   bool _bioSupported = false;
 
@@ -50,6 +62,8 @@ class LockState extends ChangeNotifier {
       _enabled = (await _storage.read(key: _kEnabled)) == 'true';
       _biometric = (await _storage.read(key: _kBio)) == 'true';
       _panicEnabled = (await _storage.read(key: _kPanicEnabled)) == 'true';
+      _misses = int.tryParse(await _storage.read(key: _kMisses) ?? '') ?? 0;
+      _until = int.tryParse(await _storage.read(key: _kUntil) ?? '') ?? 0;
     } catch (e) {
       // a keystore that will not answer. fail open, since a pin that can
       // never verify would lock the person out of their own messages, and
@@ -89,18 +103,28 @@ class LockState extends ChangeNotifier {
   }
 
   Future<PinResult> verifyPin(String pin) async {
-    // try the normal pin first
-    final salt = await _storage.read(key: _kSalt);
-    final stored = await _storage.read(key: _kHash);
-    if (salt != null && stored != null) {
-      if (_hashPin(pin, salt) == stored) {
-        _locked = false;
-        notifyListeners();
-        return PinResult.normal;
+    final held = throttleLeft > Duration.zero;
+    // the normal pin first, unless the pad is held
+    if (!held) {
+      final salt = await _storage.read(key: _kSalt);
+      final stored = await _storage.read(key: _kHash);
+      if (salt != null && stored != null) {
+        if (_hashPin(pin, salt) == stored) {
+          _locked = false;
+          if (_misses != 0 || _until != 0) {
+            _misses = 0;
+            _until = 0;
+            await _storage.write(key: _kMisses, value: '0');
+            await _storage.write(key: _kUntil, value: '0');
+          }
+          notifyListeners();
+          return PinResult.normal;
+        }
       }
     }
-    // then the panic pin, if set. matching it means the user wants
-    // the app wiped right now - caller is responsible for invoking
+    // then the panic pin, if set, held or not: someone forced to open the
+    // phone must always be able to wipe it. matching it means the user
+    // wants the app wiped right now - caller is responsible for invoking
     // wipeHalo(). we do NOT change _locked here.
     if (_panicEnabled) {
       final pSalt = await _storage.read(key: _kPanicSalt);
@@ -109,6 +133,16 @@ class LockState extends ChangeNotifier {
         return PinResult.panic;
       }
     }
+    if (held) return PinResult.throttled;
+    _misses++;
+    if (_misses % 5 == 0) {
+      final step = _misses ~/ 5;
+      final wait = 30000 * (1 << (step - 1).clamp(0, 6));
+      _until = DateTime.now().millisecondsSinceEpoch + wait;
+      await _storage.write(key: _kUntil, value: '$_until');
+    }
+    await _storage.write(key: _kMisses, value: '$_misses');
+    notifyListeners();
     return PinResult.invalid;
   }
 
