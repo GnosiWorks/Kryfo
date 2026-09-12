@@ -4,6 +4,8 @@
 // when biometric is enabled, auto-fires the system fingerprint prompt
 // on screen entry; "use fingerprint" re-fires it.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../lock_state.dart';
@@ -21,6 +23,19 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
   String _pin = '';
   bool _busy = false;
   bool _wrong = false;
+  // counts the hold down once a second while the pad is held
+  Timer? _holdTick;
+  bool get _held => lockState.throttleLeft > Duration.zero;
+  void _watchHold() {
+    _holdTick?.cancel();
+    if (!_held) return;
+    _holdTick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() {});
+      if (!_held) _holdTick?.cancel();
+    });
+  }
+
   late final AnimationController _shake = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 420),
@@ -37,6 +52,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _watchHold();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (lockState.biometric && lockState.bioSupported) {
         lockState.tryBiometric();
@@ -48,6 +64,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
   void dispose() {
     _shake.dispose();
     _breath.dispose();
+    _holdTick?.cancel();
     super.dispose();
   }
 
@@ -63,7 +80,9 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
         await wipeHalo();
         return;
       }
-      if (result == PinResult.invalid && mounted) {
+      if ((result == PinResult.invalid || result == PinResult.throttled) &&
+          mounted) {
+        _watchHold();
         setState(() => _wrong = true);
         HapticFeedback.heavyImpact();
         await _shake.forward(from: 0);
@@ -130,11 +149,17 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 200),
                     child: Text(
-                      _wrong ? 'Not it' : 'Your pin',
-                      key: ValueKey(_wrong),
+                      _held
+                          ? 'Too many tries · ${lockState.throttleLeft.inSeconds + 1}s'
+                          : _wrong
+                          ? 'Not it'
+                          : 'Your pin',
+                      key: ValueKey(_held ? 'held' : _wrong),
                       style: HaloType.sans(
                         size: 13,
-                        color: _wrong ? HaloColors.rose : HaloColors.text2,
+                        color: _wrong || _held
+                            ? HaloColors.rose
+                            : HaloColors.text2,
                       ),
                     ),
                   ),
