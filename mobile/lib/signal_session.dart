@@ -98,6 +98,13 @@ class SignalSession {
       }
       dlog('signal: filled prekey ids=$missing');
     }
+    // the invite's own prekey, made once and kept: see invitePreKeyId
+    if (!have.contains(invitePreKeyId)) {
+      final blob = (await compute(_genPreKeysTask, [invitePreKeyId])).first;
+      final k = PreKeyRecord.fromBuffer(blob);
+      await preKeyStore.storePreKey(k.id, k);
+      dlog('signal: made the invite prekey');
+    }
 
     _ready = true;
     dlog('signal: bootstrapped (regId=$registrationId)');
