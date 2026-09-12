@@ -63,7 +63,6 @@ class _BackupScreenState extends State<BackupScreen> {
         // shreds the copy here
         if (!shared) await shredFile(path);
       }
-      await appState.markBackupMade();
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
