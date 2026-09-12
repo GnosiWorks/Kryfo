@@ -15,6 +15,9 @@
          saving to the gallery on android 9 and below, which we never do -->
     <uses-feature android:name="android.hardware.camera.any" android:required="false" tools:node="replace" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove" />
+    <!-- merged in by a plugin's library. kryfo never reads shared storage;
+         a picked file arrives through the picker's own copy -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove" />
     <application
         android:label="Kryfo"
         android:name=".HaloApplication"
