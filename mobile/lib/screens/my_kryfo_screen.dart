@@ -102,7 +102,8 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
     if (!mounted) return;
     setState(() => _finding = false);
     showHaloToast(context, status);
-    if (status.startsWith('added') || status.startsWith('already')) {
+    final low = status.toLowerCase();
+    if (low.startsWith('added') || low.startsWith('already')) {
       HapticFeedback.mediumImpact();
       _handleCtrl.clear();
       final nav = Navigator.of(context);
@@ -264,7 +265,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
                   ? null
                   : () {
                       HapticFeedback.selectionClick();
-                      Clipboard.setData(ClipboardData(text: '@$handle'));
+                      copySensitive('@$handle');
                       showHaloToast(context, 'Handle copied');
                     },
             ),

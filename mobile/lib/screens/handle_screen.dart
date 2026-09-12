@@ -215,7 +215,7 @@ class _ClaimedCard extends StatelessWidget {
           GestureDetector(
             onTap: () {
               HapticFeedback.selectionClick();
-              Clipboard.setData(ClipboardData(text: url));
+              copySensitive(url);
               showHaloToast(context, 'Link copied');
             },
             behavior: HitTestBehavior.opaque,

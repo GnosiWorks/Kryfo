@@ -66,7 +66,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   void _copy(String text, String what) {
-    Clipboard.setData(ClipboardData(text: text));
+    copySensitive(text);
     HapticFeedback.selectionClick();
     showHaloToast(context, '$what copied');
   }

@@ -10,6 +10,9 @@ import android.app.job.JobInfo
 import android.app.job.JobScheduler
 import android.content.ComponentName
 import android.content.ContentValues
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.os.PersistableBundle
 import android.content.Context
 import android.provider.MediaStore
 import android.content.Intent
@@ -163,10 +166,31 @@ class MainActivity : FlutterFragmentActivity() {
                     // queued for disk when the process died, so the pin and
                     // the onboarding flag came back.
                     "wipe" -> {
+                        // the sticky listener goes first: if the clear is
+                        // refused and dart exits, nothing brings the app back
+                        try {
+                            applicationContext.stopService(
+                                Intent(applicationContext, HaloListenerService::class.java)
+                            )
+                        } catch (e: Exception) {
+                        }
                         val am = applicationContext
                             .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
                         val ok = try { am.clearApplicationUserData() } catch (e: Exception) { false }
                         result.success(ok)
+                    }
+                    // a copy the keyboard's history and the android 13 preview
+                    // treat as sensitive: ids, codes, addresses
+                    "copySensitive" -> {
+                        val text = call.argument<String>("text") ?: ""
+                        val cm = applicationContext
+                            .getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val clip = ClipData.newPlainText("", text)
+                        clip.description.extras = PersistableBundle().apply {
+                            putBoolean("android.content.extra.IS_SENSITIVE", true)
+                        }
+                        cm.setPrimaryClip(clip)
+                        result.success(true)
                     }
                     "saveToPictures" -> {
                         val bytes = call.argument<ByteArray>("bytes")
