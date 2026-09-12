@@ -52,6 +52,22 @@ class _CameraScreenState extends State<CameraScreen>
   bool _retried = false;
   // the review step
   Uint8List? _shot;
+
+  static const _platform = MethodChannel('halo/platform');
+  Future<Uint8List> _shrink(Uint8List b) async {
+    try {
+      final r = await _platform.invokeMethod<Uint8List>('shrinkJpeg', {
+        'bytes': b,
+        'maxEdge': 1280,
+        'quality': 70,
+      });
+      if (r != null && r.isNotEmpty) return r;
+    } catch (e) {
+      dlog('shrink: $e');
+    }
+    return b;
+  }
+
   String? _clip;
   int _clipBytes = 0;
   DateTime? _recStart;
@@ -186,7 +202,10 @@ class _CameraScreenState extends State<CameraScreen>
       // the plugin wrote a file with everything the sensor knows. it goes
       // now, and only the stripped bytes live on
       await shredFile(x.path);
-      final clean = stripJpegMetadata(raw);
+      final stripped = stripJpegMetadata(raw);
+      // the same size and quality a gallery pick gets. a sensor jpeg at
+      // its own quality was two to three times the bytes over tor.
+      final clean = stripped == null ? null : await _shrink(stripped);
       if (!mounted) return;
       // a file the stripper could not walk, or one that still reads as
       // tagged, is refused rather than passed on
