@@ -15,6 +15,7 @@ import 'package:share_plus/share_plus.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/media_bubbles.dart';
 import '../atmosphere.dart';
+import 'shield_sheet.dart';
 import 'chat_screen.dart'
     show
         disguiseWav,
@@ -144,6 +145,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   bool _reloadQueued = false;
   bool _loaded = false; // first full load done - gates the append-fast-path
   int _seenRev = -1; // last group rev we reloaded for
+  // the shield's verdict on members you never added, by id. a mark on
+  // their own bubbles, nothing above the thread.
+  final Map<String, ShieldFlag> _shieldFlags = {};
+  int _seenShieldRev = -1;
 
   @override
   void initState() {
@@ -573,6 +578,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _scrollToEnd(instant: true);
       }
       _loaded = true;
+      await _loadShieldFlags();
     } finally {
       // a crash mid-load used to leave _loading stuck true, silently
       // freezing every later refresh: previews only appeared after
@@ -586,7 +592,40 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
   }
 
+  Future<void> _loadShieldFlags() async {
+    _seenShieldRev = appState.shieldRev;
+    final senders = {
+      for (final m in _messages)
+        if (m.direction == 'in') m.sender,
+    };
+    final next = <String, ShieldFlag>{};
+    for (final id in senders) {
+      if (await db.isAccepted(id)) continue;
+      final f = ShieldFlag.fromRow(await db.shieldFor(id));
+      if (f != null) next[id] = f;
+    }
+    if (!mounted) return;
+    setState(() {
+      _shieldFlags
+        ..clear()
+        ..addAll(next);
+    });
+  }
+
+  Future<void> _openShield(String id) async {
+    final flag = _shieldFlags[id];
+    if (flag == null) return;
+    final c = await showShieldSheet(context, id, flag, group: true);
+    if (!mounted) return;
+    if (c == ShieldChoice.block) showHaloToast(context, 'Blocked everywhere');
+    await _loadShieldFlags();
+  }
+
   void _onAppStateChanged() {
+    // a verdict landed after its message did: refresh the marks alone
+    if (appState.shieldRev != _seenShieldRev && !_loading) {
+      unawaited(_loadShieldFlags());
+    }
     // only react to our own group's traffic. a 1:1 message landing used
     // to full-reload this screen and churn every photo bubble.
     final rev = appState.chatRevOf('group:${widget.groupId}');
@@ -725,9 +764,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   Widget _buildGroupRow(int i) {
     final m = _messages[i];
     final prev = i > 0 ? _messages[i - 1] : null;
+    final shieldFlag = m.direction == 'in' ? _shieldFlags[m.sender] : null;
+    // a flagged member's name line shows on every one of their bubbles,
+    // since the mark lives there
     final showSender =
         m.direction == 'in' &&
-        (prev == null || prev.sender != m.sender || prev.direction != 'in');
+        (shieldFlag != null ||
+            prev == null ||
+            prev.sender != m.sender ||
+            prev.direction != 'in');
     String? quoted;
     String? quotedAuthor;
     if (m.replyTo != null) {
@@ -777,6 +822,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                   m: m,
                   showSender: showSender,
                   senderBadge: _badgeFor(m.sender),
+                  shieldFlag: shieldFlag,
+                  onShield: shieldFlag == null
+                      ? null
+                      : () => _openShield(m.sender),
                   linkTitle: m.preview?['title'],
                   linkBySender: m.preview?['by'] == 'sender',
                   quotedText: quoted,
@@ -3144,6 +3193,8 @@ class _GroupBubble extends StatelessWidget {
   final _GMsg m;
   final bool showSender;
   final String? senderBadge;
+  final ShieldFlag? shieldFlag;
+  final VoidCallback? onShield;
   final String? quotedText;
   final String? quotedAuthor;
   final void Function(BuildContext)? onLongPress;
@@ -3156,6 +3207,8 @@ class _GroupBubble extends StatelessWidget {
     required this.m,
     required this.showSender,
     this.senderBadge,
+    this.shieldFlag,
+    this.onShield,
     this.quotedText,
     this.quotedAuthor,
     this.onLongPress,
@@ -3226,6 +3279,50 @@ class _GroupBubble extends StatelessWidget {
                                 style: HaloType.mono(
                                   size: 7.5,
                                   color: HaloColors.amber,
+                                ),
+                              ),
+                            ),
+                          ],
+                          if (shieldFlag != null) ...[
+                            const SizedBox(width: 5),
+                            // the shield's mark: tap for the reasons, block
+                            // or ignore. no banner, no clean line here.
+                            GestureDetector(
+                              onTap: onShield,
+                              behavior: HitTestBehavior.opaque,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                  vertical: 1,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: HaloColors.rose.withValues(
+                                    alpha: 0.14,
+                                  ),
+                                  borderRadius: BorderRadius.circular(5),
+                                  border: Border.all(
+                                    color: HaloColors.rose.withValues(
+                                      alpha: 0.4,
+                                    ),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.shield_outlined,
+                                      size: 9,
+                                      color: HaloColors.rose,
+                                    ),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      shieldFlag!.headline,
+                                      style: HaloType.mono(
+                                        size: 7.5,
+                                        color: HaloColors.rose,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
