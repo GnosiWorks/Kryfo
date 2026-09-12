@@ -45,7 +45,7 @@ class PinsScreen extends StatelessWidget {
               const SizedBox(height: 20),
               _PinCard(
                 name: 'Your pin',
-                state: on ? 'On' : 'off',
+                state: on ? 'On' : 'Off',
                 stateColor: on ? HaloColors.green : HaloColors.text3,
                 outcome:
                     'Opens kryfo. Four digits, asked for when it comes '
@@ -90,8 +90,8 @@ class PinsScreen extends StatelessWidget {
                 state: !on
                     ? 'Needs a pin first'
                     : wipe
-                    ? 'set'
-                    : 'off',
+                    ? 'Set'
+                    : 'Off',
                 stateColor: wipe ? HaloColors.rose : HaloColors.text3,
                 outcome: 'The second pin wipes everything.',
                 primary: wipe ? 'Change wipe pin' : 'Set a wipe pin',
@@ -263,7 +263,7 @@ class _Toggle extends StatelessWidget {
           ),
         ),
         Text(
-          on ? 'On' : 'off',
+          on ? 'On' : 'Off',
           style: HaloType.mono(
             size: 10.5,
             color: on ? HaloColors.green : HaloColors.text3,

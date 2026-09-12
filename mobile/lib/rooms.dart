@@ -28,10 +28,10 @@ String expiryWords(Duration d) {
   if (d.inHours >= 1) {
     final exact = d.inMinutes % 60 == 0;
     if (d.inHours == 1) return exact ? 'an hour' : 'about an hour';
-    return exact ? '${d.inHours} hours' : 'About ${d.inHours} hours';
+    return exact ? '${d.inHours} hours' : 'about ${d.inHours} hours';
   }
   if (d.inMinutes >= 2) return '${d.inMinutes} minutes';
-  return 'A minute';
+  return 'a minute';
 }
 
 // what the header and the list row show. days and hours while there is

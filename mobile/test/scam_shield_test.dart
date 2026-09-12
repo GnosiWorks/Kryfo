@@ -27,7 +27,7 @@ void main() {
     test('a homoglyph id flags with the contact named', () {
       final r = checkImpersonation('thumb-bеhave-boring', null, contacts);
       expect(r.flagged, true);
-      expect(r.headline, 'this name matches alice');
+      expect(r.headline, 'This name matches alice');
       expect(_codes(r), ['name_match']);
     });
 
@@ -45,7 +45,7 @@ void main() {
     test('an id that reads as a nickname flags', () {
       final r = checkImpersonation('Alice', null, contacts);
       expect(r.flagged, true);
-      expect(r.hits.first.line, 'name matches your contact alice');
+      expect(r.hits.first.line, 'Name matches your contact alice');
     });
 
     test('the same face only ever adds to a near match', () {
@@ -66,7 +66,7 @@ void main() {
 
     test('a contact with no nickname is named by id', () {
       final r = checkImpersonation('candle-rope-sundae', null, contacts);
-      expect(r.headline, 'this name matches candle-rope-sunday');
+      expect(r.headline, 'This name matches candle-rope-sunday');
     });
   });
 
@@ -163,7 +163,7 @@ void main() {
         'add me on telegram, i need the transfer now before it expires',
       );
       expect(two.flagged, true);
-      expect(two.headline, 'looks like a scam');
+      expect(two.headline, 'Looks like a scam');
     });
 
     test('a normal hello stays quiet', () {
@@ -186,6 +186,6 @@ void main() {
     );
     expect(r.flagged, true);
     expect(_codes(r), ['name_match', 'secret_ask']);
-    expect(r.headline, 'this name matches alice');
+    expect(r.headline, 'This name matches alice');
   });
 }

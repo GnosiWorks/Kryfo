@@ -174,7 +174,7 @@ ShieldResult checkImpersonation(
         editDistance(me, cid) == 1;
     if (!close) continue;
     final shown = c.nickname ?? c.id;
-    final hits = [ShieldHit('name_match', 'name matches your contact $shown')];
+    final hits = [ShieldHit('name_match', 'Name matches your contact $shown')];
     if (strangerAvatar != null && strangerAvatar == c.avatar) {
       hits.add(ShieldHit('face_match', 'same face as your contact $shown'));
     }

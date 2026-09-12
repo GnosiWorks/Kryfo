@@ -29,7 +29,9 @@ void main() {
     expect(lines.length, 4);
     for (final l in lines) {
       expect(l.contains('error'), isFalse);
-      expect(l, equals(l.toLowerCase()));
+      // sentence case: a capital to open, no shouting
+      expect(l[0], equals(l[0].toUpperCase()));
+      expect(l, isNot(equals(l.toUpperCase())));
     }
   });
 }
