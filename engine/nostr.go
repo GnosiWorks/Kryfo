@@ -186,6 +186,12 @@ func nostrResetClient() {
 	cachedNostrClientMu.Lock()
 	cachedNostrClient = nil
 	cachedNostrClientMu.Unlock()
+	// the preview client dials the tor it was built on. after a restart
+	// that tor is gone, and a client kept from before would dial a dead
+	// port for the rest of the process
+	torOnlyMu.Lock()
+	torOnlyClient = nil
+	torOnlyMu.Unlock()
 }
 
 func torNostrClient() (*http.Client, error) {
