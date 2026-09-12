@@ -41,12 +41,8 @@ class _ModesScreenState extends State<ModesScreen> {
   // fast is the one mode that costs something, so it says so first
   Future<void> _pickFast() async {
     if (_mode == 'fast') return;
-    final ok = await showHaloSheet<bool>(
-      context,
-      scroll: true,
-      builder: (_) => const _FastGateSheet(),
-    );
-    if (ok == true && mounted) {
+    final ok = await showFastGateSheet(context);
+    if (ok && mounted) {
       HapticFeedback.mediumImpact();
       _pick('fast');
     }
@@ -405,6 +401,17 @@ class _Footnote extends StatelessWidget {
 }
 
 // the warning. what fast costs, in plain words, and a button
+// the one warning fast mode carries, shown by every way into it: the
+// modes screen and the home's "our relay is quiet" shortcut alike
+Future<bool> showFastGateSheet(BuildContext context) async {
+  final ok = await showHaloSheet<bool>(
+    context,
+    scroll: true,
+    builder: (_) => const _FastGateSheet(),
+  );
+  return ok == true;
+}
+
 class _FastGateSheet extends StatelessWidget {
   const _FastGateSheet();
 

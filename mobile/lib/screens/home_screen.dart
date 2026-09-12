@@ -4,6 +4,7 @@
 
 import 'saved_screen.dart';
 import '../widgets/press_scale.dart';
+import 'modes_screen.dart' show showFastGateSheet;
 import '../widgets/stagger_in.dart';
 import '../widgets/breathing_ring.dart';
 import 'requests_screen.dart';
@@ -456,6 +457,10 @@ class _RelayDownHint extends StatelessWidget {
                   GestureDetector(
                     onTap: () async {
                       HapticFeedback.selectionClick();
+                      // same warning as the modes screen: fast mode shows
+                      // your address to public relays
+                      final ok = await showFastGateSheet(context);
+                      if (!ok || !context.mounted) return;
                       await appState.setSendMode('fast');
                       if (context.mounted) {
                         showHaloToast(context, 'switched to fast');
