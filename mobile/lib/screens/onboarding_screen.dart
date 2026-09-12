@@ -148,7 +148,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
               children: [
                 const TextSpan(text: 'Private messaging,\n'),
                 TextSpan(
-                  text: 'Without the catch',
+                  text: 'without the catch',
                   style: HaloType.serif(
                     size: 38,
                     weight: FontWeight.w300,
