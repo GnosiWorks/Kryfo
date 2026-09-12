@@ -116,7 +116,7 @@ class HomeScreen extends StatelessWidget {
                 },
               ),
             Expanded(
-              child: visible.isEmpty
+              child: visible.isEmpty && groups.isEmpty
                   ? _EmptyState(onAdd: onAddContact)
                   : _ContactList(
                       contacts: visible,
