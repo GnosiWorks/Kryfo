@@ -129,9 +129,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
   Future<void> _accept(String id) async {
     HapticFeedback.selectionClick();
     await db.acceptRequest(id);
-    unawaited(appState.subscribePeer(id));
-    unawaited(appState.sendAcceptAck(id));
-    await appState.refreshContacts();
+    await appState.afterAccept(id);
     if (mounted) showHaloToast(context, 'Accepted');
     await _load();
   }
