@@ -70,10 +70,12 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet>
             const SizedBox(height: 4),
             Row(
               children: [
-                Text(
-                  'Ends in ',
-                  style: HaloType.mono(size: 10, color: HaloColors.text3),
-                ),
+                if (DateTime.now().millisecondsSinceEpoch <
+                    widget.link.expiresAt)
+                  Text(
+                    'Ends in ',
+                    style: HaloType.mono(size: 10, color: HaloColors.text3),
+                  ),
                 RoomCountdown(expiresAt: widget.link.expiresAt, size: 10),
               ],
             ),

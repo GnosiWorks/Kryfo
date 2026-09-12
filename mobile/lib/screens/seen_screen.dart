@@ -64,10 +64,10 @@ class _SeenScreenState extends State<SeenScreen> {
             ),
             child: Text(
               'Honest about the last rows: that is what the app lock, the '
-              'panic pin and encrypted storage are for, and no tool saves you '
+              'wipe pin and encrypted storage are for, and no tool saves you '
               'from someone holding your open phone. The full threat model '
               'lives in THREAT_MODEL.md in the repo, written against '
-              'LINDDUN. the code is open, so none of this has to be taken on '
+              'LINDDUN. The code is open, so none of this has to be taken on '
               'trust.',
               style: HaloType.mono(size: 11.5, color: HaloColors.text2),
             ),
@@ -205,7 +205,7 @@ class _Header extends StatelessWidget {
   const _Header({required this.active});
   @override
   Widget build(BuildContext context) {
-    const names = ['Onion', 'relay', 'fast'];
+    const names = ['Onion', 'Relay', 'Fast'];
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(

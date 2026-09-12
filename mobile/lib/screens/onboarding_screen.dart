@@ -377,7 +377,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
                           height: 1.55,
                         ),
                       ),
-                      const TextSpan(text: ' no one else has this.'),
+                      const TextSpan(text: ' No one else has this.'),
                     ],
                   ),
                 ),

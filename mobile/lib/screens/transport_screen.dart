@@ -62,7 +62,7 @@ class TransportScreen extends StatelessWidget {
                 _Line('bootstrap', '$pct%', HaloColors.amber),
               _Line(
                 'can send',
-                appState.torReady ? 'Yes' : 'not yet',
+                appState.torReady ? 'Yes' : 'Not yet',
                 appState.torReady ? HaloColors.green : HaloColors.rose,
               ),
 
@@ -70,7 +70,7 @@ class TransportScreen extends StatelessWidget {
               _Head('network'),
               _Line(
                 'connectivity',
-                appState.online ? 'Online' : 'offline',
+                appState.online ? 'Online' : 'Offline',
                 appState.online ? HaloColors.green : HaloColors.rose,
               ),
               _Line(
