@@ -10,7 +10,7 @@ void main() {
         blocked: false,
         accepted: true,
       ),
-      'keys verified in person',
+      'Keys verified in person',
     );
   });
   test('vouched names read as a line', () {
@@ -21,7 +21,7 @@ void main() {
         blocked: false,
         accepted: true,
       ),
-      'vouched by alice and bob',
+      'Vouched by alice and bob',
     );
   });
   test('blocked wins over everything', () {
@@ -43,7 +43,7 @@ void main() {
         blocked: false,
         accepted: true,
       ),
-      'added by hand',
+      'Added by hand',
     );
     expect(
       contactStatusLine(
@@ -52,7 +52,7 @@ void main() {
         blocked: false,
         accepted: false,
       ),
-      'waiting in requests',
+      'Waiting in requests',
     );
   });
 }

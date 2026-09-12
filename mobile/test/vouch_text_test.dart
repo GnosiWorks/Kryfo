@@ -3,15 +3,15 @@ import 'package:kryfo/vouch_text.dart';
 
 void main() {
   test('one, two, many', () {
-    expect(vouchedByLine(['alice']), 'vouched by alice');
-    expect(vouchedByLine(['alice', 'bob']), 'vouched by alice and bob');
+    expect(vouchedByLine(['alice']), 'Vouched by alice');
+    expect(vouchedByLine(['alice', 'bob']), 'Vouched by alice and bob');
     expect(
       vouchedByLine(['alice', 'bob', 'cat']),
-      'vouched by alice, bob and 1 other you know',
+      'Vouched by alice, bob and 1 other you know',
     );
     expect(
       introducedByLine(['alice', 'bob', 'cat', 'dan']),
-      'introduced by alice, bob and 2 others you know',
+      'Introduced by alice, bob and 2 others you know',
     );
   });
 
