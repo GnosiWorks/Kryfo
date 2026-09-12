@@ -263,7 +263,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 value: appState.secureChats ? 'on' : 'off',
                 onTap: () async {
                   await appState.setSecureChats(!appState.secureChats);
-                  setState(() {});
+                  if (mounted) setState(() {});
                 },
               ),
               _Row(
@@ -276,7 +276,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   await appState.setBlockScreenshots(
                     !appState.blockScreenshots,
                   );
-                  setState(() {});
+                  if (mounted) setState(() {});
                 },
               ),
               _Row(
@@ -286,7 +286,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 value: HaloColors.isLight ? 'on' : 'off',
                 onTap: () async {
                   await appState.setLight(!HaloColors.isLight);
-                  setState(() {});
+                  if (mounted) setState(() {});
                 },
               ),
               AnimatedBuilder(
