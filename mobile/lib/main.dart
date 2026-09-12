@@ -1709,6 +1709,19 @@ class HaloDb {
     );
   }
 
+  Future<int?> powNonceOf(String msgUid) async {
+    final db = await open();
+    final rows = await db.query(
+      'messages',
+      columns: ['pow_nonce'],
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return (rows.first['pow_nonce'] as num?)?.toInt();
+  }
+
   Future<void> setPowNonce(String msgUid, int nonce) async {
     final db = await open();
     await db.update(
