@@ -18,9 +18,12 @@ val keystoreProperties = Properties().apply {
 
 android {
     lint {
-        // release lint pulls its own dependency tree, useless for us and it
-        // was the last thing standing between the offline cache and a build
-        checkReleaseBuilds = false
+        // release lint runs. it needs its own artefacts in the gradle cache,
+        // so a fresh machine does one online sync before offline builds work
+        checkReleaseBuilds = true
+        lintConfig = file("lint.xml")
+        // a warning is a finding too; the build says so out loud
+        warningsAsErrors = true
     }
 
     namespace = "app.kryfo"
