@@ -5148,16 +5148,10 @@ class AppState extends ChangeNotifier {
       // reentrancy guard: the ffi drain + decrypt can outrun the 1s tick
       // while tor is still warming, and stacked calls pinned the main
       // thread hard enough to anr on weak phones. skip if one's running.
-      // draining our own onion inbox only needs tor's client side (up at
-      // bootstrapped) - the bytes are already sitting in the go inbox. it
-      // does NOT need our own onion published, so don't wait for reachable
-      // or a message that landed while still publishing sits unread.
-      if (_sendMode == 'private' &&
-          _torStatus != TorStatus.reachable &&
-          _torStatus != TorStatus.bootstrapped &&
-          _torStatus != TorStatus.publishing) {
-        return;
-      }
+      // no tor gate here: the bytes are already in the go inbox and
+      // opening them needs nothing from the network. a gate on tor's
+      // state is how a message sat unread in that inbox for twenty
+      // minutes on a phone whose tor was still publishing.
       if (_draining) return;
       _draining = true;
       try {
@@ -5271,16 +5265,8 @@ class AppState extends ChangeNotifier {
 
     Timer.periodic(const Duration(seconds: 1), (_) async {
       if (haloWiping) return;
-      // reading mail off a relay only needs tor's client side, which is up at
-      // bootstrapped. this used to wait for `reachable` - our own onion being
-      // published - which is a different thing entirely and minutes later.
-      // queued messages just sat there while the app looked connected.
-      if (_sendMode == 'private' &&
-          _torStatus != TorStatus.reachable &&
-          _torStatus != TorStatus.bootstrapped &&
-          _torStatus != TorStatus.publishing) {
-        return;
-      }
+      // same as the onion drain above: the relay queue is already on this
+      // phone, so it is read whatever tor is doing
       if (_polling) return;
       _polling = true;
       try {
