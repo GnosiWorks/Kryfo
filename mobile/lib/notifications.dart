@@ -38,7 +38,12 @@ Future<void> initNotifications({void Function(String? payload)? onTap}) async {
   await android?.createNotificationChannel(channel);
   // android 13+ denies notifications until asked. without this the channel
   // exists but nothing is ever delivered, silently.
-  await android?.requestNotificationsPermission();
+  // the plugin needs an activity for this. with none attached, as in a
+  // process the service brought back, it throws and used to take the whole
+  // boot down. the activity asks natively on resume anyway.
+  try {
+    await android?.requestNotificationsPermission();
+  } catch (_) {}
 }
 
 const _hideContentKey = 'notif_hide_content';
