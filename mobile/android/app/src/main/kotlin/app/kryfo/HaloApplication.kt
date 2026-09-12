@@ -23,5 +23,6 @@ class HaloApplication : Application() {
             DartExecutor.DartEntrypoint.createDefault()
         )
         FlutterEngineCache.getInstance().put(ENGINE_ID, engine)
+        JobSetup.schedule(this)
     }
 }

@@ -33,7 +33,6 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterFragmentActivity() {
     companion object {
         private const val NOTIF_PERM_REQUEST = 1001
-        private const val PERIODIC_JOB_ID = 2001
         // the one engine we keep across activity teardown
         const val ENGINE_ID = "halo_engine"
     }
@@ -71,17 +70,7 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
-    private fun schedulePeriodicJob() {
-        val scheduler = getSystemService(JobScheduler::class.java)
-        if (scheduler.getPendingJob(PERIODIC_JOB_ID) != null) return
-        val component = ComponentName(this, HaloPeriodicJobService::class.java)
-        val jobInfo = JobInfo.Builder(PERIODIC_JOB_ID, component)
-            .setPeriodic(15 * 60 * 1000L)
-            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-            .setPersisted(true)
-            .build()
-        scheduler.schedule(jobInfo)
-    }
+    private fun schedulePeriodicJob() = JobSetup.schedule(this)
 
     private fun requestNotificationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
