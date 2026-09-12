@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dlog.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -57,7 +58,9 @@ class RelayClient {
         final payload = m['payload'] as String? ?? '';
         if (from.isNotEmpty && payload.isNotEmpty) onMessage(from, payload);
       }
-    } catch (_) {}
+    } catch (e) {
+      dlog('relay: bad frame: $e');
+    }
   }
 
   // true = handed to a live socket. false = not connected, so the caller should

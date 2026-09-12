@@ -9,6 +9,7 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import '../dlog.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -165,7 +166,9 @@ class _CameraScreenState extends State<CameraScreen>
     try {
       await c.setFlashMode(next);
       setState(() => _flash = next);
-    } catch (_) {}
+    } catch (e) {
+      dlog('camera: flash refused: $e');
+    }
   }
 
   Future<void> _shutter() async {
@@ -207,11 +210,15 @@ class _CameraScreenState extends State<CameraScreen>
       try {
         final x = await c.stopVideoRecording();
         await shredFile(x.path);
-      } catch (_) {}
+      } catch (e) {
+        dlog('camera: interrupted clip: $e');
+      }
     }
     try {
       await c.dispose();
-    } catch (_) {}
+    } catch (e) {
+      dlog('camera: dispose: $e');
+    }
   }
 
   // video needs the microphone, which the photo controller never asked
