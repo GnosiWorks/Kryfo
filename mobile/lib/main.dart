@@ -56,6 +56,7 @@ import 'widgets/motion.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
+import 'signal_stores.dart' show invitePreKeyId;
 import 'dart:isolate';
 import 'dlog.dart';
 import 'stranger_gate.dart';
@@ -3213,12 +3214,10 @@ Future<void> _signalTables(Database db) async {
 
 Future<String> makePreKeyBundleB64() async {
   final spk = await signalSession.signedPreKeyStore.loadSignedPreKey(1);
-  final database = await db.open();
-  final pkRows = await database.query('prekeys', limit: 1, orderBy: 'Id ASC');
-  if (pkRows.isEmpty) throw 'no prekeys';
-  final pk = await signalSession.preKeyStore.loadPreKey(
-    pkRows.first['id'] as int,
-  );
+  // the kept invite prekey, never the lowest one-time key: that one was
+  // gone after the first person used the invite, and a handle's published
+  // invite is static, so everyone after the first was dropped unread
+  final pk = await signalSession.preKeyStore.loadPreKey(invitePreKeyId);
   final bundle = {
     'registrationId': signalSession.registrationId,
     'deviceId': 1,
@@ -4058,6 +4057,10 @@ class AppState extends ChangeNotifier {
   Future<void> loadMyHandle() async {
     _myHandle = await const FlutterSecureStorage().read(key: 'my_handle');
     notifyListeners();
+    // the published invite is static; a phone that claimed under a key
+    // since spent republishes with the kept one. best effort, it needs
+    // the registry.
+    if (_myHandle != null) unawaited(_repointHandle());
   }
 
   Future<void> setMyHandle(String? h) async {

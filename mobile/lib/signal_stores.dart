@@ -107,6 +107,12 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
   }
 }
 
+// the one prekey an invite carries. an invite is shared - a handle, a link,
+// a qr on a screen - so the "one-time" key it names has to survive being
+// used: libsignal removes a prekey after the first opener built on it, and
+// every later person who used that same invite was buried at the door.
+const invitePreKeyId = 999999;
+
 class HaloPreKeyStore implements PreKeyStore {
   final Database _db;
   HaloPreKeyStore(this._db);
@@ -144,6 +150,7 @@ class HaloPreKeyStore implements PreKeyStore {
 
   @override
   Future<void> removePreKey(int id) async {
+    if (id == invitePreKeyId) return;
     await _db.delete('prekeys', where: 'id = ?', whereArgs: [id]);
   }
 }
