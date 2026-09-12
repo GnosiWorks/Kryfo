@@ -3,6 +3,7 @@
 // matches 08_complete_spec.html "the everyday" chat tile.
 
 import 'dart:math' as math;
+import '../lock_state.dart';
 import 'dart:typed_data';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -125,6 +126,11 @@ class _Msg {
   final bool secure;
   bool sending;
   bool failed = false;
+  // online, a failed row retries itself and still reads as pending. these
+  // count the goes; past the cap it is shown as failed and the tap is the
+  // only way on.
+  int autoRetries = 0;
+  bool gaveUp = false;
   bool delivered;
   bool edited;
   bool pinned;
@@ -282,6 +288,15 @@ void _openFullImage(BuildContext context, String path, {bool secure = false}) {
       });
 }
 
+// the phone cannot send at all: no network, or onion mode without a route
+bool _cannotSend() => !appState.online || !appState.torReady;
+
+// a failed send only reads as failed when the phone cannot send, or when
+// it has retried itself to the cap. online, the row keeps going on its own
+// and shows as pending - the tap-to-retry pill was appearing on every slow
+// photo and reading as a real failure.
+bool _sendLooksFailed(_Msg m) => m.failed && (m.gaveUp || _cannotSend());
+
 String _friendlyStatus(String raw) {
   if (raw.isEmpty) return '';
   if (!appState.online && raw.startsWith('error:')) {
@@ -290,18 +305,9 @@ String _friendlyStatus(String raw) {
   if (raw.startsWith('error:') && !appState.torReady) {
     return "still connecting to tor · it'll go out on its own";
   }
-  if (raw.startsWith('error: dial:') || raw.contains('host unreachable')) {
-    return "couldn't reach them directly · trying the relay instead";
-  }
-  if (raw.contains('no relays accepted')) {
-    return "no relay took it · retrying, nothing is lost";
-  }
-  if (raw.contains('timeout')) {
-    return "took too long · queued for another go";
-  }
-  if (raw.startsWith('error:')) {
-    return "didn't send · it stays queued and retries";
-  }
+  // online, a transport error is not the user's problem: the row retries
+  // itself and the bubble stays pending. no line.
+  if (raw.startsWith('error:')) return '';
   return raw;
 }
 
@@ -728,6 +734,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
     });
 
+    _autoRetryTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _autoRetryTick(),
+    );
     _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       _checkInbox();
@@ -815,6 +825,35 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // offline. only touches messages already marked failed - never the ones still
   // 'sending' (those have a live future). fires once per reconnect via the
   // _wasReachable edge, so a stream of status ticks won't spam resends.
+  void _retryAny(_Msg m) {
+    if (m.mediaPath != null) {
+      _retryImage(m);
+    } else if (m.filePath != null) {
+      _retryMedia(m);
+    } else {
+      _retry(m);
+    }
+  }
+
+  Timer? _autoRetryTimer;
+  // online, a failed send goes again on its own: half a minute apart, six
+  // goes, then it is shown as failed. the reconnect retry below covers the
+  // offline case; this covers a route that was simply slow or flaky.
+  void _autoRetryTick() {
+    if (!mounted || _sending || _cannotSend()) return;
+    for (final m in _messages) {
+      if (m.direction != 'out' || !m.failed || m.gaveUp || m.msgUid == null) {
+        continue;
+      }
+      if (m.autoRetries >= 6) {
+        setState(() => m.gaveUp = true);
+        continue;
+      }
+      m.autoRetries++;
+      _retryAny(m);
+    }
+  }
+
   void _retryFailedOnReconnect() {
     final reachable = _torReadyToSend();
     if (reachable && !_wasReachable) {
@@ -2134,11 +2173,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       msg.sending = true;
       _status = '';
     });
+    // a stranger's opener rides its nonce again. without it the far side's
+    // gate dropped every manual retry of a first message, quietly.
+    final nonce = msg.msgUid == null ? null : await db.powNonceOf(msg.msgUid!);
     final String cipher;
     try {
       final wrapped = await wrapMessage(
         msg.text,
         msgUid: msg.msgUid,
+        powNonce: nonce,
+        powBitsUsed: nonce == null ? null : powBits,
         replyTo: msg.replyTo,
         burnSeconds: msg.burnSecs,
         preview: msg.preview,
@@ -2642,7 +2686,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _pickAndSendFile() async {
-    final res = await FilePicker.pickFiles(withData: true);
+    final res = await lockState.hold(
+      () => FilePicker.pickFiles(withData: true),
+    );
     if (res == null || res.files.isEmpty) return;
     final data = res.files.first.bytes;
     final name = res.files.first.name;
@@ -2870,10 +2916,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _pickAndSendGif() async {
-    final res = await FilePicker.pickFiles(
-      withData: true,
-      type: FileType.custom,
-      allowedExtensions: ['gif'],
+    final res = await lockState.hold(
+      () => FilePicker.pickFiles(
+        withData: true,
+        type: FileType.custom,
+        allowedExtensions: ['gif'],
+      ),
     );
     if (res == null || res.files.isEmpty) return;
     final data = res.files.first.bytes;
@@ -3048,10 +3096,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _pickAndSendMultiple() async {
-    final picked = await ImagePicker().pickMultiImage(
-      maxWidth: 1280,
-      maxHeight: 1280,
-      imageQuality: 70,
+    final picked = await lockState.hold(
+      () => ImagePicker().pickMultiImage(
+        maxWidth: 1280,
+        maxHeight: 1280,
+        imageQuality: 70,
+      ),
     );
     if (picked.isEmpty) return;
     // one photo picked: same preview + caption screen the camera path gets.
@@ -3484,11 +3534,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                   ? null
                                   : m.msgUid,
                             ),
-                      onRetry: (m) => m.mediaPath != null
-                          ? _retryImage(m)
-                          : m.filePath != null
-                          ? _retryMedia(m)
-                          : _retry(m),
+                      onRetry: (m) {
+                        m.autoRetries = 0;
+                        m.gaveUp = false;
+                        _retryAny(m);
+                      },
                       onLongPress: (ctx) => _showEmojiPickerAt(ctx, m),
                       secure: m.secure,
                       quotedText: quoted,
@@ -3535,6 +3585,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void dispose() {
     if (appState.secureChats) appState.forceSecure(false);
     _pollTimer?.cancel();
+    _autoRetryTimer?.cancel();
     _burnTick?.cancel();
     if (currentChatPeer == widget.peerHaloId) currentChatPeer = null;
     appState.removeListener(_onAppStateChanged);
@@ -4636,7 +4687,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 ),
               ),
             ),
-            if (_status.isNotEmpty)
+            if (_friendlyStatus(_status).isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Text(
@@ -5667,8 +5718,10 @@ class _Bubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final isOut = msg.direction == 'out';
     final isImage = msg.mediaPath != null;
-    final showMeta = isOut && !msg.sending && !msg.failed;
-    final showPill = isOut && msg.sending;
+    final failedShown = _sendLooksFailed(msg);
+    final pending = msg.sending || (msg.failed && !failedShown);
+    final showMeta = isOut && !pending && !failedShown;
+    final showPill = isOut && pending;
     final metaColor = (isOut && !isImage)
         ? HaloColors.onAmber.withValues(alpha: 0.55)
         : HaloColors.text3;
@@ -5709,7 +5762,7 @@ class _Bubble extends StatelessWidget {
       opacity: dimmed ? 0.28 : 1.0,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: msg.failed && onRetry != null ? () => onRetry!(msg) : onReveal,
+        onTap: failedShown && onRetry != null ? () => onRetry!(msg) : onReveal,
         onLongPress: onLongPress == null ? null : () => onLongPress!(context),
         child: Padding(
           padding: EdgeInsets.only(
@@ -5888,9 +5941,11 @@ class _Bubble extends StatelessWidget {
                                   behavior: HitTestBehavior.opaque,
                                   onTap: () {
                                     if (msg.filePath != null) {
-                                      SharePlus.instance.share(
-                                        ShareParams(
-                                          files: [XFile(msg.filePath!)],
+                                      lockState.hold(
+                                        () => SharePlus.instance.share(
+                                          ShareParams(
+                                            files: [XFile(msg.filePath!)],
+                                          ),
                                         ),
                                       );
                                     }
@@ -5990,8 +6045,8 @@ class _Bubble extends StatelessWidget {
                                                     ),
                                                   ),
                                                   const SizedBox(width: 3),
-                                                  if (!msg.sending &&
-                                                      !msg.failed) ...[
+                                                  if (!pending &&
+                                                      !failedShown) ...[
                                                     Text(
                                                       '✓',
                                                       style: const TextStyle(
@@ -6160,7 +6215,7 @@ class _Bubble extends StatelessWidget {
                                     ],
 
                                     if (msg.burnAt != null &&
-                                        !msg.sending &&
+                                        !pending &&
                                         !showMeta) ...[
                                       const SizedBox(height: 4),
                                       Padding(
@@ -6198,7 +6253,7 @@ class _Bubble extends StatelessWidget {
                                         ),
                                       ),
                                     ],
-                                    if (msg.failed) ...[
+                                    if (failedShown) ...[
                                       const SizedBox(height: 4),
                                       Text(
                                         'failed · tap to retry',
