@@ -86,6 +86,18 @@ func kickChan() chan struct{} {
 	return kickCh
 }
 
+// sleep that a kick ends early. true when it was kicked. the runner's
+// backoffs used to be plain sleeps, so a socket already waiting out a
+// failed dial missed the job's kick entirely
+func sleepOrKick(d time.Duration) bool {
+	select {
+	case <-time.After(d):
+		return false
+	case <-kickChan():
+		return true
+	}
+}
+
 // relay health. a relay that will not answer still costs a full tor circuit
 // on every attempt, and with one subscribe goroutine per relay per contact
 // that adds up fast - damus sat on 503 for fifty-three straight tries inside
@@ -573,10 +585,10 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 						armRelayWatch()
 						atomic.StoreInt64(&lastTorRestart, 0)
 						go restartTor()
-						time.Sleep(30 * time.Second)
+						sleepOrKick(30 * time.Second)
 						continue
 					}
-					time.Sleep(wait)
+					sleepOrKick(wait)
 					continue
 				}
 				r := nostr.NewRelay(ctx, u, nostr.RelayOptions{})
@@ -587,7 +599,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 						relayFailed(u)
 						wait = relayRetryAfter(u, retry)
 					}
-					time.Sleep(wait)
+					sleepOrKick(wait)
 					continue
 				}
 				// a relay answered. this is the one fact the watchdog trusts.
@@ -617,7 +629,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 						relayFailed(u)
 						wait = relayRetryAfter(u, retry)
 					}
-					time.Sleep(wait)
+					sleepOrKick(wait)
 					continue
 				}
 				if !own {
@@ -675,7 +687,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 				if kicked {
 					kicked = false
 				} else {
-					time.Sleep(rejoin)
+					sleepOrKick(rejoin)
 				}
 			}
 		}(url)
