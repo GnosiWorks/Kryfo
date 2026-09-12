@@ -82,18 +82,7 @@ class WhyKryfoScreen extends StatelessWidget {
               Text(
                 'Kryfo is pre-alpha and has not been audited. The crypto is real '
                 'but no outside expert has checked it yet, so treat it as a work '
-                'in progress, not something to trust with your life.',
-                style: HaloType.sans(
-                  size: 13,
-                  color: HaloColors.text2,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                'Tor and per-message wrapping hide who you talk to from relays and '
-                'your network. Your own habits still matter as much as the app, '
-                'privacy is a practice, not just a tool.',
+                'in progress, not something to trust with your life yet.',
                 style: HaloType.sans(
                   size: 13,
                   color: HaloColors.text2,
