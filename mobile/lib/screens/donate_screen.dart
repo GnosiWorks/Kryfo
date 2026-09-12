@@ -370,7 +370,7 @@ class _DonateScreenState extends State<DonateScreen> {
           });
         }),
         const SizedBox(width: 8),
-        _tab('card', _card, () {
+        _tab('card · not yet', _card, () {
           HapticFeedback.selectionClick();
           setState(() => _card = true);
         }),
@@ -673,18 +673,22 @@ class _DonateScreenState extends State<DonateScreen> {
         // addresses, so a typed number had nowhere to go there
         _customField(),
         const SizedBox(height: 10),
-        PressScale(
-          onTap: () => showHaloToast(context, 'card payments coming soon'),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 15),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: HaloColors.amber,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              'donate \$$_amount by card',
-              style: HaloType.sans(size: 14, color: HaloColors.onAmber),
+        // nothing is wired behind this yet. an amber button that only
+        // toasted "coming soon" read as a payment that had failed
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+          decoration: BoxDecoration(
+            color: HaloColors.surface2,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: HaloColors.line, width: 0.5),
+          ),
+          child: Text(
+            'card payments are not set up yet. nothing happens if you '
+            'try. crypto works today, and the badge comes with bitcoin.',
+            style: HaloType.sans(
+              size: 13,
+              color: HaloColors.text2,
+              height: 1.4,
             ),
           ),
         ),
