@@ -2141,6 +2141,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         msgUid: msg.msgUid,
         replyTo: msg.replyTo,
         burnSeconds: msg.burnSecs,
+        preview: msg.preview,
         secure: msg.secure,
         supporterBadge: await appState.sharedBadge(),
         sender: SenderInfo(
@@ -7194,9 +7195,8 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
     if (cancel) {
       final p = path ?? _path;
       if (p != null) {
-        try {
-          await File(p).delete();
-        } catch (_) {}
+        // a cancelled note is still a recording of a voice: shredded
+        await shredFile(p);
       }
       HapticFeedback.lightImpact();
       widget.onComplete('', 0, true);

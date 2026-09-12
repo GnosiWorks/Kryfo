@@ -980,6 +980,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         msgUid: m.msgUid,
         replyTo: m.replyTo,
         burnSeconds: m.burnSecs,
+        preview: m.preview,
       );
     } catch (e) {
       dlog('group retry failed: $e');
