@@ -4527,7 +4527,10 @@ class AppState extends ChangeNotifier {
       // a preview the sender fetched over tor and shipped inside the
       // message. kept, title and url only, and only from someone accepted:
       // a stranger's title is text they control and stays plain
-      preview: shippedPreview(env.preview, accepted: senderAccepted),
+      // a group is one you chose to be in, and the card says whose device
+      // fetched it, so a member's preview is kept whether or not they are
+      // also a contact of yours. a room's frames never reach this path.
+      preview: shippedPreview(env.preview, accepted: isGroup || senderAccepted),
       secure: env.secure,
     );
     // remember the face they picked. cheap, and it arrives with every
