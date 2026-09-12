@@ -73,6 +73,13 @@ var (
 	lastEvRecv int64
 )
 
+// a context for publishes that outlive the caller: thirty seconds of its
+// own, cancelled by the last publisher out. made here so the analyser sees
+// a plain pair rather than a cancel it cannot follow into the goroutines.
+func detachedPublishCtx() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), 30*time.Second)
+}
+
 func kickChan() chan struct{} {
 	kickMu.Lock()
 	defer kickMu.Unlock()
@@ -334,7 +341,11 @@ func nostrPublishMulti(ctx context.Context, ev nostr.Event) (ok int) {
 	// want the SLOWER relays to keep landing for redundancy after we've
 	// already returned on the first success - hence background + our own
 	// timeout, not a child of ctx.
-	bg, bgCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	bg, bgCancel := detachedPublishCtx()
+	if len(urls) == 0 {
+		bgCancel()
+		return 0
+	}
 
 	result := make(chan bool, len(urls))
 	var pending int32 = int32(len(urls))
