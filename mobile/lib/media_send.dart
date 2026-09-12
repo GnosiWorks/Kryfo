@@ -26,6 +26,10 @@ import 'signal_session.dart';
 // the record is old enough that the peer may have restarted without it
 final Map<String, Set<int>> chunkDone = {};
 final Map<String, int> chunkDoneAt = {};
+// one send per media at a time. the chat's retry and the outbox could
+// both pick the same row, and whichever finished second overwrote the
+// bubble with its own verdict.
+final Set<String> mediaInflight = {};
 
 int _mediaGrind(String seed) => grindPow(seed, powBits);
 
@@ -49,6 +53,7 @@ Future<String> sendChunkedMediaTo({
   bool secure = false,
   required SenderInfo sender,
 }) async {
+  if (!mediaInflight.add(msgUid)) return 'busy';
   try {
     return await _sendChunkedMediaInner(
       peerId: peerId,
@@ -67,6 +72,7 @@ Future<String> sendChunkedMediaTo({
       sender: sender,
     );
   } finally {
+    mediaInflight.remove(msgUid);
     mediaProgressEnd(msgUid);
   }
 }
