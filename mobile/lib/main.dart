@@ -887,7 +887,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 45,
+      version: 46,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1014,9 +1014,14 @@ class HaloDb {
         await _vouchTable(db);
         await _shieldTable(db);
         await _editsTable(db);
+        await _heldTable(db);
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 46) {
+          // onion-lane messages past the stranger cap, kept for accept
+          await _heldTable(db);
+        }
         if (oldV < 45) {
           // edits that have not reached the other side yet
           await _editsTable(db);
@@ -2009,6 +2014,7 @@ class HaloDb {
         }
       }
       await t.delete('messages', where: 'peer_id = ?', whereArgs: [haloId]);
+      await t.delete('held_onion', where: 'peer_id = ?', whereArgs: [haloId]);
       // park, don't delete - the row carries the xpub the relay subscription
       // is built from. wiping it left a declined peer with nowhere to land.
       // they write again -> unparkIfArchived surfaces them as a new request.
@@ -2717,6 +2723,40 @@ class HaloDb {
     await _scrubMedia(media);
   }
 
+  Future<void> holdCipher(String peerId, String cipher) async {
+    final db = await open();
+    // a stranger past the cap gets a small shelf, not a disk
+    final n = Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(*) FROM held_onion WHERE peer_id = ?', [
+        peerId,
+      ]),
+    );
+    if ((n ?? 0) >= 20) return;
+    await db.insert('held_onion', {
+      'peer_id': peerId,
+      'cipher': cipher,
+      'at': DateTime.now().millisecondsSinceEpoch,
+    });
+  }
+
+  Future<List<String>> takeHeld(String peerId) async {
+    final db = await open();
+    final rows = await db.query(
+      'held_onion',
+      columns: ['cipher'],
+      where: 'peer_id = ?',
+      whereArgs: [peerId],
+      orderBy: 'id ASC',
+    );
+    await db.delete('held_onion', where: 'peer_id = ?', whereArgs: [peerId]);
+    return [for (final r in rows) r['cipher'] as String];
+  }
+
+  Future<void> dropHeld(String peerId) async {
+    final db = await open();
+    await db.delete('held_onion', where: 'peer_id = ?', whereArgs: [peerId]);
+  }
+
   Future<void> queueEdit(String msgUid, String peerId, String newText) async {
     final db = await open();
     await db.insert('edits_out', {
@@ -3144,6 +3184,19 @@ class HaloDb {
     );
     return rows.isEmpty ? null : rows.first;
   }
+}
+
+// a direct-onion message past a stranger's two has no relay to wait on. it
+// waits here instead, still sealed, and opens when the person is accepted.
+Future<void> _heldTable(Database db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS held_onion (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      peer_id TEXT NOT NULL,
+      cipher TEXT NOT NULL,
+      at INTEGER NOT NULL
+    )
+  ''');
 }
 
 // an edit made offline used to be one attempt and a log line: shown as
@@ -5679,7 +5732,8 @@ class AppState extends ChangeNotifier {
               try {
                 await _applyIncomingPayload(c.haloId, env);
               } on CapHeld {
-                // direct onion has no replay: past the cap it stays dropped
+                // no relay to replay from: kept here, opened on accept
+                await db.holdCipher(c.haloId, cipher);
               }
               notifyListeners();
               handled = true;
@@ -5697,7 +5751,7 @@ class AppState extends ChangeNotifier {
                 try {
                   await _applyIncomingPayload(id, env);
                 } on CapHeld {
-                  // direct onion has no replay: past the cap it stays dropped
+                  await db.holdCipher(id, cipher);
                 }
                 notifyListeners();
                 handled = true;
@@ -5989,7 +6043,27 @@ class AppState extends ChangeNotifier {
 
   Future<void> block(String haloId) async {
     await db.setBlocked(haloId, true);
+    await db.dropHeld(haloId);
     await refreshContacts();
+  }
+
+  // what every accept does, from the chat or the requests list: listen for
+  // them, tell them they are in, and open what the onion lane held back
+  Future<void> afterAccept(String haloId) async {
+    unawaited(subscribePeer(haloId));
+    unawaited(sendAcceptAck(haloId));
+    for (final cipher in await db.takeHeld(haloId)) {
+      try {
+        final plain = await signalDecrypt(haloId, cipher);
+        if (plain == null) continue;
+        await _applyIncomingPayload(haloId, unwrapMessage(plain));
+      } catch (e) {
+        dlog('held: could not open one for $haloId ($e)');
+      }
+    }
+    _bumpChatRev(haloId);
+    await refreshContacts();
+    notifyListeners();
   }
 
   Future<void> unblock(String haloId) async {
