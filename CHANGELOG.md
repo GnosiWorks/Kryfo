@@ -2,6 +2,23 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.7] - 2026-09-12
+
+### Fixed
+- the wipe did not wipe. both the wipe pin and the settings wipe deleted your messages and keys, then lost a race on the way out: the app pin, the wipe pin and the onboarding flag were still queued for disk when the process ended, so the next launch asked for your old pin and showed a fresh, nameless identity. the wipe now goes through android's own clear-data call, the same thing as "clear storage" in settings: everything gone, the process stopped, the next launch is onboarding.
+- the app lock only ever covered the home screen. leave from settings, a chat or the pin page and come back, and that screen was still there; the pin only appeared once you walked back to home. the lock now sits above every screen, and after the pin you land where you were.
+- taking a screenshot no longer asks for your pin afterwards. a permission prompt or the notification shade does not either.
+- a message to someone who has not added you back yet could show a tick while it sat at an address they never read. it now says "waiting for them to come online or add you back" and keeps trying until they do. a false tick is worse than an honest wait.
+- a manual retry of your first message to a stranger was silently dropped by their phone. it carries what their gate needs now.
+- a photo that stalled at 98% and then "dropped": nothing was dropped. the pieces stay on the receiving phone for a week; the banner just vanished. it now says paused, with the count, and the sender resumes from the missing piece instead of starting over, chat open or not.
+- switching screenshots on or off, and opening the backup screen, flashed white. the window behind the app was painted white; it is dark now.
+
+### Changed
+- a slow send while online no longer shows "failed · tap to retry". it retries itself and stays pending; failed shows only when the phone cannot send at all, or after six goes.
+- sentence case throughout: every label, hint, button, tab and line starts with a capital. the settings hints are shorter.
+- bridges and transport moved out of about to sit with the network rows. the open source row copies the github link instead of opening it in a browser.
+- the honest part in why kryfo ends on "yet".
+
 ## [0.2.6] - 2026-09-12
 
 ### Fixed

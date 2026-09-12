@@ -1,0 +1,7 @@
+The wipe did not wipe. Both the wipe pin and the settings wipe deleted messages and keys but lost a race on the way out, so the next launch asked for the old pin and showed a fresh identity. The wipe now goes through Android's own clear-data call: everything gone, next launch is onboarding.
+
+The app lock only covered the home screen. Leave from settings or a chat and come back, and the pin never showed until you walked home. Fixed: the lock covers every screen. A screenshot no longer asks for the pin afterwards.
+
+A message to someone who has not added you back could show a tick while it sat at an address they never read. It now says it is waiting for them and keeps trying. A photo stuck at 98% resumes from the missing piece instead of starting over, and the receiving side says paused instead of vanishing.
+
+Sentence case throughout, shorter settings hints, no white flash on the screenshot toggle, open source row copies the link instead of opening a browser.
