@@ -17,7 +17,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 
 import 'dlog.dart';
-import 'main.dart' show appState, engine, signalEncrypt;
+import 'main.dart' show appState, engine, signalEncryptSerial;
 import 'media_progress.dart';
 import 'message_envelope.dart';
 import 'signal_session.dart';
@@ -121,86 +121,122 @@ Future<String> _sendChunkedMediaInner({
     if (showProgress) mediaProgressUpdate(msgUid, done.length / total);
   }
   var xpub = peerXPub == null || peerXPub.isEmpty ? null : peerXPub;
-  for (var i = 0; i < total; i++) {
-    if (done.contains(i)) continue;
-    final String cipher;
-    try {
-      // name + voice flags ride every slice: the receiver rebuilds off
-      // whichever chunk lands last, and that one decides file vs image.
-      // the burn too, or a ghost photo never expired on their side.
-      final wrapped = await wrapMessage(
-        caption,
-        msgUid: msgUid,
-        imageB64: fileName == null ? chunks[i] : null,
-        fileB64: fileName != null ? chunks[i] : null,
-        fileName: fileName,
-        voice: voice,
-        voiceDisguised: voiceDisguised,
-        mediaId: total > 1 ? msgUid : null,
-        chunkIndex: total > 1 ? i : null,
-        chunkTotal: total > 1 ? total : null,
-        burnSeconds: burnSeconds,
-        secure: secure,
-        powNonce: pow,
-        powBitsUsed: pow == null ? null : powBits,
-        supporterBadge: await appState.sharedBadge(),
-        sender: sender,
-      );
-      cipher = await signalEncrypt(peerId, wrapped);
-    } catch (e) {
-      return 'error: encrypt';
-    }
-    var sent = false;
-    String lastErr = 'error: no transport';
-    for (var attempt = 0; attempt < 3 && !sent; attempt++) {
-      if (!backPaired && peerOnion.isNotEmpty) {
-        final tor = await Future(() => engine.sendTo(peerOnion, cipher));
-        if (tor == 'ok') {
-          sent = true;
-          break;
-        }
-        lastErr = tor;
+  // five slices in flight. tor is latency-bound here, so the gain is close
+  // to linear up to about this many streams; past it public relays start
+  // refusing. encryption stays serial per peer behind signalEncryptSerial.
+  const parallel = 5;
+  // once the onion fails to answer it stays skipped for the rest of this
+  // send. every slice paying the full dial timeout before the relay was
+  // twelve minutes on a fifty-slice photo.
+  var onionDead = false;
+  String? failure;
+  var parked = false;
+  var next = 0;
+
+  Future<void> worker() async {
+    while (failure == null && !parked) {
+      while (next < total && done.contains(next)) {
+        next++;
       }
-      xpub ??= await signalSession.peerXPubHex(peerId);
-      if (xpub != null) {
-        if (!backPaired) {
-          // their first-contact address is the one relay route that
-          // reaches them before they add us back
-          final fc = appState.peerFcFor(peerId);
-          if (fc != null && fc.isNotEmpty) {
-            final fr = await engine.sendFirstContact(xpub, fc, cipher);
-            if (fr == 'ok') {
-              sent = true;
-              break;
-            }
-            lastErr = fr;
+      if (next >= total) return;
+      final i = next++;
+      final t0 = DateTime.now();
+      final String cipher;
+      try {
+        // name + voice flags ride every slice: the receiver rebuilds off
+        // whichever chunk lands last, and that one decides file vs image.
+        // the burn too, or a ghost photo never expired on their side.
+        final wrapped = await wrapMessage(
+          caption,
+          msgUid: msgUid,
+          imageB64: fileName == null ? chunks[i] : null,
+          fileB64: fileName != null ? chunks[i] : null,
+          fileName: fileName,
+          voice: voice,
+          voiceDisguised: voiceDisguised,
+          mediaId: total > 1 ? msgUid : null,
+          chunkIndex: total > 1 ? i : null,
+          chunkTotal: total > 1 ? total : null,
+          burnSeconds: burnSeconds,
+          secure: secure,
+          powNonce: pow,
+          powBitsUsed: pow == null ? null : powBits,
+          supporterBadge: await appState.sharedBadge(),
+          sender: sender,
+        );
+        cipher = await signalEncryptSerial(peerId, wrapped);
+      } catch (e) {
+        failure = 'error: encrypt';
+        return;
+      }
+      var sent = false;
+      var route = '';
+      String lastErr = 'error: no transport';
+      for (var attempt = 0; attempt < 3 && !sent; attempt++) {
+        if (!backPaired && peerOnion.isNotEmpty && !onionDead) {
+          final tor = await engine.sendTo(peerOnion, cipher);
+          if (tor == 'ok') {
+            sent = true;
+            route = 'onion';
+            break;
           }
+          lastErr = tor;
+          onionDead = true;
+          dlog('MEDIA onion gave up for this send: $tor');
         }
-        final x = xpub;
-        final r = await Future(() => engine.nostrSend(x, cipher));
-        if (r == 'ok') {
+        xpub ??= await signalSession.peerXPubHex(peerId);
+        if (xpub != null) {
           if (!backPaired) {
-            // stored where nobody reads yet. the drainer brings the whole
-            // file again once a route that reaches them is up.
-            dlog('MEDIA CHUNK $i/$total parked at the pair address');
-            return 'parked';
+            // their first-contact address is the one relay route that
+            // reaches them before they add us back
+            final fc = appState.peerFcFor(peerId);
+            if (fc != null && fc.isNotEmpty) {
+              final fr = await engine.sendFirstContact(xpub!, fc, cipher);
+              if (fr == 'ok') {
+                sent = true;
+                route = 'first-contact';
+                break;
+              }
+              lastErr = fr;
+            }
           }
-          sent = true;
-          break;
+          final r = await engine.nostrSend(xpub!, cipher);
+          if (r == 'ok') {
+            if (!backPaired) {
+              // stored where nobody reads yet. the drainer brings the whole
+              // file again once a route that reaches them is up.
+              dlog('MEDIA chunk $i/$total parked at the pair address');
+              parked = true;
+              return;
+            }
+            sent = true;
+            route = 'relay';
+            break;
+          }
+          lastErr = r;
         }
-        lastErr = r;
+        if (!sent) await Future.delayed(const Duration(milliseconds: 600));
       }
-      if (!sent) await Future.delayed(const Duration(milliseconds: 600));
+      final ms = DateTime.now().difference(t0).inMilliseconds;
+      if (!sent) {
+        dlog('MEDIA chunk $i/$total failed after ${ms}ms: $lastErr');
+        // keep what landed so the next go resumes from here
+        failure = lastErr;
+        return;
+      }
+      done.add(i);
+      chunkDoneAt[msgUid] = DateTime.now().millisecondsSinceEpoch;
+      // the line to read before touching the pool size or the chunk size
+      dlog('MEDIA chunk $i/$total via $route in ${ms}ms');
+      if (showProgress) mediaProgressUpdate(msgUid, done.length / total);
     }
-    if (!sent) {
-      dlog('MEDIA CHUNK $i/$total failed: $lastErr');
-      // keep what landed so the next go resumes from here
-      return lastErr;
-    }
-    done.add(i);
-    chunkDoneAt[msgUid] = DateTime.now().millisecondsSinceEpoch;
-    if (showProgress) mediaProgressUpdate(msgUid, done.length / total);
   }
+
+  await Future.wait([
+    for (var w = 0; w < math.min(parallel, total); w++) worker(),
+  ]);
+  if (parked) return 'parked';
+  if (failure != null) return failure!;
   chunkDone.remove(msgUid);
   chunkDoneAt.remove(msgUid);
   return 'ok';
