@@ -22,6 +22,11 @@ final Map<String, double> mediaSendProgress = {};
 /// incoming: chat key (groupId or peer haloId) -> 0..1
 final Map<String, double> incomingMediaProgress = {};
 final Map<String, int> _incomingTouch = {};
+// chat key -> (have, total), and the transfers that went quiet. the slices
+// stay on disk for a week, so a quiet transfer is paused, not lost: the
+// banner says so instead of vanishing at 98%.
+final Map<String, (int, int)> _incomingCount = {};
+final Set<String> incomingMediaStalled = {};
 
 /// which chat an outgoing send belongs to (msgUid -> chatKey), so the
 /// banner can show sender-side progress too.
@@ -32,21 +37,25 @@ Timer? _sweeper;
 
 void _bump() => mediaProgressTick.value++;
 
-// a sender dying mid-transfer would leave the banner up forever; sweep
-// entries that haven't seen a chunk in 2 minutes.
+// a transfer quiet for 75s is shown as paused; one quiet for a day is
+// dropped from the banner (its slices are swept from the db separately).
 void _ensureSweeper() {
   _sweeper ??= Timer.periodic(const Duration(seconds: 15), (_) {
     final now = DateTime.now().millisecondsSinceEpoch;
-    final stale = _incomingTouch.entries
-        .where((e) => now - e.value > 75000)
-        .map((e) => e.key)
-        .toList();
-    if (stale.isEmpty) return;
-    for (final k in stale) {
-      incomingMediaProgress.remove(k);
-      _incomingTouch.remove(k);
+    var changed = false;
+    for (final e in _incomingTouch.entries.toList()) {
+      final quiet = now - e.value;
+      if (quiet > 86400000) {
+        incomingMediaProgress.remove(e.key);
+        _incomingTouch.remove(e.key);
+        _incomingCount.remove(e.key);
+        incomingMediaStalled.remove(e.key);
+        changed = true;
+      } else if (quiet > 75000 && incomingMediaStalled.add(e.key)) {
+        changed = true;
+      }
     }
-    _bump();
+    if (changed) _bump();
   });
 }
 
@@ -69,6 +78,8 @@ void mediaProgressEnd(String msgUid) {
 void incomingMediaUpdate(String chatKey, int received, int total) {
   if (total <= 0) return;
   incomingMediaProgress[chatKey] = received / total;
+  _incomingCount[chatKey] = (received, total);
+  incomingMediaStalled.remove(chatKey);
   _incomingTouch[chatKey] = DateTime.now().millisecondsSinceEpoch;
   _ensureSweeper();
   _bump();
@@ -76,6 +87,8 @@ void incomingMediaUpdate(String chatKey, int received, int total) {
 
 void incomingMediaDone(String chatKey) {
   _incomingTouch.remove(chatKey);
+  _incomingCount.remove(chatKey);
+  incomingMediaStalled.remove(chatKey);
   if (incomingMediaProgress.remove(chatKey) != null) _bump();
 }
 
@@ -130,6 +143,8 @@ class IncomingMediaBanner extends StatelessWidget {
         final v = outV ?? incomingMediaProgress[chatKey];
         if (v == null) return const SizedBox.shrink();
         final sending = outV != null;
+        final stalled = !sending && incomingMediaStalled.contains(chatKey);
+        final count = _incomingCount[chatKey];
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
           child: Container(
@@ -154,11 +169,18 @@ class IncomingMediaBanner extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 9),
-                Text(
-                  sending
-                      ? 'sending \u00b7 ${(v * 100).round()}% \u00b7 keep the app open'
-                      : 'receiving media \u00b7 ${(v * 100).round()}%',
-                  style: HaloType.mono(size: 10.5, color: HaloColors.amber),
+                Flexible(
+                  child: Text(
+                    sending
+                        ? 'Sending \u00b7 ${(v * 100).round()}% \u00b7 keep the app open'
+                        : stalled && count != null
+                        ? 'Paused \u00b7 ${count.$1} of ${count.$2} \u00b7 waiting for the rest'
+                        : 'Receiving media \u00b7 ${(v * 100).round()}%',
+                    style: HaloType.mono(
+                      size: 10.5,
+                      color: stalled ? HaloColors.text2 : HaloColors.amber,
+                    ),
+                  ),
                 ),
               ],
             ),
