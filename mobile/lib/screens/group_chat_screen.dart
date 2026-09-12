@@ -500,6 +500,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _memberCount = members.length;
         _roomExpiresAt = g?['expires_at'] as int?;
         _isAdmin = ((g?['is_admin'] as int?) ?? 0) == 1;
+        // a reload rebuilds every row; the retry count rides across, or a
+        // failed send never reached its cap and spun forever
+        final carry = {
+          for (final m in _messages)
+            if (m.msgUid != null) m.msgUid!: (m.autoRetries, m.gaveUp),
+        };
         _messages
           ..clear()
           ..addAll(
@@ -548,6 +554,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               if (torUp && m.direction == 'out' && m.sending && stale) {
                 m.sending = false;
                 m.failed = true;
+              }
+              final c = carry[m.msgUid];
+              if (c != null) {
+                m.autoRetries = c.$1;
+                m.gaveUp = c.$2;
               }
               return m;
             }),
