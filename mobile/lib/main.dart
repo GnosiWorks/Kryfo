@@ -4515,6 +4515,10 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> resetInviteAddress() async {
+    // the key first: moving only the relay address left every old link
+    // able to open a session and dial the onion directly, which made the
+    // promise on the button a lie
+    await signalSession.rotateInvitePreKey();
     _fcCounter++;
     await const FlutterSecureStorage().write(
       key: 'fc_counter',

@@ -110,6 +110,16 @@ class SignalSession {
     dlog('signal: bootstrapped (regId=$registrationId)');
   }
 
+  // a new invite prekey under the same id. every bundle handed out before
+  // this names a key that no longer exists, so the openers built on them
+  // fail at the door: that is what "reset my invite link" has to mean.
+  Future<void> rotateInvitePreKey() async {
+    final blob = (await compute(_genPreKeysTask, [invitePreKeyId])).first;
+    final k = PreKeyRecord.fromBuffer(blob);
+    await preKeyStore.storePreKey(k.id, k);
+    dlog('signal: rotated the invite prekey');
+  }
+
   Future<int> _loadOrGenRegId(Database d) async {
     final rows = await d.query(
       'signal_meta',
