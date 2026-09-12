@@ -1416,12 +1416,28 @@ class HaloDb {
           await db.execute(
             'CREATE INDEX IF NOT EXISTS idx_messages_group_id ON messages(group_id)',
           );
+          // the whole table as a fresh install gets it. the later column
+          // migrations run before this block, so a database from before
+          // version 7 would otherwise end up with a groups table missing
+          // every column added since
           await db.execute('''
             CREATE TABLE groups (
               group_id TEXT PRIMARY KEY,
               name TEXT NOT NULL,
+              description TEXT,
               created_at INTEGER NOT NULL,
-              is_admin INTEGER NOT NULL DEFAULT 0
+              is_admin INTEGER NOT NULL DEFAULT 0,
+              admin_id TEXT,
+              unread INTEGER NOT NULL DEFAULT 0,
+              atmosphere TEXT,
+              room_priv TEXT,
+              room_pub TEXT,
+              expires_at INTEGER,
+              creator_pub TEXT,
+              fc_pk TEXT,
+              member_cap INTEGER,
+              room_seen INTEGER NOT NULL DEFAULT 0,
+              mentioned INTEGER NOT NULL DEFAULT 0
             )
           ''');
           await db.execute('''
