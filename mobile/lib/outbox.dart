@@ -3,6 +3,8 @@
 // pure, so a test can hold it against the receiver's gate: a stranger's
 // first message has to carry the same proof-of-work on the retry as on the
 // send, or the far side drops the retry without a word.
+import 'dart:convert';
+
 import 'message_envelope.dart';
 
 // does this row still owe a nonce before it can leave. a peer who has
@@ -20,10 +22,24 @@ Future<String> wrapRedelivery(
 }) {
   final nonce = (row['pow_nonce'] as num?)?.toInt();
   final groupId = row['group_id'] as String?;
+  // the preview the sender attached rides the retry too, or a message that
+  // needed a second attempt arrived with its card silently gone
+  Map<String, String>? preview;
+  final pvRaw = row['preview'];
+  if (pvRaw is String && pvRaw.isNotEmpty) {
+    try {
+      preview = (jsonDecode(pvRaw) as Map).map(
+        (k, v) => MapEntry(k.toString(), v.toString()),
+      );
+    } catch (_) {
+      preview = null;
+    }
+  }
   return wrapMessage(
     row['plaintext'] as String,
     msgUid: row['msg_uid'] as String?,
     replyTo: row['reply_to'] as String?,
+    preview: preview,
     groupId: groupId == null || groupId.isEmpty ? null : groupId,
     supporterBadge: badge,
     powNonce: nonce,
