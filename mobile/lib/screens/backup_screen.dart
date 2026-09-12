@@ -4,6 +4,7 @@
 // it to themselves, etc.
 
 import 'dart:io';
+import '../lock_state.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
@@ -81,10 +82,12 @@ class _BackupScreenState extends State<BackupScreen> {
     final bytes = await File(path).readAsBytes();
     String? saved;
     try {
-      saved = await FilePicker.saveFile(
-        dialogTitle: 'save your kryfo backup',
-        fileName: name,
-        bytes: bytes,
+      saved = await lockState.hold(
+        () => FilePicker.saveFile(
+          dialogTitle: 'save your kryfo backup',
+          fileName: name,
+          bytes: bytes,
+        ),
       );
     } catch (_) {
       saved = null;
@@ -94,12 +97,14 @@ class _BackupScreenState extends State<BackupScreen> {
       showHaloToast(context, 'backup saved · keep the passphrase safe');
       return false;
     }
-    await SharePlus.instance.share(
-      ShareParams(
-        files: [XFile(path)],
-        subject: 'kryfo backup',
-        text:
-            'your encrypted kryfo backup. keep both this file AND your passphrase safe - you need both to restore.',
+    await lockState.hold(
+      () => SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(path)],
+          subject: 'kryfo backup',
+          text:
+              'your encrypted kryfo backup. keep both this file AND your passphrase safe - you need both to restore.',
+        ),
       ),
     );
     return true;

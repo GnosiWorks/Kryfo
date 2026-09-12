@@ -5,6 +5,7 @@
 // mentions a word list, because there is none: recovery is the encrypted
 // file plus its passphrase.
 import 'dart:io';
+import '../lock_state.dart';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -41,7 +42,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
       _error = null;
       _summary = null;
     });
-    final result = await FilePicker.pickFiles();
+    final result = await lockState.hold(() => FilePicker.pickFiles());
     if (result == null || result.files.single.path == null) return;
     final path = result.files.single.path!;
     String blob;
