@@ -6861,6 +6861,11 @@ void main() async {
   // main with it, which is how a restarted process sat with a "kryfo is
   // on" notification and nothing listening behind it. boot the engine
   // here, and put the interface up the moment a window arrives.
+  unawaited(
+    appState.loadThemePref().then((_) {
+      if (HaloColors.isLight) themeRevision.value++;
+    }),
+  );
   if (PlatformDispatcher.instance.implicitView == null) {
     dlog('LAUNCH headless');
     unawaited(appState.boot());
@@ -6869,24 +6874,24 @@ void main() async {
       t.cancel();
       dlog('LAUNCH window arrived');
       runApp(const HaloApp());
+      WidgetsBinding.instance.addPostFrameCallback((_) => _openFromNotif());
     });
     return;
   }
   WidgetsBinding.instance.addPostFrameCallback((_) => dlog('LAUNCH frame'));
   runApp(const HaloApp());
   dlog('LAUNCH runApp returned');
-  // the theme pref sits in secure storage, and the first read on a new
-  // phone creates the keystore key, which takes seconds. the splash paints
-  // first, dark, and the light theme lands the moment the pref is read.
-  // before this the screen stayed empty until the key existed.
-  unawaited(
-    appState.loadThemePref().then((_) {
-      if (HaloColors.isLight) themeRevision.value++;
-    }),
-  );
   // cold-start: if launched from a notification tap, open the chat
   // after the first frame so rootNavKey has a navigator.
-  WidgetsBinding.instance.addPostFrameCallback((_) async {
+  WidgetsBinding.instance.addPostFrameCallback((_) => _openFromNotif());
+}
+
+// the theme pref sits in secure storage, and the first read on a new phone
+// creates the keystore key, which takes seconds. the splash paints first,
+// dark, and the light theme lands the moment the pref is read. it is
+// started before the window question so a headless start loads it too.
+Future<void> _openFromNotif() async {
+  try {
     final details = await notifPlugin.getNotificationAppLaunchDetails();
     if (details?.didNotificationLaunchApp ?? false) {
       final payload = details?.notificationResponse?.payload;
@@ -6895,7 +6900,9 @@ void main() async {
         () => openChatForHalo(payload),
       );
     }
-  });
+  } catch (e) {
+    dlog('notif launch: $e');
+  }
 }
 
 final themeRevision = ValueNotifier<int>(0);
