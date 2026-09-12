@@ -4190,31 +4190,6 @@ class AppState extends ChangeNotifier {
   // people lose accounts because nothing ever asked them to write the words
   // down. one card on home, dismissible, never shown again once they have a
   // backup or once they say no.
-  bool _hasBackup = true;
-  bool _nudgeOff = true;
-  bool get showBackupNudge => !_hasBackup && !_nudgeOff;
-
-  Future<void> _loadBackupFlags() async {
-    const st = FlutterSecureStorage();
-    _hasBackup = (await st.read(key: 'backup_made')) == '1';
-    _nudgeOff = (await st.read(key: 'backup_nudge_off')) == '1';
-    notifyListeners();
-  }
-
-  Future<void> markBackupMade() async {
-    _hasBackup = true;
-    await const FlutterSecureStorage().write(key: 'backup_made', value: '1');
-    notifyListeners();
-  }
-
-  Future<void> dismissBackupNudge() async {
-    _nudgeOff = true;
-    await const FlutterSecureStorage().write(
-      key: 'backup_nudge_off',
-      value: '1',
-    );
-    notifyListeners();
-  }
 
   // some screens are not optional. recovery shows the whole key, so it turns
   // the flag on whatever the user picked in settings, and hands it back on
@@ -5155,7 +5130,6 @@ class AppState extends ChangeNotifier {
     // outbox drainer: anything the wire never confirmed gets re-sent for the
     // life of the app, whatever screen you're on and across restarts.
     startOutboxDrain();
-    _loadBackupFlags();
     await _loadBridges();
     // drop week-old partial transfers nobody ever completed.
     unawaited(db.sweepMediaChunks());
