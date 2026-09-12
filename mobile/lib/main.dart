@@ -2887,9 +2887,13 @@ class HaloDb {
     final db = await open();
     return db.query(
       'messages',
+      // group text stays out: a group send marks sent on the first ack, so
+      // a row still at 0 is one nobody could take, and the screen owns its
+      // retry. group media comes along, it has the same chunked path as 1:1.
       where:
           "direction = 'out' AND sent = 0 AND msg_uid IS NOT NULL "
-          "AND (group_id IS NULL OR group_id = '')",
+          "AND (group_id IS NULL OR group_id = '' "
+          "OR media_path IS NOT NULL OR file_path IS NOT NULL)",
       orderBy: 'sent_at ASC',
       limit: 40,
     );
@@ -3751,6 +3755,14 @@ class AppState extends ChangeNotifier {
           mediaPath ?? filePath!,
           isFile: mediaPath == null,
         );
+      } else {
+        await _drainGroupMedia(
+          r,
+          groupId,
+          uid,
+          mediaPath ?? filePath!,
+          isFile: mediaPath == null,
+        );
       }
       return;
     }
@@ -3807,6 +3819,41 @@ class AppState extends ChangeNotifier {
     );
   }
 
+  Future<void> _drainGroupMedia(
+    Map<String, Object?> r,
+    String groupId,
+    String uid,
+    String path, {
+    required bool isFile,
+  }) async {
+    final f = File(path);
+    if (!await f.exists()) return;
+    final fileName = isFile ? r['file_name'] as String? : null;
+    String res;
+    try {
+      res = await sendMediaToGroup(
+        groupId,
+        base64Encode(await f.readAsBytes()),
+        msgUid: uid,
+        caption: (r['plaintext'] as String?) ?? '',
+        fileName: fileName,
+        voice: fileName == 'voice.wav',
+        voiceDisguised: ((r['voice_disguised'] as int?) ?? 0) == 1,
+        burnSeconds: (r['burn_secs'] as num?)?.toInt(),
+      );
+    } catch (e) {
+      res = 'error: $e';
+    }
+    if (res == 'ok') {
+      dlog('OUTBOX: group media redelivered $uid');
+      await db.markSent(uid);
+      await _lightBurn(r, uid);
+      notifyListeners();
+    } else {
+      dlog('OUTBOX: group media $uid still stuck ($res)');
+    }
+  }
+
   Future<void> _drainMedia(
     Map<String, Object?> r,
     String peer,
@@ -3842,7 +3889,7 @@ class AppState extends ChangeNotifier {
       await _lightBurn(r, uid);
       _bumpChatRev(peer);
       notifyListeners();
-    } else {
+    } else if (res != 'busy') {
       dlog('OUTBOX: media $uid still stuck ($res)');
     }
   }
