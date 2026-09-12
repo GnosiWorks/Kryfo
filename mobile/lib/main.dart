@@ -2701,6 +2701,19 @@ class HaloDb {
     await _scrubMedia(media);
   }
 
+  // did this sender write this row. what edit and unsend frames check.
+  Future<bool> isTheirs(String msgUid, String sender) async {
+    final db = await open();
+    final r = await db.query(
+      'messages',
+      columns: ['id'],
+      where: "msg_uid = ? AND direction = 'in' AND peer_id = ?",
+      whereArgs: [msgUid, sender],
+      limit: 1,
+    );
+    return r.isNotEmpty;
+  }
+
   Future<void> editMessage(String msgUid, String newText) async {
     final db = await open();
     await db.update(
@@ -4398,12 +4411,17 @@ class AppState extends ChangeNotifier {
     }
     // 2.5) edit - swap the text of an existing message
     if (env.edit != null) {
-      await db.editMessage(env.edit!.targetUid, env.edit!.newText);
-      notifyListeners();
+      // only the author. these frames ride in above the stranger gate, so
+      // anyone who can reach us could rewrite any row by uid otherwise.
+      if (await db.isTheirs(env.edit!.targetUid, senderHaloId)) {
+        await db.editMessage(env.edit!.targetUid, env.edit!.newText);
+        notifyListeners();
+      }
       return;
     }
     // 2.6) unsend - sender recalled a message; delete our copy
     if (env.unsend != null) {
+      if (!await db.isTheirs(env.unsend!, senderHaloId)) return;
       await db.deleteMessage(env.unsend!);
       // a recall mid-transfer would otherwise leave a half-filled buffer and
       // a progress bar that never completes. drop both.
@@ -4790,8 +4808,15 @@ class AppState extends ChangeNotifier {
         // a regular member. group.is_admin stays 0.
         if (gc.members == null || gc.name == null) return;
         // a room roster is only the creator's to send
-        if (await _roomOf(groupId) != null &&
-            senderHaloId != await db.groupAdminId(groupId)) {
+        final isRoom = await _roomOf(groupId) != null;
+        if (isRoom && senderHaloId != await db.groupAdminId(groupId)) {
+          return;
+        }
+        // a group from someone we never let in is a stranger's message
+        // with a roster attached. rooms are ours: we opened the link.
+        if (!isRoom &&
+            !await db.isAccepted(senderHaloId) &&
+            !await db.isVouched(senderHaloId)) {
           return;
         }
         if (!await db.groupExists(groupId)) {
