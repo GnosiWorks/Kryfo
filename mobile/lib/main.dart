@@ -3648,6 +3648,9 @@ class AppState extends ChangeNotifier {
   int _queued = 0;
   final Map<String, int> _queuedPerPeer = <String, int>{};
   int get queued => _queued;
+  int _parked = 0;
+  // of those, how many wait on a peer who has not added us back yet
+  int get parkedQueued => _parked;
   int queuedFor(String haloId) => _queuedPerPeer[haloId] ?? 0;
   Timer? _outboxTimer;
   bool _outboxWasReady = false;
@@ -3669,14 +3672,26 @@ class AppState extends ChangeNotifier {
     // only once the route was up, so an offline phone said nothing waited.
     final rows = await db.unsentOutbox();
     final perPeer = <String, int>{};
+    final paired = <String, bool>{};
+    var parked = 0;
     for (final r in rows) {
       // messages rows name the peer as peer_id; the old key never matched,
       // so no row ever knew it had something waiting
       final to = r['peer_id'] as String?;
       if (to != null) perPeer[to] = (perPeer[to] ?? 0) + 1;
+      // a row for someone who has not added us back is waiting on them,
+      // not on the wire. the strip says which.
+      final g = r['group_id'] as String?;
+      if (to != null && (g == null || g.isEmpty)) {
+        paired[to] ??= await db.isBackPaired(to);
+        if (!paired[to]!) parked++;
+      }
     }
-    if (rows.length != _queued || !_sameCounts(perPeer, _queuedPerPeer)) {
+    if (rows.length != _queued ||
+        parked != _parked ||
+        !_sameCounts(perPeer, _queuedPerPeer)) {
       _queued = rows.length;
+      _parked = parked;
       _queuedPerPeer
         ..clear()
         ..addAll(perPeer);
@@ -3712,7 +3727,7 @@ class AppState extends ChangeNotifier {
       // added us back yet keeps their rows going at the ten-minute gap.
       if (tries >= 8) {
         final peer = r['peer_id'] as String?;
-        if (peer == null || await db.isBackPaired(peer)) continue;
+        if (peer == null || (paired[peer] ?? true)) continue;
       }
       final now = DateTime.now().millisecondsSinceEpoch;
       final nextAt = _outboxNextAt[uid];
