@@ -664,19 +664,35 @@ func acceptLoop(l net.Listener) {
 
 func handleConn(conn net.Conn) {
 	defer conn.Close()
-	// cap the line and the wait - an unbounded ReadString from a hostile
-	// peer was an easy oom, and an idle conn held a goroutine forever.
-	conn.SetReadDeadline(time.Now().Add(30 * time.Second))
-	r := bufio.NewReader(io.LimitReader(conn, 512*1024))
+	// so many doors at once, no more. the ninth is shut unread.
+	select {
+	case inboxSlots <- struct{}{}:
+	default:
+		log.Printf("halo: door full, dropped a connection")
+		return
+	}
+	defer func() { <-inboxSlots }()
+	// a line is one write: ten seconds is generous over tor. the reader
+	// stops just past the largest line the door accepts.
+	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+	r := bufio.NewReader(io.LimitReader(conn, inboxMaxLine+2))
 	line, err := r.ReadString('\n')
 	if err != nil && err != io.EOF {
 		log.Printf("halo: read err: %v", err)
 		return
 	}
 	line = strings.TrimSpace(line)
-	mu.Lock()
-	inbox = append(inbox, line)
-	mu.Unlock()
+	// junk never reaches dart's trial decrypts, and a full or repeated
+	// inbox takes nothing more. no ack either way: an honest sender
+	// retries through its backoff, a flood learns nothing.
+	if !inboxShapeOK(line) {
+		log.Printf("halo: dropped %d bytes that are not a message", len(line))
+		return
+	}
+	if !inboxPut(line) {
+		log.Printf("halo: inbox full or repeat, dropped %d bytes", len(line))
+		return
+	}
 	conn.Write([]byte("ack\n"))
 	log.Printf("halo: received %d bytes", len(line))
 }
@@ -696,7 +712,7 @@ func HaloDrainInbox() *C.char {
 		return C.CString("")
 	}
 	out := strings.Join(inbox, "\n")
-	inbox = inbox[:0]
+	inboxDrained()
 	return C.CString(out)
 }
 
