@@ -4806,9 +4806,12 @@ class AppState extends ChangeNotifier {
     if (env.senderAvatar != null) {
       await db.setContactAvatar(senderHaloId, env.senderAvatar);
     }
-    // scam shield: a stranger's opener, once, on this phone only.
-    if (!isGroup && !burnOk) {
-      unawaited(_runShield(senderHaloId, env.message, env.senderAvatar));
+    // scam shield: a stranger's opener, once, on this phone only. in a
+    // group that is any member you never added.
+    if (!burnOk && (!isGroup || !senderAccepted)) {
+      unawaited(
+        _runShield(senderHaloId, env.message, env.senderAvatar, group: isGroup),
+      );
     }
     // saved now, messageExists covers dedup from here - drop the guard
     if (uid != null) _inflightUids.remove(uid);
@@ -4893,28 +4896,47 @@ class AppState extends ChangeNotifier {
   // the contacts we hold. only the first message counts - later ones from
   // the same stranger are not re-read - and an existing row (flagged or
   // dismissed) means the check already happened.
-  Future<void> _runShield(String senderHaloId, String text, int? face) async {
+  // group screens reload their marks when this moves
+  int _shieldRev = 0;
+  int get shieldRev => _shieldRev;
+
+  Future<void> _runShield(
+    String senderHaloId,
+    String text,
+    int? face, {
+    bool group = false,
+  }) async {
     try {
       if (!await loadScamShieldOn()) return;
       if (await db.countMessagesFrom(senderHaloId) != 1) return;
       if (await db.shieldFor(senderHaloId) != null) return;
       final rows = await db.contacts();
-      final r = shieldCheck(
-        strangerId: senderHaloId,
-        strangerAvatar: face,
-        firstMessage: text,
-        contacts: [
-          for (final c in rows)
-            ShieldContact(
-              c['halo_id'] as String,
-              nickname: c['nickname'] as String?,
-              avatar: (c['avatar'] as num?)?.toInt(),
-            ),
-        ],
-      );
+      final contacts = [
+        for (final c in rows)
+          ShieldContact(
+            c['halo_id'] as String,
+            nickname: c['nickname'] as String?,
+            avatar: (c['avatar'] as num?)?.toInt(),
+          ),
+      ];
+      final r = group
+          ? shieldCheckInGroup(
+              strangerId: senderHaloId,
+              strangerAvatar: face,
+              firstMessage: text,
+              contacts: contacts,
+            )
+          : shieldCheck(
+              strangerId: senderHaloId,
+              strangerAvatar: face,
+              firstMessage: text,
+              contacts: contacts,
+            );
       // a clean check is recorded too, as an empty headline: the chat can
-      // then say it looked, which is most of what a shield is for
+      // then say it looked, which is most of what a shield is for. not in
+      // a group: you chose to be there, so a clean line is clutter.
       if (!r.flagged) {
+        if (group) return;
         await db.setShield(senderHaloId, '', const []);
         notifyListeners();
         return;
@@ -4922,6 +4944,7 @@ class AppState extends ChangeNotifier {
       await db.setShield(senderHaloId, r.headline!, [
         for (final h in r.hits) h.line,
       ]);
+      _shieldRev++;
       dlog('shield: flagged ${r.hits.map((h) => h.code).join(',')}');
       notifyListeners();
     } catch (e) {

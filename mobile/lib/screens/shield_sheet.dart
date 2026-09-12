@@ -41,17 +41,19 @@ enum ShieldChoice { block, delete, ignore }
 Future<ShieldChoice?> showShieldSheet(
   BuildContext context,
   String haloId,
-  ShieldFlag flag,
-) async {
+  ShieldFlag flag, {
+  // a group member: nothing to delete, and block means everywhere
+  bool group = false,
+}) async {
   final choice = await showHaloSheet<ShieldChoice>(
     context,
-    builder: (_) => _ShieldSheet(flag: flag),
+    builder: (_) => _ShieldSheet(flag: flag, group: group),
   );
   if (choice == null) return null;
   HapticFeedback.selectionClick();
   switch (choice) {
     case ShieldChoice.block:
-      await db.setBlocked(haloId, true);
+      await appState.block(haloId);
     case ShieldChoice.delete:
       await db.declineRequest(haloId);
     case ShieldChoice.ignore:
@@ -63,7 +65,8 @@ Future<ShieldChoice?> showShieldSheet(
 
 class _ShieldSheet extends StatelessWidget {
   final ShieldFlag flag;
-  const _ShieldSheet({required this.flag});
+  final bool group;
+  const _ShieldSheet({required this.flag, this.group = false});
 
   @override
   Widget build(BuildContext context) {
@@ -97,12 +100,14 @@ class _ShieldSheet extends StatelessWidget {
                   HaloColors.rose,
                   onTap: () => Navigator.pop(context, ShieldChoice.block),
                 ),
-                const SizedBox(width: 8),
-                _Btn(
-                  'delete',
-                  HaloColors.text,
-                  onTap: () => Navigator.pop(context, ShieldChoice.delete),
-                ),
+                if (!group) ...[
+                  const SizedBox(width: 8),
+                  _Btn(
+                    'delete',
+                    HaloColors.text,
+                    onTap: () => Navigator.pop(context, ShieldChoice.delete),
+                  ),
+                ],
                 const SizedBox(width: 8),
                 Expanded(
                   child: _Btn(
