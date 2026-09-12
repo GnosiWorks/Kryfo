@@ -1,6 +1,11 @@
 package app.kryfo
 
 import android.Manifest
+import android.app.ActivityManager
+import android.app.ApplicationExitInfo
+import android.os.PowerManager
+import android.os.Process
+import android.os.SystemClock
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
 import android.content.ComponentName
@@ -141,6 +146,18 @@ class MainActivity : FlutterFragmentActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "isMiui" -> result.success(isMiuiDevice())
+                    // the three facts the transport screen shows so a
+                    // person can tell asleep from killed without adb
+                    "isBatteryExempt" -> {
+                        val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+                        result.success(pm.isIgnoringBatteryOptimizations(packageName))
+                    }
+                    "processUptimeMs" -> {
+                        result.success(
+                            SystemClock.elapsedRealtime() - Process.getStartElapsedRealtime()
+                        )
+                    }
+                    "lastExit" -> result.success(lastExit())
                     "openAutostartSettings" -> {
                         result.success(openAutostartSettings())
                     }
@@ -203,6 +220,41 @@ class MainActivity : FlutterFragmentActivity() {
 
     // true when some settings page opened. the miui page first, the app's
     // own details page when that is missing, false when both fail
+    // why our process last stopped, from the system's own record. the
+    // reason is what tells a kill from a crash from an update.
+    private fun lastExit(): Map<String, Any?>? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return null
+        return try {
+            val am = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            val list = am.getHistoricalProcessExitReasons(packageName, 0, 1)
+            if (list.isEmpty()) return null
+            val e = list[0]
+            val word = when (e.reason) {
+                ApplicationExitInfo.REASON_SIGNALED -> "killed by the system"
+                ApplicationExitInfo.REASON_LOW_MEMORY -> "low memory"
+                ApplicationExitInfo.REASON_CRASH,
+                ApplicationExitInfo.REASON_CRASH_NATIVE -> "crashed"
+                ApplicationExitInfo.REASON_ANR -> "not responding"
+                ApplicationExitInfo.REASON_USER_REQUESTED -> "stopped by you"
+                ApplicationExitInfo.REASON_USER_STOPPED -> "stopped by you"
+                ApplicationExitInfo.REASON_PACKAGE_UPDATED -> "updated"
+                ApplicationExitInfo.REASON_OTHER -> "stopped by the system"
+                ApplicationExitInfo.REASON_EXCESSIVE_RESOURCE_USAGE -> "used too much"
+                ApplicationExitInfo.REASON_PERMISSION_CHANGE -> "permission changed"
+                ApplicationExitInfo.REASON_EXIT_SELF -> "closed itself"
+                else -> "stopped"
+            }
+            mapOf(
+                "at" to e.timestamp,
+                "reason" to e.reason,
+                "word" to word,
+                "pssKb" to e.pss,
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     private fun openAutostartSettings(): Boolean {
         val miui = Intent().apply {
             setClassName(

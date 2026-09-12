@@ -9,6 +9,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'dart:ffi';
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Curve;
@@ -111,6 +112,8 @@ class HaloEngine {
   late final VoidFnDart _shutdown;
   late final IntArgFnDart _setDebug;
   late final CStrFnDart _getStatus;
+  late final CStrFnDart _nostrKick;
+  late final CStrFnDart _memStats;
   late final OneArgFnDart _nostrInit;
   late final OneArgFnDart _nostrSubscribe;
   late final CStrFnDart _nostrPoll;
@@ -160,6 +163,8 @@ class HaloEngine {
     _drainInbox = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloDrainInbox');
     _shutdown = _lib.lookupFunction<VoidFn, VoidFnDart>('HaloShutdown');
     _getStatus = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloGetStatus');
+    _nostrKick = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloNostrKick');
+    _memStats = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMemStats');
     _nostrInit = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrInit');
     _nostrSubscribe = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
       'HaloNostrSubscribe',
@@ -227,6 +232,18 @@ class HaloEngine {
   }
 
   String getStatus() => _getStatus().toDartString();
+
+  // every relay socket dropped and reopened now, since window and all
+  String nostrKick() => _nostrKick().toDartString();
+
+  // what the go side holds, json
+  Map<String, dynamic> memStats() {
+    try {
+      return jsonDecode(_memStats().toDartString()) as Map<String, dynamic>;
+    } catch (_) {
+      return const {};
+    }
+  }
 
   String nostrInit(String relaysCSV) {
     final ptr = relaysCSV.toNativeUtf8();
@@ -3876,6 +3893,104 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // the heartbeat. listen is the last tick the relay queue was read, drain
+  // the last time something came out of it. both kept in memory and
+  // written once a minute, so after a kill the transport screen can still
+  // say when this phone last listened. that is how a person tells asleep
+  // from killed from listening without adb.
+  int lastListenAt = 0;
+  int lastDrainAt = 0;
+  int _beatWritten = 0;
+  void _beat() {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    lastListenAt = now;
+    if (now - _beatWritten > 60000) {
+      _beatWritten = now;
+      unawaited(_writeBeat());
+    }
+  }
+
+  void _noteDrain() {
+    lastDrainAt = DateTime.now().millisecondsSinceEpoch;
+    unawaited(_writeBeat());
+  }
+
+  Future<void> _writeBeat() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('hb.listen', lastListenAt);
+      await prefs.setInt('hb.drain', lastDrainAt);
+    } catch (_) {}
+  }
+
+  // debug only: what is being held, every ten minutes, so a night's growth
+  // shows up in the log with a shape rather than a single number at the end
+  void startMemoryLog() {
+    if (!kDebugMode) return;
+    Timer.periodic(const Duration(minutes: 10), (_) {
+      final m = engine.memStats();
+      dlog(
+        'MEM rss=${ProcessInfo.currentRss ~/ 1048576}mb '
+        'go heap=${((m['heapAlloc'] as num?) ?? 0) ~/ 1048576}mb '
+        'sys=${((m['sys'] as num?) ?? 0) ~/ 1048576}mb '
+        'goroutines=${m['goroutines']} inbox=${m['inbox']} subs=${m['subs']} '
+        'sent=${m['sentIds']} imgcache=${PaintingBinding.instance.imageCache.currentSizeBytes ~/ 1048576}mb',
+      );
+    });
+  }
+
+  Future<void> loadHeartbeat() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      lastListenAt = prefs.getInt('hb.listen') ?? 0;
+      lastDrainAt = prefs.getInt('hb.drain') ?? 0;
+    } catch (_) {}
+  }
+
+  // the periodic job's window: kick every relay socket so a night's dead
+  // connections come back with their since window, then give the drains
+  // up to twenty seconds to pull what arrives. returns how many arrived.
+  Future<int> drainNow() async {
+    final before = lastDrainAt;
+    try {
+      engine.nostrKick();
+    } catch (e) {
+      dlog('drainNow: kick: $e');
+    }
+    for (var i = 0; i < 20; i++) {
+      await Future.delayed(const Duration(seconds: 1));
+      if (lastDrainAt != before && i >= 3) break;
+    }
+    dlog('drainNow: drained=${lastDrainAt != before}');
+    return lastDrainAt != before ? 1 : 0;
+  }
+
+  // three facts from the platform, null when no activity is attached
+  Future<bool?> isBatteryExempt() async {
+    try {
+      return await _platformChannel.invokeMethod<bool>('isBatteryExempt');
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<int?> processUptimeMs() async {
+    try {
+      return await _platformChannel.invokeMethod<int>('processUptimeMs');
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> lastExit() async {
+    try {
+      final r = await _platformChannel.invokeMethod<Map>('lastExit');
+      return r?.map((k, v) => MapEntry(k.toString(), v));
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> loadScreenshotPref() async {
     _blockScreenshots =
         (await const FlutterSecureStorage().read(key: 'block_screenshots')) ==
@@ -5056,6 +5171,8 @@ class AppState extends ChangeNotifier {
     await loadDisplayName();
     await loadScreenshotPref();
     await loadLinkPrefs();
+    await loadHeartbeat();
+    startMemoryLog();
     await initNotifications(onTap: openChatForHalo);
 
     // periodic sweep: delete messages whose burn_at has passed. a sweep
@@ -5269,9 +5386,11 @@ class AppState extends ChangeNotifier {
       // phone, so it is read whatever tor is doing
       if (_polling) return;
       _polling = true;
+      _beat();
       try {
         final msgs = engine.nostrPoll();
         if (msgs.isEmpty) return;
+        _noteDrain();
         for (final m in msgs) {
           // dedup: skip a message we've already handled (see direct-onion note).
           final h = sha256.convert(utf8.encode(m.cipher)).toString();
@@ -6668,6 +6787,14 @@ void main() async {
   WidgetsBinding.instance.addPostFrameCallback((_) => dlog('LAUNCH frame'));
   runApp(const HaloApp());
   dlog('LAUNCH runApp returned');
+  // the periodic job knocks here every fifteen minutes. it exists whether
+  // or not a screen is attached, which is the point: after a kill the
+  // system restarts the process for the job and this is all that is here.
+  const MethodChannel('halo/job').setMethodCallHandler((call) async {
+    if (call.method != 'drain') return null;
+    dlog('job: drain asked');
+    return appState.drainNow();
+  });
   // the theme pref sits in secure storage, and the first read on a new
   // phone creates the keystore key, which takes seconds. the splash paints
   // first, dark, and the light theme lands the moment the pref is read.
