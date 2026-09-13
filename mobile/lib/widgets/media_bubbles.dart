@@ -15,6 +15,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../main.dart' show shredFile;
 import '../theme.dart';
+import 'decode_px.dart';
 
 String _humanSize(int bytes) {
   if (bytes < 1024) return '$bytes b';
@@ -119,7 +120,12 @@ void openFullImage(BuildContext context, String path) {
               child: InteractiveViewer(
                 minScale: 1,
                 maxScale: 4,
-                child: Image.file(File(path)),
+                // twice the screen: enough for the zoom, a fraction of
+                // the file
+                child: Image.file(
+                  File(path),
+                  cacheWidth: screenPx(ctx, times: 2),
+                ),
               ),
             ),
           ),
@@ -671,7 +677,11 @@ class ImageCaptionScreenState extends State<ImageCaptionScreen> {
                   padding: const EdgeInsets.all(16),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(14),
-                    child: Image.memory(widget.bytes, fit: BoxFit.contain),
+                    child: Image.memory(
+                      widget.bytes,
+                      fit: BoxFit.contain,
+                      cacheWidth: screenPx(context),
+                    ),
                   ),
                 ),
               ),

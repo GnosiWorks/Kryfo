@@ -17,6 +17,7 @@ import '../jpeg_strip.dart';
 import '../main.dart' show shredFile, exportToPictures;
 import '../theme.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/decode_px.dart';
 
 class CaptureResult {
   final Uint8List? photo; // stripped jpeg bytes
@@ -487,6 +488,7 @@ class _CameraScreenState extends State<CameraScreen>
         key: const ValueKey('shot'),
         fit: BoxFit.contain,
         gaplessPlayback: true,
+        cacheWidth: screenPx(context),
       );
     }
     final mb = (_clipBytes / (1024 * 1024)).toStringAsFixed(1);
