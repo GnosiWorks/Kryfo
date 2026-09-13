@@ -353,11 +353,20 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     _loadingOlder = true;
     try {
       final oldestRowid = _messages.isEmpty ? null : _messages.first.rowid;
-      final rows = await db.groupMessagesPage(
+      final blockedIds = {
+        for (final c in appState.contacts)
+          if (c.blocked) c.haloId,
+      };
+      final rows0 = await db.groupMessagesPage(
         widget.groupId,
         beforeRowid: oldestRowid,
         limit: _pageSize + 1,
       );
+      // a blocked member is out of sight here too, not only at the door
+      final rows = [
+        for (final r in rows0)
+          if (!blockedIds.contains(r['peer_id'])) r,
+      ];
       if (!mounted) return;
       _hasMore = rows.length > _pageSize;
       if (_hasMore) rows.removeAt(0);
@@ -617,7 +626,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (flag == null) return;
     final c = await showShieldSheet(context, id, flag, group: true);
     if (!mounted) return;
-    if (c == ShieldChoice.block) showHaloToast(context, 'Blocked everywhere');
+    if (c == ShieldChoice.block) {
+      showHaloToast(context, 'Blocked everywhere');
+      await _load();
+      return;
+    }
     await _loadShieldFlags();
   }
 
