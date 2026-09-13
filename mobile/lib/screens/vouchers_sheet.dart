@@ -47,14 +47,15 @@ class _VouchersSheet extends StatelessWidget {
               style: HaloType.serif(size: 20, color: HaloColors.text),
             ),
           ),
-          Flexible(
-            child: ListView.builder(
-              shrinkWrap: true,
-              padding: const EdgeInsets.only(bottom: 16),
-              itemCount: rows.length,
-              itemBuilder: (_, i) =>
-                  _VoucherRow(row: rows[i], order: i, when: _when),
-            ),
+          // inside the sheet's own scroll now, so the list is laid out in
+          // full and the sheet scrolls as one
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(bottom: 16),
+            itemCount: rows.length,
+            itemBuilder: (_, i) =>
+                _VoucherRow(row: rows[i], order: i, when: _when),
           ),
         ],
       ),

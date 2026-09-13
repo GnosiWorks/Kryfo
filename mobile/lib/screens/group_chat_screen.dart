@@ -2008,38 +2008,39 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 ),
               )
             else
-              Flexible(
-                child: ListView(
-                  shrinkWrap: true,
-                  padding: const EdgeInsets.only(bottom: 8),
-                  children: [
-                    for (final c in targets)
-                      InkWell(
-                        onTap: () => Navigator.pop(ctx, c.haloId),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
-                          child: Row(
-                            children: [
-                              KryfoAvatar(seed: c.avatarSeed, size: 32),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  c.nickname ?? c.haloId,
-                                  style: HaloType.sans(
-                                    size: 14,
-                                    weight: FontWeight.w500,
-                                  ),
+              // the sheet scrolls as one now, so the list is laid out in
+              // full and does not scroll on its own
+              ListView(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 8),
+                children: [
+                  for (final c in targets)
+                    InkWell(
+                      onTap: () => Navigator.pop(ctx, c.haloId),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        child: Row(
+                          children: [
+                            KryfoAvatar(seed: c.avatarSeed, size: 32),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                c.nickname ?? c.haloId,
+                                style: HaloType.sans(
+                                  size: 14,
+                                  weight: FontWeight.w500,
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                  ],
-                ),
+                    ),
+                ],
               ),
           ],
         ),

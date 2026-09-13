@@ -10,16 +10,37 @@ const kSheetRadius = 20.0;
 Future<T?> showHaloSheet<T>(
   BuildContext context, {
   required WidgetBuilder builder,
-  // tall sheets with a keyboard or a list want the whole height
+  // true: the sheet manages its own height and scrolling. false, the
+  // default: the content scrolls inside a ceiling of nine tenths of the
+  // screen, and the keyboard pushes it up. sheets used to be capped at
+  // nine sixteenths of the screen with no scroll, which on a short phone
+  // cut the buttons off the shield sheet and the choice sheets.
   bool scroll = false,
   bool dismissible = true,
 }) {
   return showModalBottomSheet<T>(
     context: context,
-    builder: builder,
+    builder: scroll
+        ? builder
+        : (ctx) {
+            final mq = MediaQuery.of(ctx);
+            // the keyboard inset is spent here, so content that pads for
+            // it too (the confirm sheets) does not pad twice
+            return Padding(
+              padding: EdgeInsets.only(bottom: mq.viewInsets.bottom),
+              child: MediaQuery.removeViewInsets(
+                context: ctx,
+                removeBottom: true,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: mq.size.height * 0.9),
+                  child: SingleChildScrollView(child: builder(ctx)),
+                ),
+              ),
+            );
+          },
     backgroundColor: HaloColors.surface2,
     barrierColor: HaloColors.ink.withValues(alpha: 0.62),
-    isScrollControlled: scroll,
+    isScrollControlled: true,
     isDismissible: dismissible,
     enableDrag: dismissible,
     shape: const RoundedRectangleBorder(
