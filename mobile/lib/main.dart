@@ -4779,8 +4779,9 @@ class AppState extends ChangeNotifier {
       );
       chunkBurn = await db.mediaChunkBurn(mid) ?? chunkBurn;
       if (have < env.chunkTotal!) {
-        // still waiting on more pieces - surface how far along we are.
-        incomingMediaUpdate(progressKey, have, env.chunkTotal!);
+        // still waiting on more pieces - surface how far along we are. a
+        // voice note is seconds of audio; the banner is for the long ones.
+        if (!env.voice) incomingMediaUpdate(progressKey, have, env.chunkTotal!);
         return;
       }
       // all pieces in: stitch them back in index order.
