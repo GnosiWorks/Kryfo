@@ -4649,7 +4649,12 @@ class AppState extends ChangeNotifier {
     }
     // 2.6) unsend - sender recalled a message; delete our copy
     if (env.unsend != null) {
-      if (!await db.isTheirs(env.unsend!, senderHaloId)) return;
+      // a row that exists must be theirs. a half-file with no row yet has
+      // nothing to protect, and its sender stopping it is the point.
+      if (await db.messageExists(env.unsend!) &&
+          !await db.isTheirs(env.unsend!, senderHaloId)) {
+        return;
+      }
       await db.deleteMessage(env.unsend!);
       // a recall mid-transfer would otherwise leave a half-filled buffer and
       // a progress bar that never completes. drop both.
