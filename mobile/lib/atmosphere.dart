@@ -5,11 +5,11 @@
 // and for some a very slow drift that stops the moment the app is away.
 // every one keeps message text at full contrast; a mood that would not is
 // not in this list.
-import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import 'theme.dart';
 
@@ -306,9 +306,12 @@ class AtmosphereWash extends StatefulWidget {
 }
 
 class _AtmosphereWashState extends State<AtmosphereWash>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   final _phase = ValueNotifier<double>(0);
-  Timer? _tick;
+  // a ticker on the frame clock: the timer at eight steps a second read as
+  // stutter on the snow. one full drift still takes a minute.
+  Ticker? _tick;
+  Duration _last = Duration.zero;
 
   @override
   void initState() {
@@ -324,13 +327,16 @@ class _AtmosphereWashState extends State<AtmosphereWash>
   }
 
   void _start() {
-    _tick?.cancel();
+    _tick?.dispose();
     _tick = null;
     final mood = moodOf(widget.atmo);
     if (mood == null || mood.drift == AtmoDrift.none) return;
-    _tick = Timer.periodic(const Duration(milliseconds: 125), (_) {
-      _phase.value = (_phase.value + 1 / 480) % 1.0;
-    });
+    _last = Duration.zero;
+    _tick = createTicker((elapsed) {
+      final dt = (elapsed - _last).inMicroseconds / 1e6;
+      _last = elapsed;
+      _phase.value = (_phase.value + dt / 60) % 1.0;
+    })..start();
   }
 
   @override
@@ -338,7 +344,7 @@ class _AtmosphereWashState extends State<AtmosphereWash>
     if (state == AppLifecycleState.resumed) {
       _start();
     } else {
-      _tick?.cancel();
+      _tick?.dispose();
       _tick = null;
     }
   }
@@ -346,7 +352,7 @@ class _AtmosphereWashState extends State<AtmosphereWash>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _tick?.cancel();
+    _tick?.dispose();
     _phase.dispose();
     super.dispose();
   }
