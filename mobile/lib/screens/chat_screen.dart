@@ -7090,6 +7090,9 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
   bool _live = false;
   String? _path;
   double _bottomInset = 0;
+  // the keyboard's height at the moment the hold began: the overlay is in
+  // the root overlay, which never sees the keyboard, and drew under it
+  double _keyboardInset = 0;
 
   @override
   void dispose() {
@@ -7133,7 +7136,11 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
       _ms += 100;
       _overlay?.markNeedsBuild();
     });
-    if (mounted) _bottomInset = MediaQuery.of(context).padding.bottom;
+    if (mounted) {
+      final mq = MediaQuery.of(context);
+      _bottomInset = mq.padding.bottom;
+      _keyboardInset = mq.viewInsets.bottom;
+    }
     _overlay = OverlayEntry(builder: (_) => _bar());
     if (mounted) Overlay.of(context).insert(_overlay!);
     _busy = false;
@@ -7182,7 +7189,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
     return Positioned(
       left: 0,
       right: 0,
-      bottom: 0,
+      bottom: _keyboardInset,
       child: TweenAnimationBuilder<double>(
         tween: Tween(begin: 0.0, end: 1.0),
         duration: const Duration(milliseconds: 180),
