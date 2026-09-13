@@ -43,6 +43,11 @@ All notable user-facing changes to kryfo will land here. Format loosely follows 
 - the receiving banner no longer appears for a voice note.
 - the atmospheres drifted at eight steps a second, which read as stutter on snow. they move on the frame clock now.
 - the card payment tab in donate is gone until there is something behind it.
+- one screenshot switch for the whole app, applied at the next start. the per-chat one is gone, and so is the flash on every toggle: changing the flag live recreated the window.
+- a photo or file can be stopped while it is still on its way: hold it, stop sending. it goes here, and the other side drops the part it had along with its banner.
+- a wallpaper can be one of your own photos, per chat. it lives in the app's folder and goes with a wipe.
+- the name field in the profile is gone. it was stored on the phone and shown to nobody.
+- onboarding asks how your messages should travel: onion, relay or fast, each with its cost in plain words, onion picked already, one tap to skip.
 - claiming a handle froze the app until android offered to close it. the registry call ran on the screen's own thread. fixed, along with checking and deleting a handle.
 - adding someone by handle, or by a link that had already been used once, went nowhere: the invite named a one-time key that the first person to use it consumed, so everyone after them was dropped unread. the invite now carries a key that is kept. a phone with a handle republishes it on the next start.
 - direct-onion messages past a stranger's two are held on the phone and opened when you accept them, the way the relay lane already replayed them. someone you deleted has to pay the opener's proof of work again to come back.
