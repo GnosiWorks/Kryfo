@@ -13,8 +13,6 @@ import 'settings_screen.dart';
 import 'donate_screen.dart';
 import 'my_kryfo_screen.dart';
 import '../widgets/motion.dart' show haloRoute;
-import '../widgets/sheet_handle.dart';
-import '../widgets/halo_sheet.dart';
 import '../widgets/halo_switch.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -91,90 +89,9 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Future<void> _editDisplayName() async {
-    final ctrl = TextEditingController(text: appState.displayName);
-    final name = await showHaloSheet<String>(
-      context,
-      scroll: true,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          0,
-          20,
-          20 + MediaQuery.of(ctx).viewInsets.bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SheetHandle(),
-            const SizedBox(height: 8),
-            Text(
-              'Display name',
-              style: HaloType.serif(size: 18, color: HaloColors.text),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'A name you choose for yourself. It never leaves this phone - contacts always see the name they gave you, never this one. That way nobody can impersonate someone just by renaming themselves.',
-              style: HaloType.sans(
-                size: 12,
-                color: HaloColors.text2,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: ctrl,
-              autofocus: true,
-              maxLength: 32,
-              style: HaloType.serif(
-                size: 20,
-                italic: true,
-                color: HaloColors.text,
-              ),
-              cursorColor: HaloColors.amber,
-              decoration: InputDecoration(
-                hintText: 'Your name',
-                counterText: '',
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: HaloColors.line, width: 0.5),
-                ),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: HaloColors.amber, width: 0.8),
-                ),
-              ),
-              onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
-                  child: Text(
-                    'Save',
-                    style: HaloType.sans(
-                      size: 14,
-                      weight: FontWeight.w600,
-                      color: HaloColors.amber,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-    if (name == null) return;
-    await appState.setDisplayName(name);
-    if (mounted) setState(() {});
-  }
-
   @override
   Widget build(BuildContext context) {
     final id = appState.myId;
-    final name = appState.displayName;
     final hasBadge = _tier != SupporterTier.none;
 
     return Scaffold(
@@ -217,7 +134,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           ),
                         ),
                         child: Semantics(
-                          label: 'Edit name',
+                          label: 'Change your face',
                           button: true,
                           child: GestureDetector(
                             behavior: HitTestBehavior.opaque,
@@ -261,18 +178,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          // the three words are the name. a separate one
+                          // was stored here and shown to nobody.
                           Flexible(
-                            child: GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: _editDisplayName,
-                              child: Text(
-                                name.isEmpty ? 'No name set' : name,
-                                style: HaloType.serif(
-                                  size: 22,
-                                  color: name.isEmpty
-                                      ? HaloColors.text3
-                                      : HaloColors.text,
-                                ),
+                            child: Text(
+                              id,
+                              style: HaloType.mono(
+                                size: 15,
+                                color: HaloColors.amber,
                               ),
                             ),
                           ),
