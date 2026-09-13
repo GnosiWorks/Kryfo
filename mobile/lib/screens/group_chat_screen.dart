@@ -1177,15 +1177,21 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   Future<void> _pickGroupGif() async {
-    final res = await lockState.hold(
-      () => FilePicker.pickFiles(
-        withData: true,
-        type: FileType.custom,
-        allowedExtensions: ['gif'],
-      ),
-    );
+    final FilePickerResult? res;
+    try {
+      res = await lockState.hold(
+        () => FilePicker.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: ['gif'],
+        ),
+      );
+    } catch (e) {
+      if (mounted) showHaloToast(context, 'Could not read that file');
+      return;
+    }
     if (res == null || res.files.isEmpty) return;
-    final data = res.files.first.bytes;
+    final path = res.files.first.path;
+    final data = path == null ? null : await File(path).readAsBytes();
     await shredPicked(res);
     if (data == null) return;
     if (data.length > 8 * 1024 * 1024) {
@@ -1296,16 +1302,23 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         .then((r) => _finishGroupMediaSend(m, r));
   }
 
+  // the picker's own copy is copied into the media folder; no byte array
+  // crosses the plugin channel. see the 1:1 chat for why.
   Future<void> _pickGroupFile() async {
-    final res = await lockState.hold(
-      () => FilePicker.pickFiles(withData: true),
-    );
+    final FilePickerResult? res;
+    try {
+      res = await lockState.hold(() => FilePicker.pickFiles());
+    } catch (e) {
+      // the picker could not copy what was chosen: a provider that will
+      // not hand the file over, a gone download. say so instead of nothing.
+      if (mounted) showHaloToast(context, 'Could not read that file');
+      return;
+    }
     if (res == null || res.files.isEmpty) return;
-    final data = res.files.first.bytes;
+    final path = res.files.first.path;
     final name = res.files.first.name;
+    if (path != null) await _sendGroupFileFrom(path, name);
     await shredPicked(res);
-    if (data == null) return;
-    await _sendGroupFileBytes(data, name);
   }
 
   // the in-app camera: a stripped photo goes through the caption screen; a
@@ -1325,17 +1338,23 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
     final path = r.videoPath;
     if (path == null) return;
-    final data = await File(path).readAsBytes();
-    await shredFile(path);
     if (!mounted) return;
-    await _sendGroupFileBytes(
-      data,
+    await _sendGroupFileFrom(
+      path,
       'clip_${DateTime.now().millisecondsSinceEpoch}.mp4',
     );
+    await shredFile(path);
   }
 
-  Future<void> _sendGroupFileBytes(Uint8List data, String name) async {
-    if (data.length > 8 * 1024 * 1024) {
+  Future<void> _sendGroupFileFrom(String src, String name) async {
+    final int size;
+    try {
+      size = await File(src).length();
+    } catch (_) {
+      if (mounted) showHaloToast(context, 'Could not read that file');
+      return;
+    }
+    if (size > 8 * 1024 * 1024) {
       if (mounted) showHaloToast(context, 'File too big · 8 mb max');
       return;
     }
@@ -1345,7 +1364,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
     final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
     final dest = File('${mediaDir.path}/f_${uid}_$safe');
-    await dest.writeAsBytes(data);
+    await File(src).copy(dest.path);
     final burn = _ghost ? _burnSeconds : null;
     final m = _GMsg(
       sender: appState.myId,
