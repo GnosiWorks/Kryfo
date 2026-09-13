@@ -39,6 +39,7 @@ import '../message_envelope.dart'
 import '../theme.dart';
 import '../media_progress.dart';
 import '../media_send.dart';
+import '../notifications.dart' show clearNotificationsFor;
 import '../widgets/kryfo_avatar.dart';
 import '../main.dart'
     show
@@ -620,6 +621,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     appState.loadSendMode();
     currentChatPeer = widget.peerHaloId;
     db.clearUnread(widget.peerHaloId).then((_) => appState.refreshContacts());
+    unawaited(clearNotificationsFor(widget.peerHaloId));
     _unreadAfterMs =
         _lastReadPerPeer[widget.peerHaloId] ??
         DateTime.now().millisecondsSinceEpoch;

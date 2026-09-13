@@ -61,6 +61,20 @@ Future<void> setHideNotifContent(bool v) async {
   await prefs.setBool(_hideContentKey, v);
 }
 
+// ids by chat, so opening the chat by hand takes its notifications down.
+// they used to stay in the shade after the message had been read.
+final Map<String, List<int>> _shownFor = {};
+
+Future<void> clearNotificationsFor(String payload) async {
+  final ids = _shownFor.remove(payload);
+  if (ids == null) return;
+  for (final id in ids) {
+    try {
+      await notifPlugin.cancel(id: id);
+    } catch (_) {}
+  }
+}
+
 Future<void> showMessageNotification({
   required String title,
   required String body,
@@ -104,6 +118,7 @@ Future<void> showMessageNotification({
   // only UPDATED the first notification, and android never re-alerts for an
   // update - so the badge moved but no banner ever appeared.
   final id = DateTime.now().microsecondsSinceEpoch & 0x7fffffff;
+  if (payload != null) (_shownFor[payload] ??= []).add(id);
   await notifPlugin.show(
     id: id,
     title: title,

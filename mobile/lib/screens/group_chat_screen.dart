@@ -16,6 +16,7 @@ import '../widgets/press_scale.dart';
 import '../widgets/media_bubbles.dart';
 import '../atmosphere.dart';
 import 'shield_sheet.dart';
+import '../notifications.dart' show clearNotificationsFor;
 import 'chat_screen.dart'
     show
         disguiseWav,
@@ -175,6 +176,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       }
     });
     db.clearGroupUnread(widget.groupId).then((_) => appState.refreshGroups());
+    unawaited(clearNotificationsFor('group:${widget.groupId}'));
     // restore a draft left behind last time this group was open.
     _msgCtrl.text = _draftPerGroup[widget.groupId] ?? '';
     // save it live on every keystroke so it survives leaving regardless of
