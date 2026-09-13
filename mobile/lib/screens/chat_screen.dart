@@ -7244,9 +7244,11 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
       _overlay?.markNeedsBuild();
     });
     if (mounted) {
-      final mq = MediaQuery.of(context);
-      _bottomInset = mq.padding.bottom;
-      _keyboardInset = mq.viewInsets.bottom;
+      // the scaffold strips the keyboard inset from its body's media query,
+      // so it has to come from the view itself or it reads as zero
+      final view = MediaQueryData.fromView(View.of(context));
+      _bottomInset = view.padding.bottom;
+      _keyboardInset = view.viewInsets.bottom;
     }
     _overlay = OverlayEntry(builder: (_) => _bar());
     if (mounted) Overlay.of(context).insert(_overlay!);
