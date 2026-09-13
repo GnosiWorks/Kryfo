@@ -440,7 +440,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.code,
                 label: 'Open source',
                 value: 'github.com/GnosiWorks/Kryfo',
-                hint: 'Tap to copy the link',
                 onTap: () async {
                   await Clipboard.setData(
                     const ClipboardData(
