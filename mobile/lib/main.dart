@@ -3937,7 +3937,13 @@ class AppState extends ChangeNotifier {
       var row = r;
       if (groupId == null &&
           redeliveryNeedsPow(r, backPaired: await db.isBackPaired(peer))) {
-        final nonce = await compute(_outboxGrind, r['plaintext'] as String);
+        powBusy.value = DateTime.now();
+        final int nonce;
+        try {
+          nonce = await compute(_outboxGrind, r['plaintext'] as String);
+        } finally {
+          powBusy.value = null;
+        }
         await db.setPowNonce(uid, nonce);
         row = {...r, 'pow_nonce': nonce};
       }

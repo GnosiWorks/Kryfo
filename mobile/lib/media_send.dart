@@ -115,7 +115,14 @@ Future<String> _sendChunkedMediaInner({
   final showProgress = total > 1 && !voice;
   if (showProgress) mediaProgressStart(msgUid, chatKey: peerId);
   int? pow;
-  if (needPow) pow = await compute(_mediaGrind, caption);
+  if (needPow) {
+    powBusy.value = DateTime.now();
+    try {
+      pow = await compute(_mediaGrind, caption);
+    } finally {
+      powBusy.value = null;
+    }
+  }
   final now = DateTime.now().millisecondsSinceEpoch;
   final since = now - (chunkDoneAt[msgUid] ?? now);
   if (since > 240000) chunkDone.remove(msgUid);
