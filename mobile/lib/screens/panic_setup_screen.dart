@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../lock_state.dart';
+import '../widgets/fit_column.dart';
 import '../theme.dart';
 import '../widgets/pin_pad.dart';
 
@@ -96,7 +97,7 @@ class _PanicSetupScreenState extends State<PanicSetupScreen>
         iconTheme: IconThemeData(color: HaloColors.text2),
       ),
       body: SafeArea(
-        child: Column(
+        child: FitColumn(
           children: [
             const Spacer(flex: 2),
             AnimatedSwitcher(
