@@ -119,7 +119,13 @@ Future<void> shareContactCard({
           data: const MediaQueryData(),
           child: Directionality(
             textDirection: TextDirection.ltr,
-            child: ContactCard(haloId: haloId, uri: uri),
+            // no material above this tree, and text without one is drawn
+            // with flutter's yellow double underline: the lines under
+            // every word on the shared card
+            child: DefaultTextStyle(
+              style: const TextStyle(decoration: TextDecoration.none),
+              child: ContactCard(haloId: haloId, uri: uri),
+            ),
           ),
         ),
       ),
