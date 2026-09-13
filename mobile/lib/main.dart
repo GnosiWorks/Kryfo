@@ -4391,7 +4391,6 @@ class AppState extends ChangeNotifier {
       key: 'block_screenshots',
       value: v.toString(),
     );
-    await _applyScreenSecure();
   }
 
   Future<void> loadThemePref() async {
@@ -5607,7 +5606,6 @@ class AppState extends ChangeNotifier {
     // has to follow the relay list: the runner snapshots it on start and
     // gives up if it is empty.
     _loadFirstContact();
-    await loadDisplayName();
     await loadScreenshotPref();
     await loadLinkPrefs();
     await loadHeartbeat();
