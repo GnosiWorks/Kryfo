@@ -4055,6 +4055,9 @@ class AppState extends ChangeNotifier {
       notifyListeners();
     } else if (res != 'busy') {
       dlog('OUTBOX: media $uid still stuck ($res)');
+      // an open chat re-reads the row, so a bubble left spinning by a
+      // busy tap-to-retry settles into failed or waiting
+      _bumpChatRev(peer);
     }
   }
 
