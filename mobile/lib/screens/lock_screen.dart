@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../lock_state.dart';
 import '../wipe.dart';
+import '../widgets/fit_column.dart';
 import '../theme.dart';
 import '../widgets/pin_pad.dart';
 
@@ -132,7 +133,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
           SafeArea(
             child: AnimatedBuilder(
               animation: lockState,
-              builder: (_, _) => Column(
+              builder: (_, _) => FitColumn(
                 children: [
                   const Spacer(flex: 3),
                   Text(
