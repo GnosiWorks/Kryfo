@@ -16,6 +16,9 @@ import android.os.PersistableBundle
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import java.io.ByteArrayOutputStream
+import android.graphics.Matrix
+import android.media.ExifInterface
+import java.io.ByteArrayInputStream
 import android.content.Context
 import android.provider.MediaStore
 import android.content.Intent
@@ -107,15 +110,41 @@ class MainActivity : FlutterFragmentActivity() {
             var sample = 1
             while (maxOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= maxEdge) sample *= 2
             val opts = BitmapFactory.Options().apply { inSampleSize = sample }
-            val bm = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts) ?: return null
+            val decoded = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts) ?: return null
+            // the sensor writes its pixels sideways and an orientation tag
+            // to say so. the tag is stripped later, so the pixels are turned
+            // upright here, while it is still there to read.
+            val orientation = try {
+                ExifInterface(ByteArrayInputStream(bytes))
+                    .getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+            } catch (e: Exception) {
+                ExifInterface.ORIENTATION_NORMAL
+            }
+            val m = Matrix()
+            when (orientation) {
+                ExifInterface.ORIENTATION_ROTATE_90 -> m.postRotate(90f)
+                ExifInterface.ORIENTATION_ROTATE_180 -> m.postRotate(180f)
+                ExifInterface.ORIENTATION_ROTATE_270 -> m.postRotate(270f)
+                ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> m.postScale(-1f, 1f)
+                ExifInterface.ORIENTATION_FLIP_VERTICAL -> m.postScale(1f, -1f)
+                ExifInterface.ORIENTATION_TRANSPOSE -> { m.postRotate(90f); m.postScale(-1f, 1f) }
+                ExifInterface.ORIENTATION_TRANSVERSE -> { m.postRotate(270f); m.postScale(-1f, 1f) }
+            }
+            val bm = if (m.isIdentity) decoded
+                else Bitmap.createBitmap(decoded, 0, 0, decoded.width, decoded.height, m, true)
             val scale = maxEdge.toFloat() / maxOf(bm.width, bm.height)
             val out = if (scale < 1f) {
                 Bitmap.createScaledBitmap(bm, (bm.width * scale).toInt(), (bm.height * scale).toInt(), true)
             } else bm
             val bos = ByteArrayOutputStream()
             out.compress(Bitmap.CompressFormat.JPEG, quality, bos)
+            if (out !== bm) out.recycle()
+            if (bm !== decoded) bm.recycle()
+            decoded.recycle()
             bos.toByteArray()
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            // an out-of-memory on a big frame is a Throwable, not an
+            // Exception; the caller gets null and keeps the original
             null
         }
     }

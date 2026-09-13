@@ -202,10 +202,14 @@ class _CameraScreenState extends State<CameraScreen>
       // the plugin wrote a file with everything the sensor knows. it goes
       // now, and only the stripped bytes live on
       await shredFile(x.path);
-      final stripped = stripJpegMetadata(raw);
-      // the same size and quality a gallery pick gets. a sensor jpeg at
-      // its own quality was two to three times the bytes over tor.
-      final clean = stripped == null ? null : await _shrink(stripped);
+      // the shrink first, on the raw bytes: it reads the orientation tag
+      // and turns the pixels upright, then writes a jpeg with no tags at
+      // all. the strip after it is the belt to that brace. same size and
+      // quality as a gallery pick; a sensor jpeg was two to three times
+      // the bytes over tor, and came out sideways once its tag was gone.
+      final small = await _shrink(raw);
+      final stripped = stripJpegMetadata(small);
+      final clean = stripped;
       if (!mounted) return;
       // a file the stripper could not walk, or one that still reads as
       // tagged, is refused rather than passed on
