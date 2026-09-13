@@ -2554,6 +2554,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _sendVoice(String srcPath, int ms) async {
+    if (_requestLocked) return;
+    if (_requestPending) setState(() => _sentCount++);
     final src = File(srcPath);
     if (!await src.exists()) return;
     var bytes = await src.readAsBytes();
@@ -2755,10 +2757,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _sendFileBytes(Uint8List data, String name) async {
+    if (_requestLocked) return;
     if (data.length > 8 * 1024 * 1024) {
       if (mounted) showHaloToast(context, 'File too big · 8 mb max');
       return;
     }
+    if (_requestPending) setState(() => _sentCount++);
     if (!await _confirmBigSend(data.length, 'file')) return;
     final msgUid = _newMsgUid();
     final dir = await getApplicationDocumentsDirectory();
@@ -2892,6 +2896,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _sendOneImage(Uint8List bytes, String caption) async {
+    // two of anything before they accept, photos included: the third sat
+    // at a single tick while the far side held it
+    if (_requestLocked) return;
+    if (_requestPending) setState(() => _sentCount++);
     final msgUid = _newMsgUid();
     final dir = await getApplicationDocumentsDirectory();
     final mediaDir = Directory('${dir.path}/media');
