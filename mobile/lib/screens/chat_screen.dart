@@ -6109,9 +6109,12 @@ class _Bubble extends StatelessWidget {
                                       ),
                                     ],
 
+                                    // a sent photo has no meta row, so its
+                                    // countdown lives here like an incoming one
                                     if (msg.burnAt != null &&
                                         !pending &&
-                                        !showMeta) ...[
+                                        (!showMeta ||
+                                            msg.mediaPath != null)) ...[
                                       const SizedBox(height: 4),
                                       Padding(
                                         padding: const EdgeInsets.symmetric(
