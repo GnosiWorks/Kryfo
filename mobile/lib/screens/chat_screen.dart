@@ -2772,16 +2772,27 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     return ok == true;
   }
 
+  // the picker hands back a path to its own copy, and the file is copied
+  // from there straight into the media folder: no byte array crosses the
+  // plugin channel and nothing holds the whole file in memory. with
+  // withData the plugin read the file into a java array, sent it over the
+  // channel and dart kept a third copy; on a 32-bit phone the bytes came
+  // back null and a picked file silently went nowhere.
   Future<void> _pickAndSendFile() async {
-    final res = await lockState.hold(
-      () => FilePicker.pickFiles(withData: true),
-    );
+    final FilePickerResult? res;
+    try {
+      res = await lockState.hold(() => FilePicker.pickFiles());
+    } catch (e) {
+      // the picker could not copy what was chosen: a provider that will
+      // not hand the file over, a gone download. say so instead of nothing.
+      if (mounted) showHaloToast(context, 'Could not read that file');
+      return;
+    }
     if (res == null || res.files.isEmpty) return;
-    final data = res.files.first.bytes;
+    final path = res.files.first.path;
     final name = res.files.first.name;
+    if (path != null) await _sendFileFrom(path, name);
     await shredPicked(res);
-    if (data == null) return;
-    await _sendFileBytes(data, name);
   }
 
   // the in-app camera: a stripped photo goes through the caption screen like
@@ -2802,30 +2813,38 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
     final path = r.videoPath;
     if (path == null) return;
-    final data = await File(path).readAsBytes();
-    await shredFile(path);
     if (!mounted) return;
-    await _sendFileBytes(
-      data,
+    await _sendFileFrom(
+      path,
       'clip_${DateTime.now().millisecondsSinceEpoch}.mp4',
     );
+    await shredFile(path);
   }
 
-  Future<void> _sendFileBytes(Uint8List data, String name) async {
+  // src is a file this app can read: the picker's copy or a camera clip.
+  // it is copied into the media folder, never read into memory.
+  Future<void> _sendFileFrom(String src, String name) async {
     if (_requestLocked) return;
-    if (data.length > 8 * 1024 * 1024) {
+    final int size;
+    try {
+      size = await File(src).length();
+    } catch (_) {
+      if (mounted) showHaloToast(context, 'Could not read that file');
+      return;
+    }
+    if (size > 8 * 1024 * 1024) {
       if (mounted) showHaloToast(context, 'File too big · 8 mb max');
       return;
     }
     if (_requestPending) setState(() => _sentCount++);
-    if (!await _confirmBigSend(data.length, 'file')) return;
+    if (!await _confirmBigSend(size, 'file')) return;
     final msgUid = _newMsgUid();
     final dir = await getApplicationDocumentsDirectory();
     final mediaDir = Directory('${dir.path}/media');
     if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
     final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
     final dest = File('${mediaDir.path}/f_${msgUid}_$safe');
-    await dest.writeAsBytes(data);
+    await File(src).copy(dest.path);
     final filePath = dest.path;
     final msg = _Msg(
       'out',
@@ -2926,15 +2945,22 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _pickAndSendGif() async {
-    final res = await lockState.hold(
-      () => FilePicker.pickFiles(
-        withData: true,
-        type: FileType.custom,
-        allowedExtensions: ['gif'],
-      ),
-    );
+    final FilePickerResult? res;
+    try {
+      res = await lockState.hold(
+        () => FilePicker.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: ['gif'],
+        ),
+      );
+    } catch (e) {
+      if (mounted) showHaloToast(context, 'Could not read that file');
+      return;
+    }
     if (res == null || res.files.isEmpty) return;
-    final data = res.files.first.bytes;
+    // read from the picker's copy: one copy of the bytes, not three
+    final path = res.files.first.path;
+    final data = path == null ? null : await File(path).readAsBytes();
     await shredPicked(res);
     if (data == null) return;
     // a gif must NOT be re-encoded (that kills the animation), so it skips the
