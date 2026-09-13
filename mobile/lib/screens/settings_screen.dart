@@ -330,10 +330,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   label: 'App lock',
                   hint: 'Your pin, and a wipe pin',
                   value: !lockState.enabled
-                      ? 'off'
+                      ? 'Off'
                       : lockState.panicEnabled
                       ? 'Pin · wipe pin'
-                      : 'on',
+                      : 'On',
                   onTap: () =>
                       Navigator.of(context).push(haloRoute(const PinsScreen())),
                 ),
