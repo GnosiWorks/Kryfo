@@ -30,6 +30,10 @@ final Map<String, int> chunkDoneAt = {};
 // both pick the same row, and whichever finished second overwrote the
 // bubble with its own verdict.
 final Set<String> mediaInflight = {};
+// a send the person stopped. the workers see it between slices and end
+// there; the chat has already pulled the row and told the other side.
+final Set<String> mediaCancelled = {};
+void cancelMediaSend(String msgUid) => mediaCancelled.add(msgUid);
 
 int _mediaGrind(String seed) => grindPow(seed, powBits);
 
@@ -73,6 +77,7 @@ Future<String> sendChunkedMediaTo({
     );
   } finally {
     mediaInflight.remove(msgUid);
+    mediaCancelled.remove(msgUid);
     mediaProgressEnd(msgUid);
   }
 }
@@ -135,6 +140,10 @@ Future<String> _sendChunkedMediaInner({
 
   Future<void> worker() async {
     while (failure == null && !parked) {
+      if (mediaCancelled.contains(msgUid)) {
+        failure = 'cancelled';
+        return;
+      }
       while (next < total && done.contains(next)) {
         next++;
       }

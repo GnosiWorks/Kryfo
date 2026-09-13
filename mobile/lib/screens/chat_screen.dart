@@ -38,7 +38,7 @@ import '../message_envelope.dart'
         powBits;
 import '../theme.dart';
 import '../media_progress.dart';
-import '../media_send.dart';
+import '../media_send.dart' show sendChunkedMediaTo, cancelMediaSend;
 import '../notifications.dart' show clearNotificationsFor;
 import '../widgets/kryfo_avatar.dart';
 import '../main.dart'
@@ -1412,7 +1412,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           onTap: () {
                             dismiss();
                             HapticFeedback.selectionClick();
-                            _unsendMessage(target);
+                            // a photo or file still on its way stops here
+                            // and the other side drops what it has
+                            if (target.sending &&
+                                (target.mediaPath != null ||
+                                    target.filePath != null)) {
+                              _stopSending(target);
+                            } else {
+                              _unsendMessage(target);
+                            }
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(
@@ -1437,7 +1445,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  'Unsend',
+                                  target.sending &&
+                                          (target.mediaPath != null ||
+                                              target.filePath != null)
+                                      ? 'Stop sending'
+                                      : 'Unsend',
                                   style: HaloType.sans(
                                     size: 12,
                                     weight: FontWeight.w500,
@@ -1600,6 +1612,36 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
+  // the unsend frame on its own, the way a message would go. the other
+  // side drops the row, or the half-file and its banner if it never landed.
+  Future<void> _sendUnsendFrame(String uid) async {
+    try {
+      final wrapped = await wrapMessage('', unsend: uid);
+      final cipher = await signalEncryptSerial(widget.peerHaloId, wrapped);
+      final useDirectOnion = !_backPaired || _peerXPub == null;
+      await (useDirectOnion
+          ? engine.sendTo(widget.peerOnion, cipher)
+          : engine.nostrSend(_peerXPub!, cipher));
+    } catch (e) {
+      dlog('unsend send failed: $e');
+    }
+  }
+
+  // stop a photo or file mid-send. the workers end between slices, the row
+  // and the file go here, and the other side is told to drop its part.
+  Future<void> _stopSending(_Msg m) async {
+    final uid = m.msgUid;
+    if (uid == null) return;
+    cancelMediaSend(uid);
+    mediaProgressEnd(uid);
+    if (mounted) setState(() => m.removing = true);
+    await Future.delayed(const Duration(milliseconds: 300));
+    await db.deleteMessage(uid);
+    if (mounted) setState(() => _messages.remove(m));
+    unawaited(appState.refreshContacts());
+    unawaited(_sendUnsendFrame(uid));
+  }
+
   Future<void> _unsendMessage(_Msg m) async {
     if (m.msgUid == null) return;
     // the confirm sheet hands focus back to the composer on close, which pops
@@ -1665,16 +1707,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (mounted) setState(() => _messages.remove(m));
     // the home row was still previewing the message just unsent
     unawaited(appState.refreshContacts());
-    try {
-      final wrapped = await wrapMessage('', unsend: m.msgUid);
-      final cipher = await signalEncrypt(widget.peerHaloId, wrapped);
-      final useDirectOnion = !_backPaired || _peerXPub == null;
-      await (useDirectOnion
-          ? Future(() => engine.sendTo(widget.peerOnion, cipher))
-          : Future(() => engine.nostrSend(_peerXPub!, cipher)));
-    } catch (e) {
-      dlog('unsend send failed: $e');
-    }
+    await _sendUnsendFrame(m.msgUid!);
   }
 
   Future<void> _togglePin(_Msg m) async {
@@ -2858,8 +2891,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _finishMediaSend(_Msg msg, String result) async {
-    // another sender already has this one; its verdict comes later
-    if (result == 'busy') return;
+    // another sender already has this one; its verdict comes later. a
+    // cancelled one has no row left to finish.
+    if (result == 'busy' || result == 'cancelled') return;
     if (msg.msgUid != null) mediaProgressEnd(msg.msgUid!);
     if (result == 'ok' && msg.msgUid != null) await db.markSent(msg.msgUid!);
     if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
