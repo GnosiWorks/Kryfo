@@ -1056,12 +1056,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         }
         return;
       }
-      final b64 = base64Encode(await f.readAsBytes());
       String r;
       try {
         r = await appState.sendMediaToGroup(
           widget.groupId,
-          b64,
+          f.path,
           msgUid: m.msgUid!,
           caption: m.text,
           fileName: m.mediaPath != null ? null : m.fileName,
@@ -1204,7 +1203,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
     final f = File('${mediaDir.path}/$uid.jpg');
     await f.writeAsBytes(bytes);
-    final b64 = base64Encode(bytes);
     final burn = _ghost ? _burnSeconds : null;
     final m = _GMsg(
       sender: appState.myId,
@@ -1235,7 +1233,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     appState
         .sendMediaToGroup(
           widget.groupId,
-          b64,
+          f.path,
           msgUid: uid,
           caption: caption,
           burnSeconds: burn,
@@ -1254,7 +1252,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
     final dest = File('${mediaDir.path}/vn_$uid.wav');
     await dest.writeAsBytes(bytes);
-    final b64 = base64Encode(bytes);
     final burn = _ghost ? _burnSeconds : null;
     final m = _GMsg(
       sender: appState.myId,
@@ -1289,7 +1286,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     appState
         .sendMediaToGroup(
           widget.groupId,
-          b64,
+          dest.path,
           msgUid: uid,
           fileName: 'voice.wav',
           voice: true,
@@ -1349,7 +1346,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
     final dest = File('${mediaDir.path}/f_${uid}_$safe');
     await dest.writeAsBytes(data);
-    final b64 = base64Encode(data);
     final burn = _ghost ? _burnSeconds : null;
     final m = _GMsg(
       sender: appState.myId,
@@ -1382,7 +1378,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     appState
         .sendMediaToGroup(
           widget.groupId,
-          b64,
+          dest.path,
           msgUid: uid,
           fileName: name,
           burnSeconds: burn,

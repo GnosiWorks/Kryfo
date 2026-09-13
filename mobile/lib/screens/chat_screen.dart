@@ -2476,11 +2476,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       msg.failed = false;
       msg.sending = true;
     });
-    final b64 = base64Encode(await file.readAsBytes());
     final msgUid = msg.msgUid ?? _newMsgUid();
     msg.msgUid = msgUid;
     _sendChunkedMedia(
-      b64: b64,
+      path: path,
       msgUid: msgUid,
       caption: msg.text,
       burnSeconds: msg.burnSecs,
@@ -2501,11 +2500,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       msg.failed = false;
       msg.sending = true;
     });
-    final b64 = base64Encode(await file.readAsBytes());
     final msgUid = msg.msgUid ?? _newMsgUid();
     msg.msgUid = msgUid;
     _sendChunkedMedia(
-      b64: b64,
+      path: path,
       msgUid: msgUid,
       fileName: msg.fileName!,
       voice: msg.fileName == 'voice.wav',
@@ -2623,7 +2621,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final dest = File('${mediaDir.path}/vn_$msgUid.wav');
     await dest.writeAsBytes(bytes);
     final filePath = dest.path;
-    final b64 = base64Encode(bytes);
     final msg = _Msg(
       'out',
       '',
@@ -2656,7 +2653,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       sent: 0,
     );
     _sendChunkedMedia(
-      b64: b64,
+      path: filePath,
       msgUid: msgUid,
       fileName: 'voice.wav',
       voice: true,
@@ -2830,7 +2827,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final dest = File('${mediaDir.path}/f_${msgUid}_$safe');
     await dest.writeAsBytes(data);
     final filePath = dest.path;
-    final b64 = base64Encode(data);
     final msg = _Msg(
       'out',
       '',
@@ -2861,7 +2857,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       sent: 0,
     );
     _sendChunkedMedia(
-      b64: b64,
+      path: filePath,
       msgUid: msgUid,
       fileName: name,
       burnSeconds: _ghost ? _burnSeconds : null,
@@ -2874,7 +2870,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // fileName == null means image lane (imageB64), else file lane (fileB64).
   // the shared sender does the work; this hands it what the screen knows
   Future<String> _sendChunkedMedia({
-    required String b64,
+    required String path,
     required String msgUid,
     String caption = '',
     String? fileName,
@@ -2889,7 +2885,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       peerXPub: _peerXPub ?? (widget.peerXPub.isEmpty ? null : widget.peerXPub),
       backPaired: _backPaired,
       needPow: _recvCount == 0 || !await hasSessionWith(widget.peerHaloId),
-      b64: b64,
+      path: path,
       msgUid: msgUid,
       caption: caption,
       fileName: fileName,
@@ -2967,7 +2963,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final mediaFile = File('${mediaDir.path}/$msgUid.jpg');
     await mediaFile.writeAsBytes(bytes);
     final mediaPath = mediaFile.path;
-    final b64 = base64Encode(bytes);
     // read it once - the toggle is cleared below and the save reads it after.
     final wantSecure = _secureNext;
     final msg = _Msg(
@@ -3002,7 +2997,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (wantSecure && mounted) setState(() => _secureNext = false);
     unawaited(
       _sendChunkedMedia(
-        b64: b64,
+        path: mediaPath,
         msgUid: msgUid,
         caption: caption,
         burnSeconds: _ghost ? _burnSeconds : null,
