@@ -3007,16 +3007,18 @@ class HaloDb {
     return r.first['burn'] as int?;
   }
 
-  Future<List<String>> mediaChunkSlices(String mediaId) async {
+  // one slice, so a file is rebuilt piece by piece instead of all its
+  // slices sitting in one list
+  Future<String?> mediaChunkSlice(String mediaId, int idx) async {
     final db = await open();
     final r = await db.query(
       'media_chunks',
       columns: ['slice'],
-      where: 'media_id = ?',
-      whereArgs: [mediaId],
-      orderBy: 'Idx ASC',
+      where: 'media_id = ? AND idx = ?',
+      whereArgs: [mediaId, idx],
+      limit: 1,
     );
-    return [for (final row in r) (row['slice'] as String?) ?? ''];
+    return r.isEmpty ? null : r.first['slice'] as String?;
   }
 
   Future<int> dropMediaChunks(String mediaId) async {
@@ -3585,23 +3587,63 @@ Future<void> sweepCaptures() async {
   }
 }
 
-Future<String> saveFileBytes(List<int> bytes, String uid, String name) async {
+String _safeLeaf(String s) => s.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+
+// where a received file lands: media/f_<uid>_<name>
+Future<File> receivedFileFor(String uid, String name) async {
   final dir = await getApplicationDocumentsDirectory();
   final mediaDir = Directory('${dir.path}/media');
   if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
-  final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-  final file = File('${mediaDir.path}/f_${uid}_$safe');
+  return File('${mediaDir.path}/f_${uid}_${_safeLeaf(name)}');
+}
+
+// where a received picture lands: media/<uid>.jpg
+Future<File> receivedImageFor(String name) async {
+  final dir = await getApplicationDocumentsDirectory();
+  final mediaDir = Directory('${dir.path}/media');
+  if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
+  return File('${mediaDir.path}/${_safeLeaf(name)}.jpg');
+}
+
+Future<String> saveFileBytes(List<int> bytes, String uid, String name) async {
+  final file = await receivedFileFor(uid, name);
   await file.writeAsBytes(bytes);
   return file.path;
 }
 
 Future<String> saveMediaBytes(List<int> bytes, String name) async {
-  final dir = await getApplicationDocumentsDirectory();
-  final mediaDir = Directory('${dir.path}/media');
-  if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
-  final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-  final file = File('${mediaDir.path}/$safe.jpg');
+  final file = await receivedImageFor(name);
   await file.writeAsBytes(bytes);
+  return file.path;
+}
+
+// a chunked file rebuilt one slice at a time. every slice but the last is
+// a multiple of four base64 characters, so each decodes on its own and
+// goes straight to disk. a slice that is missing or will not decode
+// leaves no half file behind.
+Future<String> saveSlices(
+  File file,
+  int total,
+  Future<String?> Function(int i) slice,
+) async {
+  final sink = file.openWrite();
+  try {
+    for (var i = 0; i < total; i++) {
+      final part = await slice(i);
+      if (part == null) throw StateError('slice $i missing');
+      sink.add(base64Decode(part));
+    }
+    await sink.flush();
+    await sink.close();
+  } catch (e) {
+    try {
+      await sink.close();
+    } catch (_) {}
+    try {
+      await file.delete();
+    } catch (_) {}
+    rethrow;
+  }
   return file.path;
 }
 
@@ -4744,8 +4786,17 @@ class AppState extends ChangeNotifier {
     // first). hold onto whichever one carried it so the rebuilt message keeps
     // its timer instead of landing permanent on the receiver.
     int? chunkBurn = env.burnSeconds;
+    // a save can fail, a full phone say. the message still lands, with a
+    // line saying what is missing, rather than an empty bubble
+    String? mediaPath;
+    String? filePath;
+    var unsaved = false;
+    final fileName = env.fileName;
+    final fileUid =
+        env.msgUid ?? DateTime.now().millisecondsSinceEpoch.toString();
     if (env.mediaId != null && env.chunkTotal != null && env.chunkTotal! > 1) {
       final mid = env.mediaId!;
+      final total = env.chunkTotal!;
       final progressKey = isGroup ? env.groupId! : senderHaloId;
       final slice = (env.imageB64 ?? env.fileB64) ?? '';
       // slices land on disk as they arrive, so closing the app mid-transfer
@@ -4755,57 +4806,65 @@ class AppState extends ChangeNotifier {
         mid,
         env.chunkIndex ?? 0,
         slice,
-        env.chunkTotal!,
+        total,
         (env.burnSeconds != null && env.burnSeconds! > 0)
             ? env.burnSeconds
             : null,
       );
       chunkBurn = await db.mediaChunkBurn(mid) ?? chunkBurn;
-      if (have < env.chunkTotal!) {
+      if (have < total) {
         // still waiting on more pieces - surface how far along we are. a
         // voice note is seconds of audio; the banner is for the long ones.
-        if (!env.voice) incomingMediaUpdate(progressKey, have, env.chunkTotal!);
+        if (!env.voice) incomingMediaUpdate(progressKey, have, total);
         return;
       }
-      // all pieces in: stitch them back in index order.
-      final full = StringBuffer();
-      for (final part in await db.mediaChunkSlices(mid)) {
-        full.write(part);
+      // all pieces in. each goes from the database to the file on its
+      // own; the whole base64 was stitched into one string and decoded
+      // in one go before, three copies of the file at once, on the phone
+      // with the least room for it.
+      // a preview thumbnail from an older client: never drawn, never kept.
+      // titles are fetched here only when the reader asks, images never.
+      if (!env.pvImg) {
+        try {
+          final out = fileName != null
+              ? await receivedFileFor(fileUid, fileName)
+              : await receivedImageFor(fileUid);
+          final path = await saveSlices(
+            out,
+            total,
+            (i) => db.mediaChunkSlice(mid, i),
+          );
+          if (fileName != null) {
+            filePath = path;
+          } else {
+            mediaPath = path;
+          }
+        } catch (e) {
+          dlog('recv: chunked media not saved: $e');
+          unsaved = true;
+        }
       }
       await db.dropMediaChunks(mid);
       incomingMediaDone(progressKey);
-      // a preview thumbnail from an older client: never drawn, never kept.
-      // titles are fetched here only when the reader asks, images never.
       if (env.pvImg) return;
-      // which field it belonged to: file if a name was sent, else image.
-      if (env.fileName != null) {
-        fileB64v = full.toString();
-      } else {
-        imgB64 = full.toString();
-      }
+      // the slice in this envelope is on disk now; nothing below should
+      // save it again
+      imgB64 = null;
+      fileB64v = null;
     }
-    // a save can fail, a full phone say. the message still lands, with a
-    // line saying what is missing, rather than an empty bubble
-    String? mediaPath;
-    var unsaved = false;
     if (imgB64 != null && imgB64.isNotEmpty) {
       try {
-        mediaPath = await saveMediaBytes(
-          base64Decode(imgB64),
-          env.msgUid ?? DateTime.now().millisecondsSinceEpoch.toString(),
-        );
+        mediaPath = await saveMediaBytes(base64Decode(imgB64), fileUid);
       } catch (e) {
         dlog('recv: image not saved: $e');
         unsaved = true;
       }
     }
-    String? filePath;
-    final fileName = env.fileName;
     if (fileB64v != null && fileB64v.isNotEmpty) {
       try {
         filePath = await saveFileBytes(
           base64Decode(fileB64v),
-          env.msgUid ?? DateTime.now().millisecondsSinceEpoch.toString(),
+          fileUid,
           fileName ?? 'file',
         );
       } catch (e) {
