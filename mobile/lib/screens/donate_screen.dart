@@ -77,7 +77,6 @@ class _DonateScreenState extends State<DonateScreen> {
   }
 
   final _customCtl = TextEditingController();
-  bool _card = false; // false = crypto tab
   String _coin = 'btc';
 
   SupporterTier _tierFor(int amt) {
@@ -87,12 +86,9 @@ class _DonateScreenState extends State<DonateScreen> {
     return SupporterTier.none;
   }
 
-  int _lastTier = 20;
-
   void _pickTier(int amt) {
     setState(() {
       _amount = amt;
-      _lastTier = amt;
       _customCtl.clear();
     });
   }
@@ -126,17 +122,9 @@ class _DonateScreenState extends State<DonateScreen> {
               const SizedBox(height: 22),
               _tiers(),
               const SizedBox(height: 22),
-              _methodTabs(),
-              const SizedBox(height: 14),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 240),
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeIn,
-                child: KeyedSubtree(
-                  key: ValueKey(_card),
-                  child: !_card ? _cryptoPane() : _cardPane(),
-                ),
-              ),
+              // card payments are not set up. the tab that said so came
+              // out; it comes back with a processor behind it.
+              _cryptoPane(),
               const SizedBox(height: 26),
             ],
           ),
@@ -311,92 +299,6 @@ class _DonateScreenState extends State<DonateScreen> {
                   ),
                 ),
               ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _customField() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        color: HaloColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: HaloColors.line),
-      ),
-      child: Row(
-        children: [
-          Text('\$', style: HaloType.serif(size: 17, color: HaloColors.text2)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              controller: _customCtl,
-              keyboardType: TextInputType.number,
-              style: HaloType.serif(size: 16, color: HaloColors.text),
-              cursorColor: HaloColors.amber,
-              decoration: InputDecoration(
-                isCollapsed: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                border: InputBorder.none,
-                hintText: 'Other amount',
-                hintStyle: HaloType.serif(size: 16, color: HaloColors.text2),
-              ),
-              onChanged: (v) {
-                final n = int.tryParse(v) ?? 0;
-                setState(() => _amount = n < 0 ? 0 : n);
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _methodTabs() {
-    return Row(
-      children: [
-        _tab('crypto', !_card, () {
-          HapticFeedback.selectionClick();
-          setState(() {
-            _card = false;
-            // back to the tiers: whatever was typed for the card is not an
-            // amount bitcoin can use
-            if (_customCtl.text.isNotEmpty) {
-              _customCtl.clear();
-              _amount = _lastTier;
-            }
-          });
-        }),
-        const SizedBox(width: 8),
-        _tab('Card · not yet', _card, () {
-          HapticFeedback.selectionClick();
-          setState(() => _card = true);
-        }),
-      ],
-    );
-  }
-
-  Widget _tab(String label, bool sel, VoidCallback onTap) {
-    return Expanded(
-      child: PressScale(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: sel ? HaloColors.amber : Colors.transparent,
-            borderRadius: BorderRadius.circular(9),
-            border: Border.all(color: sel ? HaloColors.amber : HaloColors.line),
-          ),
-          child: Text(
-            label,
-            style: HaloType.mono(
-              size: 12,
-              color: sel ? HaloColors.onAmber : HaloColors.text2,
             ),
           ),
         ),
@@ -661,44 +563,6 @@ class _DonateScreenState extends State<DonateScreen> {
           ],
         ],
       ),
-    );
-  }
-
-  Widget _cardPane() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // any amount by card. on crypto the tiers are the amounts, since a
-        // bitcoin invoice is made per tier and the other coins are plain
-        // addresses, so a typed number had nowhere to go there
-        _customField(),
-        const SizedBox(height: 10),
-        // nothing is wired behind this yet. an amber button that only
-        // toasted "coming soon" read as a payment that had failed
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
-          decoration: BoxDecoration(
-            color: HaloColors.surface2,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: HaloColors.line, width: 0.5),
-          ),
-          child: Text(
-            'Card payments are not set up yet. Nothing happens if you '
-            'try. Crypto works today, and the badge comes with bitcoin.',
-            style: HaloType.sans(
-              size: 13,
-              color: HaloColors.text2,
-              height: 1.4,
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          'A card is not anonymous. Use crypto, monero especially, if that matters to you.',
-          textAlign: TextAlign.center,
-          style: HaloType.mono(size: 11, color: HaloColors.text2),
-        ),
-      ],
     );
   }
 }
