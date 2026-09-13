@@ -33,6 +33,16 @@ All notable user-facing changes to kryfo will land here. Format loosely follows 
 - the home strip said "waiting" with a retry for every message still on its way. it speaks now only when the phone cannot send, or when a message waits on someone who has not added you back.
 - two of anything before a stranger accepts you, photos, files and voice notes included; a third photo sat at a single tick.
 - a member blocked from the scam shield sheet inside a group stays on screen until reopened. gone at once now.
+- a friend in relay mode published to a relay nobody in onion mode read, so everything they sent sat at one tick. every mode now shares our relay, reached over tor in onion mode. the first-contact address follows a mode switch too.
+- switching to tor a second time inside a minute could leave the app on "connecting" for good. the engine now reports off when a restart is skipped, so the watchdog tries again.
+- notifications for a chat come down when you open it, not only when you tap them.
+- a photo sent with a timer showed its countdown on the receiver only. the sender sees it now.
+- holding the mic with the keyboard up recorded with no bar on screen: the bar drew under the keyboard. it sits above it now.
+- a photo, a file or a voice note can no longer be edited into text.
+- the send estimate for a file matched the old one-slice-at-a-time sender. it follows the pool now.
+- the receiving banner no longer appears for a voice note.
+- the atmospheres drifted at eight steps a second, which read as stutter on snow. they move on the frame clock now.
+- the card payment tab in donate is gone until there is something behind it.
 - claiming a handle froze the app until android offered to close it. the registry call ran on the screen's own thread. fixed, along with checking and deleting a handle.
 - adding someone by handle, or by a link that had already been used once, went nowhere: the invite named a one-time key that the first person to use it consumed, so everyone after them was dropped unread. the invite now carries a key that is kept. a phone with a handle republishes it on the next start.
 - direct-onion messages past a stranger's two are held on the phone and opened when you accept them, the way the relay lane already replayed them. someone you deleted has to pay the opener's proof of work again to come back.
