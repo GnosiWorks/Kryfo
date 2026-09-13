@@ -27,6 +27,12 @@ All notable user-facing changes to kryfo will land here. Format loosely follows 
 - accept, decline and block are on the requests list, not only inside the chat.
 - "reset my invite link" promised that old codes and links stop working. it moved only the relay address: an old link still opened a session and could still dial your onion directly. that promise was wrong and could have got someone hurt. reset now also replaces the key inside the invite, so an old link fails on every route, and the button says what it costs: anyone who has the old link but never used it needs a new one.
 - the onion door has limits now: eight connections at once, a full inbox takes nothing more, a line has to look like a message before it costs the phone a decrypt, repeats are dropped. someone with your onion address could keep your phone busy for as long as they liked before.
+- photos taken with the in-app camera came out sideways: the orientation tag was stripped before the pixels were turned. upright now.
+- the shared contact card had thin yellow lines under every word. gone.
+- the six digit pairing code could be shown but typed in nowhere. "they read you a code" under the code opens the way in.
+- the home strip said "waiting" with a retry for every message still on its way. it speaks now only when the phone cannot send, or when a message waits on someone who has not added you back.
+- two of anything before a stranger accepts you, photos, files and voice notes included; a third photo sat at a single tick.
+- a member blocked from the scam shield sheet inside a group stays on screen until reopened. gone at once now.
 - claiming a handle froze the app until android offered to close it. the registry call ran on the screen's own thread. fixed, along with checking and deleting a handle.
 - adding someone by handle, or by a link that had already been used once, went nowhere: the invite named a one-time key that the first person to use it consumed, so everyone after them was dropped unread. the invite now carries a key that is kept. a phone with a handle republishes it on the next start.
 - direct-onion messages past a stranger's two are held on the phone and opened when you accept them, the way the relay lane already replayed them. someone you deleted has to pay the opener's proof of work again to come back.
