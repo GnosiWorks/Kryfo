@@ -600,7 +600,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
 
-    if (appState.secureChats) appState.forceSecure(true);
     _applySecureContent();
     WidgetsBinding.instance.addObserver(this);
     _reconcileSending();
@@ -3476,7 +3475,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    if (appState.secureChats) appState.forceSecure(false);
     _pollTimer?.cancel();
     _autoRetryTimer?.cancel();
     _burnTick?.cancel();

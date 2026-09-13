@@ -172,7 +172,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     _postureLine(
                       'screenshots',
-                      appState.blockScreenshots,
+                      appState.blockScreenshotsApplied,
                       'blocked',
                       'allowed',
                     ),
@@ -289,21 +289,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _Section('security'),
           _Group(
             children: [
-              _Row(
-                icon: Icons.photo_camera_back_outlined,
-                label: 'Screen security',
-                hint: 'No screenshots inside chats',
-                value: appState.secureChats ? 'On' : 'Off',
-                onTap: () async {
-                  await appState.setSecureChats(!appState.secureChats);
-                  if (mounted) setState(() {});
-                },
-              ),
+              // one switch for the whole app, applied at the next start.
+              // the per-chat one went: changing the flag live recreated the
+              // surface and flashed on every toggle.
               _Row(
                 icon: Icons.visibility_off_outlined,
                 label: 'Block screenshots',
-                hint: 'Whole app hidden from recents and screenshots',
-                value: appState.blockScreenshots ? 'On' : 'Off',
+                hint: appState.blockScreenshotsPending
+                    ? 'Whole app hidden from recents and screenshots · '
+                          'takes effect after the next start'
+                    : 'Whole app hidden from recents and screenshots',
+                value: appState.blockScreenshots
+                    ? (appState.blockScreenshotsPending
+                          ? 'On · next start'
+                          : 'On')
+                    : (appState.blockScreenshotsPending
+                          ? 'Off · next start'
+                          : 'Off'),
                 onTap: () async {
                   await appState.setBlockScreenshots(
                     !appState.blockScreenshots,

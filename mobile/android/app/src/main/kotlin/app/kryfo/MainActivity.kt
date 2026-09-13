@@ -158,10 +158,10 @@ class MainActivity : FlutterFragmentActivity() {
         }
         val surface = findSurface(window.decorView)
         surface?.setSecure(on)
-        if (!on && secureNow && surface != null) {
-            surface.visibility = View.GONE
-            surface.post { surface.visibility = View.VISIBLE }
-        }
+        // no surface recreate on the way off any more: it flashed the
+        // window on every toggle. one ui may keep the bit until the next
+        // start, and the switch that drives this says "after the next
+        // start" for that reason.
         secureNow = on
     }
 
