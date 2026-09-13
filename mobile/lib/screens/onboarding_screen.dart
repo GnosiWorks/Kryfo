@@ -10,6 +10,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/fit_column.dart';
 import '../theme.dart';
 import 'restore_screen.dart';
 import 'my_kryfo_screen.dart';
@@ -101,127 +102,125 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return FitColumn(
       padding: const EdgeInsets.fromLTRB(32, 60, 32, 36),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AnimatedBuilder(
-            animation: _ctl,
-            builder: (c, _) {
-              final op = 0.7 + 0.3 * math.sin(_ctl.value * 2 * math.pi);
-              return Container(
-                width: 70,
-                height: 70,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    center: Alignment(-0.3, -0.3),
-                    colors: [HaloColors.amber, HaloColors.amberDeep],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: HaloColors.amber.withValues(alpha: 0.5 * op),
-                      blurRadius: 40,
-                      spreadRadius: 4,
-                    ),
-                  ],
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AnimatedBuilder(
+          animation: _ctl,
+          builder: (c, _) {
+            final op = 0.7 + 0.3 * math.sin(_ctl.value * 2 * math.pi);
+            return Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  center: Alignment(-0.3, -0.3),
+                  colors: [HaloColors.amber, HaloColors.amberDeep],
                 ),
-              );
-            },
+                boxShadow: [
+                  BoxShadow(
+                    color: HaloColors.amber.withValues(alpha: 0.5 * op),
+                    blurRadius: 40,
+                    spreadRadius: 4,
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 28),
+        Text(
+          'PRIVATE BY DEFAULT',
+          style: HaloType.mono(
+            size: 10,
+            color: HaloColors.amber,
+          ).copyWith(letterSpacing: 4, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 22),
+        RichText(
+          text: TextSpan(
+            style: HaloType.serif(
+              size: 38,
+              weight: FontWeight.w300,
+              color: HaloColors.text,
+              height: 1.05,
+            ),
+            children: [
+              const TextSpan(text: 'Private messaging,\n'),
+              TextSpan(
+                text: 'without the catch',
+                style: HaloType.serif(
+                  size: 38,
+                  weight: FontWeight.w300,
+                  italic: true,
+                  color: HaloColors.amber,
+                  height: 1.05,
+                ),
+              ),
+              const TextSpan(text: '.'),
+            ],
           ),
-          const SizedBox(height: 28),
-          Text(
-            'PRIVATE BY DEFAULT',
+        ),
+        const SizedBox(height: 26),
+        _bullet(
+          'Your name is three words.',
+          'No phone, no email, no address book.',
+        ),
+        const SizedBox(height: 13),
+        _bullet(
+          'Nobody gets in unless you let them.',
+          'There is no search. People are added by hand, both ways.',
+        ),
+        const SizedBox(height: 13),
+        _bullet(
+          'The first connection takes a minute.',
+          'Kryfo builds a private route before it sends. Quick after.',
+        ),
+        const Spacer(),
+        GestureDetector(
+          onTap: widget.onContinue,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            decoration: BoxDecoration(
+              color: HaloColors.amber,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              'Begin',
+              style: HaloType.sans(
+                size: 14,
+                color: HaloColors.onAmber,
+                weight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Center(
+          child: GestureDetector(
+            onTap: () {
+              Navigator.of(context).push(haloRoute(const RestoreScreen()));
+            },
+            child: Text(
+              'Have a backup? Restore →',
+              style: HaloType.sans(size: 12, color: HaloColors.text2),
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        Center(
+          child: Text(
+            'Kryfo is open source',
             style: HaloType.mono(
               size: 10,
-              color: HaloColors.amber,
-            ).copyWith(letterSpacing: 4, fontWeight: FontWeight.w500),
+              color: HaloColors.text3,
+            ).copyWith(letterSpacing: 2),
           ),
-          const SizedBox(height: 22),
-          RichText(
-            text: TextSpan(
-              style: HaloType.serif(
-                size: 38,
-                weight: FontWeight.w300,
-                color: HaloColors.text,
-                height: 1.05,
-              ),
-              children: [
-                const TextSpan(text: 'Private messaging,\n'),
-                TextSpan(
-                  text: 'without the catch',
-                  style: HaloType.serif(
-                    size: 38,
-                    weight: FontWeight.w300,
-                    italic: true,
-                    color: HaloColors.amber,
-                    height: 1.05,
-                  ),
-                ),
-                const TextSpan(text: '.'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 26),
-          _bullet(
-            'Your name is three words.',
-            'No phone, no email, no address book.',
-          ),
-          const SizedBox(height: 13),
-          _bullet(
-            'Nobody gets in unless you let them.',
-            'There is no search. People are added by hand, both ways.',
-          ),
-          const SizedBox(height: 13),
-          _bullet(
-            'The first connection takes a minute.',
-            'Kryfo builds a private route before it sends. Quick after.',
-          ),
-          const Spacer(),
-          GestureDetector(
-            onTap: widget.onContinue,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              decoration: BoxDecoration(
-                color: HaloColors.amber,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                'Begin',
-                style: HaloType.sans(
-                  size: 14,
-                  color: HaloColors.onAmber,
-                  weight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Center(
-            child: GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(haloRoute(const RestoreScreen()));
-              },
-              child: Text(
-                'Have a backup? Restore →',
-                style: HaloType.sans(size: 12, color: HaloColors.text2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          Center(
-            child: Text(
-              'Kryfo is open source',
-              style: HaloType.mono(
-                size: 10,
-                color: HaloColors.text3,
-              ).copyWith(letterSpacing: 2),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -795,79 +794,74 @@ class _TransportScreenState extends State<_TransportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return FitColumn(
       padding: const EdgeInsets.fromLTRB(28, 44, 28, 36),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _Step(4),
-          const SizedBox(height: 22),
-          _headline('How your messages ', 'travel'),
-          const SizedBox(height: 12),
-          Text(
-            'You can change this any time in settings, for everyone or for '
-            'one chat.',
-            style: HaloType.sans(
-              size: 13.5,
-              color: HaloColors.text2,
-              height: 1.55,
-            ),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _Step(4),
+        const SizedBox(height: 22),
+        _headline('How your messages ', 'travel'),
+        const SizedBox(height: 12),
+        Text(
+          'You can change this any time in settings, for everyone or for '
+          'one chat.',
+          style: HaloType.sans(
+            size: 13.5,
+            color: HaloColors.text2,
+            height: 1.55,
           ),
-          const SizedBox(height: 24),
-          ...staggerAll([
-            _ModeCard(
-              title: 'Onion',
-              cost: 'Slower. A message takes two to five seconds.',
-              gain: 'Hides your address from everyone, our relay included.',
-              on: _pick == 'private',
-              onTap: () => setState(() => _pick = 'private'),
-            ),
-            const SizedBox(height: 10),
-            _ModeCard(
-              title: 'Relay',
-              cost: 'Our relay sees your address. Nobody else does.',
-              gain: 'About a second. Works where tor is blocked.',
-              on: _pick == 'balanced',
-              onTap: () => setState(() => _pick = 'balanced'),
-            ),
-            const SizedBox(height: 10),
-            _ModeCard(
-              title: 'Fast',
-              cost:
-                  'Every relay you use sees your address. The least private '
-                  'of the three.',
-              gain: 'Near instant.',
-              on: _pick == 'fast',
-              onTap: () => setState(() => _pick = 'fast'),
-            ),
-          ]),
-          const Spacer(),
-          _Cta(
-            label: _pick == 'private' ? 'Keep onion →' : 'Use this →',
-            onTap: _go,
+        ),
+        const SizedBox(height: 24),
+        ...staggerAll([
+          _ModeCard(
+            title: 'Onion',
+            cost: 'Slower. A message takes two to five seconds.',
+            gain: 'Hides your address from everyone, our relay included.',
+            on: _pick == 'private',
+            onTap: () => setState(() => _pick = 'private'),
           ),
           const SizedBox(height: 10),
-          Center(
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () {
-                HapticFeedback.selectionClick();
-                widget.onContinue();
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Text(
-                  'Skip · onion is a fine default',
-                  style: HaloType.sans(size: 13, color: HaloColors.text2),
-                ),
+          _ModeCard(
+            title: 'Relay',
+            cost: 'Our relay sees your address. Nobody else does.',
+            gain: 'About a second. Works where tor is blocked.',
+            on: _pick == 'balanced',
+            onTap: () => setState(() => _pick = 'balanced'),
+          ),
+          const SizedBox(height: 10),
+          _ModeCard(
+            title: 'Fast',
+            cost:
+                'Every relay you use sees your address. The least private '
+                'of the three.',
+            gain: 'Near instant.',
+            on: _pick == 'fast',
+            onTap: () => setState(() => _pick = 'fast'),
+          ),
+        ]),
+        const Spacer(),
+        _Cta(
+          label: _pick == 'private' ? 'Keep onion →' : 'Use this →',
+          onTap: _go,
+        ),
+        const SizedBox(height: 10),
+        Center(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              HapticFeedback.selectionClick();
+              widget.onContinue();
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'Skip · onion is a fine default',
+                style: HaloType.sans(size: 13, color: HaloColors.text2),
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -964,66 +958,64 @@ class _ThreeThingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return FitColumn(
       padding: const EdgeInsets.fromLTRB(28, 44, 28, 36),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _Step(5),
-          const SizedBox(height: 22),
-          _headline('Three things,\nthen ', "you're in"),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _Step(5),
+        const SizedBox(height: 22),
+        _headline('Three things,\nthen ', "you're in"),
+        const SizedBox(height: 12),
+        Text(
+          'Everything else the app will tell you when it matters.',
+          style: HaloType.sans(
+            size: 13.5,
+            color: HaloColors.text2,
+            height: 1.55,
+          ),
+        ),
+        const SizedBox(height: 24),
+        ...staggerAll([
+          _Card(
+            num: '01',
+            title: 'Your name is three words',
+            desc:
+                'That is the whole identity. No number to leak, no email '
+                'to phish, nothing to look up. People you talk to see '
+                'these words and the face you picked.',
+          ),
           const SizedBox(height: 12),
+          _Card(
+            num: '02',
+            title: 'Nobody can reach you until you let them in',
+            desc:
+                'A stranger with your words can only knock. Their first '
+                'message waits in requests until you say yes, and you can '
+                'say no without them ever knowing.',
+          ),
+          const SizedBox(height: 12),
+          _Card(
+            num: '03',
+            title: 'The first connection takes a minute',
+            desc:
+                'Kryfo builds a private route before it sends anything. '
+                'While you are offline, messages wait and arrive when you '
+                'are back.',
+          ),
+          const SizedBox(height: 16),
           Text(
-            'Everything else the app will tell you when it matters.',
+            'Your identity lives on this phone. Back it up from settings '
+            'when you are ready.',
             style: HaloType.sans(
-              size: 13.5,
-              color: HaloColors.text2,
-              height: 1.55,
+              size: 12,
+              color: HaloColors.text3,
+              height: 1.5,
             ),
           ),
-          const SizedBox(height: 24),
-          ...staggerAll([
-            _Card(
-              num: '01',
-              title: 'Your name is three words',
-              desc:
-                  'That is the whole identity. No number to leak, no email '
-                  'to phish, nothing to look up. People you talk to see '
-                  'these words and the face you picked.',
-            ),
-            const SizedBox(height: 12),
-            _Card(
-              num: '02',
-              title: 'Nobody can reach you until you let them in',
-              desc:
-                  'A stranger with your words can only knock. Their first '
-                  'message waits in requests until you say yes, and you can '
-                  'say no without them ever knowing.',
-            ),
-            const SizedBox(height: 12),
-            _Card(
-              num: '03',
-              title: 'The first connection takes a minute',
-              desc:
-                  'Kryfo builds a private route before it sends anything. '
-                  'While you are offline, messages wait and arrive when you '
-                  'are back.',
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Your identity lives on this phone. Back it up from settings '
-              'when you are ready.',
-              style: HaloType.sans(
-                size: 12,
-                color: HaloColors.text3,
-                height: 1.5,
-              ),
-            ),
-          ], from: 1),
-          const Spacer(),
-          _Cta(label: 'I understand →', onTap: onContinue),
-        ],
-      ),
+        ], from: 1),
+        const Spacer(),
+        _Cta(label: 'I understand →', onTap: onContinue),
+      ],
     );
   }
 }
@@ -1039,39 +1031,37 @@ class _NotificationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return FitColumn(
       padding: const EdgeInsets.fromLTRB(28, 44, 28, 36),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _Step(6),
-          const SizedBox(height: 22),
-          _headline('One quiet ', 'notification'),
-          const SizedBox(height: 12),
-          Text(
-            'Android needs a visible notification while an app listens in '
-            'the background. That is how messages reach you when kryfo is '
-            'closed.',
-            style: HaloType.sans(
-              size: 13.5,
-              color: HaloColors.text2,
-              height: 1.55,
-            ),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _Step(6),
+        const SizedBox(height: 22),
+        _headline('One quiet ', 'notification'),
+        const SizedBox(height: 12),
+        Text(
+          'Android needs a visible notification while an app listens in '
+          'the background. That is how messages reach you when kryfo is '
+          'closed.',
+          style: HaloType.sans(
+            size: 13.5,
+            color: HaloColors.text2,
+            height: 1.55,
           ),
-          const SizedBox(height: 24),
-          ...staggerAll([
-            const _Card(
-              icon: Icons.notifications_none,
-              title: 'Silent, and at the bottom of the shade',
-              desc:
-                  'It never buzzes. Turn it off and messages wait until you '
-                  'open the app again.',
-            ),
-          ], from: 1),
-          const Spacer(),
-          _Cta(label: 'Got it →', onTap: onContinue),
-        ],
-      ),
+        ),
+        const SizedBox(height: 24),
+        ...staggerAll([
+          const _Card(
+            icon: Icons.notifications_none,
+            title: 'Silent, and at the bottom of the shade',
+            desc:
+                'It never buzzes. Turn it off and messages wait until you '
+                'open the app again.',
+          ),
+        ], from: 1),
+        const Spacer(),
+        _Cta(label: 'Got it →', onTap: onContinue),
+      ],
     );
   }
 }
@@ -1084,84 +1074,79 @@ class _AddSomeoneScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return FitColumn(
       padding: const EdgeInsets.fromLTRB(28, 44, 28, 36),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _Step(7),
-          const SizedBox(height: 22),
-          _headline('Now, ', 'add someone'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _Step(7),
+        const SizedBox(height: 22),
+        _headline('Now, ', 'add someone'),
+        const SizedBox(height: 12),
+        Text(
+          'The app is ready. Nobody can message you until you add them '
+          'or let them in.',
+          style: HaloType.sans(
+            size: 13.5,
+            color: HaloColors.text2,
+            height: 1.55,
+          ),
+        ),
+        const SizedBox(height: 24),
+        ...staggerAll([
+          _Path(
+            icon: Icons.qr_code_2_outlined,
+            title: 'Every way to add someone',
+            desc:
+                'Show your code, send them a link, or type the @handle '
+                'they gave you.',
+            onTap: () async {
+              // open the page first, then finish onboarding once it
+              // returns. completing first rebuilds the tree to home and
+              // eats the nav.
+              final nav = Navigator.of(context);
+              await nav.push(haloRoute(const MyKryfoScreen()));
+              onComplete();
+            },
+          ),
           const SizedBox(height: 12),
-          Text(
-            'The app is ready. Nobody can message you until you add them '
-            'or let them in.',
-            style: HaloType.sans(
-              size: 13.5,
+          _Path(
+            icon: Icons.center_focus_weak,
+            title: 'Scan theirs',
+            desc: 'Point the camera at their code',
+            onTap: () async {
+              final nav = Navigator.of(context);
+              await nav.push(haloRoute(const ScanScreen()));
+              onComplete();
+            },
+          ),
+        ], from: 1),
+        const Spacer(),
+        Center(
+          child: Text(
+            'The app is ready when you are.',
+            style: HaloType.serif(
+              size: 16,
+              weight: FontWeight.w300,
+              italic: true,
               color: HaloColors.text2,
-              height: 1.55,
             ),
           ),
-          const SizedBox(height: 24),
-          ...staggerAll([
-            _Path(
-              icon: Icons.qr_code_2_outlined,
-              title: 'Every way to add someone',
-              desc:
-                  'Show your code, send them a link, or type the @handle '
-                  'they gave you.',
-              onTap: () async {
-                // open the page first, then finish onboarding once it
-                // returns. completing first rebuilds the tree to home and
-                // eats the nav.
-                final nav = Navigator.of(context);
-                await nav.push(haloRoute(const MyKryfoScreen()));
-                onComplete();
-              },
-            ),
-            const SizedBox(height: 12),
-            _Path(
-              icon: Icons.center_focus_weak,
-              title: 'Scan theirs',
-              desc: 'Point the camera at their code',
-              onTap: () async {
-                final nav = Navigator.of(context);
-                await nav.push(haloRoute(const ScanScreen()));
-                onComplete();
-              },
-            ),
-          ], from: 1),
-          const Spacer(),
-          Center(
-            child: Text(
-              'The app is ready when you are.',
-              style: HaloType.serif(
-                size: 16,
-                weight: FontWeight.w300,
-                italic: true,
-                color: HaloColors.text2,
+        ),
+        const SizedBox(height: 18),
+        Center(
+          child: GestureDetector(
+            onTap: onComplete,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+              child: Text(
+                'Not now · add people later',
+                style: HaloType.sans(size: 12.5, color: HaloColors.text2),
               ),
             ),
           ),
-          const SizedBox(height: 18),
-          Center(
-            child: GestureDetector(
-              onTap: onComplete,
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 12,
-                ),
-                child: Text(
-                  'Not now · add people later',
-                  style: HaloType.sans(size: 12.5, color: HaloColors.text2),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
