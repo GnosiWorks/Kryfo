@@ -17,6 +17,7 @@ import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/pair_code_panel.dart';
+import 'pair_code_screen.dart';
 import '../widgets/stagger_in.dart';
 import 'handle_screen.dart';
 import 'scan_screen.dart';
@@ -202,6 +203,12 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
               onToggle: () => _toggle(_Way.here),
               uri: _uri,
               onScan: _scanTheirs,
+              onCode: () async {
+                await Navigator.of(
+                  context,
+                ).push(haloRoute(const PairCodeScreen(entering: true)));
+                if (mounted) await appState.refreshContacts();
+              },
             ),
             const SizedBox(height: 12),
 
@@ -396,11 +403,13 @@ class _Way1Card extends StatelessWidget {
   final VoidCallback onToggle;
   final String? uri;
   final VoidCallback onScan;
+  final VoidCallback onCode;
   const _Way1Card({
     required this.open,
     required this.onToggle,
     required this.uri,
     required this.onScan,
+    required this.onCode,
   });
 
   @override
@@ -421,6 +430,13 @@ class _Way1Card extends StatelessWidget {
             icon: Icons.center_focus_strong_outlined,
             label: 'Scan theirs instead',
             onTap: onScan,
+          ),
+          const SizedBox(height: 8),
+          // the code had no door: it could be shown, and nowhere typed in
+          _Ghost(
+            icon: Icons.dialpad_outlined,
+            label: 'They read you a code',
+            onTap: onCode,
           ),
         ],
       ),
