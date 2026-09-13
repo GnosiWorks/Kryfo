@@ -738,21 +738,26 @@ class _OfflineStrip extends StatelessWidget {
       listenable: appState,
       builder: (context, _) {
         final n = appState.queued;
-        // nothing wrong and nothing waiting, so say nothing
-        if (appState.online && n == 0) return const SizedBox.shrink();
+        final p = appState.parkedQueued;
+        // a send in flight while the phone can send is not news: it showed
+        // "waiting" and a retry for every message typed from home. the strip
+        // speaks when the phone cannot send, or when a message waits on
+        // someone who has not added you back.
+        final cannotSend = !appState.online || !appState.torReady;
+        if (!cannotSend && p == 0) return const SizedBox.shrink();
 
         final offline = !appState.online;
+        final torDown = !offline && !appState.torReady;
         final tint = offline ? HaloColors.rose : HaloColors.amber;
-        final head = offline ? 'Offline' : 'waiting';
+        final head = offline ? 'Offline' : 'Waiting';
         // the old strip said "offline" and stopped, which left people
         // guessing whether anything was queued or lost.
-        // rows parked for someone who has not added you back are waiting
-        // on them, not on the wire. "sending now" for those never ended.
-        final p = appState.parkedQueued;
         final tail = n == 0
             ? 'Nothing waiting to send'
             : offline
             ? "$n waiting · sends when you're back"
+            : torDown
+            ? '$n waiting · tor is still connecting'
             : p >= n
             ? '$n waiting · for them to add you back'
             : p > 0
@@ -797,7 +802,7 @@ class _OfflineStrip extends StatelessWidget {
                   maxLines: 2,
                 ),
               ),
-              if (n > 0) ...[
+              if (n > 0 && !offline && !torDown) ...[
                 const SizedBox(width: 8),
                 GestureDetector(
                   onTap: () {
@@ -1578,7 +1583,9 @@ class _Row extends StatelessWidget {
                           ],
                           // a message still in the outbox says so where the
                           // time would be, so the row is honest about it
-                          if (!c.blocked && appState.queuedFor(c.haloId) > 0)
+                          if (!c.blocked &&
+                              appState.queuedFor(c.haloId) > 0 &&
+                              (!appState.online || !appState.torReady))
                             Text(
                               'Queued',
                               style: HaloType.mono(
