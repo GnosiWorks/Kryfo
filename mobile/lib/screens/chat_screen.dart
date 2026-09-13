@@ -1448,57 +1448,62 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(999),
-                          onTap: () {
-                            dismiss();
-                            _editMessage(target);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: HaloColors.surface3,
-                              border: Border.all(
-                                color: HaloColors.line,
-                                width: 0.5,
+                      // words can be edited; a photo, a file or a voice note
+                      // is what it is
+                      if (target.mediaPath == null &&
+                          target.filePath == null) ...[
+                        const SizedBox(height: 6),
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(999),
+                            onTap: () {
+                              dismiss();
+                              _editMessage(target);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
                               ),
-                              borderRadius: BorderRadius.circular(999),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.5),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 6),
+                              decoration: BoxDecoration(
+                                color: HaloColors.surface3,
+                                border: Border.all(
+                                  color: HaloColors.line,
+                                  width: 0.5,
                                 ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.edit_outlined,
-                                  size: 14,
-                                  color: HaloColors.amber,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'Edit',
-                                  style: HaloType.sans(
-                                    size: 12,
-                                    weight: FontWeight.w500,
+                                borderRadius: BorderRadius.circular(999),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.5),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.edit_outlined,
+                                    size: 14,
                                     color: HaloColors.amber,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Edit',
+                                    style: HaloType.sans(
+                                      size: 12,
+                                      weight: FontWeight.w500,
+                                      color: HaloColors.amber,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ],
                 ),
