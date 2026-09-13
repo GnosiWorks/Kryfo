@@ -14,6 +14,10 @@
 set -e
 cd "$(dirname "$0")"   # engine/
 
+echo "!! this regenerates ./vendor and drops the hand patches listed in"
+echo "!! VENDOR_PATCHES.md. 32-bit phones will not connect until they are"
+echo "!! re-applied. ctrl-c now if that is not what you want."
+sleep 8
 echo "→ vendoring go modules (one-time online)…"
 until go mod tidy; do echo "  net dropped, retrying…"; sleep 3; done
 until go mod vendor; do echo "  net dropped, retrying…"; sleep 3; done

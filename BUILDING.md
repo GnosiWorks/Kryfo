@@ -15,10 +15,17 @@ the exact go and ndk versions matter for the reproducible build, see repro/.
     cd engine
     ./build.sh
 
-finds the ndk from ANDROID_NDK_HOME or $ANDROID_HOME/ndk, builds arm64 and
-x86_64, writes them into the app's jniLibs. fully offline: deps are vendored
-and the tor/openssl objects cache in engine/.gocache, so only the first build
-pays the native compile.
+finds the ndk from ANDROID_NDK_HOME or $ANDROID_HOME/ndk, builds arm64,
+armeabi-v7a and x86_64, writes them into the app's jniLibs. fully offline:
+deps are vendored and the tor/openssl objects cache in engine/.gocache, so
+only the first build pays the native compile.
+
+**never run `go mod vendor` in engine/.** three headers in engine/vendor are
+patched by hand for 32-bit phones and that command silently removes the
+patches; the build still succeeds and tor never connects on armeabi-v7a.
+the list and the reason are in engine/VENDOR_PATCHES.md. after editing any
+of those headers build with `HALO_FULL=1 ./build.sh`: go's cache does not
+notice them.
 
 ## gradle, offline
 

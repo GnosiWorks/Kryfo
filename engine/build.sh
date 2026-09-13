@@ -1,4 +1,21 @@
 #!/bin/bash
+# ============================================================================
+#  READ BEFORE TOUCHING ./vendor
+#
+#  three headers under vendor/github.com/alexballas/go-libtor are PATCHED BY
+#  HAND, see VENDOR_PATCHES.md next to this file. upstream generated them on a
+#  64-bit machine and ships them for every target; unpatched, the 32-bit
+#  (armeabi-v7a) engine builds fine and tor never bootstraps: the phone sits
+#  at "connecting" forever, 0%, no error anywhere.
+#
+#  `go mod vendor` REGENERATES ./vendor AND DESTROYS THOSE PATCHES. it has
+#  been run by accident here before. do not run it. if the vendor tree ever
+#  has to be rebuilt, re-apply VENDOR_PATCHES.md and build with HALO_FULL=1.
+#
+#  go's build cache does not see those headers change either (they live
+#  outside the go package), so after any edit to them: HALO_FULL=1 ./build.sh
+# ============================================================================
+#
 # builds libhalo.so for android. fully offline: deps come from ./vendor and
 # the compiled tor/openssl objects are cached in ./.gocache, so only the
 # first build pays the c compile.
@@ -40,21 +57,26 @@ export CGO_ENABLED=1
 export CGO_LDFLAGS="-Wl,--build-id=none"
 export SOURCE_DATE_EPOCH=1700000000
 LDFLAGS="-buildid= -w -s"
+# go does not track c headers outside a package, so a change to a vendored
+# config header (the openssl and libevent ones under go-libtor) leaves the
+# cache serving objects built with the old header. HALO_FULL=1 rebuilds
+# every object.
+BUILD_FLAGS="${HALO_FULL:+-a}"
 
 echo "ndk: $NDK_ROOT"
 echo "out: $JNI"
 
 echo "→ arm64 (phone)…"
 CC="$NDK/aarch64-linux-android27-clang" GOOS=android GOARCH=arm64 \
-  go build -buildmode=c-shared -ldflags "$LDFLAGS" -o "$JNI/arm64-v8a/libhalo.so" .
+  go build $BUILD_FLAGS -buildmode=c-shared -ldflags "$LDFLAGS" -o "$JNI/arm64-v8a/libhalo.so" .
 
 echo "→ armeabi-v7a (32-bit phones)…"
 CC="$NDK/armv7a-linux-androideabi24-clang" GOOS=android GOARCH=arm GOARM=7 \
-  go build -buildmode=c-shared -ldflags "$LDFLAGS" -o "$JNI/armeabi-v7a/libhalo.so" .
+  go build $BUILD_FLAGS -buildmode=c-shared -ldflags "$LDFLAGS" -o "$JNI/armeabi-v7a/libhalo.so" .
 
 echo "→ x86_64 (emulator)…"
 CC="$NDK/x86_64-linux-android24-clang" GOOS=android GOARCH=amd64 \
-  go build -buildmode=c-shared -ldflags "$LDFLAGS" -o "$JNI/x86_64/libhalo.so" .
+  go build $BUILD_FLAGS -buildmode=c-shared -ldflags "$LDFLAGS" -o "$JNI/x86_64/libhalo.so" .
 
 ls -la "$JNI"/*/libhalo.so
 echo "✓ all three archs built (offline)"
