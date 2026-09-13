@@ -41,6 +41,7 @@ import '../theme.dart';
 import '../media_progress.dart';
 import '../media_send.dart' show sendChunkedMediaTo, cancelMediaSend;
 import '../widgets/pow_note.dart';
+import '../widgets/decode_px.dart';
 import '../notifications.dart' show clearNotificationsFor;
 import '../widgets/kryfo_avatar.dart';
 import '../main.dart'
@@ -282,7 +283,10 @@ void _openFullImage(BuildContext context, String path, {bool secure = false}) {
                   child: InteractiveViewer(
                     minScale: 1,
                     maxScale: 4,
-                    child: Image.file(File(path)),
+                    child: Image.file(
+                      File(path),
+                      cacheWidth: screenPx(ctx, times: 2),
+                    ),
                   ),
                 ),
               ),
@@ -4502,6 +4506,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           File(_wallpaperPath!),
                           fit: BoxFit.cover,
                           gaplessPlayback: true,
+                          cacheWidth: screenPx(context),
                         ),
                       ),
                       // a wash so the bubbles keep reading over any photo
@@ -6005,6 +6010,10 @@ class _Bubble extends StatelessWidget {
                                               File(msg.mediaPath!),
                                               gaplessPlayback: true,
                                               fit: BoxFit.cover,
+                                              cacheWidth: screenPx(
+                                                context,
+                                                times: 0.78,
+                                              ),
                                               errorBuilder: (_, e, _) {
                                                 dlog(
                                                   'Image failed: '
@@ -7885,7 +7894,11 @@ class _ImageCaptionScreenState extends State<_ImageCaptionScreen> {
                   padding: const EdgeInsets.all(16),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(14),
-                    child: Image.memory(widget.bytes, fit: BoxFit.contain),
+                    child: Image.memory(
+                      widget.bytes,
+                      fit: BoxFit.contain,
+                      cacheWidth: screenPx(context),
+                    ),
                   ),
                 ),
               ),
