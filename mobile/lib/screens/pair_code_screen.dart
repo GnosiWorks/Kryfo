@@ -15,13 +15,15 @@ import '../widgets/stagger_in.dart';
 import '../widgets/pair_code_panel.dart';
 
 class PairCodeScreen extends StatefulWidget {
-  const PairCodeScreen({super.key});
+  // open on the entering side: the other person read their code out
+  final bool entering;
+  const PairCodeScreen({super.key, this.entering = false});
   @override
   State<PairCodeScreen> createState() => _PairCodeScreenState();
 }
 
 class _PairCodeScreenState extends State<PairCodeScreen> {
-  bool _sharing = true;
+  late bool _sharing = !widget.entering;
 
   @override
   Widget build(BuildContext context) {
