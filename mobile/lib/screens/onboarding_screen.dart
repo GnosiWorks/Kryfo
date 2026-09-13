@@ -8,6 +8,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../widgets/press_scale.dart';
 import '../theme.dart';
 import 'restore_screen.dart';
@@ -59,6 +60,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             _WelcomeScreen(onContinue: _next),
             _IdentityScreen(appState: widget.appState, onContinue: _next),
             _PickFaceScreen(onContinue: _next),
+            _TransportScreen(onContinue: _next),
             _ThreeThingsScreen(onContinue: _next),
             _NotificationScreen(onContinue: _next),
             _AddSomeoneScreen(onComplete: widget.onComplete),
@@ -768,6 +770,194 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
 // nothing about rooms, vouching, the shield or modes: the app explains those
 // the first time they come up.
 
+// === 04 · HOW YOUR MESSAGES TRAVEL ===
+// three ways, each with its cost in plain words, onion picked already. one
+// tap skips it: someone who does not know what to pick keeps the safest
+// and moves on without feeling they got something wrong.
+
+class _TransportScreen extends StatefulWidget {
+  final VoidCallback onContinue;
+  const _TransportScreen({required this.onContinue});
+  @override
+  State<_TransportScreen> createState() => _TransportScreenState();
+}
+
+class _TransportScreenState extends State<_TransportScreen> {
+  String _pick = 'private';
+  bool _busy = false;
+
+  Future<void> _go() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    if (_pick != 'private') await appState.setSendMode(_pick);
+    if (mounted) widget.onContinue();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(28, 44, 28, 36),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _Step(4),
+          const SizedBox(height: 22),
+          _headline('How your messages ', 'travel'),
+          const SizedBox(height: 12),
+          Text(
+            'You can change this any time in settings, for everyone or for '
+            'one chat.',
+            style: HaloType.sans(
+              size: 13.5,
+              color: HaloColors.text2,
+              height: 1.55,
+            ),
+          ),
+          const SizedBox(height: 24),
+          ...staggerAll([
+            _ModeCard(
+              title: 'Onion',
+              cost: 'Slower. A message takes two to five seconds.',
+              gain: 'Hides your address from everyone, our relay included.',
+              on: _pick == 'private',
+              onTap: () => setState(() => _pick = 'private'),
+            ),
+            const SizedBox(height: 10),
+            _ModeCard(
+              title: 'Relay',
+              cost: 'Our relay sees your address. Nobody else does.',
+              gain: 'About a second. Works where tor is blocked.',
+              on: _pick == 'balanced',
+              onTap: () => setState(() => _pick = 'balanced'),
+            ),
+            const SizedBox(height: 10),
+            _ModeCard(
+              title: 'Fast',
+              cost:
+                  'Every relay you use sees your address. The least private '
+                  'of the three.',
+              gain: 'Near instant.',
+              on: _pick == 'fast',
+              onTap: () => setState(() => _pick = 'fast'),
+            ),
+          ]),
+          const Spacer(),
+          _Cta(
+            label: _pick == 'private' ? 'Keep onion →' : 'Use this →',
+            onTap: _go,
+          ),
+          const SizedBox(height: 10),
+          Center(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                widget.onContinue();
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Text(
+                  'Skip · onion is a fine default',
+                  style: HaloType.sans(size: 13, color: HaloColors.text2),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ModeCard extends StatelessWidget {
+  final String title;
+  final String cost;
+  final String gain;
+  final bool on;
+  final VoidCallback onTap;
+  const _ModeCard({
+    required this.title,
+    required this.cost,
+    required this.gain,
+    required this.on,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return PressScale(
+      scale: 0.98,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.fromLTRB(15, 13, 15, 13),
+        decoration: BoxDecoration(
+          color: on
+              ? HaloColors.amber.withValues(alpha: 0.10)
+              : HaloColors.surface2,
+          border: Border.all(
+            color: on ? HaloColors.amber : HaloColors.line,
+            width: on ? 1 : 0.5,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Icon(
+                on ? Icons.radio_button_checked : Icons.radio_button_off,
+                size: 18,
+                color: on ? HaloColors.amber : HaloColors.text3,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: HaloType.serif(size: 17, color: HaloColors.text),
+                  ),
+                  const SizedBox(height: 4),
+                  // the cost first, then what it buys: a card that lists
+                  // only benefits sends everyone to the fastest one
+                  Text(
+                    cost,
+                    style: HaloType.sans(
+                      size: 12.5,
+                      color: HaloColors.text,
+                      height: 1.45,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    gain,
+                    style: HaloType.sans(
+                      size: 12.5,
+                      color: HaloColors.text2,
+                      height: 1.45,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ThreeThingsScreen extends StatelessWidget {
   final VoidCallback onContinue;
   const _ThreeThingsScreen({required this.onContinue});
@@ -779,7 +969,7 @@ class _ThreeThingsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _Step(4),
+          const _Step(5),
           const SizedBox(height: 22),
           _headline('Three things,\nthen ', "you're in"),
           const SizedBox(height: 12),
@@ -854,7 +1044,7 @@ class _NotificationScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _Step(5),
+          const _Step(6),
           const SizedBox(height: 22),
           _headline('One quiet ', 'notification'),
           const SizedBox(height: 12),
@@ -899,7 +1089,7 @@ class _AddSomeoneScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _Step(6),
+          const _Step(7),
           const SizedBox(height: 22),
           _headline('Now, ', 'add someone'),
           const SizedBox(height: 12),
@@ -985,7 +1175,7 @@ class _Step extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      '0$n / 06',
+      '0$n / 07',
       style: HaloType.mono(
         size: 10,
         color: HaloColors.amber,
