@@ -4003,7 +4003,7 @@ class AppState extends ChangeNotifier {
     try {
       res = await sendMediaToGroup(
         groupId,
-        base64Encode(await f.readAsBytes()),
+        path,
         msgUid: uid,
         caption: (r['plaintext'] as String?) ?? '',
         fileName: fileName,
@@ -4043,7 +4043,7 @@ class AppState extends ChangeNotifier {
       peerXPub: contact['xpub'] as String?,
       backPaired: backPaired,
       needPow: !backPaired,
-      b64: base64Encode(await f.readAsBytes()),
+      path: path,
       msgUid: uid,
       caption: (r['plaintext'] as String?) ?? '',
       fileName: fileName,
@@ -6888,7 +6888,7 @@ class AppState extends ChangeNotifier {
   // this only puts bytes on the wire. returns 'ok' or an error string.
   Future<String> sendMediaToGroup(
     String groupId,
-    String b64, {
+    String path, {
     required String msgUid,
     String caption = '',
     String? fileName,
@@ -6902,28 +6902,31 @@ class AppState extends ChangeNotifier {
     // ("event too large"), so delivery only worked through our own
     // uncapped onion relay. 16k lands ~38-51k, safe on every relay.
     // receivers reassemble by index/total, so chunk size is free to change.
-    const chunkSize = 16 * 1024;
-    final chunks = <String>[];
-    for (var i = 0; i < b64.length; i += chunkSize) {
-      chunks.add(
-        b64.substring(
-          i,
-          i + chunkSize > b64.length ? b64.length : i + chunkSize,
-        ),
-      );
+    // slices are read from the file as their turn comes, see media_send.
+    final int total;
+    try {
+      total = await mediaSliceCount(path);
+    } catch (e) {
+      return 'error: read';
     }
-    final total = chunks.length;
     if (total > 1) mediaProgressStart(msgUid, chatKey: groupId);
     final members = await db.getGroupMembers(groupId);
     final adminId = await db.groupAdminId(groupId);
     final amAdmin = adminId == myId;
     final rosterParts = amAdmin ? await _buildParticipants(members) : null;
     Future<bool> sendChunk(int i) async {
+      final String slice;
+      try {
+        slice = await mediaSlice(path, i);
+      } catch (e) {
+        dlog('GRP MEDIA chunk $i/$total unreadable: $e');
+        return false;
+      }
       final wrapped = await wrapMessage(
         caption,
         msgUid: msgUid,
-        imageB64: fileName == null && !voice ? chunks[i] : null,
-        fileB64: fileName != null || voice ? chunks[i] : null,
+        imageB64: fileName == null && !voice ? slice : null,
+        fileB64: fileName != null || voice ? slice : null,
         fileName: fileName,
         voice: voice,
         voiceDisguised: voiceDisguised,

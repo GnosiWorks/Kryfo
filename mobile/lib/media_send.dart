@@ -12,7 +12,10 @@
 // us back. publishing there before that is not delivery, so it comes back
 // as 'parked' rather than 'ok', and the row stays queued.
 
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 
@@ -37,7 +40,30 @@ void cancelMediaSend(String msgUid) => mediaCancelled.add(msgUid);
 
 int _mediaGrind(String seed) => grindPow(seed, powBits);
 
+// base64 characters per slice on the wire. 12288 bytes of file make
+// exactly 16384 characters, so slicing the file and slicing its base64
+// give the same pieces: the receiver stitches them as it always did.
+//
+// the whole file used to be read, base64'd and cut into a list before the
+// first slice went out: three copies of an 8 mb file in memory, and a
+// 4 gb phone killing the app mid-send with nothing on screen to say why.
+// now a slice is read from disk when its turn comes and dropped after.
 const mediaChunkSize = 16 * 1024;
+const _sliceBytes = mediaChunkSize ~/ 4 * 3;
+
+Future<int> mediaSliceCount(String path) async {
+  final n = await File(path).length();
+  return (n + _sliceBytes - 1) ~/ _sliceBytes;
+}
+
+Future<String> mediaSlice(String path, int i) async {
+  final start = i * _sliceBytes;
+  final b = BytesBuilder(copy: false);
+  await for (final part in File(path).openRead(start, start + _sliceBytes)) {
+    b.add(part);
+  }
+  return base64Encode(b.takeBytes());
+}
 
 // the progress entry ends with the send whatever way it ends, so a banner
 // never outlives a transfer the drainer gave up on
@@ -47,7 +73,8 @@ Future<String> sendChunkedMediaTo({
   String? peerXPub,
   required bool backPaired,
   required bool needPow,
-  required String b64,
+  // the file as saved in the app's media folder. read slice by slice.
+  required String path,
   required String msgUid,
   String caption = '',
   String? fileName,
@@ -65,7 +92,7 @@ Future<String> sendChunkedMediaTo({
       peerXPub: peerXPub,
       backPaired: backPaired,
       needPow: needPow,
-      b64: b64,
+      path: path,
       msgUid: msgUid,
       caption: caption,
       fileName: fileName,
@@ -89,7 +116,7 @@ Future<String> _sendChunkedMediaInner({
   required bool backPaired,
   // a stranger's gate wants pow on every envelope until they answer
   required bool needPow,
-  required String b64,
+  required String path,
   required String msgUid,
   String caption = '',
   String? fileName,
@@ -105,11 +132,12 @@ Future<String> _sendChunkedMediaInner({
     torWait += 400;
   }
   if (!appState.torReady) return 'error: tor not ready';
-  final chunks = <String>[];
-  for (var i = 0; i < b64.length; i += mediaChunkSize) {
-    chunks.add(b64.substring(i, math.min(i + mediaChunkSize, b64.length)));
+  final int total;
+  try {
+    total = await mediaSliceCount(path);
+  } catch (e) {
+    return 'error: read';
   }
-  final total = chunks.length;
   // a voice note is a couple of seconds of audio. the strip is for photos
   // and files, where the wait is long enough to wonder about.
   final showProgress = total > 1 && !voice;
@@ -157,6 +185,14 @@ Future<String> _sendChunkedMediaInner({
       if (next >= total) return;
       final i = next++;
       final t0 = DateTime.now();
+      final String slice;
+      try {
+        slice = await mediaSlice(path, i);
+      } catch (e) {
+        // the file went: a wipe, a burn, a full phone that lost it
+        failure = 'error: read';
+        return;
+      }
       final String cipher;
       try {
         // name + voice flags ride every slice: the receiver rebuilds off
@@ -165,8 +201,8 @@ Future<String> _sendChunkedMediaInner({
         final wrapped = await wrapMessage(
           caption,
           msgUid: msgUid,
-          imageB64: fileName == null ? chunks[i] : null,
-          fileB64: fileName != null ? chunks[i] : null,
+          imageB64: fileName == null ? slice : null,
+          fileB64: fileName != null ? slice : null,
           fileName: fileName,
           voice: voice,
           voiceDisguised: voiceDisguised,
