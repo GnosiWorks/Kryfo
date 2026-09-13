@@ -60,6 +60,10 @@ All notable user-facing changes to kryfo will land here. Format loosely follows 
 - sentence case throughout: every label, hint, button, tab and line starts with a capital. the settings hints are shorter.
 - bridges and transport moved out of about to sit with the network rows. the open source row copies the github link instead of opening it in a browser.
 - the honest part in why kryfo ends on "yet".
+- 32-bit phones: the app ships its engine for armeabi-v7a too, so a galaxy a13 and its kind install and run.
+- short screens and large display zoom: the pin pad, the lock screen and every onboarding page scroll instead of dropping their button under the navigation bar. a galaxy a13 with a bigger display zoom could not reach "keep onion", and a pin pad cut off is a phone you cannot get into.
+- the first message to someone new says what it is doing. a line under the composer counts the seconds while the phone proves the message is real; that is seconds on most phones and up to a minute on a slow one. it used to be silence.
+- sheets scroll by default, with the keyboard pushing them up, instead of a fixed nine sixteenths of the screen that cut off the last button on a short phone.
 
 ## [0.2.6] - 2026-09-12
 
