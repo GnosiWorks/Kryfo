@@ -2618,8 +2618,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // message with a full tor round trip, call it ~1.1s a slice, and base64
   // inflates the bytes by a third on the way out.
   String _wireEstimate(int bytes) {
+    // five slices in flight, about two seconds a round over tor. the old
+    // figure was one slice at a time.
     final slices = ((bytes * 4 / 3) / (16 * 1024)).ceil();
-    final secs = (slices * 1.1).round();
+    final secs = ((slices / 5).ceil() * 2.2).round();
     if (secs < 20) return 'A few seconds';
     if (secs < 90) return 'Under a minute';
     final mins = (secs / 60).round();
