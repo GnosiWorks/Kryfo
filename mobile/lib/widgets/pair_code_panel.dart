@@ -185,9 +185,9 @@ class _PairCodePanelState extends State<PairCodePanel> {
         const SizedBox(height: 12),
         Text(
           widget.compact
-              ? 'They tap add, choose code, and type these. Once.'
+              ? 'They tap add, choose code, and type these.'
               : 'They open kryfo, tap add, choose pairing code and type these six '
-                    'digits. It works once and then the address is gone.',
+                    'digits. Make a new one for the next person.',
           textAlign: TextAlign.center,
           style: HaloType.sans(size: 12.5, color: HaloColors.text2),
         ),
