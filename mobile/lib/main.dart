@@ -3815,6 +3815,7 @@ class AppState extends ChangeNotifier {
       return;
     }
     _outboxWasReady = true;
+    unawaited(_drainEdits());
     if (rows.isEmpty) {
       if (_outboxTries.isNotEmpty) {
         _outboxTries.clear();
@@ -3822,7 +3823,6 @@ class AppState extends ChangeNotifier {
       }
       return;
     }
-    unawaited(_drainEdits());
     // anything that landed since the last sweep stops costing us bookkeeping.
     final live = {for (final r in rows) r['msg_uid'] as String?};
     _outboxTries.removeWhere((k, _) => !live.contains(k));
