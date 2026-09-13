@@ -6,6 +6,8 @@
 // messages pass through unchanged.
 
 import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:crypto/crypto.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'push_mode.dart';
@@ -191,6 +193,11 @@ int _leadingZeroBits(List<int> hash) {
   }
   return bits;
 }
+
+// when a grind is running, since when. the chat shows a line under the
+// composer while this is set: on a slow phone the first message to a
+// stranger sat unsent for a minute with no sign of why.
+final ValueNotifier<DateTime?> powBusy = ValueNotifier(null);
 
 // grind a nonce so sha256(seed + nonce) has >= bits leading zeros. runs on the
 // caller's isolate - callers should wrap in compute() to keep the ui smooth.

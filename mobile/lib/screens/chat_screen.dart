@@ -31,6 +31,7 @@ import '../signal_session.dart';
 import '../message_envelope.dart'
     show
         wrapMessage,
+        powBusy,
         SenderInfo,
         ReactionFrame,
         loadPeerEndpoint,
@@ -39,6 +40,7 @@ import '../message_envelope.dart'
 import '../theme.dart';
 import '../media_progress.dart';
 import '../media_send.dart' show sendChunkedMediaTo, cancelMediaSend;
+import '../widgets/pow_note.dart';
 import '../notifications.dart' show clearNotificationsFor;
 import '../widgets/kryfo_avatar.dart';
 import '../main.dart'
@@ -3167,7 +3169,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       // may have let us go and its gate asks again
       final fresh = !await hasSessionWith(widget.peerHaloId);
       if (_recvCount == 0 || fresh) {
-        final n = await compute(_grindPowTask, text);
+        powBusy.value = DateTime.now();
+        final int n;
+        try {
+          n = await compute(_grindPowTask, text);
+        } finally {
+          powBusy.value = null;
+        }
         powNonce = n;
         // kept on the row so a retry from the outbox carries the same nonce
         await db.setPowNonce(msgUid, n);
@@ -4694,6 +4702,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   style: HaloType.mono(size: 10, color: HaloColors.amber),
                 ),
               ),
+            const PowNote(),
             // tor still warming: say so where the eye already is. messages
             // typed now are queued and go out the moment the route is up.
             if (appState.sendMode == 'private' && !_torReadyToSend())
