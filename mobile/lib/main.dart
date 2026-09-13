@@ -4119,10 +4119,20 @@ class AppState extends ChangeNotifier {
   Future<void> loadMyHandle() async {
     _myHandle = await const FlutterSecureStorage().read(key: 'my_handle');
     notifyListeners();
-    // the published invite is static; a phone that claimed under a key
-    // since spent republishes with the kept one. best effort, it needs
-    // the registry.
-    if (_myHandle != null) unawaited(_repointHandle());
+  }
+
+  // the published invite is static; a phone that claimed under a key since
+  // spent republishes with the kept one, once per run, and only once the
+  // onion and the first-contact counter are in hand. fired at boot before
+  // either was loaded, it overwrote the page with an invite nobody could
+  // reach: an empty onion and the counter at zero.
+  bool _fcLoaded = false;
+  bool _repointed = false;
+  void _maybeRepoint() {
+    if (_repointed || _myHandle == null) return;
+    if (myOnion.isEmpty || !_fcLoaded) return;
+    _repointed = true;
+    unawaited(_repointHandle());
   }
 
   Future<void> setMyHandle(String? h, {String bio = ''}) async {
@@ -4480,6 +4490,8 @@ class AppState extends ChangeNotifier {
       dlog('peer fc map unreadable, starting empty: $e');
     }
     engine.subscribeFirstContactBg(_fcCounter);
+    _fcLoaded = true;
+    _maybeRepoint();
     notifyListeners();
   }
 
@@ -4507,7 +4519,7 @@ class AppState extends ChangeNotifier {
   // the public page keeps handing out an address that no longer answers.
   Future<void> _repointHandle() async {
     final h = _myHandle;
-    if (h == null) return;
+    if (h == null || myOnion.isEmpty) return;
     try {
       final uri = await buildHaloUriV3(myId, myOnion, _fcCounter);
       final bio =
@@ -5546,6 +5558,7 @@ class AppState extends ChangeNotifier {
     _startListenerOnIsolate(docsDir.path).then((addr) {
       if (addr.isNotEmpty && !addr.startsWith('error')) {
         myOnion = addr;
+        _maybeRepoint();
         notifyListeners();
       }
     });
