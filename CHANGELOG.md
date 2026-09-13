@@ -64,6 +64,7 @@ All notable user-facing changes to kryfo will land here. Format loosely follows 
 - short screens and large display zoom: the pin pad, the lock screen and every onboarding page scroll instead of dropping their button under the navigation bar. a galaxy a13 with a bigger display zoom could not reach "keep onion", and a pin pad cut off is a phone you cannot get into.
 - the first message to someone new says what it is doing. a line under the composer counts the seconds while the phone proves the message is real; that is seconds on most phones and up to a minute on a slow one. it used to be silence.
 - sheets scroll by default, with the keyboard pushing them up, instead of a fixed nine sixteenths of the screen that cut off the last button on a short phone.
+- memory on a 4 gb phone: every picture decodes at the size of its box instead of the size of the file, a photo or file goes out slice by slice from disk instead of three copies of it sitting in memory, and a received one is rebuilt slice by slice straight to disk. an 8 mb file used to cost fifty to sixty megabytes at both ends, which is how a transfer failed with nothing on screen to say why.
 
 ## [0.2.6] - 2026-09-12
 
