@@ -194,6 +194,8 @@ class LockState extends ChangeNotifier {
   }
 
   Future<bool> tryBiometric() async {
+    // the pad is held: the finger does not walk around it
+    if (throttleLeft > Duration.zero) return false;
     if (!_enabled || !_biometric || !_bioSupported) {
       return false;
     }
