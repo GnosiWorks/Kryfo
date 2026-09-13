@@ -645,7 +645,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         setState(() {
           _nickname = c?['nickname'] as String?;
           _note = c?['note'] as String?;
-          _peerFace = (c?['avatar'] as num?)?.toInt();
+          _peerFace = (c?['avatar'] as num?)?.toInt() ?? _peerFace;
         });
       }
     });
@@ -2853,6 +2853,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         edPub: engine.myEdPubkey(),
         onion: appState.myOnion,
         xPub: engine.myXPubkey(),
+        avatar: appState.myAvatar,
       ),
     );
   }
