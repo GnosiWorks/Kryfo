@@ -30,7 +30,7 @@ NDK="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
 
 # ── output dir, relative to this script ──
 JNI="${JNI_LIBS_DIR:-$ENGINE_DIR/../mobile/android/app/src/main/jniLibs}"
-mkdir -p "$JNI/arm64-v8a" "$JNI/x86_64"
+mkdir -p "$JNI/arm64-v8a" "$JNI/armeabi-v7a" "$JNI/x86_64"
 
 # ── offline, reproducible-ish flags ──
 export GOFLAGS="-mod=vendor -trimpath"
@@ -48,9 +48,13 @@ echo "→ arm64 (phone)…"
 CC="$NDK/aarch64-linux-android27-clang" GOOS=android GOARCH=arm64 \
   go build -buildmode=c-shared -ldflags "$LDFLAGS" -o "$JNI/arm64-v8a/libhalo.so" .
 
+echo "→ armeabi-v7a (32-bit phones)…"
+CC="$NDK/armv7a-linux-androideabi24-clang" GOOS=android GOARCH=arm GOARM=7 \
+  go build -buildmode=c-shared -ldflags "$LDFLAGS" -o "$JNI/armeabi-v7a/libhalo.so" .
+
 echo "→ x86_64 (emulator)…"
 CC="$NDK/x86_64-linux-android24-clang" GOOS=android GOARCH=amd64 \
   go build -buildmode=c-shared -ldflags "$LDFLAGS" -o "$JNI/x86_64/libhalo.so" .
 
 ls -la "$JNI"/*/libhalo.so
-echo "✓ both archs built (offline)"
+echo "✓ all three archs built (offline)"
