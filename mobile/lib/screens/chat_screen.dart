@@ -519,6 +519,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   bool _loaded = false;
   Atmo _atmosphere = Atmo.none;
+  // a photo of their own behind this chat. lives in the app's folder, so
+  // it goes with a wipe; stored as image:<path> in the atmosphere column.
+  String? _wallpaperPath;
   String _status = '';
   bool _loading = false;
   bool _reloadPending = false;
@@ -651,7 +654,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _loadVouches();
     _loadShield();
     db.getAtmosphere(widget.peerHaloId).then((a) {
-      if (mounted) setState(() => _atmosphere = atmoFromName(a));
+      if (!mounted) return;
+      setState(() {
+        if (a != null && a.startsWith('image:')) {
+          _wallpaperPath = a.substring(6);
+          _atmosphere = Atmo.none;
+        } else {
+          _atmosphere = atmoFromName(a);
+        }
+      });
     });
     signalSession.peerXPubHex(widget.peerHaloId).then((v) {
       // only adopt the session value if we don't already have the widget key;
@@ -3952,19 +3963,67 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final picked = await showWallpaperSheet(
       context,
       before,
+      allowPhoto: true,
       onPreview: (a) {
         if (mounted) setState(() => _atmosphere = a);
       },
     );
     if (!mounted) return;
-    if (picked == null) {
+    if (picked is WallpaperFromPhotos) {
+      setState(() => _atmosphere = before);
+      await _pickWallpaperImage();
+      return;
+    }
+    if (picked is! Atmo) {
       setState(() => _atmosphere = before);
       return;
     }
     HapticFeedback.selectionClick();
+    await _dropWallpaperFile();
     await db.setAtmosphere(widget.peerHaloId, picked.name);
     if (!mounted) return;
-    setState(() => _atmosphere = picked);
+    setState(() {
+      _atmosphere = picked;
+      _wallpaperPath = null;
+    });
+  }
+
+  Future<void> _dropWallpaperFile() async {
+    final old = _wallpaperPath;
+    if (old == null) return;
+    try {
+      await shredFile(old);
+    } catch (_) {}
+  }
+
+  // a picture from the gallery, shrunk by the picker, copied into the
+  // app's own folder. the gallery copy is not touched; ours goes on wipe.
+  Future<void> _pickWallpaperImage() async {
+    final x = await lockState.hold(
+      () => ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 80,
+      ),
+    );
+    if (x == null) return;
+    final bytes = await x.readAsBytes();
+    try {
+      await shredFile(x.path);
+    } catch (_) {}
+    final dir = await getApplicationDocumentsDirectory();
+    final folder = Directory('${dir.path}/wallpapers');
+    if (!await folder.exists()) await folder.create(recursive: true);
+    final file = File('${folder.path}/${widget.peerHaloId}.jpg');
+    await file.writeAsBytes(bytes, flush: true);
+    await db.setAtmosphere(widget.peerHaloId, 'image:${file.path}');
+    if (!mounted) return;
+    HapticFeedback.selectionClick();
+    setState(() {
+      _wallpaperPath = file.path;
+      _atmosphere = Atmo.none;
+    });
   }
 
   Future<void> _clearConversation() async {
@@ -4428,6 +4487,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 child: Stack(
                   key: _listKey,
                   children: [
+                    if (_wallpaperPath != null) ...[
+                      Positioned.fill(
+                        child: Image.file(
+                          File(_wallpaperPath!),
+                          fit: BoxFit.cover,
+                          gaplessPlayback: true,
+                        ),
+                      ),
+                      // a wash so the bubbles keep reading over any photo
+                      Positioned.fill(
+                        child: ColoredBox(
+                          color: HaloColors.ink.withValues(alpha: 0.42),
+                        ),
+                      ),
+                    ],
                     if (_atmosphere != Atmo.none)
                       Positioned.fill(child: AtmosphereWash(_atmosphere)),
                     !_loaded

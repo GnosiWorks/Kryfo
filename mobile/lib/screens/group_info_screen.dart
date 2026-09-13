@@ -5,6 +5,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../main.dart' show appState, db;
+import '../atmosphere.dart' show Atmo, atmoFromName;
 import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../rooms.dart';
@@ -110,7 +111,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     final current = atmoFromName(await db.getGroupAtmosphere(widget.groupId));
     if (!mounted) return;
     final picked = await showWallpaperSheet(context, current);
-    if (picked == null) return;
+    if (picked is! Atmo) return;
     HapticFeedback.selectionClick();
     await db.setGroupAtmosphere(widget.groupId, picked.name);
   }

@@ -13,22 +13,36 @@ import '../widgets/halo_sheet.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
 
-Future<Atmo?> showWallpaperSheet(
+// what the sheet hands back when the person wants a photo of their own
+// behind the chat instead of an atmosphere
+class WallpaperFromPhotos {
+  const WallpaperFromPhotos();
+}
+
+// an Atmo to keep, a WallpaperFromPhotos to go and pick one, or null
+Future<Object?> showWallpaperSheet(
   BuildContext context,
   Atmo current, {
   ValueChanged<Atmo>? onPreview,
+  bool allowPhoto = false,
 }) {
-  return showHaloSheet<Atmo>(
+  return showHaloSheet<Object>(
     context,
     scroll: true,
-    builder: (ctx) => _Picker(current: current, onPreview: onPreview),
+    builder: (ctx) =>
+        _Picker(current: current, onPreview: onPreview, allowPhoto: allowPhoto),
   );
 }
 
 class _Picker extends StatefulWidget {
   final Atmo current;
   final ValueChanged<Atmo>? onPreview;
-  const _Picker({required this.current, this.onPreview});
+  final bool allowPhoto;
+  const _Picker({
+    required this.current,
+    this.onPreview,
+    this.allowPhoto = false,
+  });
   @override
   State<_Picker> createState() => _PickerState();
 }
@@ -95,6 +109,44 @@ class _PickerState extends State<_Picker> {
                 onPick: _choose,
                 from: 11,
               ),
+              if (widget.allowPhoto) ...[
+                const SizedBox(height: 16),
+                _Head('your photo'),
+                const SizedBox(height: 10),
+                // a picture from the gallery, copied into the app's own
+                // folder and drawn behind this chat only
+                PressScale(
+                  label: 'From your photos',
+                  onTap: () =>
+                      Navigator.pop(context, const WallpaperFromPhotos()),
+                  child: Container(
+                    height: 44,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: HaloColors.line),
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.photo_outlined,
+                          size: 16,
+                          color: HaloColors.text2,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'From your photos',
+                          style: HaloType.sans(
+                            size: 13,
+                            color: HaloColors.text,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 18),
               PressScale(
                 label: 'Keep it',
