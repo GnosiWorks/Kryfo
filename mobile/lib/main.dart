@@ -4228,42 +4228,16 @@ class AppState extends ChangeNotifier {
     dlog('mode: $m, relays rebuilt');
   }
 
-  String _displayName = '';
-  String get displayName => _displayName;
-  Future<void> loadDisplayName() async {
-    _displayName =
-        await const FlutterSecureStorage().read(key: 'display_name') ?? '';
-    notifyListeners();
-  }
-
-  Future<void> setDisplayName(String name) async {
-    _displayName = name;
-    notifyListeners();
-    await const FlutterSecureStorage().write(key: 'display_name', value: name);
-  }
-
   static const _platformChannel = MethodChannel('halo/platform');
+  // the switch as saved, and as applied at this start. the flag is only
+  // set at boot: changing it live recreated the window's surface, which
+  // flashed on every toggle, so the switch says "after the next start".
   bool _blockScreenshots = false;
   bool get blockScreenshots => _blockScreenshots;
-
-  // when on, every chat screen sets FLAG_SECURE while it is open - so
-  // screenshots of conversations are blocked on this phone whoever took them.
-  // it protects a conversation only if both sides have it on, and a camera
-  // pointed at the screen still works. the ui says so.
-  bool _secureChats = false;
-  bool get secureChats => _secureChats;
-
-  // a chat currently showing a message the sender marked. their app asked
-  // for this, and ours is the one that has to honour it - the same way
-  // instagram and signal view-once work, because both ends run the same app.
-  Future<void> setSecureChats(bool v) async {
-    _secureChats = v;
-    await const FlutterSecureStorage().write(
-      key: 'secure_chats',
-      value: v ? '1' : '0',
-    );
-    notifyListeners();
-  }
+  bool _blockScreenshotsApplied = false;
+  bool get blockScreenshotsApplied => _blockScreenshotsApplied;
+  bool get blockScreenshotsPending =>
+      _blockScreenshots != _blockScreenshotsApplied;
 
   // the heartbeat. listen is the last tick the relay queue was read, drain
   // the last time something came out of it. both kept in memory and
@@ -4405,8 +4379,7 @@ class AppState extends ChangeNotifier {
     _blockScreenshots =
         (await const FlutterSecureStorage().read(key: 'block_screenshots')) ==
         'true';
-    _secureChats =
-        (await const FlutterSecureStorage().read(key: 'secure_chats')) == '1';
+    _blockScreenshotsApplied = _blockScreenshots;
     await _applyScreenSecure();
     notifyListeners();
   }
@@ -4568,7 +4541,7 @@ class AppState extends ChangeNotifier {
     _secureForced = on;
     try {
       await _platformChannel.invokeMethod('setSecure', {
-        'on': on || _blockScreenshots,
+        'on': on || _blockScreenshotsApplied,
       });
     } catch (e) {
       dlog('setSecure: $e');
@@ -4578,7 +4551,7 @@ class AppState extends ChangeNotifier {
   Future<void> _applyScreenSecure() async {
     try {
       await _platformChannel.invokeMethod('setSecure', {
-        'on': _blockScreenshots || _secureForced,
+        'on': _blockScreenshotsApplied || _secureForced,
       });
     } catch (e) {
       dlog('setSecure: $e');

@@ -155,7 +155,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   void initState() {
     super.initState();
 
-    if (appState.secureChats) appState.forceSecure(true);
     currentChatPeer = 'group:${widget.groupId}';
     WidgetsBinding.instance.addObserver(this);
     // a room is never in the app switcher and never screenshotted. the flag
@@ -2243,7 +2242,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   void _leaveRoomScreen() {
     if (_left) return;
     _left = true;
-    if (appState.secureChats || _isRoom) appState.forceSecure(false);
+    if (_isRoom) appState.forceSecure(false);
     if (_isRoom && _roomBanner) db.markRoomSeen(widget.groupId);
   }
 
