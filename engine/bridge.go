@@ -493,7 +493,10 @@ func restartTor() {
 	defer atomic.StoreInt32(&torRestarting, 0)
 
 	if n := atomic.LoadInt32(&torClosing); n > 0 {
+		// a second switch inside the close window used to leave the status
+		// on "starting" for good; off lets the dart watchdog try again
 		log.Printf("halo: restartTor skipped - %d old tor still closing", n)
+		setStatus("off")
 		return
 	}
 
@@ -516,6 +519,7 @@ func restartTor() {
 	mu.Unlock()
 	if dir == "" {
 		log.Println("halo: restartTor skipped - no saved data dir")
+		setStatus("off")
 		return
 	}
 	log.Println("halo: restarting embedded tor (dialer wedged)")
@@ -614,6 +618,7 @@ func restartTor() {
 	})
 	if lerr != nil {
 		log.Printf("halo: restartTor listen failed: %v", lerr)
+		setStatus("off")
 		return
 	}
 	mu.Lock()

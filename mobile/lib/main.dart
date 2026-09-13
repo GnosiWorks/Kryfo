@@ -4193,8 +4193,11 @@ class AppState extends ChangeNotifier {
       case 'fast':
         return '$_clearnetRelay,$_publicRelays';
       default:
+        // our relay's clearnet name rides along, dialled over tor like the
+        // rest. without it a friend in relay mode published to a relay
+        // nobody in onion mode read, and their messages sat at one tick.
         return 'ws://z4waup3c6j6gknkjba72cqjjuffhgg6gtgqfu3vetzcvgoluvr42srid'
-            '.onion,$_publicRelays';
+            '.onion,$_clearnetRelay,$_publicRelays';
     }
   }
 
@@ -4219,6 +4222,9 @@ class AppState extends ChangeNotifier {
     for (final c in contacts) {
       await subscribePeer(c.haloId);
     }
+    // the first-contact runner keeps the relay list it started with; it
+    // has to follow the switch or strangers' openers go unread
+    if (_fcLoaded) engine.subscribeFirstContactBg(_fcCounter);
     dlog('mode: $m, relays rebuilt');
   }
 
