@@ -186,6 +186,19 @@ extern "C" {
 #  undef BN_LLONG
     /* clang-format on */
     /* Only one for the following should be defined */
+    /*
+     * kryfo: this header was generated for a 64-bit build and shipped for
+     * every target. on a 32-bit phone (armeabi-v7a) unsigned long is four
+     * bytes while BN_BYTES said eight, so every bignum operation was wrong
+     * and no tls handshake to a tor relay ever completed: the app sat at
+     * "connecting" for good. the word size now follows the ARCH_* define
+     * that go-libtor sets per target, the way its bn_conf.h already does.
+     */
+#  if defined(ARCH_LINUX32) || defined(ARCH_ANDROID32) || defined(ARCH_WINDOWS32)
+#    undef SIXTY_FOUR_BIT_LONG
+#    undef SIXTY_FOUR_BIT
+#    define THIRTY_TWO_BIT
+#  else
     /* clang-format off */
 #  define SIXTY_FOUR_BIT_LONG
     /* clang-format on */
@@ -195,6 +208,7 @@ extern "C" {
     /* clang-format off */
 #  undef THIRTY_TWO_BIT
 /* clang-format on */
+#  endif
 #endif
 
 /* clang-format off */
