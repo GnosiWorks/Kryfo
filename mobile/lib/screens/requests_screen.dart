@@ -126,17 +126,25 @@ class _RequestsScreenState extends State<RequestsScreen> {
 
   // the three answers live here, on the list. opening a chat to decline
   // someone was backwards.
+  // one answer per card at a time: a double tap on accept ran the accept
+  // twice, two acks out and the held messages opened twice
+  final Set<String> _answering = {};
+
   Future<void> _accept(String id) async {
+    if (!_answering.add(id)) return;
     HapticFeedback.selectionClick();
     await db.acceptRequest(id);
     await appState.afterAccept(id);
+    _answering.remove(id);
     if (mounted) showHaloToast(context, 'Accepted');
     await _load();
   }
 
   Future<void> _decline(String id) async {
+    if (!_answering.add(id)) return;
     HapticFeedback.selectionClick();
     await db.declineRequest(id);
+    _answering.remove(id);
     await appState.refreshContacts();
     await _load();
   }
@@ -150,9 +158,13 @@ class _RequestsScreenState extends State<RequestsScreen> {
           'messages go.',
       yes: 'Block',
     );
-    if (!ok || !mounted) return;
+    if (!ok || !mounted || !_answering.add(id)) return;
+    // the sheet says their messages go: decline drops them, block shuts
+    // the door
+    await db.declineRequest(id);
     await appState.block(id);
     await db.clearUnread(id);
+    _answering.remove(id);
     await appState.refreshContacts();
     await _load();
   }
