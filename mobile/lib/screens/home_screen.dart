@@ -744,7 +744,7 @@ class _OfflineStrip extends StatelessWidget {
         // speaks when the phone cannot send, or when a message waits on
         // someone who has not added you back.
         final cannotSend = !appState.online || !appState.torReady;
-        if (!cannotSend && p == 0) return const SizedBox.shrink();
+        if (!cannotSend) return const SizedBox.shrink();
 
         final offline = !appState.online;
         final torDown = !offline && !appState.torReady;
