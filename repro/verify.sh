@@ -1,46 +1,125 @@
 #!/bin/bash
-# reproducible build entry point. builds libhalo.so inside the pinned
-# container from the engine source, then (if an apk is given) extracts the
-# shipped libs and checks they match byte for byte.
+# builds the whole apk in the pinned container, from a clean checkout of one
+# commit, at the path f-droid builds in, and diffs every zip entry against
+# the apk you published. a MATCH means every entry in the shipped apk is byte
+# for byte what this source, this toolchain and this path produce; only the
+# signature is left out, because the container has no keystore and f-droid
+# copies yours across before it compares. this is f-droid's own check.
 #
 # usage:
-#   ./verify.sh                 build + print hashes
-#   ./verify.sh path/to.apk     build + compare against that apk's libs
+#   ./verify.sh app-arm64-v8a-release.apk [more.apk...]
+#   ./verify.sh --ref v0.2.8 app-arm64-v8a-release.apk
+#   ./verify.sh --compare built.apk published.apk    no container, diff only
+#
+# options:
+#   --ref <rev>   the commit to build (default: HEAD of this repo). a release
+#                 is verified against its tag.
+#   --cache       mount ~/.gradle and ~/.pub-cache into the container so the
+#                 second run does not download the world again. the build
+#                 output does not depend on the caches, only the wait does.
+#   --keep        leave the checkout and the container output in place
 set -e
 cd "$(dirname "$0")"
 
-ENGINE_DIR="${ENGINE_DIR:-../engine}"
-IMAGE=halo-repro
+IMAGE=kryfo-repro
+REF=HEAD
+CACHE=
+KEEP=
+APKS=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --ref) REF="$2"; shift 2 ;;
+    --cache) CACHE=1; shift ;;
+    --keep) KEEP=1; shift ;;
+    --compare) shift; COMPARE_ONLY=1 ;;
+    -h|--help) sed -n '2,22p' "$0"; exit 0 ;;
+    *) APKS+=("$1"); shift ;;
+  esac
+done
 
-if grep -q '9457d95a1e8a4a344c9f9d2b1a5f6b9c9e2e7c7c8b4e5f6a7b8c9d0e1f2a3b4c' Dockerfile; then
-  echo "checksums are still placeholders. run ./fill-checksums.sh first."
-  exit 1
-fi
+# every zip entry with its sha256, minus the v1 signature files (a container
+# build is signed with a throwaway debug key). the v2/v3 signature lives in
+# the signing block, which is not an entry, so nothing else is skipped.
+entries() {
+  local dir
+  dir=$(mktemp -d)
+  unzip -q "$1" -d "$dir"
+  ( cd "$dir" && find . -type f \
+      ! -regex '\./META-INF/[^/]*\.\(SF\|RSA\|DSA\|EC\)' \
+      ! -path './META-INF/MANIFEST.MF' \
+      | LC_ALL=C sort | xargs sha256sum )
+  rm -rf "$dir"
+}
 
-echo "building image (first run pulls go + ndk, ~10 min)..."
-docker build -t "$IMAGE" .
-
-echo "building libhalo.so from $ENGINE_DIR..."
-docker run --rm -v "$(cd "$ENGINE_DIR" && pwd)":/build:ro -v "$PWD/out":/build/out "$IMAGE"
-
-if [ -n "$1" ]; then
-  APK="$1"
-  echo
-  echo "extracting shipped libs from $APK..."
-  TMP=$(mktemp -d)
-  unzip -q "$APK" 'lib/*/libhalo.so' -d "$TMP" || true
-  for arch in arm64-v8a armeabi-v7a x86_64; do
-    built="out/$arch/libhalo.so"
-    shipped="$TMP/lib/$arch/libhalo.so"
-    if [ -f "$shipped" ]; then
-      if cmp -s "$built" "$shipped"; then
-        echo "  $arch: MATCH"
-      else
-        echo "  $arch: DIFFERS"
-        echo "    built:   $(sha256sum "$built"   | cut -d' ' -f1)"
-        echo "    shipped: $(sha256sum "$shipped" | cut -d' ' -f1)"
-      fi
-    fi
+# prints MATCH or the differing entries; returns 1 on a difference
+compare() {
+  local built="$1" shipped="$2"
+  local a b
+  a=$(entries "$built"); b=$(entries "$shipped")
+  if [ "$a" = "$b" ]; then
+    echo "  MATCH  every entry of $(basename "$shipped") is byte for byte the container build"
+    return 0
+  fi
+  echo "  DIFFERS  $(basename "$shipped")"
+  # entries whose hash or presence differ, one line each
+  diff <(echo "$a") <(echo "$b") | awk '/^[<>]/ {print $3}' | LC_ALL=C sort -u | while read -r e; do
+    local ha hb
+    ha=$(echo "$a" | awk -v e="$e" '$2==e {print substr($1,1,12)}')
+    hb=$(echo "$b" | awk -v e="$e" '$2==e {print substr($1,1,12)}')
+    printf '    %-48s built %-12s shipped %-12s\n' "$e" "${ha:-missing}" "${hb:-missing}"
   done
-  rm -rf "$TMP"
+  return 1
+}
+
+if [ -n "$COMPARE_ONLY" ]; then
+  [ ${#APKS[@]} -eq 2 ] || { echo "usage: ./verify.sh --compare built.apk published.apk" >&2; exit 2; }
+  compare "${APKS[0]}" "${APKS[1]}"
+  exit $?
 fi
+
+[ ${#APKS[@]} -gt 0 ] || { echo "give the published apk(s) to compare against. ./verify.sh --help" >&2; exit 2; }
+for f in "${APKS[@]}"; do [ -f "$f" ] || { echo "no such apk: $f" >&2; exit 2; }; done
+command -v docker >/dev/null || { echo "docker is not installed" >&2; exit 2; }
+docker info >/dev/null 2>&1 || { echo "the docker daemon is not running" >&2; exit 2; }
+
+REPO=$(git rev-parse --show-toplevel)
+COMMIT=$(git rev-parse "$REF")
+echo "== source: $REF ($COMMIT)"
+WORK=$(mktemp -d)
+# a clean clone: nothing untracked, no jniLibs, no key.properties, no
+# .gocache. what f-droid gets is what the container gets.
+git clone -q "$REPO" "$WORK/src"
+git -C "$WORK/src" checkout -q "$COMMIT"
+
+echo "== image (the first build pulls the jdk, go, the sdk, flutter: a while)"
+docker build -q -t "$IMAGE" . >/dev/null
+
+MOUNTS=(-v "$WORK/src:/home/vagrant/build/app.kryfo" -v "$WORK/out:/out")
+if [ -n "$CACHE" ]; then
+  mkdir -p "$HOME/.gradle" "$HOME/.pub-cache"
+  MOUNTS+=(-v "$HOME/.gradle:/home/vagrant/.gradle" -v "$HOME/.pub-cache:/home/vagrant/.pub-cache")
+fi
+mkdir -p "$WORK/out"
+echo "== building in the container"
+docker run --rm -u "$(id -u):$(id -g)" "${MOUNTS[@]}" "$IMAGE"
+
+echo
+echo "== compare"
+rc=0
+for shipped in "${APKS[@]}"; do
+  built="$WORK/out/$(basename "$shipped")"
+  if [ ! -f "$built" ]; then
+    echo "  the container made no $(basename "$shipped"); it makes app-<abi>-release.apk"
+    rc=1
+    continue
+  fi
+  compare "$built" "$shipped" || rc=1
+done
+
+if [ -n "$KEEP" ]; then
+  echo
+  echo "kept: $WORK (src/ is the checkout, out/ the container's apks)"
+else
+  rm -rf "$WORK"
+fi
+exit $rc

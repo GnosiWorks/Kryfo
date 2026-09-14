@@ -1,12 +1,14 @@
-# offline twin of Dockerfile. same pinned toolchain, but go + ndk come from
-# local files in dl/ instead of the network. run ./prep-offline.sh once to
-# fetch + repack + fill the hashes below, then this builds with zero network
-# beyond the ~30mb base pull (which resumes per-layer if the line dies).
+# the engine on its own, with no network: go + ndk come from local files in
+# dl/ instead of the download. run ./prep-offline.sh once to fetch, repack
+# and fill the hashes below. this checks libhalo.so only; the whole-apk
+# check is Dockerfile + verify.sh, which needs the network for gradle and
+# pub. the pins here must equal the ones in Dockerfile, or the two images
+# build different engines: go 1.25.0 is what the shipped engine says.
 FROM debian:bookworm-20250630-slim
 
-ENV GO_VERSION=1.23.4
-ENV GO_SHA256=45f853e8a918281f5069fcf7d864c4e8c3487b37486a5461b94dd8f9595c382e
-ENV NDK_VERSION=r28c
+ENV GO_VERSION=1.25.0
+ENV GO_SHA256=2852af0cb20a13139b3448992e69b868e50ed0f8a1e5940ee1de9e19a123b613
+ENV NDK_VERSION=r28b
 ENV NDK_TGZ_SHA256=58c7fdf41a4b9177e0fcbe3fbb2f5ab1bb0d85ba26f35028c5a86fabbe2785f6
 
 # go toolchain from local tarball, checksum-verified
@@ -34,6 +36,6 @@ ENV SOURCE_DATE_EPOCH=1700000000
 ENV GOPROXY=off
 ENV GOMODCACHE=/gomod
 
-COPY build-repro.sh /usr/local/bin/build-repro.sh
-RUN chmod +x /usr/local/bin/build-repro.sh
-ENTRYPOINT ["/usr/local/bin/build-repro.sh"]
+COPY engine-only.sh /usr/local/bin/engine-only.sh
+RUN chmod +x /usr/local/bin/engine-only.sh
+ENTRYPOINT ["/usr/local/bin/engine-only.sh"]
