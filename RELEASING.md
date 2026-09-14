@@ -53,28 +53,49 @@ bottom. each step exists because skipping it has bitten us once.
   `mobile/fastlane/metadata/android/en-US/changelogs/<N*10+3>.txt`
   these were missed until 0.2.3. f-droid shows them under "what's new".
 
-## 3. commit and tag
+## 3. commit
 
     git add mobile/pubspec.yaml mobile/pubspec.lock CHANGELOG.md mobile/fastlane
     git commit -m "X.Y.Z"
+
+no tag yet. the tag goes on this commit once the apks built from it have
+been proven, below; f-droid builds the tag, so anything pushed later is
+the next release.
+
+## 4. build the apks
+
+    cd engine && HALO_FULL=1 bash build.sh && cd ../mobile
+    flutter build apk --release --split-per-abi
+
+signed with the release keystore that is not in the repo. build with
+jdk 17, the one f-droid's buildserver uses; a build made with another
+major can differ in classes.dex and fail the next step.
+
+## 5. prove it reproduces
+
+f-droid rebuilds the tag on its own box and publishes only if every byte
+matches. check that here first, against the apks you just built:
+
+    cd repro && ./verify.sh --ref HEAD \
+        ../mobile/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
+        ../mobile/build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk \
+        ../mobile/build/app/outputs/flutter-apk/app-x86_64-release.apk
+
+all three must say MATCH. a DIFFERS names the entries; the usual causes
+are in repro/README.md. fix, commit, rebuild, verify again. no tag until
+they match.
+
+## 6. tag and push
+
     git tag vX.Y.Z
     git push origin main
     git push origin vX.Y.Z
 
-the tag goes on the version commit itself, nothing after it. f-droid builds
-the tag, so anything pushed later is the next release.
+attach the arm64, armeabi-v7a and x86_64 apks to the github release for
+anyone sideloading before the f-droid index catches up. the armeabi-v7a
+one is the 32-bit phones; it exists since 0.2.7.
 
-## 4. build the apks
-
-    cd engine && bash build.sh && cd ../mobile
-    flutter build apk --release --split-per-abi
-
-signed with the release keystore that is not in the repo. attach the arm64,
-armeabi-v7a and x86_64 apks to the github release for anyone sideloading
-before the f-droid index catches up. the armeabi-v7a one is the 32-bit
-phones; it exists since 0.2.7.
-
-## 5. f-droid
+## 7. f-droid
 
 the recipe lives in the fdroiddata fork as `metadata/app.kryfo.yml`. once
 the merge request is accepted their bot follows tags on its own

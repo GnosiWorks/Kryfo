@@ -73,17 +73,15 @@ done
 until GOMODCACHE="$GOMODCACHE" go mod download; do sleep 5; done
 cd ../repro
 
-# 4. fill real hashes into BOTH dockerfiles from the local bytes.
-# fill-checksums.sh is dead - it re-downloaded the 700mb ndk just to hash it.
+# 4. fill real hashes into both dockerfiles from the local bytes
 GO_SHA=$(sha256sum "$GO_TGZ" | cut -d' ' -f1)
 NDK_TGZ_SHA=$(sha256sum "$NDK_TGZ" | cut -d' ' -f1)
-NDK_ZIP_SHA=$(sha256sum "$NDK_ZIP" | cut -d' ' -f1)
 sed -i "s|^ENV GO_SHA256=.*|ENV GO_SHA256=$GO_SHA|" Dockerfile.offline
 sed -i "s|^ENV NDK_TGZ_SHA256=.*|ENV NDK_TGZ_SHA256=$NDK_TGZ_SHA|" Dockerfile.offline
 sed -i "s|^ENV GO_SHA256=.*|ENV GO_SHA256=$GO_SHA|" Dockerfile
-sed -i "s|^ENV NDK_SHA256=.*|ENV NDK_SHA256=$NDK_ZIP_SHA|" Dockerfile
 
 echo
-echo "done. dl/ holds everything, builds are offline from here:"
-echo "  OFFLINE=1 ./verify.sh"
+echo "done. dl/ holds everything; the engine-only image builds offline:"
+echo "  docker build -f Dockerfile.offline -t kryfo-engine-offline ."
+echo "  docker run --rm -v \$(cd ../engine && pwd):/build:ro -v \$PWD/dl/gomod:/gomod:ro -v \$PWD/out:/build/out kryfo-engine-offline"
 du -sh dl 2>/dev/null

@@ -1,7 +1,8 @@
 #!/bin/bash
-# runs inside the pinned container. builds all three libhalo.so with every
-# known source of non-determinism stripped, then prints sha256 so a verifier
-# can compare against the shipped binary.
+# runs inside the offline image. builds all three libhalo.so with every
+# known source of non-determinism stripped, then prints sha256 so they can
+# be set against the libs in a shipped apk. engine only: the whole-apk
+# check is build-repro.sh in the other image.
 set -e
 
 OUT=/build/out
@@ -12,6 +13,9 @@ mkdir -p "$OUT/arm64-v8a" "$OUT/armeabi-v7a" "$OUT/x86_64"
 # lld doesn't stamp a random note. trimpath comes from GOFLAGS in the image.
 LDFLAGS="-buildid= -w -s"
 export CGO_LDFLAGS="-Wl,--build-id=none"
+# no git stamp, same as engine/build.sh: the mounted tree has no .git and
+# the shipped engine must not carry a commit either
+export GOFLAGS="$GOFLAGS -buildvcs=false"
 
 echo "arm64..."
 CC="$NDK/aarch64-linux-android27-clang" \
