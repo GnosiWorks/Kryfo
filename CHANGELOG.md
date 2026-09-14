@@ -2,7 +2,7 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [0.2.7] - 2026-09-12
+## [0.2.7] - 2026-09-14
 
 ### Fixed
 - the wipe did not wipe. both the wipe pin and the settings wipe deleted your messages and keys, then lost a race on the way out: the app pin, the wipe pin and the onboarding flag were still queued for disk when the process ended, so the next launch asked for your old pin and showed a fresh, nameless identity. the wipe now goes through android's own clear-data call, the same thing as "clear storage" in settings: everything gone, the process stopped, the next launch is onboarding.
