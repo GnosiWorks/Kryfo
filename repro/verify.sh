@@ -29,7 +29,7 @@ if [ -n "$1" ]; then
   echo "extracting shipped libs from $APK..."
   TMP=$(mktemp -d)
   unzip -q "$APK" 'lib/*/libhalo.so' -d "$TMP" || true
-  for arch in arm64-v8a x86_64; do
+  for arch in arm64-v8a armeabi-v7a x86_64; do
     built="out/$arch/libhalo.so"
     shipped="$TMP/lib/$arch/libhalo.so"
     if [ -f "$shipped" ]; then
