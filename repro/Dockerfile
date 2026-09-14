@@ -70,10 +70,17 @@ RUN git clone -q --depth 1 --branch ${FLUTTER_VERSION} https://github.com/flutte
 ENV PATH=/opt/flutter/bin:$PATH
 
 # f-droid builds as uid 1000 in /home/vagrant; the path is what matters,
-# the uid is so the files verify.sh mounts come back owned by you.
+# the uid is so the files verify.sh mounts come back owned by you. the
+# flutter checkout was cloned by root above, and git refuses to touch a
+# repository owned by someone else ("dubious ownership"), which flutter
+# hits on its first version check. so it is handed to the build user, and
+# marked safe system-wide as well, for a host uid that is not 1000.
 RUN useradd -m -u 1000 -s /bin/bash vagrant \
     && mkdir -p /home/vagrant/build/app.kryfo /out \
-    && chmod -R a+rwX /home/vagrant /out /opt/flutter
+    && chown -R vagrant:vagrant /opt/flutter /home/vagrant /out \
+    && chmod -R a+rwX /home/vagrant /out /opt/flutter \
+    && git config --system --add safe.directory /opt/flutter \
+    && git config --system --add safe.directory '*'
 ENV HOME=/home/vagrant
 ENV PUB_CACHE=/home/vagrant/.pub-cache
 ENV GRADLE_USER_HOME=/home/vagrant/.gradle
