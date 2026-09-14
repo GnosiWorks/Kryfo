@@ -62,6 +62,11 @@ LDFLAGS="-buildid= -w -s"
 # cache serving objects built with the old header. HALO_FULL=1 rebuilds
 # every object.
 BUILD_FLAGS="${HALO_FULL:+-a}"
+# go stamps the git commit, commit time and a dirty flag into every binary
+# it builds inside a checkout. that is ninety bytes that differ between the
+# tag and whatever was HEAD on the dev box, and the dirty flag flips on any
+# untracked file, so no two machines agree. off, or nothing reproduces.
+BUILD_FLAGS="$BUILD_FLAGS -buildvcs=false"
 
 echo "ndk: $NDK_ROOT"
 echo "out: $JNI"
