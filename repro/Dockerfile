@@ -22,11 +22,16 @@ ENV FLUTTER_VERSION=3.41.7
 ENV FLUTTER_COMMIT=cc0734ac716fbb8b90f3f9db8020958b1553afa7
 ENV CMDLINE_TOOLS=11076708
 ENV CMDLINE_TOOLS_SHA256=2d2d50857e4eb553af5a6dc3ad507a17adf43d115264b1afc116f95c92e5e258
-# mobile/android/app/build.gradle.kts names the ndk; flutter 3.41 compiles
-# against 36; agp 8.11 pairs with build-tools 35
+# mobile/android/app/build.gradle.kts names the ndk. the sdk pieces are
+# the set f-droid's buildserver needed for this app, not the minimum:
+# flutter 3.41 compiles against 36, plugins still compile against 34 and
+# 35, agp 8.11 wants build-tools 35 and a plugin asks for 36, and the two
+# plugins with native code (jni, flutter_zxing) build with cmake 3.22.1.
+# a container with less builds something else, or nothing.
 ENV NDK_VERSION=28.2.13676358
-ENV ANDROID_PLATFORM=android-36
-ENV BUILD_TOOLS=35.0.0
+ENV ANDROID_PLATFORMS="platforms;android-34 platforms;android-35 platforms;android-36"
+ENV ANDROID_BUILD_TOOLS="build-tools;35.0.0 build-tools;36.0.0"
+ENV ANDROID_CMAKE="cmake;3.22.1"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates curl unzip xz-utils git \
@@ -54,8 +59,9 @@ RUN curl -fsSL "https://dl.google.com/android/repository/commandlinetools-linux-
     && yes | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null \
     && ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install \
         "platform-tools" \
-        "platforms;${ANDROID_PLATFORM}" \
-        "build-tools;${BUILD_TOOLS}" \
+        ${ANDROID_PLATFORMS} \
+        ${ANDROID_BUILD_TOOLS} \
+        ${ANDROID_CMAKE} \
         "ndk;${NDK_VERSION}" >/dev/null
 ENV ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/${NDK_VERSION}
 
