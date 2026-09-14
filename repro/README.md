@@ -47,8 +47,9 @@ step.
 | go | 1.25.0 | `engine/go.mod` and the f-droid recipe |
 | flutter | 3.41.7, commit cc0734ac | the f-droid srclib; the commit is checked, a moved tag fails |
 | android ndk | 28.2.13676358 | `ndkVersion` in `mobile/android/app/build.gradle.kts` |
-| platform | android-36 | flutter 3.41's compileSdk |
-| build-tools | 35.0.0 | what agp 8.11 pairs with |
+| platforms | android-34, 35, 36 | flutter 3.41 compiles against 36; plugins such as just_audio still against 34 and 35 |
+| build-tools | 35.0.0, 36.0.0 | agp 8.11 wants 35; a plugin asks for 36 |
+| cmake | 3.22.1 | the jni and flutter_zxing plugins build native code with it |
 | build path | /home/vagrant/build/app.kryfo | f-droid's path, see below |
 
 go and the command line tools are checksum-verified; flutter is pinned to
