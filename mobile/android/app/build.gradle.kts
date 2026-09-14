@@ -88,8 +88,11 @@ android {
 flutter {
     source = "../.."
 }
-   dependencies {
+dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // the camera shrink reads the orientation tag. the platform class is
+    // banned by lint for old security bugs; this one is the maintained copy
+    implementation("androidx.exifinterface:exifinterface:1.4.2")
 }
 
 // libhalo.so is gitignored, so a tree that has never run engine/build.sh
@@ -97,7 +100,7 @@ flutter {
 // and never reaches a screen. fail here, where we can say what to run.
 tasks.named("preBuild") {
     doFirst {
-        val missing = listOf("arm64-v8a", "x86_64").filter {
+        val missing = listOf("arm64-v8a", "armeabi-v7a", "x86_64").filter {
             !file("src/main/jniLibs/$it/libhalo.so").exists()
         }
         if (missing.isNotEmpty()) {
