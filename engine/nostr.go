@@ -603,6 +603,9 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 			rejoin := 5 * time.Second
 			deaf := 4 * time.Minute
 			kicked := false
+			// when this runner lost its subscription, so the next one can ask
+			// for as much as the gap could actually have hidden
+			var lostAt time.Time
 			if own {
 				retry = 3 * time.Second
 				rejoin = 2 * time.Second
@@ -654,10 +657,21 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 				if cur := loadLast(); cur > int64(last) {
 					last = nostr.Timestamp(cur)
 				}
+				// a hundred was chosen when a wrap was a line of text. a wrap
+				// is now as likely to be a 16k base64 slice of a video, and
+				// asking for a hundred of those on a reconnect that happened
+				// seconds ago re-downloads a file nobody sent. how long we
+				// were away is the only thing that says how much we can have
+				// missed: a cold start, or a gap long enough to have missed a
+				// conversation, still asks for the lot.
+				limit := 100
+				if !lostAt.IsZero() && time.Since(lostAt) < 5*time.Minute {
+					limit = 20
+				}
 				f := nostr.Filter{
 					Kinds: []nostr.Kind{1059},
 					Tags:  nostr.TagMap{"p": []string{rcvPk}},
-					Limit: 100,
+					Limit: limit,
 				}
 				// after the first connect only ask for what we missed - refetching
 				// 100 old events over tor on every reconnect was pure waste.
@@ -740,6 +754,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 					}
 				}
 			reconnect:
+				lostAt = time.Now()
 				if kicked {
 					kicked = false
 				} else {
