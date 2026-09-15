@@ -42,6 +42,10 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterFragmentActivity() {
     companion object {
         private const val NOTIF_PERM_REQUEST = 1001
+        private const val PERM_PREFS = "halo_perm"
+        private const val PERM_ASKED_KEY = "asked_post_notifications"
+        // one ask for the life of the process, whatever the activity does
+        private var notifPermAsked = false
         // the one engine we keep across activity teardown
         const val ENGINE_ID = "halo_engine"
     }
@@ -65,7 +69,7 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun onResume() {
         super.onResume()
-        requestNotificationPermissionIfNeeded()
+        askForNotificationsOnce()
         startListenerService()
         schedulePeriodicJob()
     }
@@ -81,19 +85,43 @@ class MainActivity : FlutterFragmentActivity() {
 
     private fun schedulePeriodicJob() = JobSetup.schedule(this)
 
-    private fun requestNotificationPermissionIfNeeded() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val granted = ContextCompat.checkSelfPermission(
+    // ask for the notification permission at most once, and never after a
+    // refusal that android has made final.
+    //
+    // this used to run on every onResume with no guard. once someone has
+    // denied twice, android stops showing a dialog and answers instantly
+    // from its own record: the request activity opens, finishes, our
+    // activity resumes, onResume asks again. forty milliseconds a turn,
+    // forever. the window loses focus every turn, so the keyboard cannot
+    // stay up, taps and the back key land on a screen that is already
+    // going, and the phone burns battery until the app is killed. it
+    // needs android 13 or newer and a refusal; nothing else.
+    private fun askForNotificationsOnce() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (notifPermAsked) return
+        val granted = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.POST_NOTIFICATIONS
+        ) == PackageManager.PERMISSION_GRANTED
+        if (granted) return
+        // asked before and android will not show a dialog again: the answer
+        // is no and it is final. the only way back is android's settings.
+        val prefs = getSharedPreferences(PERM_PREFS, Context.MODE_PRIVATE)
+        val askedBefore = prefs.getBoolean(PERM_ASKED_KEY, false)
+        if (askedBefore &&
+            !ActivityCompat.shouldShowRequestPermissionRationale(
                 this, Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-            if (!granted) {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                    NOTIF_PERM_REQUEST
-                )
-            }
+            )
+        ) {
+            notifPermAsked = true
+            return
         }
+        notifPermAsked = true
+        prefs.edit().putBoolean(PERM_ASKED_KEY, true).apply()
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+            NOTIF_PERM_REQUEST
+        )
     }
 
     // flag_secure on the window is not enough on every phone: flutter draws
