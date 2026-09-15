@@ -2609,9 +2609,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _sendVoice(String srcPath, int ms) async {
     if (_requestLocked) return;
-    if (_requestPending) setState(() => _sentCount++);
     final src = File(srcPath);
     if (!await src.exists()) return;
+    if (_requestPending) setState(() => _sentCount++);
     var bytes = await src.readAsBytes();
     if (_disguise) bytes = disguiseWav(bytes);
     final msgUid = _newMsgUid();
@@ -2836,8 +2836,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (mounted) showHaloToast(context, 'File too big · 8 mb max');
       return;
     }
-    if (_requestPending) setState(() => _sentCount++);
     if (!await _confirmBigSend(size, 'file')) return;
+    // after the confirm, not before: two cancelled sends used to spend both
+    // slots a stranger gets and lock the composer for nothing
+    if (_requestPending) setState(() => _sentCount++);
     final msgUid = _newMsgUid();
     final dir = await getApplicationDocumentsDirectory();
     final mediaDir = Directory('${dir.path}/media');
