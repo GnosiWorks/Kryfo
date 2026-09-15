@@ -83,7 +83,7 @@ if [ -z "$SIGN" ]; then
   ( cd out && sha256sum app-*.apk )
   echo
   echo "unsigned. sign each with:"
-  echo "  apksigner sign --ks <keystore> app-<abi>-release.apk"
+  echo "  apksigner sign --ks <keystore> --v1-signing-enabled false app-<abi>-release.apk"
   exit 0
 fi
 
@@ -99,9 +99,20 @@ echo "== signing"
 # the plain name and are signed in place
 for f in out/app-*-release.apk; do
   [ -f "$f" ] || { echo "the container produced no apks" >&2; exit 1; }
+  # v2/v3 only. a v1 signature is three more entries inside the zip, and
+  # f-droid verifies by copying our signature onto their unsigned build:
+  # "the APKs must be completely identical before and after signing (apart
+  # from the signature)". v1 entries move bytes around, so their placement
+  # has to be reproduced exactly or the v2 digest over the whole file
+  # fails, which is what their log showed. the v2/v3 block sits outside
+  # the entries and is what apksigcopier is built to move. minSdk is 24
+  # and v1 is only needed below that, so nothing loses a signature.
   printf '%s\n%s\n' "$STOREPASS" "$KEYPASS" | "$APKSIGNER" sign \
     --ks "$KEYSTORE" --ks-key-alias "$ALIAS" \
     --ks-pass stdin --key-pass stdin \
+    --v1-signing-enabled false \
+    --v2-signing-enabled true \
+    --v3-signing-enabled true \
     "$f"
   rm -f "$f.idsig"
   echo "  $(basename "$f")"

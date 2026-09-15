@@ -90,7 +90,7 @@ step.
 | build-tools | 35.0.0, 36.0.0 | agp 8.11 wants 35; a plugin asks for 36 |
 | cmake | 3.22.1 | the jni and flutter_zxing plugins build native code with it |
 | build path | /home/vagrant/build/app.kryfo | f-droid's path, see below |
-| signing | outside the container, apksigner | the key stays off the container; nothing compared depends on it |
+| signing | outside the container, apksigner, v2/v3 only | the key stays off the container; v1 would add three entries inside the zip, see below |
 
 go and the command line tools are checksum-verified; flutter is pinned to
 a commit; the sdk pieces come from google's manager at exact versions.
@@ -120,6 +120,27 @@ measured on 2026-09-14 against the published v0.2.7 arm64 apk:
   the container rebuilds every object (`HALO_FULL=1`). a dev box that
   edited those headers and rebuilt without it ships stale objects; the
   container does not, and the diff shows it.
+
+## why the release is signed v2/v3 and not v1
+
+f-droid verifies by copying our signature onto their own unsigned build
+and checking it still verifies. their page: "v2/v3 signatures cover all
+other bytes in the APK. Thus, the APKs must be completely identical
+before and after signing (apart from the signature) in order to verify
+correctly."
+
+a v1 (jar) signature is three more entries inside the zip. inserting them
+moves bytes, so their placement has to be reproduced exactly or the v2
+digest over the whole file fails. apksigcopier's own notes list v1
+failures that come from zip metadata differing between signing tools.
+the v2/v3 block sits outside the entries and is the thing it is built to
+move.
+
+minSdk is 24 and v1 is only needed below that, so dropping it costs
+nothing. measured on 2026-09-15: f-droid's build of 0.2.8 was identical
+to ours on all 558 content entries, same order, same compression, same
+sizes. the only difference was our three v1 entries, and their digest
+check failed on it.
 
 ## a build that failed once and passed once
 
