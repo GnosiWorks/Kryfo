@@ -9,6 +9,14 @@ bottom. each step exists because skipping it has bitten us once.
   infos (flutter_secure_storage's `encryptedSharedPreferences`). a warning
   or an error stops the release.
 - `flutter test` passes.
+
+  one unexplained failure, recorded so a second one is known to be a second
+  one rather than a first. on 2026-09-15, just after commit 23606e0e at
+  11:01 local, a run ended `+111 -1: Some tests failed`. only the summary
+  line was kept, so the test is not named. twenty-three runs since, on the
+  same tree, all passed. if this comes back, keep the whole output: the
+  name is the thing worth having.
+
 - `cd mobile/android && ./gradlew --offline :app:lintDebug :app:lintVitalAnalyzeRelease`
   passes. warnings fail it on purpose; the first run of it found two style
   attributes above our minimum api.
