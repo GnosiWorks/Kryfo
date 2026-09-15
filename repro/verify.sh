@@ -1,10 +1,21 @@
 #!/bin/bash
-# builds the whole apk in the pinned container, from a clean checkout of one
-# commit, at the path f-droid builds in, and diffs every zip entry against
-# the apk you published. a MATCH means every entry in the shipped apk is byte
-# for byte what this source, this toolchain and this path produce; only the
-# signature is left out, because the container has no keystore and f-droid
-# copies yours across before it compares. this is f-droid's own check.
+# builds the whole apk in the pinned container, twice, and asks the two
+# questions that decide whether f-droid will publish us.
+#
+#   1. does the apk you published match a build of that commit at the path
+#      f-droid builds in? every zip entry, byte for byte.
+#   2. does that same source produce the same bytes somewhere else?
+#
+# the second one is the one we learned the hard way. our own container
+# agreeing with our own build at one path says our pipeline is
+# deterministic, which is not the question anyone is asking. f-droid built
+# 0.2.8 on their machine and disagreed with ours on libdartjni.so, and
+# nothing here could see it, because both sides of the comparison were the
+# same build at the same path.
+#
+# only the signature is left out: the container builds unsigned and the
+# published apk is signed, so the v1 files exist on one side only, and the
+# v2/v3 signature lives in the signing block, which is not an entry.
 #
 # usage:
 #   ./verify.sh app-arm64-v8a-release.apk [more.apk...]
@@ -14,11 +25,14 @@
 # options:
 #   --ref <rev>   the commit to build (default: HEAD of this repo). a release
 #                 is verified against its tag.
+#   --no-cross    skip the second build. halves the wait, and gives up the
+#                 only check that speaks to what f-droid's machine will do.
+#                 fine while iterating, not before a tag.
 #   --cache       mount ~/.pub-cache into the container so the second run
 #                 does not fetch every package again. the gradle cache is
 #                 never shared: the host's journal lock deadlocks against
 #                 the container's daemon and the build hangs.
-#   --keep        leave the checkout and the container output in place
+#   --keep        leave the checkouts and the container output in place
 set -e
 cd "$(dirname "$0")"
 
@@ -26,22 +40,34 @@ IMAGE=kryfo-repro
 REF=HEAD
 CACHE=
 KEEP=
+CROSS=1
 APKS=()
+
+# where f-droid builds. the release has to be made here, because the dart
+# snapshot bakes this path in and nothing can strip it.
+FDROID_PATH=/home/vagrant/build/app.kryfo
+# deliberately unlike the above in length and shape, so anything that
+# leaks a path shows up as a difference rather than by luck
+ALT_PATH=/home/vagrant/elsewhere/kryfo-built-somewhere-else
+
+# entries allowed to differ between the two builds, as an extended regex
+# over the unzipped paths. keep this list as short as the truth allows:
+# every name here is a thing we have given up on making path-independent.
+PATH_DEPENDENT='^\./lib/[^/]+/libapp\.so$'
+
 while [ $# -gt 0 ]; do
   case "$1" in
     --ref) REF="$2"; shift 2 ;;
     --cache) CACHE=1; shift ;;
     --keep) KEEP=1; shift ;;
+    --no-cross) CROSS=; shift ;;
     --compare) shift; COMPARE_ONLY=1 ;;
-    -h|--help) sed -n '2,22p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,36p' "$0"; exit 0 ;;
     *) APKS+=("$1"); shift ;;
   esac
 done
 
-# every zip entry with its sha256, minus the v1 signature files. the
-# container builds unsigned and the published apk is signed, so those files
-# exist on one side only; the v2/v3 signature lives in the signing block,
-# which is not an entry at all. everything else is compared.
+# every zip entry with its sha256, minus the v1 signature files
 entries() {
   local dir
   dir=$(mktemp -d)
@@ -53,6 +79,13 @@ entries() {
   rm -rf "$dir"
 }
 
+# names the entries that differ between two entry listings
+differing() {
+  diff <(echo "$1") <(echo "$2") | awk '/^[<>]/ {print $3}' | LC_ALL=C sort -u
+}
+
+hash_of() { echo "$1" | awk -v e="$2" '$2==e {print substr($1,1,12)}'; }
+
 # prints MATCH or the differing entries; returns 1 on a difference
 compare() {
   local built="$1" shipped="$2"
@@ -63,13 +96,49 @@ compare() {
     return 0
   fi
   echo "  DIFFERS  $(basename "$shipped")"
-  # entries whose hash or presence differ, one line each
-  diff <(echo "$a") <(echo "$b") | awk '/^[<>]/ {print $3}' | LC_ALL=C sort -u | while read -r e; do
-    local ha hb
-    ha=$(echo "$a" | awk -v e="$e" '$2==e {print substr($1,1,12)}')
-    hb=$(echo "$b" | awk -v e="$e" '$2==e {print substr($1,1,12)}')
-    printf '    %-48s built %-12s shipped %-12s\n' "$e" "${ha:-missing}" "${hb:-missing}"
+  differing "$a" "$b" | while read -r e; do
+    printf '    %-48s built %-12s shipped %-12s\n' \
+      "$e" "$(hash_of "$a" "$e")" "$(hash_of "$b" "$e")"
   done
+  return 1
+}
+
+# the cross-path check: the same source built in two places. anything that
+# differs outside the allowlist means this source is not reproducible
+# anywhere but here.
+compare_cross() {
+  local one="$1" two="$2" name="$3"
+  local a b bad
+  a=$(entries "$one"); b=$(entries "$two")
+  bad=$(differing "$a" "$b" | grep -Ev "$PATH_DEPENDENT" || true)
+  if [ -z "$bad" ]; then
+    echo "  SAME     $name is the same bytes built at either path"
+    return 0
+  fi
+  echo "  PATH-DEPENDENT  $name"
+  echo "$bad" | while read -r e; do
+    printf '    %-48s here %-12s elsewhere %-12s\n' \
+      "$e" "$(hash_of "$a" "$e")" "$(hash_of "$b" "$e")"
+  done
+  cat <<EOF
+
+    what this means: the entries above come out different depending on
+    where the source was built. f-droid builds this commit on their own
+    machine. if a file changes with the build path, their rebuild will not
+    agree with the apk you published, no matter what our own container
+    says, and they will refuse the release. this is exactly how 0.2.8
+    failed on libdartjni.so.
+
+    the usual cause is a native library keeping a gnu build-id, or an
+    absolute path baked into its objects. the cmake flags that fix it are
+    in mobile/android/build.gradle.kts, and repro/README.md says where
+    they come from.
+
+    lib/*/libapp.so is exempt on purpose, and is not reported here. the
+    dart snapshot embeds the path of the generated plugin registrant and
+    nothing can strip it, which is the whole reason release.sh builds at
+    f-droid's path instead of anywhere convenient.
+EOF
   return 1
 }
 
@@ -88,35 +157,50 @@ REPO=$(git rev-parse --show-toplevel)
 COMMIT=$(git rev-parse "$REF")
 echo "== source: $REF ($COMMIT)"
 WORK=$(mktemp -d)
-# a clean clone: nothing untracked, no jniLibs, no key.properties, no
-# .gocache. what f-droid gets is what the container gets.
-git clone -q "$REPO" "$WORK/src"
-git -C "$WORK/src" checkout -q "$COMMIT"
+cleanup() { [ -n "$KEEP" ] || rm -rf "$WORK"; }
+trap cleanup EXIT
 
 echo "== image (the first build pulls the jdk, go, the sdk, flutter: a while)"
 docker build -q -t "$IMAGE" . >/dev/null
 
-MOUNTS=(-v "$WORK/src:/home/vagrant/build/app.kryfo" -v "$WORK/out:/out")
-if [ -n "$CACHE" ]; then
-  mkdir -p "$HOME/.pub-cache"
-  MOUNTS+=(-v "$HOME/.pub-cache:/home/vagrant/.pub-cache")
-fi
-mkdir -p "$WORK/out"
-echo "== building in the container"
-# cgo opens a lot of files at once building tor and openssl. the
-# daemon hands a container 1024 by default, which is under what
-# that needs: the engine build then dies with "too many open
-# files", sometimes, which is worse than always.
-docker run --rm --ulimit nofile=65536:65536 -u "$(id -u):$(id -g)" "${MOUNTS[@]}" "$IMAGE"
+# one clean clone and one build per path. they cannot share a tree: the
+# generated plugin registrant and the build output both carry the path,
+# and a reused tree would agree with itself for the wrong reason.
+build_at() {
+  local srcpath="$1" tag="$2"
+  git clone -q "$REPO" "$WORK/$tag"
+  git -C "$WORK/$tag" checkout -q "$COMMIT"
+  mkdir -p "$WORK/out-$tag"
+  local mounts=(-v "$WORK/$tag:$srcpath" -v "$WORK/out-$tag:/out")
+  if [ -n "$CACHE" ]; then
+    mkdir -p "$HOME/.pub-cache"
+    mounts+=(-v "$HOME/.pub-cache:/home/vagrant/.pub-cache")
+  fi
+  echo "== building at $srcpath"
+  # cgo opens a lot of files at once building tor and openssl. the daemon
+  # hands a container 1024 by default, which is under what that needs: the
+  # engine build then dies with "too many open files", sometimes, which is
+  # worse than always.
+  docker run --rm --ulimit nofile=65536:65536 -u "$(id -u):$(id -g)" \
+    -e "HALO_SRC=$srcpath" -w "$srcpath" "${mounts[@]}" "$IMAGE"
+}
+
+build_at "$FDROID_PATH" primary
+[ -n "$CROSS" ] && build_at "$ALT_PATH" alt
+
+# the container's apk is unsigned, so its name may carry -unsigned. match
+# on the abi rather than the whole basename.
+built_for() {
+  local abi="$1" tag="$2"
+  ls "$WORK/out-$tag/app-$abi-release"*.apk 2>/dev/null | head -1
+}
 
 echo
-echo "== compare"
+echo "== against what you published"
 rc=0
 for shipped in "${APKS[@]}"; do
-  # the container's apk is unsigned, so its name carries -unsigned. match
-  # on the abi rather than the whole basename.
   abi=$(basename "$shipped" | sed -n 's/^app-\(.*\)-release.*\.apk$/\1/p')
-  built=$(ls "$WORK/out/app-$abi-release"*.apk 2>/dev/null | head -1)
+  built=$(built_for "$abi" primary)
   if [ -z "$abi" ] || [ ! -f "$built" ]; then
     echo "  the container made nothing for $(basename "$shipped")"
     rc=1
@@ -125,10 +209,25 @@ for shipped in "${APKS[@]}"; do
   compare "$built" "$shipped" || rc=1
 done
 
-if [ -n "$KEEP" ]; then
+if [ -n "$CROSS" ]; then
   echo
-  echo "kept: $WORK (src/ is the checkout, out/ the container's apks)"
+  echo "== the same source built somewhere else"
+  for shipped in "${APKS[@]}"; do
+    abi=$(basename "$shipped" | sed -n 's/^app-\(.*\)-release.*\.apk$/\1/p')
+    one=$(built_for "$abi" primary)
+    two=$(built_for "$abi" alt)
+    if [ -z "$one" ] || [ -z "$two" ]; then
+      echo "  no pair to compare for $abi"
+      rc=1
+      continue
+    fi
+    compare_cross "$one" "$two" "app-$abi-release.apk" || rc=1
+  done
 else
-  rm -rf "$WORK"
+  echo
+  echo "== cross-path check skipped (--no-cross)"
+  echo "   our pipeline agreeing with itself is not what f-droid asks."
 fi
+
+[ -n "$KEEP" ] && echo && echo "kept: $WORK"
 exit $rc
