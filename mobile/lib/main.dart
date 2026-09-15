@@ -8419,7 +8419,9 @@ class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
     // just allowed.
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
-      lockState.lock();
+      lockState.leaving();
+    } else if (state == AppLifecycleState.resumed) {
+      lockState.returned();
     }
   }
 

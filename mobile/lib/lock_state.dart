@@ -240,6 +240,28 @@ class LockState extends ChangeNotifier {
     }
   }
 
+  // the app went away while a picker hold was open. the hold can run out
+  // while it is away, and no second pause event ever comes, so whether it
+  // locks has to be asked again when it comes back.
+  bool _leftWhileHeld = false;
+
+  // called on pause and on hidden
+  void leaving() {
+    if (!_enabled) return;
+    _leftWhileHeld = holding;
+    lock();
+  }
+
+  // called on resume. the picker coming back keeps its hold and nothing
+  // locks. anything else - the home key from inside the picker, another
+  // app, a call - left the hold to expire in the background, and this is
+  // the only place that notices.
+  void returned() {
+    if (!_leftWhileHeld) return;
+    _leftWhileHeld = false;
+    lock();
+  }
+
   void lock() {
     if (!_enabled || holding) return;
     if (!_locked) {
