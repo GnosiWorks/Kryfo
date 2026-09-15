@@ -2,6 +2,11 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [unreleased]
+
+### Fixed
+- the app would not let you type, then closed itself. on android 13 and newer, once you had refused the notification permission twice, kryfo asked again every time a screen came to the front, and android answered instantly from its own record rather than showing a dialog. that is a request every forty milliseconds, for as long as the app is open: the window loses focus each turn, so the keyboard will not stay up, taps and the back key land on a screen that is already going, and the phone warms up until android kills the app. it asks once now, and not at all once the answer is final. nothing to do with the phone being 32-bit or short of memory; a refusal on android 13 was enough.
+
 ## [0.2.7] - 2026-09-14
 
 ### Fixed
