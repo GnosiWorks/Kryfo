@@ -168,10 +168,25 @@ class VoiceBubbleState extends State<VoiceBubble> {
     _player.playerStateStream.listen((st) {
       if (!mounted) return;
       setState(() => _playing = st.playing);
+      // android takes the codec back when it wants it, and something else
+      // playing audio can stop us too. the bubble used to go on believing
+      // it was loaded for the life of the widget, so the next tap called
+      // play() on a player with no source: the note appeared to pause on
+      // its own and then started again from the beginning. losing the
+      // source means it has to be loaded again, and _toggle puts the
+      // position back.
+      if (st.processingState == ProcessingState.idle) {
+        _ready = false;
+      }
       if (st.processingState == ProcessingState.completed) {
         _player.seek(Duration.zero);
         _player.pause();
-        if (mounted) setState(() => _playing = false);
+        if (mounted) {
+          setState(() {
+            _playing = false;
+            _pos = Duration.zero;
+          });
+        }
       }
     });
     // only rebuild on position ticks while actually playing. idle bubbles
@@ -246,8 +261,14 @@ class VoiceBubbleState extends State<VoiceBubble> {
 
   void _toggle() async {
     if (!_ready) {
+      // where it was before the player lost its source, so a reload
+      // carries on instead of starting over
+      final was = _pos;
       await _load();
       if (!_ready) return;
+      if (was > Duration.zero && was < _dur) {
+        await _player.seek(was);
+      }
     }
     if (_playing) {
       _player.pause();
