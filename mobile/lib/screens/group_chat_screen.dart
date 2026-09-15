@@ -40,6 +40,7 @@ import '../main.dart'
         shredFile;
 import '../theme.dart';
 import '../media_progress.dart';
+import '../media_send.dart' show cancelMediaSend;
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/burn_fade.dart';
 import 'group_info_screen.dart';
@@ -1438,6 +1439,21 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     return null;
   }
 
+  // stop a photo or file mid-send. the workers end between slices, the row
+  // goes here, and the group is told to drop what it has. the same thing
+  // the one-to-one screen does, which groups never had.
+  Future<void> _stopGroupSending(_GMsg m) async {
+    final uid = m.msgUid;
+    if (uid == null) return;
+    cancelMediaSend(uid);
+    mediaProgressEnd(uid);
+    if (mounted) setState(() => m.removing = true);
+    await Future.delayed(const Duration(milliseconds: 300));
+    await db.deleteMessage(uid);
+    if (mounted) setState(() => _messages.remove(m));
+    unawaited(appState.unsendInGroup(widget.groupId, uid));
+  }
+
   Future<void> _finishGroupMediaSend(_GMsg m, String result) async {
     if (m.msgUid != null) mediaProgressEnd(m.msgUid!);
     final ok = result == 'ok';
@@ -2496,7 +2512,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 target: _replyTo!,
                 onCancel: () => setState(() => _replyTo = null),
               ),
-            IncomingMediaBanner(chatKey: widget.groupId),
+            IncomingMediaBanner(
+              chatKey: widget.groupId,
+              onCancel: (uid) {
+                final m = _liveMsg(uid);
+                if (m != null) _stopGroupSending(m);
+              },
+            ),
             ValueListenableBuilder<TextEditingValue>(
               valueListenable: _msgCtrl,
               builder: (_, v, _) => PreviewStrip(
