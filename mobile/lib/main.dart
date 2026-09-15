@@ -1904,6 +1904,18 @@ class HaloDb {
     );
   }
 
+  // every blocked id, accepted or not. contacts() is accepted-only, so a
+  // caller built on it never sees someone blocked while still a stranger.
+  Future<Set<String>> blockedIds() async {
+    final db = await open();
+    final rows = await db.query(
+      'contacts',
+      columns: ['halo_id'],
+      where: 'blocked = 1',
+    );
+    return {for (final r in rows) r['halo_id'] as String};
+  }
+
   Future<bool> isBlocked(String haloId) async {
     final db = await open();
     final rows = await db.query(
