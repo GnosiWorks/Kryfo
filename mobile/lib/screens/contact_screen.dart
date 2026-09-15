@@ -677,8 +677,12 @@ class _MediaRow extends StatelessWidget {
                             height: 56,
                             fit: BoxFit.cover,
                             cacheWidth: 112,
-                            errorBuilder: (_, _, _) =>
-                                const SizedBox(width: 56, height: 56),
+                            // an empty box here is a black square against the
+                            // card, which reads as a broken app rather than a
+                            // photo whose file is gone. say which it is.
+                            errorBuilder: (_, _, _) => const _MissingTile(
+                              size: 56,
+                            ),
                           ),
                         ),
                       ),
@@ -688,6 +692,28 @@ class _MediaRow extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+// a photo whose file has gone. drawn rather than left blank, because an
+// empty square looks like the app failed to load a picture that is still
+// there.
+class _MissingTile extends StatelessWidget {
+  final double size;
+  const _MissingTile({required this.size});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      color: HaloColors.surface2,
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.image_not_supported_outlined,
+        size: size * 0.32,
+        color: HaloColors.text3,
       ),
     );
   }
