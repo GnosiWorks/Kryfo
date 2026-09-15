@@ -3775,7 +3775,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       const SizedBox(width: 14),
                       Text(
-                        pinned ? 'Unpin' : 'pin to top',
+                        pinned ? 'Unpin' : 'Pin to top',
                         style: HaloType.sans(size: 14, color: HaloColors.text),
                       ),
                     ],
