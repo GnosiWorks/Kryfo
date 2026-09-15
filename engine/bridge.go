@@ -347,7 +347,7 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 		ProcessCreator: libtor.Creator,
 		DataDir:        torDataDir,
 		DebugWriter:    newTorDebugWriter(),
-		ExtraArgs:      bridgeTorArgs(),
+		ExtraArgs:      torArgs(),
 	})
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: tor start: %v", err))
@@ -575,7 +575,7 @@ func restartTor() {
 			ProcessCreator: libtor.Creator,
 			DataDir:        torDataDir,
 			DebugWriter:    newTorDebugWriter(),
-			ExtraArgs:      bridgeTorArgs(),
+			ExtraArgs:      torArgs(),
 		})
 		if err == nil {
 			break
