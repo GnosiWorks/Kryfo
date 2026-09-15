@@ -6588,18 +6588,25 @@ class AppState extends ChangeNotifier {
     if (room == null) return _sendOneEnvelope(memberId, wrapped);
     if (memberId == room.pub) return false;
     if (room.expiresAt <= DateTime.now().millisecondsSinceEpoch) return false;
-    final r = await engine.roomSend(
-      room.priv,
-      memberId,
-      _roomify(wrapped, room.pub),
-    );
+    final stripped = _roomify(wrapped, room.pub);
+    if (stripped == null) return false;
+    final r = await engine.roomSend(room.priv, memberId, stripped);
     if (r != 'ok') dlog('room send: $r');
     return r == 'ok';
   }
 
-  String _roomify(String wrapped, String pub) {
+  // strip every trace of who sent this and put the room key in its place.
+  // null when it cannot be done, and the send has to be dropped: the frame
+  // it could not rewrite still carries the real onion, the kryfo id and the
+  // push endpoint, which is the one thing a burner room exists to withhold.
+  // it used to hand that frame back unchanged on an unexpected prefix or a
+  // parse that threw, and the caller sent it.
+  String? _roomify(String wrapped, String pub) {
     const prefix = 'halo/1:';
-    if (!wrapped.startsWith(prefix)) return wrapped;
+    if (!wrapped.startsWith(prefix)) {
+      dlog('room: frame is not halo/1, not sending it');
+      return null;
+    }
     try {
       final j =
           jsonDecode(wrapped.substring(prefix.length)) as Map<String, dynamic>;
@@ -6610,9 +6617,19 @@ class AppState extends ChangeNotifier {
       j.remove('p');
       j.remove('bg');
       j.remove('rp');
-      return '$prefix${jsonEncode(j)}';
-    } catch (_) {
-      return wrapped;
+      final out = '$prefix${jsonEncode(j)}';
+      // read it back: the fields have to be gone, whatever the encoder did
+      final check = jsonDecode(out.substring(prefix.length)) as Map;
+      for (final k in ['o', 'e', 'p', 'bg', 'rp']) {
+        if (check.containsKey(k)) {
+          dlog('room: $k survived the strip, not sending it');
+          return null;
+        }
+      }
+      return out;
+    } catch (e) {
+      dlog('room: could not strip the frame, not sending it');
+      return null;
     }
   }
 
@@ -6701,6 +6718,9 @@ class AppState extends ChangeNotifier {
       ),
       k.pub,
     );
+    if (wrapped == null) {
+      return 'Joined ${link.name}, but your hello was held back';
+    }
     final r = await engine.roomSendFirstContact(
       k.priv,
       link.creatorPub,
