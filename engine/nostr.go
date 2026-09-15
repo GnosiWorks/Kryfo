@@ -742,6 +742,28 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 						r.Close()
 						goto reconnect
 					case <-kickChan():
+						// the job knocks every fifteen minutes so sockets that
+						// died while the phone was asleep come back inside its
+						// short window. a socket that is still answering does
+						// not need reviving, and dropping it cost a full since
+						// window on every contact and every relay: 6.6mb a
+						// kick, measured, four times an hour, for nothing that
+						// ever reached the screen. ask before tearing down.
+						//
+						// a runner with no live subscription never gets here -
+						// it is asleep in sleepOrKick and still reconnects at
+						// once, which is the case the kick exists for.
+						if relayResponds(ctx, r) {
+							log.Printf("nostr: %s kicked but still answering, keeping the sub", u)
+							if !idle.Stop() {
+								select {
+								case <-idle.C:
+								default:
+								}
+							}
+							idle.Reset(deaf)
+							continue
+						}
 						log.Printf("nostr: %s kicked, reconnecting now", u)
 						idle.Stop()
 						r.Close()
