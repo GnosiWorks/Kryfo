@@ -173,17 +173,38 @@ Future<String> _sendChunkedMediaInner({
   var parked = false;
   var next = 0;
 
+  // a chunk that will not go through costs that chunk, not the transfer.
+  // it used to cost the transfer: one slice failing its three dials, about
+  // two seconds, ended a send that was ninety-five per cent done, and a
+  // longer file is more slices so more chances to lose the lot. a failed
+  // slice goes back in the queue now and another pass picks it up, with a
+  // breather between passes because a wedged circuit needs longer than the
+  // gap between dials. the send gives up only when one slice has burned
+  // the whole budget, which is what a dead route actually looks like.
+  //
+  // the genuinely-whole-send failures still stop everything at once:
+  // cancelled, parked, and a file that has gone from disk.
+  const chunkPasses = 4;
+  final attempts = <int, int>{};
+  final retryQueue = <int>[];
+
+  int? takeChunk() {
+    if (retryQueue.isNotEmpty) return retryQueue.removeAt(0);
+    while (next < total && done.contains(next)) {
+      next++;
+    }
+    if (next >= total) return null;
+    return next++;
+  }
+
   Future<void> worker() async {
     while (failure == null && !parked) {
       if (mediaCancelled.contains(msgUid)) {
         failure = 'cancelled';
         return;
       }
-      while (next < total && done.contains(next)) {
-        next++;
-      }
-      if (next >= total) return;
-      final i = next++;
+      final i = takeChunk();
+      if (i == null) return;
       final t0 = DateTime.now();
       final String slice;
       try {
@@ -271,10 +292,20 @@ Future<String> _sendChunkedMediaInner({
       }
       final ms = DateTime.now().difference(t0).inMilliseconds;
       if (!sent) {
-        dlog('MEDIA chunk $i/$total failed after ${ms}ms: $lastErr');
-        // keep what landed so the next go resumes from here
-        failure = lastErr;
-        return;
+        final pass = (attempts[i] ?? 0) + 1;
+        attempts[i] = pass;
+        dlog(
+          'MEDIA chunk $i/$total failed after ${ms}ms, pass $pass: $lastErr',
+        );
+        if (pass >= chunkPasses) {
+          // this one is not going through. keep what landed so the next
+          // go resumes from here rather than starting over.
+          failure = lastErr;
+          return;
+        }
+        retryQueue.add(i);
+        await Future.delayed(Duration(seconds: 2 * pass));
+        continue;
       }
       done.add(i);
       chunkDoneAt[msgUid] = DateTime.now().millisecondsSinceEpoch;
