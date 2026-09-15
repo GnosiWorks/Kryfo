@@ -1,0 +1,13 @@
+The app lock could be walked around, and anyone on 0.2.7 was open to it. Attaching a photo or sharing your card tells the lock not to ask for the pin while the picker is up. But the lock only asked itself that question on the way out, so leaving the picker for another app meant nothing ever locked: the app sat unlocked in the background until the next cold start. It asks again on the way back in now.
+
+The scam shield has never once run in a group. The check that decides whether to look at a stranger's first message was written so that in a group it was always false, so the mark on a flagged member and the block from inside the group have been dead since they shipped. It looks at a message from any member you never added, which is what it always said it did.
+
+A burner room message that could not be stripped of your identity was sent anyway. The part that takes your address off a room message handed it back untouched when it could not parse it. It refuses now and the message is dropped instead.
+
+Kryfo would not let you type and then closed itself, on Android 13 and newer, once you had refused the notification permission twice. It asked again every time a screen came to the front and Android answered instantly from its own record, tens of times a second, so the keyboard could not stay up and the phone warmed up until Android killed the app. It asks once now.
+
+Home says when Android is blocking notifications and opens the page that turns them back on, because nothing arrives while Kryfo is closed when they are off and nothing used to say so.
+
+Blocking someone in a group now takes their messages off the screen for good, not until you reopen it. A message waiting for someone to add you back is visible on home again, with its retry. Cancelling the big file sheet no longer spends one of the two messages a stranger gets.
+
+Release builds are now made in a pinned container at the path F-Droid builds in, so an APK from us can be checked against one built from this source, byte for byte.
