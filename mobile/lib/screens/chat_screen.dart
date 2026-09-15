@@ -764,7 +764,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       _checkInbox();
-      _refreshPreviews();
     });
   }
 
@@ -902,32 +901,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // rebuild from scratch (that full reload was eating the bubble-in animation
   // and felt laggy). falls back to a full reload if anything looks off - an
   // edit, a delete, a reaction, or a row we already have.
-  // a link-preview update arrives as a separate control message and only
-  // updates an existing row's preview column - _tryAppendNew won't see it (no
-  // new row). so each tick, pull previews for messages that have a url but no
-  // card yet and patch them in live. cheap: only runs while a preview is
-  // genuinely missing.
-  Future<void> _refreshPreviews() async {
-    if (!_loaded) return;
-    final pending = _messages
-        .where((m) => m.preview == null && firstUrl(m.text) != null)
-        .toList();
-    if (pending.isEmpty) return;
-    var changed = false;
-    for (final m in pending) {
-      if (m.msgUid == null) continue;
-      final pv = await db.getMsgPreview(m.msgUid!);
-      if (pv != null && pv.isNotEmpty) {
-        try {
-          final d = jsonDecode(pv) as Map<String, dynamic>;
-          m.preview = d.map((k, v) => MapEntry(k, v.toString()));
-          changed = true;
-        } catch (_) {}
-      }
-    }
-    if (changed && mounted) setState(() {});
-  }
-
   // a delivery receipt flipped `delivered` in the db for a message already on
   // screen. _tryAppendNew won't catch it (no new row), so re-read the flag for
   // any out-message not yet marked delivered and update the bubble in place.

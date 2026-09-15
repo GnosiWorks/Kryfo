@@ -892,7 +892,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 46,
+      version: 47,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1023,6 +1023,15 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 47) {
+          // the reader-side title cache. nothing ever read or wrote it and
+          // there was no way to ask for a title, so it goes.
+          try {
+            await db.execute('DROP TABLE IF EXISTS link_titles');
+          } catch (e) {
+            dlog('migration 47: $e');
+          }
+        }
         if (oldV < 46) {
           // onion-lane messages past the stranger cap, kept for accept
           await _heldTable(db);
@@ -2829,50 +2838,6 @@ class HaloDb {
     return rows.isNotEmpty;
   }
 
-  Future<String?> getLinkTitle(String url) async {
-    final db = await open();
-    final rows = await db.query(
-      'link_titles',
-      columns: ['title'],
-      where: 'url = ?',
-      whereArgs: [url],
-      limit: 1,
-    );
-    return rows.isEmpty ? null : rows.first['title'] as String?;
-  }
-
-  Future<void> setLinkTitle(String url, String title) async {
-    final db = await open();
-    await db.insert('link_titles', {
-      'url': url,
-      'title': title,
-      'at': DateTime.now().millisecondsSinceEpoch,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
-  }
-
-  Future<String?> getMsgPreview(String msgUid) async {
-    final db = await open();
-    final rows = await db.query(
-      'messages',
-      columns: ['preview'],
-      where: 'msg_uid = ?',
-      whereArgs: [msgUid],
-      limit: 1,
-    );
-    if (rows.isEmpty) return null;
-    return rows.first['preview'] as String?;
-  }
-
-  Future<int> setMsgPreview(String msgUid, String previewJson) async {
-    final db = await open();
-    return db.update(
-      'messages',
-      {'preview': previewJson},
-      where: 'msg_uid = ?',
-      whereArgs: [msgUid],
-    );
-  }
-
   Future<void> setMsgBurnAt(String msgUid, int burnAt) async {
     final db = await open();
     await db.update(
@@ -3238,14 +3203,6 @@ Future<void> _shieldTable(Database db) async {
       headline TEXT NOT NULL,
       lines TEXT NOT NULL,
       dismissed INTEGER NOT NULL DEFAULT 0,
-      at INTEGER NOT NULL
-    )
-  ''');
-  // titles the reader asked for, by url, so a second ask costs no request
-  await db.execute('''
-    CREATE TABLE IF NOT EXISTS link_titles (
-      url TEXT PRIMARY KEY,
-      title TEXT NOT NULL,
       at INTEGER NOT NULL
     )
   ''');
