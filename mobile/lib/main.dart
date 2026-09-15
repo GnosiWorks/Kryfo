@@ -5515,6 +5515,10 @@ class AppState extends ChangeNotifier {
       dlog('BOOT failed: $e\n$st');
       bootError = e.toString();
       _booting = false;
+      // a boot that threw before the signal step never completed this, and
+      // both deep link handlers wait on it. a tapped kryfo:// link hung
+      // there for the life of the process with nothing on screen.
+      if (!_signalReady.isCompleted) _signalReady.complete();
       notifyListeners();
     }
   }
