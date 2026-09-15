@@ -445,11 +445,21 @@ class _BridgesScreenState extends State<BridgesScreen> {
                     ),
             ),
           ),
-          if (_result != null && _result != 'ok') ...[
+          // the engine answers "ok: 3 bridges", never a bare ok, so the
+          // old check for exactly 'ok' never matched and a save that
+          // worked printed in the error colour
+          if (_result != null) ...[
             const SizedBox(height: 10),
             Text(
-              _result!.replaceFirst('error: ', ''),
-              style: HaloType.mono(size: 11, color: HaloColors.rose),
+              _result!.startsWith('ok')
+                  ? _result!.replaceFirst('ok: ', '')
+                  : _result!.replaceFirst('error: ', ''),
+              style: HaloType.mono(
+                size: 11,
+                color: _result!.startsWith('ok')
+                    ? HaloColors.text2
+                    : HaloColors.rose,
+              ),
             ),
           ],
           const SizedBox(height: 22),
