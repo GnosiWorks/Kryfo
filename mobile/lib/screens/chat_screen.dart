@@ -1280,7 +1280,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                target.saved ? 'Unsave' : 'save',
+                                target.saved ? 'Unsave' : 'Save',
                                 style: HaloType.sans(
                                   size: 13,
                                   color: HaloColors.text,
@@ -1384,7 +1384,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
-                            target.pinned ? 'Unpin' : 'pin',
+                            target.pinned ? 'Unpin' : 'Pin',
                             style: HaloType.sans(
                               size: 13,
                               color: HaloColors.text,
