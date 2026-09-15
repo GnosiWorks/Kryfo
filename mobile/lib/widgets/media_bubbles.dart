@@ -41,7 +41,67 @@ IconData _fileGlyph(String name) {
   return Icons.insert_drive_file_outlined;
 }
 
+// a picture sent through the file picker arrives as a file and was drawn as
+// a row with a paperclip, so a photo looked like a document. if the name
+// says it is an image, show it as one; the name underneath keeps what the
+// file card was for. a name that lies is caught by the decode: errorBuilder
+// falls all the way back to the plain card.
+const _imageExts = {
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.gif',
+  '.webp',
+  '.bmp',
+  '.heic',
+  '.heif',
+};
+
+bool _nameSaysImage(String? name) {
+  final n = (name ?? '').toLowerCase();
+  return _imageExts.any(n.endsWith);
+}
+
 Widget fileCard(String? filePath, String? fileName, bool isOut) {
+  if (filePath != null && _nameSaysImage(fileName)) {
+    final fallback = _plainFileCard(filePath, fileName, isOut);
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 230),
+      child: Image.file(
+        File(filePath),
+        fit: BoxFit.cover,
+        cacheWidth: 460,
+        filterQuality: FilterQuality.low,
+        errorBuilder: (_, _, _) => fallback,
+        // wraps only an image that is actually loading, so the caption
+        // cannot end up under a card that replaced it
+        frameBuilder: (ctx, child, frame, wasSync) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: child,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              fileName ?? 'file',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: HaloType.mono(
+                size: 9,
+                color: isOut ? HaloColors.onAmber : HaloColors.text3,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  return _plainFileCard(filePath, fileName, isOut);
+}
+
+Widget _plainFileCard(String? filePath, String? fileName, bool isOut) {
   final fg = isOut ? HaloColors.onAmber : HaloColors.text;
   final sub = isOut ? HaloColors.onAmber : HaloColors.text3;
   final icon = isOut ? HaloColors.onAmber : HaloColors.amber;
