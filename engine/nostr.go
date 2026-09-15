@@ -112,6 +112,11 @@ var (
 // a couple of misses is just a bad circuit, not a dead relay.
 const relayFailGrace = 3
 
+// our own relay carries the traffic, so it is retried far more eagerly than
+// the public ones: seconds apart rather than minutes. it is still a ceiling
+// and not an exemption.
+const ownRelayCeiling = 20 * time.Second
+
 func relayBackoff(n int) time.Duration {
 	if n <= relayFailGrace {
 		return 0
@@ -158,12 +163,20 @@ func relayOK(u string) {
 }
 
 // how long to wait before the next attempt, never shorter than the caller's
-// own cadence.
-func relayRetryAfter(u string, base time.Duration) time.Duration {
+// own cadence. our own relay backs off too, but to a much lower ceiling:
+// "heal it hard" has to stop short of "hammer it forever". with the relay
+// answering 502 for a day, exempting it entirely meant every subscription
+// redialled it every three seconds, around the clock, on whatever
+// connection the phone had. that was a real bill for a real person.
+func relayRetryAfter(u string, base time.Duration, own bool) time.Duration {
 	relayHealthMu.Lock()
 	n := relayFails[u]
 	relayHealthMu.Unlock()
-	if d := relayBackoff(n); d > base {
+	d := relayBackoff(n)
+	if own && d > ownRelayCeiling {
+		d = ownRelayCeiling
+	}
+	if d > base {
 		return d
 	}
 	return base
@@ -594,12 +607,8 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 				r := nostr.NewRelay(ctx, u, nostr.RelayOptions{})
 				if err := r.ConnectWithClient(ctx, client); err != nil {
 					log.Printf("nostr: subscribe-connect %s: %v", u, err)
-					wait := retry
-					if !own {
-						relayFailed(u)
-						wait = relayRetryAfter(u, retry)
-					}
-					sleepOrKick(wait)
+					relayFailed(u)
+					sleepOrKick(relayRetryAfter(u, retry, own))
 					continue
 				}
 				// a relay answered. this is the one fact the watchdog trusts.
@@ -624,17 +633,13 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 				if err != nil {
 					log.Printf("nostr: subscribe %s: %v", u, err)
 					r.Close()
-					wait := retry
-					if !own {
-						relayFailed(u)
-						wait = relayRetryAfter(u, retry)
-					}
-					sleepOrKick(wait)
+					relayFailed(u)
+					sleepOrKick(relayRetryAfter(u, retry, own))
 					continue
 				}
-				if !own {
-					relayOK(u)
-				}
+				// our own relay's successes clear its count too now that its
+				// failures are counted
+				relayOK(u)
 				log.Printf("nostr: listening on %s for addr %s...", u, rcvPk[:12])
 				// a dead tor circuit leaves the websocket open but mute - no
 				// error, no channel close, this select just goes deaf forever
