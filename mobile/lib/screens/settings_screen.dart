@@ -18,6 +18,7 @@ import 'bridges_screen.dart';
 import 'seen_screen.dart';
 import '../copy.dart';
 import '../theme.dart';
+import '../notif_permission.dart';
 import 'modes_screen.dart';
 import 'blocked_screen.dart';
 import 'push_settings_screen.dart';
@@ -177,6 +178,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'allowed',
                     ),
                     _postureLine('app lock', lockState.enabled, 'on', 'off'),
+                    // only when android is blocking them: a line that says
+                    // so outlives the home banner, which can be dismissed
+                    FutureBuilder<bool>(
+                      future: notificationsEnabled(),
+                      builder: (_, snap) => snap.data == false
+                          ? _postureLine(
+                              'notifications',
+                              false,
+                              '',
+                              'blocked by android',
+                            )
+                          : const SizedBox.shrink(),
+                    ),
                   ],
                 ),
               );

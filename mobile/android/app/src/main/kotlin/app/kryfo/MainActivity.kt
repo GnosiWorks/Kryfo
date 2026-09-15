@@ -25,6 +25,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import android.content.ActivityNotFoundException
 import android.net.Uri
@@ -224,6 +225,14 @@ class MainActivity : FlutterFragmentActivity() {
                         )
                     }
                     "lastExit" -> result.success(lastExit())
+                    "notificationsEnabled" -> {
+                        result.success(
+                            NotificationManagerCompat.from(this).areNotificationsEnabled()
+                        )
+                    }
+                    "openNotificationSettings" -> {
+                        result.success(openNotificationSettings())
+                    }
                     "openAutostartSettings" -> {
                         result.success(openAutostartSettings())
                     }
@@ -362,6 +371,31 @@ class MainActivity : FlutterFragmentActivity() {
             )
         } catch (e: Exception) {
             null
+        }
+    }
+
+    // android's own notification page for kryfo. the permission dialog is
+    // gone for good once the answer is final, so this is the only way back.
+    private fun openNotificationSettings(): Boolean {
+        val direct = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+            putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+        }
+        try {
+            startActivity(direct)
+            return true
+        } catch (e: Exception) {
+            // some builds do not carry that page; the app details page has
+            // the same switch one tap deeper
+        }
+        return try {
+            startActivity(
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.fromParts("package", packageName, null)
+                }
+            )
+            true
+        } catch (e: Exception) {
+            false
         }
     }
 
