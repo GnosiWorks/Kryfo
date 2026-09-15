@@ -4363,7 +4363,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       final obj = key.currentContext?.findRenderObject();
       if (obj is! RenderBox) return;
       final dy = obj.localToGlobal(Offset.zero).dy;
-      if (dy <= top + 6 && dy > bestDy) {
+      // the floating chip sits at the top of this same list, so a divider
+      // counted as passed while it is still on screen drew the day twice,
+      // a few pixels apart. it has only passed once its bottom edge is
+      // above the top of the list.
+      if (dy + obj.size.height <= top && dy > bestDy) {
         bestDy = dy;
         best = _dayMsOf[anchor];
       }
