@@ -14,9 +14,10 @@
 # options:
 #   --ref <rev>   the commit to build (default: HEAD of this repo). a release
 #                 is verified against its tag.
-#   --cache       mount ~/.gradle and ~/.pub-cache into the container so the
-#                 second run does not download the world again. the build
-#                 output does not depend on the caches, only the wait does.
+#   --cache       mount ~/.pub-cache into the container so the second run
+#                 does not fetch every package again. the gradle cache is
+#                 never shared: the host's journal lock deadlocks against
+#                 the container's daemon and the build hangs.
 #   --keep        leave the checkout and the container output in place
 set -e
 cd "$(dirname "$0")"
@@ -96,8 +97,8 @@ docker build -q -t "$IMAGE" . >/dev/null
 
 MOUNTS=(-v "$WORK/src:/home/vagrant/build/app.kryfo" -v "$WORK/out:/out")
 if [ -n "$CACHE" ]; then
-  mkdir -p "$HOME/.gradle" "$HOME/.pub-cache"
-  MOUNTS+=(-v "$HOME/.gradle:/home/vagrant/.gradle" -v "$HOME/.pub-cache:/home/vagrant/.pub-cache")
+  mkdir -p "$HOME/.pub-cache"
+  MOUNTS+=(-v "$HOME/.pub-cache:/home/vagrant/.pub-cache")
 fi
 mkdir -p "$WORK/out"
 echo "== building in the container"
