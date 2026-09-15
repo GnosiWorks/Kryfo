@@ -124,7 +124,15 @@ class SendProgressLabel extends StatelessWidget {
 /// slim "receiving media" pill above the composer. self-hiding.
 class IncomingMediaBanner extends StatelessWidget {
   final String chatKey;
-  const IncomingMediaBanner({super.key, required this.chatKey});
+  /// stops an outgoing send from the strip itself. the way out already
+  /// existed, behind a long press on a bubble that is busy sending, which
+  /// is not somewhere anyone looks while a strip says "keep the app open".
+  final void Function(String msgUid)? onCancel;
+  const IncomingMediaBanner({
+    super.key,
+    required this.chatKey,
+    this.onCancel,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -134,15 +142,23 @@ class IncomingMediaBanner extends StatelessWidget {
         // an outgoing send for this chat takes precedence: that's the
         // one where the user can still ruin it by leaving.
         double? outV;
+        String? outUid;
         for (final e in _sendChat.entries) {
           if (e.value == chatKey) {
-            outV = mediaSendProgress[e.key];
-            if (outV != null) break;
+            final v = mediaSendProgress[e.key];
+            if (v != null) {
+              outV = v;
+              outUid = e.key;
+              break;
+            }
           }
         }
         final v = outV ?? incomingMediaProgress[chatKey];
         if (v == null) return const SizedBox.shrink();
         final sending = outV != null;
+        // captured as locals so the tap closure keeps a non-null pair
+        final cancelUid = outUid;
+        final cancel = onCancel;
         final stalled = !sending && incomingMediaStalled.contains(chatKey);
         final count = _incomingCount[chatKey];
         return Padding(
@@ -182,6 +198,31 @@ class IncomingMediaBanner extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (sending && cancelUid != null && cancel != null) ...[
+                  const SizedBox(width: 10),
+                  Semantics(
+                    button: true,
+                    label: 'Cancel sending',
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => cancel(cancelUid),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 3,
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: HaloType.mono(
+                            size: 10.5,
+                            weight: FontWeight.w700,
+                            color: HaloColors.text2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

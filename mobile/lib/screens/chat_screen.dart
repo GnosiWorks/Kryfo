@@ -4765,7 +4765,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     )
                   : const SizedBox.shrink(),
             ),
-            IncomingMediaBanner(chatKey: widget.peerHaloId),
+            IncomingMediaBanner(
+              chatKey: widget.peerHaloId,
+              onCancel: (uid) {
+                for (final m in _messages) {
+                  if (m.msgUid == uid) {
+                    _stopSending(m);
+                    return;
+                  }
+                }
+              },
+            ),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 260),
               switchInCurve: Curves.easeOut,
