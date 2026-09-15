@@ -350,28 +350,39 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (_pixels < 400) _loadOlder();
   }
 
+  // who is blocked, refreshed with every load. it used to be read from
+  // appState.contacts, which is accepted-only, so anyone blocked while
+  // still a stranger was never filtered at all.
+  Set<String> _blocked = {};
+
+  List<Map<String, Object?>> _withoutBlocked(List<Map<String, Object?>> rows) {
+    if (_blocked.isEmpty) return rows;
+    return [
+      for (final r in rows)
+        if (!_blocked.contains(r['peer_id'])) r,
+    ];
+  }
+
   Future<void> _loadOlder() async {
     if (_loadingOlder || !_hasMore || _searching) return;
     _loadingOlder = true;
     try {
       final oldestRowid = _messages.isEmpty ? null : _messages.first.rowid;
-      final blockedIds = {
-        for (final c in appState.contacts)
-          if (c.blocked) c.haloId,
-      };
+      _blocked = await db.blockedIds();
       final rows0 = await db.groupMessagesPage(
         widget.groupId,
         beforeRowid: oldestRowid,
         limit: _pageSize + 1,
       );
-      // a blocked member is out of sight here too, not only at the door
-      final rows = [
-        for (final r in rows0)
-          if (!blockedIds.contains(r['peer_id'])) r,
-      ];
+      // a blocked member is out of sight here too, not only at the door.
+      // the page size is judged before the filter, or one filtered row
+      // ends paging for good.
+      _hasMore = rows0.length > _pageSize;
+      final rows = _withoutBlocked(rows0);
       if (!mounted) return;
-      _hasMore = rows.length > _pageSize;
-      if (_hasMore) rows.removeAt(0);
+      if (_hasMore && rows.isNotEmpty && rows.length == rows0.length) {
+        rows.removeAt(0);
+      }
       if (!_hasMore) _pagedOut = true;
       if (rows.isEmpty) return;
       final uids = rows
@@ -481,14 +492,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       // keep whatever window the user has expanded to - a mid-scroll reaction
       // used to collapse the list back to one page and yank the view.
       final wantAll = _searching || _pagedOut || _messages.length > _pageSize;
-      final rows = wantAll
+      _blocked = await db.blockedIds();
+      final rows0 = wantAll
           ? await db.loadGroupMessages(widget.groupId)
           : await db.groupMessagesPage(widget.groupId, limit: _pageSize + 1);
       if (!wantAll) {
-        _hasMore = rows.length > _pageSize;
-        if (_hasMore) rows.removeAt(0);
+        _hasMore = rows0.length > _pageSize;
+        if (_hasMore) rows0.removeAt(0);
         if (!_hasMore) _pagedOut = true;
       }
+      final rows = _withoutBlocked(rows0);
       // gather reactions for every uid we have
       final uids = rows
           .map((r) => r['msg_uid'] as String?)
@@ -687,7 +700,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final lastRowid = _messages.isEmpty
         ? 0
         : _messages.map((m) => m.rowid).reduce((a, b) => a > b ? a : b);
-    final rows = await db.groupMessagesAfter(widget.groupId, lastRowid);
+    final rows = _withoutBlocked(
+      await db.groupMessagesAfter(widget.groupId, lastRowid),
+    );
     if (!mounted) return;
     final have = _messages.map((m) => m.msgUid).toSet();
     final brandNew = rows
