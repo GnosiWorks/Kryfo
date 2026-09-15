@@ -1780,7 +1780,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       final obj = key.currentContext?.findRenderObject();
       if (obj is! RenderBox) return;
       final dy = obj.localToGlobal(Offset.zero).dy;
-      if (dy <= top + 6 && dy > bestDy) {
+      // same as the one-to-one screen: the floating chip sits at the top of
+      // this list, so a divider counted as passed while it is still on
+      // screen drew the day twice.
+      if (dy + obj.size.height <= top && dy > bestDy) {
         bestDy = dy;
         best = _dayMsOf[anchor];
       }
