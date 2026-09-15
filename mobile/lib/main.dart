@@ -4946,7 +4946,12 @@ class AppState extends ChangeNotifier {
     }
     // scam shield: a stranger's opener, once, on this phone only. in a
     // group that is any member you never added.
-    if (!burnOk && (!isGroup || !senderAccepted)) {
+    //
+    // this used to be gated on burnOk, which is `isGroup || senderAccepted`,
+    // so in a group it was always false and the shield never ran once. the
+    // group half of the feature - the member mark, the in-group block - has
+    // never executed. the question is only whether we have accepted them.
+    if (!senderAccepted && senderHaloId != myId) {
       unawaited(
         _runShield(senderHaloId, env.message, env.senderAvatar, group: isGroup),
       );
