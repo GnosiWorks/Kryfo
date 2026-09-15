@@ -62,28 +62,35 @@ no tag yet. the tag goes on this commit once the apks built from it have
 been proven, below; f-droid builds the tag, so anything pushed later is
 the next release.
 
-## 4. build the apks
+## 4. build the apks, in the container
 
-    cd engine && HALO_FULL=1 bash build.sh && cd ../mobile
-    flutter build apk --release --split-per-abi
+    cd repro && ./release.sh
 
-signed with the release keystore that is not in the repo. build with
-jdk 17, the one f-droid's buildserver uses; a build made with another
-major can differ in classes.dex and fail the next step.
+that is the release build. it clones the commit clean, builds the engine
+and the three apks inside the pinned image at `/home/vagrant/build/app.kryfo`,
+signs them with the release keystore mounted read only, and leaves them in
+`repro/out/`. those three files are what you attach.
+
+it has to be the container, not this machine. the dart snapshot in
+`libapp.so` and the build-id of two plugin libraries bake in the absolute
+build path, so an apk built anywhere else can never match f-droid's, no
+matter what else is pinned. building where they build settles it and
+pins the jdk, flutter, go and the ndk at the same time.
+
+it refuses a dirty working tree: what ships must be a commit.
 
 ## 5. prove it reproduces
 
 f-droid rebuilds the tag on its own box and publishes only if every byte
-matches. check that here first, against the apks you just built:
+matches. confirm that before the tag exists:
 
-    cd repro && ./verify.sh --ref HEAD \
-        ../mobile/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
-        ../mobile/build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk \
-        ../mobile/build/app/outputs/flutter-apk/app-x86_64-release.apk
+    ./verify.sh --ref HEAD out/app-arm64-v8a-release.apk \
+        out/app-armeabi-v7a-release.apk out/app-x86_64-release.apk
 
 all three must say MATCH. a DIFFERS names the entries; the usual causes
-are in repro/README.md. fix, commit, rebuild, verify again. no tag until
-they match.
+are in repro/README.md. no tag until they match. do not pass `--cache`
+for a release check; it shares the pub cache, which is fine, but a
+release deserves the cold path.
 
 ## 6. tag and push
 
@@ -91,9 +98,9 @@ they match.
     git push origin main
     git push origin vX.Y.Z
 
-attach the arm64, armeabi-v7a and x86_64 apks to the github release for
-anyone sideloading before the f-droid index catches up. the armeabi-v7a
-one is the 32-bit phones; it exists since 0.2.7.
+attach the three apks from `repro/out/` to the github release for anyone
+sideloading before the f-droid index catches up. the armeabi-v7a one is
+the 32-bit phones; it exists since 0.2.7.
 
 ## 7. f-droid
 

@@ -24,13 +24,25 @@ finding.
 
 ## use
 
+    ./release.sh                 build the release apks in the container
+
+that is the release build, not a check on one: it clones the commit
+clean, builds engine and apks inside the image at f-droid's path, signs
+them with the keystore mounted read only, and leaves them in `out/`.
+those files are what you publish, so f-droid rebuilding the tag gets the
+same bytes by construction. `--unsigned` keeps the keystore out of the
+container and leaves the signing to you; the password is already in
+plain text in `mobile/android/key.properties` either way.
+
     ./verify.sh --ref v0.2.8 path/to/app-arm64-v8a-release.apk
 
 builds the image (first time: jdk, go, the android sdk, flutter, a while),
 clones the repo at the ref into a temp dir, builds the engine from scratch
 and then the apk inside the container, and diffs. give it all three apks
-to check all three. `--cache` mounts your gradle and pub caches so the
-second run is minutes, not an hour; the output does not depend on them.
+to check all three. `--cache` mounts your pub cache so the second run
+does not fetch every package again; the output does not depend on it.
+the gradle cache is never shared, because the host's journal lock
+deadlocks against the container's daemon.
 `--compare built.apk published.apk` skips the container and only diffs,
 for looking at two apks you already have.
 
