@@ -882,7 +882,13 @@ class _OfflineStrip extends StatelessWidget {
         // speaks when the phone cannot send, or when a message waits on
         // someone who has not added you back.
         final cannotSend = !appState.online || !appState.torReady;
-        if (!cannotSend) return const SizedBox.shrink();
+        // "or when a message waits on someone who has not added you back"
+        // is the second half of the rule above, and it was dropped from
+        // this line. without it every branch below that needs a working
+        // phone was unreachable: the parked tails and the retry button
+        // could not render at all, so a message parked on a peer who has
+        // not added you back was invisible everywhere on home.
+        if (!cannotSend && p == 0) return const SizedBox.shrink();
 
         final offline = !appState.online;
         final torDown = !offline && !appState.torReady;
