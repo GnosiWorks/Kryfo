@@ -38,9 +38,10 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-# every zip entry with its sha256, minus the v1 signature files (a container
-# build is signed with a throwaway debug key). the v2/v3 signature lives in
-# the signing block, which is not an entry, so nothing else is skipped.
+# every zip entry with its sha256, minus the v1 signature files. the
+# container builds unsigned and the published apk is signed, so those files
+# exist on one side only; the v2/v3 signature lives in the signing block,
+# which is not an entry at all. everything else is compared.
 entries() {
   local dir
   dir=$(mktemp -d)
@@ -108,9 +109,12 @@ echo
 echo "== compare"
 rc=0
 for shipped in "${APKS[@]}"; do
-  built="$WORK/out/$(basename "$shipped")"
-  if [ ! -f "$built" ]; then
-    echo "  the container made no $(basename "$shipped"); it makes app-<abi>-release.apk"
+  # the container's apk is unsigned, so its name carries -unsigned. match
+  # on the abi rather than the whole basename.
+  abi=$(basename "$shipped" | sed -n 's/^app-\(.*\)-release.*\.apk$/\1/p')
+  built=$(ls "$WORK/out/app-$abi-release"*.apk 2>/dev/null | head -1)
+  if [ -z "$abi" ] || [ ! -f "$built" ]; then
+    echo "  the container made nothing for $(basename "$shipped")"
     rc=1
     continue
   fi
