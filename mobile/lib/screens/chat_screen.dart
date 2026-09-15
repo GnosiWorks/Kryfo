@@ -7849,6 +7849,18 @@ class MediaGalleryScreen extends StatelessWidget {
                     fit: BoxFit.cover,
                     cacheWidth: 360,
                     filterQuality: FilterQuality.low,
+                    // no handler at all drew a black square for a photo whose
+                    // file is gone, with nothing to say whether it was the
+                    // picture or the app that failed.
+                    errorBuilder: (_, _, _) => Container(
+                      color: HaloColors.surface2,
+                      alignment: Alignment.center,
+                      child: Icon(
+                        Icons.image_not_supported_outlined,
+                        size: 22,
+                        color: HaloColors.text3,
+                      ),
+                    ),
                   ),
                 );
               },
