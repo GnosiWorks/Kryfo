@@ -2,10 +2,24 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [unreleased]
+## [0.2.8] - 2026-09-15
 
 ### Fixed
+- the app lock could be walked around, and anyone who had installed 0.2.7 was open to it. attaching a photo, picking a file or sharing your card tells the lock not to ask for the pin while the picker is up, which is right. but the lock only ever asked itself the question on the way out. leave the picker for another app instead of coming back, and the pause it needed had already happened: nothing locked, and the app sat unlocked in the background until the next cold start. come back an hour later and your chats were open. the question is asked again on the way back in now, where it is possible to know whether the picker returned.
+- the scam shield has never once run in a group. the check that decides whether to look at a stranger's first message was written so that in a group it was always false. every group part of the feature - the mark on a flagged member's messages, the block from inside the group, the check itself - has been dead since it shipped. it looks at a message from any member you never added, which is what it always said it did. the sheet that explains a flag has a group wording built into it that nobody could ever have seen.
+- a burner room frame that could not be stripped of your identity was sent anyway. the function that takes your onion address, your kryfo id and your push endpoint off a room message handed the message back untouched when it could not parse it, and the caller sent that. it refuses now, and the send is dropped instead.
+- blocking someone in a group left everything they had already said on screen. the filter ran on one of the three paths that load messages, so reopening the group brought it all back, and someone blocked before you ever accepted them was never filtered at all.
+- a message waiting for someone to add you back was invisible on home. half the condition on the status strip was dropped, which also took the retry button with it.
+- cancelling the "send this file?" sheet still spent one of the two messages a stranger is allowed before you accept them. two cancels locked the composer.
 - the app would not let you type, then closed itself. on android 13 and newer, once you had refused the notification permission twice, kryfo asked again every time a screen came to the front, and android answered instantly from its own record rather than showing a dialog. that is a request every forty milliseconds, for as long as the app is open: the window loses focus each turn, so the keyboard will not stay up, taps and the back key land on a screen that is already going, and the phone warms up until android kills the app. it asks once now, and not at all once the answer is final. nothing to do with the phone being 32-bit or short of memory; a refusal on android 13 was enough.
+- scrolling back in a group could stop early once a blocked member's messages were filtered out of a page.
+
+### Added
+- home says when android is blocking notifications, and opens the page that turns them back on. nothing arrives while the app is closed when they are off, and until now nothing said so. the android 13 permission dialog does not come back once your answer is final, so that page is the only way. dismiss the banner and a line in settings still says it.
+
+### Changed
+- release builds are made in a pinned container at the path f-droid builds in, which is what makes an apk you can check against ours byte for byte. repro/README.md says what that means and what it does not.
+- dependencies moved up within the versions already declared. the encrypted storage and the signal libraries were deliberately left where they are.
 
 ## [0.2.7] - 2026-09-14
 
