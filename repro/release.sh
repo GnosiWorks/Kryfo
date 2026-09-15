@@ -65,7 +65,11 @@ mkdir -p "$WORK/out"
 echo "== image"
 docker build -q -t "$IMAGE" . >/dev/null
 echo "== building (no gradle cache is shared: the host's journal lock deadlocks)"
-docker run --rm -u "$(id -u):$(id -g)" \
+# cgo opens a lot of files at once building tor and openssl. the
+# daemon hands a container 1024 by default, which is under what
+# that needs: the engine build then dies with "too many open
+# files", sometimes, which is worse than always.
+docker run --rm --ulimit nofile=65536:65536 -u "$(id -u):$(id -g)" \
   -v "$WORK/src:/home/vagrant/build/app.kryfo" \
   -v "$WORK/out:/out" \
   "$IMAGE"
