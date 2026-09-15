@@ -2,6 +2,15 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Fixed
+- the app re-downloaded the same messages over and over in the background, which could use a lot of mobile data. it doesn't now. one person got through 3.5gb in a day without sending anything: the app treated a quiet conversation as a broken connection, dropped it every seventy-five seconds and asked for the last twelve hours again each time, and after a photo or a voice note that is a few megabytes of the same data every cycle. it checks the connection with a question instead of throwing it away, and it no longer asks for more than the time it was away could have hidden.
+- a photo, file or voice note showed a tick before it had arrived. finishing an upload means the pieces were accepted somewhere, not that the other person got them; on the relay route those are not the same thing, and a photo could sit ticked and unread for good. media now says nothing until the receipt comes back, then says delivered.
+- one bad piece of a photo or video killed the whole transfer. each piece gets its own retries now, so a single dropped one costs that piece and not the file.
+- voice notes could stop partway through, and tapping them started again from the beginning. when android takes the audio player back the note is now reloaded and carries on where it stopped.
+- the tor screen still described the faster modes as coming soon, long after they shipped. it points at where they live in settings.
+
 ## [0.2.8] - 2026-09-15
 
 ### Fixed
