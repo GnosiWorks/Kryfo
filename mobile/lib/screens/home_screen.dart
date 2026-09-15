@@ -26,6 +26,7 @@ import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/shift_in_place.dart';
 import '../widgets/confirm_sheet.dart';
+import '../notif_permission.dart';
 
 bool _miuiPromptChecked = false;
 
@@ -90,6 +91,7 @@ class HomeScreen extends StatelessWidget {
             const _BridgeHint(),
             const _BridgeStuckHint(),
             const _RelayDownHint(),
+            const _NotificationsBlockedHint(),
             StaggerIn(
               index: 1,
               child: _QuickTiles(
@@ -402,6 +404,142 @@ class _HomeHead extends StatelessWidget {
           _AddScanButton(onTap: onAdd),
           const SizedBox(width: 12),
           TorHalo(label: true),
+        ],
+      ),
+    );
+  }
+}
+
+// android is not letting kryfo put a notification up. nothing arrives
+// while the app is closed and, before this, nothing said so. the android
+// 13 permission dialog does not come back once the answer is final, so
+// the only way out is the page this opens.
+class _NotificationsBlockedHint extends StatefulWidget {
+  const _NotificationsBlockedHint();
+
+  @override
+  State<_NotificationsBlockedHint> createState() =>
+      _NotificationsBlockedHintState();
+}
+
+class _NotificationsBlockedHintState extends State<_NotificationsBlockedHint>
+    with WidgetsBindingObserver {
+  bool _show = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _check();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // coming back from android's settings is the moment the answer changes
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _check();
+  }
+
+  Future<void> _check() async {
+    final on = await notificationsEnabled();
+    if (on) await clearNotifHintDismissal();
+    final show = !on && !await notifHintDismissed();
+    if (mounted && show != _show) setState(() => _show = show);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_show) return const SizedBox.shrink();
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      decoration: BoxDecoration(
+        color: HaloColors.amber.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: HaloColors.amber.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              BreathDot(color: HaloColors.amber, size: 7),
+              const SizedBox(width: 9),
+              Text(
+                'Notifications are off',
+                style: HaloType.mono(
+                  size: 11,
+                  color: HaloColors.amber,
+                  weight: FontWeight.w600,
+                  letter: 0.12,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Android is blocking them, so nothing reaches you while kryfo '
+            'is closed. Messages still arrive when you open it.',
+            style: HaloType.sans(size: 13, color: HaloColors.text2),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () async {
+                  final opened = await openNotificationSettings();
+                  if (!opened && context.mounted) {
+                    showHaloToast(
+                      context,
+                      "couldn't open it. look for kryfo in phone settings",
+                    );
+                  }
+                },
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 15,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: HaloColors.amber,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    'Turn them on',
+                    style: HaloType.mono(
+                      size: 11.5,
+                      color: HaloColors.ink,
+                      weight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              GestureDetector(
+                onTap: () async {
+                  await dismissNotifHint();
+                  if (mounted) setState(() => _show = false);
+                },
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  child: Text(
+                    'Leave them off',
+                    style: HaloType.mono(size: 11.5, color: HaloColors.text2),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
