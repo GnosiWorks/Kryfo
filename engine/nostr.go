@@ -32,6 +32,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"runtime"
@@ -95,6 +96,31 @@ func sleepOrKick(d time.Duration) bool {
 		return false
 	case <-kickChan():
 		return true
+	}
+}
+
+// a req that cannot match anything. the relay answers eose and nothing
+// else, which is the cheapest proof that this circuit still carries data -
+// and unlike cycling the subscription it does not refetch a single stored
+// event. the library dispatches a fake eose after 7s when a relay stays
+// silent, which would make every probe pass, so that is disabled here:
+// only the relay's own eose counts.
+func relayResponds(ctx context.Context, r *nostr.Relay) bool {
+	pctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+	sub, err := r.Subscribe(pctx, nostr.Filter{
+		IDs:   []nostr.ID{{}},
+		Limit: 1,
+	}, nostr.SubscriptionOptions{MaxWaitForEOSE: time.Duration(math.MaxInt64)})
+	if err != nil {
+		return false
+	}
+	defer sub.Unsub()
+	select {
+	case <-sub.EndOfStoredEvents:
+		return true
+	case <-pctx.Done():
+		return false
 	}
 }
 
@@ -669,12 +695,22 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 						}
 						idle.Reset(deaf)
 					case <-idle.C:
-						log.Printf("nostr: %s quiet %s, cycling the sub", u, deaf)
+						// quiet is what a conversation looks like nearly all of the
+						// time, so treating it as a dead circuit was treating the
+						// normal case as a fault. every cycle re-ran the since
+						// window - 47 an hour on our own relay, 15 on each of the
+						// others - and after a media send that window is a hundred
+						// base64 chunks. one user paid for 3.5gb of the same wraps
+						// in a day that way. ask a question nothing can answer
+						// instead: a req matching no event costs a frame and an
+						// eose, and a real eose proves the circuit still carries
+						// data.
+						if relayResponds(ctx, r) {
+							idle.Reset(deaf)
+							continue
+						}
+						log.Printf("nostr: %s did not answer a probe, cycling the sub", u)
 						r.Close()
-						// a quiet relay proves nothing on its own - an idle chat looks
-						// exactly like a dead circuit from here. just cycle the sub; a
-						// genuinely unusable tor shows up as dial failures, which
-						// restartTor already watches for.
 						goto reconnect
 					case <-kickChan():
 						log.Printf("nostr: %s kicked, reconnecting now", u)
