@@ -530,6 +530,16 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 		f.WriteString(id + "\n")
 		f.Close()
 	}
+	// every relay runner snapshots the anchor when it starts and nothing
+	// hands it back. so the one relay that sees a new event moves its own
+	// copy and the other four stay pinned to whatever the window was at
+	// launch, refetching it for the life of the process. read it back.
+	loadLast := func() int64 {
+		seenMu.Lock()
+		defer seenMu.Unlock()
+		return lastSaved
+	}
+
 	saveLast := func(ts int64) {
 		seenMu.Lock()
 		stale := ts <= lastSaved
@@ -639,6 +649,11 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 				}
 				// a relay answered. this is the one fact the watchdog trusts.
 				noteRelayConnected()
+				// another runner may have moved the anchor on while this one
+				// was down. take the newer of the two before asking.
+				if cur := loadLast(); cur > int64(last) {
+					last = nostr.Timestamp(cur)
+				}
 				f := nostr.Filter{
 					Kinds: []nostr.Kind{1059},
 					Tags:  nostr.TagMap{"p": []string{rcvPk}},
