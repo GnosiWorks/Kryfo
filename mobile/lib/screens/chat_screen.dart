@@ -5731,7 +5731,17 @@ class _Bubble extends StatelessWidget {
     final failedShown = _sendLooksFailed(msg);
     final parked = msg.parked && !msg.sending && !msg.failed;
     final pending = msg.sending || (msg.failed && !failedShown);
-    final showMeta = isOut && !pending && !failedShown && !parked;
+    // a media send finishing means every slice was accepted somewhere, not
+    // that any of it arrived: on the relay lane a relay taking the bytes is
+    // not the peer reading them, which is the same overstatement parked was
+    // introduced to stop for text. a text message gets its receipt in
+    // seconds so a bare tick is a blink; a photo or a voice note can sit
+    // ticked and unread for good. three voice notes in one conversation
+    // minutes apart showed it: only the short one was ever acknowledged.
+    // so media says nothing until the receipt lands, then says Delivered.
+    final isMedia = msg.mediaPath != null || msg.filePath != null;
+    final ackOk = !isMedia || msg.delivered;
+    final showMeta = isOut && !pending && !failedShown && !parked && ackOk;
     final showPill = isOut && pending;
     final metaColor = (isOut && !isImage)
         ? HaloColors.onAmber.withValues(alpha: 0.55)
@@ -6063,7 +6073,8 @@ class _Bubble extends StatelessWidget {
                                                   ),
                                                   const SizedBox(width: 3),
                                                   if (!pending &&
-                                                      !failedShown) ...[
+                                                      !failedShown &&
+                                                      ackOk) ...[
                                                     Text(
                                                       '✓',
                                                       style: const TextStyle(
