@@ -28,13 +28,14 @@ ulimit -n 65536 2>/dev/null || true
 HALO_FULL=1 bash build.sh
 
 echo
-echo "== apk"
+echo "== apk (unsigned: the keystore never comes near this container)"
 cd "$SRC/mobile"
+export HALO_UNSIGNED=1
 flutter pub get --enforce-lockfile
 flutter build apk --release --split-per-abi
 
 echo
 echo "== out"
-cp build/app/outputs/flutter-apk/app-*-release.apk "$OUT/"
+cp build/app/outputs/flutter-apk/app-*-release*.apk "$OUT/"
 cd "$OUT"
-sha256sum app-*-release.apk
+sha256sum app-*.apk

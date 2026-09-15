@@ -27,12 +27,17 @@ finding.
     ./release.sh                 build the release apks in the container
 
 that is the release build, not a check on one: it clones the commit
-clean, builds engine and apks inside the image at f-droid's path, signs
-them with the keystore mounted read only, and leaves them in `out/`.
-those files are what you publish, so f-droid rebuilding the tag gets the
-same bytes by construction. `--unsigned` keeps the keystore out of the
-container and leaves the signing to you; the password is already in
-plain text in `mobile/android/key.properties` either way.
+clean, builds engine and apks inside the image at f-droid's path, then
+signs them here with apksigner and leaves them in `out/`. those files
+are what you publish, so f-droid rebuilding the tag gets the same bytes
+by construction.
+
+the container builds unsigned and the keystore never goes into it. that
+costs nothing: signing adds the block and the v1 files, which is exactly
+what the comparison leaves out. measured on 2026-09-15 - an unsigned
+build signed afterwards with apksigner is entry for entry identical to
+the same source signed by gradle, same certificate. `--unsigned` stops
+after the container and leaves the signing to you.
 
     ./verify.sh --ref v0.2.8 path/to/app-arm64-v8a-release.apk
 
@@ -63,6 +68,7 @@ step.
 | build-tools | 35.0.0, 36.0.0 | agp 8.11 wants 35; a plugin asks for 36 |
 | cmake | 3.22.1 | the jni and flutter_zxing plugins build native code with it |
 | build path | /home/vagrant/build/app.kryfo | f-droid's path, see below |
+| signing | outside the container, apksigner | the key stays off the container; nothing compared depends on it |
 
 go and the command line tools are checksum-verified; flutter is pinned to
 a commit; the sdk pieces come from google's manager at exact versions.

@@ -74,12 +74,15 @@ android {
     }
     buildTypes {
         release {
-            // real key when key.properties exists; debug fallback keeps
-            // day-to-day debug installs working without the keystore.
-            signingConfig = if (keystorePropertiesFile.exists()) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
+            // HALO_UNSIGNED=1 leaves the apk unsigned, so the reproducible
+            // container build never needs the keystore; repro/release.sh
+            // signs the result outside with apksigner. otherwise: the real
+            // key when key.properties exists, and the debug key so
+            // day-to-day builds still install without the keystore.
+            signingConfig = when {
+                System.getenv("HALO_UNSIGNED") == "1" -> null
+                keystorePropertiesFile.exists() -> signingConfigs.getByName("release")
+                else -> signingConfigs.getByName("debug")
             }
         }
     }

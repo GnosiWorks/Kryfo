@@ -68,8 +68,12 @@ the next release.
 
 that is the release build. it clones the commit clean, builds the engine
 and the three apks inside the pinned image at `/home/vagrant/build/app.kryfo`,
-signs them with the release keystore mounted read only, and leaves them in
-`repro/out/`. those three files are what you attach.
+then signs them here with apksigner and leaves them in `repro/out/`. those
+three files are what you attach.
+
+the container builds unsigned and the keystore never enters it. signing
+only adds the block and the v1 files, which the comparison leaves out
+anyway, so nothing that is checked depends on where it happens.
 
 it has to be the container, not this machine. the dart snapshot in
 `libapp.so` and the build-id of two plugin libraries bake in the absolute
