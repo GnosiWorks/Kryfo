@@ -99,6 +99,15 @@ measured on 2026-09-14 against the published v0.2.7 arm64 apk:
   edited those headers and rebuilt without it ships stale objects; the
   container does not, and the diff shows it.
 
+## a build that failed once and passed once
+
+the container is given 65536 open files on the command line. docker hands
+one 1024 by default, and cgo building tor and openssl wants more than
+that: the engine build died with "too many open files" on one run and
+got through on the next, from the same source. a release tool that is a
+coin flip is worse than one that always fails, so the limit is set
+rather than asked for.
+
 ## engine only, offline
 
 `Dockerfile.offline` and `engine-only.sh` build just libhalo.so with go and

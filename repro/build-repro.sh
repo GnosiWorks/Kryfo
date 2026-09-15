@@ -24,7 +24,10 @@ echo
 
 echo "== engine (all three archs, every object rebuilt)"
 cd "$SRC/engine"
-ulimit -n 65536 2>/dev/null || true
+# raise to whatever the hard limit allows. asking for a fixed number that
+# is above it fails, and the failure was being swallowed.
+ulimit -n "$(ulimit -Hn)" 2>/dev/null || true
+echo "open files: $(ulimit -n)"
 HALO_FULL=1 bash build.sh
 
 echo
