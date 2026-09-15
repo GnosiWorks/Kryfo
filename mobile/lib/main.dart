@@ -8538,8 +8538,13 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                     ).copyWith(height: 1.5),
                   ),
                   const SizedBox(height: 10),
+                  // this promised fast mode as a future thing long after it
+                  // shipped. a promise about something already in settings
+                  // is worse than saying nothing.
                   Text(
-                    'A faster mode that skips tor (and reveals your ip) is coming soon.',
+                    'Relay and fast modes skip tor and are quicker. They are '
+                    'in settings, under speed & privacy, and each says what '
+                    'it costs.',
                     style: HaloType.sans(size: 11, color: HaloColors.text2),
                   ),
                 ],
