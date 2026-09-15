@@ -7,11 +7,14 @@
 # same two commands RELEASING.md gives, run where f-droid runs them.
 set -e
 
-SRC=/home/vagrant/build/app.kryfo
+# where verify.sh mounted the checkout. it builds twice, at f-droid's path
+# and at another one, because a file that changes with the path is a file
+# f-droid's rebuild will disagree with us about.
+SRC=${HALO_SRC:-/home/vagrant/build/app.kryfo}
 OUT=/out
 
 if [ ! -f "$SRC/engine/build.sh" ]; then
-  echo "no source at $SRC. verify.sh mounts a checkout there." >&2
+  echo "no source at $SRC. verify.sh and release.sh mount one there." >&2
   exit 2
 fi
 

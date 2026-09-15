@@ -99,10 +99,18 @@ matches. confirm that before the tag exists:
     ./verify.sh --ref HEAD out/app-arm64-v8a-release.apk \
         out/app-armeabi-v7a-release.apk out/app-x86_64-release.apk
 
-all three must say MATCH. a DIFFERS names the entries; the usual causes
-are in repro/README.md. no tag until they match. do not pass `--cache`
-for a release check; it shares the pub cache, which is fine, but a
-release deserves the cold path.
+it builds twice: once at f-droid's path, which must match the apks you
+are about to publish on every entry, and once somewhere else, which must
+match the first everywhere except `lib/*/libapp.so`. both have to pass.
+
+the second build is the one that matters and the one we did not have.
+0.2.8 passed the first check here and f-droid rejected it on their own
+machine, on `lib/armeabi-v7a/libdartjni.so`. a file that changes with the
+build path is a file their rebuild will disagree with us about.
+
+no tag until both say so. `--no-cross` skips the second build; it is for
+iterating, never before a tag. do not pass `--cache` for a release check
+either: a release deserves the cold path.
 
 ## 6. tag and push
 

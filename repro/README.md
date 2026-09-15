@@ -8,7 +8,10 @@ same path, diffed entry by entry against the apk you are about to publish.
 
 ## what a MATCH means
 
-`verify.sh` unzips the published apk and the container's apk and compares
+`verify.sh` builds twice and asks two different questions.
+
+the first is the old one: does the apk you published match a build of that
+commit at the path f-droid builds in. it unzips both and compares
 the sha256 of every entry: the manifest, resources, classes.dex, every
 asset, every `lib/*/*.so`, the metadata under META-INF. only the v1
 signature files (`*.SF`, `*.RSA`, `MANIFEST.MF`) are left out, and the
@@ -21,6 +24,25 @@ runs.
 
 `DIFFERS` names each entry that is not, with both hashes. that list is the
 finding.
+
+the second question is the one we learned the hard way. the same commit is
+built again at a different path inside the container and the two builds are
+compared to each other. our container agreeing with our own build at one
+path only says our pipeline is deterministic, which is not what f-droid
+asks: they rebuild on their machine. 0.2.8 passed here and was rejected
+there, on `lib/armeabi-v7a/libdartjni.so`, and nothing in this directory
+could have seen it.
+
+anything that differs between the two paths is reported, except one
+allowlisted entry: `lib/*/libapp.so`. the dart snapshot embeds the path of
+the generated plugin registrant and nothing can strip it, which is why
+`release.sh` builds at f-droid's path rather than anywhere convenient.
+every other name that ever appears on that list is a thing we have given up
+on, so the list should stay one line long.
+
+`--no-cross` skips the second build. it halves the wait and gives up the
+only check that speaks to what f-droid's machine will do: fine while
+iterating, not before a tag.
 
 ## use
 
