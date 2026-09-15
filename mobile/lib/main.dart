@@ -5227,11 +5227,11 @@ class AppState extends ChangeNotifier {
   // called from the status poll. the clock runs while tor is trying and
   // resets the moment it can carry traffic.
   void _noteTorProgress() {
-    // the transport state carries the subscription count; a relay that is up
-    // has at least one.
+    // the relay rows carry the only live signal: fails counts failures since
+    // that relay's last success and is cleared the moment one lands.
     try {
       final tx = engine.transportState();
-      _noteRelayHealth(tx['sub_count'] as int? ?? 0);
+      _noteRelayHealth(tx['relays'] as List?);
     } catch (_) {
       // transport not readable yet - nothing to conclude
     }
@@ -5308,14 +5308,33 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // fed by the transport poll: subscriptions are the honest signal that our
-  // relay is actually answering.
-  void _noteRelayHealth(int subs) {
+  // fed by the transport poll. this used to read sub_count and treat more
+  // than zero as "our relay is answering", but that number counts the peers
+  // we have a subscription registered for, not relay connections: it reads
+  // three or four with every relay on earth unreachable. the clock never
+  // started, so the hint below could not appear for anyone with a contact,
+  // and when our relay went down nobody in relay mode had any way to know.
+  //
+  // a relay row's fails counts failures since that relay's last success and
+  // is deleted the moment one lands, so it says what is true now. benched
+  // means it is in backoff. down is: nothing in the list is usable.
+  void _noteRelayHealth(List? relays) {
     if (_sendMode != 'balanced') {
       _relayDownSince = null;
       return;
     }
-    if (subs > 0) {
+    // no rows yet: the engine has not been configured, which is not the
+    // same as a relay that will not answer
+    if (relays == null || relays.isEmpty) {
+      _relayDownSince = null;
+      return;
+    }
+    final anyUsable = relays.any((r) {
+      if (r is! Map) return true;
+      final fails = (r['fails'] as num?)?.toInt() ?? 0;
+      return fails == 0 && r['benched'] != true;
+    });
+    if (anyUsable) {
       _relayDownSince = null;
     } else {
       _relayDownSince ??= DateTime.now();
