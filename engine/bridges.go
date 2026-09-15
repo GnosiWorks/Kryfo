@@ -118,6 +118,20 @@ func bridgeLines() []string {
 
 // the extra torrc arguments tor needs to route through us. empty when bridges
 // are off, so the normal path is untouched.
+// every argument tor starts with. the scheduler is here rather than in
+// bridgeTorArgs because that one returns nothing when bridges are off.
+//
+// KIST asks the kernel how many bytes are still unsent on each socket with
+// ioctl(SIOCOUTQNSD). android's selinux policy refuses that to an untrusted
+// app, and tor only disables KIST when the error is EINVAL: EACCES falls
+// back for that one socket and tries again on the next scheduling round,
+// ten milliseconds later, per socket, for the life of the process. nothing
+// burns but every attempt writes a kernel audit line, and the log is worth
+// more than that. vanilla is what tor falls back to anyway.
+func torArgs() []string {
+	return append([]string{"--Schedulers", "Vanilla"}, bridgeTorArgs()...)
+}
+
 func bridgeTorArgs() []string {
 	if !bridgesEnabled() {
 		return nil
