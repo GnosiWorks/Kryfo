@@ -892,6 +892,12 @@ class _OfflineStrip extends StatelessWidget {
 
         final offline = !appState.online;
         final torDown = !offline && !appState.torReady;
+        // tor coming up is what every launch looks like. with an empty
+        // queue there is nothing to explain and the halo already says so,
+        // and the strip said "waiting" over "nothing waiting to send",
+        // which is two opposite things at once. offline is different: that
+        // is worth stating even with nothing queued.
+        if (torDown && n == 0 && p == 0) return const SizedBox.shrink();
         final tint = offline ? HaloColors.rose : HaloColors.amber;
         final head = offline ? 'Offline' : 'Waiting';
         // the old strip said "offline" and stopped, which left people
