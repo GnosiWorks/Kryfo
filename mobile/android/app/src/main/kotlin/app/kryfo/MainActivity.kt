@@ -377,15 +377,19 @@ class MainActivity : FlutterFragmentActivity() {
     // android's own notification page for kryfo. the permission dialog is
     // gone for good once the answer is final, so this is the only way back.
     private fun openNotificationSettings(): Boolean {
-        val direct = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-            putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
-        }
-        try {
-            startActivity(direct)
-            return true
-        } catch (e: Exception) {
-            // some builds do not carry that page; the app details page has
-            // the same switch one tap deeper
+        // the per-app notification page arrives in api 26. below that, and
+        // on a build that does not carry it, the app details page has the
+        // same switch one tap deeper.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val direct = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+            }
+            try {
+                startActivity(direct)
+                return true
+            } catch (e: Exception) {
+                // fall through to the app details page
+            }
         }
         return try {
             startActivity(
