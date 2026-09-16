@@ -38,7 +38,7 @@ class _IntroducedByState extends State<IntroducedBy>
     super.initState();
     _pop = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 420),
+      duration: const Duration(milliseconds: 280),
     );
     Future.delayed(widget.delay, () {
       if (mounted) _pop.forward();

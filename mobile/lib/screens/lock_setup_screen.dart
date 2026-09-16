@@ -25,7 +25,7 @@ class _LockSetupScreenState extends State<LockSetupScreen>
   bool _mismatch = false;
   late final AnimationController _shake = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 420),
+    duration: const Duration(milliseconds: 280),
   );
 
   @override

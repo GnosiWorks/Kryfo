@@ -3108,7 +3108,7 @@ Widget _groupBubbleEntrance({
   if (isOut) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 340),
+      duration: const Duration(milliseconds: 280),
       curve: Curves.easeOutCubic,
       child: child,
       builder: (_, t, c) => Opacity(
@@ -3138,7 +3138,7 @@ Widget _groupBubbleEntrance({
   }
   return TweenAnimationBuilder<double>(
     tween: Tween(begin: 0.0, end: 1.0),
-    duration: const Duration(milliseconds: 320),
+    duration: const Duration(milliseconds: 280),
     curve: Curves.easeOutCubic,
     child: child,
     builder: (_, t, c) => Opacity(
