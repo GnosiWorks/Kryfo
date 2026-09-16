@@ -26,6 +26,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"unsafe"
 
 	libtor "github.com/alexballas/go-libtor"
 	"github.com/cretz/bine/control"
@@ -854,6 +855,87 @@ func HaloDecryptBackup(cBlob, cPassphrase *C.char) *C.char {
 		return C.CString("error: wrong passphrase or corrupt")
 	}
 	return C.CString(string(plain))
+}
+
+// the streamed backup. the v1 blob above holds the whole payload in memory
+// several times over, which is fine for a small database and not for a
+// year of photos and voice notes. v2 is written a chunk at a time: one key
+// from the passphrase and a salt, then every record sealed on its own with
+// a nonce made of its index. same scrypt, same aes-256-gcm as v1, so the
+// strength is unchanged. the record layout lives in the dart side; these
+// three do the cryptography and nothing else, on raw buffers so a chunk is
+// not copied through a c string.
+
+// derives the backup key. salt is exactly 16 bytes. returns the key as
+// hex, or "error: ...".
+//
+//export HaloBackupKey
+func HaloBackupKey(cPassphrase *C.char, cSalt *C.uchar) *C.char {
+	salt := C.GoBytes(unsafe.Pointer(cSalt), 16)
+	key, err := scrypt.Key([]byte(C.GoString(cPassphrase)), salt, 32768, 8, 1, 32)
+	if err != nil {
+		return C.CString("error: scrypt: " + err.Error())
+	}
+	return C.CString(hex.EncodeToString(key))
+}
+
+func backupGCM(keyHex string) (cipher.AEAD, error) {
+	key, err := hex.DecodeString(keyHex)
+	if err != nil || len(key) != 32 {
+		return nil, fmt.Errorf("bad key")
+	}
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	return cipher.NewGCM(block)
+}
+
+// the nonce is the record index, so no two records under one key share
+// one, and a record moved to another place in the file fails to open.
+// the record type rides as additional data for the same reason.
+func backupNonce(index uint64) []byte {
+	n := make([]byte, 12)
+	for i := 0; i < 8; i++ {
+		n[11-i] = byte(index >> (8 * i))
+	}
+	return n
+}
+
+// seals inLen bytes at in into out, which must have room for inLen+16.
+// returns the sealed length, or -1.
+//
+//export HaloSealChunk
+func HaloSealChunk(cKey *C.char, index C.ulonglong, typ C.uchar, in *C.uchar, inLen C.int, out *C.uchar) C.int {
+	gcm, err := backupGCM(C.GoString(cKey))
+	if err != nil || inLen < 0 {
+		return -1
+	}
+	plain := C.GoBytes(unsafe.Pointer(in), inLen)
+	ct := gcm.Seal(nil, backupNonce(uint64(index)), plain, []byte{byte(typ)})
+	dst := unsafe.Slice((*byte)(unsafe.Pointer(out)), len(ct))
+	copy(dst, ct)
+	return C.int(len(ct))
+}
+
+// opens inLen sealed bytes at in into out, which must have room for inLen.
+// returns the plaintext length, or -1 when the passphrase is wrong, the
+// record was moved, or the bytes were changed.
+//
+//export HaloOpenChunk
+func HaloOpenChunk(cKey *C.char, index C.ulonglong, typ C.uchar, in *C.uchar, inLen C.int, out *C.uchar) C.int {
+	gcm, err := backupGCM(C.GoString(cKey))
+	if err != nil || inLen < 16 {
+		return -1
+	}
+	ct := C.GoBytes(unsafe.Pointer(in), inLen)
+	plain, err := gcm.Open(nil, backupNonce(uint64(index)), ct, []byte{byte(typ)})
+	if err != nil {
+		return -1
+	}
+	dst := unsafe.Slice((*byte)(unsafe.Pointer(out)), len(plain))
+	copy(dst, plain)
+	return C.int(len(plain))
 }
 
 // watchHSDirUpload subscribes to tor's HS_DESC events and returns as
