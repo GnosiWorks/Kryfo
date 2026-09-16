@@ -142,6 +142,12 @@ build will not match the apks you attached:
   exact name `release.sh` writes (`app-<abi>-release.apk`). that is the
   file they compare their build against and then publish with your
   signature.
+- the signature has to be a pure insertion. `release.sh` passes
+  `--alignment-preserved` to apksigner; without it apksigner 0.9 re-pads
+  the zip while signing, every entry still matches, and f-droid's byte
+  comparison of their unsigned build against ours-minus-signature fails.
+  0.2.8 and 0.2.10 were both refused this way. `verify.sh` makes that
+  same comparison now, so it cannot slip through again.
 - `AllowedAPKSigningKeys` is the sha-256 of the signing certificate,
   lowercase, no colons. it is printed by `release.sh` after signing.
 
