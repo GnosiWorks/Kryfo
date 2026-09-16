@@ -4746,7 +4746,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 ),
               ),
             ),
-            if (_friendlyStatus(_status).isNotEmpty)
+            if (_friendlyStatus(_status).isNotEmpty && !appState.movedAway)
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Text(
