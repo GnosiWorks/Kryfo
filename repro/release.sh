@@ -99,6 +99,14 @@ echo "== signing"
 # the plain name and are signed in place
 for f in out/app-*-release.apk; do
   [ -f "$f" ] || { echo "the container produced no apks" >&2; exit 1; }
+  # --alignment-preserved, or apksigner 0.9 rewrites the zip on the way
+  # through: native libraries re-padded to 16k pages, everything else to
+  # four bytes, aligned already or not. every entry still matched and
+  # f-droid refused 0.2.8 and 0.2.10 all the same, because they compare
+  # their unsigned build to our apk with the signature cut out, byte for
+  # byte, and what was left was not the container they built. with the
+  # flag the signature is a pure insertion: proven by signing a stripped
+  # copy and stripping it again.
   # v2/v3 only. a v1 signature is three more entries inside the zip, and
   # f-droid verifies by copying our signature onto their unsigned build:
   # "the APKs must be completely identical before and after signing (apart
@@ -113,6 +121,7 @@ for f in out/app-*-release.apk; do
     --v1-signing-enabled false \
     --v2-signing-enabled true \
     --v3-signing-enabled true \
+    --alignment-preserved \
     "$f"
   rm -f "$f.idsig"
   echo "  $(basename "$f")"
