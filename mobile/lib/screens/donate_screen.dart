@@ -843,9 +843,9 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
               border: Border.all(color: HaloColors.line),
             ),
             child: Text(
-              "couldn't reach the payment service over tor right now. you can "
+              "Couldn't reach the payment service over tor right now. You can "
               "still donate to the address below - your badge just won't unlock "
-              "automatically. try again later for the badge.",
+              "automatically. Try again later for the badge.",
               style: HaloType.sans(
                 size: 12.5,
                 color: HaloColors.text2,
@@ -856,7 +856,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           const SizedBox(height: 16),
           if (addr.isNotEmpty) _StaticAddress(address: addr),
           const SizedBox(height: 14),
-          _ghostButton('try again', _start),
+          _ghostButton('Try again', _start),
         ],
       ),
     );
