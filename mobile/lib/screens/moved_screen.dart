@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import '../main.dart' show appState;
 import '../theme.dart';
 import '../widgets/confirm_sheet.dart';
+import '../widgets/fit_column.dart';
 import '../wipe.dart';
 
 class MovedScreen extends StatelessWidget {
@@ -58,56 +59,56 @@ class MovedScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: HaloColors.surface,
       body: SafeArea(
-        child: Padding(
+        // fits or scrolls: a button under the spacer must never sit past
+        // the body on a short phone
+        child: FitColumn(
           padding: const EdgeInsets.fromLTRB(28, 48, 28, 28),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'This kryfo has moved',
-                style: HaloType.serif(size: 26, color: HaloColors.text),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'This kryfo has moved',
+              style: HaloType.serif(size: 26, color: HaloColors.text),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              '${appState.myId} is now on another device. This phone can '
+              'still show what was here, but nothing new will arrive on '
+              'it, and anything you send from here won\'t reach anyone.',
+              style: HaloType.sans(
+                size: 14.5,
+                color: HaloColors.text2,
+                height: 1.5,
               ),
-              const SizedBox(height: 14),
-              Text(
-                '${appState.myId} is now on another device. This phone can '
-                'still show what was here, but nothing new will arrive on '
-                'it, and anything you send from here won\'t reach anyone.',
-                style: HaloType.sans(
-                  size: 14.5,
-                  color: HaloColors.text2,
-                  height: 1.5,
-                ),
-              ),
-              const Spacer(),
-              _Button(
-                label: 'Keep it to read',
-                primary: true,
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  appState.keepMovedToRead();
-                },
-              ),
-              const SizedBox(height: 10),
-              _Button(label: 'Wipe this phone', onTap: () => _wipe(context)),
-              const SizedBox(height: 18),
-              Center(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => _stay(context),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Text(
-                      "I'm not moving after all",
-                      style: HaloType.sans(size: 12.5, color: HaloColors.text3),
-                    ),
+            ),
+            const Spacer(),
+            _Button(
+              label: 'Keep it to read',
+              primary: true,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                appState.keepMovedToRead();
+              },
+            ),
+            const SizedBox(height: 10),
+            _Button(label: 'Wipe this phone', onTap: () => _wipe(context)),
+            const SizedBox(height: 18),
+            Center(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _stay(context),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Text(
+                    "I'm not moving after all",
+                    style: HaloType.sans(size: 12.5, color: HaloColors.text3),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
