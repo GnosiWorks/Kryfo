@@ -603,9 +603,15 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 			rejoin := 5 * time.Second
 			deaf := 4 * time.Minute
 			kicked := false
-			// when this runner lost its subscription, so the next one can ask
-			// for as much as the gap could actually have hidden
-			var lostAt time.Time
+			// the last moment this runner knew its subscription was alive: a
+			// successful subscribe, an event, a probe answered. the gap from
+			// there decides how much the next subscribe asks for. wall clock
+			// on purpose: the monotonic clock go prefers stops while the phone
+			// is asleep, and a night asleep is exactly the gap this has to
+			// see. measured from when the loss was noticed, a kick after that
+			// night looked like a two-second gap and asked for twenty events.
+			var lastAlive time.Time
+			markAlive := func() { lastAlive = time.Now().Round(0) }
 			if own {
 				retry = 3 * time.Second
 				rejoin = 2 * time.Second
@@ -665,7 +671,8 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 				// missed: a cold start, or a gap long enough to have missed a
 				// conversation, still asks for the lot.
 				limit := 100
-				if !lostAt.IsZero() && time.Since(lostAt) < 5*time.Minute {
+				if !lastAlive.IsZero() &&
+					time.Now().Round(0).Sub(lastAlive) < 5*time.Minute {
 					limit = 20
 				}
 				f := nostr.Filter{
@@ -695,6 +702,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 				// our own relay's successes clear its count too now that its
 				// failures are counted
 				relayOK(u)
+				markAlive()
 				log.Printf("nostr: listening on %s for addr %s...", u, rcvPk[:12])
 				// a dead tor circuit leaves the websocket open but mute - no
 				// error, no channel close, this select just goes deaf forever
@@ -709,6 +717,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 							r.Close()
 							goto reconnect
 						}
+						markAlive()
 						if ev.ID.Hex() != "" {
 							if ev.CreatedAt > last {
 								last = ev.CreatedAt
@@ -735,6 +744,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 						// eose, and a real eose proves the circuit still carries
 						// data.
 						if relayResponds(ctx, r) {
+							markAlive()
 							idle.Reset(deaf)
 							continue
 						}
@@ -754,6 +764,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 						// it is asleep in sleepOrKick and still reconnects at
 						// once, which is the case the kick exists for.
 						if relayResponds(ctx, r) {
+							markAlive()
 							log.Printf("nostr: %s kicked but still answering, keeping the sub", u)
 							if !idle.Stop() {
 								select {
@@ -776,7 +787,6 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 					}
 				}
 			reconnect:
-				lostAt = time.Now()
 				if kicked {
 					kicked = false
 				} else {
