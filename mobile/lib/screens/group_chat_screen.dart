@@ -41,6 +41,7 @@ import '../main.dart'
 import '../theme.dart';
 import '../media_progress.dart';
 import '../media_send.dart' show cancelMediaSend;
+import '../mp4_strip.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/burn_fade.dart';
 import 'group_info_screen.dart';
@@ -1381,6 +1382,21 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
     final dest = File('${mediaDir.path}/f_${uid}_$safe');
     await File(src).copy(dest.path);
+    // a gallery video carries the same things a gallery photo did: where,
+    // on what, and when. the photo path has stripped those for a while;
+    // this is the video equivalent, in place on our own copy. a file that
+    // cannot be walked is not sent, the same as a jpeg that cannot be.
+    if (videoNameNeedsStrip(name)) {
+      final ok = await stripMp4Metadata(dest.path);
+      final left = ok == null ? null : await mp4MetadataCount(dest.path);
+      if (ok == null || left != 0) {
+        try {
+          await dest.delete();
+        } catch (_) {}
+        if (mounted) showHaloToast(context, 'Could not clean that video');
+        return;
+      }
+    }
     final burn = _ghost ? _burnSeconds : null;
     final m = _GMsg(
       sender: appState.myId,
