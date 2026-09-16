@@ -95,6 +95,12 @@ class _BackupScreenState extends State<BackupScreen> {
   // the share sheet took it
   Future<bool> _handOver(String path, String name) async {
     if (!mounted) return false;
+    // the save picker takes the file as bytes, which is the whole backup in
+    // memory again - the thing the streamed format exists to avoid. past a
+    // size that is plainly text-and-keys, the share sheet takes the file by
+    // path and the receiving app reads it as a stream.
+    final size = await File(path).length();
+    if (size > 24 * 1024 * 1024) return _share(path);
     final bytes = await File(path).readAsBytes();
     String? saved;
     try {
@@ -113,6 +119,10 @@ class _BackupScreenState extends State<BackupScreen> {
       showHaloToast(context, 'Backup saved · keep the passphrase safe');
       return false;
     }
+    return _share(path);
+  }
+
+  Future<bool> _share(String path) async {
     await lockState.hold(
       () => SharePlus.instance.share(
         ShareParams(
