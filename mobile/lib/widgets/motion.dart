@@ -33,7 +33,7 @@ enum PrivacyMode { fast, normal, private }
 // shared screen transition - a calm rise-and-fade, one way in across the app.
 Route<T> haloRoute<T>(Widget page) {
   return PageRouteBuilder<T>(
-    transitionDuration: const Duration(milliseconds: 360),
+    transitionDuration: const Duration(milliseconds: 280),
     reverseTransitionDuration: const Duration(milliseconds: 280),
     pageBuilder: (_, _, _) => page,
     transitionsBuilder: (_, anim, _, child) {

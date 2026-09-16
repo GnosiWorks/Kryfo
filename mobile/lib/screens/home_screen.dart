@@ -148,7 +148,7 @@ class HomeScreen extends StatelessWidget {
 
 Route<void> _archivedRoute() {
   return PageRouteBuilder<void>(
-    transitionDuration: const Duration(milliseconds: 340),
+    transitionDuration: const Duration(milliseconds: 280),
     reverseTransitionDuration: const Duration(milliseconds: 260),
     pageBuilder: (_, _, _) => const ArchivedScreen(),
     transitionsBuilder: (_, anim, _, child) {

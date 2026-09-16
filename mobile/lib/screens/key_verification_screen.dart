@@ -188,7 +188,7 @@ class _VerifyButton extends StatelessWidget {
     return PressScale(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 340),
+        duration: const Duration(milliseconds: 280),
         curve: Curves.easeOut,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(

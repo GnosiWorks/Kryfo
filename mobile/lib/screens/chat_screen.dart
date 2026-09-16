@@ -6482,7 +6482,7 @@ class _ReactionPopState extends State<_ReactionPop>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 420),
+    duration: const Duration(milliseconds: 280),
   );
 
   @override
@@ -8008,7 +8008,7 @@ Widget _sendOffEntrance({required bool active, required Widget child}) {
   if (!active) return child;
   return TweenAnimationBuilder<double>(
     tween: Tween(begin: 0.0, end: 1.0),
-    duration: const Duration(milliseconds: 340),
+    duration: const Duration(milliseconds: 280),
     curve: Curves.easeOutCubic,
     child: child,
     builder: (_, t, c) => Opacity(
@@ -8043,7 +8043,7 @@ Widget _arriveEntrance({required bool active, required Widget child}) {
   if (!active) return child;
   return TweenAnimationBuilder<double>(
     tween: Tween(begin: 0.0, end: 1.0),
-    duration: const Duration(milliseconds: 320),
+    duration: const Duration(milliseconds: 280),
     curve: Curves.easeOutCubic,
     child: child,
     builder: (_, t, c) => Opacity(

@@ -249,7 +249,7 @@ class _DonateScreenState extends State<DonateScreen> {
         },
         child: AnimatedScale(
           scale: sel ? 1.05 : 1.0,
-          duration: const Duration(milliseconds: 320),
+          duration: const Duration(milliseconds: 280),
           curve: Curves.easeOutBack,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 220),
@@ -713,7 +713,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
       ),
       body: SafeArea(
         child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 320),
+          duration: const Duration(milliseconds: 280),
           switchInCurve: Curves.easeOut,
           switchOutCurve: Curves.easeIn,
           transitionBuilder: (child, anim) => FadeTransition(
@@ -1198,7 +1198,7 @@ class _ConfirmedViewState extends State<_ConfirmedView>
             const SizedBox(height: 32),
             AnimatedOpacity(
               opacity: _showBadge ? 1 : 0,
-              duration: const Duration(milliseconds: 400),
+              duration: const Duration(milliseconds: 280),
               child: t == SupporterTier.none
                   ? _fill('done', () => _choose(false))
                   : Column(

@@ -303,7 +303,7 @@ class _PickRow extends StatelessWidget {
           children: [
             AnimatedScale(
               scale: picked ? 1.1 : 1.0,
-              duration: const Duration(milliseconds: 320),
+              duration: const Duration(milliseconds: 280),
               curve: Curves.easeOutBack,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
@@ -472,7 +472,7 @@ class _FadeRightState extends State<_FadeRight> {
       curve: Curves.easeOut,
       child: AnimatedSlide(
         offset: Offset((1 - _t) * 0.06, 0),
-        duration: const Duration(milliseconds: 340),
+        duration: const Duration(milliseconds: 280),
         curve: Curves.easeOutCubic,
         child: widget.child,
       ),

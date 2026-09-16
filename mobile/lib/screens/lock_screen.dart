@@ -39,7 +39,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
 
   late final AnimationController _shake = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 420),
+    duration: const Duration(milliseconds: 280),
   );
   late final AnimationController _breath = AnimationController(
     vsync: this,
