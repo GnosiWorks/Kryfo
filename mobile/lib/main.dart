@@ -884,6 +884,15 @@ class HaloDb {
     return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
   }
 
+  // folds the write-ahead log into the file before it is copied. a
+  // backup reads halo.db as bytes, and without this the last minutes of
+  // messages could still be sitting in the sidecar
+  Future<void> checkpoint() async {
+    try {
+      await _db?.execute('PRAGMA wal_checkpoint(TRUNCATE)');
+    } catch (_) {}
+  }
+
   Future<Database> open() async {
     if (_db != null) return _db!;
     final dir = await getApplicationDocumentsDirectory();
