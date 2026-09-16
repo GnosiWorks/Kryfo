@@ -124,14 +124,26 @@ the 32-bit phones; it exists since 0.2.7.
 
 ## 7. f-droid
 
-the recipe lives in the fdroiddata fork as `metadata/app.kryfo.yml`. once
+the recipe lives in the fdroiddata fork as `metadata/app.kryfo.yml`; the
+copy in this repo at `fdroiddata/app.kryfo.yml` is what goes there. once
 the merge request is accepted their bot follows tags on its own
-(`AutoUpdateMode: Version`). until then, add a `Builds:` block per abi for
-the new tag and bump `CurrentVersion` and `CurrentVersionCode`. the recipe
-has blocks for arm64 and x86_64 only, and `VercodeOperation` lists +2 and
-+3: the 32-bit apk needs a third block with
-`--target-platform=android-arm`, output `app-armeabi-v7a-release.apk`,
-and a `'%c * 10 + 1'` operation, or f-droid never ships it.
+(`AutoUpdateMode: Version`). until then, the copy here carries one
+`Builds:` block per abi for the release tag - armeabi-v7a, arm64-v8a,
+x86_64, version codes N*10+1, +2, +3 - and `CurrentVersion` /
+`CurrentVersionCode` for the newest. paste it over the fork's file and
+push the branch of the merge request.
+
+three things in it have to agree with the rest of the release, or their
+build will not match the apks you attached:
+
+- `ndk: r28c` is 28.2.13676358, the version `repro/Dockerfile` pins and
+  `build.gradle.kts` names. r28b is a different compiler.
+- each block's `binary:` points at the github release asset with the
+  exact name `release.sh` writes (`app-<abi>-release.apk`). that is the
+  file they compare their build against and then publish with your
+  signature.
+- `AllowedAPKSigningKeys` is the sha-256 of the signing certificate,
+  lowercase, no colons. it is printed by `release.sh` after signing.
 
 ## afterwards
 
