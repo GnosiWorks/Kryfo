@@ -1155,6 +1155,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               const SizedBox(height: 6),
               tile(Icons.photo_camera_outlined, 'camera', _openGroupCamera),
               tile(Icons.photo_library_outlined, 'gallery', _pickGroupMultiple),
+              tile(Icons.videocam_outlined, 'video', _pickGroupVideo),
               tile(Icons.gif_box_outlined, 'gif from phone', _pickGroupGif),
               tile(Icons.attach_file, 'file', _pickGroupFile),
               const SizedBox(height: 8),
@@ -1165,22 +1166,24 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     );
   }
 
+  // a video from the gallery, same reasoning as the one-to-one chat
+  Future<void> _pickGroupVideo() async {
+    final x = await lockState.hold(
+      () => ImagePicker().pickVideo(source: ImageSource.gallery),
+    );
+    if (x == null || !mounted) return;
+    await _sendGroupFileFrom(x.path, x.name);
+    await shredPickedImages([x]);
+  }
+
   Future<void> _pickGroupMultiple() async {
-    // photos and videos both, same as the one-to-one chat
-    final all = await lockState.hold(
-      () => ImagePicker().pickMultipleMedia(
+    final picked = await lockState.hold(
+      () => ImagePicker().pickMultiImage(
         maxWidth: 1280,
         maxHeight: 1280,
         imageQuality: 70,
       ),
     );
-    if (all.isEmpty) return;
-    for (final v in all.where(pickedIsVideo)) {
-      if (!mounted) return;
-      await _sendGroupFileFrom(v.path, v.name);
-      await shredPickedImages([v]);
-    }
-    final picked = [for (final x in all) if (!pickedIsVideo(x)) x];
     if (picked.isEmpty) return;
     if (picked.length == 1) {
       final bytes = await picked.first.readAsBytes();
