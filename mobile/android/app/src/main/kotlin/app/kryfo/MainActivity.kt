@@ -41,6 +41,7 @@ import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterFragmentActivity() {
+    private val REQ_SAVE_DOCUMENT = 7311
     companion object {
         private const val NOTIF_PERM_REQUEST = 1001
         private const val PERM_PREFS = "halo_perm"
@@ -296,9 +297,68 @@ class MainActivity : FlutterFragmentActivity() {
                         val mime = call.argument<String>("mime") ?: "image/jpeg"
                         result.success(bytes != null && saveToPictures(bytes, name, mime))
                     }
+                    "saveDocument" -> {
+                        val path = call.argument<String>("path")
+                        val name = call.argument<String>("name") ?: "kryfo-backup.kryfo"
+                        if (path == null || pendingSave != null) {
+                            result.success(false)
+                        } else {
+                            saveDocument(path, name, result)
+                        }
+                    }
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    // the system's own save dialog, then a stream copy from the file into
+    // whatever the person chose. the file never goes through memory and never
+    // crosses the channel: a backup can be a year of photos, and the earlier
+    // way - the picker plugin taking the whole file as bytes - was the thing
+    // the streamed backup exists to avoid. false when they backed out.
+    private var pendingSave: MethodChannel.Result? = null
+    private var pendingSavePath: String? = null
+
+    private fun saveDocument(path: String, name: String, result: MethodChannel.Result) {
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "application/octet-stream"
+            putExtra(Intent.EXTRA_TITLE, name)
+        }
+        try {
+            pendingSave = result
+            pendingSavePath = path
+            startActivityForResult(intent, REQ_SAVE_DOCUMENT)
+        } catch (e: ActivityNotFoundException) {
+            pendingSave = null
+            pendingSavePath = null
+            result.success(false)
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != REQ_SAVE_DOCUMENT) return
+        val result = pendingSave ?: return
+        val path = pendingSavePath
+        pendingSave = null
+        pendingSavePath = null
+        val uri = data?.data
+        if (resultCode != RESULT_OK || uri == null || path == null) {
+            result.success(false)
+            return
+        }
+        Thread {
+            val ok = try {
+                contentResolver.openOutputStream(uri, "wt")?.use { out ->
+                    java.io.FileInputStream(path).use { it.copyTo(out) }
+                    true
+                } ?: false
+            } catch (e: Exception) {
+                false
+            }
+            runOnUiThread { result.success(ok) }
+        }.start()
     }
 
     // a copy into the phone's photos, through the media store, only when the
