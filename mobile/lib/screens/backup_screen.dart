@@ -6,7 +6,7 @@
 import 'dart:io';
 import '../lock_state.dart';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -54,6 +54,7 @@ class _BackupScreenState extends State<BackupScreen> {
       _busy = true;
     });
     try {
+      debugPrint('BKTRACE start');
       final tempDir = await getTemporaryDirectory();
       final ts = DateTime.now().millisecondsSinceEpoch ~/ 1000;
       final name = 'kryfo-backup-$ts.kryfo';
@@ -65,9 +66,11 @@ class _BackupScreenState extends State<BackupScreen> {
           if (mounted && b > 0) setState(() => _progress = a / b);
         },
       );
+      debugPrint('BKTRACE written ${await File(path).length()} bytes');
       var shared = false;
       try {
         shared = await _handOver(path, name);
+        debugPrint('BKTRACE handover shared=$shared');
       } finally {
         // a shared file is read by the other app after share() returns,
         // so that one is left for the boot sweep. every other way out
@@ -80,8 +83,10 @@ class _BackupScreenState extends State<BackupScreen> {
         // failing session weeks later
         await appState.markMoved();
       }
+      debugPrint('BKTRACE popping');
       if (mounted) Navigator.of(context).pop();
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('BKTRACE failed: $e\n$st');
       if (mounted) {
         setState(() {
           _error = e.toString();
@@ -91,31 +96,29 @@ class _BackupScreenState extends State<BackupScreen> {
     }
   }
 
-  // the save picker first, the share sheet when that is refused. true when
-  // the share sheet took it
+  // the system's save dialog first, streaming the file into wherever the
+  // person picks - downloads, a drive, a card - and the share sheet when
+  // that is refused. neither reads the file into memory: the save is a
+  // stream copy on the platform side, the share hands over a path. true
+  // when the share sheet took it, since that app reads the file after we
+  // return and the copy has to be left for the boot sweep.
   Future<bool> _handOver(String path, String name) async {
     if (!mounted) return false;
-    // the save picker takes the file as bytes, which is the whole backup in
-    // memory again - the thing the streamed format exists to avoid. past a
-    // size that is plainly text-and-keys, the share sheet takes the file by
-    // path and the receiving app reads it as a stream.
-    final size = await File(path).length();
-    if (size > 24 * 1024 * 1024) return _share(path);
-    final bytes = await File(path).readAsBytes();
-    String? saved;
+    var saved = false;
     try {
       saved = await lockState.hold(
-        () => FilePicker.saveFile(
-          dialogTitle: 'Save your kryfo backup',
-          fileName: name,
-          bytes: bytes,
-        ),
+        () async =>
+            await const MethodChannel('halo/platform').invokeMethod<bool>(
+              'saveDocument',
+              {'path': path, 'name': name},
+            ) ??
+            false,
       );
     } catch (_) {
-      saved = null;
+      saved = false;
     }
     if (!mounted) return false;
-    if (saved != null) {
+    if (saved) {
       showHaloToast(context, 'Backup saved · keep the passphrase safe');
       return false;
     }
