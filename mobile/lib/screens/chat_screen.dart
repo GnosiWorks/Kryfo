@@ -40,6 +40,7 @@ import '../message_envelope.dart'
 import '../theme.dart';
 import '../media_progress.dart';
 import '../media_send.dart' show sendChunkedMediaTo, cancelMediaSend;
+import '../mp4_strip.dart';
 import '../widgets/pow_note.dart';
 import '../widgets/decode_px.dart';
 import '../notifications.dart' show clearNotificationsFor;
@@ -2820,6 +2821,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
     final dest = File('${mediaDir.path}/f_${msgUid}_$safe');
     await File(src).copy(dest.path);
+    // a gallery video carries the same things a gallery photo did: where,
+    // on what, and when. the photo path has stripped those for a while;
+    // this is the video equivalent, in place on our own copy. a file that
+    // cannot be walked is not sent, the same as a jpeg that cannot be.
+    if (videoNameNeedsStrip(name)) {
+      final ok = await stripMp4Metadata(dest.path);
+      final left = ok == null ? null : await mp4MetadataCount(dest.path);
+      if (ok == null || left != 0) {
+        try {
+          await dest.delete();
+        } catch (_) {}
+        if (mounted) showHaloToast(context, 'Could not clean that video');
+        return;
+      }
+    }
     final filePath = dest.path;
     final msg = _Msg(
       'out',
