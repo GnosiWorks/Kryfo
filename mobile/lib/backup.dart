@@ -515,8 +515,9 @@ Future<Object?> _restoreJob(_Job j) async {
 
 RestoreError _classify(Object e) {
   if (e is RestoreError) return e;
-  if (e is BackupLocked)
+  if (e is BackupLocked) {
     return const RestoreError(RestoreFailure.wrongPassphrase);
+  }
   return const RestoreError(RestoreFailure.damaged);
 }
 
