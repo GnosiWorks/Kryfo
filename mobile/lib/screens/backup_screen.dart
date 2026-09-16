@@ -3,7 +3,6 @@
 // to the system share sheet so the user can save it to drive, email
 // it to themselves, etc.
 
-import 'dart:io';
 import '../lock_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
