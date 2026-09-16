@@ -2,6 +2,14 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Fixed
+- a video from the gallery went out with where it was filmed, on what phone, and when, still inside it. photos have had that taken off for a while and videos did not. the location, the make and model, the encoder and the dates are now blanked inside the file before it leaves, in place, so the clip plays exactly as before. mp4, mov and 3gp. a video the app cannot read through is not sent.
+
+### Changed
+- the app's transitions are a touch quicker: everything that moves when you tap now finishes inside three tenths of a second. the slow reveals on onboarding and the loaders are unchanged on purpose.
+
 ## [0.2.9] - 2026-09-16
 
 ### Fixed
