@@ -2534,6 +2534,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
               ListTile(
                 leading: Icon(
+                  Icons.videocam_outlined,
+                  color: HaloColors.amber,
+                  size: 22,
+                ),
+                title: Text(
+                  'Video',
+                  style: HaloType.sans(size: 15, color: HaloColors.text),
+                ),
+                onTap: () {
+                  Navigator.of(sheetCtx).pop();
+                  _pickAndSendVideo();
+                },
+              ),
+              ListTile(
+                leading: Icon(
                   Icons.gif_box_outlined,
                   color: HaloColors.amber,
                   size: 22,
@@ -3023,26 +3038,28 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
+  // a video from the gallery. its own tile rather than a mixed picker: on
+  // android 12 and older the mixed one is the system file browser opened
+  // on downloads, which looks like the wrong app. the video-only picker is
+  // the same thing on every version. the clip goes the file way, which
+  // strips it and copies it out of the picker's cache.
+  Future<void> _pickAndSendVideo() async {
+    final x = await lockState.hold(
+      () => ImagePicker().pickVideo(source: ImageSource.gallery),
+    );
+    if (x == null || !mounted) return;
+    await _sendFileFrom(x.path, x.name);
+    await shredPickedImages([x]);
+  }
+
   Future<void> _pickAndSendMultiple() async {
-    // photos and videos both. the image-only picker hid every video in
-    // the gallery, so the only way to send one was the camera or the file
-    // picker, and nobody found that.
-    final all = await lockState.hold(
-      () => ImagePicker().pickMultipleMedia(
+    final picked = await lockState.hold(
+      () => ImagePicker().pickMultiImage(
         maxWidth: 1280,
         maxHeight: 1280,
         imageQuality: 70,
       ),
     );
-    if (all.isEmpty) return;
-    // a video goes the file way, which strips it and copies it out of the
-    // picker's cache; the picker's copy is dropped after
-    for (final v in all.where(pickedIsVideo)) {
-      if (!mounted) return;
-      await _sendFileFrom(v.path, v.name);
-      await shredPickedImages([v]);
-    }
-    final picked = [for (final x in all) if (!pickedIsVideo(x)) x];
     if (picked.isEmpty) return;
     // one photo picked: same preview + caption screen the camera path gets.
     if (picked.length == 1) {
