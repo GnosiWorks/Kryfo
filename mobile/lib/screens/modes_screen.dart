@@ -64,7 +64,7 @@ class _ModesScreenState extends State<ModesScreen> {
               const _Head(),
               const SizedBox(height: 6),
               _ModeCard(
-                name: 'onion',
+                name: 'Onion',
                 accent: '·',
                 active: _mode == 'private',
                 desc:
@@ -75,7 +75,7 @@ class _ModesScreenState extends State<ModesScreen> {
                 onTap: () => _pick('private'),
               ),
               _ModeCard(
-                name: 'relay',
+                name: 'Relay',
                 active: _mode == 'balanced',
                 desc:
                     "One sealed connection to kryfo's own relay, like a vpn "
@@ -89,7 +89,7 @@ class _ModesScreenState extends State<ModesScreen> {
                 onTap: () => _pick('balanced'),
               ),
               _ModeCard(
-                name: 'fast',
+                name: 'Fast',
                 active: _mode == 'fast',
                 desc:
                     'Plain connections to every relay. Near instant, and the '
