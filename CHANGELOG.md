@@ -2,17 +2,24 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
-
-### Fixed
-- a video from the gallery went out with where it was filmed, on what phone, and when, still inside it. photos have had that taken off for a while and videos did not. the location, the make and model, the encoder and the dates are now blanked inside the file before it leaves, in place, so the clip plays exactly as before. mp4, mov and 3gp. a video the app cannot read through is not sent.
+## [0.2.10] - 2026-09-16
 
 ### Added
-- moving to another device. the backup screen now asks whether you are making a copy to keep or moving, and a move retires the phone it left: it says so on the next launch, keeps what was there to read, and never sends or receives again, so the two devices cannot fall out of step. the restore on the new device says plainly what follows and what does not before it writes anything, and tells you when a large file will take a few minutes.
-- backups now carry every photo, voice note and file, not only the messages. the file is written and read a piece at a time, so a large one does not need a large phone. old backup files still restore.
+- moving to another phone. the backup screen now asks whether you are making a copy to keep or moving, and a move retires the phone it left: next time it opens it says so, you can keep it to read, wipe it, or say you are not moving after all. it never sends or receives again, so the two phones cannot fall out of step. on the new phone, before anything is written, the restore says what follows and what does not, and warns you when a big file will take a few minutes.
+- backups now hold every photo, voice note and file, not just the messages. the file is written and read a piece at a time, so a big one does not need a big phone. it is saved through the phone's own save dialog, into downloads unless you pick somewhere else, and it is called kryfo-backup followed by a number, ending in .kryfo. that is the file to look for when you restore. old backup files still work.
+- a video tile next to the gif one, in chats and groups. the gallery only ever showed photos.
+
+### Fixed
+- a video from the gallery went out with where it was filmed, on what phone, and when, still inside it. photos have had that taken off for a while and videos had not. it is blanked inside the file before it leaves, so the clip plays exactly as before. mp4, mov and 3gp. a video the app cannot read through is not sent.
+- picking onion at the start could leave the app on the relay. an explicit choice is written now, and skip means onion for real.
+- scanning a code from the first screen read it and added nobody.
+- the button at the bottom of the backup screen could sit just past what the phone lets you tap. the same fault had been fixed on onboarding and the pin pads; every screen that pushes a button to the bottom now fits or scrolls.
+- the bitcoin page said the payment service could not be reached when it had been reached and was having trouble. it says that now.
+- the every-way-in row under the plus button was easy to miss. it is not any more.
 
 ### Changed
-- the app's transitions are a touch quicker: everything that moves when you tap now finishes inside three tenths of a second. the slow reveals on onboarding and the loaders are unchanged on purpose.
+- the app's transitions are a touch quicker: everything that moves when you tap finishes inside three tenths of a second. the slow reveals on onboarding and the loaders are unchanged on purpose.
+- the three modes in speed & privacy, the group attach sheet and the donation buttons are capitalised like everything else.
 
 ## [0.2.9] - 2026-09-16
 

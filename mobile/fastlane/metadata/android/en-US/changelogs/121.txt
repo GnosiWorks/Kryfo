@@ -1,0 +1,9 @@
+You can move Kryfo to another phone now. The backup screen asks whether you are making a copy to keep or moving. A move retires the phone it left: next time it opens it says so, and it never sends or receives again, so the two phones cannot fall out of step. On the new phone the restore tells you what follows and what does not before it writes anything.
+
+Backups now hold every photo, voice note and file, not just the messages. The file is written a piece at a time, so a big backup does not need a big phone. It is saved through the phone's own save dialog, into Downloads unless you pick somewhere else, and it is called kryfo-backup followed by a number, ending in .kryfo. Old backup files still restore.
+
+A video from the gallery used to go out with where it was filmed, on what phone, and when, still inside it. That is blanked before it leaves, and the clip plays exactly as before. There is a video tile next to the gif one now, because the gallery only ever showed photos.
+
+Picking onion at the start could leave the app on the relay. It writes the choice now. Scanning a code from the first screen read it and added nobody; it adds them.
+
+The button at the bottom of the backup screen could sit just past what the phone lets you tap. Every screen that pushes a button to the bottom now fits or scrolls.
