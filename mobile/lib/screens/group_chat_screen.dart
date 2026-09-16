@@ -1166,13 +1166,21 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   Future<void> _pickGroupMultiple() async {
-    final picked = await lockState.hold(
-      () => ImagePicker().pickMultiImage(
+    // photos and videos both, same as the one-to-one chat
+    final all = await lockState.hold(
+      () => ImagePicker().pickMultipleMedia(
         maxWidth: 1280,
         maxHeight: 1280,
         imageQuality: 70,
       ),
     );
+    if (all.isEmpty) return;
+    for (final v in all.where(pickedIsVideo)) {
+      if (!mounted) return;
+      await _sendGroupFileFrom(v.path, v.name);
+      await shredPickedImages([v]);
+    }
+    final picked = [for (final x in all) if (!pickedIsVideo(x)) x];
     if (picked.isEmpty) return;
     if (picked.length == 1) {
       final bytes = await picked.first.readAsBytes();
@@ -1185,9 +1193,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       await _sendGroupImage(bytes, caption);
       return;
     }
-    final all = [for (final x in picked) await x.readAsBytes()];
+    final bytesOf = [for (final x in picked) await x.readAsBytes()];
     await shredPickedImages(picked);
-    for (final bytes in all) {
+    for (final bytes in bytesOf) {
       if (!mounted) return;
       await _sendGroupImage(bytes, '');
     }
