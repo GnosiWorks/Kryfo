@@ -227,7 +227,6 @@ Future<void> restoreBackupBlob(String blob, String passphrase) async {
   dlog('backup: restored identity');
 }
 
-
 // ───────────────────────── v2: the streamed file ─────────────────────────
 //
 // one key from the passphrase, every record sealed on its own, the files
@@ -355,7 +354,12 @@ Future<void> createBackupFile(
   await db.checkpoint();
   final prefs = await SharedPreferences.getInstance();
   final prefsMap = <String, dynamic>{};
-  for (final k in ['push_mode', 'ntfy_topic', 'ntfy_server', 'onboarding.complete']) {
+  for (final k in [
+    'push_mode',
+    'ntfy_topic',
+    'ntfy_server',
+    'onboarding.complete',
+  ]) {
     final v = prefs.get(k);
     if (v != null) prefsMap[k] = v;
   }
@@ -384,42 +388,135 @@ Future<void> createBackupFile(
     salt[i] = rnd.nextInt(256);
   }
   final port = ReceivePort();
-  // only the SendPort may cross into the worker: the ReceivePort itself is
-  // unsendable, and capturing `port` in the closure took it along
-  final tell = port.sendPort;
   final sub = port.listen((m) {
-    if (m is List && m.length == 2) onProgress?.call(m[0] as int, m[1] as int);
+    if (m is List && m.length == 2) {
+      onProgress?.call(m[0] as int, m[1] as int);
+    }
   });
   try {
-    final err = await Isolate.run(() async {
-      final lib = _engineLib();
-      final key = _backupKey(lib, passphrase, salt);
-      if (key == null) return 'key';
-      final cipher = _EngineCipher(lib, key, kBackupChunk);
-      try {
-        await writeBackup(
-          outPath: outPath,
-          salt: salt,
-          cipher: cipher,
-          manifest: manifest,
-          root: docs.path,
-          onProgress: (a, b) => tell.send([a, b]),
-        );
-      } finally {
-        cipher.dispose();
-      }
-      return '';
-    });
-    if (err.isNotEmpty) throw BackupError('could not make the key');
+    final err = await _runJob(
+      _exportJob,
+      _Job(
+        passphrase: passphrase,
+        salt: salt,
+        path: outPath,
+        root: docs.path,
+        manifest: manifest,
+        tell: port.sendPort,
+      ),
+    );
+    if (err is String && err.isNotEmpty) throw BackupError(err);
   } finally {
     await sub.cancel();
     port.close();
   }
 }
 
+// what crosses into a worker isolate: plain values and a SendPort, nothing
+// else. the job runs as a top-level function and the closure handed to
+// Isolate.run captures this one object and nothing more. an inline closure
+// dragged its whole enclosing scope along - the ReceivePort, a completer -
+// and Isolate.run refused it, silently from the user's side.
+class _Job {
+  final String passphrase;
+  final Uint8List salt;
+  final String path;
+  final String root;
+  final Map<String, dynamic>? manifest;
+  final SendPort? tell;
+  const _Job({
+    required this.passphrase,
+    required this.salt,
+    required this.path,
+    required this.root,
+    this.manifest,
+    this.tell,
+  });
+}
+
+Future<Object?> _runJob(Future<Object?> Function(_Job) job, _Job j) =>
+    Isolate.run(() => job(j));
+
+Future<Object?> _exportJob(_Job j) async {
+  final lib = _engineLib();
+  final key = _backupKey(lib, j.passphrase, j.salt);
+  if (key == null) return 'could not make the key';
+  final cipher = _EngineCipher(lib, key, kBackupChunk);
+  try {
+    await writeBackup(
+      outPath: j.path,
+      salt: j.salt,
+      cipher: cipher,
+      manifest: j.manifest!,
+      root: j.root,
+      onProgress: (a, b) => j.tell?.send([a, b]),
+    );
+  } finally {
+    cipher.dispose();
+  }
+  return '';
+}
+
+// reads the manifest and streams halo.db to j.root (the peek path), so the
+// caller can count what is inside without touching the phone's own files
+Future<Object?> _inspectJob(_Job j) async {
+  final lib = _engineLib();
+  final key = _backupKey(lib, j.passphrase, j.salt);
+  if (key == null) throw const BackupLocked();
+  final cipher = _EngineCipher(lib, key, kBackupChunk);
+  try {
+    final m = await readBackupManifest(j.path, cipher);
+    if (m['v'] is! int) throw const BackupDamaged('no version');
+    if ((m['v'] as int) > 2) {
+      throw const RestoreError(RestoreFailure.newerVersion);
+    }
+    if (m['dbPassphrase'] is! String || m['edPriv'] is! String) {
+      throw const BackupDamaged('manifest secrets');
+    }
+    await extractBackup(
+      j.path,
+      cipher,
+      want: (n) => n == 'halo.db' ? j.root : null,
+    );
+    return m;
+  } finally {
+    cipher.dispose();
+  }
+}
+
+// streams every file into j.root, the docs folder
+Future<Object?> _restoreJob(_Job j) async {
+  final lib = _engineLib();
+  final key = _backupKey(lib, j.passphrase, j.salt);
+  if (key == null) throw const BackupLocked();
+  final cipher = _EngineCipher(lib, key, kBackupChunk);
+  try {
+    final m = await readBackupManifest(j.path, cipher);
+    if ((m['v'] as int? ?? 99) > 2) {
+      throw const RestoreError(RestoreFailure.newerVersion);
+    }
+    // a folder this backup carries is replaced whole, so a file deleted
+    // before the backup does not linger from before
+    for (final folder in ['media', 'wallpapers']) {
+      final d = Directory(p.join(j.root, folder));
+      if (await d.exists()) await d.delete(recursive: true);
+    }
+    await extractBackup(
+      j.path,
+      cipher,
+      want: (n) => p.join(j.root, n),
+      onProgress: (a, b) => j.tell?.send([a, b]),
+    );
+    return m;
+  } finally {
+    cipher.dispose();
+  }
+}
+
 RestoreError _classify(Object e) {
   if (e is RestoreError) return e;
-  if (e is BackupLocked) return const RestoreError(RestoreFailure.wrongPassphrase);
+  if (e is BackupLocked)
+    return const RestoreError(RestoreFailure.wrongPassphrase);
   return const RestoreError(RestoreFailure.damaged);
 }
 
@@ -435,30 +532,12 @@ Future<BackupSummary> inspectBackupFile(String path, String passphrase) async {
   final peek = p.join(dir.path, 'restore_peek.db');
   Map<String, dynamic> manifest;
   try {
-    manifest = await Isolate.run(() async {
-      final lib = _engineLib();
-      final key = _backupKey(lib, passphrase, salt);
-      if (key == null) throw const BackupLocked();
-      final cipher = _EngineCipher(lib, key, kBackupChunk);
-      try {
-        final m = await readBackupManifest(path, cipher);
-        if (m['v'] is! int) throw const BackupDamaged('no version');
-        if ((m['v'] as int) > 2) {
-          throw const RestoreError(RestoreFailure.newerVersion);
-        }
-        if (m['dbPassphrase'] is! String || m['edPriv'] is! String) {
-          throw const BackupDamaged('manifest secrets');
-        }
-        await extractBackup(
-          path,
-          cipher,
-          want: (n) => n == 'halo.db' ? peek : null,
-        );
-        return m;
-      } finally {
-        cipher.dispose();
-      }
-    });
+    manifest =
+        await _runJob(
+              _inspectJob,
+              _Job(passphrase: passphrase, salt: salt, path: path, root: peek),
+            )
+            as Map<String, dynamic>;
   } catch (e) {
     await shredFile(peek);
     throw _classify(e);
@@ -521,41 +600,25 @@ Future<void> restoreBackupFile(
   final docs = await getApplicationDocumentsDirectory();
   final root = docs.path;
   final port = ReceivePort();
-  // only the SendPort may cross into the worker: the ReceivePort itself is
-  // unsendable, and capturing `port` in the closure took it along
-  final tell = port.sendPort;
   final sub = port.listen((m) {
-    if (m is List && m.length == 2) onProgress?.call(m[0] as int, m[1] as int);
+    if (m is List && m.length == 2) {
+      onProgress?.call(m[0] as int, m[1] as int);
+    }
   });
   Map<String, dynamic> manifest;
   try {
-    manifest = await Isolate.run(() async {
-      final lib = _engineLib();
-      final key = _backupKey(lib, passphrase, salt);
-      if (key == null) throw const BackupLocked();
-      final cipher = _EngineCipher(lib, key, kBackupChunk);
-      try {
-        final m = await readBackupManifest(path, cipher);
-        if ((m['v'] as int? ?? 99) > 2) {
-          throw const RestoreError(RestoreFailure.newerVersion);
-        }
-        // a folder this backup carries is replaced whole, so a file that
-        // was deleted before the backup does not linger from before
-        for (final folder in ['media', 'wallpapers']) {
-          final d = Directory(p.join(root, folder));
-          if (await d.exists()) await d.delete(recursive: true);
-        }
-        await extractBackup(
-          path,
-          cipher,
-          want: (n) => p.join(root, n),
-          onProgress: (a, b) => tell.send([a, b]),
-        );
-        return m;
-      } finally {
-        cipher.dispose();
-      }
-    });
+    manifest =
+        await _runJob(
+              _restoreJob,
+              _Job(
+                passphrase: passphrase,
+                salt: salt,
+                path: path,
+                root: root,
+                tell: port.sendPort,
+              ),
+            )
+            as Map<String, dynamic>;
   } catch (e) {
     throw _classify(e);
   } finally {

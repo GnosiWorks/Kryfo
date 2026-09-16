@@ -54,7 +54,6 @@ class _BackupScreenState extends State<BackupScreen> {
       _busy = true;
     });
     try {
-      debugPrint('BKTRACE start');
       final tempDir = await getTemporaryDirectory();
       final ts = DateTime.now().millisecondsSinceEpoch ~/ 1000;
       final name = 'kryfo-backup-$ts.kryfo';
@@ -66,11 +65,9 @@ class _BackupScreenState extends State<BackupScreen> {
           if (mounted && b > 0) setState(() => _progress = a / b);
         },
       );
-      debugPrint('BKTRACE written ${await File(path).length()} bytes');
       var shared = false;
       try {
         shared = await _handOver(path, name);
-        debugPrint('BKTRACE handover shared=$shared');
       } finally {
         // a shared file is read by the other app after share() returns,
         // so that one is left for the boot sweep. every other way out
@@ -83,10 +80,8 @@ class _BackupScreenState extends State<BackupScreen> {
         // failing session weeks later
         await appState.markMoved();
       }
-      debugPrint('BKTRACE popping');
       if (mounted) Navigator.of(context).pop();
-    } catch (e, st) {
-      debugPrint('BKTRACE failed: $e\n$st');
+    } catch (e) {
       if (mounted) {
         setState(() {
           _error = e.toString();
