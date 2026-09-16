@@ -11,6 +11,7 @@ import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import 'package:flutter/services.dart';
 import '../widgets/stagger_in.dart';
+import '../widgets/fit_column.dart';
 
 class ModesScreen extends StatefulWidget {
   const ModesScreen({super.key});
@@ -53,7 +54,10 @@ class _ModesScreenState extends State<ModesScreen> {
     return Scaffold(
       backgroundColor: HaloColors.surface,
       body: SafeArea(
-        child: Column(
+        // fits or scrolls, like every screen that pushes something to the
+        // bottom with a spacer: a plain column runs past the body on a
+        // short phone and whatever sits below the fold cannot be tapped
+        child: FitColumn(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // the spacer stays a direct child of the column. wrapped by the
