@@ -3024,13 +3024,25 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _pickAndSendMultiple() async {
-    final picked = await lockState.hold(
-      () => ImagePicker().pickMultiImage(
+    // photos and videos both. the image-only picker hid every video in
+    // the gallery, so the only way to send one was the camera or the file
+    // picker, and nobody found that.
+    final all = await lockState.hold(
+      () => ImagePicker().pickMultipleMedia(
         maxWidth: 1280,
         maxHeight: 1280,
         imageQuality: 70,
       ),
     );
+    if (all.isEmpty) return;
+    // a video goes the file way, which strips it and copies it out of the
+    // picker's cache; the picker's copy is dropped after
+    for (final v in all.where(pickedIsVideo)) {
+      if (!mounted) return;
+      await _sendFileFrom(v.path, v.name);
+      await shredPickedImages([v]);
+    }
+    final picked = [for (final x in all) if (!pickedIsVideo(x)) x];
     if (picked.isEmpty) return;
     // one photo picked: same preview + caption screen the camera path gets.
     if (picked.length == 1) {
@@ -3044,9 +3056,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       await _sendOneImage(bytes, caption);
       return;
     }
-    final all = [for (final x in picked) await x.readAsBytes()];
+    final bytesOf = [for (final x in picked) await x.readAsBytes()];
     await shredPickedImages(picked);
-    for (final bytes in all) {
+    for (final bytes in bytesOf) {
       if (!mounted) return;
       await _sendOneImage(bytes, '');
     }

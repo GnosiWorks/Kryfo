@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'main.dart' show shredFile;
+import 'mp4_strip.dart';
 
 // only a path inside the app's own cache is ours to destroy. a picker that
 // hands back the real file, as the desktop ones do, gets left alone
@@ -18,6 +19,11 @@ Future<void> shredPicked(FilePickerResult res) async {
     await FilePicker.clearTemporaryFiles();
   } catch (_) {}
 }
+
+// the media picker hands back photos and videos in one list. a video is
+// told by the type the picker reports, or the name when it reports none.
+bool pickedIsVideo(XFile x) =>
+    (x.mimeType?.startsWith('video/') ?? false) || videoNameNeedsStrip(x.name);
 
 Future<void> shredPickedImages(List<XFile> files) async {
   final cache = (await getTemporaryDirectory()).path;
