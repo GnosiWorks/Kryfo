@@ -41,6 +41,8 @@ class _RestoreScreenState extends State<RestoreScreen> {
   String? _blob;
   String? _path;
   double _progress = 0;
+  // a file of either kind is picked
+  bool get _hasFile => _blob != null || _path != null;
   final _passCtrl = TextEditingController();
   bool _busy = false;
   String? _error;
@@ -296,10 +298,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       child: Text(
                         'Not now',
-                        style: HaloType.sans(
-                          size: 13,
-                          color: HaloColors.text2,
-                        ),
+                        style: HaloType.sans(size: 13, color: HaloColors.text2),
                       ),
                     ),
                   ),
@@ -404,7 +403,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                     color: HaloColors.surface2,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: _blob != null ? HaloColors.amber : HaloColors.line,
+                      color: _hasFile ? HaloColors.amber : HaloColors.line,
                       width: 0.6,
                     ),
                   ),
@@ -439,7 +438,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
               duration: const Duration(milliseconds: 220),
               curve: Curves.easeOutCubic,
               alignment: Alignment.topCenter,
-              child: _blob == null
+              child: !_hasFile
                   ? const SizedBox(width: double.infinity)
                   : _Step(
                       n: '2',
@@ -513,9 +512,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
             if (s == null)
               _Primary(
                 label: _busy ? 'checking…' : 'Check the file',
-                onTap: _busy || (_blob == null && _path == null)
-                    ? null
-                    : _check,
+                onTap: _busy || !_hasFile ? null : _check,
               )
             else
               _Primary(
@@ -624,10 +621,7 @@ class _SummaryCard extends StatelessWidget {
           _line('contacts', '${summary.contacts}'),
           _line('messages', '${summary.messages}'),
           if (summary.files > 0)
-            _line(
-              'attachments',
-              '${summary.files} · ${_mb(summary.bytes)}',
-            ),
+            _line('attachments', '${summary.files} · ${_mb(summary.bytes)}'),
           const SizedBox(height: 8),
           Text(
             'Messages sent or received after that date are not in this file.',
@@ -703,7 +697,6 @@ class _Primary extends StatelessWidget {
     );
   }
 }
-
 
 String _mb(int bytes) {
   if (bytes >= 1024 * 1024 * 1024) {
