@@ -7673,26 +7673,41 @@ Future<void> showAddContact(BuildContext context) async {
           // handles, introductions
           _Pressable(
             onTap: () => Navigator.pop(sheetCtx, 'mine'),
+            // this is the door most people need and it read as an
+            // afterthought under the paste box: a hairline border, a small
+            // icon, plain text. same tokens, more presence - the amber
+            // edge and glow the jump button uses, a bigger mark, a
+            // heavier title.
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
               decoration: BoxDecoration(
                 color: HaloColors.surface2,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: HaloColors.line, width: 0.5),
+                border: Border.all(
+                  color: HaloColors.amber.withValues(alpha: 0.5),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: HaloColors.amber.withValues(alpha: 0.16),
+                    blurRadius: 16,
+                    spreadRadius: -2,
+                  ),
+                ],
               ),
               child: Row(
                 children: [
                   Container(
-                    width: 30,
-                    height: 30,
+                    width: 38,
+                    height: 38,
                     decoration: BoxDecoration(
                       color: HaloColors.amberSoft,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     alignment: Alignment.center,
                     child: Icon(
                       Icons.qr_code_2,
-                      size: 16,
+                      size: 20,
                       color: HaloColors.amber,
                     ),
                   ),
@@ -7704,7 +7719,8 @@ Future<void> showAddContact(BuildContext context) async {
                         Text(
                           'Every way to add someone',
                           style: HaloType.sans(
-                            size: 14,
+                            size: 14.5,
+                            weight: FontWeight.w600,
                             color: HaloColors.text,
                           ),
                         ),
@@ -7719,7 +7735,7 @@ Future<void> showAddContact(BuildContext context) async {
                       ],
                     ),
                   ),
-                  Icon(Icons.chevron_right, size: 18, color: HaloColors.text3),
+                  Icon(Icons.chevron_right, size: 18, color: HaloColors.amber),
                 ],
               ),
             ),
