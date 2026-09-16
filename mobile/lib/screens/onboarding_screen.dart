@@ -788,7 +788,12 @@ class _TransportScreenState extends State<_TransportScreen> {
   Future<void> _go() async {
     if (_busy) return;
     setState(() => _busy = true);
-    if (_pick != 'private') await appState.setSendMode(_pick);
+    // written whatever was picked. onion used to write nothing and lean on
+    // the stored default, so anything left in storage from before - a wipe
+    // that failed part way, an earlier install on the same phone - won
+    // over the choice just made. a redmi picked onion and came up on the
+    // relay. an explicit choice is written explicitly.
+    await appState.setSendMode(_pick);
     if (mounted) widget.onContinue();
   }
 
@@ -848,9 +853,11 @@ class _TransportScreenState extends State<_TransportScreen> {
         Center(
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () {
+            onTap: () async {
               HapticFeedback.selectionClick();
-              widget.onContinue();
+              // skip means onion. make it so rather than assume it.
+              await appState.setSendMode('private');
+              if (mounted) widget.onContinue();
             },
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
