@@ -384,6 +384,9 @@ Future<void> createBackupFile(
     salt[i] = rnd.nextInt(256);
   }
   final port = ReceivePort();
+  // only the SendPort may cross into the worker: the ReceivePort itself is
+  // unsendable, and capturing `port` in the closure took it along
+  final tell = port.sendPort;
   final sub = port.listen((m) {
     if (m is List && m.length == 2) onProgress?.call(m[0] as int, m[1] as int);
   });
@@ -400,7 +403,7 @@ Future<void> createBackupFile(
           cipher: cipher,
           manifest: manifest,
           root: docs.path,
-          onProgress: (a, b) => port.sendPort.send([a, b]),
+          onProgress: (a, b) => tell.send([a, b]),
         );
       } finally {
         cipher.dispose();
@@ -518,6 +521,9 @@ Future<void> restoreBackupFile(
   final docs = await getApplicationDocumentsDirectory();
   final root = docs.path;
   final port = ReceivePort();
+  // only the SendPort may cross into the worker: the ReceivePort itself is
+  // unsendable, and capturing `port` in the closure took it along
+  final tell = port.sendPort;
   final sub = port.listen((m) {
     if (m is List && m.length == 2) onProgress?.call(m[0] as int, m[1] as int);
   });
@@ -543,7 +549,7 @@ Future<void> restoreBackupFile(
           path,
           cipher,
           want: (n) => p.join(root, n),
-          onProgress: (a, b) => port.sendPort.send([a, b]),
+          onProgress: (a, b) => tell.send([a, b]),
         );
         return m;
       } finally {
