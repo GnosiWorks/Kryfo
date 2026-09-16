@@ -62,6 +62,7 @@ import 'camera_screen.dart';
 import '../link_preview.dart' show titleFromHtml, senderPreview;
 import '../widgets/preview_strip.dart';
 import '../widgets/halo_sheet.dart';
+import '../widgets/moved_strip.dart';
 
 final Map<String, String> _draftPerGroup = {};
 
@@ -2930,6 +2931,9 @@ class _Composer extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
+    // a phone whose identity has moved has no engine running: a message
+    // typed here would sit in the outbox for good. nowhere to type it.
+    if (appState.movedAway) return const MovedStrip();
     return Container(
       decoration: BoxDecoration(
         border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),

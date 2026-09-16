@@ -42,6 +42,7 @@ import 'screens/onboarding_screen.dart';
 import 'lock_state.dart';
 import 'screens/lock_screen.dart';
 import 'screens/lock_setup_screen.dart';
+import 'screens/moved_screen.dart';
 import 'push_mode.dart';
 import 'intro_prefs.dart';
 import 'scam_prefs.dart';
@@ -5210,6 +5211,14 @@ class AppState extends ChangeNotifier {
   }
 
   bool onboardingComplete = false;
+  // this identity was moved to another device from here. set by the
+  // export that moved it, never inferred: a phone that works out it is
+  // dead by failing is the silent failure this app has spent weeks
+  // removing. while set the engine never starts, so nothing here can
+  // advance a ratchet the other device now owns.
+  bool movedAway = false;
+  // the person chose to keep reading what was here. this session only.
+  bool movedReadOnly = false;
   late AppLinks _appLinks;
   String myId = '';
   String myOnion = '';
@@ -5588,6 +5597,7 @@ class AppState extends ChangeNotifier {
     onboardingComplete =
         (await const FlutterSecureStorage().read(key: 'onboarding_done')) ==
         'true';
+    movedAway = (await SharedPreferences.getInstance()).getInt('moved.at') != null;
     // let the onion linger a beat before the home appears
     if (onboardingComplete) {
       await Future.delayed(const Duration(milliseconds: 300));
@@ -5596,6 +5606,15 @@ class AppState extends ChangeNotifier {
     bootPhase = 'starting Tor';
     dlog('BOOT ready +${bsw.elapsedMilliseconds}ms');
     notifyListeners();
+    // moved away: home can show what was here, and that is all. no tor,
+    // no relays, no outbox. see movedAway.
+    if (movedAway) {
+      bootPhase = '';
+      if (!_signalReady.isCompleted) _signalReady.complete();
+      _booting = false;
+      notifyListeners();
+      return;
+    }
     // signal prekey gen is cpu-heavy (~5s on a fresh identity) and nothing
     // above needs it - defer it so the home paints first. tor + nostr also
     // start after this, and both take longer to warm than the prekeys, so
@@ -7342,6 +7361,30 @@ class AppState extends ChangeNotifier {
     engine.nostrSubscribeBg(xPub);
   }
 
+  // the export that moved this identity writes the mark; the moved screen
+  // clears it when the person says they are not moving after all
+  Future<void> markMoved() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('moved.at', DateTime.now().millisecondsSinceEpoch);
+    movedAway = true;
+    notifyListeners();
+  }
+
+  // the person chose to keep this phone to read. this session only: the
+  // mark stays and the next launch asks again
+  void keepMovedToRead() {
+    movedReadOnly = true;
+    notifyListeners();
+  }
+
+  Future<void> unmarkMoved() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('moved.at');
+    movedAway = false;
+    movedReadOnly = false;
+    notifyListeners();
+  }
+
   Future<void> markOnboardingComplete() async {
     onboardingComplete = true;
     await const FlutterSecureStorage().write(
@@ -8358,6 +8401,9 @@ class _OnboardingGateState extends State<_OnboardingGate> {
         }
         if (!appState.ready || _hold) {
           return const TorBootSplash();
+        }
+        if (appState.movedAway && !appState.movedReadOnly) {
+          return const MovedScreen();
         }
         if (!appState.onboardingComplete) {
           return OnboardingScreen(
