@@ -69,6 +69,8 @@ class BackupSummary {
   final DateTime? when;
   final int bytes;
   final int files;
+  // true when the phone that made the file retired itself. null for v1
+  final bool? moved;
   final int version;
   final String haloId;
   final int contacts;
@@ -81,6 +83,7 @@ class BackupSummary {
     required this.messages,
     this.bytes = 0,
     this.files = 0,
+    this.moved,
   });
 }
 
@@ -340,6 +343,7 @@ Future<List<BackupFileEntry>> _filesToCarry(Directory docs) async {
 Future<void> createBackupFile(
   String passphrase,
   String outPath, {
+  bool move = false,
   void Function(int done, int total)? onProgress,
 }) async {
   if (passphrase.length < 6) throw BackupError('passphrase too short');
@@ -374,6 +378,10 @@ Future<void> createBackupFile(
     'v': 2,
     'ts': DateTime.now().millisecondsSinceEpoch,
     'haloId': appState.myId,
+    // whether the phone that made this retired itself. a copy to keep
+    // says false, and the restore then warns that two phones on one
+    // identity lose messages on both
+    'moved': move,
     'edPriv': edPriv,
     'xPriv': xPriv,
     'dbPassphrase': dbPassphrase,
@@ -484,32 +492,58 @@ Future<Object?> _inspectJob(_Job j) async {
   }
 }
 
-// streams every file into j.root, the docs folder
+// streams every file into a staging folder under j.root and only then
+// moves them into place. the file is proved whole - end record and all -
+// before a single byte of the phone's own data is touched, so a backup
+// cut short halfway leaves the phone exactly as it was. the earlier order
+// deleted the media and wrote the database first, and a bad file would
+// have left a database the phone could not open with its old identity
+// already gone.
 Future<Object?> _restoreJob(_Job j) async {
   final lib = _engineLib();
   final key = _backupKey(lib, j.passphrase, j.salt);
   if (key == null) throw const BackupLocked();
   final cipher = _EngineCipher(lib, key, kBackupChunk);
+  final stage = Directory(p.join(j.root, 'restore_stage'));
   try {
+    if (await stage.exists()) await stage.delete(recursive: true);
+    await stage.create(recursive: true);
     final m = await readBackupManifest(j.path, cipher);
     if ((m['v'] as int? ?? 99) > 2) {
       throw const RestoreError(RestoreFailure.newerVersion);
     }
-    // a folder this backup carries is replaced whole, so a file deleted
-    // before the backup does not linger from before
+    await extractBackup(
+      j.path,
+      cipher,
+      want: (n) => p.join(stage.path, n),
+      onProgress: (a, b) => j.tell?.send([a, b]),
+    );
+    // whole. now, and only now, the phone's own files go
     for (final folder in ['media', 'wallpapers']) {
       final d = Directory(p.join(j.root, folder));
       if (await d.exists()) await d.delete(recursive: true);
     }
-    await extractBackup(
-      j.path,
-      cipher,
-      want: (n) => p.join(j.root, n),
-      onProgress: (a, b) => j.tell?.send([a, b]),
-    );
+    // a rollback journal left by the open database would be replayed
+    // over the restored one on the next open
+    for (final side in ['halo.db-journal', 'halo.db-wal', 'halo.db-shm']) {
+      final f = File(p.join(j.root, side));
+      if (await f.exists()) await f.delete();
+    }
+    final files = [
+      for (final f in m['files'] as List)
+        BackupFileEntry.fromJson(f as Map<String, dynamic>),
+    ];
+    for (final f in files) {
+      final dest = File(p.join(j.root, f.name));
+      await dest.parent.create(recursive: true);
+      await File(p.join(stage.path, f.name)).rename(dest.path);
+    }
     return m;
   } finally {
     cipher.dispose();
+    try {
+      if (await stage.exists()) await stage.delete(recursive: true);
+    } catch (_) {}
   }
 }
 
@@ -583,6 +617,7 @@ Future<BackupSummary> inspectBackupFile(String path, String passphrase) async {
     bytes: files.fold<int>(0, (a, f) => a + f.size),
     // the database and the onion key are not attachments
     files: files.where((f) => f.name.contains('/')).length,
+    moved: manifest['moved'] as bool?,
   );
 }
 
