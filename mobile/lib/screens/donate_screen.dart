@@ -549,7 +549,7 @@ class _DonateScreenState extends State<DonateScreen> {
                       ),
                     ),
                     child: Text(
-                      can ? 'pay with bitcoin  \u2192' : 'badges start at \$20',
+                      can ? 'Pay with bitcoin  \u2192' : 'Badges start at \$20',
                       style: HaloType.sans(
                         size: 13,
                         weight: FontWeight.w600,
@@ -980,7 +980,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
               ),
             ),
             const SizedBox(height: 24),
-            _fillButton('new invoice', _start),
+            _fillButton('New invoice', _start),
             const SizedBox(height: 10),
             _ghostButton('I paid, check again', _check),
           ],
