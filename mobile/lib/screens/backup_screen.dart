@@ -60,6 +60,7 @@ class _BackupScreenState extends State<BackupScreen> {
       await createBackupFile(
         pw,
         path,
+        move: _move,
         onProgress: (a, b) {
           if (mounted && b > 0) setState(() => _progress = a / b);
         },

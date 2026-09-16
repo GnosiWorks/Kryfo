@@ -283,6 +283,13 @@ class _RestoreScreenState extends State<RestoreScreen> {
                   "unreadable there and isn't waiting for you here either.",
                   strong: true,
                 ),
+                if (s.moved != true)
+                  _item(
+                    'If the phone this file came from is still in use, stop '
+                    'using kryfo on it before you carry on. Two phones on one '
+                    'kryfo lose messages on both.',
+                    strong: true,
+                  ),
                 _item('Notifications need setting up again on this device.'),
                 const SizedBox(height: 22),
                 _Primary(
