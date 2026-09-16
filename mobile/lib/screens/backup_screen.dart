@@ -13,6 +13,7 @@ import 'package:share_plus/share_plus.dart';
 import '../backup.dart';
 import '../main.dart';
 import '../theme.dart';
+import '../widgets/fit_column.dart';
 import '../widgets/stagger_in.dart';
 
 class BackupScreen extends StatefulWidget {
@@ -147,83 +148,84 @@ class _BackupScreenState extends State<BackupScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
+        // the page grew when it learned to move: on a 720px phone a plain
+        // column ran past the body and the button, painted where it always
+        // was, sat outside what could be tapped. fits or scrolls.
+        child: FitColumn(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: staggerAll([
-              _Choice(
-                on: !_move,
-                title: 'Back up',
-                line: 'A copy to keep. This phone carries on as it is.',
-                onTap: () => setState(() => _move = false),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: staggerAll([
+            _Choice(
+              on: !_move,
+              title: 'Back up',
+              line: 'A copy to keep. This phone carries on as it is.',
+              onTap: () => setState(() => _move = false),
+            ),
+            const SizedBox(height: 8),
+            _Choice(
+              on: _move,
+              title: 'Move to another device',
+              line:
+                  'The file takes this identity with it. Once it is made, '
+                  'this phone stops: nothing new arrives here, and nothing '
+                  'sent from here reaches anyone.',
+              onTap: () => setState(() => _move = true),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _move
+                  ? 'One encrypted file: your identity, your contacts, every '
+                        'message, and every photo, voice note and file. '
+                        'Import it on the other device with the passphrase. '
+                        'Until you do, this phone can still be kept.'
+                  : 'One encrypted file: your identity, your contacts, every '
+                        'message, and every photo, voice note and file on '
+                        'this phone right now. Anything said after today is '
+                        'not in it, so make another when it matters. To '
+                        'restore you need the file and the passphrase, both.',
+              style: HaloType.sans(
+                size: 13.5,
+                color: HaloColors.text2,
+                height: 1.5,
               ),
-              const SizedBox(height: 8),
-              _Choice(
-                on: _move,
-                title: 'Move to another device',
-                line:
-                    'The file takes this identity with it. Once it is made, '
-                    'this phone stops: nothing new arrives here, and nothing '
-                    'sent from here reaches anyone.',
-                onTap: () => setState(() => _move = true),
-              ),
-              const SizedBox(height: 16),
+            ),
+            const SizedBox(height: 24),
+            _PinField(label: 'Passphrase', controller: _p1),
+            const SizedBox(height: 12),
+            _PinField(label: 'Confirm passphrase', controller: _p2),
+            const SizedBox(height: 12),
+            if (_error != null)
               Text(
-                _move
-                    ? 'One encrypted file: your identity, your contacts, every '
-                          'message, and every photo, voice note and file. '
-                          'Import it on the other device with the passphrase. '
-                          'Until you do, this phone can still be kept.'
-                    : 'One encrypted file: your identity, your contacts, every '
-                          'message, and every photo, voice note and file on '
-                          'this phone right now. Anything said after today is '
-                          'not in it, so make another when it matters. To '
-                          'restore you need the file and the passphrase, both.',
-                style: HaloType.sans(
-                  size: 13.5,
-                  color: HaloColors.text2,
-                  height: 1.5,
-                ),
+                _error!,
+                style: HaloType.sans(size: 12, color: HaloColors.rose),
               ),
-              const SizedBox(height: 24),
-              _PinField(label: 'Passphrase', controller: _p1),
-              const SizedBox(height: 12),
-              _PinField(label: 'Confirm passphrase', controller: _p2),
-              const SizedBox(height: 12),
-              if (_error != null)
-                Text(
-                  _error!,
-                  style: HaloType.sans(size: 12, color: HaloColors.rose),
+            const Spacer(),
+            GestureDetector(
+              onTap: _busy ? null : _create,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: _busy ? HaloColors.surface3 : HaloColors.amber,
+                  borderRadius: BorderRadius.circular(999),
                 ),
-              const Spacer(),
-              GestureDetector(
-                onTap: _busy ? null : _create,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  decoration: BoxDecoration(
-                    color: _busy ? HaloColors.surface3 : HaloColors.amber,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    _busy
-                        ? (_progress > 0
-                              ? 'writing\u2026 ${(_progress * 100).round()}%'
-                              : 'creating\u2026')
-                        : (_move ? 'Make the file and move' : 'Create backup'),
-                    style: HaloType.sans(
-                      size: 14,
-                      color: _busy ? HaloColors.text2 : HaloColors.onAmber,
-                      weight: FontWeight.w500,
-                    ),
+                alignment: Alignment.center,
+                child: Text(
+                  _busy
+                      ? (_progress > 0
+                            ? 'writing\u2026 ${(_progress * 100).round()}%'
+                            : 'creating\u2026')
+                      : (_move ? 'Make the file and move' : 'Create backup'),
+                  style: HaloType.sans(
+                    size: 14,
+                    color: _busy ? HaloColors.text2 : HaloColors.onAmber,
+                    weight: FontWeight.w500,
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
-            ]),
-          ),
+            ),
+            const SizedBox(height: 8),
+          ]),
         ),
       ),
     );
@@ -255,7 +257,6 @@ class _PinField extends StatelessWidget {
     );
   }
 }
-
 
 class _Choice extends StatelessWidget {
   final bool on;
