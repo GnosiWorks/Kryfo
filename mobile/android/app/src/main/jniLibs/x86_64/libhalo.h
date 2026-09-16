@@ -140,6 +140,22 @@ extern char* HaloEncryptBackup(char* cPlain, char* cPassphrase);
 //
 extern char* HaloDecryptBackup(char* cBlob, char* cPassphrase);
 
+// derives the backup key. salt is exactly 16 bytes. returns the key as
+// hex, or "error: ...".
+//
+extern char* HaloBackupKey(char* cPassphrase, unsigned char* cSalt);
+
+// seals inLen bytes at in into out, which must have room for inLen+16.
+// returns the sealed length, or -1.
+//
+extern int HaloSealChunk(char* cKey, unsigned long long index, unsigned char typ, unsigned char* in, int inLen, unsigned char* out);
+
+// opens inLen sealed bytes at in into out, which must have room for inLen.
+// returns the plaintext length, or -1 when the passphrase is wrong, the
+// record was moved, or the bytes were changed.
+//
+extern int HaloOpenChunk(char* cKey, unsigned long long index, unsigned char typ, unsigned char* in, int inLen, unsigned char* out);
+
 // takes newline separated bridge lines and whether to use them. the caller is
 // expected to restart tor afterwards; changing this mid-session does nothing
 // on its own, because tor reads the config once at startup.
