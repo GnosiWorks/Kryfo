@@ -7,6 +7,10 @@ All notable user-facing changes to kryfo will land here. Format loosely follows 
 ### Fixed
 - a video from the gallery went out with where it was filmed, on what phone, and when, still inside it. photos have had that taken off for a while and videos did not. the location, the make and model, the encoder and the dates are now blanked inside the file before it leaves, in place, so the clip plays exactly as before. mp4, mov and 3gp. a video the app cannot read through is not sent.
 
+### Added
+- moving to another device. the backup screen now asks whether you are making a copy to keep or moving, and a move retires the phone it left: it says so on the next launch, keeps what was there to read, and never sends or receives again, so the two devices cannot fall out of step. the restore on the new device says plainly what follows and what does not before it writes anything, and tells you when a large file will take a few minutes.
+- backups now carry every photo, voice note and file, not only the messages. the file is written and read a piece at a time, so a large one does not need a large phone. old backup files still restore.
+
 ### Changed
 - the app's transitions are a touch quicker: everything that moves when you tap now finishes inside three tenths of a second. the slow reveals on onboarding and the loaders are unchanged on purpose.
 
