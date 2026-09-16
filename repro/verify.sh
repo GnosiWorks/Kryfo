@@ -92,8 +92,27 @@ compare() {
   local a b
   a=$(entries "$built"); b=$(entries "$shipped")
   if [ "$a" = "$b" ]; then
-    echo "  MATCH  every entry of $(basename "$shipped") is byte for byte the container build"
-    return 0
+    # the entries agree. now the comparison f-droid actually makes: the
+    # shipped apk with its signing block cut out, against the container
+    # build, byte for byte. entry hashes matched on 0.2.8 and 0.2.10 and
+    # both were refused, because apksigner had re-padded the zip around
+    # the entries. unsigned_of.py does the cutting.
+    local stripped
+    stripped=$(mktemp)
+    python3 "$(dirname "$0")/unsigned_of.py" "$shipped" "$stripped"
+    if cmp -s "$stripped" "$built"; then
+      rm -f "$stripped"
+      echo "  MATCH  $(basename "$shipped") minus its signature is the container build, byte for byte"
+      return 0
+    fi
+    local where
+    where=$(cmp "$stripped" "$built" 2>&1 | head -1)
+    rm -f "$stripped"
+    echo "  CONTAINER DIFFERS  $(basename "$shipped"): every entry matches, the zip around them does not"
+    echo "    $where"
+    echo "    this is what f-droid sees. the usual cause is the signer re-padding the"
+    echo "    zip: release.sh passes --alignment-preserved to apksigner for that reason."
+    return 1
   fi
   echo "  DIFFERS  $(basename "$shipped")"
   differing "$a" "$b" | while read -r e; do
