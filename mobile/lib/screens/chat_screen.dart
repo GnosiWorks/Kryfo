@@ -81,6 +81,7 @@ export '../atmosphere.dart'
         AtmosphereWash;
 import '../atmosphere.dart';
 import '../widgets/halo_sheet.dart';
+import '../widgets/moved_strip.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
 // chunk indices already accepted by the peer, per media msg_uid. lets a
@@ -7570,6 +7571,9 @@ class _Composer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // a phone whose identity has moved has no engine running: a message
+    // typed here would sit in the outbox for good. nowhere to type it.
+    if (appState.movedAway) return const MovedStrip();
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),

@@ -12,12 +12,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../backup.dart';
-import '../main.dart' show appState;
+import '../main.dart' show appState, shredFile;
 import '../picked.dart';
 import '../theme.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+import '../backup_stream.dart' show isBackupV2;
+import '../widgets/halo_sheet.dart';
+import '../widgets/sheet_handle.dart';
 
 class RestoreScreen extends StatefulWidget {
   // when non-null, called after a successful restore instead of the
@@ -31,7 +36,11 @@ class RestoreScreen extends StatefulWidget {
 
 class _RestoreScreenState extends State<RestoreScreen> {
   String? _fileName;
+  // a v1 file is a text blob held in memory; a v2 file is copied to a
+  // private temp path and streamed from there. one of the two is set.
   String? _blob;
+  String? _path;
+  double _progress = 0;
   final _passCtrl = TextEditingController();
   bool _busy = false;
   String? _error;
@@ -45,9 +54,27 @@ class _RestoreScreenState extends State<RestoreScreen> {
     final result = await lockState.hold(() => FilePicker.pickFiles());
     if (result == null || result.files.single.path == null) return;
     final path = result.files.single.path!;
-    String blob;
+    String? blob;
+    String? own;
     try {
-      blob = await File(path).readAsString();
+      if (await isBackupV2(path)) {
+        // keep our own copy: the picker's is shredded below, and a v2
+        // file is streamed, not read into memory
+        final dir = await getApplicationSupportDirectory();
+        own = p.join(dir.path, 'restore_in.kryfo');
+        await File(path).copy(own);
+      } else {
+        final head = await File(path).openRead(0, 16).first;
+        final text = String.fromCharCodes(head);
+        if (!(text.startsWith('kryfo-backup:') ||
+            text.startsWith('halo-backup:'))) {
+          if (mounted) {
+            setState(() => _error = 'That file is not a kryfo backup');
+          }
+          return;
+        }
+        blob = (await File(path).readAsString()).trim();
+      }
     } catch (_) {
       if (mounted) {
         setState(() => _error = 'This file is damaged and cannot be read');
@@ -57,22 +84,25 @@ class _RestoreScreenState extends State<RestoreScreen> {
       await shredPicked(result);
     }
     if (!mounted) return;
-    if (!(blob.startsWith('kryfo-backup:') ||
-        blob.startsWith('halo-backup:'))) {
-      setState(() => _error = 'That file is not a kryfo backup');
-      return;
-    }
     HapticFeedback.selectionClick();
+    await _dropOwnCopy();
     setState(() {
       _fileName = path.split('/').last;
-      _blob = blob.trim();
+      _blob = blob;
+      _path = own;
     });
+  }
+
+  Future<void> _dropOwnCopy() async {
+    final old = _path;
+    if (old != null) await shredFile(old);
   }
 
   // decrypt and look, touching nothing yet
   Future<void> _check() async {
     final blob = _blob;
-    if (blob == null) return;
+    final path = _path;
+    if (blob == null && path == null) return;
     final pw = _passCtrl.text.trim();
     if (pw.isEmpty) {
       setState(() => _error = 'Type the passphrase the file was made with');
@@ -83,7 +113,9 @@ class _RestoreScreenState extends State<RestoreScreen> {
       _error = null;
     });
     try {
-      final s = await inspectBackup(blob, pw);
+      final s = path != null
+          ? await inspectBackupFile(path, pw)
+          : await inspectBackup(blob!, pw);
       if (!mounted) return;
       HapticFeedback.mediumImpact();
       setState(() {
@@ -108,8 +140,14 @@ class _RestoreScreenState extends State<RestoreScreen> {
 
   Future<void> _restore() async {
     final blob = _blob;
+    final path = _path;
     final s = _summary;
-    if (blob == null || s == null) return;
+    if ((blob == null && path == null) || s == null) return;
+    // the page someone reads on the worst day. what follows, what does
+    // not, and the one line that has to be plain: the old phone stops
+    // receiving the moment this one sends. not gradually.
+    final go = await _moveSheet(s);
+    if (!go || !mounted) return;
     if (appState.onboardingComplete) {
       final ok = await showConfirmSheet(
         context,
@@ -124,9 +162,21 @@ class _RestoreScreenState extends State<RestoreScreen> {
     setState(() {
       _busy = true;
       _error = null;
+      _progress = 0;
     });
     try {
-      await restoreBackupBlob(blob, _passCtrl.text.trim());
+      if (path != null) {
+        await restoreBackupFile(
+          path,
+          _passCtrl.text.trim(),
+          onProgress: (a, b) {
+            if (mounted && b > 0) setState(() => _progress = a / b);
+          },
+        );
+        await _dropOwnCopy();
+      } else {
+        await restoreBackupBlob(blob!, _passCtrl.text.trim());
+      }
       if (!mounted) return;
       HapticFeedback.mediumImpact();
       if (widget.onRestored != null) {
@@ -157,9 +207,152 @@ class _RestoreScreenState extends State<RestoreScreen> {
     }
   }
 
+  Future<bool> _moveSheet(BackupSummary s) async {
+    final big = s.bytes > 50 * 1024 * 1024;
+    final when = s.when;
+    final made = when == null
+        ? ''
+        : ', made on ${when.day} ${_SummaryCard._month(when.month)} at '
+              '${when.hour.toString().padLeft(2, '0')}:'
+              '${when.minute.toString().padLeft(2, '0')}';
+    final name = s.haloId.isEmpty ? 'this identity' : s.haloId;
+    final r = await showHaloSheet<bool>(
+      context,
+      builder: (ctx) => SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(22, 0, 22, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Center(child: SheetHandle()),
+                const SizedBox(height: 18),
+                Text(
+                  'Move your kryfo here',
+                  style: HaloType.serif(size: 21, color: HaloColors.text),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'This backup is $name$made. Restoring it moves that '
+                  'identity to this device.',
+                  style: HaloType.sans(
+                    size: 13.5,
+                    color: HaloColors.text2,
+                    height: 1.45,
+                  ),
+                ),
+                if (big) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    'It holds ${_mb(s.bytes)} of photos, voice notes and '
+                    'files. This may take a few minutes. Keep the app open.',
+                    style: HaloType.sans(
+                      size: 13.5,
+                      color: HaloColors.amber,
+                      height: 1.45,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 18),
+                _head('What follows'),
+                _item('Your name, your code, and every contact.'),
+                _item('Every conversation, back to the start.'),
+                _item(
+                  'Your photos, voice notes and files'
+                  '${s.files > 0 ? ' · ${s.files}' : ''}.',
+                ),
+                _item(
+                  'Your onion address, so people who reach you directly '
+                  'keep reaching you.',
+                ),
+                _item(
+                  'Anything sent to you while the old phone was off, for '
+                  'fourteen days after it was sent.',
+                ),
+                _item('Your supporter badge, if you have one.'),
+                const SizedBox(height: 16),
+                _head("What doesn't"),
+                _item(
+                  'The old phone stops receiving the moment you send '
+                  'anything from here. Not gradually. The first message you '
+                  'send from this device is the last one the old phone can '
+                  'follow, and anything that reaches it after that is '
+                  "unreadable there and isn't waiting for you here either.",
+                  strong: true,
+                ),
+                _item('Notifications need setting up again on this device.'),
+                const SizedBox(height: 22),
+                _Primary(
+                  label: 'Move it here',
+                  onTap: () => Navigator.pop(ctx, true),
+                ),
+                const SizedBox(height: 6),
+                Center(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => Navigator.pop(ctx, false),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Text(
+                        'Not now',
+                        style: HaloType.sans(
+                          size: 13,
+                          color: HaloColors.text2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    return r == true;
+  }
+
+  Widget _head(String t) => Padding(
+    padding: const EdgeInsets.only(bottom: 6),
+    child: Text(t, style: HaloType.mono(size: 11, color: HaloColors.text3)),
+  );
+
+  Widget _item(String t, {bool strong = false}) => Padding(
+    padding: const EdgeInsets.only(bottom: 6),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 7, right: 10),
+          child: Container(
+            width: 4,
+            height: 4,
+            decoration: BoxDecoration(
+              color: strong ? HaloColors.amber : HaloColors.text3,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            t,
+            style: HaloType.sans(
+              size: 13.5,
+              color: strong ? HaloColors.text : HaloColors.text2,
+              weight: strong ? FontWeight.w600 : FontWeight.w400,
+              height: 1.45,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
   @override
   void dispose() {
     _passCtrl.dispose();
+    _dropOwnCopy();
     super.dispose();
   }
 
@@ -320,11 +513,17 @@ class _RestoreScreenState extends State<RestoreScreen> {
             if (s == null)
               _Primary(
                 label: _busy ? 'checking…' : 'Check the file',
-                onTap: _busy || _blob == null ? null : _check,
+                onTap: _busy || (_blob == null && _path == null)
+                    ? null
+                    : _check,
               )
             else
               _Primary(
-                label: _busy ? 'restoring…' : 'restore',
+                label: _busy
+                    ? (_path != null && _progress > 0
+                          ? 'moving… ${(_progress * 100).round()}%'
+                          : 'restoring…')
+                    : 'Restore',
                 onTap: _busy ? null : _restore,
               ),
             if (s != null) ...[
@@ -424,6 +623,11 @@ class _SummaryCard extends StatelessWidget {
           _line('made', date),
           _line('contacts', '${summary.contacts}'),
           _line('messages', '${summary.messages}'),
+          if (summary.files > 0)
+            _line(
+              'attachments',
+              '${summary.files} · ${_mb(summary.bytes)}',
+            ),
           const SizedBox(height: 8),
           Text(
             'Messages sent or received after that date are not in this file.',
@@ -498,4 +702,12 @@ class _Primary extends StatelessWidget {
       ),
     );
   }
+}
+
+
+String _mb(int bytes) {
+  if (bytes >= 1024 * 1024 * 1024) {
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
+  }
+  return '${(bytes / (1024 * 1024)).round()} MB';
 }

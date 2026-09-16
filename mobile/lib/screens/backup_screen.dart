@@ -32,6 +32,10 @@ class _BackupScreenState extends State<BackupScreen> {
   final _p2 = TextEditingController();
   bool _busy = false;
   String? _error;
+  // a backup to keep, or a move to another device. a move writes the mark
+  // that retires this phone once the file is made
+  bool _move = false;
+  double _progress = 0;
 
   Future<void> _create() async {
     final pw = _p1.text.trim();
@@ -49,12 +53,17 @@ class _BackupScreenState extends State<BackupScreen> {
       _busy = true;
     });
     try {
-      final blob = await createBackupBlob(pw);
       final tempDir = await getTemporaryDirectory();
       final ts = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      final name = 'kryfo-backup-$ts.txt';
+      final name = 'kryfo-backup-$ts.kryfo';
       final path = p.join(tempDir.path, name);
-      await File(path).writeAsString(blob, flush: true);
+      await createBackupFile(
+        pw,
+        path,
+        onProgress: (a, b) {
+          if (mounted && b > 0) setState(() => _progress = a / b);
+        },
+      );
       var shared = false;
       try {
         shared = await _handOver(path, name);
@@ -63,6 +72,12 @@ class _BackupScreenState extends State<BackupScreen> {
         // so that one is left for the boot sweep. every other way out
         // shreds the copy here
         if (!shared) await shredFile(path);
+      }
+      if (_move) {
+        // the file is out of our hands: from here this phone is retired,
+        // and the next screen says so. the mark is what tells it, not a
+        // failing session weeks later
+        await appState.markMoved();
       }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
@@ -137,11 +152,34 @@ class _BackupScreenState extends State<BackupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: staggerAll([
+              _Choice(
+                on: !_move,
+                title: 'Back up',
+                line: 'A copy to keep. This phone carries on as it is.',
+                onTap: () => setState(() => _move = false),
+              ),
+              const SizedBox(height: 8),
+              _Choice(
+                on: _move,
+                title: 'Move to another device',
+                line:
+                    'The file takes this identity with it. Once it is made, '
+                    'this phone stops: nothing new arrives here, and nothing '
+                    'sent from here reaches anyone.',
+                onTap: () => setState(() => _move = true),
+              ),
+              const SizedBox(height: 16),
               Text(
-                'One encrypted file: your identity, your contacts, and the '
-                'messages on this phone right now. Anything said after '
-                'today is not in it, so make another when it matters. To '
-                'restore you need the file and the passphrase, both.',
+                _move
+                    ? 'One encrypted file: your identity, your contacts, every '
+                          'message, and every photo, voice note and file. '
+                          'Import it on the other device with the passphrase. '
+                          'Until you do, this phone can still be kept.'
+                    : 'One encrypted file: your identity, your contacts, every '
+                          'message, and every photo, voice note and file on '
+                          'this phone right now. Anything said after today is '
+                          'not in it, so make another when it matters. To '
+                          'restore you need the file and the passphrase, both.',
                 style: HaloType.sans(
                   size: 13.5,
                   color: HaloColors.text2,
@@ -170,7 +208,11 @@ class _BackupScreenState extends State<BackupScreen> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    _busy ? 'creating…' : 'Create backup',
+                    _busy
+                        ? (_progress > 0
+                              ? 'writing\u2026 ${(_progress * 100).round()}%'
+                              : 'creating\u2026')
+                        : (_move ? 'Make the file and move' : 'Create backup'),
                     style: HaloType.sans(
                       size: 14,
                       color: _busy ? HaloColors.text2 : HaloColors.onAmber,
@@ -208,6 +250,61 @@ class _PinField extends StatelessWidget {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: HaloColors.amber, width: 0.8),
+        ),
+      ),
+    );
+  }
+}
+
+
+class _Choice extends StatelessWidget {
+  final bool on;
+  final String title;
+  final String line;
+  final VoidCallback onTap;
+  const _Choice({
+    required this.on,
+    required this.title,
+    required this.line,
+    required this.onTap,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        decoration: BoxDecoration(
+          color: on ? HaloColors.amberSoft : HaloColors.surface2,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: on ? HaloColors.amber : HaloColors.line,
+            width: on ? 1 : 0.5,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: HaloType.sans(
+                size: 14.5,
+                weight: FontWeight.w600,
+                color: HaloColors.text,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              line,
+              style: HaloType.sans(
+                size: 12.5,
+                color: HaloColors.text2,
+                height: 1.4,
+              ),
+            ),
+          ],
         ),
       ),
     );
