@@ -14,7 +14,7 @@ import '../widgets/fit_column.dart';
 import '../theme.dart';
 import 'restore_screen.dart';
 import 'my_kryfo_screen.dart';
-import '../main.dart' show appState, AppState;
+import '../main.dart' show appState, AppState, handleHaloUri;
 import 'scan_screen.dart';
 import 'avatar_picker_screen.dart' show AvatarChoiceEditor;
 import '../widgets/kryfo_avatar.dart';
@@ -1115,7 +1115,18 @@ class _AddSomeoneScreen extends StatelessWidget {
             desc: 'Point the camera at their code',
             onTap: () async {
               final nav = Navigator.of(context);
-              await nav.push(haloRoute(const ScanScreen()));
+              final raw = await nav.push<String>(
+                haloRoute<String>(const ScanScreen()),
+              );
+              // the scanner hands the code back and every other caller runs
+              // it through handleHaloUri, which is what adds the contact.
+              // this one dropped it, so a scan from onboarding read the
+              // code and added nobody.
+              if (raw != null) {
+                final status = await handleHaloUri(raw);
+                await appState.refreshContacts();
+                if (context.mounted) showHaloToast(context, status);
+              }
               onComplete();
             },
           ),
