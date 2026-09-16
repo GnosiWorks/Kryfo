@@ -843,7 +843,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
               border: Border.all(color: HaloColors.line),
             ),
             child: Text(
-              "Couldn't reach the payment service over tor right now. You can "
+              "The payment service is having trouble right now. You can "
               "still donate to the address below - your badge just won't unlock "
               "automatically. Try again later for the badge.",
               style: HaloType.sans(
