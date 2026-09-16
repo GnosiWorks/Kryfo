@@ -14,8 +14,11 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
-import 'main.dart' show TwoArgFn, TwoArgFnDart, engine, shredFile;
+import 'main.dart' show TwoArgFn, TwoArgFnDart, appState, db, engine, shredFile;
 import 'dlog.dart';
+import 'dart:typed_data';
+import 'backup_stream.dart';
+import 'dart:math';
 
 const _kDbPassphrase = 'halo.db.passphrase';
 const _secureStorage = FlutterSecureStorage(
@@ -60,8 +63,12 @@ RestoreFailure classifyRestoreError(String engineError) {
 }
 
 // what a backup file holds, read before anything is touched
+// what a backup holds, before anything is touched. bytes and files are
+// zero for a v1 file, which never carried attachments.
 class BackupSummary {
   final DateTime? when;
+  final int bytes;
+  final int files;
   final int version;
   final String haloId;
   final int contacts;
@@ -72,6 +79,8 @@ class BackupSummary {
     required this.haloId,
     required this.contacts,
     required this.messages,
+    this.bytes = 0,
+    this.files = 0,
   });
 }
 
@@ -165,90 +174,6 @@ Future<BackupSummary> inspectBackup(String blob, String passphrase) async {
   );
 }
 
-// produces an encrypted backup blob. throws BackupError on failure.
-Future<String> createBackupBlob(String passphrase) async {
-  if (passphrase.length < 6) {
-    throw BackupError('passphrase too short');
-  }
-  try {
-    final docsDir = await getApplicationDocumentsDirectory();
-
-    // identity keys (hex strings)
-    final edPriv = engine.myEdPrivkey();
-    final xPriv = engine.myXPrivkey();
-    if (edPriv.isEmpty || xPriv.isEmpty) {
-      throw BackupError('identity not loaded');
-    }
-
-    // onion key - may not exist yet if user never started the listener
-    String? onionKeyB64;
-    final onionPath = p.join(docsDir.path, 'onion.key');
-    final onionFile = File(onionPath);
-    if (await onionFile.exists()) {
-      onionKeyB64 = base64Encode(await onionFile.readAsBytes());
-    }
-
-    // sqlcipher passphrase
-    final dbPassphrase = await _secureStorage.read(key: _kDbPassphrase);
-    if (dbPassphrase == null) {
-      throw BackupError('db passphrase missing');
-    }
-
-    // database bytes
-    final dbPath = p.join(docsDir.path, 'halo.db');
-    final dbFile = File(dbPath);
-    if (!await dbFile.exists()) {
-      throw BackupError('db file not found');
-    }
-    final dbBytes = await dbFile.readAsBytes();
-    final dbB64 = base64Encode(dbBytes);
-
-    // prefs (push mode, ntfy topic, ntfy server, app lock state)
-    final prefs = await SharedPreferences.getInstance();
-    final prefKeys = <String>[
-      'push_mode',
-      'ntfy_topic',
-      'ntfy_server',
-      'onboarding.complete',
-    ];
-    final prefsMap = <String, dynamic>{};
-    for (final k in prefKeys) {
-      final v = prefs.get(k);
-      if (v != null) prefsMap[k] = v;
-    }
-
-    // onboarding_done lives in default FlutterSecureStorage, not the
-    // halo.db one. read it separately.
-    final defaultStorage = const FlutterSecureStorage();
-    final onboardingDone = await defaultStorage.read(key: 'onboarding_done');
-
-    final payload = {
-      'v': 1,
-      'ts': DateTime.now().millisecondsSinceEpoch,
-      'edPriv': edPriv,
-      'xPriv': xPriv,
-      'onionKey': onionKeyB64,
-      'dbPassphrase': dbPassphrase,
-      'db': dbB64,
-      'prefs': prefsMap,
-      'onboardingDone': onboardingDone,
-    };
-    final json = jsonEncode(payload);
-
-    final blob = engine.encryptBackup(json, passphrase);
-    if (blob.startsWith('error:')) {
-      throw BackupError(blob);
-    }
-    return blob;
-  } catch (e) {
-    if (e is BackupError) rethrow;
-    throw BackupError('$e');
-  }
-}
-
-// applies a previously-created backup blob. must be called BEFORE the
-// engine has fully booted (specifically before identity is generated)
-// otherwise the new identity will clash.
 Future<void> restoreBackupBlob(String blob, String passphrase) async {
   final payload = await _openPayload(blob, passphrase);
 
@@ -300,4 +225,367 @@ Future<void> restoreBackupBlob(String blob, String passphrase) async {
   final xPriv = payload['xPriv'] as String;
   engine.restoreIdentity(edPriv, xPriv);
   dlog('backup: restored identity');
+}
+
+
+// ───────────────────────── v2: the streamed file ─────────────────────────
+//
+// one key from the passphrase, every record sealed on its own, the files
+// read and written a chunk at a time. see backup_stream.dart for the
+// layout. the cryptography is the engine's (HaloBackupKey, HaloSealChunk,
+// HaloOpenChunk); it is reached from a worker isolate, which opens the
+// library itself, so scrypt and a year of photos never block the screen.
+
+typedef _KeyFn = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Uint8>);
+typedef _KeyFnDart = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Uint8>);
+typedef _ChunkFn =
+    Int32 Function(
+      Pointer<Utf8>,
+      Uint64,
+      Uint8,
+      Pointer<Uint8>,
+      Int32,
+      Pointer<Uint8>,
+    );
+typedef _ChunkFnDart =
+    int Function(Pointer<Utf8>, int, int, Pointer<Uint8>, int, Pointer<Uint8>);
+
+DynamicLibrary _engineLib() => Platform.isAndroid
+    ? DynamicLibrary.open('libhalo.so')
+    : DynamicLibrary.process();
+
+// derives the key. null when the engine refused, which it never should
+String? _backupKey(DynamicLibrary lib, String passphrase, Uint8List salt) {
+  final fn = lib.lookupFunction<_KeyFn, _KeyFnDart>('HaloBackupKey');
+  final p1 = passphrase.toNativeUtf8();
+  final ps = calloc<Uint8>(16);
+  try {
+    ps.asTypedList(16).setAll(0, salt);
+    final r = fn(p1, ps).toDartString();
+    return r.startsWith('error:') ? null : r;
+  } finally {
+    calloc.free(p1);
+    calloc.free(ps);
+  }
+}
+
+class _EngineCipher implements ChunkCipher {
+  final _ChunkFnDart _seal;
+  final _ChunkFnDart _open;
+  final Pointer<Utf8> _key;
+  final Pointer<Uint8> _in;
+  final Pointer<Uint8> _out;
+  final int _cap;
+  _EngineCipher(DynamicLibrary lib, String keyHex, int chunk)
+    : _seal = lib.lookupFunction<_ChunkFn, _ChunkFnDart>('HaloSealChunk'),
+      _open = lib.lookupFunction<_ChunkFn, _ChunkFnDart>('HaloOpenChunk'),
+      _key = keyHex.toNativeUtf8(),
+      _cap = chunk + 16 + 4096,
+      _in = calloc<Uint8>(chunk + 16 + 4096),
+      _out = calloc<Uint8>(chunk + 16 + 4096);
+
+  @override
+  Uint8List seal(int index, int type, Uint8List plain) {
+    if (plain.length + 16 > _cap) throw ArgumentError('record too big');
+    _in.asTypedList(_cap).setAll(0, plain);
+    final n = _seal(_key, index, type, _in, plain.length, _out);
+    if (n < 0) throw const BackupDamaged('seal failed');
+    return Uint8List.fromList(_out.asTypedList(n));
+  }
+
+  @override
+  Uint8List? open(int index, int type, Uint8List sealed) {
+    if (sealed.length > _cap) return null;
+    _in.asTypedList(_cap).setAll(0, sealed);
+    final n = _open(_key, index, type, _in, sealed.length, _out);
+    if (n < 0) return null;
+    return Uint8List.fromList(_out.asTypedList(n));
+  }
+
+  void dispose() {
+    calloc.free(_key);
+    calloc.free(_in);
+    calloc.free(_out);
+  }
+}
+
+// everything under docs that a restore has to bring back, relative to
+// docs, in a fixed order: the database first so a peek can stop early
+Future<List<BackupFileEntry>> _filesToCarry(Directory docs) async {
+  final out = <BackupFileEntry>[];
+  Future<void> add(String rel) async {
+    final f = File(p.join(docs.path, rel));
+    if (await f.exists()) out.add(BackupFileEntry(rel, await f.length()));
+  }
+
+  await add('halo.db');
+  await add('onion.key');
+  for (final folder in ['media', 'wallpapers']) {
+    final d = Directory(p.join(docs.path, folder));
+    if (!await d.exists()) continue;
+    final names = <String>[];
+    await for (final e in d.list(recursive: true, followLinks: false)) {
+      if (e is File) names.add(p.relative(e.path, from: docs.path));
+    }
+    names.sort();
+    for (final n in names) {
+      if (safeBackupName(n)) await add(n);
+    }
+  }
+  return out;
+}
+
+/// writes a v2 backup to [outPath]. everything the phone holds: identity,
+/// database, onion key, prefs, and every photo, voice note and file.
+/// [onProgress] is told bytes done of bytes total.
+Future<void> createBackupFile(
+  String passphrase,
+  String outPath, {
+  void Function(int done, int total)? onProgress,
+}) async {
+  if (passphrase.length < 6) throw BackupError('passphrase too short');
+  final docs = await getApplicationDocumentsDirectory();
+  final edPriv = engine.myEdPrivkey();
+  final xPriv = engine.myXPrivkey();
+  if (edPriv.isEmpty || xPriv.isEmpty) throw BackupError('identity not loaded');
+  final dbPassphrase = await _secureStorage.read(key: _kDbPassphrase);
+  if (dbPassphrase == null) throw BackupError('db passphrase missing');
+  // fold the write-ahead log in first, or the last minutes are not in
+  // the file that gets copied
+  await db.checkpoint();
+  final prefs = await SharedPreferences.getInstance();
+  final prefsMap = <String, dynamic>{};
+  for (final k in ['push_mode', 'ntfy_topic', 'ntfy_server', 'onboarding.complete']) {
+    final v = prefs.get(k);
+    if (v != null) prefsMap[k] = v;
+  }
+  final onboardingDone = await const FlutterSecureStorage().read(
+    key: 'onboarding_done',
+  );
+  final files = await _filesToCarry(docs);
+  if (!files.any((f) => f.name == 'halo.db')) {
+    throw BackupError('db file not found');
+  }
+  final manifest = <String, dynamic>{
+    'v': 2,
+    'ts': DateTime.now().millisecondsSinceEpoch,
+    'haloId': appState.myId,
+    'edPriv': edPriv,
+    'xPriv': xPriv,
+    'dbPassphrase': dbPassphrase,
+    'prefs': prefsMap,
+    'onboardingDone': onboardingDone,
+    'chunk': kBackupChunk,
+    'files': [for (final f in files) f.toJson()],
+  };
+  final salt = Uint8List(16);
+  final rnd = Random.secure();
+  for (var i = 0; i < 16; i++) {
+    salt[i] = rnd.nextInt(256);
+  }
+  final port = ReceivePort();
+  final sub = port.listen((m) {
+    if (m is List && m.length == 2) onProgress?.call(m[0] as int, m[1] as int);
+  });
+  try {
+    final err = await Isolate.run(() async {
+      final lib = _engineLib();
+      final key = _backupKey(lib, passphrase, salt);
+      if (key == null) return 'key';
+      final cipher = _EngineCipher(lib, key, kBackupChunk);
+      try {
+        await writeBackup(
+          outPath: outPath,
+          salt: salt,
+          cipher: cipher,
+          manifest: manifest,
+          root: docs.path,
+          onProgress: (a, b) => port.sendPort.send([a, b]),
+        );
+      } finally {
+        cipher.dispose();
+      }
+      return '';
+    });
+    if (err.isNotEmpty) throw BackupError('could not make the key');
+  } finally {
+    await sub.cancel();
+    port.close();
+  }
+}
+
+RestoreError _classify(Object e) {
+  if (e is RestoreError) return e;
+  if (e is BackupLocked) return const RestoreError(RestoreFailure.wrongPassphrase);
+  return const RestoreError(RestoreFailure.damaged);
+}
+
+/// looks inside a v2 file: who it is, how much it holds, touching nothing.
+/// the database is streamed to a private temp file just long enough to be
+/// counted, then shredded.
+Future<BackupSummary> inspectBackupFile(String path, String passphrase) async {
+  if (!await isBackupV2(path)) {
+    throw const RestoreError(RestoreFailure.notABackup);
+  }
+  final salt = await backupSalt(path);
+  final dir = await getApplicationSupportDirectory();
+  final peek = p.join(dir.path, 'restore_peek.db');
+  Map<String, dynamic> manifest;
+  try {
+    manifest = await Isolate.run(() async {
+      final lib = _engineLib();
+      final key = _backupKey(lib, passphrase, salt);
+      if (key == null) throw const BackupLocked();
+      final cipher = _EngineCipher(lib, key, kBackupChunk);
+      try {
+        final m = await readBackupManifest(path, cipher);
+        if (m['v'] is! int) throw const BackupDamaged('no version');
+        if ((m['v'] as int) > 2) {
+          throw const RestoreError(RestoreFailure.newerVersion);
+        }
+        if (m['dbPassphrase'] is! String || m['edPriv'] is! String) {
+          throw const BackupDamaged('manifest secrets');
+        }
+        await extractBackup(
+          path,
+          cipher,
+          want: (n) => n == 'halo.db' ? peek : null,
+        );
+        return m;
+      } finally {
+        cipher.dispose();
+      }
+    });
+  } catch (e) {
+    await shredFile(peek);
+    throw _classify(e);
+  }
+  var contacts = 0;
+  var messages = 0;
+  var haloId = manifest['haloId'] as String? ?? '';
+  try {
+    final db = await openDatabase(
+      peek,
+      password: manifest['dbPassphrase'] as String,
+      readOnly: true,
+    );
+    try {
+      final c = await db.rawQuery(
+        'SELECT COUNT(*) c FROM contacts WHERE accepted = 1',
+      );
+      contacts = (c.first['c'] as int?) ?? 0;
+      final m = await db.rawQuery('SELECT COUNT(*) c FROM messages');
+      messages = (m.first['c'] as int?) ?? 0;
+      final i = await db.query('identity', columns: ['id'], limit: 1);
+      if (i.isNotEmpty) haloId = (i.first['id'] as String?) ?? haloId;
+    } finally {
+      await db.close();
+    }
+  } catch (_) {
+    throw const RestoreError(RestoreFailure.damaged);
+  } finally {
+    await shredFile(peek);
+  }
+  final files = [
+    for (final f in manifest['files'] as List)
+      BackupFileEntry.fromJson(f as Map<String, dynamic>),
+  ];
+  final ts = manifest['ts'];
+  return BackupSummary(
+    when: ts is int ? DateTime.fromMillisecondsSinceEpoch(ts) : null,
+    version: manifest['v'] as int,
+    haloId: haloId,
+    contacts: contacts,
+    messages: messages,
+    bytes: files.fold<int>(0, (a, f) => a + f.size),
+    // the database and the onion key are not attachments
+    files: files.where((f) => f.name.contains('/')).length,
+  );
+}
+
+/// brings a v2 file in. the files land under docs exactly where they came
+/// from, then the secrets and prefs go where the app reads them. the app
+/// is expected to exit afterwards and boot from what was written.
+Future<void> restoreBackupFile(
+  String path,
+  String passphrase, {
+  void Function(int done, int total)? onProgress,
+}) async {
+  if (!await isBackupV2(path)) {
+    throw const RestoreError(RestoreFailure.notABackup);
+  }
+  final salt = await backupSalt(path);
+  final docs = await getApplicationDocumentsDirectory();
+  final root = docs.path;
+  final port = ReceivePort();
+  final sub = port.listen((m) {
+    if (m is List && m.length == 2) onProgress?.call(m[0] as int, m[1] as int);
+  });
+  Map<String, dynamic> manifest;
+  try {
+    manifest = await Isolate.run(() async {
+      final lib = _engineLib();
+      final key = _backupKey(lib, passphrase, salt);
+      if (key == null) throw const BackupLocked();
+      final cipher = _EngineCipher(lib, key, kBackupChunk);
+      try {
+        final m = await readBackupManifest(path, cipher);
+        if ((m['v'] as int? ?? 99) > 2) {
+          throw const RestoreError(RestoreFailure.newerVersion);
+        }
+        // a folder this backup carries is replaced whole, so a file that
+        // was deleted before the backup does not linger from before
+        for (final folder in ['media', 'wallpapers']) {
+          final d = Directory(p.join(root, folder));
+          if (await d.exists()) await d.delete(recursive: true);
+        }
+        await extractBackup(
+          path,
+          cipher,
+          want: (n) => p.join(root, n),
+          onProgress: (a, b) => port.sendPort.send([a, b]),
+        );
+        return m;
+      } finally {
+        cipher.dispose();
+      }
+    });
+  } catch (e) {
+    throw _classify(e);
+  } finally {
+    await sub.cancel();
+    port.close();
+  }
+  await _secureStorage.write(
+    key: _kDbPassphrase,
+    value: manifest['dbPassphrase'] as String,
+  );
+  final prefs = await SharedPreferences.getInstance();
+  final prefsMap = manifest['prefs'] as Map<String, dynamic>? ?? {};
+  for (final entry in prefsMap.entries) {
+    final v = entry.value;
+    if (v is String) {
+      await prefs.setString(entry.key, v);
+    } else if (v is int) {
+      await prefs.setInt(entry.key, v);
+    } else if (v is bool) {
+      await prefs.setBool(entry.key, v);
+    } else if (v is double) {
+      await prefs.setDouble(entry.key, v);
+    }
+  }
+  // this device is where the identity lives now, whatever it was before
+  await prefs.remove('moved.at');
+  final onboardingDone = manifest['onboardingDone'] as String?;
+  if (onboardingDone != null) {
+    await const FlutterSecureStorage().write(
+      key: 'onboarding_done',
+      value: onboardingDone,
+    );
+  }
+  engine.restoreIdentity(
+    manifest['edPriv'] as String,
+    manifest['xPriv'] as String,
+  );
+  dlog('backup: restored identity from a v2 file');
 }
