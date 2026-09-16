@@ -2,7 +2,7 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [0.2.9] - 2026-09-16
 
 ### Fixed
 - the app re-downloaded the same messages every fifteen minutes even when nothing had happened, which could use a lot of mobile data. it doesn't now. one person got through 3.5gb in a day without sending anything. there were two causes and both are fixed. a background check that runs every quarter of an hour dropped every working connection and asked for the last twelve hours of messages again on each one, and separately a quiet conversation was treated as a broken connection and thrown away every seventy-five seconds. after a photo or a voice note, asking for those twelve hours again means a few megabytes of data you already have, every time. the app now asks a connection whether it is still there instead of assuming it is dead, and when it does have to catch up it asks only for the stretch it was actually away for.
@@ -10,6 +10,12 @@ All notable user-facing changes to kryfo will land here. Format loosely follows 
 - one bad piece of a photo or video killed the whole transfer. each piece gets its own retries now, so a single dropped one costs that piece and not the file.
 - voice notes could stop partway through, and tapping them started again from the beginning. when android takes the audio player back the note is now reloaded and carries on where it stopped.
 - the tor screen still described the faster modes as coming soon, long after they shipped. it points at where they live in settings.
+- the date label was drawn twice while scrolling, once in the list and once floating over it a few pixels apart. in groups too.
+- a photo whose file had gone showed as a black square on the contact page strip and in the shared photos grid. it says the photo is missing now.
+- a picture sent through the file picker arrived looking like a document with a paperclip. if the name says it is an image, it is shown as one, with the name kept underneath.
+
+### Added
+- cancel, on the strip that shows a photo or file going out. stopping a send always worked, but the only way to it was a long press on the bubble, which nobody found. groups had no way to stop a send at all and now have the same one.
 
 ## [0.2.8] - 2026-09-15
 

@@ -1,0 +1,11 @@
+Kryfo was re-downloading the same messages every fifteen minutes, even when nothing had happened, and that could use a lot of mobile data. One person got through 3.5 GB in a day without sending anything. A background check that runs every quarter of an hour dropped every working connection and asked for the last twelve hours of messages again, and separately a quiet conversation was treated as a broken connection and thrown away every seventy-five seconds. After a photo or a voice note that is a few megabytes of data you already have, every time. It now asks a connection whether it is still there instead of assuming it is dead, and when it does have to catch up it asks only for the stretch it was actually away for. Measured on a phone: about a hundred times less data when idle.
+
+A photo, file or voice note showed a tick before it had arrived. Media now says nothing until the receipt comes back, then says delivered.
+
+One bad piece of a photo or video killed the whole transfer. Each piece gets its own retries now.
+
+Voice notes could stop partway through and start again from the beginning when tapped. They carry on where they stopped.
+
+There is a cancel on the strip that shows a photo or file going out, in groups too.
+
+The date label was drawn twice while scrolling. A photo whose file has gone says so instead of showing a black square. A picture sent through the file picker is shown as a picture. The tor screen no longer describes the faster modes as coming soon.
