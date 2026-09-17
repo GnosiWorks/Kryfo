@@ -20,7 +20,6 @@ import 'key_verification_screen.dart';
 import 'contact_screen.dart';
 import 'wallpaper_sheet.dart';
 import 'introduce_sheet.dart';
-import 'vouchers_sheet.dart';
 import 'shield_sheet.dart';
 import '../vouch_text.dart';
 import '../widgets/intro_chip.dart';
@@ -3909,10 +3908,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (!mounted) return;
     if (action == 'contact') {
       _openContact();
-    } else if (action == 'verify') {
-      _openKeyVerification();
-    } else if (action == 'vouchers') {
-      await showVouchersSheet(context, widget.peerHaloId);
     } else if (action == 'introduce') {
       await showIntroduceSheet(
         context,
