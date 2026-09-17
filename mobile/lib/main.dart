@@ -44,6 +44,7 @@ import 'screens/lock_screen.dart';
 import 'screens/lock_setup_screen.dart';
 import 'screens/moved_screen.dart';
 import 'pin_gate.dart';
+import 'widgets/pins.dart' show kMaxPins;
 import 'push_mode.dart';
 import 'intro_prefs.dart';
 import 'scam_prefs.dart';
@@ -898,7 +899,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 47,
+      version: 48,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -947,6 +948,7 @@ class HaloDb {
             group_id TEXT,
             edited INTEGER NOT NULL DEFAULT 0,
             pinned INTEGER NOT NULL DEFAULT 0,
+            pinned_at INTEGER,
             secure INTEGER NOT NULL DEFAULT 0,
             media_path TEXT,
             file_path TEXT,
@@ -1029,6 +1031,17 @@ class HaloDb {
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 48) {
+          // when a message was pinned, so the list of pins can run newest
+          // first. pins from before have none and sort by their own time.
+          try {
+            await db.execute(
+              'ALTER TABLE messages ADD COLUMN pinned_at INTEGER',
+            );
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
+        }
         if (oldV < 47) {
           // the reader-side title cache. nothing ever read or wrote it and
           // there was no way to ask for a title, so it goes.
@@ -2567,9 +2580,41 @@ class HaloDb {
     final db = await open();
     await db.update(
       'messages',
-      {'pinned': pinned ? 1 : 0},
+      {
+        'pinned': pinned ? 1 : 0,
+        'pinned_at': pinned ? DateTime.now().millisecondsSinceEpoch : null,
+      },
       where: 'msg_uid = ?',
       whereArgs: [msgUid],
+    );
+  }
+
+  // every pin in one chat, newest pin first, whatever part of the thread
+  // the screen has loaded. a 1:1 chat by the other person's id, a group by
+  // its own.
+  Future<List<Map<String, Object?>>> pinnedIn({
+    String? peerId,
+    String? groupId,
+  }) async {
+    final db = await open();
+    return db.query(
+      'messages',
+      columns: [
+        'msg_uid',
+        'peer_id',
+        'direction',
+        'plaintext',
+        'sent_at',
+        'media_path',
+        'file_name',
+        'pinned_at',
+      ],
+      where: groupId != null
+          ? 'pinned = 1 AND msg_uid IS NOT NULL AND group_id = ?'
+          : "pinned = 1 AND msg_uid IS NOT NULL AND peer_id = ? "
+                "AND (group_id IS NULL OR group_id = '')",
+      whereArgs: [groupId ?? peerId],
+      orderBy: 'COALESCE(pinned_at, sent_at) DESC',
     );
   }
 
@@ -4691,6 +4736,16 @@ class AppState extends ChangeNotifier {
       if (!ok) {
         dlog('pin: dropped, sender is not in that chat');
         return;
+      }
+      // the sender counts before it pins, but that is their word. held
+      // here too, or a member could fill the list from afar.
+      if (env.pin!.pinned) {
+        final held = await db.pinnedIn(peerId: where!.$1, groupId: where.$2);
+        if (held.length >= kMaxPins &&
+            !held.any((r) => r['msg_uid'] == env.pin!.targetUid)) {
+          dlog('pin: dropped, that chat is full');
+          return;
+        }
       }
       await db.setPinned(env.pin!.targetUid, env.pin!.pinned);
       notifyListeners();
