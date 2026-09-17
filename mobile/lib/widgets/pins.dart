@@ -46,6 +46,7 @@ class PinHeaderButton extends StatelessWidget {
                 ),
               ),
             ),
+            // the count is in the tooltip; read out on its own it was "1"
             if (on)
               Positioned(
                 right: -2,
@@ -60,14 +61,16 @@ class PinHeaderButton extends StatelessWidget {
                     color: HaloColors.amber,
                     borderRadius: BorderRadius.circular(999),
                   ),
-                  child: Text(
-                    count > 99 ? '99' : '$count',
-                    textAlign: TextAlign.center,
-                    style: HaloType.mono(
-                      size: 8.5,
-                      weight: FontWeight.w600,
-                      color: HaloColors.onAmber,
-                      letter: 0,
+                  child: ExcludeSemantics(
+                    child: Text(
+                      count > 99 ? '99' : '$count',
+                      textAlign: TextAlign.center,
+                      style: HaloType.mono(
+                        size: 8.5,
+                        weight: FontWeight.w600,
+                        color: HaloColors.onAmber,
+                        letter: 0,
+                      ),
                     ),
                   ),
                 ),
