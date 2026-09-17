@@ -216,6 +216,9 @@ Future<void> restoreBackupBlob(String blob, String passphrase) async {
     }
   }
 
+  // a v1 backup carries none of these; what is here is the old identity's
+  await _applyIdentitySecure(payload['secure']);
+
   // restore the onboarding_done flag to default secure storage
   final defaultStorage = const FlutterSecureStorage();
   final onboardingDone = payload['onboardingDone'] as String?;
@@ -337,6 +340,63 @@ Future<List<BackupFileEntry>> _filesToCarry(Directory docs) async {
   return out;
 }
 
+// what belongs to the identity but lives in secure storage, outside the
+// database: the public handle and its line, which first-contact address is
+// the live one, and where each contact takes first contact. left behind,
+// the new phone did not know its own handle, and after a reset of the
+// invite it listened on address 0 while the published invite named another,
+// so a stranger's first message went nowhere and nothing said so.
+const kIdentitySecureKeys = [
+  'my_handle',
+  'my_handle_bio',
+  'fc_counter',
+  'peer_fc',
+];
+
+/// what a restore does to those keys: the carried ones are written, and
+/// every other one is removed, because whatever sits there belonged to the
+/// identity being replaced. a backup from before they were carried has
+/// none, and removes them all.
+({Map<String, String> write, List<String> remove}) identitySecurePlan(
+  Object? carried,
+) {
+  final write = <String, String>{};
+  if (carried is Map) {
+    for (final k in kIdentitySecureKeys) {
+      final v = carried[k];
+      if (v is String && v.isNotEmpty) write[k] = v;
+    }
+  }
+  return (
+    write: write,
+    remove: [
+      for (final k in kIdentitySecureKeys)
+        if (!write.containsKey(k)) k,
+    ],
+  );
+}
+
+Future<Map<String, String>> _readIdentitySecure() async {
+  const st = FlutterSecureStorage();
+  final out = <String, String>{};
+  for (final k in kIdentitySecureKeys) {
+    final v = await st.read(key: k);
+    if (v != null && v.isNotEmpty) out[k] = v;
+  }
+  return out;
+}
+
+Future<void> _applyIdentitySecure(Object? carried) async {
+  const st = FlutterSecureStorage();
+  final plan = identitySecurePlan(carried);
+  for (final e in plan.write.entries) {
+    await st.write(key: e.key, value: e.value);
+  }
+  for (final k in plan.remove) {
+    await st.delete(key: k);
+  }
+}
+
 /// writes a v2 backup to [outPath]. everything the phone holds: identity,
 /// database, onion key, prefs, and every photo, voice note and file.
 /// [onProgress] is told bytes done of bytes total.
@@ -386,6 +446,7 @@ Future<void> createBackupFile(
     'xPriv': xPriv,
     'dbPassphrase': dbPassphrase,
     'prefs': prefsMap,
+    'secure': await _readIdentitySecure(),
     'onboardingDone': onboardingDone,
     'chunk': kBackupChunk,
     'files': [for (final f in files) f.toJson()],
@@ -681,6 +742,7 @@ Future<void> restoreBackupFile(
   }
   // this device is where the identity lives now, whatever it was before
   await prefs.remove('moved.at');
+  await _applyIdentitySecure(manifest['secure']);
   final onboardingDone = manifest['onboardingDone'] as String?;
   if (onboardingDone != null) {
     await const FlutterSecureStorage().write(
