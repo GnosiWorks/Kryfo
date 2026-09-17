@@ -1,0 +1,15 @@
+Pay with bitcoin froze the app while it reached the payment service over Tor, long enough that some phones said Kryfo had stopped. It waits in the open now, and offers the plain address after twenty seconds.
+
+Voice notes stopped a second or two in. A video or a big file could be sent twice, reaching 99% and starting again. Both are fixed.
+
+Videos look like videos: first frame, length, play button. Tapping a file opens it; share is under a long press.
+
+Pins: the pin in the top bar opens the list, newest first, with jump and unpin. A pin in a one to one chat shows for both of you. Fifty to a chat. Tapping a pin twice no longer scrolls past it.
+
+A room link in a message is an invitation with a join button, and can be sent to a contact.
+
+Moving to a new phone now carries your public handle, and a restore gives a handle back before replacing the account that held it.
+
+Security: a pin is accepted only from someone in that chat.
+
+The link preview setting is gone; the per-message button stays.

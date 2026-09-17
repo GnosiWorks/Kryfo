@@ -425,7 +425,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _Row(
                 icon: Icons.info_outline,
                 label: 'Version',
-                value: '0.2.10 · alpha',
+                value: '0.2.11 · alpha',
               ),
               _Row(
                 icon: Icons.flag_outlined,

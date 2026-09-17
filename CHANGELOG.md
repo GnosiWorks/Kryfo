@@ -2,6 +2,33 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.11] - 2026-09-17
+
+### Security
+- anyone who could reach you and knew a message's id could pin or unpin it on your phone. nothing could be read or changed that way, but it should not have been possible. a pin is accepted only from the other person in that chat, or from a member of that group.
+
+### Fixed
+- pay with bitcoin froze the app while it reached the payment service over tor, fifteen or twenty seconds on a slow connection, long enough that some phones said kryfo had stopped working. the work was being done in the one place nothing else can happen. it is not now: the screen shows that it is waiting and for how long, and after twenty seconds offers the plain address instead.
+- voice notes stopped a second or two in and had to be started again. every delivery tick rebuilt the whole conversation on screen, and the player went with it. a row keeps what it is doing now when the list under it changes.
+- a video or a big file could be sent twice. the first pass got to 99%, the bar started again from nothing, and it arrived at the end of the second pass. the app had marked a send that was still running as failed and then retried it. a file goes out once. the receiving phone also stops collecting pieces of a file it already has, which had left a "receiving" strip counting towards nothing.
+- moving to a new phone left your public handle behind. the new phone did not know it had one, and if you had ever reset your invite, people adding you for the first time wrote to an address nobody was listening on. the backup carries both now.
+- restoring over an account that had a handle left the handle pointing at an account that no longer existed, with no way to take it back. the restore gives the handle back first, and if it cannot reach the registry it tells you what going ahead will cost. the handle screen also says so when a name is held under a different key, instead of going on saying it is yours.
+- tapping a pin a second time scrolled past the message. a jump lands on the message now, however many times you ask and wherever you were.
+- a room link sent in a chat was a wall of text that could not be tapped, and pasted with anything around it the app called it invalid. opened from outside the app, nothing told you what had happened.
+- a phone whose account has moved still said it was building a private route and that what you sent would deliver itself.
+
+### Added
+- videos look like videos: the first frame, how long it runs, and a play button, in chats and groups. tap one and it opens in your phone's player. the frame is never written to the phone, so nothing of a video outlives a message that burns.
+- tapping a file opens it, in whatever your phone has for that kind of file. it only ever offered to share it. share is under a long press now.
+- pins work the way you would expect from discord. the pin in the top bar is always there and opens the list: newest first, who wrote it, when, a picture if there is one, jump and unpin. a pin in a one to one chat shows for both of you, as it always has in groups. pinning asks first. fifty to a chat, up from three. the strip that sat under the top bar is gone.
+- a room link on its own in a message is an invitation with a join button, and the room opens once you are in. the room's link sheet can share the link or send it to a contact, after saying what that costs: they will know the room came from you.
+
+### Changed
+- the link preview setting is gone. it was a switch for whether you would be offered a button, and the button is already a choice you make per message. the button is offered whenever tor is up, and your phone still never fetches a link someone sent you.
+- the voice mask sits a little lower.
+- the public handle page loaded its fonts from google, which showed google everyone who opened one. it carries its own now.
+- the handle registry and the badge service still run on the same machine as the relay. whoever held that machine could match the moment you claimed a handle to the moment your key next spoke to the relay. nothing is logged, but the timing is there, and it is written into the threat model until they have moved to a box of their own.
+
 ## [0.2.10] - 2026-09-16
 
 ### Added
