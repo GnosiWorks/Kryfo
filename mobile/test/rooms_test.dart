@@ -71,4 +71,16 @@ void main() {
     expect(looksLikeRoomKey(_pub), true);
     expect(looksLikeRoomKey('thumb-behave-boring'), false);
   });
+
+  test('a link is found inside what was pasted around it', () {
+    final link = 'kryfo://room?id=r1&pub=$_pub&fc=$_fc&exp=5';
+    expect(firstKryfoLink('join us $link tonight'), link);
+    expect(firstKryfoLink('  $link\n'), link);
+    expect(
+      firstKryfoLink('kryfo://share?id=a&onion=b&v=3 ok'),
+      'kryfo://share?id=a&onion=b&v=3',
+    );
+    expect(firstKryfoLink('https://example.com and nothing else'), null);
+    expect(kryfoLinksIn('$link and $link').length, 2);
+  });
 }

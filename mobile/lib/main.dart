@@ -3551,8 +3551,17 @@ Future<String> handleHaloUri(String raw) async {
     if (r.startsWith('error:')) return r.substring(7);
     raw = r;
   }
+  // the link, out of whatever was pasted around it
+  raw = firstKryfoLink(raw) ?? raw;
   final room = RoomLink.parse(raw);
-  if (room != null) return appState.joinRoom(room);
+  if (room != null) {
+    final r = await appState.joinRoom(room);
+    // a join used to end in a toast and a room somewhere in the list
+    if (r.startsWith('Joined') || r == 'You are already in this room') {
+      openRoomSoon(room.roomId);
+    }
+    return r;
+  }
   final parsed = parseHaloUri(raw);
   if (parsed == null) return 'invalid uri';
   if (parsed['v'] == '2' || parsed['v'] == '3') {
@@ -3780,6 +3789,24 @@ Map<String, String>? parseHaloUri(String raw) {
 
 final engine = HaloEngine();
 final db = HaloDb();
+
+// opens a room on the root navigator, a beat later: whoever asked for the
+// join is a sheet or a screen about to close itself, and a room pushed
+// before that close would be the thing that got closed.
+void openRoomSoon(String groupId) {
+  Future.delayed(const Duration(milliseconds: 450), () async {
+    final nav = rootNavKey.currentState;
+    if (nav == null || !await db.groupExists(groupId)) return;
+    nav.push(haloRoute(GroupChatScreen(groupId: groupId)));
+  });
+}
+
+// what a link opened from outside the app came to. it went to the debug
+// log only, so an expired room or a full one looked like nothing happening.
+void _sayLinkResult(String result) {
+  final ctx = rootNavKey.currentContext;
+  if (ctx != null && ctx.mounted) showHaloToast(ctx, result);
+}
 
 // open ChatScreen for a given kryfo id. used by notification taps
 // (both warm - onDidReceiveNotificationResponse - and cold starts
@@ -5761,6 +5788,7 @@ class AppState extends ChangeNotifier {
         await _signalReady.future;
         final result = await handleHaloUri(uri.toString());
         dlog('deep link: $result');
+        _sayLinkResult(result);
         await refreshContacts();
         notifyListeners();
       }
@@ -5775,6 +5803,7 @@ class AppState extends ChangeNotifier {
             await _signalReady.future;
             final result = await handleHaloUri(uri.toString());
             dlog('deep link (cold start): $result');
+            _sayLinkResult(result);
             await refreshContacts();
             notifyListeners();
           })
