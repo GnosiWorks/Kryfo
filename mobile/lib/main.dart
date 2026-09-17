@@ -4178,6 +4178,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> setMyHandle(String? h, {String bio = ''}) async {
     _myHandle = h;
+    _handleForeign = false;
     final st = const FlutterSecureStorage();
     if (h == null) {
       await st.delete(key: 'my_handle');
@@ -4536,6 +4537,13 @@ class AppState extends ChangeNotifier {
   // are untouched; only the address strangers use to reach us moves.
   // the registry holds a copy of the invite, so a reset has to reach it or
   // the public page keeps handing out an address that no longer answers.
+  // true once the registry has said the handle this phone believes in is
+  // held under another key. it was swallowed with every other failure, and
+  // the screen went on saying "you are @name" over a page that pointed at
+  // someone else's invite, or at nobody's.
+  bool _handleForeign = false;
+  bool get handleForeign => _handleForeign;
+
   Future<void> _repointHandle() async {
     final h = _myHandle;
     if (h == null || myOnion.isEmpty) return;
@@ -4543,12 +4551,20 @@ class AppState extends ChangeNotifier {
       final uri = await buildHaloUriV3(myId, myOnion, _fcCounter);
       final bio =
           await const FlutterSecureStorage().read(key: 'my_handle_bio') ?? '';
-      await engine.handleClaim(h, uri, bio);
+      final r = await engine.handleClaim(h, uri, bio);
+      final foreign = r.contains('taken');
+      if (foreign != _handleForeign) {
+        _handleForeign = foreign;
+        notifyListeners();
+      }
     } catch (_) {
       // offline, or the registry is down. the handle stays claimed and
       // stale rather than lost, and the next claim fixes it.
     }
   }
+
+  // asked by the handle screen when it opens on a claimed handle
+  Future<void> checkHandle() => _repointHandle();
 
   Future<void> resetInviteAddress() async {
     // the key first: moving only the relay address left every old link
