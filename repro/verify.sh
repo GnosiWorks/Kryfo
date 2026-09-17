@@ -3,7 +3,8 @@
 # questions that decide whether f-droid will publish us.
 #
 #   1. does the apk you published match a build of that commit at the path
-#      f-droid builds in? every zip entry, byte for byte.
+#      f-droid builds in? every zip entry, byte for byte, and then
+#      apksigcopier compare, which is the check f-droid itself runs.
 #   2. does that same source produce the same bytes somewhere else?
 #
 # the second one is the one we learned the hard way. our own container
@@ -92,25 +93,32 @@ compare() {
   local a b
   a=$(entries "$built"); b=$(entries "$shipped")
   if [ "$a" = "$b" ]; then
-    # the entries agree. now the comparison f-droid actually makes: the
-    # shipped apk with its signing block cut out, against the container
-    # build, byte for byte. entry hashes matched on 0.2.8 and 0.2.10 and
-    # both were refused, because apksigner had re-padded the zip around
-    # the entries. unsigned_of.py does the cutting.
+    # the entries agree. now the comparison f-droid actually makes, with the
+    # tool they make it with: apksigcopier copies the shipped apk's signature
+    # onto the container build and the result has to be the shipped apk,
+    # byte for byte. entry hashes matched on 0.2.8 and 0.2.10 and both were
+    # refused, because apksigner had re-padded the zip around the entries.
+    # not a raw cmp of the two with the signature cut out: apksig page-aligns
+    # the start of the signing block with zeros, their build does not have
+    # them, their tool puts them back, and a cmp is wrong about it forever.
+    local sh bu out
+    sh=$(realpath "$shipped"); bu=$(realpath "$built")
+    docker image inspect "$IMAGE" >/dev/null 2>&1 || docker build -q -t "$IMAGE" . >/dev/null
+    if out=$(docker run --rm --entrypoint sh -u "$(id -u):$(id -g)" \
+        -v "$sh:/shipped.apk:ro" -v "$bu:/built.apk:ro" "$IMAGE" -c \
+        'PATH=$(ls -d /opt/android-sdk/build-tools/* | sort -V | tail -1):$PATH
+         apksigcopier compare /shipped.apk --unsigned /built.apk' 2>&1); then
+      echo "  MATCH  $(basename "$shipped"): apksigcopier puts its signature on the container build and gets the same file"
+      return 0
+    fi
+    echo "  CONTAINER DIFFERS  $(basename "$shipped"): every entry matches, the zip around them does not"
+    echo "$out" | tail -3 | sed 's/^/    /'
     local stripped
     stripped=$(mktemp)
     python3 "$(dirname "$0")/unsigned_of.py" "$shipped" "$stripped"
-    if cmp -s "$stripped" "$built"; then
-      rm -f "$stripped"
-      echo "  MATCH  $(basename "$shipped") minus its signature is the container build, byte for byte"
-      return 0
-    fi
-    local where
-    where=$(cmp "$stripped" "$built" 2>&1 | head -1)
+    echo "    first byte that differs with the signature cut out: $(cmp "$stripped" "$built" 2>&1 | head -1 | sed 's/.*differ: //')"
     rm -f "$stripped"
-    echo "  CONTAINER DIFFERS  $(basename "$shipped"): every entry matches, the zip around them does not"
-    echo "    $where"
-    echo "    this is what f-droid sees. the usual cause is the signer re-padding the"
+    echo "    this is the check f-droid runs. the usual cause is the signer re-padding the"
     echo "    zip: release.sh passes --alignment-preserved to apksigner for that reason."
     return 1
   fi
