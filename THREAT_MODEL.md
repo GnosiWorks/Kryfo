@@ -29,6 +29,12 @@ put you in danger, read all of it.
 - the fact that you communicated. metadata is minimized, not erased. if you
   send while a contact is online, that timing existed.
 - forensics on a seized unlocked device or on backups of it.
+- our own server lining things up. the handle registry and the badge service
+  run on the same machine as the relay today. nothing there logs who you are,
+  but claiming a handle or buying a badge happens seconds away from your
+  pubkey's relay traffic, and whoever holds that machine could match the two
+  by time. they are moving to a separate box; SERVERS.md has the rule and the
+  state of it. if you use neither, this does not touch you.
 - this integration itself. the crypto is standard libraries (libsignal, tor,
   sqlcipher, nip-44/59) but the way they are wired together here is new and
   has not had an independent review.
