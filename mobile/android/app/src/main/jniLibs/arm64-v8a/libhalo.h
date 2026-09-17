@@ -227,12 +227,6 @@ extern char* HaloNostrKick(void);
 extern char* HaloMemStats(void);
 extern char* HaloNostrPoll(void);
 
-// posts a wake-up trigger to the peer's ntfy endpoint via tor. fire-and-
-// forget from dart's perspective. message body is a fixed string; ntfy
-// only cares that *something* arrived to wake subscribers.
-//
-extern char* HaloNtfyPing(char* cEndpoint);
-
 // fetch a url over the tor http client and return the html body (capped).
 // used for sender-side link previews so the receiver never has to fetch and
 // leak their ip. best-effort: returns "error: ..." on any failure, caller skips.

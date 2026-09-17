@@ -1029,41 +1029,6 @@ func HaloNostrPoll() *C.char {
 	return C.CString(out)
 }
 
-// posts a wake-up trigger to the peer's ntfy endpoint via tor. fire-and-
-// forget from dart's perspective. message body is a fixed string; ntfy
-// only cares that *something* arrived to wake subscribers.
-//
-//export HaloNtfyPing
-func HaloNtfyPing(cEndpoint *C.char) *C.char {
-	endpoint := C.GoString(cEndpoint)
-	if endpoint == "" {
-		return C.CString("error: empty endpoint")
-	}
-	client, err := torNostrClient()
-	if err != nil {
-		return C.CString(fmt.Sprintf("error: tor client: %v", err))
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, "POST", endpoint, strings.NewReader("halo"))
-	if err != nil {
-		return C.CString(fmt.Sprintf("error: req: %v", err))
-	}
-	req.Header.Set("Content-Type", "text/plain")
-	req.Header.Set("Title", "halo")
-	req.Header.Set("Priority", "high")
-	resp, err := client.Do(req)
-	if err != nil {
-		return C.CString(fmt.Sprintf("error: post: %v", err))
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode >= 400 {
-		return C.CString(fmt.Sprintf("error: status %d", resp.StatusCode))
-	}
-	log.Printf("ntfy: pinged %s -> %d", endpoint, resp.StatusCode)
-	return C.CString("ok")
-}
-
 // fetch a url over the tor http client and return the html body (capped).
 // used for sender-side link previews so the receiver never has to fetch and
 // leak their ip. best-effort: returns "error: ..." on any failure, caller skips.
