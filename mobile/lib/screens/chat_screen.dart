@@ -14,7 +14,6 @@ import 'package:file_picker/file_picker.dart';
 import '../picked.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:record/record.dart';
-import 'package:just_audio/just_audio.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'key_verification_screen.dart';
@@ -25,6 +24,7 @@ import 'vouchers_sheet.dart';
 import 'shield_sheet.dart';
 import '../vouch_text.dart';
 import '../widgets/intro_chip.dart';
+import '../widgets/media_bubbles.dart' show VoiceBubble;
 import '../widgets/notice_banner.dart';
 import '../widgets/swipe_to_reply.dart';
 import '../signal_session.dart';
@@ -6028,7 +6028,7 @@ class _Bubble extends StatelessWidget {
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 2,
                                   ),
-                                  child: _VoiceBubble(
+                                  child: VoiceBubble(
                                     key: ValueKey('vb_${msg.filePath}'),
                                     path: msg.filePath!,
                                     isOut: isOut,
@@ -7045,234 +7045,6 @@ Uint8List disguiseWav(Uint8List wav) {
   result[42] = (dataLen >> 16) & 0xff;
   result[43] = (dataLen >> 24) & 0xff;
   return result;
-}
-
-class _VoiceBubble extends StatefulWidget {
-  final String path;
-  final bool isOut;
-  final bool disguised;
-  const _VoiceBubble({
-    super.key,
-    required this.path,
-    required this.isOut,
-    this.disguised = false,
-  });
-  @override
-  State<_VoiceBubble> createState() => _VoiceBubbleState();
-}
-
-class _VoiceBubbleState extends State<_VoiceBubble> {
-  final _player = AudioPlayer();
-  bool _ready = false;
-  bool _missing = false;
-  bool _playing = false;
-  Duration _dur = Duration.zero;
-  Duration _pos = Duration.zero;
-
-  @override
-  void initState() {
-    super.initState();
-    // don't call _load() here - it allocates a native media handle per bubble,
-    // and a chat with several voice notes exhausts android's codec pool so the
-    // later ones fail to play. just check the file exists (cheap); the real
-    // load happens lazily on first tap in _toggle.
-    _checkExists();
-    _player.playerStateStream.listen((st) {
-      if (!mounted) return;
-      setState(() => _playing = st.playing);
-      if (st.processingState == ProcessingState.completed) {
-        _player.seek(Duration.zero);
-        _player.pause();
-        if (mounted) setState(() => _playing = false);
-      }
-    });
-    // only rebuild on position ticks while actually playing. idle bubbles
-    // streaming setState every tick was a real scroll cost.
-    _player.positionStream.listen((p) {
-      if (mounted && _playing) setState(() => _pos = p);
-    });
-  }
-
-  // flag missing files, and read just the clip length with a throwaway player
-  // so the bubble can show the real duration. the probe is disposed right after
-  // so we don't hold a codec handle per bubble (holding them all was the
-  // exhaustion that stopped later notes playing).
-  // duration read once per file, ever. opening a chat with many voice notes used
-  // to spin up + tear down a player per bubble and froze weak phones.
-  static final Map<String, Duration> _durCache = {};
-
-  Future<void> _checkExists() async {
-    if (!await File(widget.path).exists()) {
-      if (mounted) setState(() => _missing = true);
-      return;
-    }
-    final cached = _durCache[widget.path];
-    if (cached != null) {
-      if (mounted) setState(() => _dur = cached);
-      return;
-    }
-    // probe just once, off the first frame so it never blocks chat-open layout.
-    Future.delayed(const Duration(milliseconds: 400), () async {
-      if (!mounted) return;
-      final probe = AudioPlayer();
-      try {
-        final d = await probe.setFilePath(widget.path);
-        if (d != null) {
-          _durCache[widget.path] = d;
-          if (mounted) setState(() => _dur = d);
-        }
-      } catch (_) {
-      } finally {
-        await probe.dispose();
-      }
-    });
-  }
-
-  // called after every list rebuild. a marked message arriving while the chat
-  // is open has to turn protection on too, not only one that was already
-  // there when it opened.
-  Future<void> _load() async {
-    // old notes can point at a file that got wiped/moved between installs.
-    // flag it so the bubble shows 'audio unavailable' instead of a dead shell.
-    if (!await File(widget.path).exists()) {
-      if (mounted) setState(() => _missing = true);
-      return;
-    }
-    // setFilePath can fail if the player's native resources got recycled (it
-    // happens after a bubble's been alive a while) or the file isn't flushed
-    // yet on a just-recorded note. retry a couple times before giving up so the
-    // bubble doesn't render as a dead half-shell.
-    for (var attempt = 0; attempt < 3; attempt++) {
-      try {
-        _dur = await _player.setFilePath(widget.path) ?? Duration.zero;
-        if (mounted) setState(() => _ready = true);
-        return;
-      } catch (_) {
-        await Future.delayed(const Duration(milliseconds: 250));
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _player.dispose();
-    super.dispose();
-  }
-
-  void _toggle() async {
-    if (!_ready) {
-      await _load();
-      if (!_ready) return;
-    }
-    if (_playing) {
-      _player.pause();
-    } else {
-      _player.play();
-    }
-  }
-
-  String _fmt(Duration d) {
-    final s = d.inSeconds;
-    return '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final fg = widget.isOut ? HaloColors.onAmber : HaloColors.amber;
-    final track = widget.isOut
-        ? HaloColors.onAmber.withValues(alpha: 0.3)
-        : HaloColors.text3.withValues(alpha: 0.4);
-    final progress = (_dur.inMilliseconds == 0)
-        ? 0.0
-        : (_pos.inMilliseconds / _dur.inMilliseconds).clamp(0.0, 1.0);
-    final shown = _pos > Duration.zero ? _pos : _dur;
-    return GestureDetector(
-      onTap: _missing ? null : _toggle,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 168,
-        child: _missing
-            ? Row(
-                children: [
-                  Icon(
-                    Icons.music_off_rounded,
-                    size: 20,
-                    color: fg.withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Audio unavailable',
-                    style: HaloType.mono(
-                      size: 11,
-                      color: fg.withValues(alpha: 0.55),
-                    ),
-                  ),
-                ],
-              )
-            : Row(
-                children: [
-                  Icon(
-                    _playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                    size: 26,
-                    color: fg,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(2),
-                          child: LinearProgressIndicator(
-                            value: progress,
-                            minHeight: 3,
-                            backgroundColor: track,
-                            valueColor: AlwaysStoppedAnimation(fg),
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        Row(
-                          children: [
-                            Text(
-                              _fmt(shown),
-                              style: HaloType.mono(
-                                size: 10,
-                                color: widget.isOut
-                                    ? HaloColors.onAmber
-                                    : HaloColors.text3,
-                              ),
-                            ),
-                            if (widget.disguised) ...[
-                              const SizedBox(width: 8),
-                              Icon(
-                                Icons.theater_comedy_outlined,
-                                size: 11,
-                                color: widget.isOut
-                                    ? HaloColors.onAmber
-                                    : HaloColors.amber,
-                              ),
-                              const SizedBox(width: 3),
-                              Text(
-                                'Hidden',
-                                style: HaloType.mono(
-                                  size: 9,
-                                  color: widget.isOut
-                                      ? HaloColors.onAmber
-                                      : HaloColors.amber,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
 }
 
 class _HoldToTalkMic extends StatefulWidget {
