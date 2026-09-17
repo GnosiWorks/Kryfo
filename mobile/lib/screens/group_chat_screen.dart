@@ -17,6 +17,7 @@ import '../widgets/confirm_sheet.dart';
 import '../widgets/pins.dart';
 import '../widgets/remembered_height.dart';
 import '../widgets/video_bubble.dart';
+import '../widgets/kryfo_link_text.dart';
 import '../open_file.dart';
 import '../widgets/media_bubbles.dart';
 import '../widgets/decode_px.dart';
@@ -3633,33 +3634,57 @@ class _GroupBubble extends StatelessWidget {
                                                 0,
                                               )
                                             : EdgeInsets.zero,
-                                        // @three-words in amber
-                                        child: Text.rich(
-                                          mentionRich(
-                                            m.text,
-                                            HaloType.sans(
-                                              size: 14,
-                                              // captions get a touch more weight
-                                              // so they read over busy images.
-                                              weight: m.mediaPath != null
-                                                  ? FontWeight.w600
-                                                  : FontWeight.w400,
-                                              // a photo caption sits on a transparent
-                                              // bubble (no amber), so onAmber would be
-                                              // invisible - use the readable color.
-                                              // text-only out messages keep onAmber.
-                                              color:
-                                                  (isOut && m.mediaPath == null)
-                                                  ? HaloColors.onAmber
-                                                  : HaloColors.text,
-                                              height: 1.35,
-                                            ),
-                                            accent:
-                                                (isOut && m.mediaPath == null)
-                                                ? HaloColors.onAmber
-                                                : null,
-                                          ),
-                                        ),
+                                        // a kryfo link is drawn as one;
+                                        // otherwise @three-words in amber
+                                        child: m.text.contains('kryfo://')
+                                            ? KryfoLinkText(
+                                                text: m.text,
+                                                style: HaloType.sans(
+                                                  size: 14,
+                                                  color:
+                                                      (isOut &&
+                                                          m.mediaPath == null)
+                                                      ? HaloColors.onAmber
+                                                      : HaloColors.text,
+                                                  height: 1.35,
+                                                ),
+                                                onAmber:
+                                                    isOut &&
+                                                    m.mediaPath == null,
+                                                linkColor:
+                                                    (isOut &&
+                                                        m.mediaPath == null)
+                                                    ? HaloColors.onAmber
+                                                    : HaloColors.amber,
+                                              )
+                                            : Text.rich(
+                                                mentionRich(
+                                                  m.text,
+                                                  HaloType.sans(
+                                                    size: 14,
+                                                    // captions get a touch more weight
+                                                    // so they read over busy images.
+                                                    weight: m.mediaPath != null
+                                                        ? FontWeight.w600
+                                                        : FontWeight.w400,
+                                                    // a photo caption sits on a transparent
+                                                    // bubble (no amber), so onAmber would be
+                                                    // invisible - use the readable color.
+                                                    // text-only out messages keep onAmber.
+                                                    color:
+                                                        (isOut &&
+                                                            m.mediaPath == null)
+                                                        ? HaloColors.onAmber
+                                                        : HaloColors.text,
+                                                    height: 1.35,
+                                                  ),
+                                                  accent:
+                                                      (isOut &&
+                                                          m.mediaPath == null)
+                                                      ? HaloColors.onAmber
+                                                      : null,
+                                                ),
+                                              ),
                                       ),
                                     if (firstUrl(m.text) case final u?) ...[
                                       const SizedBox(height: 6),

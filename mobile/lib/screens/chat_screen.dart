@@ -30,6 +30,7 @@ import '../widgets/pins.dart';
 import '../widgets/remembered_height.dart';
 import '../widgets/row_anchor.dart';
 import '../widgets/video_bubble.dart';
+import '../widgets/kryfo_link_text.dart';
 import '../open_file.dart';
 import '../widgets/notice_banner.dart';
 import '../widgets/swipe_to_reply.dart';
@@ -5802,7 +5803,12 @@ class _Bubble extends StatelessWidget {
             height: 1.4,
           );
     if (query.isEmpty) {
-      return Text(msg.text, style: base);
+      return KryfoLinkText(
+        text: msg.text,
+        style: base,
+        onAmber: isOut && !image,
+        linkColor: (isOut && !image) ? HaloColors.onAmber : HaloColors.amber,
+      );
     }
     final text = msg.text;
     final lower = text.toLowerCase();
