@@ -2265,7 +2265,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
               child: Text(
-                "it disappears with no trace. this can't be undone.",
+                "It disappears with no trace. This can't be undone.",
                 style: HaloType.sans(size: 13, color: HaloColors.text2),
               ),
             ),
@@ -2493,7 +2493,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                                     vertical: 6,
                                   ),
                                   child: Text(
-                                    "this message can't be shown",
+                                    "This message can't be shown",
                                     style: HaloType.sans(
                                       size: 12,
                                       color: HaloColors.text3,

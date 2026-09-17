@@ -496,7 +496,7 @@ class _NotificationsBlockedHintState extends State<_NotificationsBlockedHint>
                   if (!opened && context.mounted) {
                     showHaloToast(
                       context,
-                      "couldn't open it. look for kryfo in phone settings",
+                      "Couldn't open it. Look for kryfo in phone settings",
                     );
                   }
                 },
@@ -585,9 +585,9 @@ class _RelayDownHint extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                "relay mode uses only our own relay, and it is not answering "
-                "right now. fast mode adds public relays alongside it, so "
-                "messages still land. everything stays sealed either way.",
+                "Relay mode uses only our own relay, and it is not answering "
+                "right now. Fast mode adds public relays alongside it, so "
+                "messages still land. Everything stays sealed either way.",
                 style: HaloType.sans(size: 13, color: HaloColors.text2),
               ),
               const SizedBox(height: 13),
@@ -690,8 +690,8 @@ class _BridgeStuckHint extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                "bridges are on and tor still is not through. bridges are "
-                "slower, and some go dead without warning. if your network "
+                "Bridges are on and tor still is not through. Bridges are "
+                "slower, and some go dead without warning. If your network "
                 "does not block tor, going direct is faster and more reliable.",
                 style: HaloType.sans(size: 13, color: HaloColors.text2),
               ),
@@ -779,8 +779,8 @@ class _BridgeHint extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                "tor is not getting through. some networks block it on "
-                "purpose. our own relay is one plain connection and usually "
+                "Tor is not getting through. Some networks block it on "
+                "purpose. Our own relay is one plain connection and usually "
                 "works anyway - or bridges, which take longer to set up.",
                 style: HaloType.sans(size: 13, color: HaloColors.text2),
               ),
