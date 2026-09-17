@@ -2,9 +2,13 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [0.2.11] - 2026-09-17
+## [0.2.11] - 2026-09-18
 
 ### Security
+- ntfy push is gone, all of it. the option opened a connection to a public server from outside tor, so that server had your address for as long as the app ran, and the wake-up it waited for did nothing. while it existed every message also carried an address for the other side to call after sending, and off onion mode that call went out directly: a contact could have learned where you were by naming a server of their own. nobody needed the option on for that part. the option, the field and the call are removed, and what they had stored is cleared the first time this version starts. if push ever comes back it goes over tor or not at all.
+- a photo sent as a file kept everything the camera wrote in it: where, when, on what phone. the photo button has always cleaned that off; the file button sent the file as it was, and the other side then showed it as a photo. pictures sent as files are cleaned now, without touching the picture itself: jpeg, png, webp, heic, avif, and gifs on the gif button. one the app cannot read through is not sent.
+- the cleaning itself missed things, found by running it on real photos instead of test files. a samsung camera writes a block of its own after the end of the picture, and that came through. some phones hang a second image off the first, and that came through. a png can carry a record of what made it and under which account, and that came through. all three are gone now, and a png keeps only what it takes to draw it.
+- the parts of the engine written in c, which is tor and the libraries under it, are now built with stack protection. they are what reads bytes off the network, and they were being built without it.
 - anyone who could reach you and knew a message's id could pin or unpin it on your phone. nothing could be read or changed that way, but it should not have been possible. a pin is accepted only from the other person in that chat, or from a member of that group.
 
 ### Fixed
