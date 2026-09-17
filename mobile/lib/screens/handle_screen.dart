@@ -30,7 +30,13 @@ class _HandleScreenState extends State<HandleScreen> {
   void initState() {
     super.initState();
     _claimed = appState.myHandle;
-    if (_claimed != null) _ctrl.text = _claimed!;
+    if (_claimed != null) {
+      _ctrl.text = _claimed!;
+      // ask the registry whose it is, so the card below tells the truth
+      appState.checkHandle().then((_) {
+        if (mounted) setState(() {});
+      });
+    }
   }
 
   @override
@@ -82,6 +88,18 @@ class _HandleScreenState extends State<HandleScreen> {
     }
   }
 
+  // the name is on this phone and under another key at the registry.
+  // nothing here can release it; all that can be done is stop claiming it.
+  Future<void> _forget() async {
+    await appState.setMyHandle(null);
+    if (!mounted) return;
+    setState(() {
+      _claimed = null;
+      _ctrl.clear();
+      _state = '';
+    });
+  }
+
   Future<void> _release() async {
     final h = _claimed;
     if (h == null) return;
@@ -115,7 +133,10 @@ class _HandleScreenState extends State<HandleScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
         children: staggerAll([
-          if (_claimed != null) ...[
+          if (_claimed != null && appState.handleForeign) ...[
+            _ForeignCard(handle: _claimed!, onForget: _forget),
+            const SizedBox(height: 22),
+          ] else if (_claimed != null) ...[
             _ClaimedCard(handle: _claimed!, onRelease: _busy ? null : _release),
             const SizedBox(height: 22),
           ] else ...[
@@ -371,6 +392,69 @@ class _Field extends StatelessWidget {
                 counterText: '',
                 hintText: hint,
                 hintStyle: HaloType.mono(size: 14, color: HaloColors.text3),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// shown in place of the claimed card when the registry holds the name
+// under a key that is not this phone's
+class _ForeignCard extends StatelessWidget {
+  final String handle;
+  final VoidCallback onForget;
+  const _ForeignCard({required this.handle, required this.onForget});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: HaloColors.surface2,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: HaloColors.rose, width: 0.8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '@$handle is not yours on this phone',
+            style: HaloType.serif(size: 19, color: HaloColors.text),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'The registry holds it under a different key, most likely an '
+            'identity this phone had before a restore. People who add '
+            '@$handle are not reaching you. It cannot be released or '
+            'updated from here. Pick another name.',
+            style: HaloType.sans(
+              size: 13,
+              color: HaloColors.text2,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 14),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onForget,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: HaloColors.line),
+              ),
+              child: Text(
+                'Forget it on this phone',
+                style: HaloType.sans(
+                  size: 13.5,
+                  weight: FontWeight.w600,
+                  color: HaloColors.text,
+                ),
               ),
             ),
           ),
