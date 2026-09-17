@@ -3423,6 +3423,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   // android's flag is per-window, not per-view.
 
+  static String _rowKey(_Msg m) => m.msgUid ?? 'r${m.rowid}';
+
+  // where a row went when the list under it changed, so its state follows
+  // the message and not the slot
+  int? _indexOfRow(Key key) {
+    if (key is! ValueKey<String>) return null;
+    final ix = _messages.lastIndexWhere((m) => _rowKey(m) == key.value);
+    return ix < 0 ? null : _messages.length - 1 - ix;
+  }
+
   Widget _buildRow(BuildContext c, int i, bool searchActive) {
     final ix = _messages.length - 1 - i;
     final m = _messages[ix];
@@ -3471,9 +3481,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         (m.when.difference(o.when).inSeconds).abs() < 120;
     final firstInGroup = !sameRun(prevMsg) || ix == _firstUnreadIndex;
     final lastInGroup = !sameRun(nextMsg);
+    // keyed by the message, at the top, where the list looks. the key was
+    // the row object and sat one level down: a reload makes new objects and
+    // in a reversed list every arrival moves every index, so each receipt
+    // and each new message rebuilt every row from nothing, and a voice note
+    // that was playing lost its player a second after it started.
     return RepaintBoundary(
+      key: ValueKey(_rowKey(m)),
       child: Column(
-        key: ObjectKey(m),
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (showDate) _dateDivider(m.when, m.msgUid ?? 'r${m.rowid}'),
@@ -4576,6 +4591,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               vertical: 12,
                             ),
                             itemCount: _messages.length,
+                            findChildIndexCallback: _indexOfRow,
                             itemBuilder: (c, i) {
                               // one unbuildable message must never cost
                               // the whole conversation. draw a stub and
