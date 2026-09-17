@@ -593,6 +593,14 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
   int _secsLeft = 15 * 60;
   int _lateChecks = 0;
   late final AnimationController _pulse;
+  // the wait for the invoice, in seconds, so the screen can show it is
+  // alive. each ask has a number: one the person walked away from must not
+  // flip the screen when it finally answers.
+  int _waited = 0;
+  Timer? _waitTick;
+  int _ask = 0;
+  bool _gaveUp = false;
+  bool _checking = false;
 
   @override
   void initState() {
@@ -608,6 +616,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
   void dispose() {
     _poll?.cancel();
     _tick?.cancel();
+    _waitTick?.cancel();
     _pulse.dispose();
     super.dispose();
   }
@@ -618,9 +627,19 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
       setState(() => _phase = _Phase.needsOnion);
       return;
     }
-    setState(() => _phase = _Phase.loading);
+    final ask = ++_ask;
+    setState(() {
+      _phase = _Phase.loading;
+      _waited = 0;
+      _gaveUp = false;
+    });
+    _waitTick?.cancel();
+    _waitTick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted && _phase == _Phase.loading) setState(() => _waited++);
+    });
     final inv = await createInvoice(widget.tierKey);
-    if (!mounted) return;
+    if (!mounted || ask != _ask) return;
+    _waitTick?.cancel();
     if (inv == null) {
       // tor or the badge service is unreachable - fall back to the static
       // address so a donation is still possible (no badge auto-grant then).
@@ -668,8 +687,16 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
 
   Future<void> _check() async {
     final inv = _inv;
-    if (inv == null) return;
-    final r = await fetchReceipt(inv.id);
+    // one ask at a time: over a slow circuit a check can outlast the six
+    // seconds to the next, and they piled up
+    if (inv == null || _checking) return;
+    _checking = true;
+    final BadgeReceipt r;
+    try {
+      r = await fetchReceipt(inv.id);
+    } finally {
+      _checking = false;
+    }
     if (!mounted) return;
     switch (r.state) {
       case ReceiptState.paid:
@@ -785,6 +812,28 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
             'Reaching the payment service over tor…',
             style: HaloType.mono(size: 11, color: HaloColors.text2),
           ),
+          const SizedBox(height: 8),
+          Text(
+            _waited < 5
+                ? 'This can take up to a minute'
+                : '${_waited}s · this can take up to a minute',
+            style: HaloType.mono(size: 10.5, color: HaloColors.text3),
+          ),
+          // held back until the wait is long enough to doubt
+          if (_waited >= 20 && widget.fallbackAddress.isNotEmpty) ...[
+            const SizedBox(height: 22),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 56),
+              child: _ghostButton('Use the address instead', () {
+                _ask++;
+                _waitTick?.cancel();
+                setState(() {
+                  _gaveUp = true;
+                  _phase = _Phase.unreachable;
+                });
+              }),
+            ),
+          ],
         ],
       ),
     );
@@ -843,9 +892,14 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
               border: Border.all(color: HaloColors.line),
             ),
             child: Text(
-              "The payment service is having trouble right now. You can "
-              "still donate to the address below - your badge just won't unlock "
-              "automatically. Try again later for the badge.",
+              _gaveUp
+                  ? "Tor was slow to reach the payment service. You can "
+                        "donate to the address below - your badge just won't "
+                        "unlock automatically. Try again later for the badge."
+                  : "The payment service is having trouble right now. You can "
+                        "still donate to the address below - your badge just "
+                        "won't unlock automatically. Try again later for the "
+                        "badge.",
               style: HaloType.sans(
                 size: 12.5,
                 color: HaloColors.text2,

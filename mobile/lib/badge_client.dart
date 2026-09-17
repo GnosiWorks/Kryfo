@@ -51,8 +51,9 @@ class BadgeReceipt {
 /// ask the badge service for a fresh invoice. returns null if tor or the
 /// service is unreachable - the caller shows the manual address instead.
 Future<BadgeInvoice?> createInvoice(String tier) async {
-  final raw = await Future(
-    () => engine.torPost('$kBadgeOnion/invoice', jsonEncode({'tier': tier})),
+  final raw = await engine.torPost(
+    '$kBadgeOnion/invoice',
+    jsonEncode({'tier': tier}),
   );
   if (raw.startsWith('error:')) return null;
   try {
@@ -74,9 +75,7 @@ Future<BadgeInvoice?> createInvoice(String tier) async {
 /// poll a receipt. only returns paid when the signature verifies against the
 /// pinned key - an unsigned or badly signed "paid" is treated as an error.
 Future<BadgeReceipt> fetchReceipt(String invoiceId) async {
-  final raw = await Future(
-    () => engine.torGetJson('$kBadgeOnion/receipt?id=$invoiceId'),
-  );
+  final raw = await engine.torGetJson('$kBadgeOnion/receipt?id=$invoiceId');
   if (raw.startsWith('error:')) return const BadgeReceipt(ReceiptState.error);
   try {
     final j = jsonDecode(raw) as Map<String, dynamic>;

@@ -129,8 +129,6 @@ class HaloEngine {
   late final OneArgFnDart _setMode;
   late final OneArgFnDart _ntfyPing;
   late final OneArgFnDart _torGet;
-  late final OneArgFnDart _torGetJson;
-  late final TwoArgFnDart _torPost;
   late final OneArgFnDart _torGetB64;
   late final OneArgFnDart _idFromEdPub;
   late final TwoArgFnDart _encryptBackup;
@@ -181,8 +179,6 @@ class HaloEngine {
     );
     _ntfyPing = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNtfyPing');
     _torGet = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGet');
-    _torGetJson = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetJSON');
-    _torPost = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloTorPost');
     _torGetB64 = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetB64');
     _idFromEdPub = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
       'HaloIdFromEdPub',
@@ -404,27 +400,24 @@ class HaloEngine {
   // fetch a url's html over tor (for sender-side link previews). slow + can
   // fail - caller treats anything starting 'error:' as no-preview.
   // POST json over tor (badge invoices). keeps 2xx bodies, unlike torGet.
-  String torPost(String url, String body) {
-    final u = url.toNativeUtf8();
-    final b = body.toNativeUtf8();
-    try {
-      return _torPost(u, b).toDartString();
-    } finally {
-      calloc.free(u);
-      calloc.free(b);
-    }
-  }
+  // off the ui thread: the call returns when the onion has answered, which
+  // is a rendezvous and a round trip, and run inline it held every frame
+  // and android's own main thread for as long as that took.
+  Future<String> torPost(String url, String body) => _ffiOnIsolate(
+    'HaloTorPost',
+    [url, body],
+    wait: const Duration(seconds: 80),
+    what: 'tor',
+  );
 
   // GET over tor that accepts any 2xx - the badge service replies 202 while
-  // a donation is still unconfirmed.
-  String torGetJson(String url) {
-    final ptr = url.toNativeUtf8();
-    try {
-      return _torGetJson(ptr).toDartString();
-    } finally {
-      calloc.free(ptr);
-    }
-  }
+  // a donation is still unconfirmed. off the ui thread, as above.
+  Future<String> torGetJson(String url) => _ffiOnIsolate(
+    'HaloTorGetJSON',
+    [url],
+    wait: const Duration(seconds: 80),
+    what: 'tor',
+  );
 
   String torGet(String url) {
     final ptr = url.toNativeUtf8();
@@ -725,7 +718,12 @@ Future<String> _startListenerOnIsolate(String dataDir) {
 
 // one, two or three strings in, one string out, on a background isolate
 // with a ceiling so a registry that never answers cannot hold a screen
-Future<String> _ffiOnIsolate(String symbol, List<String> args) {
+Future<String> _ffiOnIsolate(
+  String symbol,
+  List<String> args, {
+  Duration wait = const Duration(seconds: 45),
+  String what = 'registry',
+}) {
   return Isolate.run(() {
     final lib = Platform.isAndroid
         ? DynamicLibrary.open('libhalo.so')
@@ -755,10 +753,7 @@ Future<String> _ffiOnIsolate(String symbol, List<String> args) {
         malloc.free(p);
       }
     }
-  }).timeout(
-    const Duration(seconds: 45),
-    onTimeout: () => 'error: registry timeout',
-  );
+  }).timeout(wait, onTimeout: () => 'error: $what timeout');
 }
 
 Future<String> _sendOnIsolate(({bool nostr, String a, String b}) args) {
