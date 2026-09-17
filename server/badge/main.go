@@ -3,15 +3,15 @@
 // receipt the app can verify forever, offline.
 //
 // design notes (privacy first):
-//   * NO database. the invoice id IS the state, and BTCPay already holds it.
+//   - NO database. the invoice id IS the state, and BTCPay already holds it.
 //     nothing about a donor is stored here - not an address, not a time, not
 //     an ip. (it's behind a tor onion, so there's no ip to log anyway.)
-//   * NO accounts, no email, no PII. a supporter is "someone holding a valid
+//   - NO accounts, no email, no PII. a supporter is "someone holding a valid
 //     signature", nothing more.
-//   * the receipt is signed with a key that never leaves this box; the app
+//   - the receipt is signed with a key that never leaves this box; the app
 //     pins the PUBLIC key at build time. once signed, the badge keeps working
 //     even if this server disappears forever.
-//   * stdlib only - no go modules to download (matters on a bad connection).
+//   - stdlib only - no go modules to download (matters on a bad connection).
 package main
 
 import (
@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -146,6 +147,41 @@ func handleInvoice(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// paid means the money cannot be taken back. btcpay says "Processing" the
+// moment it sees a transaction, before any block holds it, and a receipt
+// was signed on that: pay, take the receipt, replace the transaction with
+// one that pays yourself, and keep a badge that verifies for ever, for
+// nothing. "Processing" was in the list below by mistake; the comment on
+// the default case always said it meant pending, and could never be
+// reached for it. only a settled invoice is signed for. how many
+// confirmations "settled" takes is the store's own setting in btcpay
+// (payment, "consider the invoice settled when"), and it must not be
+// "unconfirmed", or this check means nothing.
+func paid(status string) bool {
+	switch status {
+	case "Settled", "Complete", "Confirmed": // the last two are the old api's names
+		return true
+	}
+	return false
+}
+
+// the tier a settled invoice earns, or "" when it earns none. the tier is
+// read off the invoice and the invoice off btcpay, so anything else that
+// can make invoices in the same store - a pay button, another app - could
+// make a one dollar invoice that says guardian. the amount has to cover the
+// tier it names.
+func earned(tier, amount, currency string) string {
+	want, ok := tiers[tier]
+	if !ok || currency != "USD" {
+		return ""
+	}
+	got, err := strconv.ParseFloat(amount, 64)
+	if err != nil || got+0.005 < want {
+		return ""
+	}
+	return tier
+}
+
 // GET /receipt?id=...  -> 202 while unpaid, 200 + signed receipt once settled.
 func handleReceipt(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
@@ -161,6 +197,8 @@ func handleReceipt(w http.ResponseWriter, r *http.Request) {
 	var inv struct {
 		ID       string `json:"id"`
 		Status   string `json:"status"`
+		Amount   string `json:"amount"`
+		Currency string `json:"currency"`
 		Metadata struct {
 			Tier string `json:"tier"`
 		} `json:"metadata"`
@@ -170,22 +208,29 @@ func handleReceipt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	switch inv.Status {
-	case "Settled", "Complete", "Confirmed", "Processing":
+	switch {
+	case paid(inv.Status):
+		tier := earned(inv.Metadata.Tier, inv.Amount, inv.Currency)
+		if tier == "" {
+			// paid, but not for a badge. nothing is signed
+			log.Printf("receipt refused: settled invoice does not cover a tier")
+			http.Error(w, "not a badge invoice", 409)
+			return
+		}
 		// canonical payload: the app rebuilds this exact string and checks
 		// the signature against its pinned pubkey. keep the format frozen.
-		payload := fmt.Sprintf("halo-badge|v1|%s|%s", inv.ID, inv.Metadata.Tier)
+		payload := fmt.Sprintf("halo-badge|v1|%s|%s", inv.ID, tier)
 		sig := ed25519.Sign(priv, []byte(payload))
 		writeJSON(w, map[string]any{
 			"status":  "paid",
 			"id":      inv.ID,
-			"tier":    inv.Metadata.Tier,
+			"tier":    tier,
 			"payload": payload,
 			"sig":     base64.RawURLEncoding.EncodeToString(sig),
 		})
-	case "Expired", "Invalid":
+	case inv.Status == "Expired" || inv.Status == "Invalid":
 		writeJSON(w, map[string]any{"status": "expired", "id": inv.ID})
-	default: // New, Processing
+	default: // New, and Processing: seen, not yet in a block
 		w.WriteHeader(http.StatusAccepted)
 		writeJSON(w, map[string]any{"status": "pending", "id": inv.ID})
 	}
