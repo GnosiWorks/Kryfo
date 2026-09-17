@@ -1764,7 +1764,11 @@ class _Row extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          c.preview ?? '',
+                          // a room link is an invitation, not a line of
+                          // two hundred characters
+                          (c.preview ?? '').contains('kryfo://room?')
+                              ? 'Room invite'
+                              : (c.preview ?? ''),
                           style: HaloType.sans(
                             size: 12,
                             color: c.unread > 0
