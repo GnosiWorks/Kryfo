@@ -10,6 +10,12 @@ import '../widgets/room_countdown.dart';
 import '../dlog.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
+import 'package:share_plus/share_plus.dart';
+import '../lock_state.dart';
+import '../main.dart' show appState, db;
+import '../widgets/motion.dart';
+import '../widgets/kryfo_avatar.dart';
+import 'chat_screen.dart';
 
 Future<void> showRoomLinkSheet(BuildContext context, RoomLink link) {
   return showHaloSheet<void>(
@@ -45,6 +51,103 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet>
   void dispose() {
     _in.dispose();
     super.dispose();
+  }
+
+  // to someone already in kryfo: their chat opens with the link in the
+  // box, and it goes when you press send. said plainly first, because a
+  // room is where nobody knows who anyone is, and this is the exception.
+  Future<void> _toContact(String uri) async {
+    final contacts = appState.contacts.where((c) => !c.blocked).toList();
+    final nav = Navigator.of(context);
+    final who = await showHaloSheet<String>(
+      context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Center(child: SheetHandle()),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+              child: Text(
+                'Send the room to',
+                style: HaloType.serif(size: 19, color: HaloColors.text),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+              child: Text(
+                'They will know this room came from you. Inside it they are '
+                'a key like everyone else.',
+                style: HaloType.sans(
+                  size: 12.5,
+                  color: HaloColors.text2,
+                  height: 1.45,
+                ),
+              ),
+            ),
+            if (contacts.isEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 22),
+                child: Text(
+                  'No contacts yet',
+                  style: HaloType.sans(size: 13, color: HaloColors.text2),
+                ),
+              )
+            else
+              for (final c in contacts)
+                InkWell(
+                  onTap: () => Navigator.pop(ctx, c.haloId),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 11,
+                    ),
+                    child: Row(
+                      children: [
+                        KryfoAvatar(
+                          seed: c.avatarSeed,
+                          size: 32,
+                          choice: c.avatar,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            c.nickname ?? c.haloId,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: HaloType.sans(
+                              size: 14,
+                              weight: FontWeight.w500,
+                              color: HaloColors.text,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (who == null) return;
+    final row = await db.getContact(who);
+    if (row == null) return;
+    nav.pop(); // the link sheet
+    nav.push(
+      haloRoute(
+        ChatScreen(
+          peerHaloId: who,
+          peerOnion: (row['onion'] as String?) ?? '',
+          peerXPub: (row['xpub'] as String?) ?? '',
+          avatarSeed: who,
+          avatarChoice: (row['avatar'] as num?)?.toInt(),
+          initialText: uri,
+        ),
+      ),
+    );
   }
 
   @override
@@ -126,11 +229,50 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet>
                 showHaloToast(context, 'Room link copied');
               },
             ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _Quiet(
+                  label: 'Send to a contact',
+                  onTap: () => _toContact(uri),
+                ),
+                const SizedBox(width: 18),
+                _Quiet(
+                  label: 'Share',
+                  onTap: () => lockState.hold(
+                    () => SharePlus.instance.share(ShareParams(text: uri)),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
+}
+
+class _Quiet extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _Quiet({required this.label, required this.onTap});
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    behavior: HitTestBehavior.opaque,
+    onTap: onTap,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+      child: Text(
+        label,
+        style: HaloType.sans(
+          size: 13,
+          weight: FontWeight.w600,
+          color: HaloColors.violet,
+        ),
+      ),
+    ),
+  );
 }
 
 class _CopyButton extends StatefulWidget {
