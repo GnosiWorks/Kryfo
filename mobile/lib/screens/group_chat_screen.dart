@@ -606,6 +606,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _scrollToEnd(instant: true);
       }
       _loaded = true;
+      unawaited(_refreshPinCount());
       await _loadShieldFlags();
     } finally {
       // a crash mid-load used to leave _loading stuck true, silently
@@ -1949,106 +1950,84 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     _scrollToIndex(idx);
   }
 
+  // read from the database: a pin far up the thread is still a pin when
+  // only the last page is loaded
+  Future<List<PinEntry>> _loadPins() async {
+    final rows = await db.pinnedIn(groupId: widget.groupId);
+    final nickById = <String, String>{};
+    final faceById = <String, int?>{};
+    for (final c in appState.contacts) {
+      final n = c.nickname;
+      if (n != null && n.isNotEmpty) nickById[c.haloId] = n;
+      faceById[c.haloId] = c.avatar;
+    }
+    return [
+      for (final r in rows)
+        () {
+          final out = r['direction'] == 'out';
+          final peer = r['peer_id'] as String;
+          return PinEntry(
+            uid: r['msg_uid'] as String,
+            author: out ? 'You' : (_senderLabel(nickById, peer) ?? peer),
+            authorSeed: out ? appState.myId : peer,
+            face: out ? appState.myAvatar : faceById[peer],
+            when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+            text: (r['plaintext'] as String?) ?? '',
+            imagePath: r['media_path'] as String?,
+            fileName: r['file_name'] as String?,
+          );
+        }(),
+    ];
+  }
+
+  int _pinCount = 0;
+  Future<void> _refreshPinCount() async {
+    final n = (await db.pinnedIn(groupId: widget.groupId)).length;
+    if (mounted && n != _pinCount) setState(() => _pinCount = n);
+  }
+
   Future<void> _showGroupPinnedSheet() async {
-    final pinned = _messages.where((m) => m.pinned).toList();
-    if (pinned.isEmpty) return;
-    await showHaloSheet<void>(
+    // the composer regains focus when a sheet closes, and the keyboard
+    // coming up under a jump throws the landing off
+    FocusManager.instance.primaryFocus?.unfocus();
+    await showPinsSheet(
       context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SheetHandle(),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              child: Text(
-                'Pinned messages',
-                style: HaloType.mono(
-                  size: 11,
-                  color: HaloColors.text3,
-                  letter: 0.14,
-                ),
-              ),
-            ),
-            for (final m in pinned)
-              InkWell(
-                onTap: () {
-                  FocusManager.instance.primaryFocus?.unfocus();
-                  Navigator.pop(ctx);
-                  _scrollToGroupMessage(m);
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.push_pin_outlined,
-                        size: 14,
-                        color: HaloColors.amber,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          m.text.isEmpty ? 'photo' : m.text,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: HaloType.sans(
-                            size: 14,
-                            color: HaloColors.text,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Semantics(
-                        label: 'Close',
-                        button: true,
-                        child: InkWell(
-                          onTap: () {
-                            FocusManager.instance.primaryFocus?.unfocus();
-                            Navigator.pop(ctx);
-                            _togglePinGroup(m);
-                          },
-                          borderRadius: BorderRadius.circular(999),
-                          child: Padding(
-                            padding: EdgeInsets.all(4),
-                            child: Icon(
-                              Icons.close,
-                              size: 16,
-                              color: HaloColors.text3,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
+      load: _loadPins,
+      onJump: (e) {
+        final at = _messages.indexWhere((m) => m.msgUid == e.uid);
+        if (at >= 0) _scrollToIndex(at);
+      },
+      onUnpin: (e) => _setPinnedGroup(e.uid, false),
     );
-    // the sheet restores focus to the composer when it pops (that's what
-    // kept yanking the keyboard up) - drop focus after it has closed.
-    if (mounted) FocusManager.instance.primaryFocus?.unfocus();
+  }
+
+  Future<void> _setPinnedGroup(String uid, bool on) async {
+    if (mounted) {
+      setState(() {
+        for (final m in _messages) {
+          if (m.msgUid == uid) m.pinned = on;
+        }
+      });
+    }
+    // ours first, so the list and the count are right at once; telling the
+    // members is a send to each over tor and is not waited for
+    await db.setPinned(uid, on);
+    unawaited(appState.pinInGroup(widget.groupId, uid, on));
+    await _refreshPinCount();
   }
 
   Future<void> _togglePinGroup(_GMsg m) async {
     if (m.msgUid == null) return;
     if (!m.pinned) {
-      final count = _messages.where((x) => x.pinned).length;
-      if (count >= 3) {
-        if (mounted) showHaloToast(context, 'Max 3 pinned');
+      final count = (await db.pinnedIn(groupId: widget.groupId)).length;
+      if (count >= kMaxPins) {
+        if (mounted) {
+          showHaloToast(context, 'This chat has $kMaxPins pins already');
+        }
         return;
       }
     }
-    final next = !m.pinned;
-    if (mounted) setState(() => m.pinned = next);
-    await appState.pinInGroup(widget.groupId, m.msgUid!, next);
+    await _setPinnedGroup(m.msgUid!, !m.pinned);
   }
 
   Future<void> _toggleSavedGroup(_GMsg m) async {
@@ -2388,7 +2367,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     expiresAt: _roomExpiresAt,
                     onBack: () => Navigator.of(context).pop(),
                     onSearch: _openSearch,
-                    pinnedCount: _messages.where((m) => m.pinned).length,
+                    pinnedCount: _pinCount,
                     onPinned: _showGroupPinnedSheet,
                     onTapInfo: () async {
                       await Navigator.of(context).push(

@@ -1523,87 +1523,59 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     Overlay.of(context).insert(entry);
   }
 
-  Future<void> _showPinnedSheet() async {
-    final pinned = _messages.where((m) => m.pinned).toList();
-    if (pinned.isEmpty) return;
-    await showHaloSheet<void>(
-      context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SheetHandle(),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              child: Text(
-                'Pinned messages',
-                style: HaloType.mono(
-                  size: 10,
-                  color: HaloColors.text3,
-                  letter: 0.14,
-                ),
-              ),
-            ),
-            for (final m in pinned)
-              InkWell(
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _scrollToMessage(m);
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.push_pin_outlined,
-                        size: 14,
-                        color: HaloColors.amber,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          m.text,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: HaloType.sans(
-                            size: 14,
-                            color: HaloColors.text,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Semantics(
-                        label: 'Close',
-                        button: true,
-                        child: InkWell(
-                          onTap: () {
-                            Navigator.pop(ctx);
-                            _togglePin(m);
-                          },
-                          borderRadius: BorderRadius.circular(999),
-                          child: Padding(
-                            padding: EdgeInsets.all(4),
-                            child: Icon(
-                              Icons.close,
-                              size: 16,
-                              color: HaloColors.text3,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            const SizedBox(height: 8),
-          ],
+  // the list is read from the database, not from the rows on screen: a pin
+  // far up the thread is still a pin when only the last page is loaded
+  Future<List<PinEntry>> _loadPins() async {
+    final rows = await db.pinnedIn(peerId: widget.peerHaloId);
+    final nick = _nickname;
+    final them = (nick != null && nick.isNotEmpty) ? nick : widget.peerHaloId;
+    return [
+      for (final r in rows)
+        PinEntry(
+          uid: r['msg_uid'] as String,
+          author: r['direction'] == 'out' ? 'You' : them,
+          authorSeed: r['direction'] == 'out'
+              ? appState.myId
+              : widget.avatarSeed,
+          face: r['direction'] == 'out' ? appState.myAvatar : _peerFace,
+          when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+          text: (r['plaintext'] as String?) ?? '',
+          imagePath: r['media_path'] as String?,
+          fileName: r['file_name'] as String?,
         ),
-      ),
+    ];
+  }
+
+  int _pinCount = 0;
+  Future<void> _refreshPinCount() async {
+    final n = (await db.pinnedIn(peerId: widget.peerHaloId)).length;
+    if (mounted && n != _pinCount) setState(() => _pinCount = n);
+  }
+
+  Future<void> _showPinnedSheet() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    await showPinsSheet(
+      context,
+      load: _loadPins,
+      onJump: (e) => _jumpToPin(e.uid),
+      onUnpin: (e) => _setPinned(e.uid, false),
     );
+  }
+
+  Future<void> _setPinned(String uid, bool on) async {
+    await db.setPinned(uid, on);
+    if (!mounted) return;
+    setState(() {
+      for (final m in _messages) {
+        if (m.msgUid == uid) m.pinned = on;
+      }
+    });
+    await _refreshPinCount();
+  }
+
+  void _jumpToPin(String uid) {
+    final at = _messages.indexWhere((m) => m.msgUid == uid);
+    if (at >= 0) _scrollToMessage(_messages[at]);
   }
 
   // the unsend frame on its own, the way a message would go. the other
@@ -1707,16 +1679,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _togglePin(_Msg m) async {
     if (m.msgUid == null) return;
     if (!m.pinned) {
-      final count = _messages.where((x) => x.pinned).length;
-      if (count >= 3) {
+      final count = (await db.pinnedIn(peerId: widget.peerHaloId)).length;
+      if (count >= kMaxPins) {
         if (mounted) {
-          showHaloToast(context, 'Max 3 pinned');
+          showHaloToast(context, 'This chat has $kMaxPins pins already');
         }
         return;
       }
     }
-    await db.setPinned(m.msgUid!, !m.pinned);
-    if (mounted) setState(() => m.pinned = !m.pinned);
+    await _setPinned(m.msgUid!, !m.pinned);
   }
 
   void _scrollToMessage(_Msg m) {
@@ -2065,6 +2036,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         m.gaveUp = c.$2;
       }
     }
+    unawaited(_refreshPinCount());
     setState(() {
       _loaded = true;
       _forgetDayKeys();
@@ -4570,7 +4542,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     onBack: () => Navigator.pop(context),
                     onSearch: _openSearch,
                     onRename: _openContact,
-                    pinnedCount: _messages.where((m) => m.pinned).length,
+                    pinnedCount: _pinCount,
                     onPinned: _showPinnedSheet,
                   ),
             if (_flag != null && !_accepted)
