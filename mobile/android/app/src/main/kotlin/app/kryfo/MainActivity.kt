@@ -17,6 +17,9 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import java.io.ByteArrayOutputStream
 import android.graphics.Matrix
+import android.media.MediaMetadataRetriever
+import android.webkit.MimeTypeMap
+import java.io.File
 import androidx.exifinterface.media.ExifInterface
 import java.io.ByteArrayInputStream
 import android.content.Context
@@ -297,6 +300,16 @@ class MainActivity : FlutterFragmentActivity() {
                         val mime = call.argument<String>("mime") ?: "image/jpeg"
                         result.success(bytes != null && saveToPictures(bytes, name, mime))
                     }
+                    "openFile" -> {
+                        val path = call.argument<String>("path")
+                        val name = call.argument<String>("name")
+                        if (path == null) result.success(false) else openFile(path, name, result)
+                    }
+                    "videoInfo" -> {
+                        val path = call.argument<String>("path")
+                        val maxEdge = call.argument<Int>("maxEdge") ?: 640
+                        if (path == null) result.success(null) else videoInfo(path, maxEdge, result)
+                    }
                     "saveDocument" -> {
                         val path = call.argument<String>("path")
                         val name = call.argument<String>("name") ?: "kryfo-backup.kryfo"
@@ -309,6 +322,101 @@ class MainActivity : FlutterFragmentActivity() {
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    // "open with". another app cannot read our files, and must not be able
+    // to: the file is copied to cache/open/, the only folder the provider
+    // serves, and the uri is granted to the one app that gets the intent.
+    // the folder holds one file; the last one goes before the next arrives.
+    private fun openFile(path: String, name: String?, result: MethodChannel.Result) {
+        Thread {
+            var ok = false
+            try {
+                val src = File(path)
+                val dir = File(cacheDir, "open")
+                dir.deleteRecursively()
+                dir.mkdirs()
+                val safe = (name ?: src.name).replace(Regex("[^A-Za-z0-9._ -]"), "_").takeLast(80)
+                val dst = File(dir, if (safe.isBlank()) "file" else safe)
+                src.inputStream().use { i -> dst.outputStream().use { o -> i.copyTo(o) } }
+                val uri = androidx.core.content.FileProvider.getUriForFile(
+                    this, "$packageName.open", dst
+                )
+                val ext = dst.extension.lowercase()
+                val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext)
+                    ?: when (ext) {
+                        "mov" -> "video/quicktime"
+                        "mkv" -> "video/x-matroska"
+                        "m4v" -> "video/mp4"
+                        "3g2" -> "video/3gpp2"
+                        "opus" -> "audio/ogg"
+                        else -> "application/octet-stream"
+                    }
+                val view = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, mime)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                runOnUiThread {
+                    try {
+                        startActivity(view)
+                        result.success(true)
+                    } catch (e: ActivityNotFoundException) {
+                        // nothing on this phone opens that kind of file
+                        result.success(false)
+                    } catch (e: Exception) {
+                        result.success(false)
+                    }
+                }
+                ok = true
+            } catch (e: Exception) {
+                // fall through
+            }
+            if (!ok) runOnUiThread { result.success(false) }
+        }.start()
+    }
+
+    // one frame and the length of a video, for its bubble. the frame goes
+    // back as bytes and is never written anywhere: a thumbnail on disk
+    // would outlive a message that burned.
+    private fun videoInfo(path: String, maxEdge: Int, result: MethodChannel.Result) {
+        Thread {
+            var out: Map<String, Any?>? = null
+            val r = MediaMetadataRetriever()
+            try {
+                r.setDataSource(path)
+                val ms = r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                    ?.toLongOrNull() ?: 0L
+                val frame = r.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+                if (frame != null) {
+                    val scale = maxEdge.toFloat() / maxOf(frame.width, frame.height)
+                    val bmp = if (scale < 1f) {
+                        Bitmap.createScaledBitmap(
+                            frame,
+                            (frame.width * scale).toInt().coerceAtLeast(1),
+                            (frame.height * scale).toInt().coerceAtLeast(1),
+                            true
+                        )
+                    } else frame
+                    val bos = ByteArrayOutputStream()
+                    bmp.compress(Bitmap.CompressFormat.JPEG, 80, bos)
+                    out = mapOf(
+                        "jpeg" to bos.toByteArray(),
+                        "ms" to ms,
+                        "w" to bmp.width,
+                        "h" to bmp.height
+                    )
+                    if (bmp !== frame) bmp.recycle()
+                    frame.recycle()
+                } else if (ms > 0) {
+                    out = mapOf("jpeg" to null, "ms" to ms, "w" to 16, "h" to 9)
+                }
+            } catch (e: Exception) {
+                // not a video the phone can read; the bubble says so
+            } finally {
+                try { r.release() } catch (e: Exception) {}
+            }
+            runOnUiThread { result.success(out) }
+        }.start()
     }
 
     // the system's own save dialog, then a stream copy from the file into

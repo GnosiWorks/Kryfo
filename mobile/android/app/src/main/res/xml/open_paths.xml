@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- the one folder OpenFileProvider can serve. a file is copied in when the
+     person opens it with another app, and the folder is emptied before the
+     next one and at every start. the app's own media folder is never
+     reachable from outside. -->
+<paths>
+    <cache-path name="open" path="open/" />
+</paths>

@@ -16,6 +16,8 @@ import '../widgets/press_scale.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/pins.dart';
 import '../widgets/remembered_height.dart';
+import '../widgets/video_bubble.dart';
+import '../open_file.dart';
 import '../widgets/media_bubbles.dart';
 import '../widgets/decode_px.dart';
 import '../atmosphere.dart';
@@ -1720,6 +1722,19 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       : () {
                           dismiss();
                           _forwardGroupMessage(target);
+                        },
+                  // a tap opens a file now, so sharing it lives here
+                  onShare:
+                      (target.filePath == null ||
+                          target.fileName == 'voice.wav')
+                      ? null
+                      : () {
+                          dismiss();
+                          lockState.hold(
+                            () => SharePlus.instance.share(
+                              ShareParams(files: [XFile(target.filePath!)]),
+                            ),
+                          );
                         },
                   onEdit: (isOut && target.text.isNotEmpty)
                       ? () {
@@ -3481,17 +3496,33 @@ class _GroupBubble extends StatelessWidget {
                                           disguised: m.voiceDisguised,
                                         ),
                                       )
+                                    else if (m.filePath != null &&
+                                        nameSaysVideo(m.fileName))
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 2,
+                                        ),
+                                        child: VideoBubble(
+                                          key: ValueKey('vid_${m.filePath}'),
+                                          path: m.filePath!,
+                                          fileName: m.fileName!,
+                                          width: 240,
+                                          onOpen: () => openReceivedFile(
+                                            context,
+                                            m.filePath!,
+                                            m.fileName,
+                                          ),
+                                        ),
+                                      )
                                     else if (m.fileName != null)
                                       GestureDetector(
                                         behavior: HitTestBehavior.opaque,
                                         onTap: () {
                                           if (m.filePath != null) {
-                                            lockState.hold(
-                                              () => SharePlus.instance.share(
-                                                ShareParams(
-                                                  files: [XFile(m.filePath!)],
-                                                ),
-                                              ),
+                                            openReceivedFile(
+                                              context,
+                                              m.filePath!,
+                                              m.fileName,
                                             );
                                           }
                                         },
@@ -3911,6 +3942,7 @@ class _EmojiPickerBubble extends StatefulWidget {
     this.onPin,
     this.onSave,
     this.onForward,
+    this.onShare,
     this.onEdit,
     this.onUnsend,
   });
@@ -3921,6 +3953,7 @@ class _EmojiPickerBubble extends StatefulWidget {
   final VoidCallback? onPin;
   final VoidCallback? onSave;
   final VoidCallback? onForward;
+  final VoidCallback? onShare;
   final VoidCallback? onEdit;
   final VoidCallback? onUnsend;
   @override
@@ -4058,6 +4091,7 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
     );
     add(Icons.copy_rounded, 'copy', widget.onCopy);
     add(Icons.forward_rounded, 'forward', widget.onForward);
+    add(Icons.ios_share_rounded, 'Share', widget.onShare);
     if (widget.isOut) {
       add(Icons.edit_outlined, 'edit', widget.onEdit, tint: HaloColors.amber);
       add(

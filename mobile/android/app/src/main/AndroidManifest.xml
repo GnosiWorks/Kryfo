@@ -74,6 +74,16 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- "open with": one file at a time, from cache/open/ only -->
+        <provider
+            android:name=".OpenFileProvider"
+            android:authorities="${applicationId}.open"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/open_paths" />
+        </provider>
     </application>
     <queries>
         <intent>

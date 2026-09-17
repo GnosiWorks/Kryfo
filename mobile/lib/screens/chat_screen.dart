@@ -29,6 +29,8 @@ import '../widgets/confirm_sheet.dart';
 import '../widgets/pins.dart';
 import '../widgets/remembered_height.dart';
 import '../widgets/row_anchor.dart';
+import '../widgets/video_bubble.dart';
+import '../open_file.dart';
 import '../widgets/notice_banner.dart';
 import '../widgets/swipe_to_reply.dart';
 import '../signal_session.dart';
@@ -1329,6 +1331,47 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         ),
                       ),
                     ),
+                    // a tap opens a file now, so sharing it lives here
+                    if (target.filePath != null &&
+                        target.fileName != 'voice.wav') ...[
+                      const SizedBox(height: 6),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(999),
+                          onTap: () {
+                            dismiss();
+                            HapticFeedback.selectionClick();
+                            lockState.hold(
+                              () => SharePlus.instance.share(
+                                ShareParams(files: [XFile(target.filePath!)]),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: HaloColors.surface3,
+                              border: Border.all(
+                                color: HaloColors.line,
+                                width: 0.5,
+                              ),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              'Share',
+                              style: HaloType.sans(
+                                size: 13,
+                                color: HaloColors.text,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                     if (target.text.isNotEmpty) ...[
                       const SizedBox(height: 6),
                       Material(
@@ -6024,17 +6067,36 @@ class _Bubble extends StatelessWidget {
                                     disguised: msg.voiceDisguised,
                                   ),
                                 )
+                              else if (msg.filePath != null &&
+                                  nameSaysVideo(msg.fileName))
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 2,
+                                  ),
+                                  child: VideoBubble(
+                                    key: ValueKey('vid_${msg.filePath}'),
+                                    path: msg.filePath!,
+                                    fileName: msg.fileName!,
+                                    width:
+                                        (MediaQuery.of(context).size.width *
+                                                0.66)
+                                            .clamp(180.0, 300.0),
+                                    onOpen: () => openReceivedFile(
+                                      context,
+                                      msg.filePath!,
+                                      msg.fileName,
+                                    ),
+                                  ),
+                                )
                               else if (msg.fileName != null)
                                 GestureDetector(
                                   behavior: HitTestBehavior.opaque,
                                   onTap: () {
                                     if (msg.filePath != null) {
-                                      lockState.hold(
-                                        () => SharePlus.instance.share(
-                                          ShareParams(
-                                            files: [XFile(msg.filePath!)],
-                                          ),
-                                        ),
+                                      openReceivedFile(
+                                        context,
+                                        msg.filePath!,
+                                        msg.fileName,
                                       );
                                     }
                                   },
