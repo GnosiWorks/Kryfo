@@ -4815,7 +4815,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             const PowNote(),
             // tor still warming: say so where the eye already is. messages
             // typed now are queued and go out the moment the route is up.
-            if (appState.sendMode == 'private' && !_torReadyToSend())
+            // not on a phone whose identity has moved: tor is off there on
+            // purpose, and "queued and delivers itself" would be a lie
+            if (appState.sendMode == 'private' &&
+                !_torReadyToSend() &&
+                !appState.movedAway)
               Padding(
                 padding: const EdgeInsets.only(bottom: 6),
                 child: Row(
