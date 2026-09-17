@@ -130,3 +130,14 @@ class RoomLink {
     }
   }
 }
+
+// a kryfo link inside whatever it arrived in. people paste the whole
+// message, "join us kryfo://room?...", and both parsers want the link and
+// nothing else, so that was "invalid uri" with a good link sitting in it.
+final _kryfoLink = RegExp(r'kryfo://(?:room|share)\?[^\s]+');
+
+/// the first kryfo link in [text], or null
+String? firstKryfoLink(String text) => _kryfoLink.firstMatch(text)?.group(0);
+
+/// every kryfo link in [text] with where it sits, for drawing them tappable
+Iterable<RegExpMatch> kryfoLinksIn(String text) => _kryfoLink.allMatches(text);
