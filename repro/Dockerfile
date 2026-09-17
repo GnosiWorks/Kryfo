@@ -95,6 +95,15 @@ ENV GRADLE_USER_HOME=/home/vagrant/.gradle
 ENV CGO_ENABLED=1
 ENV SOURCE_DATE_EPOCH=1700000000
 
+# apksigcopier is what f-droid runs to decide whether their build and our
+# apk are the same: it copies our signature onto their build and compares
+# the result with ours. verify.sh runs that same tool from this image, so
+# our check is their check and not something like it. it plays no part in
+# the build and changes no byte of the apk.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      apksigcopier=1.1.1-1 \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /home/vagrant/build/app.kryfo
 COPY build-repro.sh /usr/local/bin/build-repro.sh
 RUN chmod +x /usr/local/bin/build-repro.sh

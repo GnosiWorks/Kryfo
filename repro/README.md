@@ -18,9 +18,16 @@ signature files (`*.SF`, `*.RSA`, `MANIFEST.MF`) are left out, and the
 v2/v3 signing block is not a zip entry at all, because the container has
 no keystore and signs with a throwaway key; f-droid copies your signature
 across before it compares, so the signature is by definition not part of
-the claim. MATCH means: everything f-droid would compare is byte for byte
-what this source and this toolchain produce. it is the same test f-droid
-runs.
+the claim. once the entries agree, verify runs `apksigcopier compare` from
+the pinned image: your signature is copied onto the container build and the
+result has to be your apk, to the byte. that is not like f-droid's test, it
+is f-droid's test, with their tool. matching entries alone got 0.2.8 and
+0.2.10 refused, because apksigner had re-padded the zip around them. MATCH
+means apksigcopier said so.
+
+`CONTAINER DIFFERS` means every entry matched and the zip around them did
+not. release.sh passes `--alignment-preserved` to apksigner to keep that
+from happening.
 
 `DIFFERS` names each entry that is not, with both hashes. that list is the
 finding.
