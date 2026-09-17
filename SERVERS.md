@@ -30,7 +30,7 @@ live with the relay.
 |---|---|---|---|
 | relay (`relay-live/`) | `wss://relay.kryfo.app` and its onion | relay box | it is the relay |
 | handle registry (`server/handle/`) | `https://relay.kryfo.app/handle/*`, `/@name` | relay box | **no** |
-| badge service | its own onion | relay box | **no** |
+| badge service (`server/badge/`) | its own onion | relay box | **no** |
 
 both of the no rows move.
 

@@ -1,0 +1,17 @@
+# an example, written from the source's defaults, not copied off the box.
+# check it against `systemctl cat` on the box before trusting it.
+[Unit]
+Description=Kryfo badge service
+After=network.target
+
+[Service]
+ExecStart=/opt/halo-badge/halo-badge
+EnvironmentFile=/opt/halo-badge/badge.env
+Restart=always
+User=ubuntu
+# logs to ram only, same posture as the relay
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
