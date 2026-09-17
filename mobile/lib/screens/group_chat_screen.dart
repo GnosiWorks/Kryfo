@@ -1917,12 +1917,21 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (idx < 0 || idx >= _messages.length || !_scrollReady) return;
     final m = _messages[idx];
     setState(() => _jumpUid = m.msgUid);
-    final max = _maxScroll;
-    final frac = idx / _messages.length;
-    final vpDim = _scrollCtrl.positions.first.viewportDimension;
-    final approx = (frac * max - vpDim * 0.3).clamp(0.0, max);
-    _scrollCtrl.jumpTo(approx.clamp(0.0, max));
-    _settleJump(0);
+    // the key has just been asked for and lands with the next frame. if
+    // the row is already built then, go straight to it: the rough jump is
+    // a guess from whatever rows happen to be laid out, and guessing away
+    // from a row that is on screen is how a second tap on a pin wandered.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollReady) return;
+      if (_jumpKey.currentContext == null) {
+        final max = _maxScroll;
+        final frac = idx / _messages.length;
+        final vpDim = _scrollCtrl.positions.first.viewportDimension;
+        final approx = (frac * max - vpDim * 0.3).clamp(0.0, max);
+        _scrollCtrl.jumpTo(approx.clamp(0.0, max));
+      }
+      _settleJump(0);
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (m.msgUid != null) {
         setState(() => _rippleUid = m.msgUid);
