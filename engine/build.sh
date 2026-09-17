@@ -54,6 +54,13 @@ export GOFLAGS="-mod=vendor -trimpath"
 export GOPROXY=off
 export GOCACHE="${GOCACHE:-$ENGINE_DIR/.gocache}"
 export CGO_ENABLED=1
+# tor, openssl, libevent and zlib are c, compiled into this library by cgo,
+# and they are what parses bytes from the network. go does its own stack
+# checks and has no use for a canary, so nothing asked for one, and the c
+# went out without: no __stack_chk in the library at all. -O2 -g is cgo's
+# own default, kept; the two after it are the hardening. fortify needs the
+# optimiser on, which it is.
+export CGO_CFLAGS="-O2 -g -fstack-protector-strong -D_FORTIFY_SOURCE=2"
 export CGO_LDFLAGS="-Wl,--build-id=none"
 export SOURCE_DATE_EPOCH=1700000000
 LDFLAGS="-buildid= -w -s"
