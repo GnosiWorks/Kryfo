@@ -52,7 +52,6 @@ import 'scam_shield.dart';
 import 'rooms.dart';
 import 'outbox.dart';
 import 'supporter.dart';
-import 'ntfy_listener.dart';
 import 'message_envelope.dart';
 import 'widgets/motion.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -127,7 +126,6 @@ class HaloEngine {
   late final CStrFnDart _bridgeState;
   late final CStrFnDart _restartTor;
   late final OneArgFnDart _setMode;
-  late final OneArgFnDart _ntfyPing;
   late final OneArgFnDart _torGet;
   late final OneArgFnDart _torGetB64;
   late final OneArgFnDart _idFromEdPub;
@@ -177,7 +175,6 @@ class HaloEngine {
     _setMode = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
       'HaloSetTransportMode',
     );
-    _ntfyPing = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNtfyPing');
     _torGet = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGet');
     _torGetB64 = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetB64');
     _idFromEdPub = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
@@ -239,15 +236,6 @@ class HaloEngine {
       return _nostrInit(ptr).toDartString();
     } finally {
       malloc.free(ptr);
-    }
-  }
-
-  String ntfyPing(String endpoint) {
-    final ptr = endpoint.toNativeUtf8();
-    try {
-      return _ntfyPing(ptr).toDartString();
-    } finally {
-      calloc.free(ptr);
     }
   }
 
@@ -4769,17 +4757,8 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  NtfyListener? _ntfyListener;
-
   Future<void> applyPushMode(PushMode m) async {
     await savePushMode(m);
-    if (m == PushMode.ntfy) {
-      _ntfyListener ??= NtfyListener(onPing: () {}, log: (msg) => dlog(msg));
-      await _ntfyListener!.start();
-    } else {
-      await _ntfyListener?.stop();
-      _ntfyListener = null;
-    }
   }
 
   // unified incoming routing. handles three payload variants:
@@ -5422,15 +5401,6 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<void> applyNtfyServerChange(String url) async {
-    await saveNtfyServer(url);
-    if (_ntfyListener != null) {
-      await _ntfyListener!.stop();
-      _ntfyListener = NtfyListener(onPing: () {}, log: (msg) => dlog(msg));
-      await _ntfyListener!.start();
-    }
-  }
-
   bool onboardingComplete = false;
   // this identity was moved to another device from here. set by the
   // export that moved it, never inferred: a phone that works out it is
@@ -5684,9 +5654,6 @@ class AppState extends ChangeNotifier {
         _xPubToHaloId[env.senderXPub!] = h;
         engine.nostrSubscribeBg(env.senderXPub!);
       }
-      if (env.endpoint != null) {
-        await savePeerEndpoint(h, env.endpoint!);
-      }
       try {
         await _applyIncomingPayload(h, env, fromBackPair: true);
       } on CapHeld {
@@ -5816,7 +5783,7 @@ class AppState extends ChangeNotifier {
     await refreshGroups();
     dlog('BOOT groups +${bsw.elapsedMilliseconds}ms');
     // paint the home as soon as contacts/groups are ready; notifications,
-    // nostr subscriptions and ntfy keep warming up in the background.
+    // nostr subscriptions keep warming up in the background.
     onboardingComplete =
         (await const FlutterSecureStorage().read(key: 'onboarding_done')) ==
         'true';
@@ -6007,13 +5974,8 @@ class AppState extends ChangeNotifier {
       }
       await _saveXPubCache(fresh);
     });
-    // open ntfy websocket when push mode is ntfy. on incoming
-    // ping, the existing 1s drain loop catches up - we just log for now.
-    final mode = await loadPushMode();
-    if (mode == PushMode.ntfy) {
-      _ntfyListener = NtfyListener(onPing: () {}, log: (m) => dlog(m));
-      _ntfyListener!.start();
-    }
+    // what the removed ntfy mode left behind in the prefs
+    unawaited(forgetNtfy());
 
     // continuous drain of direct-onion inbox. handles back-
     // pair from strangers + falls back to trial-decrypt against known
@@ -6052,9 +6014,6 @@ class AppState extends ChangeNotifier {
             final plain = await signalDecrypt(c.haloId, cipher);
             if (plain != null) {
               final env = unwrapMessage(plain);
-              if (env.endpoint != null) {
-                await savePeerEndpoint(c.haloId, env.endpoint!);
-              }
               try {
                 await _applyIncomingPayload(c.haloId, env);
               } on CapHeld {
@@ -6264,9 +6223,6 @@ class AppState extends ChangeNotifier {
             continue;
           }
           final env = unwrapMessage(wrapped);
-          if (env.endpoint != null) {
-            await savePeerEndpoint(haloId!, env.endpoint!);
-          }
           try {
             await _applyIncomingPayload(haloId!, env);
           } on CapHeld {

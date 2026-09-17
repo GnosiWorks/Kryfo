@@ -234,7 +234,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   null => '',
                   PushMode.tor => 'Over tor',
                   PushMode.fcm => 'Google push',
-                  PushMode.ntfy => 'Ntfy push',
                 },
                 onTap: () async {
                   await Navigator.of(

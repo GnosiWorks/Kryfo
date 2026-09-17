@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // message_envelope.dart - wrap outgoing plain text with optional metadata
-// (ntfy endpoint + sender identity for back-pair) so the peer learns our
-// push endpoint and identity over the existing encrypted channel. wrapped
+// (sender identity for back-pair) so the peer learns who we are over the
+// existing encrypted channel. the 'p' field once carried a push url for the
+// other side to call; it is neither sent nor read any more. wrapped
 // messages use the sentinel prefix "halo/1:" + JSON object so legacy plain
 // messages pass through unchanged.
 
@@ -9,16 +10,12 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:crypto/crypto.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'push_mode.dart';
 import 'dlog.dart';
 
 const _envelopePrefix = 'halo/1:';
-const _peerEndpointPrefix = 'ntfy_peer_endpoint_';
 
 class UnwrappedMessage {
   final String message;
-  final String? endpoint;
   final String? senderHaloId; // 'h' field
   final String? senderEdPub; // 'e' field, hex
   final String? senderOnion; // 'o' field
@@ -56,7 +53,6 @@ class UnwrappedMessage {
   UnwrappedMessage(
     this.message, {
     this.secure = false,
-    this.endpoint,
     this.senderHaloId,
     this.senderEdPub,
     this.senderOnion,
@@ -164,7 +160,6 @@ class SenderInfo {
 }
 
 // wrap: always includes sender identity now (cheap, enables back-pair).
-// endpoint is added only when push mode is ntfy.
 class EditFrame {
   final String targetUid;
   final String newText;
@@ -246,7 +241,6 @@ Future<String> wrapMessage(
   bool secure = false,
   IntroFrame? intro,
 }) async {
-  final mode = await loadPushMode();
   final body = <String, dynamic>{'m': plain};
   if (msgUid != null) body['u'] = msgUid;
   if (reaction != null) {
@@ -290,11 +284,6 @@ Future<String> wrapMessage(
   if (supporterBadge != null) body['bg'] = supporterBadge;
   if (secure) body['sc'] = 1;
 
-  if (mode == PushMode.ntfy) {
-    final topic = await loadNtfyTopic();
-    final server = await loadNtfyServer();
-    body['p'] = composeNtfyEndpoint(server, topic);
-  }
   if (sender != null) {
     body['h'] = sender.haloId;
     if (sender.avatar != null) body['av'] = sender.avatar;
@@ -398,7 +387,6 @@ UnwrappedMessage unwrapMessage(String wrapped) {
     }
     return UnwrappedMessage(
       (json['m'] as String?) ?? '',
-      endpoint: json['p'] as String?,
       senderHaloId: json['h'] as String?,
       senderAvatar: (json['av'] as num?)?.toInt(),
       senderEdPub: json['e'] as String?,
@@ -443,14 +431,4 @@ UnwrappedMessage unwrapMessage(String wrapped) {
     );
     return UnwrappedMessage(wrapped);
   }
-}
-
-Future<void> savePeerEndpoint(String peerHaloId, String endpoint) async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setString('$_peerEndpointPrefix$peerHaloId', endpoint);
-}
-
-Future<String?> loadPeerEndpoint(String peerHaloId) async {
-  final prefs = await SharedPreferences.getInstance();
-  return prefs.getString('$_peerEndpointPrefix$peerHaloId');
 }

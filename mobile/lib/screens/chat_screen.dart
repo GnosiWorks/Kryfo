@@ -36,14 +36,7 @@ import '../widgets/notice_banner.dart';
 import '../widgets/swipe_to_reply.dart';
 import '../signal_session.dart';
 import '../message_envelope.dart'
-    show
-        wrapMessage,
-        powBusy,
-        SenderInfo,
-        ReactionFrame,
-        loadPeerEndpoint,
-        grindPow,
-        powBits;
+    show wrapMessage, powBusy, SenderInfo, ReactionFrame, grindPow, powBits;
 import '../theme.dart';
 import '../media_progress.dart';
 import '../media_send.dart'
@@ -2321,11 +2314,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
           }
         });
-        loadPeerEndpoint(widget.peerHaloId).then((endpoint) {
-          if (endpoint != null && endpoint.isNotEmpty) {
-            Future(() => engine.ntfyPing(endpoint));
-          }
-        });
       } else if (result == 'parked') {
         setState(() {
           msg.sending = false;
@@ -3371,11 +3359,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         if (msg.burnAt != null) {
           await db.setMsgBurnAt(msgUid, msg.burnAt!);
         }
-        loadPeerEndpoint(widget.peerHaloId).then((endpoint) {
-          if (endpoint != null && endpoint.isNotEmpty) {
-            Future(() => engine.ntfyPing(endpoint));
-          }
-        });
       } else if (result == 'parked') {
         setState(() {
           msg.sending = false;

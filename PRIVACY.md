@@ -18,13 +18,13 @@ to deliver a message, kryfo routes it through tor and, when the other person is 
 
 your ip is hidden behind tor on the default private mode. if you turn on fast mode, messages skip the extra tor hops to go quicker, which can expose your ip to a relay. fast mode is off by default and labeled where you turn it on.
 
-## optional notifications
+## notifications
 
-you can turn on push notifications. these use a relay (ntfy) to wake the app when a message is waiting. the ping carries no message content and no sender, only a signal to fetch. the relay can see that a wake-up reached your notification address, but not what the message is or who sent it. push is off by default. if you leave it off, the app checks for messages itself when open.
+there is no push service. the app checks for messages itself, over the same route it sends on, and shows a notification when one arrives. nothing outside the app is told that a message is waiting for you. an earlier version offered an optional wake-up through an ntfy server; that option has been removed.
 
 ## third parties
 
-kryfo talks to tor relays, nostr relays, and optionally an ntfy server. these are infrastructure for moving sealed data, not partners we share anything with. we do not sell, rent, or trade data, because we do not have any to give.
+kryfo talks to tor relays and nostr relays. these are infrastructure for moving sealed data, not partners we share anything with. we do not sell, rent, or trade data, because we do not have any to give.
 
 ## law enforcement and data requests
 

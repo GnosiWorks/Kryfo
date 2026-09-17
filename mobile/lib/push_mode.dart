@@ -1,29 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // push_mode.dart - how kryfo gets woken up to receive messages.
-// only PushMode.tor is fully wired today. ntfy ships in sprint 11.
-// fcm is deferred until a play-store variant.
+// there is one way: the app polls over tor. an ntfy mode used to sit here.
+// it held a websocket to a public server from dart, outside the engine and
+// outside tor, so that server saw the phone's address for as long as the
+// app ran, and the ping it waited for did nothing. it also had every
+// message carry a url for the other side to ping, which meant a contact
+// could make this phone call any address they liked. it is gone. if push
+// comes back it goes through the engine, over tor, or not at all.
+// fcm is deferred until a play-store variant and cannot be picked.
 
-import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum PushMode { tor, fcm, ntfy }
+enum PushMode { tor, fcm }
 
 const _modeKey = 'push_mode';
-const _serverKey = 'ntfy_server';
-const _topicKey = 'ntfy_topic';
-const defaultNtfyServer = 'https://ntfy.sh';
 
 Future<PushMode> loadPushMode() async {
   final prefs = await SharedPreferences.getInstance();
-  switch (prefs.getString(_modeKey)) {
-    case 'fcm':
-      return PushMode.fcm;
-    case 'ntfy':
-    case 'unifiedPush': // legacy key from earlier build
-      return PushMode.ntfy;
-    default:
-      return PushMode.tor;
-  }
+  // 'ntfy' and the older 'unifiedPush' both land on tor now
+  return prefs.getString(_modeKey) == 'fcm' ? PushMode.fcm : PushMode.tor;
 }
 
 Future<void> savePushMode(PushMode m) async {
@@ -31,42 +26,17 @@ Future<void> savePushMode(PushMode m) async {
   await prefs.setString(_modeKey, m.name);
 }
 
-Future<String> loadNtfyServer() async {
+/// what the ntfy mode left in the prefs: its topic, its server, and a url
+/// for every contact who ever sent one. run once at boot.
+Future<void> forgetNtfy() async {
   final prefs = await SharedPreferences.getInstance();
-  return prefs.getString(_serverKey) ?? defaultNtfyServer;
-}
-
-Future<void> saveNtfyServer(String url) async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setString(_serverKey, url);
-}
-
-// ntfy topic: 32 hex chars from Random.secure. unguessable, so even
-// though ntfy.sh topics are public, randomness keeps the channel private.
-Future<String> loadNtfyTopic() async {
-  final prefs = await SharedPreferences.getInstance();
-  var t = prefs.getString(_topicKey);
-  if (t == null || t.isEmpty) {
-    t = _generateTopic();
-    await prefs.setString(_topicKey, t);
+  for (final k in prefs.getKeys().toList()) {
+    if (k == 'ntfy_topic' ||
+        k == 'ntfy_server' ||
+        k.startsWith('ntfy_peer_endpoint_')) {
+      await prefs.remove(k);
+    }
   }
-  return t;
-}
-
-Future<void> clearNtfyTopic() async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.remove(_topicKey);
-}
-
-String _generateTopic() {
-  final rng = Random.secure();
-  final bytes = List<int>.generate(16, (_) => rng.nextInt(256));
-  return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
-}
-
-String composeNtfyEndpoint(String server, String topic) {
-  final s = server.endsWith('/')
-      ? server.substring(0, server.length - 1)
-      : server;
-  return '$s/$topic';
+  final m = prefs.getString(_modeKey);
+  if (m == 'ntfy' || m == 'unifiedPush') await prefs.remove(_modeKey);
 }

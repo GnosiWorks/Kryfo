@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // push_settings_screen.dart - three-tier notification wake-up picker.
-// tier 1 (tor only) is live. tier 3 (ntfy push) is wired in sprint 11.
+// tor only is the one way in. see push_mode.dart for what used to sit beside it.
 // tier 2 (fcm) is deferred until a play-store variant ships.
 
 import 'package:flutter/material.dart';
@@ -20,22 +20,16 @@ class PushSettingsScreen extends StatefulWidget {
 
 class _PushSettingsScreenState extends State<PushSettingsScreen> {
   PushMode _mode = PushMode.tor;
-  String _ntfyServer = defaultNtfyServer;
-  String _ntfyTopic = '';
   bool _loaded = false;
   bool _hideContent = true;
 
   @override
   void initState() {
     super.initState();
-    Future.wait([loadPushMode(), loadNtfyServer(), loadNtfyTopic()]).then((
-      vals,
-    ) {
+    loadPushMode().then((m) {
       if (!mounted) return;
       setState(() {
-        _mode = vals[0] as PushMode;
-        _ntfyServer = vals[1] as String;
-        _ntfyTopic = vals[2] as String;
+        _mode = m;
         _loaded = true;
       });
     });
@@ -47,11 +41,6 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
   void _pick(PushMode m) {
     setState(() => _mode = m);
     appState.applyPushMode(m);
-  }
-
-  void _updateServer(String url) {
-    setState(() => _ntfyServer = url);
-    appState.applyNtfyServerChange(url);
   }
 
   @override
@@ -113,25 +102,6 @@ class _PushSettingsScreenState extends State<PushSettingsScreen> {
                           'Kryfo polls tor in the background. Nothing leaves your phone via any third party. The battery cost is small.',
                       badges: const ['no metadata', '~30s latency'],
                       onTap: () => _pick(PushMode.tor),
-                    ),
-                    _PushCard(
-                      name: 'Ntfy push',
-                      active: _mode == PushMode.ntfy,
-                      desc:
-                          'A wake-up ping comes through a public ntfy server. The ping carries no message content, only a nudge to fetch. Faster than tor only.',
-                      badges: const [
-                        'some metadata',
-                        '~2s latency',
-                        'self-hostable',
-                      ],
-                      onTap: () => _pick(PushMode.ntfy),
-                      extra: _mode == PushMode.ntfy
-                          ? _ServerField(
-                              initial: _ntfyServer,
-                              topic: _ntfyTopic,
-                              onChanged: _updateServer,
-                            )
-                          : null,
                     ),
                     _PushCard(
                       name: 'Via google',
@@ -229,7 +199,6 @@ class _PushCard extends StatelessWidget {
   final String desc;
   final List<String> badges;
   final VoidCallback onTap;
-  final Widget? extra;
 
   const _PushCard({
     required this.name,
@@ -239,7 +208,6 @@ class _PushCard extends StatelessWidget {
     required this.desc,
     required this.badges,
     required this.onTap,
-    this.extra,
   });
 
   @override
@@ -341,108 +309,10 @@ class _PushCard extends StatelessWidget {
                     )
                     .toList(),
               ),
-              if (extra != null) ...[const SizedBox(height: 12), extra!],
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class _ServerField extends StatefulWidget {
-  final String initial;
-  final String topic;
-  final ValueChanged<String> onChanged;
-  const _ServerField({
-    required this.initial,
-    required this.topic,
-    required this.onChanged,
-  });
-
-  @override
-  State<_ServerField> createState() => _ServerFieldState();
-}
-
-class _ServerFieldState extends State<_ServerField> {
-  late final TextEditingController _ctl;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctl = TextEditingController(text: widget.initial);
-  }
-
-  @override
-  void dispose() {
-    _ctl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Server',
-          style: HaloType.mono(size: 10, color: HaloColors.text3, letter: 0.1),
-        ),
-        const SizedBox(height: 4),
-        TextField(
-          controller: _ctl,
-          style: HaloType.mono(size: 12, color: HaloColors.text),
-          decoration: InputDecoration(
-            isDense: true,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 10,
-            ),
-            filled: true,
-            fillColor: HaloColors.surface2,
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: HaloColors.line, width: 0.5),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: HaloColors.amber, width: 1),
-            ),
-          ),
-          onSubmitted: widget.onChanged,
-          onEditingComplete: () => widget.onChanged(_ctl.text),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Use https://ntfy.sh (default) or your own self-hosted instance',
-          style: HaloType.sans(size: 10, color: HaloColors.text3, height: 1.4),
-        ),
-        if (widget.topic.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Text(
-            'Your endpoint',
-            style: HaloType.mono(
-              size: 10,
-              color: HaloColors.text3,
-              letter: 0.1,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: HaloColors.surface3,
-              border: Border.all(color: HaloColors.line, width: 0.5),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              composeNtfyEndpoint(_ctl.text, widget.topic),
-              style: HaloType.mono(size: 11, color: HaloColors.text2),
-            ),
-          ),
-        ],
-      ],
     );
   }
 }
