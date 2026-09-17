@@ -13,6 +13,7 @@ import '../picked.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/pins.dart';
 import '../widgets/media_bubbles.dart';
 import '../widgets/decode_px.dart';
 import '../atmosphere.dart';
@@ -2406,12 +2407,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 margin: const EdgeInsets.fromLTRB(12, 6, 12, 2),
                 delay: const Duration(milliseconds: 160),
               ),
-            if (_messages.any((m) => m.pinned))
-              _GroupPinnedBar(
-                message: _messages.lastWhere((m) => m.pinned),
-                onTap: () =>
-                    _scrollToGroupMessage(_messages.lastWhere((m) => m.pinned)),
-              ),
             if (_ghost)
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -2648,71 +2643,6 @@ class _GMsg {
        senderName = senderName ?? sender;
 }
 
-// ───────── header ─────────
-
-class _GroupPinnedBar extends StatelessWidget {
-  final _GMsg message;
-  final VoidCallback onTap;
-  const _GroupPinnedBar({required this.message, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final preview = message.text.isEmpty ? 'photo' : message.text;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          decoration: BoxDecoration(
-            color: HaloColors.surface2,
-            border: Border(
-              bottom: BorderSide(color: HaloColors.line, width: 0.5),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 2.5,
-                height: 30,
-                decoration: BoxDecoration(
-                  color: HaloColors.amber,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Pinned',
-                      style: HaloType.mono(
-                        size: 9.5,
-                        color: HaloColors.amber,
-                        letter: 0.6,
-                      ),
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      preview,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: HaloType.sans(size: 13, color: HaloColors.text),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.push_pin, size: 14, color: HaloColors.amber),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _Header extends StatelessWidget {
   final String name;
   final String groupId;
@@ -2821,24 +2751,7 @@ class _Header extends StatelessWidget {
               ),
             ),
           ),
-          if (pinnedCount > 0)
-            InkWell(
-              onTap: onPinned,
-              borderRadius: BorderRadius.circular(999),
-              child: Padding(
-                padding: const EdgeInsets.all(6),
-                child: Row(
-                  children: [
-                    Icon(Icons.push_pin, size: 14, color: HaloColors.amber),
-                    const SizedBox(width: 2),
-                    Text(
-                      '$pinnedCount',
-                      style: HaloType.mono(size: 10.5, color: HaloColors.amber),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          PinHeaderButton(count: pinnedCount, onTap: onPinned),
           if (onSearch != null)
             IconButton(
               tooltip: 'Search this chat',

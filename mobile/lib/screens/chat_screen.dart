@@ -25,6 +25,7 @@ import 'shield_sheet.dart';
 import '../vouch_text.dart';
 import '../widgets/intro_chip.dart';
 import '../widgets/media_bubbles.dart' show VoiceBubble;
+import '../widgets/pins.dart';
 import '../widgets/notice_banner.dart';
 import '../widgets/swipe_to_reply.dart';
 import '../signal_session.dart';
@@ -4572,12 +4573,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     pinnedCount: _messages.where((m) => m.pinned).length,
                     onPinned: _showPinnedSheet,
                   ),
-            if (_messages.any((m) => m.pinned))
-              _PinnedBar(
-                message: _messages.lastWhere((m) => m.pinned),
-                onTap: () =>
-                    _scrollToMessage(_messages.lastWhere((m) => m.pinned)),
-              ),
             if (_flag != null && !_accepted)
               const SizedBox.shrink()
             else if (_vouched && !_accepted && _recvCount == 0)
@@ -5487,16 +5482,7 @@ class _ChatHead extends StatelessWidget {
             ),
           ),
 
-          if (pinnedCount > 0)
-            IconButton(
-              tooltip: 'Pin',
-              icon: Icon(
-                Icons.push_pin_outlined,
-                color: HaloColors.amber,
-                size: 19,
-              ),
-              onPressed: onPinned,
-            ),
+          PinHeaderButton(count: pinnedCount, onTap: onPinned),
           IconButton(
             tooltip: 'Search this chat',
             icon: Icon(Icons.search_rounded, color: HaloColors.text2, size: 21),
@@ -6629,69 +6615,6 @@ class _ReactionPopState extends State<_ReactionPop>
           ),
         ]).animate(_c),
         child: widget.child,
-      ),
-    );
-  }
-}
-
-class _PinnedBar extends StatelessWidget {
-  final _Msg message;
-  final VoidCallback onTap;
-  const _PinnedBar({required this.message, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final preview = message.text.isEmpty ? 'photo' : message.text;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          decoration: BoxDecoration(
-            color: HaloColors.surface2,
-            border: Border(
-              bottom: BorderSide(color: HaloColors.line, width: 0.5),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 2.5,
-                height: 30,
-                decoration: BoxDecoration(
-                  color: HaloColors.amber,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Pinned',
-                      style: HaloType.mono(
-                        size: 9.5,
-                        color: HaloColors.amber,
-                        letter: 0.6,
-                      ),
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      preview,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: HaloType.sans(size: 13, color: HaloColors.text),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.push_pin, size: 14, color: HaloColors.amber),
-            ],
-          ),
-        ),
       ),
     );
   }
