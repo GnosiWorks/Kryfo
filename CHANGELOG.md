@@ -27,7 +27,6 @@ All notable user-facing changes to kryfo will land here. Format loosely follows 
 - the link preview setting is gone. it was a switch for whether you would be offered a button, and the button is already a choice you make per message. the button is offered whenever tor is up, and your phone still never fetches a link someone sent you.
 - the voice mask sits a little lower.
 - the public handle page loaded its fonts from google, which showed google everyone who opened one. it carries its own now.
-- the handle registry and the badge service still run on the same machine as the relay. whoever held that machine could match the moment you claimed a handle to the moment your key next spoke to the relay. nothing is logged, but the timing is there, and it is written into the threat model until they have moved to a box of their own.
 
 ## [0.2.10] - 2026-09-16
 

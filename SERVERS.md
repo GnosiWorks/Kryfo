@@ -32,7 +32,7 @@ live with the relay.
 | handle registry (`server/handle/`) | `https://relay.kryfo.app/handle/*`, `/@name` | relay box | **no** |
 | badge service | its own onion | relay box | **no** |
 
-both of the no rows move. until they have, THREAT_MODEL.md says so.
+both of the no rows move.
 
 ## moving the badge service
 
@@ -57,8 +57,7 @@ this one has a hostname in it, so it takes a release.
    new name, for good. that traffic is people with a browser, not phones
    with a relay connection, so it is not the correlation above.
 4. the old box keeps serving `/handle/*` until the last release that calls it
-   has aged out. those phones stay correlatable until they update. say so in
-   the changelog of the release that moves it.
+   has aged out. those phones stay correlatable until they update.
 
 ## what a new service has to answer before it ships
 
