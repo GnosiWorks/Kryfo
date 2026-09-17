@@ -562,17 +562,17 @@ class _RestoreScreenState extends State<RestoreScreen> {
             const SizedBox(height: 22),
             if (s == null)
               _Primary(
-                label: _busy ? 'checking…' : 'Check the file',
+                label: _busy ? 'Checking…' : 'Check the file',
                 onTap: _busy || !_hasFile ? null : _check,
               )
             else
               _Primary(
                 label: _releasing
-                    ? 'releasing your handle…'
+                    ? 'Releasing your handle…'
                     : _busy
                     ? (_path != null && _progress > 0
-                          ? 'moving… ${(_progress * 100).round()}%'
-                          : 'restoring…')
+                          ? 'Moving… ${(_progress * 100).round()}%'
+                          : 'Restoring…')
                     : 'Restore',
                 onTap: _busy ? null : _restore,
               ),

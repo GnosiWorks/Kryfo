@@ -182,7 +182,7 @@ class _HandleScreenState extends State<HandleScreen> {
                   ),
                 ),
                 child: Text(
-                  _busy ? 'claiming…' : 'Claim this handle',
+                  _busy ? 'Claiming…' : 'Claim this handle',
                   style: HaloType.mono(
                     size: 12.5,
                     weight: FontWeight.w600,
@@ -286,7 +286,7 @@ class _Availability extends StatelessWidget {
     late final String txt;
     late final Color c;
     if (state == 'checking') {
-      txt = 'checking…';
+      txt = 'Checking…';
       c = HaloColors.text3;
     } else if (state == 'free') {
       txt = '✓ available';
