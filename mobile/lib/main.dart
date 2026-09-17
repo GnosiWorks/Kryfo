@@ -4805,6 +4805,16 @@ class AppState extends ChangeNotifier {
       final total = env.chunkTotal!;
       final progressKey = isGroup ? env.groupId! : senderHaloId;
       final slice = (env.imageB64 ?? env.fileB64) ?? '';
+      // a slice of a file already put together: the sender went round
+      // again. buffering it began a second copy that could never finish,
+      // and a banner counting towards nothing for a day. one receipt per
+      // pass, on the first slice, so the sender learns it can stop.
+      if (await db.messageExists(mid)) {
+        if (!isGroup && (env.chunkIndex ?? 0) == 0 && senderHaloId != myId) {
+          unawaited(_sendDeliveryReceipt(senderHaloId, mid));
+        }
+        return;
+      }
       // slices land on disk as they arrive, so closing the app mid-transfer
       // no longer throws the partial away. the count is over rows, which is
       // what makes a restart resume instead of start over.
@@ -7019,6 +7029,36 @@ class AppState extends ChangeNotifier {
   // every 16k slice out to each member. the local row is saved by the caller;
   // this only puts bytes on the wire. returns 'ok' or an error string.
   Future<String> sendMediaToGroup(
+    String groupId,
+    String path, {
+    required String msgUid,
+    String caption = '',
+    String? fileName,
+    bool voice = false,
+    bool voiceDisguised = false,
+    int? burnSeconds,
+  }) async {
+    // one send per media at a time, the same set the 1:1 path holds. the
+    // drainer picks up any row older than 45 s, and a video to a group is
+    // still leaving long after that: both then sent the whole file.
+    if (!mediaInflight.add(msgUid)) return 'busy';
+    try {
+      return await _sendMediaToGroupInner(
+        groupId,
+        path,
+        msgUid: msgUid,
+        caption: caption,
+        fileName: fileName,
+        voice: voice,
+        voiceDisguised: voiceDisguised,
+        burnSeconds: burnSeconds,
+      );
+    } finally {
+      mediaInflight.remove(msgUid);
+    }
+  }
+
+  Future<String> _sendMediaToGroupInner(
     String groupId,
     String path, {
     required String msgUid,

@@ -39,7 +39,8 @@ import '../message_envelope.dart'
         powBits;
 import '../theme.dart';
 import '../media_progress.dart';
-import '../media_send.dart' show sendChunkedMediaTo, cancelMediaSend;
+import '../media_send.dart'
+    show sendChunkedMediaTo, cancelMediaSend, mediaInflight;
 import '../mp4_strip.dart';
 import '../widgets/pow_note.dart';
 import '../widgets/decode_px.dart';
@@ -2033,6 +2034,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     for (final m in loaded) {
       // under a minute old the send future may still be running in the
       // background - marking it failed here caused dup resends.
+      // a file still going out is not stale, however old its row: the row
+      // is saved before the first slice leaves, and a video over tor takes
+      // minutes. marked failed here, the retry tick sent the whole file a
+      // second time the moment the first pass ended.
+      if (m.msgUid != null && mediaInflight.contains(m.msgUid)) continue;
       if (torUp &&
           m.direction == 'out' &&
           m.sending &&
@@ -2439,9 +2445,37 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
   }
 
+  // a retry has nothing to do for a file that went, or is going. a reload
+  // can paint a row failed from a stale read; sending on that word alone
+  // put the same file on the wire twice.
+  Future<bool> _alreadyGoing(_Msg msg) async {
+    final uid = msg.msgUid;
+    if (uid == null) return false;
+    if (mediaInflight.contains(uid)) {
+      if (mounted) {
+        setState(() {
+          msg.failed = false;
+          msg.sending = true;
+        });
+      }
+      return true;
+    }
+    if (await db.isSent(uid)) {
+      if (mounted) {
+        setState(() {
+          msg.failed = false;
+          msg.sending = false;
+        });
+      }
+      return true;
+    }
+    return false;
+  }
+
   Future<void> _retryImage(_Msg msg) async {
     final path = msg.mediaPath;
     if (path == null) return;
+    if (await _alreadyGoing(msg)) return;
     final file = File(path);
     if (!await file.exists()) {
       setState(() => msg.failed = true);
@@ -2466,6 +2500,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _retryMedia(_Msg msg) async {
     final path = msg.filePath;
     if (path == null || msg.fileName == null) return;
+    if (await _alreadyGoing(msg)) return;
     final file = File(path);
     if (!await file.exists()) {
       setState(() => msg.failed = true);
@@ -2941,13 +2976,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       msg.burnAt = ba;
     }
     if (!mounted) return;
+    // a reload since the send began left [msg] off screen and a new object
+    // in its place; the verdict goes to the one being drawn as well
+    final shown = _messages.where(
+      (m) => m.msgUid != null && m.msgUid == msg.msgUid,
+    );
     setState(() {
-      msg.sending = false;
-      msg.parked = result == 'parked';
-      if (result != 'ok' && result != 'parked') {
-        msg.failed = true;
-        _status = result;
+      for (final m in {msg, ...shown}) {
+        m.sending = false;
+        m.parked = result == 'parked';
+        m.failed = result != 'ok' && result != 'parked';
       }
+      if (result != 'ok' && result != 'parked') _status = result;
     });
   }
 

@@ -1483,6 +1483,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   Future<void> _finishGroupMediaSend(_GMsg m, String result) async {
+    // another sender already has this one; its verdict comes later
+    if (result == 'busy') return;
     if (m.msgUid != null) mediaProgressEnd(m.msgUid!);
     final ok = result == 'ok';
     final uid = m.msgUid;
