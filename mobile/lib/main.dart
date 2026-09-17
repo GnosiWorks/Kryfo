@@ -43,6 +43,7 @@ import 'lock_state.dart';
 import 'screens/lock_screen.dart';
 import 'screens/lock_setup_screen.dart';
 import 'screens/moved_screen.dart';
+import 'pin_gate.dart';
 import 'push_mode.dart';
 import 'intro_prefs.dart';
 import 'scam_prefs.dart';
@@ -2552,8 +2553,21 @@ class HaloDb {
     );
   }
 
-  // add or replace a reaction. reactor is '' for self, peer's kryfo id
-  // for theirs. one reaction per (msgUid, reactor) - re-reacting replaces.
+  // the chat a row lives in: (peer_id, group_id), or null when there is no
+  // such row
+  Future<(String, String?)?> chatOf(String msgUid) async {
+    final db = await open();
+    final r = await db.query(
+      'messages',
+      columns: ['peer_id', 'group_id'],
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+      limit: 1,
+    );
+    if (r.isEmpty) return null;
+    return (r.first['peer_id'] as String, r.first['group_id'] as String?);
+  }
+
   Future<void> setPinned(String msgUid, bool pinned) async {
     final db = await open();
     await db.update(
@@ -2858,6 +2872,8 @@ class HaloDb {
     );
   }
 
+  // add or replace a reaction. reactor is '' for self, peer's kryfo id
+  // for theirs. one reaction per (msgUid, reactor) - re-reacting replaces.
   Future<void> addReaction(String msgUid, String reactor, String emoji) async {
     final db = await open();
     await db.insert('reactions', {
@@ -4647,8 +4663,24 @@ class AppState extends ChangeNotifier {
       await _applyIntro(senderHaloId, env.intro!);
       return;
     }
-    // shared pin - every member mirrors it
+    // shared pin - every member mirrors it. only from someone in the chat
+    // the row lives in: the frame names a uid and nothing else, and it rides
+    // in above the stranger gate like an edit does.
     if (env.pin != null) {
+      final where = await db.chatOf(env.pin!.targetUid);
+      final ok = pinAllowed(
+        rowPeer: where?.$1,
+        rowGroup: where?.$2,
+        sender: senderHaloId,
+        frameGroup: env.groupId,
+        members: where?.$2 == null
+            ? const []
+            : await db.getGroupMembers(where!.$2!),
+      );
+      if (!ok) {
+        dlog('pin: dropped, sender is not in that chat');
+        return;
+      }
       await db.setPinned(env.pin!.targetUid, env.pin!.pinned);
       notifyListeners();
       return;
@@ -5597,7 +5629,8 @@ class AppState extends ChangeNotifier {
     onboardingComplete =
         (await const FlutterSecureStorage().read(key: 'onboarding_done')) ==
         'true';
-    movedAway = (await SharedPreferences.getInstance()).getInt('moved.at') != null;
+    movedAway =
+        (await SharedPreferences.getInstance()).getInt('moved.at') != null;
     // let the onion linger a beat before the home appears
     if (onboardingComplete) {
       await Future.delayed(const Duration(milliseconds: 300));
