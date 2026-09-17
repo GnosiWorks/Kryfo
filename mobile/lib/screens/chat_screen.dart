@@ -74,7 +74,6 @@ import '../widgets/sheet_handle.dart';
 import '../widgets/menu_backdrop.dart';
 import '../widgets/link_stub.dart';
 import '../widgets/preview_strip.dart';
-import '../link_prefs.dart';
 import 'camera_screen.dart';
 import '../link_preview.dart' show titleFromHtml, firstUrl, senderPreview;
 export '../link_preview.dart' show firstUrl;
@@ -4923,7 +4922,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             // over tor or not at all, so without it there is
                             // nothing to offer
                             builder: (_, v, _) => PreviewStrip(
-                              url: sendLinkPreviews && _accepted && _torUp
+                              url: _accepted && _torUp
                                   ? firstUrl(v.text)
                                   : null,
                               pending: _pendingPreview,

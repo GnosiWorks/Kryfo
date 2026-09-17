@@ -9,7 +9,6 @@ import '../main.dart' show appState;
 import '../lock_state.dart';
 import '../intro_prefs.dart';
 import '../scam_prefs.dart';
-import '../link_prefs.dart';
 import '../miui_autostart.dart';
 import '../widgets/motion.dart' show TorStatus, haloRoute;
 import 'why_kryfo_screen.dart';
@@ -283,17 +282,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () async {
                   setState(() => _shieldOn = !_shieldOn);
                   await saveScamShieldOn(_shieldOn);
-                },
-              ),
-              _Row(
-                icon: Icons.travel_explore_outlined,
-                label: 'Add link previews',
-                hint:
-                    'You fetch the title over tor and send it along. Onion mode only',
-                value: sendLinkPreviews ? 'On' : 'Off',
-                onTap: () async {
-                  await saveSendLinkPreviews(!sendLinkPreviews);
-                  if (mounted) setState(() {});
                 },
               ),
             ],

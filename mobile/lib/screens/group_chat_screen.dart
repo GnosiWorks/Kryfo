@@ -63,7 +63,6 @@ import '../widgets/sheet_handle.dart';
 import '../widgets/menu_backdrop.dart';
 import '../mentions.dart';
 import '../widgets/link_stub.dart';
-import '../link_prefs.dart';
 import 'camera_screen.dart';
 import '../link_preview.dart' show titleFromHtml, senderPreview;
 import '../widgets/preview_strip.dart';
@@ -2568,7 +2567,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             ValueListenableBuilder<TextEditingValue>(
               valueListenable: _msgCtrl,
               builder: (_, v, _) => PreviewStrip(
-                url: sendLinkPreviews && !_isRoom && _torUp
+                url: !_isRoom && _torUp
                     ? firstUrl(v.text)
                     : null,
                 pending: _pendingPreview,
