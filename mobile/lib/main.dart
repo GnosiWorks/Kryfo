@@ -48,7 +48,6 @@ import 'widgets/pins.dart' show kMaxPins;
 import 'push_mode.dart';
 import 'intro_prefs.dart';
 import 'scam_prefs.dart';
-import 'link_prefs.dart';
 import 'scam_shield.dart';
 import 'rooms.dart';
 import 'outbox.dart';
@@ -5922,7 +5921,6 @@ class AppState extends ChangeNotifier {
     // gives up if it is empty.
     _loadFirstContact();
     await loadScreenshotPref();
-    await loadLinkPrefs();
     await loadHeartbeat();
     startMemoryLog();
     await initNotifications(onTap: openChatForHalo);
