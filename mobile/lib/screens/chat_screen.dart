@@ -7015,8 +7015,9 @@ Uint8List disguiseWav(Uint8List wav) {
     (wav.length - headerLen) ~/ 2,
   );
   // ratio < 1 keeps more samples = lower, slower-sounding voice once
-  // played at the original rate. 0.82 is a noticeable but still-clear drop.
-  const ratio = 0.80;
+  // played at the original rate. 0.76 is a clear drop that still reads as
+  // speech; it was 0.80, and went five percent lower.
+  const ratio = 0.76;
   final outLen = (body.length / ratio).floor();
   final out = Int16List(outLen);
   for (var i = 0; i < outLen; i++) {
