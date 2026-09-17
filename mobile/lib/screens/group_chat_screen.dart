@@ -47,6 +47,7 @@ import '../main.dart'
 import '../theme.dart';
 import '../media_progress.dart';
 import '../media_send.dart' show cancelMediaSend;
+import '../image_strip.dart';
 import '../mp4_strip.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/burn_fade.dart';
@@ -1233,8 +1234,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (mounted) showHaloToast(context, 'Gif too big · 8 mb max');
       return;
     }
+    // raw, but not with what rode along: a gif's comment and xmp blocks
+    // go, its frames and its loop count stay. whatever was picked under
+    // the gif filter is cleaned as the kind of file its bytes say it is.
+    final clean = stripPictureBytes(data);
+    if (clean == null) {
+      if (mounted) showHaloToast(context, 'Could not clean that gif');
+      return;
+    }
     // raw bytes through the image lane - re-encoding kills the animation.
-    await _sendGroupImage(data, '');
+    await _sendGroupImage(clean, '');
   }
 
   Future<void> _sendGroupImage(Uint8List bytes, String caption) async {
@@ -1414,6 +1423,22 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         if (mounted) showHaloToast(context, 'Could not clean that video');
         return;
       }
+    }
+    // a picture sent as a file is cleaned like one sent as a photo. it is
+    // told by its bytes, not its name: jpeg, png, webp, heic, avif. one the
+    // app cannot read through is not sent; the photo button re-encodes and
+    // will take it.
+    else if (await stripPictureFileOffUi(dest.path) == null) {
+      try {
+        await dest.delete();
+      } catch (_) {}
+      if (mounted) {
+        showHaloToast(
+          context,
+          'Could not clean that picture · send it as a photo',
+        );
+      }
+      return;
     }
     final burn = _ghost ? _burnSeconds : null;
     final m = _GMsg(
@@ -2567,9 +2592,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             ValueListenableBuilder<TextEditingValue>(
               valueListenable: _msgCtrl,
               builder: (_, v, _) => PreviewStrip(
-                url: !_isRoom && _torUp
-                    ? firstUrl(v.text)
-                    : null,
+                url: !_isRoom && _torUp ? firstUrl(v.text) : null,
                 pending: _pendingPreview,
                 busy: _previewBusy,
                 onAdd: _addPreview,

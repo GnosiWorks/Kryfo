@@ -41,6 +41,7 @@ import '../theme.dart';
 import '../media_progress.dart';
 import '../media_send.dart'
     show sendChunkedMediaTo, cancelMediaSend, mediaInflight;
+import '../image_strip.dart';
 import '../mp4_strip.dart';
 import '../widgets/pow_note.dart';
 import '../widgets/decode_px.dart';
@@ -2873,6 +2874,22 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         return;
       }
     }
+    // a picture sent as a file is cleaned like one sent as a photo. it is
+    // told by its bytes, not its name: jpeg, png, webp, heic, avif. one the
+    // app cannot read through is not sent; the photo button re-encodes and
+    // will take it.
+    else if (await stripPictureFileOffUi(dest.path) == null) {
+      try {
+        await dest.delete();
+      } catch (_) {}
+      if (mounted) {
+        showHaloToast(
+          context,
+          'Could not clean that picture · send it as a photo',
+        );
+      }
+      return;
+    }
     final filePath = dest.path;
     final msg = _Msg(
       'out',
@@ -3005,9 +3022,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (mounted) showHaloToast(context, 'Gif too big · 8 mb max');
       return;
     }
+    // raw, but not with what rode along: a gif's comment and xmp blocks
+    // go, its frames and its loop count stay. whatever was picked under
+    // the gif filter is cleaned as the kind of file its bytes say it is.
+    final clean = stripPictureBytes(data);
+    if (clean == null) {
+      if (mounted) showHaloToast(context, 'Could not clean that gif');
+      return;
+    }
     // send raw through the image path - Image.memory animates gifs by the bytes,
     // the .jpg filename doesn't matter.
-    await _sendOneImage(data, '');
+    await _sendOneImage(clean, '');
   }
 
   Future<void> _sendOneImage(Uint8List bytes, String caption) async {
