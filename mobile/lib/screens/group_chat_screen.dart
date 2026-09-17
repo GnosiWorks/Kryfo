@@ -13,6 +13,7 @@ import '../picked.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/confirm_sheet.dart';
 import '../widgets/pins.dart';
 import '../widgets/remembered_height.dart';
 import '../widgets/media_bubbles.dart';
@@ -2037,6 +2038,18 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         return;
       }
     }
+    if (!mounted) return;
+    final ok = await showConfirmSheet(
+      context,
+      title: m.pinned ? 'Unpin this message?' : 'Pin this message?',
+      line: m.pinned
+          ? 'It leaves the pinned list for everyone here.'
+          : 'It goes under the pin at the top of the chat, for everyone here.',
+      yes: m.pinned ? 'Unpin' : 'Pin it',
+      keep: 'Not now',
+      rose: false,
+    );
+    if (!ok) return;
     await _setPinnedGroup(m.msgUid!, !m.pinned);
   }
 

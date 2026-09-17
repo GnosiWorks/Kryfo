@@ -25,6 +25,7 @@ import 'shield_sheet.dart';
 import '../vouch_text.dart';
 import '../widgets/intro_chip.dart';
 import '../widgets/media_bubbles.dart' show VoiceBubble;
+import '../widgets/confirm_sheet.dart';
 import '../widgets/pins.dart';
 import '../widgets/remembered_height.dart';
 import '../widgets/row_anchor.dart';
@@ -1695,6 +1696,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         return;
       }
     }
+    if (!mounted) return;
+    final ok = await showConfirmSheet(
+      context,
+      title: m.pinned ? 'Unpin this message?' : 'Pin this message?',
+      line: m.pinned
+          ? 'It leaves the pinned list for both of you.'
+          : 'It goes under the pin at the top of the chat, for both of you.',
+      yes: m.pinned ? 'Unpin' : 'Pin it',
+      keep: 'Not now',
+      rose: false,
+    );
+    if (!ok) return;
     await _setPinned(m.msgUid!, !m.pinned);
   }
 
