@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../backup.dart';
-import '../main.dart' show appState, shredFile;
+import '../main.dart' show appState, engine, shredFile;
 import '../picked.dart';
 import '../theme.dart';
 import '../widgets/confirm_sheet.dart';
@@ -41,6 +41,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
   String? _blob;
   String? _path;
   double _progress = 0;
+  bool _releasing = false;
   // a file of either kind is picked
   bool get _hasFile => _blob != null || _path != null;
   final _passCtrl = TextEditingController();
@@ -161,6 +162,46 @@ class _RestoreScreenState extends State<RestoreScreen> {
       );
       if (!ok) return;
     }
+    // a handle is proved with the key that is about to go. once another
+    // identity takes this phone nobody can release it or point it anywhere
+    // again, and the public page keeps handing out an invite no one holds.
+    // so it goes back first, while the key is still here.
+    final mine = appState.myHandle;
+    final sameIdentity = s.haloId == appState.myId;
+    if (mine != null && !sameIdentity) {
+      setState(() {
+        _busy = true;
+        _releasing = true;
+        _error = null;
+      });
+      var r = 'error: timeout';
+      try {
+        r = await engine
+            .handleRelease(mine)
+            .timeout(const Duration(seconds: 40), onTimeout: () => r);
+      } catch (_) {}
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _releasing = false;
+      });
+      if (r == 'ok') {
+        await appState.setMyHandle(null);
+      } else {
+        final ok = await showConfirmSheet(
+          context,
+          title: '@$mine could not be released',
+          line:
+              'The registry did not answer. If you go on, @$mine stays '
+              'pointed at the identity this phone is about to lose. Anyone '
+              'who adds it will be writing to nobody, and the name cannot '
+              'be claimed again. Better to get online and try once more.',
+          yes: 'Restore anyway',
+          keep: 'Not yet',
+        );
+        if (!ok || !mounted) return;
+      }
+    }
     setState(() {
       _busy = true;
       _error = null;
@@ -179,6 +220,9 @@ class _RestoreScreenState extends State<RestoreScreen> {
       } else {
         await restoreBackupBlob(blob!, _passCtrl.text.trim());
       }
+      // the same identity coming back, from a file made before handles
+      // were carried: the key still proves the handle, so keep the name
+      if (sameIdentity && mine != null) await keepHandleIfDropped(mine);
       if (!mounted) return;
       HapticFeedback.mediumImpact();
       if (widget.onRestored != null) {
@@ -523,7 +567,9 @@ class _RestoreScreenState extends State<RestoreScreen> {
               )
             else
               _Primary(
-                label: _busy
+                label: _releasing
+                    ? 'releasing your handle…'
+                    : _busy
                     ? (_path != null && _progress > 0
                           ? 'moving… ${(_progress * 100).round()}%'
                           : 'restoring…')

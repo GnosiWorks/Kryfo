@@ -376,6 +376,15 @@ const kIdentitySecureKeys = [
   );
 }
 
+/// puts a handle back when a restore of the same identity removed it
+Future<void> keepHandleIfDropped(String handle) async {
+  const st = FlutterSecureStorage();
+  final now = await st.read(key: 'my_handle');
+  if (now == null || now.isEmpty) {
+    await st.write(key: 'my_handle', value: handle);
+  }
+}
+
 Future<Map<String, String>> _readIdentitySecure() async {
   const st = FlutterSecureStorage();
   final out = <String, String>{};
