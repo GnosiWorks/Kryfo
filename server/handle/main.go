@@ -19,6 +19,7 @@ package main
 
 import (
 	"crypto/ed25519"
+	"embed"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -126,6 +127,14 @@ func refuse(w http.ResponseWriter, msg string) {
 	writeJSON(w, http.StatusOK, map[string]any{"ok": false, "error": msg})
 }
 
+// the three faces the page is set in, served from here. they came from
+// google's font host before, which put every visitor's address in front of
+// google on a page whose whole promise is that nobody is told who looked.
+// the same files the app ships, under the open font license beside them.
+//
+//go:embed fonts/*.ttf
+var fontFS embed.FS
+
 func main() {
 	addr := os.Getenv("HANDLE_ADDR")
 	if addr == "" {
@@ -228,6 +237,18 @@ func main() {
 	})
 
 	// nip-05 shaped, so other nostr clients can resolve a kryfo handle too
+	mux.HandleFunc("/handle/font/", func(w http.ResponseWriter, r *http.Request) {
+		name := strings.TrimPrefix(r.URL.Path, "/handle/font/")
+		b, err := fontFS.ReadFile("fonts/" + filepath.Base(name))
+		if err != nil || !strings.HasSuffix(name, ".ttf") {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "font/ttf")
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		_, _ = w.Write(b)
+	})
+
 	mux.HandleFunc("/.well-known/kryfo.json", func(w http.ResponseWriter, r *http.Request) {
 		h := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("name")))
 		e, ok := st.get(h)
@@ -315,7 +336,9 @@ const head = `<meta name=viewport content="width=device-width,initial-scale=1">
 <meta name=referrer content=no-referrer>
 <title>kryfo</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;1,300&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@font-face{font-family:Fraunces;font-weight:100 900;font-display:swap;src:url(/handle/font/Fraunces.ttf) format('truetype')}
+@font-face{font-family:'Instrument Sans';font-weight:400 700;font-display:swap;src:url(/handle/font/InstrumentSans.ttf) format('truetype')}
+@font-face{font-family:'JetBrains Mono';font-weight:100 800;font-display:swap;src:url(/handle/font/JetBrainsMono.ttf) format('truetype')}
 *{box-sizing:border-box}
 body{margin:0;min-height:100vh;background:#0D0B09;color:#F5F1EA;
      font-family:'Instrument Sans',system-ui,sans-serif;
