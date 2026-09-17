@@ -25,8 +25,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
-	"strings"
+	"sync"
 	"time"
 )
 
@@ -54,6 +55,56 @@ var tiers = map[string]float64{
 	"guardian":  100,
 }
 
+// how many invoices may be made in an hour, by everyone together. behind
+// an onion there is no client to tell from another, so the limit is on the
+// door and not on the caller. it is here because an invoice costs btcpay a
+// fresh address whether or not it is ever paid: a flood of them walks the
+// wallet past its gap limit, and a wallet restored from its seed later
+// stops looking before it reaches the addresses real money went to. a
+// handful of supporters a day is the real traffic; thirty an hour is room.
+var perHour = envInt("BADGE_INVOICES_PER_HOUR", 30)
+
+// a token bucket: a burst of ten, refilled evenly across the hour
+type bucket struct {
+	mu     sync.Mutex
+	tokens float64
+	max    float64
+	perSec float64
+	last   time.Time
+}
+
+func newBucket(perHour int) *bucket {
+	max := 10.0
+	if float64(perHour) < max {
+		max = float64(perHour)
+	}
+	return &bucket{tokens: max, max: max, perSec: float64(perHour) / 3600, last: time.Now()}
+}
+
+func (b *bucket) take(now time.Time) bool {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.tokens += now.Sub(b.last).Seconds() * b.perSec
+	if b.tokens > b.max {
+		b.tokens = b.max
+	}
+	b.last = now
+	if b.tokens < 1 {
+		return false
+	}
+	b.tokens--
+	return true
+}
+
+var invoices = newBucket(perHour)
+
+func envInt(k string, d int) int {
+	if n, err := strconv.Atoi(os.Getenv(k)); err == nil && n > 0 {
+		return n
+	}
+	return d
+}
+
 func main() {
 	if apiKey == "" || storeID == "" {
 		log.Fatal("set BTCPAY_APIKEY and BTCPAY_STOREID")
@@ -68,8 +119,17 @@ func main() {
 	http.HandleFunc("/invoice", handleInvoice)
 	http.HandleFunc("/receipt", handleReceipt)
 
-	log.Printf("halo badge service on %s", listen)
-	log.Fatal(http.ListenAndServe(listen, nil))
+	log.Printf("halo badge service on %s, %d invoices an hour", listen, perHour)
+	// timeouts, so a client that opens a connection and says nothing does
+	// not hold it for ever
+	srv := &http.Server{
+		Addr:              listen,
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       20 * time.Second,
+		WriteTimeout:      60 * time.Second,
+		IdleTimeout:       90 * time.Second,
+	}
+	log.Fatal(srv.ListenAndServe())
 }
 
 func loadOrCreateKey() {
@@ -108,6 +168,12 @@ func handleInvoice(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "unknown tier", 400)
 		return
 	}
+	// after the tier check, so a malformed request costs nothing
+	if !invoices.take(time.Now()) {
+		log.Printf("invoice refused: over %d an hour", perHour)
+		http.Error(w, "busy, try again later", http.StatusTooManyRequests)
+		return
+	}
 
 	body, _ := json.Marshal(map[string]any{
 		"amount":   fmt.Sprintf("%.2f", amount),
@@ -127,25 +193,36 @@ func handleInvoice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var inv struct {
-		ID           string `json:"id"`
-		CheckoutLink string `json:"checkoutLink"`
+		ID string `json:"id"`
 	}
 	_ = json.Unmarshal(resp, &inv)
 
 	// pull the on-chain address + exact btc amount so the app can render its
 	// own QR instead of sending the donor to a web checkout.
 	addr, btcAmt := paymentDetails(inv.ID)
+	if inv.ID == "" || addr == "" {
+		// an invoice with nowhere to pay is not one. the app shows the
+		// plain address instead
+		http.Error(w, "upstream", 502)
+		return
+	}
 
+	// btcpay's checkout link is not passed on: the app draws its own qr and
+	// never used it, and it names wherever btcpay is hosted
 	writeJSON(w, map[string]any{
-		"id":       inv.ID,
-		"tier":     req.Tier,
-		"usd":      amount,
-		"address":  addr,
-		"btc":      btcAmt,
-		"uri":      "bitcoin:" + addr + "?amount=" + btcAmt,
-		"checkout": inv.CheckoutLink,
+		"id":      inv.ID,
+		"tier":    req.Tier,
+		"usd":     amount,
+		"address": addr,
+		"btc":     btcAmt,
+		"uri":     "bitcoin:" + addr + "?amount=" + btcAmt,
 	})
 }
+
+// what a btcpay invoice id looks like. the id goes into a url on btcpay's
+// api under our key, so it is matched against what it can be and not
+// against a list of what it must not contain.
+var invoiceID = regexp.MustCompile(`^[A-Za-z0-9]{8,64}$`)
 
 // paid means the money cannot be taken back. btcpay says "Processing" the
 // moment it sees a transaction, before any block holds it, and a receipt
@@ -185,7 +262,7 @@ func earned(tier, amount, currency string) string {
 // GET /receipt?id=...  -> 202 while unpaid, 200 + signed receipt once settled.
 func handleReceipt(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
-	if id == "" || strings.ContainsAny(id, "/?&") {
+	if !invoiceID.MatchString(id) {
 		http.Error(w, "bad id", 400)
 		return
 	}
