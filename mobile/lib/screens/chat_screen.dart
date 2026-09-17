@@ -1563,7 +1563,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _setPinned(String uid, bool on) async {
-    await db.setPinned(uid, on);
+    // for both of us: the other side mirrors it, as a group always has
+    await appState.pinInChat(widget.peerHaloId, uid, on);
     if (!mounted) return;
     setState(() {
       for (final m in _messages) {
