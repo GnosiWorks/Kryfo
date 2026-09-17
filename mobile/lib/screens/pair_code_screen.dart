@@ -149,7 +149,7 @@ class _JoinSideState extends State<_JoinSide> {
     }
     setState(() {
       _busy = true;
-      _status = 'looking…';
+      _status = 'Looking…';
     });
 
     // the other side may not have pressed share yet, so give it a few goes
@@ -236,7 +236,7 @@ class _JoinSideState extends State<_JoinSide> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              _busy ? 'looking…' : 'Add them',
+              _busy ? 'Looking…' : 'Add them',
               style: HaloType.mono(
                 size: 12,
                 weight: FontWeight.w600,

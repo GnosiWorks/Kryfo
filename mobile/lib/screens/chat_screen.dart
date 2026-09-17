@@ -1383,7 +1383,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             dismiss();
                             HapticFeedback.selectionClick();
                             Clipboard.setData(ClipboardData(text: target.text));
-                            showHaloToast(context, 'copied!');
+                            showHaloToast(context, 'Copied');
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(
@@ -3965,7 +3965,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     await db.setContactPinned(widget.peerHaloId, !pinned);
     await appState.refreshContacts();
     if (mounted) {
-      showHaloToast(context, pinned ? 'Unpinned' : 'pinned to top');
+      showHaloToast(context, pinned ? 'Unpinned' : 'Pinned to top');
     }
   }
 

@@ -425,7 +425,7 @@ class _ContactScreenState extends State<ContactScreen> {
               await appState.refreshContacts();
               if (!context.mounted) return;
               HapticFeedback.mediumImpact();
-              showHaloToast(context, 'deleted');
+              showHaloToast(context, 'Deleted');
               Navigator.of(context).popUntil((r) => r.isFirst);
             },
           ),

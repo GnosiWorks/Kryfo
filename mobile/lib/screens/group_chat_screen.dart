@@ -1708,7 +1708,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       : () {
                           dismiss();
                           Clipboard.setData(ClipboardData(text: target.text));
-                          showHaloToast(context, 'copied');
+                          showHaloToast(context, 'Copied');
                         },
                   onPin: () {
                     dismiss();
@@ -4108,20 +4108,20 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
       );
     }
 
-    add(Icons.push_pin_outlined, widget.pinned ? 'Unpin' : 'pin', widget.onPin);
+    add(Icons.push_pin_outlined, widget.pinned ? 'Unpin' : 'Pin', widget.onPin);
     add(
       widget.saved ? Icons.bookmark : Icons.bookmark_outline,
-      widget.saved ? 'Unsave' : 'save',
+      widget.saved ? 'Unsave' : 'Save',
       widget.onSave,
     );
-    add(Icons.copy_rounded, 'copy', widget.onCopy);
-    add(Icons.forward_rounded, 'forward', widget.onForward);
+    add(Icons.copy_rounded, 'Copy', widget.onCopy);
+    add(Icons.forward_rounded, 'Forward', widget.onForward);
     add(Icons.ios_share_rounded, 'Share', widget.onShare);
     if (widget.isOut) {
-      add(Icons.edit_outlined, 'edit', widget.onEdit, tint: HaloColors.amber);
+      add(Icons.edit_outlined, 'Edit', widget.onEdit, tint: HaloColors.amber);
       add(
         Icons.delete_outline,
-        'unsend',
+        'Unsend',
         widget.onUnsend,
         tint: HaloColors.rose,
       );

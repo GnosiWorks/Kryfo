@@ -153,7 +153,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
         });
         if (appState.torReady) {
           HapticFeedback.mediumImpact();
-          showHaloToast(context, 'connected');
+          showHaloToast(context, 'Connected');
         }
       }
     });
@@ -435,7 +435,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                       ],
                     )
                   : Text(
-                      _busy ? 'applying…' : 'Save and reconnect',
+                      _busy ? 'Applying…' : 'Save and reconnect',
                       style: HaloType.mono(
                         size: 12.5,
                         color: HaloColors.onAmber,
@@ -789,7 +789,7 @@ class _RequestBlock extends StatelessWidget {
           _Ghost(
             icon: Icons.refresh_rounded,
             label: asking
-                ? 'asking…'
+                ? 'Asking…'
                 : captcha == null
                 ? 'Request bridges'
                 : 'Different puzzle',

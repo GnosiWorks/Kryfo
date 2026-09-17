@@ -617,7 +617,7 @@ class _Way3Card extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           _Primary(
-            label: busy ? 'looking…' : 'Find them',
+            label: busy ? 'Looking…' : 'Find them',
             onTap: busy ? null : onFind,
           ),
         ],

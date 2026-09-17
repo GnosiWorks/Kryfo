@@ -7901,7 +7901,8 @@ Future<void> showAddContact(BuildContext context) async {
           ),
           const SizedBox(height: 6),
           Text(
-            'Scan their code, or paste the link or @handle they gave you.',
+            'Scan their code, or paste what they gave you: a link, an '
+            '@handle, or a room link.',
             style: HaloType.sans(size: 12.5, color: HaloColors.text2),
           ),
           const SizedBox(height: 16),
@@ -7949,7 +7950,7 @@ Future<void> showAddContact(BuildContext context) async {
               style: HaloType.mono(size: 12, color: HaloColors.text),
               decoration: InputDecoration(
                 border: InputBorder.none,
-                hintText: 'kryfo://share?...  or  @wren',
+                hintText: 'A kryfo link, a room link or @wren',
                 hintStyle: HaloType.mono(size: 12, color: HaloColors.text3),
               ),
             ),

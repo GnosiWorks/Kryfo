@@ -69,7 +69,7 @@ class _DonateScreenState extends State<DonateScreen> {
           HapticFeedback.mediumImpact();
           showHaloToast(
             context,
-            'your earlier bitcoin payment was seen · ${tierName(t)} badge unlocked',
+            'Your earlier bitcoin payment was seen · ${tierName(t)} badge unlocked',
           );
         }
       });
