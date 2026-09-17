@@ -1027,6 +1027,7 @@ class HaloDb {
         await _vouchTable(db);
         await _shieldTable(db);
         await _editsTable(db);
+        await _pinsTable(db);
         await _heldTable(db);
         await _signalTables(db);
       },
@@ -1034,6 +1035,7 @@ class HaloDb {
         if (oldV < 48) {
           // when a message was pinned, so the list of pins can run newest
           // first. pins from before have none and sort by their own time.
+          await _pinsTable(db);
           try {
             await db.execute(
               'ALTER TABLE messages ADD COLUMN pinned_at INTEGER',
@@ -2847,6 +2849,32 @@ class HaloDb {
     await db.delete('held_onion', where: 'peer_id = ?', whereArgs: [peerId]);
   }
 
+  Future<void> queuePin(String msgUid, String peerId, bool pinned) async {
+    final db = await open();
+    // one row a message: the latest word replaces the last
+    await db.insert('pins_out', {
+      'msg_uid': msgUid,
+      'peer_id': peerId,
+      'pinned': pinned ? 1 : 0,
+      'at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<List<Map<String, Object?>>> unsentPins() async {
+    final db = await open();
+    return db.query('pins_out', orderBy: 'at ASC', limit: 40);
+  }
+
+  // only the word that was sent: a newer one queued meanwhile stays
+  Future<void> dropPin(String msgUid, bool pinned) async {
+    final db = await open();
+    await db.delete(
+      'pins_out',
+      where: 'msg_uid = ? AND pinned = ?',
+      whereArgs: [msgUid, pinned ? 1 : 0],
+    );
+  }
+
   Future<void> queueEdit(String msgUid, String peerId, String newText) async {
     final db = await open();
     await db.insert('edits_out', {
@@ -3244,6 +3272,19 @@ Future<void> _heldTable(Database db) async {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       peer_id TEXT NOT NULL,
       cipher TEXT NOT NULL,
+      at INTEGER NOT NULL
+    )
+  ''');
+}
+
+// a pin in a 1:1 chat that has not reached the other person yet. a pin is
+// shared state; sent once and lost, the two lists differ for good.
+Future<void> _pinsTable(Database db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS pins_out (
+      msg_uid TEXT PRIMARY KEY,
+      peer_id TEXT NOT NULL,
+      pinned INTEGER NOT NULL,
       at INTEGER NOT NULL
     )
   ''');
@@ -3893,6 +3934,7 @@ class AppState extends ChangeNotifier {
     }
     _outboxWasReady = true;
     unawaited(_drainEdits());
+    unawaited(_drainPins());
     if (rows.isEmpty) {
       if (_outboxTries.isNotEmpty) {
         _outboxTries.clear();
@@ -3949,6 +3991,51 @@ class AppState extends ChangeNotifier {
           r['new_text'] as String,
         ).whenComplete(() => _editsInflight.remove(uid)),
       );
+    }
+  }
+
+  final Set<String> _pinsInflight = {};
+  Future<void> _drainPins() async {
+    for (final r in await db.unsentPins()) {
+      final uid = r['msg_uid'] as String;
+      final age = DateTime.now().millisecondsSinceEpoch - (r['at'] as int);
+      if (age < 45000 || _pinsInflight.contains(uid)) continue;
+      _pinsInflight.add(uid);
+      unawaited(
+        _sendPin(
+          r['peer_id'] as String,
+          uid,
+          (r['pinned'] as int) == 1,
+        ).whenComplete(() => _pinsInflight.remove(uid)),
+      );
+    }
+  }
+
+  // pin or unpin in a 1:1 chat, for both of us. ours is written first; the
+  // frame queues like an edit does, so it survives tor being down.
+  Future<void> pinInChat(String peer, String uid, bool pinned) async {
+    await db.setPinned(uid, pinned);
+    await db.queuePin(uid, peer, pinned);
+    notifyListeners();
+    _pinsInflight.add(uid);
+    unawaited(
+      _sendPin(peer, uid, pinned).whenComplete(() => _pinsInflight.remove(uid)),
+    );
+  }
+
+  Future<bool> _sendPin(String peer, String uid, bool pinned) async {
+    try {
+      final wrapped = await wrapMessage(
+        '',
+        pin: PinFrame(targetUid: uid, pinned: pinned),
+        sender: _mySender(),
+      );
+      final ok = await _sendOneEnvelope(peer, wrapped);
+      if (ok) await db.dropPin(uid, pinned);
+      return ok;
+    } catch (e) {
+      dlog('pin: $uid still stuck ($e)');
+      return false;
     }
   }
 
