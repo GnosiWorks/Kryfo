@@ -27,6 +27,7 @@ import '../widgets/intro_chip.dart';
 import '../widgets/media_bubbles.dart' show VoiceBubble;
 import '../widgets/pins.dart';
 import '../widgets/remembered_height.dart';
+import '../widgets/row_anchor.dart';
 import '../widgets/notice_banner.dart';
 import '../widgets/swipe_to_reply.dart';
 import '../signal_session.dart';
@@ -566,8 +567,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Set<int> _matchSet = {};
   int _matchPos = 0;
   final Map<int, GlobalKey> _matchKeys = {};
-  final GlobalKey _jumpKey = GlobalKey();
-  int? _jumpIndex;
   String? _nickname;
   late int? _peerFace = widget.avatarChoice;
   bool _blocked = false;
@@ -1574,9 +1573,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     await _refreshPinCount();
   }
 
-  void _jumpToPin(String uid) {
-    final at = _messages.indexWhere((m) => m.msgUid == uid);
-    if (at >= 0) _scrollToMessage(_messages[at]);
+  Future<void> _jumpToPin(String uid) async {
+    if (!_messages.any((m) => m.msgUid == uid)) {
+      // pinned above what is loaded: bring the whole thread in, and hold
+      // the reload's own snap to the newest message off while we do
+      _pagedOut = true;
+      _jumpActive = true;
+      await _loadMessages();
+      if (!mounted) return;
+    }
+    _jumpToUid(uid);
   }
 
   // the unsend frame on its own, the way a message would go. the other
@@ -1691,35 +1697,43 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     await _setPinned(m.msgUid!, !m.pinned);
   }
 
-  void _scrollToMessage(_Msg m) {
-    final idx = _messages.indexOf(m);
-    if (idx < 0 || !_scrollCtrl.hasClients) return;
-    setState(() => _jumpIndex = idx);
-    final max = _scrollCtrl.position.maxScrollExtent;
-    final frac = (_messages.length - 1 - idx) / _messages.length;
-    final approx = (frac * max - _scrollCtrl.position.viewportDimension * 0.3)
-        .clamp(0.0, max);
-    _safeJump(approx.clamp(0.0, max));
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final ctx = _jumpKey.currentContext;
-      if (ctx != null) {
-        Scrollable.ensureVisible(
-          ctx,
-          duration: Duration.zero,
-          curve: Curves.easeOut,
-          alignment: 0.3,
-        );
-      }
-      _jumpIndex = null;
-      if (m.msgUid != null) {
-        setState(() => _rippleUid = m.msgUid);
+  // every jump to a message lands through here: a pin, a quoted reply, a
+  // saved message opened from outside. see row_anchor.dart for why the old
+  // guess-and-correct-once missed on the second tap.
+  final RowAnchors _anchors = RowAnchors();
+
+  void _scrollToMessage(_Msg m) => _landOn(_rowKey(m));
+
+  void _landOn(String rowKey) {
+    final at = _messages.lastIndexWhere((m) => _rowKey(m) == rowKey);
+    if (at < 0) return;
+    final uid = _messages[at].msgUid;
+    _jumpActive = true;
+    landOnRow(
+      ctrl: _scrollCtrl,
+      anchors: _anchors,
+      id: rowKey,
+      alive: () => mounted,
+      indexOf: (k) {
+        final i = _messages.lastIndexWhere((m) => _rowKey(m) == k);
+        return i < 0 ? null : i;
+      },
+      reversed: true,
+      rough: () {
+        final p = _scrollCtrl.positions.first;
+        final i = _messages.lastIndexWhere((m) => _rowKey(m) == rowKey);
+        final frac = (_messages.length - 1 - i) / _messages.length;
+        return frac * p.maxScrollExtent - p.viewportDimension * 0.5;
+      },
+      done: (landed) {
+        _jumpActive = false;
+        if (!mounted || !landed || uid == null) return;
+        setState(() => _rippleUid = uid);
         Future.delayed(const Duration(milliseconds: 1300), () {
-          if (mounted && _rippleUid == m.msgUid) {
-            setState(() => _rippleUid = null);
-          }
+          if (mounted && _rippleUid == uid) setState(() => _rippleUid = null);
         });
-      }
-    });
+      },
+    );
   }
 
   // 12-char base36 id from a high-precision timestamp + random salt.
@@ -2073,58 +2087,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void _jumpToUid(String uid) {
     final idx = _messages.indexWhere((m) => m.msgUid == uid);
     if (idx < 0) {
+      _jumpActive = false;
       _scrollToEnd();
       return;
     }
-    // the list isn't laid out yet when this fires from the load tail, so a
-    // position read here is stale and the jump lands at the bottom. wait a
-    // frame, rough-jump so the target builds, wait once more, then ensureVisible
-    // on the real context. attach _jumpKey via _jumpIndex so the key lands on
-    // the target bubble.
-    _jumpActive = true;
-    setState(() => _jumpIndex = idx);
-
-    // under lag the list isn't fully laid out after one frame, so a single
-    // rough-jump lands short and the target's context never builds. poll: each
-    // frame, jump to the running estimate; once the scroll extent stops growing
-    // the list is built, then ensureVisible on the real context.
-    var attempts = 0;
-    double lastMax = -1;
-    void step() {
-      if (!mounted || !_scrollReady) return;
-      final max = _scrollCtrl.position.maxScrollExtent;
-      final frac = (_messages.length - 1 - idx) / _messages.length;
-      final approx = (frac * max - _scrollCtrl.position.viewportDimension * 0.3)
-          .clamp(0.0, max);
-      _safeJump(approx);
-      final ctx = _jumpKey.currentContext;
-      final settled = (max - lastMax).abs() < 1.0 && attempts > 1;
-      lastMax = max;
-      attempts++;
-      if ((ctx != null && settled) || attempts > 8) {
-        if (ctx != null) {
-          Scrollable.ensureVisible(
-            ctx,
-            duration: const Duration(milliseconds: 280),
-            curve: Curves.easeOut,
-            alignment: 0.4,
-          );
-        }
-        // start the pulse after the scroll lands so the full 820ms plays on
-        // the settled message, not during the jump.
-        Future.delayed(const Duration(milliseconds: 300), () {
-          if (mounted) setState(() => _rippleUid = uid);
-        });
-        return;
-      }
-      WidgetsBinding.instance.addPostFrameCallback((_) => step());
-    }
-
-    WidgetsBinding.instance.addPostFrameCallback((_) => step());
-    Future.delayed(const Duration(milliseconds: 2600), () {
-      _jumpActive = false;
-      if (mounted && _rippleUid == uid) setState(() => _rippleUid = null);
-    });
+    _landOn(_rowKey(_messages[idx]));
   }
 
   // hasClients is not enough: the controller attaches before the list has
@@ -3495,13 +3462,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         (m.when.difference(o.when).inSeconds).abs() < 120;
     final firstInGroup = !sameRun(prevMsg) || ix == _firstUnreadIndex;
     final lastInGroup = !sameRun(nextMsg);
-    // keyed by the message, at the top, where the list looks. the key was
-    // the row object and sat one level down: a reload makes new objects and
-    // in a reversed list every arrival moves every index, so each receipt
-    // and each new message rebuilt every row from nothing, and a voice note
-    // that was playing lost its player a second after it started.
     return RepaintBoundary(
-      key: ValueKey(_rowKey(m)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -3538,9 +3499,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         : 1.0,
                     duration: const Duration(milliseconds: 300),
                     child: _Bubble(
-                      key: isMatch
-                          ? _matchKeys[i]
-                          : (i == _jumpIndex ? _jumpKey : null),
+                      key: isMatch ? _matchKeys[i] : null,
                       msg: m,
                       linkTitle: m.preview?['title'],
                       linkBySender: m.preview?['by'] == 'sender',
@@ -4605,7 +4564,24 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               // the whole conversation. draw a stub and
                               // carry on.
                               try {
-                                return _buildRow(c, i, searchActive);
+                                // keyed by the message, at the top,
+                                // where the list looks. the key was the
+                                // row object, one level down: a reload
+                                // makes new objects and in a reversed
+                                // list every arrival moves every index,
+                                // so each receipt rebuilt every row from
+                                // nothing and a voice note lost its
+                                // player a second after it started. the
+                                // same id is the anchor a jump lands on.
+                                final id = _rowKey(
+                                  _messages[_messages.length - 1 - i],
+                                );
+                                return RowAnchor(
+                                  key: ValueKey(id),
+                                  anchors: _anchors,
+                                  id: id,
+                                  child: _buildRow(c, i, searchActive),
+                                );
                               } catch (e) {
                                 dlog('bubble failed: $e');
                                 return Padding(
