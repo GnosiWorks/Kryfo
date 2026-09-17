@@ -26,6 +26,7 @@ import '../vouch_text.dart';
 import '../widgets/intro_chip.dart';
 import '../widgets/media_bubbles.dart' show VoiceBubble;
 import '../widgets/pins.dart';
+import '../widgets/remembered_height.dart';
 import '../widgets/notice_banner.dart';
 import '../widgets/swipe_to_reply.dart';
 import '../signal_session.dart';
@@ -6080,38 +6081,41 @@ class _Bubble extends StatelessWidget {
                                           // infinity, until the file decodes.
                                           // pin one so the answer holds either
                                           // way.
-                                          child: SizedBox(
-                                            width:
-                                                MediaQuery.of(
+                                          child: RememberedHeight(
+                                            id: msg.mediaPath!,
+                                            child: SizedBox(
+                                              width:
+                                                  MediaQuery.of(
+                                                    context,
+                                                  ).size.width *
+                                                  0.78,
+                                              child: Image.file(
+                                                File(msg.mediaPath!),
+                                                gaplessPlayback: true,
+                                                fit: BoxFit.cover,
+                                                cacheWidth: screenPx(
                                                   context,
-                                                ).size.width *
-                                                0.78,
-                                            child: Image.file(
-                                              File(msg.mediaPath!),
-                                              gaplessPlayback: true,
-                                              fit: BoxFit.cover,
-                                              cacheWidth: screenPx(
-                                                context,
-                                                times: 0.78,
-                                              ),
-                                              errorBuilder: (_, e, _) {
-                                                dlog(
-                                                  'Image failed: '
-                                                  '${msg.mediaPath} / $e',
-                                                );
-                                                return Container(
-                                                  height: 120,
-                                                  alignment: Alignment.center,
-                                                  color: Colors.black26,
-                                                  child: Text(
-                                                    'Photo unavailable',
-                                                    style: HaloType.mono(
-                                                      size: 11,
-                                                      color: HaloColors.text2,
+                                                  times: 0.78,
+                                                ),
+                                                errorBuilder: (_, e, _) {
+                                                  dlog(
+                                                    'Image failed: '
+                                                    '${msg.mediaPath} / $e',
+                                                  );
+                                                  return Container(
+                                                    height: 120,
+                                                    alignment: Alignment.center,
+                                                    color: Colors.black26,
+                                                    child: Text(
+                                                      'Photo unavailable',
+                                                      style: HaloType.mono(
+                                                        size: 11,
+                                                        color: HaloColors.text2,
+                                                      ),
                                                     ),
-                                                  ),
-                                                );
-                                              },
+                                                  );
+                                                },
+                                              ),
                                             ),
                                           ),
                                         ),

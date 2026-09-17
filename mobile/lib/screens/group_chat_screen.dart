@@ -14,6 +14,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/pins.dart';
+import '../widgets/remembered_height.dart';
 import '../widgets/media_bubbles.dart';
 import '../widgets/decode_px.dart';
 import '../atmosphere.dart';
@@ -3507,18 +3508,21 @@ class _GroupBubble extends StatelessWidget {
                                                         maxHeight: 280,
                                                         maxWidth: 240,
                                                       ),
-                                                  child: Image.file(
-                                                    File(m.mediaPath!),
-                                                    cacheWidth: decodePx(
-                                                      context,
-                                                      240,
+                                                  child: RememberedHeight(
+                                                    id: m.mediaPath!,
+                                                    child: Image.file(
+                                                      File(m.mediaPath!),
+                                                      cacheWidth: decodePx(
+                                                        context,
+                                                        240,
+                                                      ),
+                                                      gaplessPlayback: true,
+                                                      filterQuality:
+                                                          FilterQuality.medium,
+                                                      fit: BoxFit.cover,
+                                                      errorBuilder: (_, _, _) =>
+                                                          const SizedBox.shrink(),
                                                     ),
-                                                    gaplessPlayback: true,
-                                                    filterQuality:
-                                                        FilterQuality.medium,
-                                                    fit: BoxFit.cover,
-                                                    errorBuilder: (_, _, _) =>
-                                                        const SizedBox.shrink(),
                                                   ),
                                                 ),
                                                 // caption-less photo: float the
