@@ -27,6 +27,7 @@ import '../wipe.dart';
 import 'restore_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../push_mode.dart';
+import '../widgets/halo_rows.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/confirm_sheet.dart';
 
@@ -196,10 +197,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
 
-          _Section('privacy'),
-          _Group(
+          HaloSection('privacy'),
+          HaloGroup(
             children: [
-              _Row(
+              HaloRow(
                 icon: Icons.shield_outlined,
                 label: 'Speed & privacy',
                 value: appState.sendMode == 'fast'
@@ -214,7 +215,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (mounted) setState(() {});
                 },
               ),
-              _Row(
+              HaloRow(
                 icon: Icons.vpn_lock_outlined,
                 label: 'Bridges',
                 hint: 'For networks that block tor',
@@ -227,7 +228,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (mounted) setState(() {});
                 },
               ),
-              _Row(
+              HaloRow(
                 icon: Icons.notifications_none,
                 label: 'Notifications',
                 value: switch (_push) {
@@ -243,27 +244,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (mounted) setState(() => _push = v);
                 },
               ),
-              _Row(
+              HaloRow(
                 icon: Icons.battery_saver,
                 label: 'Run in background',
                 value: 'So messages arrive',
                 onTap: () => forceShowBackgroundPrompt(context),
               ),
-              _Row(
+              HaloRow(
                 icon: Icons.lan_outlined,
                 label: 'Transport',
                 value: 'What the network is doing',
                 onTap: () =>
                     Navigator.push(context, haloRoute(const TransportScreen())),
               ),
-              _Row(
+              HaloRow(
                 icon: Icons.block,
                 label: 'Blocked',
                 onTap: () => Navigator.of(
                   context,
                 ).push(haloRoute(const BlockedScreen())),
               ),
-              _Row(
+              HaloRow(
                 icon: Icons.people_outline,
                 label: 'Accept introductions',
                 hint: 'Friends can introduce you to theirs',
@@ -273,7 +274,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   await saveAcceptIntros(_acceptIntros);
                 },
               ),
-              _Row(
+              HaloRow(
                 icon: Icons.shield_outlined,
                 label: 'Scam shield',
                 hint: 'Checks strangers on your phone. Nothing leaves it',
@@ -287,13 +288,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 24),
 
-          _Section('security'),
-          _Group(
+          HaloSection('security'),
+          HaloGroup(
             children: [
               // one switch for the whole app, applied at the next start.
               // the per-chat one went: changing the flag live recreated the
               // surface and flashed on every toggle.
-              _Row(
+              HaloRow(
                 icon: Icons.visibility_off_outlined,
                 label: 'Block screenshots',
                 hint: appState.blockScreenshotsPending
@@ -314,7 +315,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (mounted) setState(() {});
                 },
               ),
-              _Row(
+              HaloRow(
                 icon: Icons.light_mode_outlined,
                 label: 'Light theme',
                 hint: 'Same protection, brighter',
@@ -326,7 +327,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               AnimatedBuilder(
                 animation: lockState,
-                builder: (_, _) => _Row(
+                builder: (_, _) => HaloRow(
                   icon: Icons.lock_outline,
                   label: 'App lock',
                   hint: 'Your pin, and a wipe pin',
@@ -343,17 +344,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 24),
 
-          _Section('backup'),
-          _Group(
+          HaloSection('backup'),
+          HaloGroup(
             children: [
-              _Row(
+              HaloRow(
                 icon: Icons.save_alt,
                 label: 'Back up identity',
                 value: 'Encrypted file',
                 onTap: () =>
                     Navigator.of(context).push(haloRoute(const BackupScreen())),
               ),
-              _Row(
+              HaloRow(
                 icon: Icons.restore,
                 label: 'Restore from backup',
                 value: 'Replace current',
@@ -365,10 +366,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 24),
 
-          _Section('voice'),
-          _Group(
+          HaloSection('voice'),
+          HaloGroup(
             children: [
-              _Row(
+              HaloRow(
                 icon: Icons.record_voice_over,
                 label: 'Disguise voice',
                 hint: 'Shifts your pitch before a voice note leaves',
@@ -382,17 +383,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 24),
 
-          _Section('about'),
-          _Group(
+          HaloSection('about'),
+          HaloGroup(
             children: [
-              _Row(
+              HaloRow(
                 icon: Icons.help_outline,
                 label: 'Why kryfo',
                 value: 'How it protects you',
                 onTap: () =>
                     Navigator.push(context, haloRoute(const WhyKryfoScreen())),
               ),
-              _Row(
+              HaloRow(
                 icon: Icons.autorenew,
                 label: 'Reset my invite link',
                 hint: 'Old links and codes stop working, for everyone',
@@ -414,19 +415,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   }
                 },
               ),
-              _Row(
+              HaloRow(
                 icon: Icons.visibility_outlined,
                 label: 'What we can see',
                 value: 'The honest list',
                 onTap: () =>
                     Navigator.push(context, haloRoute(const SeenScreen())),
               ),
-              _Row(
+              HaloRow(
                 icon: Icons.info_outline,
                 label: 'Version',
                 value: '0.2.11 · alpha',
               ),
-              _Row(
+              HaloRow(
                 icon: Icons.flag_outlined,
                 label: 'Report an issue',
                 value: 'Bug or security flaw',
@@ -439,7 +440,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               // copies, never opens: a browser hop would hand github the
               // phone's address
-              _Row(
+              HaloRow(
                 icon: Icons.code,
                 label: 'Open source',
                 value: 'github.com/GnosiWorks/Kryfo',
@@ -457,6 +458,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(4, 10, 12, 0),
             child: Text(
+              'The offline map in Tools is drawn from Natural Earth (public '
+              'domain). Town names are from GeoNames, geonames.org, under '
+              'CC BY 4.0.',
+              style: HaloType.sans(
+                size: 12,
+                color: HaloColors.warm,
+                height: 1.4,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 10, 12, 0),
+            child: Text(
               'Not independently audited. Pre-alpha - good for testing, '
               'not yet for high-stakes use.',
               style: HaloType.sans(
@@ -468,11 +482,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 24),
 
-          _Section('danger zone'),
-          _Group(
+          HaloSection('danger zone'),
+          HaloGroup(
             rose: true,
             children: [
-              _Row(
+              HaloRow(
                 icon: Icons.delete_outline,
                 label: 'Wipe kryfo from this phone',
                 rose: true,
@@ -482,160 +496,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 32),
         ]),
-      ),
-    );
-  }
-}
-
-class _Section extends StatelessWidget {
-  final String label;
-  const _Section(this.label);
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(6, 4, 4, 8),
-      child: Text(
-        sentence(label),
-        style: HaloType.mono(size: 10.5, color: HaloColors.text3, letter: 0.06),
-      ),
-    );
-  }
-}
-
-// one rounded surface holding a section's rows, a hairline between each.
-// the page used to be a stack of separate cards, one per row.
-class _Group extends StatelessWidget {
-  final List<Widget> children;
-  final bool rose;
-  const _Group({required this.children, this.rose = false});
-  @override
-  Widget build(BuildContext context) {
-    final line = rose
-        ? HaloColors.rose.withValues(alpha: 0.35)
-        : HaloColors.line;
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: rose
-            ? HaloColors.rose.withValues(alpha: 0.05)
-            : HaloColors.surface2,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: line, width: 0.5),
-      ),
-      child: Column(
-        children: [
-          for (var i = 0; i < children.length; i++) ...[
-            if (i > 0)
-              Padding(
-                padding: const EdgeInsets.only(left: 58),
-                child: Container(height: 0.5, color: line),
-              ),
-            children[i],
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _Row extends StatelessWidget {
-  final String label;
-  final String? value;
-  // one plain line under the label. toggles showed on/off and nothing
-  // about what the switch actually does.
-  final String? hint;
-  final VoidCallback? onTap;
-  final IconData? icon;
-  final bool rose;
-  const _Row({
-    required this.label,
-    this.value,
-    this.hint,
-    this.onTap,
-    this.icon,
-    this.rose = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // 14pt is the label size; once it renders past ~19 the two-column layout
-    // stops fitting on a phone. a short value sits on the right, a sentence
-    // goes under the label instead of wrapping into ribbons.
-    final v = value ?? '';
-    final stacked =
-        v.length > 16 || MediaQuery.of(context).textScaler.scale(14) > 19;
-    final fg = rose ? HaloColors.rose : HaloColors.text;
-    final tile = rose
-        ? HaloColors.rose.withValues(alpha: 0.12)
-        : HaloColors.amberSoft;
-    final ink = rose ? HaloColors.rose : HaloColors.amber;
-    return InkWell(
-      onTap: onTap,
-      splashColor: ink.withValues(alpha: 0.08),
-      highlightColor: ink.withValues(alpha: 0.05),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-        child: Row(
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: tile,
-                borderRadius: BorderRadius.circular(9),
-              ),
-              alignment: Alignment.center,
-              child: Icon(icon ?? Icons.circle_outlined, size: 17, color: ink),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    sentence(label),
-                    style: HaloType.sans(size: 14, color: fg),
-                  ),
-                  if (hint != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 3, right: 10),
-                      child: Text(
-                        sentence(hint!),
-                        style: HaloType.mono(
-                          size: 10.5,
-                          color: HaloColors.text3,
-                        ),
-                      ),
-                    ),
-                  if (v.isNotEmpty && stacked)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4, right: 10),
-                      child: Text(
-                        sentence(v),
-                        style: HaloType.sans(size: 13, color: HaloColors.text2),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            if (v.isNotEmpty && !stacked) ...[
-              const SizedBox(width: 8),
-              Text(
-                sentence(v),
-                style: HaloType.sans(size: 13, color: HaloColors.text2),
-              ),
-            ],
-            if (onTap != null) ...[
-              const SizedBox(width: 6),
-              Icon(
-                Icons.chevron_right,
-                color: rose ? ink : HaloColors.text3,
-                size: 18,
-              ),
-            ],
-          ],
-        ),
       ),
     );
   }

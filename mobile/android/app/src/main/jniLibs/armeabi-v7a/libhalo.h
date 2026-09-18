@@ -27,6 +27,7 @@ extern const char *_GoStringPtr(_GoString_ s);
 
 
 
+
 #line 11 "room.go"
 
 #include <stdlib.h>
@@ -95,6 +96,27 @@ typedef struct { void *data; GoInt len; GoInt cap; } GoSlice;
 extern "C" {
 #endif
 
+
+// both descriptors are owned from here on and closed before returning
+//
+extern char* HaloAgeLock(int inFd, int outFd, char* cPass);
+
+// checks the password against the header and keeps the file open. nothing
+// of the body is read, so nothing needs a place to go yet.
+//
+extern char* HaloAgeOpenBegin(int inFd, char* cPass);
+extern char* HaloAgeOpenFinish(int outFd);
+extern void HaloAgeOpenDrop(void);
+
+// read from the ui while a call above runs on another isolate
+//
+extern long long HaloAgeProgress(void);
+extern void HaloAgeCancel(void);
+
+// four words from the list the identity names come from: 44 bits, drawn
+// from the system's random source, with no modulo bias (2048 is 2^11).
+//
+extern char* HaloSuggestPassphrase(void);
 extern void HaloSetDebug(int on);
 extern char* HaloPing(void);
 extern char* HaloVersion(void);

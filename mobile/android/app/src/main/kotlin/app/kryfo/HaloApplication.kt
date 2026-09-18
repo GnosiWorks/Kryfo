@@ -26,6 +26,9 @@ class HaloApplication : Application() {
         JobSetup.schedule(this)
         // a file handed to another app to open is a copy in cache/open/.
         // nothing needs it past the session that made it.
-        Thread { java.io.File(cacheDir, "open").deleteRecursively() }.start()
+        Thread {
+            java.io.File(cacheDir, "open").deleteRecursively()
+            ToolsBridge.sweep(cacheDir, true)
+        }.start()
     }
 }

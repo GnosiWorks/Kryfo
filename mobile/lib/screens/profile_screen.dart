@@ -16,7 +16,8 @@ import '../widgets/motion.dart' show haloRoute;
 import '../widgets/halo_switch.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final VoidCallback? onOpenSupport;
+  const ProfileScreen({super.key, this.onOpenSupport});
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
@@ -411,9 +412,11 @@ class _ProfileScreenState extends State<ProfileScreen>
               _reveal(
                 3,
                 _PressRow(
-                  onTap: () => Navigator.of(
-                    context,
-                  ).push(haloRoute(const DonateScreen())),
+                  onTap:
+                      widget.onOpenSupport ??
+                      () => Navigator.of(
+                        context,
+                      ).push(haloRoute(const DonateScreen())),
                   child: Container(
                     decoration: BoxDecoration(
                       color: HaloColors.surface2,
