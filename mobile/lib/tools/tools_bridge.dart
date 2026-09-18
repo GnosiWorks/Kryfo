@@ -3,6 +3,8 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 
+import '../lock_state.dart';
+
 class PickedFile {
   final String uri;
   final String? mime;
@@ -87,7 +89,7 @@ class ToolsBridge {
   Future<PickedFile?> pick(String kind) async {
     try {
       return PickedFile.from(
-        await _ch.invokeMethod('pick', {'kind': kind}),
+        await lockState.hold(() => _ch.invokeMethod('pick', {'kind': kind})),
       );
     } on PlatformException {
       return null;
@@ -114,10 +116,12 @@ class ToolsBridge {
 
   Future<bool> shareOut(String path, String mime) async {
     try {
-      return await _ch.invokeMethod<bool>('shareOut', {
+      return await lockState.hold<bool?>(
+            () => _ch.invokeMethod<bool>('shareOut', {
               'path': path,
               'mime': mime,
-            }) ??
+            }),
+          ) ??
           false;
     } on PlatformException {
       return false;
@@ -126,11 +130,13 @@ class ToolsBridge {
 
   Future<String> saveToGallery(String path, String name, String mime) async {
     try {
-      return await _ch.invokeMethod<String>('saveToGallery', {
+      return await lockState.hold<String?>(
+            () => _ch.invokeMethod<String>('saveToGallery', {
               'path': path,
               'name': name,
               'mime': mime,
-            }) ??
+            }),
+          ) ??
           'failed';
     } on PlatformException {
       return 'failed';
@@ -139,7 +145,9 @@ class ToolsBridge {
 
   Future<String> deleteOriginal(String uri) async {
     try {
-      return await _ch.invokeMethod<String>('deleteOriginal', {'uri': uri}) ??
+      return await lockState.hold<String?>(
+            () => _ch.invokeMethod<String>('deleteOriginal', {'uri': uri}),
+          ) ??
           'failed';
     } on PlatformException {
       return 'failed';
@@ -148,11 +156,13 @@ class ToolsBridge {
 
   Future<String> saveToFiles(String path, String name, String mime) async {
     try {
-      return await _ch.invokeMethod<String>('saveToFiles', {
+      return await lockState.hold<String?>(
+            () => _ch.invokeMethod<String>('saveToFiles', {
               'path': path,
               'name': name,
               'mime': mime,
-            }) ??
+            }),
+          ) ??
           'failed';
     } on PlatformException {
       return 'failed';
@@ -169,10 +179,12 @@ class ToolsBridge {
 
   Future<String?> createDocument(String name, String mime) async {
     try {
-      return await _ch.invokeMethod<String>('createDocument', {
+      return await lockState.hold<String?>(
+        () => _ch.invokeMethod<String>('createDocument', {
           'name': name,
           'mime': mime,
-        });
+        }),
+      );
     } on PlatformException {
       return null;
     }

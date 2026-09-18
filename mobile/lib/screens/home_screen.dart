@@ -19,6 +19,7 @@ import 'qr_screen.dart';
 import 'lock_file_screen.dart';
 import 'open_locked_screen.dart';
 import '../tools/tools_bridge.dart';
+import '../lock_state.dart';
 import '../widgets/nav_bar.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
@@ -77,11 +78,13 @@ class _HomeScreenState extends State<HomeScreen> {
   final Set<HaloTab> _seen = {HaloTab.chats};
   StreamSubscription<void>? _sharedSub;
   Timer? _sweeper;
+  Widget? _heldTool;
 
   @override
   void initState() {
     super.initState();
     _sharedSub = ToolsBridge.instance.shared.listen((_) => _takeShared());
+    lockState.addListener(_onLock);
     ToolsBridge.instance.sweep();
     _sweeper = Timer.periodic(
       const Duration(minutes: 5),
@@ -93,6 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _sharedSub?.cancel();
+    lockState.removeListener(_onLock);
     _sweeper?.cancel();
     super.dispose();
   }
@@ -119,12 +123,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _clean(PickedFile f) => _openTool(CleanScreen(file: f));
 
+  // the lock is a route on this same navigator. opening a tool under it, or
+  // clearing the stack to make room for one, would take the lock away, so a
+  // share or a pick that lands while locked waits for the pin.
   void _openTool(Widget screen) {
     if (!mounted) return;
+    if (!lockState.loaded || lockState.locked) {
+      _heldTool = screen;
+      return;
+    }
     final nav = Navigator.of(context);
     nav.popUntil((r) => r.isFirst);
     _pick(HaloTab.tools);
     nav.push(haloRoute(screen));
+  }
+
+  void _onLock() {
+    final held = _heldTool;
+    if (held == null || !lockState.loaded || lockState.locked) return;
+    _heldTool = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _openTool(held));
   }
 
   void _pick(HaloTab t) {
