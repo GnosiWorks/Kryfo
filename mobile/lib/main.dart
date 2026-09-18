@@ -4747,6 +4747,11 @@ class AppState extends ChangeNotifier {
   Timer? _sleepTimer;
   int lastCheckAt = 0;
   int lastWakeAt = 0;
+  // how the last check-in ended, for the transport screen. a check-in that
+  // gave up is the thing a person needs to see, and it used to leave no
+  // trace at all: the line just said there had never been one.
+  String lastCheckHow = '';
+  int lastCheckTriedAt = 0;
 
   // the nudge. nothing vendor-specific is read: while kryfo is supposed to
   // be staying connected it writes the time every few minutes, and a start
@@ -4813,6 +4818,7 @@ class AppState extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       lastCheckAt = prefs.getInt(kLastCheckKey) ?? 0;
       lastWakeAt = prefs.getInt(kLastWakeKey) ?? 0;
+      lastCheckHow = prefs.getString(kLastCheckHowKey) ?? '';
     } catch (_) {}
   }
 
@@ -4904,13 +4910,18 @@ class AppState extends ChangeNotifier {
     final started = DateTime.now();
     final drainBefore = lastDrainAt;
     final wasHeld = _torHeld;
+    var how = 'started';
     try {
-      if (!await _torWake()) return 0;
+      if (!await _torWake()) {
+        how = 'tor would not wake';
+        return 0;
+      }
       // ready means the engine has a route a relay can be reached over
       for (var i = 0; i < 75 && !torReady; i++) {
         await Future.delayed(const Duration(seconds: 1));
       }
       if (!torReady) {
+        how = 'tor not ready in 75s';
         dlog('checkin($why): tor never became ready');
         return 0;
       }
@@ -4940,6 +4951,7 @@ class AppState extends ChangeNotifier {
       for (var i = 0; i < 10 && _queued > 0; i++) {
         await Future.delayed(const Duration(seconds: 1));
       }
+      how = 'ok';
       lastCheckAt = DateTime.now().millisecondsSinceEpoch;
       if (why == 'push') lastWakeAt = lastCheckAt;
       try {
@@ -4953,6 +4965,13 @@ class AppState extends ChangeNotifier {
       return lastDrainAt != drainBefore ? 1 : 0;
     } finally {
       _checking = false;
+      lastCheckHow =
+          '$how, ${DateTime.now().difference(started).inSeconds}s, by $why';
+      lastCheckTriedAt = DateTime.now().millisecondsSinceEpoch;
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(kLastCheckHowKey, lastCheckHow);
+      } catch (_) {}
       // only put it back to sleep if it was asleep: a check-in that ran
       // while the person had the app open leaves tor alone
       if (wasHeld && !_inFront && _deliveryMode != DeliveryMode.always) {

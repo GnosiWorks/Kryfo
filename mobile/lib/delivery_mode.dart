@@ -21,6 +21,7 @@ const kLastWakeKey = 'delivery_last_wake';
 const kHeartbeatKey = 'delivery_heartbeat';
 const kKillsKey = 'delivery_kills';
 const kNudgeShownKey = 'delivery_nudge_shown';
+const kLastCheckHowKey = 'delivery_last_how';
 
 DeliveryMode deliveryModeOf(String? raw) => switch (raw) {
   'checkins' => DeliveryMode.checkins,
@@ -68,6 +69,8 @@ DeliveryStatus deliveryStatus({
   required DeliveryMode mode,
   required bool connected,
   required bool connecting,
+  // a check-in is running right now: woken by the job or by a knock
+  bool checking = false,
   required int lastCheckMs,
   required int lastWakeMs,
   required int nowMs,
@@ -78,10 +81,19 @@ DeliveryStatus deliveryStatus({
       if (connected) return const DeliveryStatus('Connected', live: true);
       return DeliveryStatus(connecting ? 'Connecting' : 'Not connected');
     case DeliveryMode.checkins:
-      if (connected || connecting) {
-        return const DeliveryStatus('Checking now', live: true);
+      if (checking) return const DeliveryStatus('Checking now', live: true);
+      final last = lastCheckMs > 0
+          ? 'last check-in ${agoLine(lastCheckMs, nowMs)}'
+          : 'no check-in yet';
+      // with kryfo open the connection is up and messages land as they
+      // always did. the last check-in rides along anyway: this screen can
+      // only be read with kryfo open, so a line that hid it while open
+      // would never be seen at all.
+      if (connected) {
+        return DeliveryStatus('Connected now \u00B7 $last', live: true);
       }
-      if (lastCheckMs <= 0) return const DeliveryStatus('Not checked yet');
+      if (connecting) return DeliveryStatus('Connecting \u00B7 $last');
+      if (lastCheckMs <= 0) return const DeliveryStatus('No check-in yet');
       return DeliveryStatus('Last checked ${agoLine(lastCheckMs, nowMs)}');
     case DeliveryMode.helper:
       final who = (helperName == null || helperName.isEmpty)

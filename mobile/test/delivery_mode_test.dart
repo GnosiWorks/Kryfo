@@ -30,6 +30,7 @@ void main() {
       DeliveryMode m, {
       bool connected = false,
       bool connecting = false,
+      bool checking = false,
       int check = 0,
       int wake = 0,
       String? helper,
@@ -37,6 +38,7 @@ void main() {
       mode: m,
       connected: connected,
       connecting: connecting,
+      checking: checking,
       lastCheckMs: check,
       lastWakeMs: wake,
       nowMs: 50 * hour,
@@ -50,7 +52,7 @@ void main() {
       expect(line(DeliveryMode.always).text, 'Not connected');
     });
     test('check-ins show the real last one, late or not', () {
-      expect(line(DeliveryMode.checkins).text, 'Not checked yet');
+      expect(line(DeliveryMode.checkins).text, 'No check-in yet');
       expect(
         line(DeliveryMode.checkins, check: 50 * hour - 4 * min).text,
         'Last checked 4 min ago',
@@ -59,9 +61,24 @@ void main() {
         line(DeliveryMode.checkins, check: 50 * hour - 3 * hour).text,
         'Last checked 3 hours ago',
       );
+      expect(line(DeliveryMode.checkins, checking: true).text, 'Checking now');
+      // this screen is only ever read with kryfo open, so the last check-in
+      // has to be on the line there too or it is never seen
+      expect(
+        line(
+          DeliveryMode.checkins,
+          connected: true,
+          check: 50 * hour - 8 * min,
+        ).text,
+        'Connected now \u00B7 last check-in 8 min ago',
+      );
+      expect(
+        line(DeliveryMode.checkins, connected: true).text,
+        'Connected now \u00B7 no check-in yet',
+      );
       expect(
         line(DeliveryMode.checkins, connecting: true).text,
-        'Checking now',
+        'Connecting \u00B7 no check-in yet',
       );
     });
     test('helper', () {

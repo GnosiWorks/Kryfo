@@ -377,6 +377,15 @@ class _AliveState extends State<_Alive> {
         // at the relay, and whether the phone slept or the process died
         _Line('Last relay arrival', _travel(), HaloColors.text),
         _Line(
+          'last check-in',
+          appState.lastCheckHow.isEmpty ? 'None yet' : appState.lastCheckHow,
+          appState.lastCheckHow.startsWith('ok')
+              ? HaloColors.green
+              : appState.lastCheckHow.isEmpty
+              ? HaloColors.warm
+              : HaloColors.rose,
+        ),
+        _Line(
           'job runs',
           appState.jobRuns == 0
               ? 'None yet'
