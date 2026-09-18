@@ -50,6 +50,16 @@ class _StrokePainter extends CustomPainter {
       old.color != color || old.stroke != stroke || old.paths != paths;
 }
 
+String svgCircle(double cx, double cy, double r) =>
+    'M${cx - r} ${cy}a$r $r 0 1 0 ${2 * r} 0a$r $r 0 1 0 ${-2 * r} 0z';
+
+String svgRect(double x, double y, double w, double h, [double rx = 0]) {
+  if (rx <= 0) return 'M$x ${y}h${w}v${h}h${-w}z';
+  return 'M${x + rx} ${y}h${w - 2 * rx}a$rx $rx 0 0 1 $rx ${rx}v${h - 2 * rx}'
+      'a$rx $rx 0 0 1 ${-rx} ${rx}h${-(w - 2 * rx)}a$rx $rx 0 0 1 ${-rx} ${-rx}'
+      'v${-(h - 2 * rx)}a$rx $rx 0 0 1 $rx ${-rx}z';
+}
+
 Path parseSvgPath(String d) {
   final path = Path();
   var i = 0;
