@@ -220,7 +220,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           offstage: t != _tab,
                           child: TickerMode(
                             enabled: t == _tab,
-                            child: _Arrive(on: t == _tab, child: _body(t)),
+                            // keyed on the theme so a switch rebuilds the
+                            // whole tab from scratch. HaloColors is a palette
+                            // swapped in place, and a const widget handed back
+                            // to a rebuild is skipped, so anything const in
+                            // here would otherwise keep the colours it was
+                            // first built with. the tools heading stayed white
+                            // on cream that way until the app was restarted.
+                            child: KeyedSubtree(
+                              key: ValueKey(HaloColors.isLight),
+                              child: _Arrive(on: t == _tab, child: _body(t)),
+                            ),
                           ),
                         ),
                   ],
