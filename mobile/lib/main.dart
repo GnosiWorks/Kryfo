@@ -26,6 +26,8 @@ import 'wipe.dart';
 import 'media_progress.dart';
 import 'media_send.dart';
 import 'media_resend.dart';
+import 'delivery_mode.dart';
+import 'helper_push.dart';
 import 'screens/home_screen.dart';
 import 'screens/new_group_screen.dart';
 import 'screens/room_create_sheet.dart';
@@ -221,6 +223,21 @@ class HaloEngine {
 
   // every relay socket dropped and reopened now, since window and all
   String nostrKick() => _nostrKick().toDartString();
+
+  // looked up on first use: an engine from before check-ins does not have it
+  late final CStrFnDart _catchupState = _lib.lookupFunction<CStrFn, CStrFnDart>(
+    'HaloCatchupState',
+  );
+
+  /// (connections still fetching what they missed, connections begun so far)
+  (int, int) catchupState() {
+    try {
+      final p = _catchupState().toDartString().split(' ');
+      return (int.parse(p[0]), int.parse(p[1]));
+    } catch (_) {
+      return (0, 0);
+    }
+  }
 
   // what the go side holds, json
   Map<String, dynamic> memStats() {
@@ -684,6 +701,16 @@ Future<String> _nostrInitOnIsolate(String relaysCSV) {
       malloc.free(p);
     }
   });
+}
+
+// tor's control port answers fast, but never on the ui thread
+Future<String> _torCtlOnIsolate(String symbol) {
+  return Isolate.run(() {
+    final lib = Platform.isAndroid
+        ? DynamicLibrary.open('libhalo.so')
+        : DynamicLibrary.process();
+    return lib.lookupFunction<CStrFn, CStrFnDart>(symbol)().toDartString();
+  }).timeout(const Duration(seconds: 70), onTimeout: () => 'error: timeout');
 }
 
 Future<String> _startListenerOnIsolate(String dataDir) {
@@ -4706,7 +4733,244 @@ class AppState extends ChangeNotifier {
   // the periodic job's window: kick every relay socket so a night's dead
   // connections come back with their since window, then give the drains
   // up to twenty seconds to pull what arrives. returns how many arrived.
+  // ---- how messages arrive ----
+
+  DeliveryMode _deliveryMode = DeliveryMode.always;
+  DeliveryMode get deliveryMode => _deliveryMode;
+  String _docsPath = '';
+  // tor is down because this side took it down
+  bool _torHeld = false;
+  bool get torHeld => _torHeld;
+  bool _checking = false;
+  bool get checkingIn => _checking;
+  bool _inFront = false;
+  Timer? _sleepTimer;
+  int lastCheckAt = 0;
+  int lastWakeAt = 0;
+
+  // the nudge. nothing vendor-specific is read: while kryfo is supposed to
+  // be staying connected it writes the time every few minutes, and a start
+  // that finds that time long past, on a phone that was not switched off in
+  // between, was a kill. three in a day and the card is offered, once ever.
+  bool _nudgeDue = false;
+  bool get nudgeDue => _nudgeDue;
+  Timer? _beatTimer;
+
+  Future<void> _judgeLastRun() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final booted =
+          await _platformChannel.invokeMethod<int>('bootedAtMs') ?? 0;
+      final v = judgeRestart(
+        nowMs: DateTime.now().millisecondsSinceEpoch,
+        lastBeatMs: prefs.getInt(kHeartbeatKey) ?? 0,
+        bootedAtMs: booted,
+        kills: prefs.getStringList(kKillsKey)?.map(int.parse).toList() ?? [],
+        nudgeShown: prefs.getBool(kNudgeShownKey) ?? false,
+        mode: _deliveryMode,
+      );
+      if (v.wasKill) {
+        dlog('delivery: this phone stopped kryfo, ${v.kills.length} today');
+        await prefs.setStringList(kKillsKey, v.kills.map((k) => '$k').toList());
+      }
+      _nudgeDue = v.showNudge;
+    } catch (e) {
+      dlog('delivery: could not judge the last run: $e');
+    }
+    _startHeartbeat();
+  }
+
+  void _startHeartbeat() {
+    _beatTimer?.cancel();
+    if (_deliveryMode != DeliveryMode.always) return;
+    unawaited(_writeDeliveryBeat());
+    _beatTimer = Timer.periodic(
+      const Duration(milliseconds: kHeartbeatEveryMs),
+      (_) => unawaited(_writeDeliveryBeat()),
+    );
+  }
+
+  Future<void> _writeDeliveryBeat() async {
+    if (haloWiping) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(kHeartbeatKey, DateTime.now().millisecondsSinceEpoch);
+    } catch (_) {}
+  }
+
+  /// the card was offered. never again, whatever the answer.
+  Future<void> nudgeAnswered() async {
+    _nudgeDue = false;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(kNudgeShownKey, true);
+    } catch (_) {}
+    notifyListeners();
+  }
+
+  Future<void> _loadDeliveryTimes() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      lastCheckAt = prefs.getInt(kLastCheckKey) ?? 0;
+      lastWakeAt = prefs.getInt(kLastWakeKey) ?? 0;
+    } catch (_) {}
+  }
+
+  Future<void> setDeliveryMode(DeliveryMode m) async {
+    if (m == _deliveryMode) return;
+    _deliveryMode = m;
+    await saveDeliveryMode(m);
+    try {
+      await _platformChannel.invokeMethod('applyDeliveryMode');
+    } catch (e) {
+      dlog('delivery: platform did not take the mode: $e');
+    }
+    if (m == DeliveryMode.always) {
+      _sleepTimer?.cancel();
+      await _torWake();
+    } else if (!_inFront) {
+      _scheduleSleep();
+    }
+    _startHeartbeat();
+    notifyListeners();
+  }
+
+  // the window came to the front, or left it
+  void appInFront(bool front) {
+    _inFront = front;
+    if (_deliveryMode == DeliveryMode.always) return;
+    if (front) {
+      _sleepTimer?.cancel();
+      unawaited(_torWake());
+    } else {
+      _scheduleSleep();
+    }
+  }
+
+  // tor goes down a while after the person leaves, not the moment they do:
+  // a message just sent has to get out first, and someone flicking between
+  // two apps should not pay a bootstrap every time.
+  void _scheduleSleep() {
+    _sleepTimer?.cancel();
+    var waited = 0;
+    _sleepTimer = Timer.periodic(const Duration(seconds: 30), (t) {
+      waited += 30;
+      if (_inFront || _deliveryMode == DeliveryMode.always) {
+        t.cancel();
+        return;
+      }
+      final busy = _queued > 0 || mediaInflight.isNotEmpty || _checking;
+      if (waited < 90 || (busy && waited < 600)) return;
+      t.cancel();
+      unawaited(_torSleep());
+    });
+  }
+
+  Future<void> _torSleep() async {
+    if (_torHeld || haloWiping) return;
+    _torHeld = true;
+    final r = await _torCtlOnIsolate('HaloTorStop');
+    dlog('delivery: tor stopped ($r)');
+    notifyListeners();
+  }
+
+  Future<bool> _torWake() async {
+    if (!_torHeld) return true;
+    // 'ok': tor was asleep and is waking. 'start': there is no tor in this
+    // process yet. either way the start call below does the right thing -
+    // it hands back the address of the tor that is up, or makes one.
+    final r = await _torCtlOnIsolate('HaloTorResume');
+    if (r.startsWith('error')) {
+      dlog('delivery: tor would not wake: $r');
+      return false;
+    }
+    _torHeld = false;
+    final addr = await _startListenerOnIsolate(_docsPath);
+    if (addr.isEmpty || addr.startsWith('error')) {
+      dlog('delivery: tor did not start: $addr');
+      return false;
+    }
+    myOnion = addr;
+    notifyListeners();
+    return true;
+  }
+
+  // one check-in: tor up, every relay asked for what it holds, tor down.
+  // returns how many drains brought something. bounded all the way: the job
+  // that calls this is given under three minutes.
+  Future<int> checkIn({String why = 'job'}) async {
+    if (_checking) return 0;
+    _checking = true;
+    final started = DateTime.now();
+    final drainBefore = lastDrainAt;
+    final wasHeld = _torHeld;
+    try {
+      if (!await _torWake()) return 0;
+      // ready means the engine has a route a relay can be reached over
+      for (var i = 0; i < 75 && !torReady; i++) {
+        await Future.delayed(const Duration(seconds: 1));
+      }
+      if (!torReady) {
+        dlog('checkin($why): tor never became ready');
+        return 0;
+      }
+      final begunBefore = engine.catchupState().$2;
+      try {
+        engine.nostrKick();
+      } catch (e) {
+        dlog('checkin: kick: $e');
+      }
+      // wait for the relays to be asked, then for every answer to be in,
+      // paging included. the ceiling is the job's window, not the work.
+      var quiet = 0;
+      while (DateTime.now().difference(started).inSeconds < 140) {
+        await Future.delayed(const Duration(seconds: 1));
+        final (active, begun) = engine.catchupState();
+        if (begun > begunBefore && active == 0) {
+          quiet++;
+          if (quiet >= 4) break;
+        } else {
+          quiet = 0;
+        }
+      }
+      // what came in is drained by the one-second poll. let it finish, and
+      // let receipts and slice requests that answer it get out.
+      await Future.delayed(const Duration(seconds: 3));
+      await askForMissingSlices();
+      for (var i = 0; i < 10 && _queued > 0; i++) {
+        await Future.delayed(const Duration(seconds: 1));
+      }
+      lastCheckAt = DateTime.now().millisecondsSinceEpoch;
+      if (why == 'push') lastWakeAt = lastCheckAt;
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setInt(kLastCheckKey, lastCheckAt);
+        if (why == 'push') await prefs.setInt(kLastWakeKey, lastWakeAt);
+      } catch (_) {}
+      dlog(
+        'checkin($why): done in ${DateTime.now().difference(started).inSeconds}s',
+      );
+      return lastDrainAt != drainBefore ? 1 : 0;
+    } finally {
+      _checking = false;
+      // only put it back to sleep if it was asleep: a check-in that ran
+      // while the person had the app open leaves tor alone
+      if (wasHeld && !_inFront && _deliveryMode != DeliveryMode.always) {
+        await _torSleep();
+      }
+      notifyListeners();
+    }
+  }
+
   Future<int> drainNow() async {
+    // the job can knock before a cold boot has read the mode. wait for that,
+    // or the first check-in after a kill is a twenty-second shrug
+    for (var i = 0; i < 80 && _docsPath.isEmpty; i++) {
+      await Future.delayed(const Duration(milliseconds: 500));
+    }
+    if (_deliveryMode != DeliveryMode.always && (_torHeld || !_inFront)) {
+      return checkIn();
+    }
     final before = lastDrainAt;
     try {
       engine.nostrKick();
@@ -6029,16 +6293,36 @@ class AppState extends ChangeNotifier {
     await _loadBridges();
     // drop week-old partial transfers nobody ever completed.
     unawaited(db.sweepMediaChunks());
+    _deliveryMode = await loadDeliveryMode();
+    _inFront = PlatformDispatcher.instance.implicitView != null;
+    await _judgeLastRun();
+    // a knock wakes a check-in, whatever mode is set: a helper app still
+    // registered from before should not be answered with silence
+    HelperPush.instance.onKnock = () => unawaited(checkIn(why: 'push'));
+    HelperPush.instance.listen();
+    await _loadDeliveryTimes();
     // start tor last, after all sync identity + signal work. nothing
     // above needs it, and starting it earlier stalled the main thread
     // while tor bootstrapped.
-    _startListenerOnIsolate(docsDir.path).then((addr) {
-      if (addr.isNotEmpty && !addr.startsWith('error')) {
-        myOnion = addr;
-        _maybeRepoint();
-        notifyListeners();
-      }
-    });
+    //
+    // a process the fifteen-minute job started, with no window, in a mode
+    // that sleeps between checks: tor stays down and the job's own check-in
+    // brings it up for its minute. starting it here as well left it up for
+    // good, which is always-on without the service that keeps it alive.
+    if (_deliveryMode != DeliveryMode.always && !_inFront) {
+      _torHeld = true;
+      await _torCtlOnIsolate('HaloTorStop');
+      _docsPath = docsDir.path;
+    } else {
+      _docsPath = docsDir.path;
+      _startListenerOnIsolate(docsDir.path).then((addr) {
+        if (addr.isNotEmpty && !addr.startsWith('error')) {
+          myOnion = addr;
+          _maybeRepoint();
+          notifyListeners();
+        }
+      });
+    }
     // poll bootstrap so the kryfo can breathe while the listener warms up.
     // this used to cancel itself once tor went green - which meant a tor
     // death later on had no witness and no comeback. now it runs for the
@@ -6063,6 +6347,7 @@ class AppState extends ChangeNotifier {
       // tor died or never came up in this process. nothing else
       // restarts it, so we do. throttled - a start takes a while.
       if (st == TorStatus.off &&
+          !_torHeld &&
           DateTime.now().difference(torKickedAt).inSeconds > 45) {
         torKickedAt = DateTime.now();
         dlog('TOR_WATCHDOG: tor off, restarting listener');
@@ -8856,6 +9141,9 @@ class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     lockState.addListener(_sync);
     lockState.load();
+    // a window exists, so someone is looking: the lifecycle only reports
+    // changes, and a fresh start is not one
+    appState.appInFront(true);
   }
 
   @override
@@ -8907,8 +9195,10 @@ class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
       lockState.leaving();
+      appState.appInFront(false);
     } else if (state == AppLifecycleState.resumed) {
       lockState.returned();
+      appState.appInFront(true);
     }
   }
 

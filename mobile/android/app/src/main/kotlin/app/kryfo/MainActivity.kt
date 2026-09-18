@@ -80,6 +80,7 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     private fun startListenerService() {
+        if (!DeliveryPrefs.staysOn(this)) return
         val intent = Intent(this, HaloListenerService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent)
@@ -229,6 +230,42 @@ class MainActivity : FlutterFragmentActivity() {
                         )
                     }
                     "lastExit" -> result.success(lastExit())
+                    // wall-clock time this phone was switched on. a gap in
+                    // the app's heartbeat that spans it was the phone being
+                    // off, not the app being killed.
+                    "helperApps" -> result.success(HelperPush.distributors(this))
+                    "helperChosen" -> result.success(HelperPush.distributor(this))
+                    "helperRegister" -> {
+                        val pkg = call.argument<String>("package")
+                        val instance = call.argument<String>("instance")
+                        result.success(
+                            if (pkg == null || instance.isNullOrEmpty()) false
+                            else HelperPush.register(this, pkg, instance)
+                        )
+                    }
+                    "helperUnregister" -> {
+                        HelperPush.unregisterAll(this)
+                        result.success(true)
+                    }
+                    "bootedAtMs" -> result.success(
+                        System.currentTimeMillis() - android.os.SystemClock.elapsedRealtime()
+                    )
+                    // the delivery mode changed. dart has written the new
+                    // mode before calling, so this only has to act on it.
+                    "applyDeliveryMode" -> {
+                        try {
+                            if (DeliveryPrefs.staysOn(this)) {
+                                startListenerService()
+                            } else {
+                                applicationContext.stopService(
+                                    Intent(applicationContext, HaloListenerService::class.java)
+                                )
+                            }
+                            result.success(true)
+                        } catch (e: Exception) {
+                            result.success(false)
+                        }
+                    }
                     "notificationsEnabled" -> {
                         result.success(
                             NotificationManagerCompat.from(this).areNotificationsEnabled()

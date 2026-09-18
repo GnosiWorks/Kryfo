@@ -17,6 +17,8 @@ import 'bridges_screen.dart';
 import 'seen_screen.dart';
 import '../copy.dart';
 import '../notifications.dart';
+import '../delivery_mode.dart';
+import 'getting_messages_screen.dart';
 import '../theme.dart';
 import '../notif_permission.dart';
 import 'modes_screen.dart';
@@ -224,6 +226,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     context,
                     haloRoute(const BridgesScreen()),
                   );
+                  if (mounted) setState(() {});
+                },
+              ),
+              _Row(
+                icon: Icons.mark_email_unread_outlined,
+                label: 'Getting messages',
+                value: deliveryModeName(appState.deliveryMode),
+                onTap: () async {
+                  await Navigator.of(
+                    context,
+                  ).push(haloRoute(const GettingMessagesScreen()));
                   if (mounted) setState(() {});
                 },
               ),

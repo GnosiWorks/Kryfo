@@ -27,12 +27,15 @@ class HaloPeriodicJobService : JobService() {
         // bring the listener back if something took it. not allowed from
         // the background on newer androids, and that is fine: the engine
         // in this process does the actual work either way.
-        try {
-            val intent = Intent(this, HaloListenerService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent)
-            else startService(intent)
-        } catch (e: Exception) {
-            Log.i("halo-engine", "periodic job: listener not restarted: ${e.javaClass.simpleName}")
+        val staysOn = DeliveryPrefs.staysOn(this)
+        if (staysOn) {
+            try {
+                val intent = Intent(this, HaloListenerService::class.java)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent)
+                else startService(intent)
+            } catch (e: Exception) {
+                Log.i("halo-engine", "periodic job: listener not restarted: ${e.javaClass.simpleName}")
+            }
         }
         val engine = FlutterEngineCache.getInstance().get(HaloApplication.ENGINE_ID)
         if (engine == null) {
@@ -45,8 +48,24 @@ class HaloPeriodicJobService : JobService() {
                 jobFinished(params, false)
             }
         }
-        // a hard stop so a wedged drain cannot hold the job open
-        main.postDelayed(finish, 60_000)
+        // a hard stop so a wedged drain cannot hold the job open. a check-in
+        // has to bring tor up, fetch and take it down again inside its one
+        // window, so it gets longer than a knock on sockets that are already
+        // there. android allows a job ten minutes.
+        main.postDelayed(finish, if (staysOn) 60_000 else 170_000)
+        ask(engine, params, finish, if (staysOn) 0 else 15)
+        return true
+    }
+
+    // in a process the job itself just started, dart may not have its
+    // handler up yet. always-on does not care: the boot that is under way
+    // connects anyway. a check-in does, because nothing else will fetch.
+    private fun ask(
+        engine: io.flutter.embedding.engine.FlutterEngine,
+        params: JobParameters?,
+        finish: Runnable,
+        retries: Int
+    ) {
         try {
             MethodChannel(engine.dartExecutor.binaryMessenger, "halo/job")
                 .invokeMethod("drain", null, object : MethodChannel.Result {
@@ -61,6 +80,10 @@ class HaloPeriodicJobService : JobService() {
                         finish.run()
                     }
                     override fun notImplemented() {
+                        if (retries > 0 && !done) {
+                            main.postDelayed({ ask(engine, params, finish, retries - 1) }, 2_000)
+                            return
+                        }
                         Log.i("halo-engine", "periodic job: dart not listening yet")
                         main.removeCallbacks(finish)
                         finish.run()
@@ -68,9 +91,9 @@ class HaloPeriodicJobService : JobService() {
                 })
         } catch (e: Exception) {
             Log.i("halo-engine", "periodic job: ${e.javaClass.simpleName}")
-            return false
+            main.removeCallbacks(finish)
+            finish.run()
         }
-        return true
     }
 
     override fun onStopJob(params: JobParameters?): Boolean {

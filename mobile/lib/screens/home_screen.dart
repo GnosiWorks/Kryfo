@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'donate_screen.dart';
 import 'package:flutter/services.dart';
 import '../copy.dart';
+import '../delivery_mode.dart';
 import '../theme.dart';
 import '../widgets/room_countdown.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -91,6 +92,7 @@ class HomeScreen extends StatelessWidget {
             const _BridgeHint(),
             const _BridgeStuckHint(),
             const _RelayDownHint(),
+            const _KeepsStoppingCard(),
             const _NotificationsBlockedHint(),
             StaggerIn(
               index: 1,
@@ -420,6 +422,121 @@ class _NotificationsBlockedHint extends StatefulWidget {
   @override
   State<_NotificationsBlockedHint> createState() =>
       _NotificationsBlockedHintState();
+}
+
+// this phone has killed kryfo three times in a day while it was supposed
+// to be staying connected. said once, ever, and only after it has happened:
+// no vendor list, no guessing from the model name.
+class _KeepsStoppingCard extends StatefulWidget {
+  const _KeepsStoppingCard();
+
+  @override
+  State<_KeepsStoppingCard> createState() => _KeepsStoppingCardState();
+}
+
+class _KeepsStoppingCardState extends State<_KeepsStoppingCard> {
+  bool _busy = false;
+
+  Future<void> _switch() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    await appState.setDeliveryMode(DeliveryMode.checkins);
+    await appState.nudgeAnswered();
+    if (!mounted) return;
+    showHaloToast(context, 'Kryfo will check in every 15 minutes');
+    unawaited(forceShowBackgroundPrompt(context));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: appState,
+      builder: (context, _) {
+        if (!appState.nudgeDue) return const SizedBox.shrink();
+        return Container(
+          margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          decoration: BoxDecoration(
+            color: HaloColors.amber.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: HaloColors.amber.withValues(alpha: 0.35)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  BreathDot(color: HaloColors.amber, size: 7),
+                  const SizedBox(width: 9),
+                  Text(
+                    'Your phone keeps stopping kryfo',
+                    style: HaloType.mono(
+                      size: 11,
+                      color: HaloColors.amber,
+                      weight: FontWeight.w600,
+                      letter: 0.12,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'It has closed kryfo three times today, so messages were '
+                'late or waited. Check-ins survive that: kryfo wakes every '
+                '15 minutes instead of staying connected.',
+                style: HaloType.sans(size: 13, color: HaloColors.warm),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: _switch,
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 15,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: HaloColors.amber,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        'Switch to check-ins',
+                        style: HaloType.mono(
+                          size: 11.5,
+                          color: HaloColors.ink,
+                          weight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: () => appState.nudgeAnswered(),
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Text(
+                        'Not now',
+                        style: HaloType.mono(
+                          size: 11.5,
+                          color: HaloColors.warm,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _NotificationsBlockedHintState extends State<_NotificationsBlockedHint>

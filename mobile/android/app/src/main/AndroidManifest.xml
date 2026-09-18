@@ -67,6 +67,21 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+        <!-- the helper app mode. a distributor (ntfy and the like) sends
+             these four; anything else on the phone can send them too, which
+             is why a knock is only ever a knock: a token this phone made,
+             then a check-in over tor. the body is never read. -->
+        <receiver
+            android:name=".HelperPushReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="org.unifiedpush.android.connector.MESSAGE" />
+                <action android:name="org.unifiedpush.android.connector.NEW_ENDPOINT" />
+                <action android:name="org.unifiedpush.android.connector.REGISTRATION_FAILED" />
+                <action android:name="org.unifiedpush.android.connector.UNREGISTERED" />
+            </intent-filter>
+        </receiver>
         <service
             android:name=".HaloPeriodicJobService"
             android:permission="android.permission.BIND_JOB_SERVICE"
@@ -89,6 +104,10 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- so the helper apps already on this phone can be listed -->
+        <intent>
+            <action android:name="org.unifiedpush.android.distributor.REGISTER"/>
         </intent>
     </queries>
 </manifest>
