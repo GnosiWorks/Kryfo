@@ -9,7 +9,7 @@ import 'package:flutter/services.dart';
 
 class _Palette {
   final Color ink, surface, surface2, surface3, line, line2;
-  final Color text, text2, text3;
+  final Color text, text2, text3, warm;
   final Color amber, amberDeep, amberSoft;
   final Color green, greenSoft, violet, rose, onAmber;
   final Color bubbleIn;
@@ -23,6 +23,7 @@ class _Palette {
     required this.text,
     required this.text2,
     required this.text3,
+    required this.warm,
     required this.amber,
     required this.amberDeep,
     required this.amberSoft,
@@ -45,6 +46,7 @@ const _dark = _Palette(
   text: Color(0xFFF5F1EA),
   text2: Color(0xFFC8C0B5),
   text3: Color(0xFFA79E92),
+  warm: Color(0xFFD6CCBE),
   amber: Color(0xFFF59E0B),
   amberDeep: Color(0xFFD97706),
   amberSoft: Color(0x24F59E0B),
@@ -66,6 +68,7 @@ const _light = _Palette(
   text: Color(0xFF1C1813),
   text2: Color(0xFF57503F),
   text3: Color(0xFF554E44),
+  warm: Color(0xFF5F4E38),
   amber: Color(0xFFB66A07),
   amberDeep: Color(0xFF8F5205),
   amberSoft: Color(0x1FB66A07),
@@ -91,6 +94,7 @@ class HaloColors {
   static Color get text => _p.text;
   static Color get text2 => _p.text2;
   static Color get text3 => _p.text3;
+  static Color get warm => _p.warm;
   static Color get amber => _p.amber;
   static Color get bubbleIn => _p.bubbleIn;
   static Color get amberDeep => _p.amberDeep;

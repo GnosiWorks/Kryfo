@@ -36,7 +36,6 @@ import 'screens/scan_screen.dart';
 import 'screens/modes_screen.dart';
 import 'screens/push_settings_screen.dart';
 import 'screens/settings_screen.dart';
-import 'screens/profile_screen.dart';
 import 'screens/my_kryfo_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'lock_state.dart';
@@ -7815,7 +7814,6 @@ class _RootShellState extends State<RootShell> {
       },
       expiredRoomName: appState.expiredRoomName,
       onOpenDev: () => _open(const DevScreen()),
-      onOpenSettings: () => _open(const ProfileScreen()),
       onOpenSettingsDirect: () => _open(SettingsScreen()),
       onOpenChat: (id) async {
         final rows = await db.contacts();

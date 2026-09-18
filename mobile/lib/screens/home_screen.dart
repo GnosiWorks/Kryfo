@@ -11,8 +11,10 @@ import 'requests_screen.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'donate_screen.dart';
+import 'profile_screen.dart';
+import 'tools_screen.dart';
+import '../widgets/nav_bar.dart';
 import 'package:flutter/services.dart';
-import '../copy.dart';
 import '../theme.dart';
 import '../widgets/room_countdown.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -30,7 +32,7 @@ import '../notif_permission.dart';
 
 bool _miuiPromptChecked = false;
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   final String haloId; // "neon-tiger-saturn"
   final List<ContactPreview> contacts;
   final List<GroupSummary> groups;
@@ -40,7 +42,6 @@ class HomeScreen extends StatelessWidget {
   final VoidCallback onNewRoom;
   final String? expiredRoomName;
   final VoidCallback onOpenDev;
-  final VoidCallback onOpenSettings;
   final VoidCallback onOpenSettingsDirect;
   final void Function(String kryfo) onOpenChat;
   final void Function(String groupId) onOpenGroup;
@@ -55,7 +56,165 @@ class HomeScreen extends StatelessWidget {
     required this.onNewRoom,
     this.expiredRoomName,
     required this.onOpenDev,
-    required this.onOpenSettings,
+    required this.onOpenSettingsDirect,
+    this.pendingCount = 0,
+    required this.onOpenChat,
+    required this.onOpenGroup,
+  });
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  HaloTab _tab = HaloTab.chats;
+  final Set<HaloTab> _seen = {HaloTab.chats};
+
+  void _pick(HaloTab t) {
+    if (t == _tab) return;
+    setState(() {
+      _tab = t;
+      _seen.add(t);
+    });
+  }
+
+  Widget _body(HaloTab t) {
+    switch (t) {
+      case HaloTab.chats:
+        return _ChatsTab(
+          haloId: widget.haloId,
+          contacts: widget.contacts,
+          groups: widget.groups,
+          pendingCount: widget.pendingCount,
+          onAddContact: widget.onAddContact,
+          onNewGroup: widget.onNewGroup,
+          onNewRoom: widget.onNewRoom,
+          expiredRoomName: widget.expiredRoomName,
+          onOpenSettingsDirect: widget.onOpenSettingsDirect,
+          onOpenChat: widget.onOpenChat,
+          onOpenGroup: widget.onOpenGroup,
+        );
+      case HaloTab.tools:
+        return const ToolsScreen();
+      case HaloTab.support:
+        return const DonateScreen();
+      case HaloTab.me:
+        return ProfileScreen(onOpenSupport: () => _pick(HaloTab.support));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: _tab == HaloTab.chats,
+      onPopInvokedWithResult: (done, _) {
+        if (!done) _pick(HaloTab.chats);
+      },
+      child: Scaffold(
+        backgroundColor: HaloColors.surface,
+        body: Column(
+          children: [
+            Expanded(
+              child: MediaQuery.removePadding(
+                context: context,
+                removeBottom: true,
+                child: Stack(
+                  children: [
+                    for (final t in HaloTab.values)
+                      if (_seen.contains(t))
+                        Offstage(
+                          offstage: t != _tab,
+                          child: TickerMode(
+                            enabled: t == _tab,
+                            child: _Arrive(on: t == _tab, child: _body(t)),
+                          ),
+                        ),
+                  ],
+                ),
+              ),
+            ),
+            SafeArea(
+              top: false,
+              child: HaloNavBar(
+                active: _tab,
+                onPick: _pick,
+                onMeLongPress: widget.onOpenDev,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Arrive extends StatefulWidget {
+  final bool on;
+  final Widget child;
+  const _Arrive({required this.on, required this.child});
+  @override
+  State<_Arrive> createState() => _ArriveState();
+}
+
+class _ArriveState extends State<_Arrive> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 280),
+    value: 1,
+  );
+
+  @override
+  void didUpdateWidget(_Arrive old) {
+    super.didUpdateWidget(old);
+    if (!widget.on || old.on) return;
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) return;
+    _c.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final a = CurvedAnimation(parent: _c, curve: Curves.easeOutCubic);
+    return FadeTransition(
+      opacity: a,
+      child: AnimatedBuilder(
+        animation: a,
+        builder: (_, child) => Transform.translate(
+          offset: Offset(0, 8 * (1 - a.value)),
+          child: child,
+        ),
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _ChatsTab extends StatelessWidget {
+  final String haloId; // "neon-tiger-saturn"
+  final List<ContactPreview> contacts;
+  final List<GroupSummary> groups;
+  final int pendingCount;
+  final VoidCallback onAddContact;
+  final VoidCallback onNewGroup;
+  final VoidCallback onNewRoom;
+  final String? expiredRoomName;
+  final VoidCallback onOpenSettingsDirect;
+  final void Function(String kryfo) onOpenChat;
+  final void Function(String groupId) onOpenGroup;
+
+  const _ChatsTab({
+    required this.haloId,
+    this.contacts = const [],
+    this.groups = const [],
+    required this.onAddContact,
+    required this.onNewGroup,
+    required this.onNewRoom,
+    this.expiredRoomName,
     required this.onOpenSettingsDirect,
     this.pendingCount = 0,
     required this.onOpenChat,
@@ -73,74 +232,65 @@ class HomeScreen extends StatelessWidget {
         maybeShowBackgroundPrompt(context);
       });
     }
-    return Scaffold(
-      backgroundColor: HaloColors.surface,
-      body: SafeArea(
-        child: Column(
-          children: [
+    return SafeArea(
+      bottom: false,
+      child: Column(
+        children: [
+          StaggerIn(
+            index: 0,
+            child: _HomeHead(
+              now: now,
+              haloId: haloId,
+              onAdd: onAddContact,
+              onSettings: onOpenSettingsDirect,
+            ),
+          ),
+          const _OfflineStrip(),
+          const _BridgeHint(),
+          const _BridgeStuckHint(),
+          const _RelayDownHint(),
+          const _NotificationsBlockedHint(),
+          StaggerIn(
+            index: 1,
+            child: _QuickTiles(
+              onNotes: () =>
+                  Navigator.of(context).push(haloRoute(const NotesScreen())),
+              onSaved: () =>
+                  Navigator.of(context).push(haloRoute(const SavedScreen())),
+            ),
+          ),
+          if (pendingCount > 0)
             StaggerIn(
-              index: 0,
-              child: _HomeHead(
-                now: now,
-                haloId: haloId,
-                onAdd: onAddContact,
-                onSettings: onOpenSettingsDirect,
+              index: 2,
+              child: _RequestsPin(
+                count: pendingCount,
+                onTap: () => Navigator.of(
+                  context,
+                ).push(haloRoute(const RequestsScreen())),
               ),
             ),
-            const _OfflineStrip(),
-            const _BridgeHint(),
-            const _BridgeStuckHint(),
-            const _RelayDownHint(),
-            const _NotificationsBlockedHint(),
-            StaggerIn(
-              index: 1,
-              child: _QuickTiles(
-                onNotes: () =>
-                    Navigator.of(context).push(haloRoute(const NotesScreen())),
-                onSaved: () =>
-                    Navigator.of(context).push(haloRoute(const SavedScreen())),
-              ),
+          if (hasArchived)
+            _ArchivedPin(
+              count: contacts.where((c) => c.archived).length,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                Navigator.of(context).push(_archivedRoute());
+              },
             ),
-            if (pendingCount > 0)
-              StaggerIn(
-                index: 2,
-                child: _RequestsPin(
-                  count: pendingCount,
-                  onTap: () => Navigator.of(
-                    context,
-                  ).push(haloRoute(const RequestsScreen())),
-                ),
-              ),
-            if (hasArchived)
-              _ArchivedPin(
-                count: contacts.where((c) => c.archived).length,
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  Navigator.of(context).push(_archivedRoute());
-                },
-              ),
-            Expanded(
-              child: visible.isEmpty && groups.isEmpty
-                  ? _EmptyState(onAdd: onAddContact)
-                  : _ContactList(
-                      contacts: visible,
-                      groups: groups,
-                      onTap: onOpenChat,
-                      onOpenGroup: onOpenGroup,
-                      onNewGroup: onNewGroup,
-                      onNewRoom: onNewRoom,
-                      expiredRoomName: expiredRoomName,
-                    ),
-            ),
-            _NavTabs(
-              active: 'chats',
-              onDevLongPress: onOpenDev,
-              onMeTap: onOpenSettings,
-              onSupportTap: () =>
-                  Navigator.of(context).push(haloRoute(const DonateScreen())),
-            ),
-          ],
-        ),
+          Expanded(
+            child: visible.isEmpty && groups.isEmpty
+                ? _EmptyState(onAdd: onAddContact)
+                : _ContactList(
+                    contacts: visible,
+                    groups: groups,
+                    onTap: onOpenChat,
+                    onOpenGroup: onOpenGroup,
+                    onNewGroup: onNewGroup,
+                    onNewRoom: onNewRoom,
+                    expiredRoomName: expiredRoomName,
+                  ),
+          ),
+        ],
       ),
     );
   }
@@ -1819,112 +1969,6 @@ String _relTime(DateTime? t) {
     'Dec',
   ];
   return '${t.day} ${months[t.month - 1]}';
-}
-
-// ───────── nav tabs ─────────
-
-class _NavTabs extends StatelessWidget {
-  final String active;
-  final VoidCallback onDevLongPress;
-  final VoidCallback onMeTap;
-  final VoidCallback onSupportTap;
-  const _NavTabs({
-    required this.active,
-    required this.onDevLongPress,
-    required this.onMeTap,
-    required this.onSupportTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),
-      ),
-      padding: const EdgeInsets.fromLTRB(0, 10, 0, 14),
-      // every tab gets the SAME padding and an equal share of the row.
-      // before, only Support/Me were padded, so the gaps were visibly
-      // uneven. 'Drop' is gone - it had no handler and did nothing.
-      child: Row(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              child: Center(
-                child: _Tab(label: 'Chats', active: active == 'chats'),
-              ),
-            ),
-          ),
-          Expanded(
-            child: GestureDetector(
-              onTap: onSupportTap,
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                child: Center(
-                  child: _Tab(label: 'Support', active: active == 'support'),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: GestureDetector(
-              onLongPress: onDevLongPress,
-              onTap: onMeTap,
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                child: Center(
-                  child: _Tab(label: 'Me', active: active == 'me'),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Tab extends StatelessWidget {
-  final String label;
-  final bool active;
-  const _Tab({required this.label, required this.active});
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AnimatedDefaultTextStyle(
-          duration: const Duration(milliseconds: 180),
-          style: HaloType.sans(
-            size: 11,
-            weight: active ? FontWeight.w500 : FontWeight.w400,
-            color: active ? HaloColors.text : HaloColors.text2,
-          ),
-          child: Text(sentence(label)),
-        ),
-        const SizedBox(height: 4),
-        // a short amber mark that grows under the tab you are on
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOutBack,
-          width: active ? 14 : 0,
-          height: 3,
-          decoration: BoxDecoration(
-            color: HaloColors.amber,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 // unknown-sender requests. amber, shows a count, only rendered when > 0.
