@@ -5,4 +5,5 @@
      reachable from outside. -->
 <paths>
     <cache-path name="open" path="open/" />
+    <cache-path name="tools_out" path="tools_out/" />
 </paths>

@@ -39,7 +39,6 @@ import 'screens/scan_screen.dart';
 import 'screens/modes_screen.dart';
 import 'screens/push_settings_screen.dart';
 import 'screens/settings_screen.dart';
-import 'screens/profile_screen.dart';
 import 'screens/my_kryfo_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'lock_state.dart';
@@ -70,10 +69,8 @@ import 'handle_lookup.dart';
 import 'widgets/sheet_handle.dart';
 import 'widgets/halo_sheet.dart';
 
-typedef VoidFn = Void Function();
 typedef IntArgFn = Void Function(Int32);
 typedef IntArgFnDart = void Function(int);
-typedef VoidFnDart = void Function();
 typedef CStrFn = Pointer<Utf8> Function();
 typedef CStrFnDart = Pointer<Utf8> Function();
 typedef OneArgFn = Pointer<Utf8> Function(Pointer<Utf8>);
@@ -115,7 +112,6 @@ class HaloEngine {
   late final TwoArgFnDart _decryptFrom;
   late final Pointer<Utf8> Function(Pointer<Utf8>) _start;
   late final CStrFnDart _drainInbox;
-  late final VoidFnDart _shutdown;
   late final IntArgFnDart _setDebug;
   late final CStrFnDart _getStatus;
   late final CStrFnDart _nostrKick;
@@ -161,7 +157,6 @@ class HaloEngine {
           Pointer<Utf8> Function(Pointer<Utf8>)
         >('HaloStartListener');
     _drainInbox = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloDrainInbox');
-    _shutdown = _lib.lookupFunction<VoidFn, VoidFnDart>('HaloShutdown');
     _getStatus = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloGetStatus');
     _nostrKick = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloNostrKick');
     _memStats = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMemStats');
@@ -211,8 +206,6 @@ class HaloEngine {
     }
   }
 
-  void shutdown() => _shutdown();
-
   List<String> drainInbox() {
     final raw = _drainInbox().toDartString();
     if (raw.isEmpty) return const [];
@@ -236,6 +229,19 @@ class HaloEngine {
       return (int.parse(p[0]), int.parse(p[1]));
     } catch (_) {
       return (0, 0);
+    }
+  }
+
+  // where the last tor reconnect got to. looked up on first use so an engine
+  // from before it still loads.
+  late final CStrFnDart _lastReconnect = _lib
+      .lookupFunction<CStrFn, CStrFnDart>('HaloLastReconnect');
+
+  String lastReconnect() {
+    try {
+      return _lastReconnect().toDartString();
+    } catch (_) {
+      return '';
     }
   }
 
@@ -8312,7 +8318,6 @@ class _RootShellState extends State<RootShell> {
       },
       expiredRoomName: appState.expiredRoomName,
       onOpenDev: () => _open(const DevScreen()),
-      onOpenSettings: () => _open(const ProfileScreen()),
       onOpenSettingsDirect: () => _open(SettingsScreen()),
       onOpenChat: (id) async {
         final rows = await db.contacts();

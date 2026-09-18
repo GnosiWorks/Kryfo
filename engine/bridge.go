@@ -28,6 +28,7 @@ import (
 	"time"
 	"unsafe"
 
+	libtor "github.com/alexballas/go-libtor"
 	"github.com/cretz/bine/control"
 	"github.com/cretz/bine/tor"
 	"github.com/tyler-smith/go-bip39"
@@ -311,7 +312,8 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 	return C.CString(startListener(C.GoString(cDataDir)))
 }
 
-// the onion address, or a line starting with "error:"
+// the onion address, or a line starting with "error:". plain go so the
+// tor tests can drive it; cgo cannot be called from a _test.go file.
 func startListener(dataDir string) string {
 	// startMu serializes start against shutdown. mu is only taken around
 	// the shared vars so other ffi calls don't freeze for the seconds tor
@@ -346,16 +348,12 @@ func startListener(dataDir string) string {
 	// and we hold startMu, so removing a stale lock here is safe.
 	// same reasoning as the restart path: a run file left by a process that
 	// was killed rather than closed will fail the next start outright.
-	if !waitTorGone(45 * time.Second) {
-		log.Println("halo: the last tor has not finished stopping, not starting another on top of it")
-		return "error: tor still stopping"
-	}
 	cleanTorRunFiles(torDataDir)
 
 	setStatus("starting")
 	log.Println("halo: starting embedded tor...")
 	t, err := tor.Start(nil, &tor.StartConf{
-		ProcessCreator: torCreator,
+		ProcessCreator: libtor.Creator,
 		DataDir:        torDataDir,
 		DebugWriter:    newTorDebugWriter(),
 		ExtraArgs:      torArgs(),
@@ -431,11 +429,48 @@ func startListener(dataDir string) string {
 	return addr
 }
 
-// waits for the onion's descriptor to reach an hsdir and only then calls the
-// phone reachable. armed at every start and at every wake from sleep.
-// one of each watcher at a time. ninety-six wakes a day, each leaving a
-// goroutine parked on a control event listener, is a leak the cycle test
-// caught: the count went up by one per wake and never came down.
+// bine writes a fresh torrc and control-port file per run and does not always
+// clean them up. a half-written one left by a dying process is read by the
+// next start as "invalid port format", which killed the restart outright.
+func cleanTorRunFiles(dir string) {
+	os.Remove(dir + "/lock")
+	ents, err := os.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	for _, e := range ents {
+		n := e.Name()
+		if strings.HasPrefix(n, "control-port-") || strings.HasPrefix(n, "torrc-") {
+			os.Remove(dir + "/" + n)
+		}
+	}
+}
+
+// a wedged dialer, a bridge change or a hop back onto onion used to close
+// tor and start another one. that is the one thing this tor cannot do.
+//
+// tor 0.4.9.5, as go-libtor vendors it, survives exactly ONE shutdown per
+// process. the second tor.Close() either hangs inside the control connection
+// or aborts the whole app:
+//
+//	INTERNAL ERROR: Raw assertion failed in Tor 0.4.9.5 at
+//	compat_mutex_pthreads.c:120: Error destroying a mutex.  SIGABRT
+//
+// reproduced twice out of two by tor_cycle_test.go, which does what the old
+// restart did, in a loop. so nothing here closes tor, ever. instead tor is
+// handed the config it needs and told to leave the network and come back:
+// DisableNetwork closes every circuit and connection and stops it building
+// more, which is what tor browser and orbot do to apply a bridge change. the
+// consensus and the guards stay, so coming back takes a quarter of a second
+// instead of a bootstrap.
+//
+// serialized on startMu against a start so the two cannot overlap.
+var torRestarting int32
+
+var lastTorRestart int64 // unix seconds of the last one, for the cooldown
+
+// one watcher of each kind at a time. each parks on a control event listener,
+// and one left behind per reconnect is a leak with a whole day to grow in.
 var (
 	bootstrapWatching int32
 	publishWatching   int32
@@ -452,7 +487,7 @@ func goWatchBootstrap(t *tor.Tor) {
 }
 
 func goWatchPublished(t *tor.Tor, onionID string) {
-	if t == nil || t.Control == nil {
+	if t == nil || t.Control == nil || onionID == "" {
 		return
 	}
 	if !atomic.CompareAndSwapInt32(&publishWatching, 0, 1) {
@@ -460,21 +495,14 @@ func goWatchPublished(t *tor.Tor, onionID string) {
 	}
 	go func() {
 		defer atomic.StoreInt32(&publishWatching, 0)
-		watchPublished(t, onionID)
+		hsCh, hsSubbed := listenForUploads(t)
+		watchPublishedOn(t, hsCh, hsSubbed, onionID)
 	}()
 }
 
-func watchPublished(t *tor.Tor, onionID string) {
-	if t == nil || t.Control == nil {
-		return
-	}
-	hsCh, hsSubbed := listenForUploads(t)
-	watchPublishedOn(t, hsCh, hsSubbed, onionID)
-}
-
-// subscribe first, act later: at a start the first UPLOADED can fire while
-// Listen is still setting the onion up, and missing it meant sitting out
-// the full fallback.
+// subscribe before the thing that would fire: at a start the first UPLOADED
+// can arrive while Listen is still setting the onion up, and missing it meant
+// sitting out the full fallback.
 func listenForUploads(t *tor.Tor) (chan control.Event, bool) {
 	hsCh := make(chan control.Event, 16)
 	if t == nil || t.Control == nil {
@@ -496,9 +524,6 @@ func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionI
 		}()
 	}
 	for {
-		if torIsPaused() {
-			return
-		}
 		if watchHSDirUpload(t, hsCh, hsSubbed, onionID) {
 			break
 		}
@@ -508,8 +533,8 @@ func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionI
 		if !stillPub {
 			return
 		}
-		// no confirmed upload yet - the same listener stays live, loop
-		// and wait for a late descriptor instead of lying reachable.
+		// no confirmed upload yet - the same listener stays live, loop and
+		// wait for a late descriptor instead of lying reachable.
 	}
 	statusMu.Lock()
 	if torStatus == "publishing" {
@@ -527,209 +552,182 @@ func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionI
 	statusMu.Unlock()
 }
 
-// bine writes a fresh torrc and control-port file per run and does not always
-// clean them up. a half-written one left by a dying process is read by the
-// next start as "invalid port format", which killed the restart outright.
-func cleanTorRunFiles(dir string) {
-	os.Remove(dir + "/lock")
-	ents, err := os.ReadDir(dir)
-	if err != nil {
-		return
+// hands tor the bridge configuration it should be using right now. all three
+// of these are set every time bridges are turned on, including
+// ClientTransportPlugin when its value has not changed.
+//
+// that last part is not redundant. turning bridges off drops tor's
+// registration of the transport, so turning them back on without naming the
+// plugin again leaves tor with bridge lines and no way to reach them: it sits
+// at "connecting" and never dials. caught on the phone on the third switch,
+// on-off-on, which is why the test below does exactly that.
+func applyBridgeConf(t *tor.Tor) error {
+	if t == nil || t.Control == nil {
+		return fmt.Errorf("no control connection")
 	}
-	for _, e := range ents {
-		n := e.Name()
-		if strings.HasPrefix(n, "control-port-") || strings.HasPrefix(n, "torrc-") {
-			os.Remove(dir + "/" + n)
+	if !bridgesEnabled() {
+		noteStep("setconf bridges off")
+		if err := t.Control.SetConf(control.KeyVals("UseBridges", "0")...); err != nil {
+			return err
 		}
+		// the lines go too, or a later UseBridges 1 would quietly use the
+		// list from last time
+		return t.Control.ResetConf(&control.KeyVal{Key: "Bridge"})
 	}
+	noteStep("pt listener")
+	if err := startPTListener(); err != nil {
+		return err
+	}
+	bridgeMu.RLock()
+	port := ptPort
+	bridgeMu.RUnlock()
+	if port == 0 {
+		return fmt.Errorf("no pt listener")
+	}
+	kv := []*control.KeyVal{
+		control.NewKeyVal("ClientTransportPlugin",
+			fmt.Sprintf("obfs4 socks5 127.0.0.1:%d", port)),
+		control.NewKeyVal("UseBridges", "1"),
+	}
+	lines := bridgeLines()
+	for _, b := range lines {
+		kv = append(kv, control.NewKeyVal("Bridge", b))
+	}
+	log.Printf("bridges: handing tor %d bridge lines via 127.0.0.1:%d", len(lines), port)
+	noteStep("setconf plugin+bridges")
+	return t.Control.SetConf(kv...)
 }
 
-// restartTor tears down the wedged tor and brings a fresh one up on the same
-// data dir + onion key. triggered by the dialer watchdog when the control
-// conn is provably dead. serialized on startMu against Start/Shutdown so two
-// restarts (or a restart racing shutdown) can't overlap.
-var torRestarting int32
-var lastTorRestart int64 // unix seconds of the last restart, for cooldown
+// where the last reconnect got to, and how it ended. a bounce that stalls
+// does so inside tor's control port, which says nothing in a release build,
+// so it is written down here and shown on the transport screen.
+var reconnectStep atomic.Value // string
 
-// how many old tor instances are still shutting down. each one holds its
-// memory and its circuits until it finishes, so starting another on top is
-// how the process gets killed.
-var torClosing int32
+func noteStep(s string) { reconnectStep.Store(s) }
 
-func restartTor() {
-	// stopped on purpose. every watchdog that finds tor gone comes through
-	// here, and none of them may bring it back.
-	if torIsPaused() {
-		log.Println("halo: restartTor skipped - tor is stopped on purpose")
-		return
+func lastReconnectStep() string {
+	if v, ok := reconnectStep.Load().(string); ok {
+		return v
 	}
-	// collapse concurrent triggers - only one restart at a time.
+	return ""
+}
+
+//export HaloLastReconnect
+func HaloLastReconnect() *C.char { return C.CString(lastReconnectStep()) }
+
+// the bounce itself. "ok", or a line starting with "error:".
+func reconnectTor() string {
+	// asleep on purpose: the check-in mode takes tor off the network between
+	// checks, and every watchdog that finds it quiet comes through here. none
+	// of them may bring it back - that is the app's call, not a watchdog's.
+	if torIsPaused() {
+		log.Println("halo: reconnect skipped - tor is asleep on purpose")
+		return "error: tor is asleep"
+	}
 	if !atomic.CompareAndSwapInt32(&torRestarting, 0, 1) {
-		return
+		return "error: one already running"
 	}
 	defer atomic.StoreInt32(&torRestarting, 0)
 
-	if n := atomic.LoadInt32(&torClosing); n > 0 {
-		// a second switch inside the close window used to leave the status
-		// on "starting" for good; off lets the dart watchdog try again
-		log.Printf("halo: restartTor skipped - %d old tor still closing", n)
-		setStatus("off")
-		return
-	}
-
-	// cooldown: a quiet-but-alive relay shouldn't drive a restart loop. hold
-	// to at least 3 min between restarts. the deaf-cycle trigger can be noisy;
-	// the dialer-hang trigger is rarer but shares the same floor.
+	// a quiet-but-alive relay should not drive a loop. a bounce is cheap now,
+	// so the floor is a minute rather than the three a full restart needed.
 	now := time.Now().Unix()
-	if prev := atomic.LoadInt64(&lastTorRestart); prev != 0 && now-prev < 180 {
-		log.Printf("halo: restartTor skipped - %ds since last (cooldown 180s)", now-prev)
-		return
+	if prev := atomic.LoadInt64(&lastTorRestart); prev != 0 && now-prev < 60 {
+		log.Printf("halo: reconnect skipped - %ds since the last (floor 60s)", now-prev)
+		return "error: too soon"
 	}
 	atomic.StoreInt64(&lastTorRestart, now)
 
-	startMu.Lock()
-	defer startMu.Unlock()
-
-	mu.Lock()
-	old := torNode
-	dir := savedDataDir
-	mu.Unlock()
-	if dir == "" {
-		log.Println("halo: restartTor skipped - no saved data dir")
-		setStatus("off")
-		return
-	}
-	log.Println("halo: restarting embedded tor (dialer wedged)")
-	statusMu.Lock()
-	hsdirUploads = 0
-	statusMu.Unlock()
-	setStatus("starting")
-
-	// drop the old node + cached client so nothing keeps dialing the dead one.
-	mu.Lock()
-	torNode = nil
-	listener = nil
-	myAddr = ""
-	mu.Unlock()
-	nostrResetClient()
-	if old != nil {
-		// closing a tor with live circuits can block for minutes. nothing
-		// still points at it, so do not wait.
-		atomic.AddInt32(&torClosing, 1)
-		go func() {
-			defer atomic.AddInt32(&torClosing, -1)
-			done := make(chan struct{})
-			go func() {
-				old.Close()
-				close(done)
-			}()
-			select {
-			case <-done:
-				log.Println("halo: old tor closed")
-			case <-time.After(20 * time.Second):
-				log.Println("halo: old tor is taking its time, moving on")
-			}
-		}()
-	}
-
-	torDataDir := dir + "/tor"
-	// give the old process a moment to let go of its files. without this the
-	// new tor reads a control port file the dying one is still rewriting.
-	if old != nil {
-		for i := 0; i < 30; i++ {
-			if atomic.LoadInt32(&torClosing) == 0 {
-				break
-			}
-			time.Sleep(200 * time.Millisecond)
-		}
-	}
-	// closed is not the same as gone: bine's close gives up after 300ms.
-	// starting on top of a tor that is still unwinding aborts the process.
-	if !waitTorGone(45 * time.Second) {
-		log.Println("halo: restartTor gave up - the old tor never finished stopping")
-		setStatus("off")
-		return
-	}
-	cleanTorRunFiles(torDataDir)
-
-	var t *tor.Tor
-	var err error
-	for attempt := 0; attempt < 2; attempt++ {
-		t, err = tor.Start(nil, &tor.StartConf{
-			ProcessCreator: torCreator,
-			DataDir:        torDataDir,
-			DebugWriter:    newTorDebugWriter(),
-			ExtraArgs:      torArgs(),
-		})
-		if err == nil {
-			break
-		}
-		log.Printf("halo: restartTor tor.Start failed: %v", err)
-		// a stale control port file is the usual cause and clearing it is
-		// cheap. one retry beats leaving the app at "off" with no way back.
-		time.Sleep(2 * time.Second)
-		cleanTorRunFiles(torDataDir)
-	}
-	if err != nil {
-		log.Printf("halo: restartTor gave up: %v", err)
-		setStatus("off")
-		return
-	}
-	mu.Lock()
-	torNode = t
-	mu.Unlock()
-	goWatchBootstrap(t)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-
-	keyPath := dir + "/onion.key"
-	var key ed25519.PrivateKey
-	if data, rerr := os.ReadFile(keyPath); rerr == nil && len(data) == ed25519.PrivateKeySize {
-		key = ed25519.PrivateKey(data)
-	} else {
-		log.Println("halo: restartTor WARN missing onion key, address will change")
-	}
-
-	if eerr := t.EnableNetwork(ctx, false); eerr != nil {
-		log.Printf("halo: restartTor enable network: %v", eerr)
-	}
-	onion, lerr := t.Listen(ctx, &tor.ListenConf{
-		NoWait:      true,
-		Version3:    true,
-		RemotePorts: []int{80},
-		Key:         key,
-	})
-	if lerr != nil {
-		log.Printf("halo: restartTor listen failed: %v", lerr)
-		setStatus("off")
-		return
-	}
-	mu.Lock()
-	listener = onion
-	myAddr = fmt.Sprintf("%s.onion", onion.ID)
-	mu.Unlock()
-	go acceptLoop(onion)
-	log.Printf("halo: tor restarted, listening on %s.onion", onion.ID)
-}
-
-//export HaloShutdown
-func HaloShutdown() {
-	// stop tor cleanly so its data dir lock is released. without this a fast
-	// relaunch raced the dying process for the dir and blocked the new ui
-	// thread long enough to anr.
-	startMu.Lock()
-	defer startMu.Unlock()
 	mu.Lock()
 	t := torNode
-	torNode = nil
-	listener = nil
-	myAddr = ""
+	dir := savedDataDir
+	addr := myAddr
 	mu.Unlock()
-	nostrResetClient()
-	if t != nil {
-		t.Close()
+
+	if dir == "" {
+		log.Println("halo: reconnect skipped - no saved data dir")
+		setStatus("off")
+		return "error: no data dir"
 	}
+	// no tor in this process yet, or one that never got a control port: this
+	// is a first start, and a first start is the one that is safe. it takes
+	// startMu itself.
+	if t == nil || t.Control == nil {
+		out := startListener(dir)
+		if strings.HasPrefix(out, "error:") {
+			return out
+		}
+		return "ok"
+	}
+
+	// tor answering its control port is not something to take on faith - a
+	// wedged one used to mean this never returned, holding startMu with it.
+	started := time.Now()
+	done := make(chan string, 1)
+	go func() { done <- reconnectOn(t, addr) }()
+	select {
+	case r := <-done:
+		noteStep(fmt.Sprintf("%s after %s", r, time.Since(started).Round(time.Millisecond)))
+		return r
+	case <-time.After(45 * time.Second):
+		log.Println("halo: reconnect gave up waiting on tor's control port")
+		noteStep("stuck at " + lastReconnectStep() + " (45s)")
+		setStatus("off")
+		return "error: control port not answering"
+	}
+}
+
+// the control work, on its own goroutine so the caller has a way out.
+func reconnectOn(t *tor.Tor, addr string) string {
+	startMu.Lock()
+	defer startMu.Unlock()
+
+	log.Println("halo: reconnecting tor (config change or wedged dialer)")
+	noteStep("start")
+	statusMu.Lock()
+	hsdirUploads = 0
+	bootstrapPct = 0
+	statusMu.Unlock()
+	setStatus("starting")
+	// dropped in the background on purpose. torNostrClient holds that same
+	// mutex for up to half a minute while it builds a dialer, and with a few
+	// relay runners queued behind each other a reconnect that waited for it
+	// sat there past a minute doing nothing - which is how the first version
+	// of this looked like tor hanging. nothing is lost by being late: tor is
+	// the same process either side of a bounce, so a client built before it
+	// still dials the same socks port. dropping it only shakes off a dialer
+	// that wedged.
+	go nostrResetClient()
+
+	// the network goes down FIRST, and the config changes while it is down.
+	// changing bridges under a live tor that is part way through a handshake
+	// with an unreachable one makes it stop answering its control port
+	// altogether: SETCONF never returns and everything queued behind it waits
+	// for ever. the test below caught it on the second and third switch. this
+	// is the order tor browser uses for the same change.
+	noteStep("network off")
+	if err := t.Control.SetConf(control.KeyVals("DisableNetwork", "1")...); err != nil {
+		log.Printf("halo: tor would not leave the network: %v", err)
+		setStatus("off")
+		return "error: " + err.Error()
+	}
+	// let it drop what it had before it is told anything else
+	time.Sleep(500 * time.Millisecond)
+	noteStep("bridge config")
+	if err := applyBridgeConf(t); err != nil {
+		log.Printf("halo: bridge config not applied: %v", err)
+	}
+	noteStep("network on")
+	if err := t.Control.SetConf(control.KeyVals("DisableNetwork", "0")...); err != nil {
+		log.Printf("halo: tor would not come back: %v", err)
+		setStatus("off")
+		return "error: " + err.Error()
+	}
+	noteStep("watchers")
+	goWatchBootstrap(t)
+	goWatchPublished(t, strings.TrimSuffix(addr, ".onion"))
+	log.Println("halo: tor reconnected")
+	return "ok"
 }
 
 // set while tor is quiet because the app asked for it to be: the check-in

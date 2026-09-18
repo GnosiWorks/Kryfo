@@ -45,6 +45,7 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterFragmentActivity() {
     private val REQ_SAVE_DOCUMENT = 7311
+    private val tools = ToolsBridge(this)
     companion object {
         private const val NOTIF_PERM_REQUEST = 1001
         private const val PERM_PREFS = "halo_perm"
@@ -71,6 +72,12 @@ class MainActivity : FlutterFragmentActivity() {
     // keep the engine when this screen goes away, so the dart isolate and the
     // nostr poll timer keep running in the background
     override fun shouldDestroyEngineWithHost(): Boolean = false
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        tools.offer(intent)
+    }
 
     override fun onResume() {
         super.onResume()
@@ -214,6 +221,8 @@ class MainActivity : FlutterFragmentActivity() {
         super.configureFlutterEngine(flutterEngine)
         // hold on to it so the next activity attaches to this same engine
         FlutterEngineCache.getInstance().put(ENGINE_ID, flutterEngine)
+        tools.attach(MethodChannel(flutterEngine.dartExecutor.binaryMessenger, ToolsBridge.CHANNEL))
+        tools.offer(intent)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "halo/platform")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -483,6 +492,7 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (tools.onActivityResult(requestCode, resultCode, data)) return
         if (requestCode != REQ_SAVE_DOCUMENT) return
         val result = pendingSave ?: return
         val path = pendingSavePath

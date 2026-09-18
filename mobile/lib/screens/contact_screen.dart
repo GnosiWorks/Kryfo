@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import '../contact_status.dart';
 import '../main.dart' show appState, db, engine;
 import '../theme.dart';
+import '../widgets/halo_buttons.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/motion.dart' show haloRoute;
@@ -143,7 +144,8 @@ class _ContactScreenState extends State<ContactScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: _Ghost(
+                      child: HaloGhostButton(
+                        quiet: true,
                         label: 'Clear',
                         onTap: () => Navigator.pop(ctx, ''),
                       ),
@@ -151,7 +153,7 @@ class _ContactScreenState extends State<ContactScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       flex: 2,
-                      child: _Primary(
+                      child: HaloPrimaryButton(
                         label: 'Save',
                         onTap: () => Navigator.pop(ctx, ctrl.text),
                       ),
@@ -208,17 +210,15 @@ class _ContactScreenState extends State<ContactScreen> {
           child: Row(
             children: [
               Expanded(
-                child: _Button(
+                child: HaloPrimaryButton(
                   label: 'Message',
-                  filled: true,
                   onTap: () => Navigator.of(context).pop(),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: _Button(
+                child: HaloGhostButton(
                   label: verified ? 'Keys verified' : 'Verify keys',
-                  filled: false,
                   onTap: () async {
                     await Navigator.of(context).push(
                       haloRoute(
@@ -536,43 +536,6 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-// the two things you do with a person, at the bottom where a thumb is
-class _Button extends StatelessWidget {
-  final String label;
-  final bool filled;
-  final VoidCallback onTap;
-  const _Button({
-    required this.label,
-    required this.filled,
-    required this.onTap,
-  });
-  @override
-  Widget build(BuildContext context) {
-    return PressScale(
-      label: label,
-      onTap: onTap,
-      scale: 0.96,
-      child: Container(
-        height: 46,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: filled ? HaloColors.amber : Colors.transparent,
-          borderRadius: BorderRadius.circular(13),
-          border: filled ? null : Border.all(color: HaloColors.amber, width: 1),
-        ),
-        child: Text(
-          label,
-          style: HaloType.sans(
-            size: 14,
-            weight: FontWeight.w600,
-            color: filled ? HaloColors.onAmber : HaloColors.amber,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _Row extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -680,9 +643,8 @@ class _MediaRow extends StatelessWidget {
                             // an empty box here is a black square against the
                             // card, which reads as a broken app rather than a
                             // photo whose file is gone. say which it is.
-                            errorBuilder: (_, _, _) => const _MissingTile(
-                              size: 56,
-                            ),
+                            errorBuilder: (_, _, _) =>
+                                const _MissingTile(size: 56),
                           ),
                         ),
                       ),
@@ -717,54 +679,4 @@ class _MissingTile extends StatelessWidget {
       ),
     );
   }
-}
-
-class _Primary extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  const _Primary({required this.label, required this.onTap});
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    behavior: HitTestBehavior.opaque,
-    child: Container(
-      height: 46,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: HaloColors.amber,
-        borderRadius: BorderRadius.circular(13),
-      ),
-      child: Text(
-        label,
-        style: HaloType.sans(
-          size: 14,
-          weight: FontWeight.w600,
-          color: HaloColors.onAmber,
-        ),
-      ),
-    ),
-  );
-}
-
-class _Ghost extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  const _Ghost({required this.label, required this.onTap});
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    behavior: HitTestBehavior.opaque,
-    child: Container(
-      height: 46,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(13),
-        border: Border.all(color: HaloColors.line),
-      ),
-      child: Text(
-        label,
-        style: HaloType.sans(size: 14, color: HaloColors.text2),
-      ),
-    ),
-  );
 }

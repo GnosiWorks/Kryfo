@@ -403,7 +403,7 @@ func torNostrClient() (*http.Client, error) {
 				log.Println("nostr: nothing has moved in 3 minutes, restarting tor regardless")
 			}
 			dialerHangs = 0
-			go restartTor()
+			go reconnectTor()
 		}
 		return nil, fmt.Errorf("tor dialer hung")
 	}
@@ -711,7 +711,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 						// same loop and would otherwise each fire one.
 						armRelayWatch()
 						atomic.StoreInt64(&lastTorRestart, 0)
-						go restartTor()
+						go reconnectTor()
 						sleepOrKick(30 * time.Second)
 						continue
 					}

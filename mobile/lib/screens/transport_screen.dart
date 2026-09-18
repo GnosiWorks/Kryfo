@@ -386,6 +386,15 @@ class _AliveState extends State<_Alive> {
               : HaloColors.rose,
         ),
         _Line(
+          'last tor reconnect',
+          engine.lastReconnect().isEmpty ? 'None yet' : engine.lastReconnect(),
+          engine.lastReconnect().startsWith('ok')
+              ? HaloColors.green
+              : engine.lastReconnect().isEmpty
+              ? HaloColors.warm
+              : HaloColors.rose,
+        ),
+        _Line(
           'job runs',
           appState.jobRuns == 0
               ? 'None yet'

@@ -14,6 +14,7 @@ import '../dlog.dart';
 import '../handle_lookup.dart' show handleFromInput;
 import '../main.dart' show appState, buildHaloUriV3, handleHaloUri;
 import '../theme.dart';
+import '../widgets/halo_buttons.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/pair_code_panel.dart';
@@ -512,7 +513,10 @@ class _Way2Card extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          _Primary(label: 'Send the link', onTap: ready ? onShare : null),
+          HaloPrimaryButton(
+            label: 'Send the link',
+            onTap: ready ? onShare : null,
+          ),
           const SizedBox(height: 10),
           Row(
             children: [
@@ -616,7 +620,7 @@ class _Way3Card extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          _Primary(
+          HaloPrimaryButton(
             label: busy ? 'Looking…' : 'Find them',
             onTap: busy ? null : onFind,
           ),
@@ -754,50 +758,6 @@ class _HandleRow extends StatelessWidget {
             else
               Icon(Icons.chevron_right, size: 20, color: HaloColors.text2),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-// ───────── buttons ─────────
-
-class _Primary extends StatefulWidget {
-  final String label;
-  final VoidCallback? onTap;
-  const _Primary({required this.label, required this.onTap});
-  @override
-  State<_Primary> createState() => _PrimaryState();
-}
-
-class _PrimaryState extends State<_Primary> {
-  bool _down = false;
-  @override
-  Widget build(BuildContext context) {
-    final on = widget.onTap != null;
-    return GestureDetector(
-      onTapDown: on ? (_) => setState(() => _down = true) : null,
-      onTapUp: on ? (_) => setState(() => _down = false) : null,
-      onTapCancel: on ? () => setState(() => _down = false) : null,
-      onTap: widget.onTap,
-      child: AnimatedScale(
-        scale: _down ? 0.97 : 1,
-        duration: const Duration(milliseconds: 110),
-        child: Container(
-          height: 46,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: on ? HaloColors.amber : HaloColors.surface3,
-            borderRadius: BorderRadius.circular(13),
-          ),
-          child: Text(
-            widget.label,
-            style: HaloType.sans(
-              size: 14,
-              weight: FontWeight.w600,
-              color: on ? HaloColors.onAmber : HaloColors.text3,
-            ),
-          ),
         ),
       ),
     );

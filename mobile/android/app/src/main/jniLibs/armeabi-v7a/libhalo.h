@@ -27,6 +27,7 @@ extern const char *_GoStringPtr(_GoString_ s);
 
 
 
+
 #line 11 "room.go"
 
 #include <stdlib.h>
@@ -95,6 +96,27 @@ typedef struct { void *data; GoInt len; GoInt cap; } GoSlice;
 extern "C" {
 #endif
 
+
+// both descriptors are owned from here on and closed before returning
+//
+extern char* HaloAgeLock(int inFd, int outFd, char* cPass);
+
+// checks the password against the header and keeps the file open. nothing
+// of the body is read, so nothing needs a place to go yet.
+//
+extern char* HaloAgeOpenBegin(int inFd, char* cPass);
+extern char* HaloAgeOpenFinish(int outFd);
+extern void HaloAgeOpenDrop(void);
+
+// read from the ui while a call above runs on another isolate
+//
+extern long long HaloAgeProgress(void);
+extern void HaloAgeCancel(void);
+
+// four words from the list the identity names come from: 44 bits, drawn
+// from the system's random source, with no modulo bias (2048 is 2^11).
+//
+extern char* HaloSuggestPassphrase(void);
 extern void HaloSetDebug(int on);
 extern char* HaloPing(void);
 extern char* HaloVersion(void);
@@ -117,30 +139,7 @@ extern char* HaloIdFromPubkey(char* cHex);
 extern char* HaloEncryptFor(char* cPeerPub, char* cPlain);
 extern char* HaloDecryptFrom(char* cPeerPub, char* cB64);
 extern char* HaloStartListener(char* cDataDir);
-extern void HaloShutdown(void);
-
-// puts tor to sleep and keeps it there. it does NOT shut tor down.
-//
-// the first version did, and a test that ran real start/stop cycles in one
-// process (tor_cycle_test.go) killed it: tor 0.4.9.5 survives one shutdown
-// per process and aborts the whole app on the second, "Error destroying a
-// mutex", or hangs in it. a day of check-ins is ninety-six of them. so tor
-// stays up and is told to leave the network: DisableNetwork=1 closes every
-// connection and circuit and stops it building more, which is what tor
-// browser and orbot do for the same reason. waking is the same setting
-// turned back, and the consensus it kept makes that quick.
-//
-// "ok" when tor went quiet or was not running, "error: ..." when it would
-// not take the setting. on an error tor is left exactly as it was.
-//
-extern char* HaloTorStop(void);
-
-// lets tor run again, and wakes it if it is only asleep. "ok" means awake
-// or waking, "start" means there is no tor in this process yet and
-// HaloStartListener has to make one.
-//
-extern char* HaloTorResume(void);
-extern int HaloTorPaused(void);
+extern char* HaloLastReconnect(void);
 extern char* HaloGetStatus(void);
 extern char* HaloDrainInbox(void);
 extern char* HaloSendTo(char* cAddr, char* cMsg);
@@ -179,18 +178,17 @@ extern int HaloSealChunk(char* cKey, unsigned long long index, unsigned char typ
 //
 extern int HaloOpenChunk(char* cKey, unsigned long long index, unsigned char typ, unsigned char* in, int inLen, unsigned char* out);
 
-// takes newline separated bridge lines and whether to use them. the caller is
-// expected to restart tor afterwards; changing this mid-session does nothing
-// on its own, because tor reads the config once at startup.
+// takes newline separated bridge lines and whether to use them. the caller
+// calls HaloRestartTor afterwards, which hands the new config to the running
+// tor and bounces its network so it takes.
 //
 extern char* HaloSetBridges(char* cLines, int on);
 
 // what the ui needs: whether bridges are on, how many are configured, and
 // whether the local transport is actually up.
 //
-// bounce tor so it picks up a config change. bridges are the only reason to
-// call this - tor reads its arguments once and never again, so toggling them
-// without a restart looks like the feature silently not working.
+// hand tor the new bridge config and bounce its network so it takes. tor is
+// never restarted for this: see reconnectTor for why it cannot be.
 //
 extern char* HaloRestartTor(void);
 extern char* HaloBridgeState(void);
@@ -219,10 +217,6 @@ extern char* HaloMoatFetch(void);
 // "wrong" if the captcha was not solved, or "error: ...".
 //
 extern char* HaloMoatSolve(char* cChallenge, char* cSolution);
-
-// "active started", two numbers
-//
-extern char* HaloCatchupState(void);
 extern char* HaloNostrInit(char* cRelaysCSV);
 extern char* HaloNostrSend(char* cPeerXPubHex, char* cMsg);
 extern char* HaloNostrSubscribe(char* cPeerXPubHex);
