@@ -16,6 +16,8 @@ import 'tools_screen.dart';
 import 'clean_screen.dart';
 import 'photo_knows_screen.dart';
 import 'qr_screen.dart';
+import 'lock_file_screen.dart';
+import 'open_locked_screen.dart';
 import '../tools/tools_bridge.dart';
 import '../widgets/nav_bar.dart';
 import 'package:flutter/services.dart';
@@ -110,6 +112,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (f != null) _openTool(PhotoKnowsScreen(file: f));
   }
 
+  Future<void> _pickFor(Widget Function(PickedFile) screen) async {
+    final f = await ToolsBridge.instance.pick('any');
+    if (f != null) _openTool(screen(f));
+  }
+
   void _clean(PickedFile f) => _openTool(CleanScreen(file: f));
 
   void _openTool(Widget screen) {
@@ -150,6 +157,8 @@ class _HomeScreenState extends State<HomeScreen> {
           onPickVideo: () => _pickToRead('video'),
           onClean: _pickToClean,
           onQr: () => _openTool(const QrScreen()),
+          onLock: () => _pickFor((f) => LockFileScreen(file: f)),
+          onOpenLocked: () => _pickFor((f) => OpenLockedScreen(file: f)),
         );
       case HaloTab.support:
         return const DonateScreen();

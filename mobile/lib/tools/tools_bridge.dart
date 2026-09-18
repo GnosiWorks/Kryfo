@@ -86,7 +86,9 @@ class ToolsBridge {
 
   Future<PickedFile?> pick(String kind) async {
     try {
-      return PickedFile.from(await _ch.invokeMethod('pick', {'kind': kind}));
+      return PickedFile.from(
+        await _ch.invokeMethod('pick', {'kind': kind}),
+      );
     } on PlatformException {
       return null;
     }
@@ -113,9 +115,9 @@ class ToolsBridge {
   Future<bool> shareOut(String path, String mime) async {
     try {
       return await _ch.invokeMethod<bool>('shareOut', {
-            'path': path,
-            'mime': mime,
-          }) ??
+              'path': path,
+              'mime': mime,
+            }) ??
           false;
     } on PlatformException {
       return false;
@@ -125,10 +127,10 @@ class ToolsBridge {
   Future<String> saveToGallery(String path, String name, String mime) async {
     try {
       return await _ch.invokeMethod<String>('saveToGallery', {
-            'path': path,
-            'name': name,
-            'mime': mime,
-          }) ??
+              'path': path,
+              'name': name,
+              'mime': mime,
+            }) ??
           'failed';
     } on PlatformException {
       return 'failed';
@@ -141,6 +143,66 @@ class ToolsBridge {
           'failed';
     } on PlatformException {
       return 'failed';
+    }
+  }
+
+  Future<String> saveToFiles(String path, String name, String mime) async {
+    try {
+      return await _ch.invokeMethod<String>('saveToFiles', {
+              'path': path,
+              'name': name,
+              'mime': mime,
+            }) ??
+          'failed';
+    } on PlatformException {
+      return 'failed';
+    }
+  }
+
+  Future<int> openForRead(String uri) async {
+    try {
+      return await _ch.invokeMethod<int>('openForRead', {'uri': uri}) ?? -1;
+    } on PlatformException {
+      return -1;
+    }
+  }
+
+  Future<String?> createDocument(String name, String mime) async {
+    try {
+      return await _ch.invokeMethod<String>('createDocument', {
+          'name': name,
+          'mime': mime,
+        });
+    } on PlatformException {
+      return null;
+    }
+  }
+
+  Future<int> openCreated(String uri) async {
+    try {
+      return await _ch.invokeMethod<int>('openCreated', {'uri': uri}) ?? -1;
+    } on PlatformException {
+      return -1;
+    }
+  }
+
+  Future<void> dropCreated(String uri) async {
+    try {
+      await _ch.invokeMethod('dropCreated', {'uri': uri});
+    } on PlatformException {
+      return;
+    }
+  }
+
+  Future<({String path, int fd})?> openCacheOut(String name) async {
+    try {
+      final raw = await _ch.invokeMethod('openCacheOut', {'name': name});
+      if (raw is! Map) return null;
+      final path = raw['path'], fd = raw['fd'];
+      if (path is! String || fd is! int || fd < 0) return null;
+      return (path: path, fd: fd);
+    } on PlatformException {
+      return null;
     }
   }
 

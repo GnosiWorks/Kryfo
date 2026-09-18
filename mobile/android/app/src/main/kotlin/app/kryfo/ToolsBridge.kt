@@ -8,6 +8,8 @@ import android.content.ContentValues
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.ParcelFileDescriptor
+import android.provider.DocumentsContract
 import android.os.StatFs
 import android.provider.MediaStore
 import android.provider.OpenableColumns
@@ -24,6 +26,7 @@ class ToolsBridge(private val activity: Activity) {
         const val REQ_PICK = 7321
         const val REQ_DELETE = 7322
         const val REQ_SAVE_AS = 7323
+        const val REQ_CREATE = 7324
         const val IN_DIR = "tools_in"
         const val OUT_DIR = "tools_out"
         private const val MAX_AGE_MS = 15 * 60 * 1000L
@@ -47,6 +50,8 @@ class ToolsBridge(private val activity: Activity) {
     private var pendingDelete: MethodChannel.Result? = null
     private var pendingSaveAs: MethodChannel.Result? = null
     private var pendingSaveAsPath: String? = null
+    private var pendingCreate: MethodChannel.Result? = null
+    private val created = HashSet<String>()
     private val cancel = AtomicBoolean(false)
 
     fun attach(ch: MethodChannel) {
@@ -142,6 +147,21 @@ class ToolsBridge(private val activity: Activity) {
                 result
             )
             "deleteOriginal" -> deleteOriginal(call.argument<String>("uri"), result)
+            "saveToFiles" -> saveAs(
+                call.argument<String>("path"),
+                call.argument<String>("name"),
+                call.argument<String>("mime"),
+                result
+            )
+            "openForRead" -> openForRead(call.argument<String>("uri"), result)
+            "createDocument" -> createDocument(
+                call.argument<String>("name"),
+                call.argument<String>("mime"),
+                result
+            )
+            "openCreated" -> openCreated(call.argument<String>("uri"), result)
+            "dropCreated" -> dropCreated(call.argument<String>("uri"), result)
+            "openCacheOut" -> openCacheOut(call.argument<String>("name"), result)
             "sweep" -> {
                 sweep(activity.cacheDir, call.argument<Boolean>("all") ?: false)
                 result.success(true)
@@ -220,6 +240,9 @@ class ToolsBridge(private val activity: Activity) {
                             done += n
                             if (done - lastTold >= (1L shl 20)) {
                                 lastTold = done
+                                // a provider can lie about the size. the disk cannot
+                                val left = free()
+                                if (left in 0 until (64L shl 20)) throw java.io.IOException("full")
                                 val d = done
                                 activity.runOnUiThread {
                                     channel?.invokeMethod("copyProgress", mapOf("done" to d, "total" to total))
@@ -235,7 +258,8 @@ class ToolsBridge(private val activity: Activity) {
                 activity.runOnUiThread { result.error("cancelled", "stopped", null) }
             } catch (e: Exception) {
                 out?.parentFile?.deleteRecursively()
-                activity.runOnUiThread { result.error("read", "could not read that file", null) }
+                val code = if (e.message == "full") "full" else "read"
+                activity.runOnUiThread { result.error(code, "could not read that file", null) }
             }
         }.start()
     }
@@ -276,24 +300,7 @@ class ToolsBridge(private val activity: Activity) {
         val type = mime ?: "application/octet-stream"
         val shown = safeName(name ?: src.name)
         if (Build.VERSION.SDK_INT < 29) {
-            if (pendingSaveAs != null) {
-                result.success("failed")
-                return
-            }
-            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-                addCategory(Intent.CATEGORY_OPENABLE)
-                this.type = type
-                putExtra(Intent.EXTRA_TITLE, shown)
-            }
-            try {
-                pendingSaveAs = result
-                pendingSaveAsPath = src.path
-                activity.startActivityForResult(intent, REQ_SAVE_AS)
-            } catch (e: Exception) {
-                pendingSaveAs = null
-                pendingSaveAsPath = null
-                result.success("failed")
-            }
+            saveAs(path, name, mime, result)
             return
         }
         Thread {
@@ -328,6 +335,114 @@ class ToolsBridge(private val activity: Activity) {
             }
             activity.runOnUiThread { result.success(if (ok) "saved" else "failed") }
         }.start()
+    }
+
+    private fun saveAs(path: String?, name: String?, mime: String?, result: MethodChannel.Result) {
+        val src = path?.let { File(it) }
+        if (src == null || !src.isFile || outUri(src.path) == null || pendingSaveAs != null) {
+            result.success("failed")
+            return
+        }
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = mime ?: "application/octet-stream"
+            putExtra(Intent.EXTRA_TITLE, safeName(name ?: src.name))
+        }
+        try {
+            pendingSaveAs = result
+            pendingSaveAsPath = src.path
+            activity.startActivityForResult(intent, REQ_SAVE_AS)
+        } catch (e: Exception) {
+            pendingSaveAs = null
+            pendingSaveAsPath = null
+            result.success("failed")
+        }
+    }
+
+    // the descriptor is detached: whoever is handed the number owns it and
+    // closes it. the engine does, at the end of the one call it is given to.
+    private fun openForRead(uriText: String?, result: MethodChannel.Result) {
+        val uri = uriText?.let { Uri.parse(it) }
+        if (uri == null || !acceptable(uri)) {
+            result.success(-1)
+            return
+        }
+        try {
+            val pfd = activity.contentResolver.openFileDescriptor(uri, "r")
+            result.success(pfd?.detachFd() ?: -1)
+        } catch (e: Exception) {
+            result.success(-1)
+        }
+    }
+
+    private fun createDocument(name: String?, mime: String?, result: MethodChannel.Result) {
+        if (pendingCreate != null) {
+            result.success(null)
+            return
+        }
+        // with the file's own type android numbers a second copy as
+        // "name (1).pdf". with octet-stream it becomes "name.pdf (1)"
+        val shown = safeName(name)
+        val byName = android.webkit.MimeTypeMap.getSingleton()
+            .getMimeTypeFromExtension(shown.substringAfterLast('.', "").lowercase())
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = byName ?: mime ?: "application/octet-stream"
+            putExtra(Intent.EXTRA_TITLE, shown)
+        }
+        try {
+            pendingCreate = result
+            activity.startActivityForResult(intent, REQ_CREATE)
+        } catch (e: Exception) {
+            pendingCreate = null
+            result.success(null)
+        }
+    }
+
+    private fun openCreated(uriText: String?, result: MethodChannel.Result) {
+        if (uriText == null || !created.contains(uriText)) {
+            result.success(-1)
+            return
+        }
+        try {
+            val pfd = activity.contentResolver.openFileDescriptor(Uri.parse(uriText), "wt")
+            result.success(pfd?.detachFd() ?: -1)
+        } catch (e: Exception) {
+            result.success(-1)
+        }
+    }
+
+    // a file this session made and then could not finish is taken away again
+    private fun dropCreated(uriText: String?, result: MethodChannel.Result) {
+        if (uriText == null || !created.remove(uriText)) {
+            result.success(false)
+            return
+        }
+        val ok = try {
+            DocumentsContract.deleteDocument(activity.contentResolver, Uri.parse(uriText))
+        } catch (e: Exception) {
+            false
+        }
+        result.success(ok)
+    }
+
+    private fun openCacheOut(name: String?, result: MethodChannel.Result) {
+        try {
+            val rnd = ByteArray(8).also { SecureRandom().nextBytes(it) }
+                .joinToString("") { "%02x".format(it) }
+            val dir = File(File(activity.cacheDir, OUT_DIR), rnd)
+            dir.mkdirs()
+            val f = File(dir, safeName(name))
+            val pfd = ParcelFileDescriptor.open(
+                f,
+                ParcelFileDescriptor.MODE_CREATE or
+                    ParcelFileDescriptor.MODE_WRITE_ONLY or
+                    ParcelFileDescriptor.MODE_TRUNCATE
+            )
+            result.success(mapOf("path" to f.absolutePath, "fd" to pfd.detachFd()))
+        } catch (e: Exception) {
+            result.success(null)
+        }
     }
 
     private fun deleteOriginal(uriText: String?, result: MethodChannel.Result) {
@@ -376,6 +491,18 @@ class ToolsBridge(private val activity: Activity) {
                 val r = pendingDelete ?: return true
                 pendingDelete = null
                 r.success(if (resultCode == Activity.RESULT_OK) "deleted" else "kept")
+                return true
+            }
+            REQ_CREATE -> {
+                val r = pendingCreate ?: return true
+                pendingCreate = null
+                val uri = data?.data
+                if (resultCode != Activity.RESULT_OK || uri == null) {
+                    r.success(null)
+                } else {
+                    created.add(uri.toString())
+                    r.success(uri.toString())
+                }
                 return true
             }
             REQ_SAVE_AS -> {
