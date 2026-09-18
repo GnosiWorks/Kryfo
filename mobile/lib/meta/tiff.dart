@@ -16,6 +16,9 @@ class TiffInfo {
   double? lat;
   double? lon;
   double? altitude;
+  double? accuracyM;
+  double? fNumber;
+  double? exposure;
   bool gpsBlank = false;
   bool makerNote = false;
   bool comment = false;
@@ -89,6 +92,12 @@ TiffInfo? readTiff(Uint8List block) {
     return d == 0 ? null : t.u32(at) / d;
   }
 
+  double? rationalOf(int entry) {
+    if (t.u16(entry + 2) != 5 || t.u32(entry + 4) != 1) return null;
+    final v = rational(t.u32(entry + 8));
+    return v != null && v.isFinite && v > 0 ? v : null;
+  }
+
   double? dms(int entry) {
     if (t.u16(entry + 2) != 5 || t.u32(entry + 4) != 3) return null;
     final at = t.u32(entry + 8);
@@ -151,6 +160,12 @@ TiffInfo? readTiff(Uint8List block) {
           info.offset ??= text(e);
         case 0xA434:
           info.lens = text(e);
+        case 0x829A:
+          info.exposure = rationalOf(e);
+          info.otherTags++;
+        case 0x829D:
+          info.fNumber = rationalOf(e);
+          info.otherTags++;
         case 0xA431:
           info.serial = text(e);
         case 0xA430:
@@ -186,6 +201,9 @@ TiffInfo? readTiff(Uint8List block) {
           altRef = block[e + 8];
         case 6:
           info.altitude = rational(t.u32(e + 8));
+        case 0x1F:
+          info.accuracyM = rationalOf(e);
+          info.otherTags++;
         default:
           info.otherTags++;
       }

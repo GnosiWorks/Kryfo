@@ -33,6 +33,9 @@ class MetaReport {
   String? copyright;
   String? taken;
   String? offset;
+  double? accuracyM;
+  double? fNumber;
+  double? exposure;
   DateTime? created;
   int orientation = 1;
   int thumbnailBytes = 0;
@@ -232,6 +235,9 @@ void _takeExif(Uint8List tiff, MetaReport r) {
   r.copyright ??= e.copyright;
   r.taken ??= e.taken;
   r.offset ??= e.offset;
+  r.accuracyM ??= e.accuracyM;
+  r.fNumber ??= e.fNumber;
+  r.exposure ??= e.exposure;
   if (e.gpsBlank) r.gpsBlank = true;
   if (e.makerNote) r.makerNote = true;
   if (e.comment) r.comment = true;

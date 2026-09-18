@@ -114,6 +114,12 @@ Uint8List cameraTiff({bool le = true, bool south = false}) {
       b.ascii(0x0131, 'A536BXXU4'),
     ],
     exif: [
+      b.rationals(0x829A, [
+        [1, 120],
+      ]),
+      b.rationals(0x829D, [
+        [20, 10],
+      ]),
       b.ascii(0x9003, '2026:09:17 18:09:48'),
       b.ascii(0x9011, '+03:00'),
       b.undefined(0x927C, List.filled(24, 7)),
@@ -135,6 +141,9 @@ Uint8List cameraTiff({bool le = true, bool south = false}) {
       b.byte(5, 0),
       b.rationals(6, [
         [1570, 10],
+      ]),
+      b.rationals(0x1F, [
+        [5, 1],
       ]),
     ],
     thumbnail: [0xFF, 0xD8, 1, 2, 3, 4, 5, 6, 0xFF, 0xD9],

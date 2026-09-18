@@ -127,6 +127,14 @@ void main() {
     expect(read(webp()).status, MetaStatus.nothing);
   });
 
+  test('accuracy, aperture and shutter are read and still counted', () {
+    final r = read(jpeg(tiff: cameraTiff()));
+    expect(r.accuracyM, 5);
+    expect(r.fNumber, 2);
+    expect(r.exposure, closeTo(1 / 120, 1e-9));
+    expect(r.otherExifTags >= 3, true);
+  });
+
   test('heif: the exif and xmp items', () {
     final r = read(heif(tiff: cameraTiff(), xmp: xmpGps));
     expect(r.kind, MetaKind.heif);

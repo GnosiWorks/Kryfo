@@ -14,6 +14,7 @@ import 'donate_screen.dart';
 import 'profile_screen.dart';
 import 'tools_screen.dart';
 import 'clean_screen.dart';
+import 'photo_knows_screen.dart';
 import '../tools/tools_bridge.dart';
 import '../widgets/nav_bar.dart';
 import 'package:flutter/services.dart';
@@ -73,7 +74,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final Set<HaloTab> _seen = {HaloTab.chats};
   StreamSubscription<void>? _sharedSub;
   Timer? _sweeper;
-  bool _cleaning = false;
 
   @override
   void initState() {
@@ -104,14 +104,19 @@ class _HomeScreenState extends State<HomeScreen> {
     if (f != null) _clean(f);
   }
 
-  Future<void> _clean(PickedFile f) async {
-    if (!mounted || _cleaning) return;
-    _cleaning = true;
+  Future<void> _pickToRead(String kind) async {
+    final f = await ToolsBridge.instance.pick(kind);
+    if (f != null) _openTool(PhotoKnowsScreen(file: f));
+  }
+
+  void _clean(PickedFile f) => _openTool(CleanScreen(file: f));
+
+  void _openTool(Widget screen) {
+    if (!mounted) return;
+    final nav = Navigator.of(context);
+    nav.popUntil((r) => r.isFirst);
     _pick(HaloTab.tools);
-    await Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => CleanScreen(file: f)));
-    _cleaning = false;
+    nav.push(haloRoute(screen));
   }
 
   void _pick(HaloTab t) {
@@ -139,7 +144,11 @@ class _HomeScreenState extends State<HomeScreen> {
           onOpenGroup: widget.onOpenGroup,
         );
       case HaloTab.tools:
-        return ToolsScreen(onClean: _pickToClean);
+        return ToolsScreen(
+          onPickPhoto: () => _pickToRead('image'),
+          onPickVideo: () => _pickToRead('video'),
+          onClean: _pickToClean,
+        );
       case HaloTab.support:
         return const DonateScreen();
       case HaloTab.me:

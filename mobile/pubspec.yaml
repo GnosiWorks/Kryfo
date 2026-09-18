@@ -84,6 +84,10 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  assets:
+    - assets/geo/world.bin
+    - assets/geo/places.bin.gz
+
   fonts:
     - family: Fraunces
       fonts:

@@ -92,6 +92,9 @@ MetaReport readFile(String path) {
   }
 }
 
+Future<MetaReport> readFileOffUi(String path) =>
+    Isolate.run(() => readFile(path));
+
 Future<CleanResult> cleanFile(
   String inPath,
   String outRoot, {

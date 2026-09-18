@@ -458,6 +458,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(4, 10, 12, 0),
             child: Text(
+              'The offline map in Tools is drawn from Natural Earth (public '
+              'domain). Town names are from GeoNames, geonames.org, under '
+              'CC BY 4.0.',
+              style: HaloType.sans(
+                size: 12,
+                color: HaloColors.warm,
+                height: 1.4,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 10, 12, 0),
+            child: Text(
               'Not independently audited. Pre-alpha - good for testing, '
               'not yet for high-stakes use.',
               style: HaloType.sans(

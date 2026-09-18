@@ -14,8 +14,8 @@ import '../widgets/halo_sheet.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/stroke_icon.dart';
+import '../widgets/tool_parts.dart';
 
-const _back = ['M15 5l-7 7 7 7'];
 const _share = [
   'M12 15V4',
   'M8 8l4-4 4 4',
@@ -30,7 +30,6 @@ const _trash = [
 const _pin = ['M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z'];
 const _note = ['M12 6.5v7', 'M12 17v.5'];
 const _tick = ['M5 12.5l4.5 4.5L19 7.5'];
-final _film = [svgRect(4, 5, 16, 14, 2.5), 'M10 9.5v5l4.5-2.5z'];
 
 String failureTitle(Object f) => switch (f) {
   CleanFailure.unknownKind => 'Kryfo can’t clean this kind of file yet.',
@@ -58,16 +57,10 @@ String failureBody(Object f) => switch (f) {
   _ => 'The app that shared it may have taken it back. Try sharing it again.',
 };
 
-String prettySize(int bytes) {
-  if (bytes < 1024) return '$bytes B';
-  if (bytes < 1 << 20) return '${(bytes / 1024).round()} KB';
-  final mb = bytes / (1 << 20);
-  return '${mb.toStringAsFixed(mb < 100 ? 1 : 0)} MB';
-}
-
 class CleanScreen extends StatefulWidget {
   final PickedFile file;
-  const CleanScreen({super.key, required this.file});
+  final String? localPath;
+  const CleanScreen({super.key, required this.file, this.localPath});
 
   @override
   State<CleanScreen> createState() => _CleanScreenState();
@@ -83,7 +76,7 @@ class _CleanScreenState extends State<CleanScreen>
   CopyProgress? _progress;
   CleanResult? _result;
   Object? _failure;
-  bool _copying = true;
+  late bool _copying = widget.localPath == null;
   bool _busy = false;
   bool _gone = false;
   bool _still = false;
@@ -115,7 +108,9 @@ class _CleanScreenState extends State<CleanScreen>
   Future<void> _run() async {
     String? inPath;
     try {
-      inPath = await ToolsBridge.instance.copyIn(widget.file.uri);
+      inPath =
+          widget.localPath ??
+          await ToolsBridge.instance.copyIn(widget.file.uri);
       if (_gone) return;
       setState(() => _copying = false);
       final cache = await getTemporaryDirectory();
@@ -223,7 +218,7 @@ class _CleanScreenState extends State<CleanScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const _Bar(title: 'Clean copy'),
+            const ToolBar(title: 'Clean copy'),
             Expanded(
               child: _failure != null
                   ? _Failed(failure: _failure!)
@@ -241,14 +236,14 @@ class _CleanScreenState extends State<CleanScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _WideButton(
+                    ToolWideButton(
                       icon: _share,
                       label: 'Share clean copy',
                       filled: true,
                       onTap: _busy ? null : _shareIt,
                     ),
                     const SizedBox(height: 10),
-                    _WideButton(
+                    ToolWideButton(
                       icon: _down,
                       label: 'Save to gallery',
                       filled: false,
@@ -260,7 +255,7 @@ class _CleanScreenState extends State<CleanScreen>
             else if (_failure != null)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 22),
-                child: _WideButton(
+                child: ToolWideButton(
                   label: 'Back',
                   filled: false,
                   onTap: () => Navigator.of(context).maybePop(),
@@ -269,7 +264,7 @@ class _CleanScreenState extends State<CleanScreen>
             else if (_copying)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 22),
-                child: _WideButton(
+                child: ToolWideButton(
                   label: 'Stop',
                   filled: false,
                   onTap: () => Navigator.of(context).maybePop(),
@@ -277,45 +272,6 @@ class _CleanScreenState extends State<CleanScreen>
               ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _Bar extends StatelessWidget {
-  final String title;
-  const _Bar({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(8, 8, 16, 6),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: HaloColors.line, width: 0.5)),
-      ),
-      child: Row(
-        children: [
-          PressScale(
-            label: 'Back',
-            onTap: () => Navigator.of(context).maybePop(),
-            child: SizedBox(
-              width: 44,
-              height: 44,
-              child: Center(
-                child: StrokeIcon(_back, size: 22, color: HaloColors.warm),
-              ),
-            ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            title,
-            style: HaloType.sans(
-              size: 15,
-              weight: FontWeight.w500,
-              color: HaloColors.text,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -486,7 +442,7 @@ class _Done extends StatelessWidget {
                           padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
                           child: Row(
                             children: [
-                              _Thumb(
+                              ToolThumb(
                                 path: result.path!,
                                 video: video,
                                 size: 46,
@@ -625,39 +581,6 @@ class _RemovedRow extends StatelessWidget {
   }
 }
 
-class _Thumb extends StatelessWidget {
-  final String path;
-  final bool video;
-  final double size;
-  const _Thumb({required this.path, required this.video, required this.size});
-
-  @override
-  Widget build(BuildContext context) {
-    final fallback = ColoredBox(
-      color: HaloColors.surface3,
-      child: Center(
-        child: StrokeIcon(_film, size: size * 0.5, color: HaloColors.warm),
-      ),
-    );
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(size * 0.24),
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: video
-            ? fallback
-            : Image.file(
-                File(path),
-                fit: BoxFit.cover,
-                cacheWidth: (size * 3).round(),
-                gaplessPlayback: true,
-                errorBuilder: (_, _, _) => fallback,
-              ),
-      ),
-    );
-  }
-}
-
 class _CheckPainter extends CustomPainter {
   final double ring;
   final double tick;
@@ -712,59 +635,6 @@ class _CheckPainter extends CustomPainter {
       old.ring != ring || old.tick != tick || old.color != color;
 }
 
-class _WideButton extends StatelessWidget {
-  final List<String>? icon;
-  final String label;
-  final bool filled;
-  final VoidCallback? onTap;
-  const _WideButton({
-    this.icon,
-    required this.label,
-    required this.filled,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final ink = filled ? HaloColors.onAmber : HaloColors.text;
-    return Opacity(
-      opacity: onTap == null ? 0.55 : 1,
-      child: PressScale(
-        label: label,
-        onTap: onTap,
-        scale: 0.96,
-        child: Container(
-          height: filled ? 54 : 50,
-          decoration: BoxDecoration(
-            color: filled ? HaloColors.amber : null,
-            borderRadius: BorderRadius.circular(14),
-            border: filled ? null : Border.all(color: HaloColors.line2),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (icon != null) ...[
-                StrokeIcon(icon!, size: 19, color: ink),
-                const SizedBox(width: 9),
-              ],
-              ExcludeSemantics(
-                child: Text(
-                  label,
-                  style: HaloType.sans(
-                    size: filled ? 15 : 14,
-                    weight: filled ? FontWeight.w600 : FontWeight.w500,
-                    color: ink,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _SavedSheet extends StatefulWidget {
   final PickedFile file;
   final CleanResult result;
@@ -794,7 +664,7 @@ class _SavedSheetState extends State<_SavedSheet> {
   Widget build(BuildContext context) {
     final before = widget.result.before;
     final video = before.kind == MetaKind.mp4;
-    final hadPlace = before.gps != null;
+    final hadPlace = before.gps != null || before.gpsBlank;
     final canDelete = widget.file.canDelete;
     final what = hadPlace
         ? 'with the location inside. Anyone who gets that one gets your street.'
@@ -814,7 +684,7 @@ class _SavedSheetState extends State<_SavedSheet> {
                 label: 'ORIGINAL',
                 tint: HaloColors.rose,
                 badge: hadPlace ? _pin : _note,
-                child: _Thumb(
+                child: ToolThumb(
                   path: widget.result.path!,
                   video: video,
                   size: 84,
@@ -825,7 +695,7 @@ class _SavedSheetState extends State<_SavedSheet> {
                 label: 'CLEAN',
                 tint: HaloColors.green,
                 badge: _tick,
-                child: _Thumb(
+                child: ToolThumb(
                   path: widget.result.path!,
                   video: video,
                   size: 84,
