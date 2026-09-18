@@ -4846,6 +4846,22 @@ class AppState extends ChangeNotifier {
     // 2) reaction
     if (env.reaction != null) {
       final r = env.reaction!;
+      // same hole pins had: the frame names a uid and nothing else, so only
+      // someone in the chat that row lives in gets to react to it
+      final where = await db.chatOf(r.targetUid);
+      final ok = pinAllowed(
+        rowPeer: where?.$1,
+        rowGroup: where?.$2,
+        sender: senderHaloId,
+        frameGroup: env.groupId,
+        members: where?.$2 == null
+            ? const []
+            : await db.getGroupMembers(where!.$2!),
+      );
+      if (!ok || r.emoji.length > 32) {
+        dlog('reaction: dropped');
+        return;
+      }
       if (r.emoji.isEmpty) {
         await db.removeReaction(r.targetUid, senderHaloId);
       } else {
