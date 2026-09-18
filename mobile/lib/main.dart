@@ -25,6 +25,7 @@ import 'theme.dart';
 import 'wipe.dart';
 import 'media_progress.dart';
 import 'media_send.dart';
+import 'media_resend.dart';
 import 'screens/home_screen.dart';
 import 'screens/new_group_screen.dart';
 import 'screens/room_create_sheet.dart';
@@ -886,7 +887,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 48,
+      version: 49,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1015,10 +1016,14 @@ class HaloDb {
         await _shieldTable(db);
         await _editsTable(db);
         await _pinsTable(db);
+        await _mediaWantsTable(db);
         await _heldTable(db);
         await _signalTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 49) {
+          await _mediaWantsTable(db);
+        }
         if (oldV < 48) {
           // when a message was pinned, so the list of pins can run newest
           // first. pins from before have none and sort by their own time.
@@ -3088,6 +3093,66 @@ class HaloDb {
     );
   }
 
+  // a slice of an unfinished file just came in. can_resend only ever goes
+  // up: one slice from a sender that can answer is enough to know it can.
+  Future<void> noteMediaWant(
+    String mediaId,
+    String peerId,
+    int total,
+    bool canResend,
+  ) async {
+    final db = await open();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.rawInsert(
+      'INSERT INTO media_wants (media_id, peer_id, total, can_resend, last_at) '
+      'VALUES (?, ?, ?, ?, ?) '
+      'ON CONFLICT(media_id) DO UPDATE SET last_at = excluded.last_at, '
+      'can_resend = MAX(can_resend, excluded.can_resend)',
+      [mediaId, peerId, total, canResend ? 1 : 0, now],
+    );
+  }
+
+  Future<List<Map<String, Object?>>> mediaWants() async {
+    final db = await open();
+    return db.query('media_wants', where: 'can_resend = 1');
+  }
+
+  Future<Set<int>> heldSlices(String mediaId) async {
+    final db = await open();
+    final r = await db.query(
+      'media_chunks',
+      columns: ['idx'],
+      where: 'media_id = ?',
+      whereArgs: [mediaId],
+    );
+    return {for (final row in r) (row['idx'] as num).toInt()};
+  }
+
+  Future<void> markMediaAsked(String mediaId) async {
+    final db = await open();
+    await db.rawUpdate(
+      'UPDATE media_wants SET asked_at = ?, asks = asks + 1 WHERE media_id = ?',
+      [DateTime.now().millisecondsSinceEpoch, mediaId],
+    );
+  }
+
+  Future<void> dropMediaWant(String mediaId) async {
+    final db = await open();
+    await db.delete('media_wants', where: 'media_id = ?', whereArgs: [mediaId]);
+  }
+
+  // what a request for slices is checked against and answered from
+  Future<Map<String, Object?>?> sentMediaRow(String msgUid) async {
+    final db = await open();
+    final r = await db.query(
+      'messages',
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+      limit: 1,
+    );
+    return r.isEmpty ? null : r.first;
+  }
+
   // a transfer nobody ever finished shouldn't sit in the db forever.
   Future<void> sweepMediaChunks() async {
     final db = await open();
@@ -3100,6 +3165,7 @@ class HaloDb {
       whereArgs: [cutoff],
     );
     if (n > 0) dlog('swept $n stale media chunks');
+    await db.delete('media_wants', where: 'last_at < ?', whereArgs: [cutoff]);
   }
 
   Future<bool> isDelivered(String msgUid) async {
@@ -3260,6 +3326,22 @@ Future<void> _heldTable(Database db) async {
       peer_id TEXT NOT NULL,
       cipher TEXT NOT NULL,
       at INTEGER NOT NULL
+    )
+  ''');
+}
+
+// a file coming in that is not whole yet: who is sending it, whether they
+// can be asked for the missing slices, and how often they have been.
+Future<void> _mediaWantsTable(Database db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS media_wants (
+      media_id TEXT PRIMARY KEY,
+      peer_id TEXT NOT NULL,
+      total INTEGER NOT NULL,
+      can_resend INTEGER NOT NULL,
+      last_at INTEGER NOT NULL,
+      asked_at INTEGER NOT NULL DEFAULT 0,
+      asks INTEGER NOT NULL DEFAULT 0
     )
   ''');
 }
@@ -3904,6 +3986,105 @@ class AppState extends ChangeNotifier {
       if (haloWiping) return;
       unawaited(drainOutbox());
     });
+    _needTimer?.cancel();
+    _needTimer = Timer.periodic(const Duration(seconds: 60), (_) {
+      if (haloWiping) return;
+      unawaited(askForMissingSlices());
+    });
+  }
+
+  Timer? _needTimer;
+  bool _asking = false;
+
+  // files that stopped arriving part way: ask each sender for what is
+  // missing. quiet for two minutes first, so a catch-up still bringing
+  // slices in is not mistaken for a loss.
+  Future<void> askForMissingSlices() async {
+    if (_asking || !torReady) return;
+    _asking = true;
+    try {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      for (final w in await db.mediaWants()) {
+        final mid = w['media_id'] as String;
+        final peer = w['peer_id'] as String;
+        final total = (w['total'] as num).toInt();
+        if (await db.messageExists(mid)) {
+          await db.dropMediaWant(mid);
+          continue;
+        }
+        final have = await db.heldSlices(mid);
+        final ask = shouldAskNow(
+          now: now,
+          lastSliceAt: (w['last_at'] as num).toInt(),
+          askedAt: (w['asked_at'] as num).toInt(),
+          asks: (w['asks'] as num).toInt(),
+          canResend: (w['can_resend'] as num).toInt() == 1,
+          have: have.length,
+          total: total,
+        );
+        if (!ask) continue;
+        if (await db.isBlocked(peer)) continue;
+        final missing = missingSlices(have, total);
+        if (missing.isEmpty) continue;
+        dlog('NEED $mid: asking for ${missing.length} of $total');
+        try {
+          final wrapped = await wrapMessage(
+            '',
+            need: NeedFrame(mid, missing),
+            sender: _mySender(),
+          );
+          await _sendOneEnvelope(peer, wrapped);
+          await db.markMediaAsked(mid);
+        } catch (e) {
+          dlog('NEED $mid: ask failed: $e');
+        }
+      }
+    } finally {
+      _asking = false;
+    }
+  }
+
+  final Map<String, int> _needAnsweredAt = {};
+  final Map<String, int> _needRounds = {};
+
+  // the other side of it. the frame comes from outside and names a file to
+  // read off this phone, so it is answered only for a row we sent, to the
+  // one person it was sent to, a bounded number of times.
+  Future<void> _answerNeed(String from, NeedFrame need) async {
+    final row = await db.sentMediaRow(need.mediaId);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final ok =
+        row != null &&
+        resendAllowed(
+          rowPeer: row['peer_id'] as String?,
+          rowGroup: row['group_id'] as String?,
+          rowDirection: row['direction'] as String?,
+          requester: from,
+          now: now,
+          lastAnsweredAt: _needAnsweredAt[need.mediaId] ?? 0,
+          rounds: _needRounds[need.mediaId] ?? 0,
+        );
+    if (!ok) {
+      dlog('NEED ${need.mediaId}: not answered');
+      return;
+    }
+    final filePath = row['file_path'] as String?;
+    final mediaPath = row['media_path'] as String?;
+    final isFile = filePath != null && filePath.isNotEmpty;
+    final path = isFile ? filePath : mediaPath;
+    if (path == null || path.isEmpty || !await File(path).exists()) return;
+    final total = await mediaSliceCount(path);
+    final only = answerable(need.indices, total);
+    if (only.isEmpty) return;
+    _needAnsweredAt[need.mediaId] = now;
+    _needRounds[need.mediaId] = (_needRounds[need.mediaId] ?? 0) + 1;
+    if (_needAnsweredAt.length > 200) {
+      _needAnsweredAt.removeWhere((_, t) => now - t > 86400000);
+    }
+    dlog('NEED ${need.mediaId}: resending ${only.length} of $total');
+    unawaited(
+      _drainMedia(row, from, need.mediaId, path, isFile: isFile, only: only),
+    );
   }
 
   // re-send anything the wire never confirmed. cheap when there's nothing to
@@ -4208,6 +4389,7 @@ class AppState extends ChangeNotifier {
     String uid,
     String path, {
     required bool isFile,
+    Set<int>? only,
   }) async {
     final f = File(path);
     if (!await f.exists()) return;
@@ -4230,7 +4412,12 @@ class AppState extends ChangeNotifier {
       burnSeconds: (r['burn_secs'] as num?)?.toInt(),
       secure: ((r['secure'] as int?) ?? 0) == 1,
       sender: _mySender(),
+      only: only,
     );
+    if (only != null) {
+      dlog('NEED $uid: resend ended $res');
+      return;
+    }
     if (res == 'ok') {
       dlog('OUTBOX: media redelivered $uid');
       await db.markSent(uid);
@@ -4811,6 +4998,11 @@ class AppState extends ChangeNotifier {
       await _applyIntro(senderHaloId, env.intro!);
       return;
     }
+    // they are missing slices of something we sent them
+    if (env.need != null) {
+      await _answerNeed(senderHaloId, env.need!);
+      return;
+    }
     // shared pin - every member mirrors it. only from someone in the chat
     // the row lives in: the frame names a uid and nothing else, and it rides
     // in above the stranger gate like an edit does.
@@ -4992,6 +5184,7 @@ class AppState extends ChangeNotifier {
         if (!isGroup && (env.chunkIndex ?? 0) == 0 && senderHaloId != myId) {
           unawaited(_sendDeliveryReceipt(senderHaloId, mid));
         }
+        unawaited(db.dropMediaWant(mid));
         return;
       }
       // slices land on disk as they arrive, so closing the app mid-transfer
@@ -5007,6 +5200,9 @@ class AppState extends ChangeNotifier {
             : null,
       );
       chunkBurn = await db.mediaChunkBurn(mid) ?? chunkBurn;
+      if (have < total && !isGroup && senderHaloId != myId) {
+        await db.noteMediaWant(mid, senderHaloId, total, env.canResend);
+      }
       if (have < total) {
         // still waiting on more pieces - surface how far along we are. a
         // voice note is seconds of audio; the banner is for the long ones.
@@ -5040,6 +5236,7 @@ class AppState extends ChangeNotifier {
         }
       }
       await db.dropMediaChunks(mid);
+      unawaited(db.dropMediaWant(mid));
       incomingMediaDone(progressKey);
       if (env.pvImg) return;
       // the slice in this envelope is on disk now; nothing below should

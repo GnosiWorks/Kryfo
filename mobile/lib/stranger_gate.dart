@@ -32,7 +32,8 @@ List<Map<String, Object?>> bootSubscribeRows({
 // coming back. counting it flipped back-paired on the sender, and with it the
 // sender's own two-message cap, so a stranger could keep writing into a gate
 // that drops everything past two. only something they wrote counts.
-bool proofOfEngagement(UnwrappedMessage env) => env.deliveredUid == null;
+bool proofOfEngagement(UnwrappedMessage env) =>
+    env.deliveredUid == null && env.need == null;
 
 // the receiver's side of the cap: an unaccepted, unvouched sender already has
 // two messages in requests, so this one is not stored.
