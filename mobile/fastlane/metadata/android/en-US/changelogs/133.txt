@@ -1,11 +1,5 @@
-Security first in this one.
+Security first. Ntfy push is removed: it connected outside Tor and gave nothing back. Photos sent as files are now cleaned of where, when and on what phone they were taken. Reactions are now only accepted from people in that chat, same as pins. The engine's C code is built with stack protection.
 
-Ntfy push is removed. It connected to a public server outside Tor, and it did nothing in return. While it existed, every message also carried an address for the other side to call after sending; off onion mode a contact could have used that to learn where you were. All of it is gone.
+Fixed: pay with bitcoin froze the app, voice notes stopped after a second, a video could send twice.
 
-A photo sent as a file kept where it was taken, when, and on what phone. Pictures sent as files are cleaned now: JPEG, PNG, WebP, HEIC, AVIF, and GIFs. The cleaning also caught three things real camera files carry that it used to miss.
-
-The C parts of the engine, Tor included, are built with stack protection. A pin is accepted only from someone in that chat.
-
-Pay with bitcoin no longer freezes the app. Voice notes no longer stop after a second. A video no longer sends twice.
-
-New: videos look like videos, tapping a file opens it, pins work like Discord's with a list behind the pin in the top bar, a room link in a message is an invitation with a join button, and moving to a new phone carries your public handle.
+New: videos look like videos, tapping a file opens it, pins have a list, room links are invites.

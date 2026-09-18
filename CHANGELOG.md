@@ -10,6 +10,7 @@ All notable user-facing changes to kryfo will land here. Format loosely follows 
 - the cleaning itself missed things, found by running it on real photos instead of test files. a samsung camera writes a block of its own after the end of the picture, and that came through. some phones hang a second image off the first, and that came through. a png can carry a record of what made it and under which account, and that came through. all three are gone now, and a png keeps only what it takes to draw it.
 - the parts of the engine written in c, which is tor and the libraries under it, are now built with stack protection. they are what reads bytes off the network, and they were being built without it.
 - anyone who could reach you and knew a message's id could pin or unpin it on your phone. nothing could be read or changed that way, but it should not have been possible. a pin is accepted only from the other person in that chat, or from a member of that group.
+- reactions are now only accepted from people in that chat, same as pins.
 
 ### Fixed
 - pay with bitcoin froze the app while it reached the payment service over tor, fifteen or twenty seconds on a slow connection, long enough that some phones said kryfo had stopped working. the work was being done in the one place nothing else can happen. it is not now: the screen shows that it is waiting and for how long, and after twenty seconds offers the plain address instead.
