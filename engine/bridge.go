@@ -28,7 +28,6 @@ import (
 	"time"
 	"unsafe"
 
-	libtor "github.com/alexballas/go-libtor"
 	"github.com/cretz/bine/control"
 	"github.com/cretz/bine/tor"
 	"github.com/tyler-smith/go-bip39"
@@ -309,27 +308,34 @@ func HaloDecryptFrom(cPeerPub *C.char, cB64 *C.char) *C.char {
 
 //export HaloStartListener
 func HaloStartListener(cDataDir *C.char) *C.char {
+	return C.CString(startListener(C.GoString(cDataDir)))
+}
+
+// the onion address, or a line starting with "error:"
+func startListener(dataDir string) string {
 	// startMu serializes start against shutdown. mu is only taken around
 	// the shared vars so other ffi calls don't freeze for the seconds tor
 	// takes to come up.
 	startMu.Lock()
 	defer startMu.Unlock()
 
+	if torIsPaused() {
+		return "error: tor is stopped, resume first"
+	}
 	mu.Lock()
 	if myAddr != "" {
 		addr := myAddr
 		mu.Unlock()
-		return C.CString(addr)
+		return addr
 	}
 	mu.Unlock()
 
-	dataDir := C.GoString(cDataDir)
 	if dataDir == "" {
-		return C.CString("error: empty data dir")
+		return "error: empty data dir"
 	}
 	torDataDir := dataDir + "/tor"
 	if err := os.MkdirAll(torDataDir, 0700); err != nil {
-		return C.CString(fmt.Sprintf("error: mkdir tor: %v", err))
+		return fmt.Sprintf("error: mkdir tor: %v", err)
 	}
 	mu.Lock()
 	savedDataDir = dataDir
@@ -340,25 +346,29 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 	// and we hold startMu, so removing a stale lock here is safe.
 	// same reasoning as the restart path: a run file left by a process that
 	// was killed rather than closed will fail the next start outright.
+	if !waitTorGone(45 * time.Second) {
+		log.Println("halo: the last tor has not finished stopping, not starting another on top of it")
+		return "error: tor still stopping"
+	}
 	cleanTorRunFiles(torDataDir)
 
 	setStatus("starting")
 	log.Println("halo: starting embedded tor...")
 	t, err := tor.Start(nil, &tor.StartConf{
-		ProcessCreator: libtor.Creator,
+		ProcessCreator: torCreator,
 		DataDir:        torDataDir,
 		DebugWriter:    newTorDebugWriter(),
 		ExtraArgs:      torArgs(),
 	})
 	if err != nil {
-		return C.CString(fmt.Sprintf("error: tor start: %v", err))
+		return fmt.Sprintf("error: tor start: %v", err)
 	}
 	mu.Lock()
 	torNode = t
 	mu.Unlock()
 	// stay "starting" - tor.Start returns before any circuit exists. the
 	// bootstrap watcher owns the flip at a real 100%.
-	go watchBootstrap(t)
+	goWatchBootstrap(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
@@ -371,7 +381,7 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 	} else {
 		_, key, err = ed25519.GenerateKey(rand.Reader)
 		if err != nil {
-			return C.CString(fmt.Sprintf("error: gen onion key: %v", err))
+			return fmt.Sprintf("error: gen onion key: %v", err)
 		}
 		if werr := os.WriteFile(keyPath, key, 0600); werr != nil {
 			log.Printf("halo: WARN onion key save failed: %v", werr)
@@ -382,17 +392,7 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 
 	// no status flip here - publishing means nothing while bootstrap is at
 	// 50%. the watcher sets it when tor is actually there.
-	// subscribe before Listen - the first UPLOADED can fire while Listen is
-	// still blocking, and missing it meant sitting out the full fallback.
-	hsCh := make(chan control.Event, 16)
-	hsSubbed := false
-	if t.Control != nil {
-		if aerr := t.Control.AddEventListener(hsCh, control.EventCodeHSDesc); aerr == nil {
-			hsSubbed = true
-		} else {
-			log.Printf("halo: HSDesc subscribe failed: %v", aerr)
-		}
-	}
+	hsCh, hsSubbed := listenForUploads(t)
 	// tor starts with the network off. bine normally turns it on inside
 	// Listen, but only on the branch we skip with NoWait - so the onion got
 	// created and never published. turn it on ourselves before listening.
@@ -409,7 +409,7 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 	})
 	if err != nil {
 		log.Printf("halo: listen failed after %.0fs: %v", time.Since(listenStart).Seconds(), err)
-		return C.CString(fmt.Sprintf("error: listen: %v", err))
+		return fmt.Sprintf("error: listen: %v", err)
 	}
 	log.Printf("halo: listen returned in %.0fs", time.Since(listenStart).Seconds())
 	mu.Lock()
@@ -418,43 +418,113 @@ func HaloStartListener(cDataDir *C.char) *C.char {
 	addr := myAddr
 	mu.Unlock()
 
-	go func() {
-		if hsSubbed {
-			defer t.Control.RemoveEventListener(hsCh, control.EventCodeHSDesc)
-		}
-		for {
-			if watchHSDirUpload(t, hsCh, hsSubbed, onion.ID) {
-				break
-			}
-			statusMu.RLock()
-			stillPub := torStatus == "publishing"
-			statusMu.RUnlock()
-			if !stillPub {
-				return
-			}
-			// no confirmed upload yet - the same listener stays live, loop
-			// and wait for a late descriptor instead of lying reachable.
-		}
-		statusMu.Lock()
-		if torStatus == "publishing" {
-			log.Println("halo: status publishing -> reachable (HSDir uploaded)")
-			torStatus = "reachable"
-			notePublished()
-			go func() {
-				if _, err := torNostrClient(); err != nil {
-					log.Printf("halo: nostr client pre-warm failed: %v", err)
-				} else {
-					log.Println("halo: nostr client pre-warmed")
-				}
-			}()
-		}
-		statusMu.Unlock()
-	}()
+	if atomic.CompareAndSwapInt32(&publishWatching, 0, 1) {
+		go func() {
+			defer atomic.StoreInt32(&publishWatching, 0)
+			watchPublishedOn(t, hsCh, hsSubbed, onion.ID)
+		}()
+	}
 
 	go acceptLoop(onion)
 
 	log.Printf("halo: listening on %s", addr)
-	return C.CString(addr)
+	return addr
+}
+
+// waits for the onion's descriptor to reach an hsdir and only then calls the
+// phone reachable. armed at every start and at every wake from sleep.
+// one of each watcher at a time. ninety-six wakes a day, each leaving a
+// goroutine parked on a control event listener, is a leak the cycle test
+// caught: the count went up by one per wake and never came down.
+var (
+	bootstrapWatching int32
+	publishWatching   int32
+)
+
+func goWatchBootstrap(t *tor.Tor) {
+	if !atomic.CompareAndSwapInt32(&bootstrapWatching, 0, 1) {
+		return
+	}
+	go func() {
+		defer atomic.StoreInt32(&bootstrapWatching, 0)
+		watchBootstrap(t)
+	}()
+}
+
+func goWatchPublished(t *tor.Tor, onionID string) {
+	if t == nil || t.Control == nil {
+		return
+	}
+	if !atomic.CompareAndSwapInt32(&publishWatching, 0, 1) {
+		return
+	}
+	go func() {
+		defer atomic.StoreInt32(&publishWatching, 0)
+		watchPublished(t, onionID)
+	}()
+}
+
+func watchPublished(t *tor.Tor, onionID string) {
+	if t == nil || t.Control == nil {
+		return
+	}
+	hsCh, hsSubbed := listenForUploads(t)
+	watchPublishedOn(t, hsCh, hsSubbed, onionID)
+}
+
+// subscribe first, act later: at a start the first UPLOADED can fire while
+// Listen is still setting the onion up, and missing it meant sitting out
+// the full fallback.
+func listenForUploads(t *tor.Tor) (chan control.Event, bool) {
+	hsCh := make(chan control.Event, 16)
+	if t == nil || t.Control == nil {
+		return hsCh, false
+	}
+	if aerr := t.Control.AddEventListener(hsCh, control.EventCodeHSDesc); aerr != nil {
+		log.Printf("halo: HSDesc subscribe failed: %v", aerr)
+		return hsCh, false
+	}
+	return hsCh, true
+}
+
+func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionID string) {
+	if hsSubbed {
+		defer func() {
+			if t.Control != nil {
+				t.Control.RemoveEventListener(hsCh, control.EventCodeHSDesc)
+			}
+		}()
+	}
+	for {
+		if torIsPaused() {
+			return
+		}
+		if watchHSDirUpload(t, hsCh, hsSubbed, onionID) {
+			break
+		}
+		statusMu.RLock()
+		stillPub := torStatus == "publishing" || torStatus == "starting"
+		statusMu.RUnlock()
+		if !stillPub {
+			return
+		}
+		// no confirmed upload yet - the same listener stays live, loop
+		// and wait for a late descriptor instead of lying reachable.
+	}
+	statusMu.Lock()
+	if torStatus == "publishing" {
+		log.Println("halo: status publishing -> reachable (HSDir uploaded)")
+		torStatus = "reachable"
+		notePublished()
+		go func() {
+			if _, err := torNostrClient(); err != nil {
+				log.Printf("halo: nostr client pre-warm failed: %v", err)
+			} else {
+				log.Println("halo: nostr client pre-warmed")
+			}
+		}()
+	}
+	statusMu.Unlock()
 }
 
 // bine writes a fresh torrc and control-port file per run and does not always
@@ -487,6 +557,12 @@ var lastTorRestart int64 // unix seconds of the last restart, for cooldown
 var torClosing int32
 
 func restartTor() {
+	// stopped on purpose. every watchdog that finds tor gone comes through
+	// here, and none of them may bring it back.
+	if torIsPaused() {
+		log.Println("halo: restartTor skipped - tor is stopped on purpose")
+		return
+	}
 	// collapse concurrent triggers - only one restart at a time.
 	if !atomic.CompareAndSwapInt32(&torRestarting, 0, 1) {
 		return
@@ -567,13 +643,20 @@ func restartTor() {
 			time.Sleep(200 * time.Millisecond)
 		}
 	}
+	// closed is not the same as gone: bine's close gives up after 300ms.
+	// starting on top of a tor that is still unwinding aborts the process.
+	if !waitTorGone(45 * time.Second) {
+		log.Println("halo: restartTor gave up - the old tor never finished stopping")
+		setStatus("off")
+		return
+	}
 	cleanTorRunFiles(torDataDir)
 
 	var t *tor.Tor
 	var err error
 	for attempt := 0; attempt < 2; attempt++ {
 		t, err = tor.Start(nil, &tor.StartConf{
-			ProcessCreator: libtor.Creator,
+			ProcessCreator: torCreator,
 			DataDir:        torDataDir,
 			DebugWriter:    newTorDebugWriter(),
 			ExtraArgs:      torArgs(),
@@ -595,7 +678,7 @@ func restartTor() {
 	mu.Lock()
 	torNode = t
 	mu.Unlock()
-	go watchBootstrap(t)
+	goWatchBootstrap(t)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
@@ -647,6 +730,97 @@ func HaloShutdown() {
 	if t != nil {
 		t.Close()
 	}
+}
+
+// set while tor is quiet because the app asked for it to be: the check-in
+// mode runs tor for a minute at a time and wants it silent in between.
+var torPaused int32
+
+func torIsPaused() bool { return atomic.LoadInt32(&torPaused) == 1 }
+
+// puts tor to sleep and keeps it there. it does NOT shut tor down.
+//
+// the first version did, and a test that ran real start/stop cycles in one
+// process (tor_cycle_test.go) killed it: tor 0.4.9.5 survives one shutdown
+// per process and aborts the whole app on the second, "Error destroying a
+// mutex", or hangs in it. a day of check-ins is ninety-six of them. so tor
+// stays up and is told to leave the network: DisableNetwork=1 closes every
+// connection and circuit and stops it building more, which is what tor
+// browser and orbot do for the same reason. waking is the same setting
+// turned back, and the consensus it kept makes that quick.
+//
+// "ok" when tor went quiet or was not running, "error: ..." when it would
+// not take the setting. on an error tor is left exactly as it was.
+//
+//export HaloTorStop
+func HaloTorStop() *C.char { return C.CString(torStop()) }
+
+func torStop() string {
+	atomic.StoreInt32(&torPaused, 1)
+	startMu.Lock()
+	defer startMu.Unlock()
+	mu.Lock()
+	t := torNode
+	mu.Unlock()
+	nostrResetClient()
+	if t == nil || t.Control == nil {
+		setStatus("off")
+		return "ok"
+	}
+	if err := t.Control.SetConf(control.KeyVals("DisableNetwork", "1")...); err != nil {
+		log.Printf("halo: tor would not leave the network: %v", err)
+		atomic.StoreInt32(&torPaused, 0)
+		return "error: " + err.Error()
+	}
+	statusMu.Lock()
+	hsdirUploads = 0
+	bootstrapPct = 0
+	statusMu.Unlock()
+	setStatus("off")
+	log.Println("halo: tor is off the network")
+	return "ok"
+}
+
+// lets tor run again, and wakes it if it is only asleep. "ok" means awake
+// or waking, "start" means there is no tor in this process yet and
+// HaloStartListener has to make one.
+//
+//export HaloTorResume
+func HaloTorResume() *C.char { return C.CString(torResume()) }
+
+func torResume() string {
+	startMu.Lock()
+	defer startMu.Unlock()
+	atomic.StoreInt32(&torPaused, 0)
+	mu.Lock()
+	t := torNode
+	addr := myAddr
+	mu.Unlock()
+	if t == nil || t.Control == nil {
+		return "start"
+	}
+	if err := t.Control.SetConf(control.KeyVals("DisableNetwork", "0")...); err != nil {
+		log.Printf("halo: tor would not come back: %v", err)
+		return "error: " + err.Error()
+	}
+	statusMu.Lock()
+	hsdirUploads = 0
+	statusMu.Unlock()
+	setStatus("starting")
+	goWatchBootstrap(t)
+	if id := strings.TrimSuffix(addr, ".onion"); id != "" {
+		goWatchPublished(t, id)
+	}
+	log.Println("halo: tor is back on the network")
+	return "ok"
+}
+
+//export HaloTorPaused
+func HaloTorPaused() C.int {
+	if torIsPaused() {
+		return 1
+	}
+	return 0
 }
 
 func newTorDebugWriter() *gatedWriter {
@@ -999,7 +1173,7 @@ func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID st
 func watchBootstrap(t *tor.Tor) {
 	lastPct := -1
 	for i := 0; i < 300; i++ {
-		if t == nil || t.Control == nil {
+		if t == nil || t.Control == nil || torIsPaused() {
 			return
 		}
 		kv, err := t.Control.GetInfo("status/bootstrap-phase")

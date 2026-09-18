@@ -135,6 +135,22 @@ const (
 	catchupMaxPages = 200
 )
 
+// connections still fetching what they missed, and how many have begun
+// since the process started. a check-in waits for the first to reach zero
+// after the second has moved.
+var (
+	catchupActive  int32
+	catchupStarted int64
+)
+
+// "active started", two numbers
+//
+//export HaloCatchupState
+func HaloCatchupState() *C.char {
+	return C.CString(fmt.Sprintf("%d %d",
+		atomic.LoadInt32(&catchupActive), atomic.LoadInt64(&catchupStarted)))
+}
+
 // one page of stored events, closed again as soon as the relay says that
 // was all. a relay that never says so costs the page its 45 seconds and the
 // catch-up its anchor, and the next connect asks again.
@@ -670,6 +686,12 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 					return
 				default:
 				}
+				// tor is down because it was asked to be. do not poll for it
+				// every ten seconds: the kick that follows a resume wakes this.
+				if modeNeedsTor() && torIsPaused() {
+					sleepOrKick(15 * time.Minute)
+					continue
+				}
 				client, err := torNostrClient()
 				if err != nil {
 					cachedNostrClientMu.Lock()
@@ -764,6 +786,14 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 				// the oldest: a full answer means there may be more behind it.
 				// the anchor is held back until that has been fetched too.
 				cctx, ccancel := context.WithCancel(ctx)
+				// counted while this connection is still fetching what it
+				// missed, so a check-in knows when it may stop tor again
+				atomic.AddInt32(&catchupActive, 1)
+				atomic.AddInt64(&catchupStarted, 1)
+				var settleOnce sync.Once
+				settled := func() {
+					settleOnce.Do(func() { atomic.AddInt32(&catchupActive, -1) })
+				}
 				eose := sub.EndOfStoredEvents
 				stored := 0
 				var oldest nostr.Timestamp
@@ -808,10 +838,12 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 						if stored < limit || oldest == 0 {
 							atomic.StoreInt32(&caughtUp, 1)
 							saveLast(atomic.LoadInt64(&pending))
+							settled()
 							continue
 						}
 						log.Printf("nostr: %s answered with a full %d, paging back", u, stored)
 						go func(from nostr.Timestamp) {
+							defer settled()
 							res := catchup.Back(cctx, func(pc context.Context, s, t nostr.Timestamp, n int) ([]nostr.Event, error) {
 								return relayPage(pc, r, rcvPk, s, t, n)
 							}, since, from, catchupPage, catchupMaxPages, dispatch)
@@ -874,12 +906,14 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 					case <-ctx.Done():
 						idle.Stop()
 						ccancel()
+						settled()
 						r.Close()
 						return
 					}
 				}
 			reconnect:
 				ccancel()
+				settled()
 				if kicked {
 					kicked = false
 				} else {
