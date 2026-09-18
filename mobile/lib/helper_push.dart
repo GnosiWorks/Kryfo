@@ -16,26 +16,28 @@
 // stays out of the picker until then: a dead option in a settings screen is
 // what we just finished removing.
 //
-// AND ONE THING IS NOT DECIDED. kryfo does not listen on one address, it
-// listens on a pairwise address per contact. so either
-//   - one endpoint per address: the helper's server sees one topic per
-//     contact, so it learns roughly how many people write to you, or
-//   - one endpoint for all of them: the relay is told which addresses share
-//     an endpoint, and can tie your pairwise addresses to each other, which
-//     today it cannot.
-// that is a trade nobody should make quietly, so onEndpoint below is a seam
-// with nothing behind it and the endpoint is only kept on the phone.
+// kryfo listens on a pairwise address per contact, so the shape of the
+// registration is the whole privacy question. it is sixteen endpoints, always
+// sixteen, whatever the contact count: see helper_slots.dart. the empty ones
+// are registered with a random address nothing is ever sent to, so the helper
+// sees the same sixteen topics on every phone and the relay cannot tell a
+// dummy from a real one. below sixteen contacts no two real addresses share an
+// endpoint, so the relay links nothing.
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dlog.dart';
+import 'helper_slots.dart';
 
 const kHelperModeReady = false;
 
-const kHelperInstance = 'main';
-const kHelperEndpointKey = 'helper_endpoint';
+// slot -> endpoint, as json
+const kHelperEndpointsKey = 'helper_endpoints';
+// address -> slot, as json
+const kHelperSlotsKey = 'helper_slots';
 // a knock is free to send and costs us a tor fetch, so one app that knocks
 // in a loop cannot be allowed to run the battery down
 const kKnockFloorMs = 60 * 1000;
@@ -77,14 +79,21 @@ class HelperPush {
           onKnock?.call();
         case 'endpoint':
           final e = args['endpoint'];
+          final who = args['instance'];
           if (e is! String || !e.startsWith('https://')) return null;
+          if (who is! String || !who.startsWith('kryfo-')) return null;
+          final slot = int.tryParse(who.substring(6));
+          if (slot == null || slot < 0 || slot >= kHelperSlots) return null;
           final prefs = await SharedPreferences.getInstance();
-          await prefs.setString(kHelperEndpointKey, e);
+          final all = Map<String, dynamic>.from(
+            jsonDecode(prefs.getString(kHelperEndpointsKey) ?? '{}') as Map,
+          )..['$slot'] = e;
+          await prefs.setString(kHelperEndpointsKey, jsonEncode(all));
           await onEndpoint?.call(e);
         case 'unregistered':
-          dlog('helper: the helper app dropped our registration');
+          dlog('helper: the helper app dropped a registration');
           final prefs = await SharedPreferences.getInstance();
-          await prefs.remove(kHelperEndpointKey);
+          await prefs.remove(kHelperEndpointsKey);
         case 'failed':
           dlog('helper: registration refused: ${args['reason']}');
       }
@@ -113,30 +122,48 @@ class HelperPush {
     }
   }
 
-  Future<bool> register(String package) async {
-    try {
-      return await _ch.invokeMethod<bool>('helperRegister', {
-            'package': package,
-            'instance': kHelperInstance,
-          }) ??
-          false;
-    } on PlatformException {
-      return false;
+  /// registers all sixteen slots with [package]. the distributor answers each
+  /// one separately, and every answer lands in onEndpoint.
+  Future<int> registerAll(String package) async {
+    var ok = 0;
+    for (var i = 0; i < kHelperSlots; i++) {
+      try {
+        final done = await _ch.invokeMethod<bool>('helperRegister', {
+          'package': package,
+          'instance': slotInstance(i),
+        });
+        if (done == true) ok++;
+      } on PlatformException {
+        // the rest still go: a distributor that refuses one is not a reason
+        // to leave the other fifteen unregistered
+      }
     }
+    return ok;
   }
 
   Future<void> unregister() async {
     try {
       await _ch.invokeMethod('helperUnregister');
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(kHelperEndpointKey);
+      await prefs.remove(kHelperEndpointsKey);
     } on PlatformException {
       return;
     }
   }
 
-  Future<String?> endpoint() async {
+  /// slot -> endpoint, for the slots the distributor has answered for
+  Future<Map<int, String>> endpoints() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(kHelperEndpointKey);
+    try {
+      final j = jsonDecode(prefs.getString(kHelperEndpointsKey) ?? '{}');
+      if (j is! Map) return {};
+      return {
+        for (final e in j.entries)
+          if (int.tryParse('${e.key}') != null && e.value is String)
+            int.parse('${e.key}'): e.value as String,
+      };
+    } catch (_) {
+      return {};
+    }
   }
 }
