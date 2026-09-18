@@ -81,8 +81,8 @@ const _light = _Palette(
 );
 
 class HaloColors {
-  static const Color amberBright = Color(0xFFF59E0B);
-  static const Color amberBrightDeep = Color(0xFFD97706);
+  static const Color amberBright = Color(0xFFE8960B);
+  static const Color amberBrightDeep = Color(0xFFCC7006);
   static const Color amberInk = Color(0xFF1A0F04);
 
   static _Palette _p = _dark;

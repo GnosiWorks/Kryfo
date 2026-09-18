@@ -63,12 +63,13 @@ class ToolsScreen extends StatelessWidget {
               const _Head(),
               _PhotoCard(onPhoto: onPickPhoto, onVideo: onPickVideo),
               Padding(
-                padding: const EdgeInsets.fromLTRB(22, 0, 22, 8),
+                padding: const EdgeInsets.fromLTRB(22, 0, 22, 10),
                 child: Text(
                   'More tools',
                   style: HaloType.mono(
-                    size: 10,
-                    color: HaloColors.warm,
+                    size: 12,
+                    weight: FontWeight.w600,
+                    color: HaloColors.text,
                     letter: 0.14,
                   ),
                 ),
@@ -76,7 +77,7 @@ class ToolsScreen extends StatelessWidget {
               _ToolRow(
                 icon: _sparkle,
                 tint: HaloColors.green,
-                tile: HaloColors.green.withValues(alpha: 0.12),
+                tile: HaloColors.green.withValues(alpha: 0.18),
                 title: 'Clean a photo or video',
                 sub: 'Or share one to Kryfo from your gallery',
                 onTap: onClean,
@@ -84,7 +85,7 @@ class ToolsScreen extends StatelessWidget {
               _ToolRow(
                 icon: _qr,
                 tint: HaloColors.violet,
-                tile: HaloColors.violet.withValues(alpha: 0.13),
+                tile: HaloColors.violet.withValues(alpha: 0.19),
                 title: 'Make a private QR code',
                 sub: 'Links, Wi-Fi, contacts and more. Made offline',
                 onTap: onQr,
@@ -92,7 +93,7 @@ class ToolsScreen extends StatelessWidget {
               _ToolRow(
                 icon: _lock,
                 tint: HaloColors.amber,
-                tile: HaloColors.amber.withValues(alpha: 0.14),
+                tile: HaloColors.amber.withValues(alpha: 0.2),
                 title: 'Lock a file',
                 sub: 'With a password. Opens anywhere with age',
                 onTap: onLock,
@@ -100,7 +101,7 @@ class ToolsScreen extends StatelessWidget {
               _ToolRow(
                 icon: _unlock,
                 tint: HaloColors.warm,
-                tile: HaloColors.surface2,
+                tile: HaloColors.surface3,
                 title: 'Open a locked file',
                 sub: 'Any .age file someone sent you',
                 onTap: onOpenLocked,
@@ -238,8 +239,8 @@ class _PhotoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     const ink = HaloColors.amberInk;
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 18, 16, 22),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.fromLTRB(20, 16, 20, 22),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
         gradient: const LinearGradient(
@@ -249,8 +250,8 @@ class _PhotoCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: HaloColors.amberBright.withValues(alpha: 0.45),
-            blurRadius: 30,
+            color: HaloColors.amberBright.withValues(alpha: 0.28),
+            blurRadius: 26,
             spreadRadius: -12,
             offset: const Offset(0, 14),
           ),
@@ -262,8 +263,8 @@ class _PhotoCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
                   color: ink,
                   borderRadius: BorderRadius.circular(12),
@@ -271,7 +272,7 @@ class _PhotoCard extends StatelessWidget {
                 alignment: Alignment.center,
                 child: StrokeIcon(
                   _eye,
-                  size: 22,
+                  size: 21,
                   color: HaloColors.amberBright,
                 ),
               ),
@@ -283,7 +284,7 @@ class _PhotoCard extends StatelessWidget {
                     Text(
                       'What does this photo know?',
                       style: HaloType.sans(
-                        size: 16,
+                        size: 15.5,
                         weight: FontWeight.w600,
                         color: ink,
                         height: 1.2,
@@ -303,12 +304,12 @@ class _PhotoCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Text(
             'Pick a photo and see what it gives away. Then keep a clean copy.',
             style: HaloType.sans(size: 13, color: ink, height: 1.5),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
@@ -354,7 +355,7 @@ class _CardButton extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: Container(
-          height: 44,
+          height: 42,
           padding: EdgeInsets.symmetric(horizontal: filled ? 0 : 16),
           alignment: Alignment.center,
           decoration: BoxDecoration(
@@ -416,21 +417,21 @@ class _ToolRow extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
           decoration: BoxDecoration(
             border: Border(top: side, bottom: last ? side : BorderSide.none),
           ),
           child: Row(
             children: [
               Container(
-                width: 42,
-                height: 42,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
                   color: tile,
                   borderRadius: BorderRadius.circular(13),
                 ),
                 alignment: Alignment.center,
-                child: StrokeIcon(icon, size: 21, color: tint),
+                child: StrokeIcon(icon, size: 22, color: tint, stroke: 1.8),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -440,20 +441,25 @@ class _ToolRow extends StatelessWidget {
                     Text(
                       title,
                       style: HaloType.sans(
-                        size: 14,
-                        weight: FontWeight.w500,
+                        size: 15,
+                        weight: FontWeight.w600,
                         color: HaloColors.text,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       sub,
-                      style: HaloType.sans(size: 12, color: HaloColors.warm),
+                      style: HaloType.sans(size: 12.5, color: HaloColors.warm),
                     ),
                   ],
                 ),
               ),
-              StrokeIcon(_chevron, size: 16, color: HaloColors.warm),
+              StrokeIcon(
+                _chevron,
+                size: 17,
+                color: HaloColors.text,
+                stroke: 1.8,
+              ),
             ],
           ),
         ),
