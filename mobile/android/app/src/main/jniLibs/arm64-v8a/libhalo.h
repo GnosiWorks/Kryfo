@@ -117,7 +117,6 @@ extern char* HaloIdFromPubkey(char* cHex);
 extern char* HaloEncryptFor(char* cPeerPub, char* cPlain);
 extern char* HaloDecryptFrom(char* cPeerPub, char* cB64);
 extern char* HaloStartListener(char* cDataDir);
-extern void HaloShutdown(void);
 extern char* HaloGetStatus(void);
 extern char* HaloDrainInbox(void);
 extern char* HaloSendTo(char* cAddr, char* cMsg);
@@ -156,18 +155,17 @@ extern int HaloSealChunk(char* cKey, unsigned long long index, unsigned char typ
 //
 extern int HaloOpenChunk(char* cKey, unsigned long long index, unsigned char typ, unsigned char* in, int inLen, unsigned char* out);
 
-// takes newline separated bridge lines and whether to use them. the caller is
-// expected to restart tor afterwards; changing this mid-session does nothing
-// on its own, because tor reads the config once at startup.
+// takes newline separated bridge lines and whether to use them. the caller
+// calls HaloRestartTor afterwards, which hands the new config to the running
+// tor and bounces its network so it takes.
 //
 extern char* HaloSetBridges(char* cLines, int on);
 
 // what the ui needs: whether bridges are on, how many are configured, and
 // whether the local transport is actually up.
 //
-// bounce tor so it picks up a config change. bridges are the only reason to
-// call this - tor reads its arguments once and never again, so toggling them
-// without a restart looks like the feature silently not working.
+// hand tor the new bridge config and bounce its network so it takes. tor is
+// never restarted for this: see reconnectTor for why it cannot be.
 //
 extern char* HaloRestartTor(void);
 extern char* HaloBridgeState(void);
