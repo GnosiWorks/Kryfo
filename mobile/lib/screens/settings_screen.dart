@@ -438,7 +438,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               HaloRow(
                 icon: Icons.info_outline,
                 label: 'Version',
-                value: '0.2.11 · alpha',
+                value: '0.2.12 · alpha',
               ),
               HaloRow(
                 icon: Icons.flag_outlined,

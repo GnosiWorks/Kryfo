@@ -2,6 +2,19 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.12] - 2026-09-19
+
+### Added
+- a tools tab. four things, all of them on your phone and none of them touching the network: what a photo gives away (where it was taken, drawn on a map the app carries itself, and on what phone and when), a clean copy of a photo or video with all of that removed, a private qr code for links, wi-fi, contacts and more, and locking a file behind a password so it can be sent anywhere and opened with the free tool age. a photo shared to kryfo from the gallery lands straight in the cleaner.
+- a choice of how messages arrive, in settings. "always on" is what kryfo has always done. "check-ins" wakes every fifteen minutes, looks for messages and goes back to sleep, which is far easier on the battery and can make messages late. the screen says when the last check-in really happened, not when one was promised.
+- if your phone keeps stopping kryfo while it is meant to be staying connected, kryfo notices on its own and offers check-ins once. it reads nothing about your phone to work that out.
+
+### Fixed
+- a file that arrived with pieces missing stayed stuck. the receiver now works out exactly which pieces it never got and asks for those, and the sender sends only those.
+- coming back after a long time away could leave messages behind for good. relays hand back only the newest hundred stored messages, and anything behind that was never asked for again; now kryfo pages back through the lot, and does not move its place in the queue until it has all of it.
+- changing bridges, or recovering from a stalled connection, used to restart tor. tor survives one shutdown per run and the second one could hang or kill the app, so this could have taken kryfo down at any time since bridges shipped. tor is reconfigured where it stands now, which is also far quicker: switching bridges takes about half a second instead of a full reconnect.
+- a heic photo from a samsung carried a block of the camera's own after the picture, and it survived cleaning. it is removed now, in the tools tab and when a photo is sent as a file.
+
 ## [0.2.11] - 2026-09-18
 
 ### Security
