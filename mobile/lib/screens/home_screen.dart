@@ -86,6 +86,12 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _sharedSub = ToolsBridge.instance.shared.listen((_) => _takeShared());
     lockState.addListener(_onLock);
+    // a tab that has been opened once stays in the tree behind an Offstage,
+    // which is what makes switching back instant - and what left it painted
+    // in the palette it was built in. switching to the light theme from
+    // settings repainted this screen and not the tools tab behind it, so the
+    // heading there stayed white on cream until the app was restarted.
+    themeRevision.addListener(_repaint);
     ToolsBridge.instance.sweep();
     _sweeper = Timer.periodic(
       const Duration(minutes: 5),
@@ -98,8 +104,13 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _sharedSub?.cancel();
     lockState.removeListener(_onLock);
+    themeRevision.removeListener(_repaint);
     _sweeper?.cancel();
     super.dispose();
+  }
+
+  void _repaint() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _takeShared() async {
