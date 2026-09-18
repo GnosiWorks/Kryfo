@@ -121,12 +121,14 @@ class ToolWideButton extends StatelessWidget {
   final String label;
   final bool filled;
   final VoidCallback? onTap;
+  final double? height;
   const ToolWideButton({
     super.key,
     this.icon,
     required this.label,
     required this.filled,
     required this.onTap,
+    this.height,
   });
 
   @override
@@ -139,7 +141,7 @@ class ToolWideButton extends StatelessWidget {
         onTap: onTap,
         scale: 0.96,
         child: Container(
-          height: filled ? 54 : 50,
+          height: height ?? (filled ? 54 : 50),
           decoration: BoxDecoration(
             color: filled ? HaloColors.amber : null,
             borderRadius: BorderRadius.circular(14),

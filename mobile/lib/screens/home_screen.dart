@@ -15,6 +15,7 @@ import 'profile_screen.dart';
 import 'tools_screen.dart';
 import 'clean_screen.dart';
 import 'photo_knows_screen.dart';
+import 'qr_screen.dart';
 import '../tools/tools_bridge.dart';
 import '../widgets/nav_bar.dart';
 import 'package:flutter/services.dart';
@@ -148,6 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onPickPhoto: () => _pickToRead('image'),
           onPickVideo: () => _pickToRead('video'),
           onClean: _pickToClean,
+          onQr: () => _openTool(const QrScreen()),
         );
       case HaloTab.support:
         return const DonateScreen();

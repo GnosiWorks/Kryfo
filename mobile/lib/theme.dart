@@ -84,6 +84,10 @@ class HaloColors {
   static const Color amberBright = Color(0xFFE8960B);
   static const Color amberBrightDeep = Color(0xFFCC7006);
   static const Color amberInk = Color(0xFF1A0F04);
+  static const Color qrPaper = Color(0xFFF5F1EA);
+  static const Color qrInk = Color(0xFF161310);
+  static const Color qrAmber = Color(0xFF8A4B0E);
+  static const Color qrViolet = Color(0xFF4C2F9E);
 
   static _Palette _p = _dark;
   static bool get isLight => identical(_p, _light);
