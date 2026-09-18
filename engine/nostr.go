@@ -29,6 +29,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -43,6 +44,7 @@ import (
 	"time"
 
 	"fiatjaf.com/nostr"
+	"github.com/halo/engine/catchup"
 	"github.com/mailru/easyjson"
 	nostr2 "github.com/nbd-wtf/go-nostr"
 	"golang.org/x/crypto/hkdf"
@@ -121,6 +123,48 @@ func relayResponds(ctx context.Context, r *nostr.Relay) bool {
 		return true
 	case <-pctx.Done():
 		return false
+	}
+}
+
+// a page is a hundred because that is what our relay hands out. two hundred
+// pages is twenty thousand wraps, more than fourteen days of retention will
+// hold for one address, so the ceiling is a guard and not a limit anyone
+// should meet.
+const (
+	catchupPage     = 100
+	catchupMaxPages = 200
+)
+
+// one page of stored events, closed again as soon as the relay says that
+// was all. a relay that never says so costs the page its 45 seconds and the
+// catch-up its anchor, and the next connect asks again.
+func relayPage(ctx context.Context, r *nostr.Relay, rcvPk string, since, until nostr.Timestamp, limit int) ([]nostr.Event, error) {
+	pctx, cancel := context.WithTimeout(ctx, 45*time.Second)
+	defer cancel()
+	sub, err := r.Subscribe(pctx, nostr.Filter{
+		Kinds: []nostr.Kind{1059},
+		Tags:  nostr.TagMap{"p": []string{rcvPk}},
+		Since: since,
+		Until: until,
+		Limit: limit,
+	}, nostr.SubscriptionOptions{MaxWaitForEOSE: time.Duration(math.MaxInt64)})
+	if err != nil {
+		return nil, err
+	}
+	defer sub.Unsub()
+	var out []nostr.Event
+	for {
+		select {
+		case ev, alive := <-sub.Events:
+			if !alive {
+				return nil, errors.New("relay closed the page")
+			}
+			out = append(out, ev)
+		case <-sub.EndOfStoredEvents:
+			return out, nil
+		case <-pctx.Done():
+			return nil, pctx.Err()
+		}
 	}
 }
 
@@ -553,20 +597,22 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 		os.WriteFile(lastPath, []byte(strconv.FormatInt(ts, 10)), 0600)
 	}
 
-	dispatch := func(ev nostr.Event) {
+	// true when the event had not been seen before, which is what the
+	// catch-up counts to know it is still finding things
+	dispatch := func(ev nostr.Event) bool {
 		id := ev.ID.Hex()
 		nostrMu.Lock()
 		mine := nostrSentIDs[id]
 		nostrMu.Unlock()
 		if mine {
-			return
+			return false
 		}
 		seenMu.Lock()
 		dup := seen[id]
 		seen[id] = true
 		seenMu.Unlock()
 		if dup {
-			return
+			return false
 		}
 		lastEvMu.Lock()
 		lastEvAt = int64(ev.CreatedAt)
@@ -576,12 +622,12 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 		var gw nostr2.Event
 		if err := easyjson.Unmarshal([]byte(ev.String()), &gw); err != nil {
 			log.Printf("nostr: wrap parse failed: %v", err)
-			return
+			return true
 		}
 		content, err := unwrap(gw)
 		if err != nil {
 			log.Printf("nostr: unwrap dropped one: %v", err)
-			return
+			return true
 		}
 		noteRecv()
 		nostrMu.Lock()
@@ -592,6 +638,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 			short = short[:12]
 		}
 		log.Printf("nostr: received event %s for %s...", id[:12], short)
+		return true
 	}
 
 	for i, url := range urls {
@@ -658,11 +705,11 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 				}
 				// a relay answered. this is the one fact the watchdog trusts.
 				noteRelayConnected()
-				// another runner may have moved the anchor on while this one
-				// was down. take the newer of the two before asking.
-				if cur := loadLast(); cur > int64(last) {
-					last = nostr.Timestamp(cur)
-				}
+				// the anchor is what was saved, by this runner or another. it
+				// is only saved once a catch-up has run to its end, so a
+				// connection that dropped half way asks for the same window
+				// again and not for the little that came after.
+				last = nostr.Timestamp(loadLast())
 				// a hundred was chosen when a wrap was a line of text. a wrap
 				// is now as likely to be a 16k base64 slice of a video, and
 				// asking for a hundred of those on a reconnect that happened
@@ -691,7 +738,10 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 						f.Since = since
 					}
 				}
-				sub, err := r.Subscribe(ctx, f, nostr.SubscriptionOptions{})
+				// the library fakes an eose after 7s of silence. a hundred
+				// slices over tor take longer than that, and a fake one would
+				// end the count below before the relay was done.
+				sub, err := r.Subscribe(ctx, f, nostr.SubscriptionOptions{MaxWaitForEOSE: time.Duration(math.MaxInt64)})
 				if err != nil {
 					log.Printf("nostr: subscribe %s: %v", u, err)
 					r.Close()
@@ -709,6 +759,17 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 				// while messages slide past. quiet too long = assume dead and
 				// reconnect; the since window refetches whatever we missed.
 				idle := time.NewTimer(deaf)
+				// stored events come newest first and stop at the relay's cap.
+				// until the relay says that was all, count them and remember
+				// the oldest: a full answer means there may be more behind it.
+				// the anchor is held back until that has been fetched too.
+				cctx, ccancel := context.WithCancel(ctx)
+				eose := sub.EndOfStoredEvents
+				stored := 0
+				var oldest nostr.Timestamp
+				var caughtUp int32
+				var pending int64
+				since := f.Since
 				for {
 					select {
 					case ev, alive := <-sub.Events:
@@ -719,9 +780,19 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 						}
 						markAlive()
 						if ev.ID.Hex() != "" {
+							if eose != nil {
+								stored++
+								if oldest == 0 || ev.CreatedAt < oldest {
+									oldest = ev.CreatedAt
+								}
+							}
 							if ev.CreatedAt > last {
 								last = ev.CreatedAt
-								saveLast(int64(ev.CreatedAt))
+							}
+							if atomic.LoadInt32(&caughtUp) == 1 {
+								saveLast(int64(last))
+							} else if int64(ev.CreatedAt) > atomic.LoadInt64(&pending) {
+								atomic.StoreInt64(&pending, int64(ev.CreatedAt))
 							}
 							dispatch(ev)
 						}
@@ -732,6 +803,26 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 							}
 						}
 						idle.Reset(deaf)
+					case <-eose:
+						eose = nil
+						if stored < limit || oldest == 0 {
+							atomic.StoreInt32(&caughtUp, 1)
+							saveLast(atomic.LoadInt64(&pending))
+							continue
+						}
+						log.Printf("nostr: %s answered with a full %d, paging back", u, stored)
+						go func(from nostr.Timestamp) {
+							res := catchup.Back(cctx, func(pc context.Context, s, t nostr.Timestamp, n int) ([]nostr.Event, error) {
+								return relayPage(pc, r, rcvPk, s, t, n)
+							}, since, from, catchupPage, catchupMaxPages, dispatch)
+							log.Printf("nostr: %s paged back %d pages, %d events, %d new, complete=%v",
+								u, res.Pages, res.Fetched, res.Fresh, res.Complete)
+							if !res.Complete {
+								return
+							}
+							atomic.StoreInt32(&caughtUp, 1)
+							saveLast(atomic.LoadInt64(&pending))
+						}(oldest)
 					case <-idle.C:
 						// quiet is what a conversation looks like nearly all of the
 						// time, so treating it as a dead circuit was treating the
@@ -782,11 +873,13 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 						goto reconnect
 					case <-ctx.Done():
 						idle.Stop()
+						ccancel()
 						r.Close()
 						return
 					}
 				}
 			reconnect:
+				ccancel()
 				if kicked {
 					kicked = false
 				} else {
