@@ -83,6 +83,8 @@ Future<String> sendChunkedMediaTo({
   int? burnSeconds,
   bool secure = false,
   required SenderInfo sender,
+  // the receiver named the slices it lacks: send those and no others
+  Set<int>? only,
 }) async {
   if (!mediaInflight.add(msgUid)) return 'busy';
   try {
@@ -101,6 +103,7 @@ Future<String> sendChunkedMediaTo({
       burnSeconds: burnSeconds,
       secure: secure,
       sender: sender,
+      only: only,
     );
   } finally {
     mediaInflight.remove(msgUid);
@@ -125,6 +128,7 @@ Future<String> _sendChunkedMediaInner({
   int? burnSeconds,
   bool secure = false,
   required SenderInfo sender,
+  Set<int>? only,
 }) async {
   var torWait = 0;
   while (!appState.torReady && torWait < 300000) {
@@ -140,7 +144,7 @@ Future<String> _sendChunkedMediaInner({
   }
   // a voice note is a couple of seconds of audio. the strip is for photos
   // and files, where the wait is long enough to wonder about.
-  final showProgress = total > 1 && !voice;
+  final showProgress = total > 1 && !voice && only == null;
   if (showProgress) mediaProgressStart(msgUid, chatKey: peerId);
   int? pow;
   if (needPow) {
@@ -152,11 +156,21 @@ Future<String> _sendChunkedMediaInner({
     }
   }
   final now = DateTime.now().millisecondsSinceEpoch;
-  final since = now - (chunkDoneAt[msgUid] ?? now);
-  if (since > 240000) chunkDone.remove(msgUid);
-  chunkDoneAt[msgUid] = now;
-  final done = chunkDone.putIfAbsent(msgUid, () => <int>{});
-  if (done.isNotEmpty && total > 1) {
+  final Set<int> done;
+  if (only != null) {
+    // its own record: everything counts as landed but what was asked for,
+    // and none of it is kept for a later full send to trust
+    done = {
+      for (var i = 0; i < total; i++)
+        if (!only.contains(i)) i,
+    };
+  } else {
+    final since = now - (chunkDoneAt[msgUid] ?? now);
+    if (since > 240000) chunkDone.remove(msgUid);
+    chunkDoneAt[msgUid] = now;
+    done = chunkDone.putIfAbsent(msgUid, () => <int>{});
+  }
+  if (done.isNotEmpty && total > 1 && only == null) {
     dlog('MEDIA resume $msgUid: ${done.length}/$total already landed');
     if (showProgress) mediaProgressUpdate(msgUid, done.length / total);
   }
@@ -236,6 +250,7 @@ Future<String> _sendChunkedMediaInner({
           powBitsUsed: pow == null ? null : powBits,
           supporterBadge: await appState.sharedBadge(),
           sender: sender,
+          canResend: total > 1,
         );
         cipher = await signalEncryptSerial(peerId, wrapped);
       } catch (e) {
@@ -308,7 +323,9 @@ Future<String> _sendChunkedMediaInner({
         continue;
       }
       done.add(i);
-      chunkDoneAt[msgUid] = DateTime.now().millisecondsSinceEpoch;
+      if (only == null) {
+        chunkDoneAt[msgUid] = DateTime.now().millisecondsSinceEpoch;
+      }
       // the line to read before touching the pool size or the chunk size
       dlog('MEDIA chunk $i/$total via $route in ${ms}ms');
       if (showProgress) mediaProgressUpdate(msgUid, done.length / total);
@@ -320,7 +337,9 @@ Future<String> _sendChunkedMediaInner({
   ]);
   if (parked) return 'parked';
   if (failure != null) return failure!;
-  chunkDone.remove(msgUid);
-  chunkDoneAt.remove(msgUid);
+  if (only == null) {
+    chunkDone.remove(msgUid);
+    chunkDoneAt.remove(msgUid);
+  }
   return 'ok';
 }

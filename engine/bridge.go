@@ -321,6 +321,9 @@ func startListener(dataDir string) string {
 	startMu.Lock()
 	defer startMu.Unlock()
 
+	if torIsPaused() {
+		return "error: tor is stopped, resume first"
+	}
 	mu.Lock()
 	if myAddr != "" {
 		addr := myAddr
@@ -614,6 +617,13 @@ func HaloLastReconnect() *C.char { return C.CString(lastReconnectStep()) }
 
 // the bounce itself. "ok", or a line starting with "error:".
 func reconnectTor() string {
+	// asleep on purpose: the check-in mode takes tor off the network between
+	// checks, and every watchdog that finds it quiet comes through here. none
+	// of them may bring it back - that is the app's call, not a watchdog's.
+	if torIsPaused() {
+		log.Println("halo: reconnect skipped - tor is asleep on purpose")
+		return "error: tor is asleep"
+	}
 	if !atomic.CompareAndSwapInt32(&torRestarting, 0, 1) {
 		return "error: one already running"
 	}
@@ -718,6 +728,97 @@ func reconnectOn(t *tor.Tor, addr string) string {
 	goWatchPublished(t, strings.TrimSuffix(addr, ".onion"))
 	log.Println("halo: tor reconnected")
 	return "ok"
+}
+
+// set while tor is quiet because the app asked for it to be: the check-in
+// mode runs tor for a minute at a time and wants it silent in between.
+var torPaused int32
+
+func torIsPaused() bool { return atomic.LoadInt32(&torPaused) == 1 }
+
+// puts tor to sleep and keeps it there. it does NOT shut tor down.
+//
+// the first version did, and a test that ran real start/stop cycles in one
+// process (tor_cycle_test.go) killed it: tor 0.4.9.5 survives one shutdown
+// per process and aborts the whole app on the second, "Error destroying a
+// mutex", or hangs in it. a day of check-ins is ninety-six of them. so tor
+// stays up and is told to leave the network: DisableNetwork=1 closes every
+// connection and circuit and stops it building more, which is what tor
+// browser and orbot do for the same reason. waking is the same setting
+// turned back, and the consensus it kept makes that quick.
+//
+// "ok" when tor went quiet or was not running, "error: ..." when it would
+// not take the setting. on an error tor is left exactly as it was.
+//
+//export HaloTorStop
+func HaloTorStop() *C.char { return C.CString(torStop()) }
+
+func torStop() string {
+	atomic.StoreInt32(&torPaused, 1)
+	startMu.Lock()
+	defer startMu.Unlock()
+	mu.Lock()
+	t := torNode
+	mu.Unlock()
+	nostrResetClient()
+	if t == nil || t.Control == nil {
+		setStatus("off")
+		return "ok"
+	}
+	if err := t.Control.SetConf(control.KeyVals("DisableNetwork", "1")...); err != nil {
+		log.Printf("halo: tor would not leave the network: %v", err)
+		atomic.StoreInt32(&torPaused, 0)
+		return "error: " + err.Error()
+	}
+	statusMu.Lock()
+	hsdirUploads = 0
+	bootstrapPct = 0
+	statusMu.Unlock()
+	setStatus("off")
+	log.Println("halo: tor is off the network")
+	return "ok"
+}
+
+// lets tor run again, and wakes it if it is only asleep. "ok" means awake
+// or waking, "start" means there is no tor in this process yet and
+// HaloStartListener has to make one.
+//
+//export HaloTorResume
+func HaloTorResume() *C.char { return C.CString(torResume()) }
+
+func torResume() string {
+	startMu.Lock()
+	defer startMu.Unlock()
+	atomic.StoreInt32(&torPaused, 0)
+	mu.Lock()
+	t := torNode
+	addr := myAddr
+	mu.Unlock()
+	if t == nil || t.Control == nil {
+		return "start"
+	}
+	if err := t.Control.SetConf(control.KeyVals("DisableNetwork", "0")...); err != nil {
+		log.Printf("halo: tor would not come back: %v", err)
+		return "error: " + err.Error()
+	}
+	statusMu.Lock()
+	hsdirUploads = 0
+	statusMu.Unlock()
+	setStatus("starting")
+	goWatchBootstrap(t)
+	if id := strings.TrimSuffix(addr, ".onion"); id != "" {
+		goWatchPublished(t, id)
+	}
+	log.Println("halo: tor is back on the network")
+	return "ok"
+}
+
+//export HaloTorPaused
+func HaloTorPaused() C.int {
+	if torIsPaused() {
+		return 1
+	}
+	return 0
 }
 
 func newTorDebugWriter() *gatedWriter {
@@ -1070,7 +1171,7 @@ func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID st
 func watchBootstrap(t *tor.Tor) {
 	lastPct := -1
 	for i := 0; i < 300; i++ {
-		if t == nil || t.Control == nil {
+		if t == nil || t.Control == nil || torIsPaused() {
 			return
 		}
 		kv, err := t.Control.GetInfo("status/bootstrap-phase")

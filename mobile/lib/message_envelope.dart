@@ -11,6 +11,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:crypto/crypto.dart';
 import 'dlog.dart';
+import 'media_resend.dart';
 
 const _envelopePrefix = 'halo/1:';
 
@@ -50,6 +51,8 @@ class UnwrappedMessage {
   final String? deliveredUid; // 'dr' - receipt: uid the peer just stored
   final bool secure; // 'sc' - sender asked that this not be screenshotted
   final IntroFrame? intro; // 'in' - a contact's card, vouched by the sender
+  final NeedFrame? need; // 'nd' - slices of a file the receiver never got
+  final bool canResend; // 'cr' - on a slice: this sender answers an 'nd'
   UnwrappedMessage(
     this.message, {
     this.secure = false,
@@ -84,6 +87,8 @@ class UnwrappedMessage {
     this.supporterBadge,
     this.deliveredUid,
     this.intro,
+    this.need,
+    this.canResend = false,
   });
 }
 
@@ -240,6 +245,8 @@ Future<String> wrapMessage(
   String? supporterBadge,
   bool secure = false,
   IntroFrame? intro,
+  NeedFrame? need,
+  bool canResend = false,
 }) async {
   final body = <String, dynamic>{'m': plain};
   if (msgUid != null) body['u'] = msgUid;
@@ -268,6 +275,8 @@ Future<String> wrapMessage(
   if (imageB64 != null) body['i'] = imageB64;
   if (unsend != null) body['un'] = unsend;
   if (deliveredUid != null) body['dr'] = deliveredUid;
+  if (need != null) body['nd'] = need.toJson();
+  if (canResend) body['cr'] = 1;
   if (fileB64 != null) body['f'] = fileB64;
   if (fileName != null) body['fn'] = fileName;
   if (voice) body['vo'] = 1;
@@ -404,6 +413,8 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       imageB64: json['i'] as String?,
       unsend: json['un'] as String?,
       deliveredUid: json['dr'] as String?,
+      need: NeedFrame.fromJson(json['nd']),
+      canResend: json['cr'] == 1,
       secure: json['sc'] == 1,
       fileB64: json['f'] as String?,
       fileName: json['fn'] as String?,

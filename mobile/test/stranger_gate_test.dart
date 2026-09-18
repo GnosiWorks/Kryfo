@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/stranger_gate.dart';
 
@@ -49,6 +50,14 @@ void main() {
     });
     test('a message is', () {
       expect(proofOfEngagement(UnwrappedMessage('hi', msgUid: 'u2')), isTrue);
+    });
+    test('nor is a request for missing slices, their phone sends it alone', () {
+      expect(
+        proofOfEngagement(
+          UnwrappedMessage('', need: const NeedFrame('u3', [1, 2])),
+        ),
+        isFalse,
+      );
     });
   });
 
