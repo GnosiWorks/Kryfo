@@ -43,7 +43,7 @@ class HaloNavBar extends StatelessWidget {
         color: HaloColors.surface,
         border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),
       ),
-      padding: const EdgeInsets.fromLTRB(6, 8, 6, 16),
+      padding: const EdgeInsets.fromLTRB(6, 6, 6, 11),
       child: Row(
         children: [
           for (final t in HaloTab.values)
