@@ -549,21 +549,21 @@ func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionI
 	statusMu.Unlock()
 }
 
-// hands tor the bridge configuration it should be using right now.
+// hands tor the bridge configuration it should be using right now. all three
+// of these are set every time bridges are turned on, including
+// ClientTransportPlugin when its value has not changed.
 //
-// UseBridges and Bridge are handed over as often as they change.
-// ClientTransportPlugin is NOT: setting it to the value it already holds
-// makes tor stop answering its control port for good - SETCONF never
-// returns, and every command queued behind it waits with it. found by the
-// test below on the third bridge switch, which is why the switches go
-// on-off-on and not on-off. so it is read back first and only written when
-// it is genuinely different, and the listener it names is never closed while
-// the process lives.
+// that last part is not redundant. turning bridges off drops tor's
+// registration of the transport, so turning them back on without naming the
+// plugin again leaves tor with bridge lines and no way to reach them: it sits
+// at "connecting" and never dials. caught on the phone on the third switch,
+// on-off-on, which is why the test below does exactly that.
 func applyBridgeConf(t *tor.Tor) error {
 	if t == nil || t.Control == nil {
 		return fmt.Errorf("no control connection")
 	}
 	if !bridgesEnabled() {
+		noteStep("setconf bridges off")
 		if err := t.Control.SetConf(control.KeyVals("UseBridges", "0")...); err != nil {
 			return err
 		}
@@ -571,6 +571,7 @@ func applyBridgeConf(t *tor.Tor) error {
 		// list from last time
 		return t.Control.ResetConf(&control.KeyVal{Key: "Bridge"})
 	}
+	noteStep("pt listener")
 	if err := startPTListener(); err != nil {
 		return err
 	}
@@ -580,21 +581,36 @@ func applyBridgeConf(t *tor.Tor) error {
 	if port == 0 {
 		return fmt.Errorf("no pt listener")
 	}
-	want := fmt.Sprintf("obfs4 socks5 127.0.0.1:%d", port)
-	var kv []*control.KeyVal
-	if have, err := t.Control.GetConf("ClientTransportPlugin"); err != nil {
-		return err
-	} else if len(have) == 0 || have[0].Val != want {
-		kv = append(kv, control.NewKeyVal("ClientTransportPlugin", want))
+	kv := []*control.KeyVal{
+		control.NewKeyVal("ClientTransportPlugin",
+			fmt.Sprintf("obfs4 socks5 127.0.0.1:%d", port)),
+		control.NewKeyVal("UseBridges", "1"),
 	}
-	kv = append(kv, control.NewKeyVal("UseBridges", "1"))
 	lines := bridgeLines()
 	for _, b := range lines {
 		kv = append(kv, control.NewKeyVal("Bridge", b))
 	}
 	log.Printf("bridges: handing tor %d bridge lines via 127.0.0.1:%d", len(lines), port)
+	noteStep("setconf plugin+bridges")
 	return t.Control.SetConf(kv...)
 }
+
+// where the last reconnect got to, and how it ended. a bounce that stalls
+// does so inside tor's control port, which says nothing in a release build,
+// so it is written down here and shown on the transport screen.
+var reconnectStep atomic.Value // string
+
+func noteStep(s string) { reconnectStep.Store(s) }
+
+func lastReconnectStep() string {
+	if v, ok := reconnectStep.Load().(string); ok {
+		return v
+	}
+	return ""
+}
+
+//export HaloLastReconnect
+func HaloLastReconnect() *C.char { return C.CString(lastReconnectStep()) }
 
 // the bounce itself. "ok", or a line starting with "error:".
 func reconnectTor() string {
@@ -636,13 +652,16 @@ func reconnectTor() string {
 
 	// tor answering its control port is not something to take on faith - a
 	// wedged one used to mean this never returned, holding startMu with it.
+	started := time.Now()
 	done := make(chan string, 1)
 	go func() { done <- reconnectOn(t, addr) }()
 	select {
 	case r := <-done:
+		noteStep(fmt.Sprintf("%s after %s", r, time.Since(started).Round(time.Millisecond)))
 		return r
 	case <-time.After(45 * time.Second):
 		log.Println("halo: reconnect gave up waiting on tor's control port")
+		noteStep("stuck at " + lastReconnectStep() + " (45s)")
 		setStatus("off")
 		return "error: control port not answering"
 	}
@@ -654,6 +673,7 @@ func reconnectOn(t *tor.Tor, addr string) string {
 	defer startMu.Unlock()
 
 	log.Println("halo: reconnecting tor (config change or wedged dialer)")
+	noteStep("start")
 	statusMu.Lock()
 	hsdirUploads = 0
 	bootstrapPct = 0
@@ -675,6 +695,7 @@ func reconnectOn(t *tor.Tor, addr string) string {
 	// altogether: SETCONF never returns and everything queued behind it waits
 	// for ever. the test below caught it on the second and third switch. this
 	// is the order tor browser uses for the same change.
+	noteStep("network off")
 	if err := t.Control.SetConf(control.KeyVals("DisableNetwork", "1")...); err != nil {
 		log.Printf("halo: tor would not leave the network: %v", err)
 		setStatus("off")
@@ -682,14 +703,17 @@ func reconnectOn(t *tor.Tor, addr string) string {
 	}
 	// let it drop what it had before it is told anything else
 	time.Sleep(500 * time.Millisecond)
+	noteStep("bridge config")
 	if err := applyBridgeConf(t); err != nil {
 		log.Printf("halo: bridge config not applied: %v", err)
 	}
+	noteStep("network on")
 	if err := t.Control.SetConf(control.KeyVals("DisableNetwork", "0")...); err != nil {
 		log.Printf("halo: tor would not come back: %v", err)
 		setStatus("off")
 		return "error: " + err.Error()
 	}
+	noteStep("watchers")
 	goWatchBootstrap(t)
 	goWatchPublished(t, strings.TrimSuffix(addr, ".onion"))
 	log.Println("halo: tor reconnected")

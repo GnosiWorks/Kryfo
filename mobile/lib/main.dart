@@ -215,6 +215,19 @@ class HaloEngine {
   // every relay socket dropped and reopened now, since window and all
   String nostrKick() => _nostrKick().toDartString();
 
+  // where the last tor reconnect got to. looked up on first use so an engine
+  // from before it still loads.
+  late final CStrFnDart _lastReconnect = _lib
+      .lookupFunction<CStrFn, CStrFnDart>('HaloLastReconnect');
+
+  String lastReconnect() {
+    try {
+      return _lastReconnect().toDartString();
+    } catch (_) {
+      return '';
+    }
+  }
+
   // what the go side holds, json
   Map<String, dynamic> memStats() {
     try {
