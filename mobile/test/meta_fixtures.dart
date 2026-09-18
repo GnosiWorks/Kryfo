@@ -17,10 +17,10 @@ List<int> le32(int v) => [
 ];
 List<int> t(String s) => latin1.encode(s);
 
-class _Entry {
+class TiffEntry {
   final int tag, type, count;
   final List<int> data;
-  _Entry(this.tag, this.type, this.count, this.data);
+  TiffEntry(this.tag, this.type, this.count, this.data);
 }
 
 class TiffBuilder {
@@ -29,26 +29,28 @@ class TiffBuilder {
   List<int> u16(int v) => le ? le16(v) : be16(v);
   List<int> u32(int v) => le ? le32(v) : be32(v);
 
-  _Entry ascii(int tag, String s) => _Entry(tag, 2, s.length + 1, [...t(s), 0]);
-  _Entry short(int tag, int v) => _Entry(tag, 3, 1, u16(v));
-  _Entry long(int tag, int v) => _Entry(tag, 4, 1, u32(v));
-  _Entry rationals(int tag, List<List<int>> r) => _Entry(tag, 5, r.length, [
-    for (final x in r) ...[...u32(x[0]), ...u32(x[1])],
-  ]);
-  _Entry undefined(int tag, List<int> d) => _Entry(tag, 7, d.length, d);
-  _Entry byte(int tag, int v) => _Entry(tag, 1, 1, [v]);
+  TiffEntry ascii(int tag, String s) =>
+      TiffEntry(tag, 2, s.length + 1, [...t(s), 0]);
+  TiffEntry short(int tag, int v) => TiffEntry(tag, 3, 1, u16(v));
+  TiffEntry long(int tag, int v) => TiffEntry(tag, 4, 1, u32(v));
+  TiffEntry rationals(int tag, List<List<int>> r) =>
+      TiffEntry(tag, 5, r.length, [
+        for (final x in r) ...[...u32(x[0]), ...u32(x[1])],
+      ]);
+  TiffEntry undefined(int tag, List<int> d) => TiffEntry(tag, 7, d.length, d);
+  TiffEntry byte(int tag, int v) => TiffEntry(tag, 1, 1, [v]);
 
   Uint8List build({
-    required List<_Entry> ifd0,
-    List<_Entry>? exif,
-    List<_Entry>? gps,
+    required List<TiffEntry> ifd0,
+    List<TiffEntry>? exif,
+    List<TiffEntry>? gps,
     List<int>? thumbnail,
   }) {
     final i0 = [...ifd0];
     if (exif != null) i0.add(long(0x8769, 0));
     if (gps != null) i0.add(long(0x8825, 0));
     i0.sort((a, b) => a.tag.compareTo(b.tag));
-    final blocks = <List<_Entry>>[i0];
+    final blocks = <List<TiffEntry>>[i0];
     if (exif != null) blocks.add(exif);
     if (gps != null) blocks.add(gps);
     var at = 8;
@@ -271,7 +273,12 @@ List<int> infe(int id, String type, {String mime = ''}) => full('infe', 2, [
   if (type == 'mime') ...[...t(mime), 0],
 ]);
 
-Uint8List heif({Uint8List? tiff, String? xmp}) {
+Uint8List heif({
+  Uint8List? tiff,
+  String? xmp,
+  List<int> after = const [],
+  String coding = 'hvc1',
+}) {
   final ftyp = box('ftyp', [
     ...t('heic'),
     ...be32(0),
@@ -285,7 +292,7 @@ Uint8List heif({Uint8List? tiff, String? xmp}) {
   const pic = 'PICTUREPICTUREPICTURE';
   final iinf = full('iinf', 0, [
     ...be16(1 + (tiff != null ? 1 : 0) + (xmp != null ? 1 : 0)),
-    ...infe(1, 'hvc1'),
+    ...infe(1, coding),
     if (tiff != null) ...infe(2, 'Exif'),
     if (xmp != null) ...infe(3, 'mime', mime: 'application/rdf+xml'),
   ]);
@@ -315,9 +322,11 @@ Uint8List heif({Uint8List? tiff, String? xmp}) {
     ...ftyp,
     ...full('meta', 0, [...iinf, ...iloc(at)]),
     ...box('mdat', [...t(pic), ...exif, ...x]),
+    ...after,
   ];
   final probe = build(0);
-  final at = probe.length - (pic.length + exif.length + x.length);
+  final at =
+      probe.length - after.length - (pic.length + exif.length + x.length);
   return Uint8List.fromList(build(at));
 }
 

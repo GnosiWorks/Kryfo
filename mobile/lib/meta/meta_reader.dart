@@ -620,6 +620,20 @@ Uint8List _payload(ByteSource s, _Box b) {
   return s.read(b.body, n);
 }
 
+const _heifTop = {'ftyp', 'meta', 'mdat', 'free', 'skip'};
+const _heifItems = {
+  'hvc1',
+  'hev1',
+  'av01',
+  'avc1',
+  'jpeg',
+  'grid',
+  'iovl',
+  'iden',
+};
+
+String _printable(String tag) => tag.replaceAll(RegExp(r'[^A-Za-z0-9]'), '?');
+
 void _heif(ByteSource s, MetaReport r) {
   final count = [0];
   final top = _boxes(s, 0, s.length, count);
@@ -628,7 +642,13 @@ void _heif(ByteSource s, MetaReport r) {
   final meta = metas.first;
   final inner = _boxes(s, meta.body + 4, meta.end, count);
   for (final b in top) {
-    if (b.type == 'uuid') r.extra.add('uuid box');
+    if (b.type == 'moov' || b.type == 'mpvd') {
+      r.embeddedVideo = true;
+    } else if (b.type == 'uuid') {
+      r.extra.add('uuid box');
+    } else if (!_heifTop.contains(b.type)) {
+      r.extra.add('${_printable(b.type)} box');
+    }
   }
 
   final want = <int, String>{};
@@ -653,7 +673,13 @@ void _heif(ByteSource s, MetaReport r) {
         final rest = latin1
             .decode(ep.sublist(q), allowInvalid: true)
             .toLowerCase();
-        if (rest.contains('xmp') || rest.contains('rdf+xml')) want[id] = 'xmp';
+        if (rest.contains('xmp') || rest.contains('rdf+xml')) {
+          want[id] = 'xmp';
+        } else {
+          r.extra.add('attached data');
+        }
+      } else if (!_heifItems.contains(type)) {
+        r.extra.add('${_printable(type)} item');
       }
     }
   }

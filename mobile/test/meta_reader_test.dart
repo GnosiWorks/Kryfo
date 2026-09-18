@@ -136,6 +136,17 @@ void main() {
     expect(read(heif()).status, MetaStatus.nothing);
   });
 
+  test('heif: a motion video, an unknown box, an unknown item, a tail', () {
+    final motion = read(heif(after: box('mpvd', t('ftypmp42 moving'))));
+    expect(motion.embeddedVideo, true);
+    expect(motion.status, MetaStatus.found);
+    expect(read(heif(after: box('moov', [1, 2, 3]))).embeddedVideo, true);
+    expect(read(heif(after: box('sefd', [1, 2, 3]))).extra, ['sefd box']);
+    expect(read(heif(coding: 'uri ')).extra, ['uri? item']);
+    expect(read(heif(after: [1, 2, 3])).status, isNot(MetaStatus.nothing));
+    expect(read(heif(after: box('free', [0, 0]))).status, MetaStatus.nothing);
+  });
+
   group('mp4', () {
     test('place, maker and the creation stamp', () {
       final r = read(mp4(place: true, maker: true, created: 3840000000));

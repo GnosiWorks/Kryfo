@@ -13,6 +13,8 @@ import 'package:flutter/material.dart';
 import 'donate_screen.dart';
 import 'profile_screen.dart';
 import 'tools_screen.dart';
+import 'clean_screen.dart';
+import '../tools/tools_bridge.dart';
 import '../widgets/nav_bar.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
@@ -69,6 +71,48 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   HaloTab _tab = HaloTab.chats;
   final Set<HaloTab> _seen = {HaloTab.chats};
+  StreamSubscription<void>? _sharedSub;
+  Timer? _sweeper;
+  bool _cleaning = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _sharedSub = ToolsBridge.instance.shared.listen((_) => _takeShared());
+    ToolsBridge.instance.sweep();
+    _sweeper = Timer.periodic(
+      const Duration(minutes: 5),
+      (_) => ToolsBridge.instance.sweep(),
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) => _takeShared());
+  }
+
+  @override
+  void dispose() {
+    _sharedSub?.cancel();
+    _sweeper?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _takeShared() async {
+    final f = await ToolsBridge.instance.takeShared();
+    if (f != null) _clean(f);
+  }
+
+  Future<void> _pickToClean() async {
+    final f = await ToolsBridge.instance.pick('media');
+    if (f != null) _clean(f);
+  }
+
+  Future<void> _clean(PickedFile f) async {
+    if (!mounted || _cleaning) return;
+    _cleaning = true;
+    _pick(HaloTab.tools);
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => CleanScreen(file: f)));
+    _cleaning = false;
+  }
 
   void _pick(HaloTab t) {
     if (t == _tab) return;
@@ -95,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onOpenGroup: widget.onOpenGroup,
         );
       case HaloTab.tools:
-        return const ToolsScreen();
+        return ToolsScreen(onClean: _pickToClean);
       case HaloTab.support:
         return const DonateScreen();
       case HaloTab.me:
