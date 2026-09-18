@@ -16,6 +16,7 @@ import 'transport_screen.dart';
 import 'bridges_screen.dart';
 import 'seen_screen.dart';
 import '../copy.dart';
+import '../notifications.dart';
 import '../theme.dart';
 import '../notif_permission.dart';
 import 'modes_screen.dart';
@@ -26,7 +27,6 @@ import 'backup_screen.dart';
 import '../wipe.dart';
 import 'restore_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../push_mode.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/confirm_sheet.dart';
 
@@ -73,7 +73,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  PushMode? _push;
+  bool? _hidePreview;
   Future<void> _confirmWipe() async {
     // step 1: explain what's about to happen
     final go = await showConfirmSheet(
@@ -109,8 +109,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    loadPushMode().then((v) {
-      if (mounted) setState(() => _push = v);
+    loadHideNotifContent().then((v) {
+      if (mounted) setState(() => _hidePreview = v);
     });
     appState.loadDisguisePref().then((d) {
       if (mounted) setState(() => _disguise = d);
@@ -230,17 +230,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _Row(
                 icon: Icons.notifications_none,
                 label: 'Notifications',
-                value: switch (_push) {
+                value: switch (_hidePreview) {
                   null => '',
-                  PushMode.tor => 'Over tor',
-                  PushMode.fcm => 'Google push',
+                  true => 'Preview hidden',
+                  false => 'Preview shown',
                 },
                 onTap: () async {
                   await Navigator.of(
                     context,
                   ).push(haloRoute(const PushSettingsScreen()));
-                  final v = await loadPushMode();
-                  if (mounted) setState(() => _push = v);
+                  final v = await loadHideNotifContent();
+                  if (mounted) setState(() => _hidePreview = v);
                 },
               ),
               _Row(

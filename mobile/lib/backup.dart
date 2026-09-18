@@ -427,7 +427,7 @@ Future<void> createBackupFile(
   await db.checkpoint();
   final prefs = await SharedPreferences.getInstance();
   final prefsMap = <String, dynamic>{};
-  for (final k in ['push_mode', 'onboarding.complete']) {
+  for (final k in ['onboarding.complete']) {
     final v = prefs.get(k);
     if (v != null) prefsMap[k] = v;
   }

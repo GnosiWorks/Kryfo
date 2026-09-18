@@ -4944,10 +4944,6 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<void> applyPushMode(PushMode m) async {
-    await savePushMode(m);
-  }
-
   // unified incoming routing. handles three payload variants:
   //   1) group control msg (no chat row, no notif)
   //   2) reaction       (add/remove on a target uid, no chat row, no notif)
