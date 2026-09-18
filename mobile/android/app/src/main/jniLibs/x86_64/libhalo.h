@@ -118,6 +118,29 @@ extern char* HaloEncryptFor(char* cPeerPub, char* cPlain);
 extern char* HaloDecryptFrom(char* cPeerPub, char* cB64);
 extern char* HaloStartListener(char* cDataDir);
 extern void HaloShutdown(void);
+
+// puts tor to sleep and keeps it there. it does NOT shut tor down.
+//
+// the first version did, and a test that ran real start/stop cycles in one
+// process (tor_cycle_test.go) killed it: tor 0.4.9.5 survives one shutdown
+// per process and aborts the whole app on the second, "Error destroying a
+// mutex", or hangs in it. a day of check-ins is ninety-six of them. so tor
+// stays up and is told to leave the network: DisableNetwork=1 closes every
+// connection and circuit and stops it building more, which is what tor
+// browser and orbot do for the same reason. waking is the same setting
+// turned back, and the consensus it kept makes that quick.
+//
+// "ok" when tor went quiet or was not running, "error: ..." when it would
+// not take the setting. on an error tor is left exactly as it was.
+//
+extern char* HaloTorStop(void);
+
+// lets tor run again, and wakes it if it is only asleep. "ok" means awake
+// or waking, "start" means there is no tor in this process yet and
+// HaloStartListener has to make one.
+//
+extern char* HaloTorResume(void);
+extern int HaloTorPaused(void);
 extern char* HaloGetStatus(void);
 extern char* HaloDrainInbox(void);
 extern char* HaloSendTo(char* cAddr, char* cMsg);
@@ -196,6 +219,10 @@ extern char* HaloMoatFetch(void);
 // "wrong" if the captcha was not solved, or "error: ...".
 //
 extern char* HaloMoatSolve(char* cChallenge, char* cSolution);
+
+// "active started", two numbers
+//
+extern char* HaloCatchupState(void);
 extern char* HaloNostrInit(char* cRelaysCSV);
 extern char* HaloNostrSend(char* cPeerXPubHex, char* cMsg);
 extern char* HaloNostrSubscribe(char* cPeerXPubHex);
