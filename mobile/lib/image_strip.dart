@@ -20,7 +20,9 @@
 //          still moves
 //   heif   heic and avif. the exif and xmp are items beside the picture,
 //          found through iinf and iloc. their bytes are zeroed where they
-//          sit: removing them would move every offset in iloc
+//          sit: removing them would move every offset in iloc. a top level
+//          box the format does not name is cut off when it is at the tail
+//          and emptied in place when it is not
 //
 // the contract is mp4_strip's. true: read end to end and clean. false: not
 // a picture of a kind known here, left alone. null: it claims to be one of
@@ -365,10 +367,16 @@ Uint8List? _heif(Uint8List src) {
       }
     }
   }
-  if (strip.isEmpty) return src;
+  // top level boxes the format does not name: samsung's sefd is one, the
+  // same vendor block it hangs behind a jpeg
+  final foreign = top.where((x) => !_heifKnown.contains(x.type)).toList();
+  if (strip.isEmpty && foreign.isEmpty) return src;
 
   final iloc = inner.where((x) => x.type == 'iloc').toList();
-  if (iloc.isEmpty) return null;
+  if (iloc.isEmpty) {
+    if (strip.isNotEmpty) return null;
+    return _dropForeign(Uint8List.fromList(src), top, foreign);
+  }
   final idat = inner.where((x) => x.type == 'idat').toList();
   final out = Uint8List.fromList(src);
   final x = iloc.first;
@@ -428,7 +436,16 @@ Uint8List? _heif(Uint8List src) {
       final off = read(offSize);
       final len = read(lenSize);
       if (off == null || len == null) return null;
-      if (!strip.contains(id)) continue;
+      if (!strip.contains(id)) {
+        // a picture item kept inside a box about to be emptied would be
+        // emptied with it
+        if (method == 0 && foreign.isNotEmpty) {
+          final from = base + off;
+          final to = len == 0 ? src.length : from + len;
+          if (foreign.any((f) => from < f.end && to > f.start)) return null;
+        }
+        continue;
+      }
       int at;
       if (method == 0) {
         at = base + off;
@@ -447,5 +464,25 @@ Uint8List? _heif(Uint8List src) {
   }
   // named in iinf and never located: cannot say it is clean
   if (located.length != strip.length) return null;
-  return out;
+  return _dropForeign(out, top, foreign);
+}
+
+const _heifKnown = {'ftyp', 'meta', 'mdat', 'free', 'skip', 'moov', 'mpvd'};
+
+// at the tail they are cut off, which moves nothing. anywhere else they are
+// renamed to 'free' and zeroed in place, as mp4_strip does, so every offset
+// in iloc still points where it did
+Uint8List _dropForeign(Uint8List out, List<_Box> top, List<_Box> foreign) {
+  if (foreign.isEmpty) return out;
+  var cut = out.length;
+  for (final b in top.reversed) {
+    if (!foreign.contains(b)) break;
+    cut = b.start;
+  }
+  for (final b in foreign) {
+    if (b.start >= cut) continue;
+    out.setRange(b.start + 4, b.start + 8, const [0x66, 0x72, 0x65, 0x65]);
+    out.fillRange(b.body, b.end, 0);
+  }
+  return cut == out.length ? out : Uint8List.sublistView(out, 0, cut);
 }

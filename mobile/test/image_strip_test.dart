@@ -193,6 +193,40 @@ void main() {
         expect(has(out, 'PICTUREPICTUREPICTURE'), true);
       });
     }
+    test('a vendor box at the tail is cut off', () {
+      final src = Uint8List.fromList([
+        ...heif(),
+        ...box('sefd', t('SM-A217F 37.98')),
+      ]);
+      final out = stripPictureBytes(src)!;
+      expect(has(out, 'sefd'), false);
+      expect(has(out, 'SM-A217F'), false);
+      expect(out.length, heif().length);
+      expect(has(out, 'PICTUREPICTUREPICTURE'), true);
+    });
+    test('a vendor box on a file with nothing else to strip', () {
+      final clean = stripPictureBytes(heif())!;
+      final src = Uint8List.fromList([...clean, ...box('sefd', t('SM-A217F'))]);
+      expect(has(stripPictureBytes(src)!, 'SM-A217F'), false);
+    });
+    test('a vendor box in the middle is emptied where it sits', () {
+      final src = Uint8List.fromList([
+        ...heif(),
+        ...box('sefd', t('SM-A217F')),
+        ...box('free', [0, 0]),
+      ]);
+      final out = stripPictureBytes(src)!;
+      expect(out.length, src.length);
+      expect(has(out, 'sefd'), false);
+      expect(has(out, 'SM-A217F'), false);
+      expect(has(out, 'PICTUREPICTUREPICTURE'), true);
+    });
+    test('a picture item kept inside a vendor box is null', () {
+      final whole = heif();
+      final at = latin1.decode(whole, allowInvalid: true).indexOf('mdat');
+      final src = Uint8List.fromList(whole)..setRange(at, at + 4, t('sefd'));
+      expect(stripPictureBytes(src), null);
+    });
     test('an exif item that iloc never places is null', () {
       expect(stripPictureBytes(heif(dropIlocForExif: true)), null);
     });
