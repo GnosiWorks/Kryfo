@@ -43,7 +43,7 @@ class HaloNavBar extends StatelessWidget {
         color: HaloColors.surface,
         border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),
       ),
-      padding: const EdgeInsets.fromLTRB(6, 6, 6, 11),
+      padding: const EdgeInsets.fromLTRB(6, 5, 6, 7),
       child: Row(
         children: [
           for (final t in HaloTab.values)
@@ -125,13 +125,13 @@ class _NavTabState extends State<_NavTab> with SingleTickerProviderStateMixin {
         },
         onLongPress: widget.onLongPress,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 48),
+          constraints: const BoxConstraints(minHeight: 46),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
                 width: 58,
-                height: 30,
+                height: 29,
                 child: AnimatedBuilder(
                   animation: _c,
                   builder: (_, _) {

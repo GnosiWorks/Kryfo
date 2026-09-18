@@ -5,10 +5,14 @@ import '../theme.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/stroke_icon.dart';
 
-final _eye = [
+// drawn in two passes so the iris can carry its own colour: one amber
+// outline, one violet centre. a single StrokeIcon paints every path the
+// same, and an eye that is all one colour reads as a symbol rather than
+// something looking back.
+const _eyeOutline = [
   'M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z',
-  svgCircle(12, 12, 3),
 ];
+final _eyeIris = [svgCircle(12, 12, 3)];
 final _picture = [
   svgRect(3.5, 4.5, 17, 15, 3),
   svgCircle(9, 10, 1.8),
@@ -77,7 +81,7 @@ class ToolsScreen extends StatelessWidget {
               _ToolRow(
                 icon: _sparkle,
                 tint: HaloColors.green,
-                tile: HaloColors.green.withValues(alpha: 0.18),
+                tile: HaloColors.green.withValues(alpha: 0.24),
                 title: 'Clean a photo or video',
                 sub: 'Or share one to Kryfo from your gallery',
                 onTap: onClean,
@@ -85,7 +89,7 @@ class ToolsScreen extends StatelessWidget {
               _ToolRow(
                 icon: _qr,
                 tint: HaloColors.violet,
-                tile: HaloColors.violet.withValues(alpha: 0.19),
+                tile: HaloColors.violet.withValues(alpha: 0.25),
                 title: 'Make a private QR code',
                 sub: 'Links, Wi-Fi, contacts and more. Made offline',
                 onTap: onQr,
@@ -93,7 +97,7 @@ class ToolsScreen extends StatelessWidget {
               _ToolRow(
                 icon: _lock,
                 tint: HaloColors.amber,
-                tile: HaloColors.amber.withValues(alpha: 0.2),
+                tile: HaloColors.amber.withValues(alpha: 0.26),
                 title: 'Lock a file',
                 sub: 'With a password. Opens anywhere with age',
                 onTap: onLock,
@@ -270,10 +274,21 @@ class _PhotoCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 alignment: Alignment.center,
-                child: StrokeIcon(
-                  _eye,
-                  size: 21,
-                  color: HaloColors.amberBright,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    StrokeIcon(
+                      _eyeOutline,
+                      size: 21,
+                      color: HaloColors.amberBright,
+                    ),
+                    StrokeIcon(
+                      _eyeIris,
+                      size: 21,
+                      stroke: 2.4,
+                      color: HaloColors.violet,
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(width: 12),
@@ -408,7 +423,7 @@ class _ToolRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final side = BorderSide(color: HaloColors.line, width: 0.5);
+    final side = BorderSide(color: HaloColors.line2, width: 0.5);
     return Semantics(
       button: true,
       enabled: onTap != null,
