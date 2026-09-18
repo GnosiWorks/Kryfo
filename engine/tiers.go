@@ -98,7 +98,7 @@ func HaloSetTransportMode(cMode *C.char) *C.char {
 			// the cooldown guards against a looping watchdog, not against
 			// someone deliberately choosing a route.
 			atomic.StoreInt64(&lastTorRestart, 0)
-			go restartTor()
+			go reconnectTor()
 		}
 	}
 	return C.CString(m)

@@ -67,10 +67,8 @@ import 'handle_lookup.dart';
 import 'widgets/sheet_handle.dart';
 import 'widgets/halo_sheet.dart';
 
-typedef VoidFn = Void Function();
 typedef IntArgFn = Void Function(Int32);
 typedef IntArgFnDart = void Function(int);
-typedef VoidFnDart = void Function();
 typedef CStrFn = Pointer<Utf8> Function();
 typedef CStrFnDart = Pointer<Utf8> Function();
 typedef OneArgFn = Pointer<Utf8> Function(Pointer<Utf8>);
@@ -112,7 +110,6 @@ class HaloEngine {
   late final TwoArgFnDart _decryptFrom;
   late final Pointer<Utf8> Function(Pointer<Utf8>) _start;
   late final CStrFnDart _drainInbox;
-  late final VoidFnDart _shutdown;
   late final IntArgFnDart _setDebug;
   late final CStrFnDart _getStatus;
   late final CStrFnDart _nostrKick;
@@ -158,7 +155,6 @@ class HaloEngine {
           Pointer<Utf8> Function(Pointer<Utf8>)
         >('HaloStartListener');
     _drainInbox = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloDrainInbox');
-    _shutdown = _lib.lookupFunction<VoidFn, VoidFnDart>('HaloShutdown');
     _getStatus = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloGetStatus');
     _nostrKick = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloNostrKick');
     _memStats = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMemStats');
@@ -207,8 +203,6 @@ class HaloEngine {
       malloc.free(ptr);
     }
   }
-
-  void shutdown() => _shutdown();
 
   List<String> drainInbox() {
     final raw = _drainInbox().toDartString();

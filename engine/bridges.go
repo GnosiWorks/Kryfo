@@ -204,18 +204,6 @@ func startPTListener() error {
 	return nil
 }
 
-func stopPTListener() {
-	bridgeMu.Lock()
-	ln := ptListener
-	ptListener = nil
-	ptPort = 0
-	bridgeMu.Unlock()
-	if ln != nil {
-		ln.Close()
-		log.Println("bridges: obfs4 listener stopped")
-	}
-}
-
 // one connection from tor: read the socks request, pull the per-bridge args
 // out of it, dial the bridge through obfs4, then copy bytes both ways.
 func servePTConn(conn net.Conn, factory base.ClientFactory) {
@@ -281,9 +269,9 @@ func servePTConn(conn net.Conn, factory base.ClientFactory) {
 // we want the dependency stated rather than implied.
 var _ = pt.Args{}
 
-// takes newline separated bridge lines and whether to use them. the caller is
-// expected to restart tor afterwards; changing this mid-session does nothing
-// on its own, because tor reads the config once at startup.
+// takes newline separated bridge lines and whether to use them. the caller
+// calls HaloRestartTor afterwards, which hands the new config to the running
+// tor and bounces its network so it takes.
 //
 //export HaloSetBridges
 func HaloSetBridges(cLines *C.char, on C.int) *C.char {
@@ -311,9 +299,12 @@ func HaloSetBridges(cLines *C.char, on C.int) *C.char {
 		if err := startPTListener(); err != nil {
 			return C.CString(fmt.Sprintf("error: %v", err))
 		}
-	} else {
-		stopPTListener()
 	}
+	// turning bridges off no longer closes the listener. tor is told
+	// ClientTransportPlugin once per process and hangs if it is set a second
+	// time (see applyBridgeConf), so the port it points at has to stay the
+	// port it points at. a localhost socket nobody dials costs nothing; the
+	// alternative costs the control connection.
 
 	if len(bad) > 0 {
 		return C.CString(fmt.Sprintf("ok: %d accepted, %d not understood", len(good), len(bad)))
@@ -324,15 +315,14 @@ func HaloSetBridges(cLines *C.char, on C.int) *C.char {
 // what the ui needs: whether bridges are on, how many are configured, and
 // whether the local transport is actually up.
 //
-// bounce tor so it picks up a config change. bridges are the only reason to
-// call this - tor reads its arguments once and never again, so toggling them
-// without a restart looks like the feature silently not working.
+// hand tor the new bridge config and bounce its network so it takes. tor is
+// never restarted for this: see reconnectTor for why it cannot be.
 //
 //export HaloRestartTor
 func HaloRestartTor() *C.char {
 	// asked for by hand, so the loop guard does not apply
 	atomic.StoreInt64(&lastTorRestart, 0)
-	go restartTor()
+	go reconnectTor()
 	return C.CString("ok")
 }
 
