@@ -4851,6 +4851,13 @@ class AppState extends ChangeNotifier {
   // that way, from a run days earlier. the transport screen calls this when it
   // opens so what is on it came from disk, not from memory.
   Future<void> refreshFromDisk() async {
+    // SharedPreferences keeps an in-memory cache per isolate, filled once.
+    // without this reload the getters hand back exactly what this process
+    // read at startup, so re-reading them "from disk" changed nothing at all
+    // and the screen went on showing a value from an hour earlier.
+    try {
+      await (await SharedPreferences.getInstance()).reload();
+    } catch (_) {}
     await loadHeartbeat();
     await _loadDeliveryTimes();
     notifyListeners();
