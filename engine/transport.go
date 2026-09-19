@@ -168,6 +168,10 @@ type transportView struct {
 	InboxDepth   int         `json:"inbox_depth"`
 	Mode         string      `json:"mode"`
 	PublishingS  int         `json:"publishing_secs"`
+	// the control port. dials climbs when a socket had to be replaced,
+	// timeouts when tor stopped answering one. both flat is a healthy tor.
+	CtrlDials    int64 `json:"ctrl_dials"`
+	CtrlTimeouts int64 `json:"ctrl_timeouts"`
 }
 
 func transportSnapshot() transportView {
@@ -180,6 +184,8 @@ func transportSnapshot() transportView {
 	statusMu.RUnlock()
 	v.TorReady = torReadyNow()
 	v.Mode = currentMode()
+	v.CtrlDials = ctrlDialCount()
+	v.CtrlTimeouts = ctrlTimeoutCount()
 
 	mu.Lock()
 	v.OnionAddr = myAddr

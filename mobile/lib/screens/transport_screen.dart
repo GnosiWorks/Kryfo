@@ -327,6 +327,7 @@ class _AliveState extends State<_Alive> {
     final exit = _exit;
     final exitAt = exit?['at'] as int?;
     final rss = ProcessInfo.currentRss;
+    final ctrl = engine.transportState();
     return Column(
       children: [
         _Line(
@@ -393,6 +394,16 @@ class _AliveState extends State<_Alive> {
               : engine.lastReconnect().isEmpty
               ? HaloColors.warm
               : HaloColors.rose,
+        ),
+        // dials climbs when a control socket had to be replaced, timeouts
+        // when tor stopped answering one. both flat is a healthy tor; either
+        // one climbing is the wedge that cost ten hours once.
+        _Line(
+          'control port',
+          '${ctrl['ctrl_dials'] ?? 0} dials · ${ctrl['ctrl_timeouts'] ?? 0} timeouts',
+          ((ctrl['ctrl_timeouts'] as int?) ?? 0) > 0
+              ? HaloColors.rose
+              : HaloColors.text2,
         ),
         _Line(
           'job runs',
