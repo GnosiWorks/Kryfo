@@ -166,18 +166,62 @@ func HaloCatchupState() *C.char {
 // arrives later instead of holding the phone awake now.
 const catchupCap = 30 * time.Second
 
+// a relay dropped three check-ins running gets one longer window. a backlog
+// deeper than the cap is walked in pieces and does finish eventually, but a
+// relay that keeps hitting the cap is either slow or holding a lot, and
+// giving it one proper turn is cheaper than dripping at it for an hour.
+const catchupLongCap = 90 * time.Second
+const catchupDropsBeforeLong = 3
+
 // what one relay's last catch-up cost. seconds and a flag, no content and no
 // counts - enough to see who holds a check-in up without a debug build.
 type catchupRun struct {
 	Ms      int  `json:"ms"`
 	Dropped bool `json:"dropped"`
+	Long    bool `json:"long"`
 }
 
 var (
-	catchupMu   sync.Mutex
-	catchupLast = map[string]catchupRun{}
-	catchupFrom = map[string]time.Time{}
+	catchupMu    sync.Mutex
+	catchupLast  = map[string]catchupRun{}
+	catchupFrom  = map[string]time.Time{}
+	catchupDrops = map[string]int{}
+	catchupLong  = map[string]bool{}
+	// where each relay's backlog walk got to. a relay holding more than one
+	// window can page keeps its place here, so the next check-in carries on
+	// instead of re-walking the same pages and never reaching the tail.
+	catchupMarks = map[string]catchup.Mark{}
 )
+
+func catchupMarkOf(u string) catchup.Mark {
+	catchupMu.Lock()
+	defer catchupMu.Unlock()
+	return catchupMarks[u]
+}
+
+func setCatchupMark(u string, m catchup.Mark) {
+	catchupMu.Lock()
+	defer catchupMu.Unlock()
+	if m.Started() {
+		catchupMarks[u] = m
+	} else {
+		delete(catchupMarks, u)
+	}
+}
+
+// how long this relay gets this time round.
+func catchupCapFor(u string) (time.Duration, bool) {
+	catchupMu.Lock()
+	defer catchupMu.Unlock()
+	if catchupDrops[u] >= catchupDropsBeforeLong {
+		// one longer turn, then back to the usual
+		catchupDrops[u] = 0
+		catchupLong[u] = true
+		return catchupLongCap, true
+	}
+	catchupLong[u] = false
+	return catchupCap, false
+}
 
 func noteCatchupStart(u string) {
 	catchupMu.Lock()
@@ -192,20 +236,28 @@ func noteCatchupDone(u string, dropped bool) {
 		ms = int(time.Since(t).Milliseconds())
 		delete(catchupFrom, u)
 	}
-	catchupLast[u] = catchupRun{Ms: ms, Dropped: dropped}
+	long := catchupLong[u]
+	if dropped {
+		catchupDrops[u]++
+	} else {
+		catchupDrops[u] = 0
+	}
+	drops := catchupDrops[u]
+	catchupLast[u] = catchupRun{Ms: ms, Dropped: dropped, Long: long}
 	catchupMu.Unlock()
 	if dropped {
-		log.Printf("nostr: %s still catching up after %s - dropped for this check-in", u, catchupCap)
+		log.Printf("nostr: %s still catching up after %dms - dropped for this check-in (%d in a row)",
+			u, ms, drops)
 	}
 }
 
 // the last catch-up for this relay: milliseconds, whether it was dropped, and
 // whether there has been one at all.
-func catchupOf(u string) (int, bool, bool) {
+func catchupOf(u string) (int, bool, bool, bool) {
 	catchupMu.Lock()
 	defer catchupMu.Unlock()
 	r, ok := catchupLast[u]
-	return r.Ms, r.Dropped, ok
+	return r.Ms, r.Dropped, r.Long, ok
 }
 
 // one page of stored events, closed again as soon as the relay says that
@@ -862,7 +914,12 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 				// nobody waits on one relay for longer than this. whichever
 				// of the two fires first wins the Once, so a relay is either
 				// finished or dropped, never both.
-				capT = time.AfterFunc(catchupCap, func() {
+				thisCap, longTurn := catchupCapFor(u)
+				if longTurn {
+					log.Printf("nostr: %s dropped %d check-ins running, giving it %s this time",
+						u, catchupDropsBeforeLong, catchupLongCap)
+				}
+				capT = time.AfterFunc(thisCap, func() {
 					settleOnce.Do(func() {
 						atomic.AddInt32(&catchupActive, -1)
 						noteCatchupDone(u, true)
@@ -919,11 +976,16 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 						log.Printf("nostr: %s answered with a full %d, paging back", u, stored)
 						go func(from nostr.Timestamp) {
 							defer settled()
-							res := catchup.Back(cctx, func(pc context.Context, s, t nostr.Timestamp, n int) ([]nostr.Event, error) {
+							// carries this relay's place from last time, so a
+							// backlog deeper than one window is walked in
+							// pieces instead of re-walked from the top and
+							// never finished.
+							res, mark := catchup.Continue(cctx, func(pc context.Context, s, t nostr.Timestamp, n int) ([]nostr.Event, error) {
 								return relayPage(pc, r, rcvPk, s, t, n)
-							}, since, from, catchupPage, catchupMaxPages, dispatch)
-							log.Printf("nostr: %s paged back %d pages, %d events, %d new, complete=%v",
-								u, res.Pages, res.Fetched, res.Fresh, res.Complete)
+							}, since, from, catchupPage, catchupMaxPages, dispatch, catchupMarkOf(u))
+							setCatchupMark(u, mark)
+							log.Printf("nostr: %s paged back %d pages, %d events, %d new, complete=%v, resume=%d",
+								u, res.Pages, res.Fetched, res.Fresh, res.Complete, res.Until)
 							if !res.Complete {
 								return
 							}

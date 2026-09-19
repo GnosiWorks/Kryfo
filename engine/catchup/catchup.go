@@ -23,19 +23,73 @@ type Result struct {
 	Fetched  int
 	Fresh    int
 	Complete bool
+	// where the walk stopped. on an incomplete result this is the resume
+	// point: everything above it has been fetched, so the next attempt can
+	// carry on from here instead of covering the same ground again.
+	Until nostr.Timestamp
+}
+
+// Mark is how much of a relay's backlog has already been walked: everything
+// between Cursor and Top. A relay whose backlog takes longer than one
+// check-in is allowed keeps its Mark, so the next check-in spends its time on
+// ground it has not covered yet.
+//
+// Without this a relay with more backlog than one window re-fetched the same
+// first pages every time and its oldest events never arrived at all.
+type Mark struct {
+	Top    nostr.Timestamp
+	Cursor nostr.Timestamp
+}
+
+func (m Mark) Started() bool { return m.Top > 0 }
+
+// Continue pages the window, stepping over the part Mark says is already
+// done. It returns the Mark to keep for next time; a zero Mark means the
+// window is finished and the anchor may move.
+//
+// It is one downward walk, not two. An earlier version paged the newly
+// arrived gap first and the old tail second, and a gap too big for one
+// window ate every window after it: the tail never moved and the oldest
+// events never came. One cursor, descending, cannot starve itself.
+func Continue(ctx context.Context, fetch Page, since, oldest nostr.Timestamp,
+	limit, maxPages int, deliver func(nostr.Event) bool, m Mark) (Result, Mark) {
+
+	r := walk(ctx, fetch, since, oldest, limit, maxPages, deliver, m)
+	if r.Complete {
+		return r, Mark{}
+	}
+	return r, Mark{Top: maxTs(oldest, m.Top), Cursor: r.Until}
+}
+
+func maxTs(a, b nostr.Timestamp) nostr.Timestamp {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 // Back pages from oldest down to since. deliver reports whether the event
 // was new. Complete is false when a page failed, the context ended or
 // maxPages ran out: the caller must then not move its anchor, so the next
 // connect asks again.
-//
-// it stops on an empty page, not on a short one: a relay may cap below what
-// was asked for, and a short page from such a relay is not the end.
-func Back(ctx context.Context, fetch Page, since, oldest nostr.Timestamp, limit, maxPages int, deliver func(nostr.Event) bool) Result {
+func Back(ctx context.Context, fetch Page, since, oldest nostr.Timestamp,
+	limit, maxPages int, deliver func(nostr.Event) bool) Result {
+	return walk(ctx, fetch, since, oldest, limit, maxPages, deliver, Mark{})
+}
+
+// the walk itself. skip names an interval already covered; on reaching it the
+// cursor jumps to its far side instead of asking for it again. that keeps the
+// whole thing one monotonically descending cursor, so wherever it stops is a
+// resume point.
+func walk(ctx context.Context, fetch Page, since, oldest nostr.Timestamp,
+	limit, maxPages int, deliver func(nostr.Event) bool, skip Mark) Result {
 	var res Result
 	until := oldest
 	for res.Pages < maxPages {
+		if skip.Started() && until <= skip.Top && until > skip.Cursor {
+			until = skip.Cursor
+		}
+		res.Until = until
 		if ctx.Err() != nil {
 			return res
 		}
@@ -73,6 +127,7 @@ func Back(ctx context.Context, fetch Page, since, oldest nostr.Timestamp, limit,
 			low = until - 1
 		}
 		until = low
+		res.Until = until
 	}
 	return res
 }

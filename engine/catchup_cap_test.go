@@ -51,7 +51,7 @@ func TestCatchupCapDropsASlowRelay(t *testing.T) {
 	if got := atomic.LoadInt32(&catchupActive); got != 0 {
 		t.Fatalf("the cap must release the relay; active is still %d", got)
 	}
-	ms, dropped, seen := catchupOf("wss://slow.example")
+	ms, dropped, _, seen := catchupOf("wss://slow.example")
 	if !seen || !dropped {
 		t.Fatalf("want a recorded drop, got seen=%v dropped=%v", seen, dropped)
 	}
@@ -79,7 +79,7 @@ func TestCatchupCapLeavesAQuickRelayAlone(t *testing.T) {
 	if got := atomic.LoadInt32(&catchupActive); got != 0 {
 		t.Fatalf("a finished relay should leave active at 0, got %d", got)
 	}
-	ms, dropped, seen := catchupOf("wss://quick.example")
+	ms, dropped, _, seen := catchupOf("wss://quick.example")
 	if !seen || dropped {
 		t.Fatalf("a relay that finished must not be marked dropped: %v %v", seen, dropped)
 	}
@@ -114,11 +114,11 @@ func TestCatchupCapWithSeveralRelays(t *testing.T) {
 	if got := atomic.LoadInt32(&catchupActive); got != 0 {
 		t.Fatalf("one slow relay held the check-in open: active %d", got)
 	}
-	if _, dropped, _ := catchupOf("wss://b.example"); !dropped {
+	if _, dropped, _, _ := catchupOf("wss://b.example"); !dropped {
 		t.Fatal("the slow relay should be marked dropped")
 	}
 	for _, u := range []string{"wss://a.example", "wss://c.example"} {
-		if _, dropped, _ := catchupOf(u); dropped {
+		if _, dropped, _, _ := catchupOf(u); dropped {
 			t.Fatalf("%s finished and must not be marked dropped", u)
 		}
 	}
@@ -129,5 +129,71 @@ func TestCatchupCapIsWellUnderTheJobWindow(t *testing.T) {
 	if catchupCap > 45*time.Second {
 		t.Fatalf("catchupCap is %s; the job has under three minutes and the "+
 			"check-in waits for every relay in turn", catchupCap)
+	}
+}
+
+// three drops in a row buy one longer window, then it goes back to normal.
+func TestThreeDropsBuyOneLongerWindow(t *testing.T) {
+	u := "wss://stubborn.example"
+	catchupMu.Lock()
+	delete(catchupDrops, u)
+	delete(catchupLast, u)
+	delete(catchupLong, u)
+	catchupMu.Unlock()
+
+	for i := 1; i <= 3; i++ {
+		d, long := catchupCapFor(u)
+		if long {
+			t.Fatalf("drop %d should still be the normal window", i)
+		}
+		if d != catchupCap {
+			t.Fatalf("drop %d got %s, want %s", i, d, catchupCap)
+		}
+		noteCatchupStart(u)
+		noteCatchupDone(u, true)
+	}
+
+	d, long := catchupCapFor(u)
+	if !long || d != catchupLongCap {
+		t.Fatalf("after three drops want one %s window, got %s long=%v",
+			catchupLongCap, d, long)
+	}
+	noteCatchupStart(u)
+	noteCatchupDone(u, true)
+	if _, _, wasLong, _ := catchupOf(u); !wasLong {
+		t.Fatal("the long turn should be recorded so the screen can show it")
+	}
+
+	// and it is one turn, not a new normal
+	if d, long := catchupCapFor(u); long || d != catchupCap {
+		t.Fatalf("the window after the long one should be normal, got %s long=%v", d, long)
+	}
+}
+
+// a relay that finishes clears its record, so an old bad patch does not earn
+// it a long window later.
+func TestFinishingClearsTheDropCount(t *testing.T) {
+	u := "wss://recovers.example"
+	catchupMu.Lock()
+	delete(catchupDrops, u)
+	catchupMu.Unlock()
+
+	for i := 0; i < 2; i++ {
+		catchupCapFor(u)
+		noteCatchupStart(u)
+		noteCatchupDone(u, true)
+	}
+	catchupCapFor(u)
+	noteCatchupStart(u)
+	noteCatchupDone(u, false)
+
+	catchupMu.Lock()
+	n := catchupDrops[u]
+	catchupMu.Unlock()
+	if n != 0 {
+		t.Fatalf("a finished catch-up should clear the count, got %d", n)
+	}
+	if d, long := catchupCapFor(u); long || d != catchupCap {
+		t.Fatalf("want the normal window after a success, got %s long=%v", d, long)
 	}
 }

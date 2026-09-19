@@ -157,6 +157,7 @@ type relayView struct {
 	// how a slow relay is identified without a debug build.
 	CatchupMs   int  `json:"catchup_ms"`
 	CatchupDrop bool `json:"catchup_dropped"`
+	CatchupLong bool `json:"catchup_long"`
 	CatchupSeen bool `json:"catchup_seen"`
 }
 
@@ -210,7 +211,7 @@ func transportSnapshot() transportView {
 	relayHealthMu.Lock()
 	for _, u := range urls {
 		rv := relayView{URL: u, Fails: relayFails[u]}
-		rv.CatchupMs, rv.CatchupDrop, rv.CatchupSeen = catchupOf(u)
+		rv.CatchupMs, rv.CatchupDrop, rv.CatchupLong, rv.CatchupSeen = catchupOf(u)
 		if till, ok := relayCoolTill[u]; ok && now.Before(till) {
 			rv.Benched = true
 			rv.BenchFor = int(time.Until(till).Seconds())

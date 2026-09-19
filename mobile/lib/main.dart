@@ -4871,10 +4871,11 @@ class AppState extends ChangeNotifier {
             .split('/')
             .first;
         final secs = ((m['catchup_ms'] as int? ?? 0) / 1000).toStringAsFixed(1);
+        final long = m['catchup_long'] == true ? ' long window' : '';
         parts.add(
           m['catchup_dropped'] == true
-              ? '$host ${secs}s dropped'
-              : '$host ${secs}s',
+              ? '$host ${secs}s dropped$long'
+              : '$host ${secs}s$long',
         );
       }
       return parts.join(' · ');
