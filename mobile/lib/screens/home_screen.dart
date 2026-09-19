@@ -3,6 +3,7 @@
 // matches 08_complete_spec.html "the everyday" home tile.
 
 import 'saved_screen.dart';
+import 'transport_screen.dart';
 import '../widgets/press_scale.dart';
 import 'modes_screen.dart' show showFastGateSheet;
 import '../widgets/stagger_in.dart';
@@ -353,6 +354,7 @@ class _ChatsTab extends StatelessWidget {
           const _BridgeHint(),
           const _BridgeStuckHint(),
           const _RelayDownHint(),
+          const _OfflineCard(),
           const _KeepsStoppingCard(),
           const _NotificationsBlockedHint(),
           StaggerIn(
@@ -680,6 +682,153 @@ class _NotificationsBlockedHint extends StatefulWidget {
 // this phone has killed kryfo three times in a day while it was supposed
 // to be staying connected. said once, ever, and only after it has happened:
 // no vendor list, no guessing from the model name.
+// tor has been unable to carry traffic for five minutes while kryfo is meant
+// to be connected. a samsung once sat like this for ten and a half hours with
+// nothing on screen; silence is the part being fixed here, so this says it
+// plainly and offers the one useful button.
+//
+// it keeps its own timer because the status poll only wakes listeners when
+// the status changes, and staying off is the absence of a change.
+class _OfflineCard extends StatefulWidget {
+  const _OfflineCard();
+
+  @override
+  State<_OfflineCard> createState() => _OfflineCardState();
+}
+
+class _OfflineCardState extends State<_OfflineCard> {
+  Timer? _tick;
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tick = Timer.periodic(const Duration(seconds: 20), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _reconnect() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    HapticFeedback.selectionClick();
+    engine.restartTor();
+    // the bounce reports itself through the status poll; this only stops the
+    // button being hammered while it runs.
+    await Future<void>.delayed(const Duration(seconds: 6));
+    if (mounted) setState(() => _busy = false);
+  }
+
+  String _howLong(Duration d) {
+    if (d.inHours >= 1) {
+      final h = d.inHours;
+      return h == 1 ? 'an hour' : '$h hours';
+    }
+    return '${d.inMinutes} minutes';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: appState,
+      builder: (context, _) {
+        if (!appState.looksOffline) return const SizedBox.shrink();
+        final since = appState.offlineFor ?? Duration.zero;
+        return Container(
+          margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          decoration: BoxDecoration(
+            color: HaloColors.rose.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: HaloColors.rose.withValues(alpha: 0.35)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  BreathDot(color: HaloColors.rose, size: 7),
+                  const SizedBox(width: 9),
+                  Text(
+                    'Kryfo is offline',
+                    style: HaloType.mono(
+                      size: 11,
+                      color: HaloColors.rose,
+                      weight: FontWeight.w600,
+                      letter: 0.12,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Tor has not been able to connect for ${_howLong(since)}. '
+                'Nothing can arrive or leave until it does.',
+                style: HaloType.sans(size: 13, color: HaloColors.warm),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: _busy ? null : _reconnect,
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 15,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _busy
+                            ? HaloColors.rose.withValues(alpha: 0.45)
+                            : HaloColors.rose,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        _busy ? 'Reconnecting' : 'Reconnect',
+                        style: HaloType.mono(
+                          size: 11.5,
+                          color: HaloColors.ink,
+                          weight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: () => Navigator.of(
+                      context,
+                    ).push(haloRoute(const TransportScreen())),
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Text(
+                        'What is wrong',
+                        style: HaloType.mono(
+                          size: 11.5,
+                          color: HaloColors.warm,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _KeepsStoppingCard extends StatefulWidget {
   const _KeepsStoppingCard();
 
