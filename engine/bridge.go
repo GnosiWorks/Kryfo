@@ -364,8 +364,10 @@ func startListener(dataDir string) string {
 	mu.Lock()
 	torNode = t
 	mu.Unlock()
-	// whatever control socket we held belonged to the tor before this one.
+	// whatever control socket we held belonged to the tor before this one,
+	// and so did the socks port any cached http client was built against.
 	ctrlReset()
+	nostrResetClient()
 	// stay "starting" - tor.Start returns before any circuit exists. the
 	// bootstrap watcher owns the flip at a real 100%.
 	goWatchBootstrap(t)
@@ -754,6 +756,16 @@ func reconnectOn(t *tor.Tor, addr string) string {
 		setStatus("off")
 		return "error: " + err.Error()
 	}
+	// and again now the network is back, which is the one that matters.
+	// tor closes its socks listener on DisableNetwork=1 and opens a new one
+	// on the way back, so every client built against the old port is dead.
+	// the reset at the top of this function only drops work that was already
+	// in flight: anything rebuilt during the bounce - and six relay runners
+	// are looping through torNostrClient() throughout - caches a client
+	// bound to a port that is about to stop answering, and keeps it for good.
+	// that is why a handle claim timed out on a phone whose relays were fine:
+	// the relays heal through relaysAllDead(), a one-shot request does not.
+	nostrResetClient()
 	noteStep("watchers")
 	goWatchBootstrap(t)
 	goWatchPublished(t, strings.TrimSuffix(addr, ".onion"))
@@ -839,6 +851,10 @@ func torResume() string {
 	statusMu.Lock()
 	hsdirUploads = 0
 	statusMu.Unlock()
+	// the socks port the sleeping tor had is not the one it has now, and
+	// this path never dropped the cached client at all. every check-in wake
+	// left it pointing at a closed port.
+	nostrResetClient()
 	setStatus("starting")
 	goWatchBootstrap(t)
 	if id := strings.TrimSuffix(addr, ".onion"); id != "" {
