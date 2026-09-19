@@ -439,14 +439,29 @@ class _ToolRow extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 46,
+                height: 46,
                 decoration: BoxDecoration(
-                  color: tile,
-                  borderRadius: BorderRadius.circular(13),
+                  // a little depth: the tile lifts towards its own tint at
+                  // the top left and keeps a hairline of it all round, so
+                  // the row reads as a thing to press rather than a flat
+                  // square sitting on the background.
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color.alphaBlend(tint.withValues(alpha: 0.10), tile),
+                      tile,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: tint.withValues(alpha: 0.22),
+                    width: 0.8,
+                  ),
                 ),
                 alignment: Alignment.center,
-                child: StrokeIcon(icon, size: 22, color: tint, stroke: 1.8),
+                child: StrokeIcon(icon, size: 22, color: tint, stroke: 1.9),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -469,11 +484,21 @@ class _ToolRow extends StatelessWidget {
                   ],
                 ),
               ),
-              StrokeIcon(
-                _chevron,
-                size: 17,
-                color: HaloColors.text,
-                stroke: 1.8,
+              Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: HaloColors.surface2,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: HaloColors.line2, width: 0.5),
+                ),
+                alignment: Alignment.center,
+                child: StrokeIcon(
+                  _chevron,
+                  size: 14,
+                  color: HaloColors.text,
+                  stroke: 1.9,
+                ),
               ),
             ],
           ),

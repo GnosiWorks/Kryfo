@@ -230,37 +230,41 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
                     ),
                     const SizedBox(height: 4),
                   ],
-                  PressScale(
-                    label: _failure != null
-                        ? 'Back'
-                        : story == null
-                        ? 'Stop'
-                        : story.canClean
-                        ? 'Keep it as it is'
-                        : 'Done',
-                    onTap: () => Navigator.of(context).maybePop(),
-                    scale: 0.96,
-                    child: SizedBox(
-                      height: 44,
-                      child: Center(
-                        child: ExcludeSemantics(
-                          child: Text(
-                            _failure != null
-                                ? 'Back'
-                                : story == null
-                                ? 'Stop'
-                                : story.canClean
-                                ? 'Keep it as it is'
-                                : 'Done',
-                            style: HaloType.sans(
-                              size: 13.5,
-                              color: HaloColors.warm,
+                  // with nothing to remove there is no primary button, and
+                  // the page ended on a small line of text with a lot of
+                  // room above it. the way out becomes the button instead.
+                  if (story != null && !story.canClean)
+                    ToolWideButton(
+                      label: 'Done',
+                      filled: true,
+                      onTap: () => Navigator.of(context).maybePop(),
+                    )
+                  else if (_failure != null)
+                    ToolWideButton(
+                      label: 'Back',
+                      filled: true,
+                      onTap: () => Navigator.of(context).maybePop(),
+                    )
+                  else
+                    PressScale(
+                      label: story == null ? 'Stop' : 'Keep it as it is',
+                      onTap: () => Navigator.of(context).maybePop(),
+                      scale: 0.96,
+                      child: SizedBox(
+                        height: 44,
+                        child: Center(
+                          child: ExcludeSemantics(
+                            child: Text(
+                              story == null ? 'Stop' : 'Keep it as it is',
+                              style: HaloType.sans(
+                                size: 13.5,
+                                color: HaloColors.warm,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
                   Text(
                     video
                         ? 'READ ON THIS PHONE · THE VIDEO WENT NOWHERE'
