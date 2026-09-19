@@ -237,11 +237,24 @@ class HaloEngine {
   late final CStrFnDart _lastReconnect = _lib
       .lookupFunction<CStrFn, CStrFnDart>('HaloLastReconnect');
 
+  // the go side hands this over with C.CString, which mallocs, so the string
+  // is ours to free. it matters here more than elsewhere: the transport
+  // screen reads it on every refresh, and the line it returns used to grow
+  // every time a reconnect gave up.
+  //
+  // the other CStr bindings in this file do not free, which is a leak per
+  // call across all of them. one binding is not the place to fix a house
+  // pattern - noted in kryfo-notes for a pass of its own.
   String lastReconnect() {
+    Pointer<Utf8>? p;
     try {
-      return _lastReconnect().toDartString();
+      p = _lastReconnect();
+      if (p == nullptr) return '';
+      return p.toDartString();
     } catch (_) {
       return '';
+    } finally {
+      if (p != null && p != nullptr) malloc.free(p);
     }
   }
 
@@ -5965,6 +5978,26 @@ class AppState extends ChangeNotifier {
       _torStatus == TorStatus.publishing ||
       _torStatus == TorStatus.reachable;
   int get bootstrapPct => _bootstrapPct;
+
+  // how long tor has been unable to carry traffic while kryfo is meant to be
+  // connected. null when it is fine, when check-ins are holding tor off on
+  // purpose, or when nothing has started trying yet.
+  //
+  // this exists because a samsung sat offline for ten and a half hours with
+  // nothing on screen to say so. five minutes of this and the home screen
+  // says it out loud.
+  Duration? get offlineFor {
+    if (_deliveryMode != DeliveryMode.always) return null;
+    if (_torHeld || haloWiping) return null;
+    if (torReady) return null;
+    final since = _torTryingSince;
+    if (since == null) return null;
+    return DateTime.now().difference(since);
+  }
+
+  static const offlineAfter = Duration(minutes: 5);
+
+  bool get looksOffline => (offlineFor ?? Duration.zero) >= offlineAfter;
   // when tor first started trying this session. a network that
   // blocks tor looks exactly like a slow one for the first
   // minute or two, so we wait before suggesting anything.

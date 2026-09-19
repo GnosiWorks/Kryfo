@@ -172,6 +172,17 @@ func TestReconnect(t *testing.T) {
 	if node(t) != first {
 		t.Fatal("tor was replaced somewhere")
 	}
+	// all of the above must have gone over a control socket the engine owns.
+	// on the fallback path there is nothing to close when tor wedges, which
+	// is the whole failure this change removes - so fail loudly if we are
+	// silently on it.
+	if ctrlDialCount() == 0 {
+		t.Fatal("no control connection of our own was ever dialled - " +
+			"every command went through bine, where a wedge cannot be closed")
+	}
+	if n := ctrlTimeoutCount(); n != 0 {
+		t.Fatalf("a healthy tor timed out %d times on its control port", n)
+	}
 	if n := runtime.NumGoroutine(); n > goFirst+4 {
 		t.Fatalf("goroutines climbed: %d -> %d", goFirst, n)
 	}

@@ -364,6 +364,8 @@ func startListener(dataDir string) string {
 	mu.Lock()
 	torNode = t
 	mu.Unlock()
+	// whatever control socket we held belonged to the tor before this one.
+	ctrlReset()
 	// stay "starting" - tor.Start returns before any circuit exists. the
 	// bootstrap watcher owns the flip at a real 100%.
 	goWatchBootstrap(t)
@@ -567,12 +569,16 @@ func applyBridgeConf(t *tor.Tor) error {
 	}
 	if !bridgesEnabled() {
 		noteStep("setconf bridges off")
-		if err := t.Control.SetConf(control.KeyVals("UseBridges", "0")...); err != nil {
+		if err := ctrlDo(t, "UseBridges 0", func(c *control.Conn) error {
+			return c.SetConf(control.KeyVals("UseBridges", "0")...)
+		}); err != nil {
 			return err
 		}
 		// the lines go too, or a later UseBridges 1 would quietly use the
 		// list from last time
-		return t.Control.ResetConf(&control.KeyVal{Key: "Bridge"})
+		return ctrlDo(t, "RESETCONF Bridge", func(c *control.Conn) error {
+			return c.ResetConf(&control.KeyVal{Key: "Bridge"})
+		})
 	}
 	noteStep("pt listener")
 	if err := startPTListener(); err != nil {
@@ -595,15 +601,28 @@ func applyBridgeConf(t *tor.Tor) error {
 	}
 	log.Printf("bridges: handing tor %d bridge lines via 127.0.0.1:%d", len(lines), port)
 	noteStep("setconf plugin+bridges")
-	return t.Control.SetConf(kv...)
+	return ctrlDo(t, "ClientTransportPlugin+Bridge", func(c *control.Conn) error {
+		return c.SetConf(kv...)
+	})
 }
 
 // where the last reconnect got to, and how it ended. a bounce that stalls
 // does so inside tor's control port, which says nothing in a release build,
 // so it is written down here and shown on the transport screen.
-var reconnectStep atomic.Value // string
+// two slots, deliberately. the step says where a reconnect is right now; the
+// outcome says how the last one ended. they were one slot once, and the
+// timeout wrote "stuck at " + the slot back into the slot - so every giving
+// up nested inside the one before it. a samsung was found with ninety of them
+// in a single string. an outcome is never built from an outcome.
+var (
+	reconnectStep    atomic.Value // string, where a running reconnect is
+	reconnectOutcome atomic.Value // string, how the last one ended
+	reconnectRunning int32
+)
 
 func noteStep(s string) { reconnectStep.Store(s) }
+
+func noteOutcome(s string) { reconnectOutcome.Store(s) }
 
 func lastReconnectStep() string {
 	if v, ok := reconnectStep.Load().(string); ok {
@@ -612,8 +631,21 @@ func lastReconnectStep() string {
 	return ""
 }
 
+func lastReconnectOutcome() string {
+	if atomic.LoadInt32(&reconnectRunning) == 1 {
+		if st := lastReconnectStep(); st != "" {
+			return "running, at " + st
+		}
+		return "running"
+	}
+	if v, ok := reconnectOutcome.Load().(string); ok {
+		return v
+	}
+	return ""
+}
+
 //export HaloLastReconnect
-func HaloLastReconnect() *C.char { return C.CString(lastReconnectStep()) }
+func HaloLastReconnect() *C.char { return C.CString(lastReconnectOutcome()) }
 
 // the bounce itself. "ok", or a line starting with "error:".
 func reconnectTor() string {
@@ -660,28 +692,23 @@ func reconnectTor() string {
 		return "ok"
 	}
 
-	// tor answering its control port is not something to take on faith - a
-	// wedged one used to mean this never returned, holding startMu with it.
+	// no goroutine to abandon any more. every control command inside
+	// reconnectOn carries its own deadline, so this returns whatever tor
+	// does; a wedged control port comes back as an error rather than as a
+	// lock nobody will ever release.
 	started := time.Now()
-	done := make(chan string, 1)
-	go func() { done <- reconnectOn(t, addr) }()
-	select {
-	case r := <-done:
-		noteStep(fmt.Sprintf("%s after %s", r, time.Since(started).Round(time.Millisecond)))
-		return r
-	case <-time.After(45 * time.Second):
-		log.Println("halo: reconnect gave up waiting on tor's control port")
-		noteStep("stuck at " + lastReconnectStep() + " (45s)")
-		setStatus("off")
-		return "error: control port not answering"
-	}
+	atomic.StoreInt32(&reconnectRunning, 1)
+	r := reconnectOn(t, addr)
+	atomic.StoreInt32(&reconnectRunning, 0)
+	noteOutcome(fmt.Sprintf("%s after %s", r, time.Since(started).Round(time.Millisecond)))
+	return r
 }
 
-// the control work, on its own goroutine so the caller has a way out.
+// the control work. it does NOT take startMu: holding a lock across a control
+// command is what left the samsung offline for ten hours. the only thing it
+// serializes against is itself, through the torRestarting flag its caller
+// holds, and against other control users through ctrlDo's own bounded lock.
 func reconnectOn(t *tor.Tor, addr string) string {
-	startMu.Lock()
-	defer startMu.Unlock()
-
 	log.Println("halo: reconnecting tor (config change or wedged dialer)")
 	noteStep("start")
 	statusMu.Lock()
@@ -706,7 +733,9 @@ func reconnectOn(t *tor.Tor, addr string) string {
 	// for ever. the test below caught it on the second and third switch. this
 	// is the order tor browser uses for the same change.
 	noteStep("network off")
-	if err := t.Control.SetConf(control.KeyVals("DisableNetwork", "1")...); err != nil {
+	if err := ctrlDo(t, "DisableNetwork 1", func(c *control.Conn) error {
+		return c.SetConf(control.KeyVals("DisableNetwork", "1")...)
+	}); err != nil {
 		log.Printf("halo: tor would not leave the network: %v", err)
 		setStatus("off")
 		return "error: " + err.Error()
@@ -718,7 +747,9 @@ func reconnectOn(t *tor.Tor, addr string) string {
 		log.Printf("halo: bridge config not applied: %v", err)
 	}
 	noteStep("network on")
-	if err := t.Control.SetConf(control.KeyVals("DisableNetwork", "0")...); err != nil {
+	if err := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
+		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)
+	}); err != nil {
 		log.Printf("halo: tor would not come back: %v", err)
 		setStatus("off")
 		return "error: " + err.Error()
@@ -755,17 +786,21 @@ func HaloTorStop() *C.char { return C.CString(torStop()) }
 
 func torStop() string {
 	atomic.StoreInt32(&torPaused, 1)
-	startMu.Lock()
-	defer startMu.Unlock()
 	mu.Lock()
 	t := torNode
 	mu.Unlock()
-	nostrResetClient()
+	// in the background for the same reason reconnectOn does it: this takes
+	// cachedNostrClientMu, which a dialer being built holds for up to half a
+	// minute. it used to run here with startMu held, which put a start and
+	// every reconnect behind a dialer.
+	go nostrResetClient()
 	if t == nil || t.Control == nil {
 		setStatus("off")
 		return "ok"
 	}
-	if err := t.Control.SetConf(control.KeyVals("DisableNetwork", "1")...); err != nil {
+	if err := ctrlDo(t, "DisableNetwork 1", func(c *control.Conn) error {
+		return c.SetConf(control.KeyVals("DisableNetwork", "1")...)
+	}); err != nil {
 		log.Printf("halo: tor would not leave the network: %v", err)
 		atomic.StoreInt32(&torPaused, 0)
 		return "error: " + err.Error()
@@ -787,8 +822,6 @@ func torStop() string {
 func HaloTorResume() *C.char { return C.CString(torResume()) }
 
 func torResume() string {
-	startMu.Lock()
-	defer startMu.Unlock()
 	atomic.StoreInt32(&torPaused, 0)
 	mu.Lock()
 	t := torNode
@@ -797,7 +830,9 @@ func torResume() string {
 	if t == nil || t.Control == nil {
 		return "start"
 	}
-	if err := t.Control.SetConf(control.KeyVals("DisableNetwork", "0")...); err != nil {
+	if err := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
+		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)
+	}); err != nil {
 		log.Printf("halo: tor would not come back: %v", err)
 		return "error: " + err.Error()
 	}
@@ -1174,7 +1209,12 @@ func watchBootstrap(t *tor.Tor) {
 		if t == nil || t.Control == nil || torIsPaused() {
 			return
 		}
-		kv, err := t.Control.GetInfo("status/bootstrap-phase")
+		var kv []*control.KeyVal
+		err := ctrlDo(t, "GETINFO bootstrap-phase", func(c *control.Conn) error {
+			var gerr error
+			kv, gerr = c.GetInfo("status/bootstrap-phase")
+			return gerr
+		})
 		if err == nil && len(kv) > 0 {
 			pct := parseBootstrapPct(kv[0].Val)
 			if pct != lastPct {
