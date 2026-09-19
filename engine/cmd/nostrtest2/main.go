@@ -204,7 +204,8 @@ func subscribeMulti(ctx context.Context, urls []string, pk nostr.PubKey, kind no
 // ---------- main ----------
 
 func main() {
-	fmt.Println("=== halo nostr full-stack probe (encrypt + ephemeral keys + fan-out) ===\n")
+	fmt.Println("=== halo nostr full-stack probe (encrypt + ephemeral keys + fan-out) ===")
+	fmt.Println()
 
 	// 1. two halos: alice + bob, each generates X25519
 	aliceXPriv, aliceXPub := genX25519()
