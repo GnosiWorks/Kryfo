@@ -27,6 +27,7 @@ import 'media_progress.dart';
 import 'media_send.dart';
 import 'media_resend.dart';
 import 'delivery_mode.dart';
+import 'offline_gate.dart';
 import 'helper_push.dart';
 import 'screens/home_screen.dart';
 import 'screens/new_group_screen.dart';
@@ -5986,14 +5987,19 @@ class AppState extends ChangeNotifier {
   // this exists because a samsung sat offline for ten and a half hours with
   // nothing on screen to say so. five minutes of this and the home screen
   // says it out loud.
-  Duration? get offlineFor {
-    if (_deliveryMode != DeliveryMode.always) return null;
-    if (_torHeld || haloWiping) return null;
-    if (torReady) return null;
-    final since = _torTryingSince;
-    if (since == null) return null;
-    return DateTime.now().difference(since);
-  }
+  //
+  // note what it is NOT: dropping wifi does not make tor report off - tor
+  // keeps its bootstrap state and says "reachable" with no network at all.
+  // this watches tor's own status, which is what went to "off" and stayed
+  // there in the failure it exists for. plain loss of network already has
+  // its own strip.
+  Duration? get offlineFor => offlineDurationFor(
+    mode: _deliveryMode,
+    torHeld: _torHeld || haloWiping,
+    torReady: torReady,
+    tryingSince: _torTryingSince,
+    now: DateTime.now(),
+  );
 
   static const offlineAfter = Duration(minutes: 5);
 

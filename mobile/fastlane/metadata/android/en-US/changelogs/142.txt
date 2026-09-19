@@ -2,6 +2,6 @@ A new Tools tab: see what a photo gives away, keep a clean copy with all of it r
 
 Choose how messages arrive: always on, or check-ins every fifteen minutes to save battery.
 
-Tor could get stuck off with nothing on screen to say so. Commands to Tor now time out, a stuck connection is replaced, and five minutes offline says so.
+Tor sometimes stopped answering and could stay stuck off. Kryfo now notices within seconds and recovers, and says so on screen if it cannot.
 
 A file that arrived with pieces missing now asks for them.
