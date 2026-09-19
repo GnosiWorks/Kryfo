@@ -22,6 +22,7 @@ const kHeartbeatKey = 'delivery_heartbeat';
 const kKillsKey = 'delivery_kills';
 const kNudgeShownKey = 'delivery_nudge_shown';
 const kLastCheckHowKey = 'delivery_last_how';
+const kLastCheckRelaysKey = 'delivery_last_relays';
 
 DeliveryMode deliveryModeOf(String? raw) => switch (raw) {
   'checkins' => DeliveryMode.checkins,

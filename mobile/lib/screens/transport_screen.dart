@@ -286,6 +286,10 @@ class _AliveState extends State<_Alive> {
   }
 
   Future<void> _load() async {
+    // the 15-minute job writes its record from another isolate, which this
+    // process never sees. without this the rows below can be a day old and
+    // look current.
+    await appState.refreshFromDisk();
     final exempt = await appState.isBatteryExempt();
     final up = await appState.processUptimeMs();
     final exit = await appState.lastExit();
@@ -379,7 +383,9 @@ class _AliveState extends State<_Alive> {
         _Line('Last relay arrival', _travel(), HaloColors.text),
         _Line(
           'last check-in',
-          appState.lastCheckHow.isEmpty ? 'None yet' : appState.lastCheckHow,
+          appState.lastCheckHow.isEmpty
+              ? 'None yet'
+              : '${appState.lastCheckHow} · ${_ago(appState.lastCheckAt)}',
           appState.lastCheckHow.startsWith('ok')
               ? HaloColors.green
               : appState.lastCheckHow.isEmpty
@@ -394,6 +400,20 @@ class _AliveState extends State<_Alive> {
               : engine.lastReconnect().isEmpty
               ? HaloColors.warm
               : HaloColors.rose,
+        ),
+        // who took how long on the last catch-up. a relay marked dropped hit
+        // the engine's 30s cap and its backfill was given up on; it keeps its
+        // live subscription and asks again next time.
+        _Line(
+          'catch-up by relay',
+          appState.lastCheckRelays.isEmpty
+              ? 'None yet'
+              : appState.lastCheckRelays,
+          appState.lastCheckRelays.contains('dropped')
+              ? HaloColors.rose
+              : appState.lastCheckRelays.isEmpty
+              ? HaloColors.warm
+              : HaloColors.text2,
         ),
         // dials climbs when a control socket had to be replaced, timeouts
         // when tor stopped answering one. both flat is a healthy tor; either

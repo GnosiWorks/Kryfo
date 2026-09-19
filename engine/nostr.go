@@ -151,6 +151,63 @@ func HaloCatchupState() *C.char {
 		atomic.LoadInt32(&catchupActive), atomic.LoadInt64(&catchupStarted)))
 }
 
+// how long one relay may spend catching up before the check-in stops waiting
+// for it.
+//
+// a check-in used to end only when every relay had finished, and paging back
+// is catchupMaxPages (200) requests at up to 45s each, so a single slow relay
+// could hold tor awake for the whole 140s window - measured at 143s on the
+// samsung, every quarter of an hour, in the mode whose entire point is to use
+// less battery.
+//
+// past this the relay's BACKFILL is cancelled and it stops counting as active.
+// its live subscription stays up; only the catching-up is given up on, and the
+// next connect asks again from the same anchor, so nothing is lost - it
+// arrives later instead of holding the phone awake now.
+const catchupCap = 30 * time.Second
+
+// what one relay's last catch-up cost. seconds and a flag, no content and no
+// counts - enough to see who holds a check-in up without a debug build.
+type catchupRun struct {
+	Ms      int  `json:"ms"`
+	Dropped bool `json:"dropped"`
+}
+
+var (
+	catchupMu   sync.Mutex
+	catchupLast = map[string]catchupRun{}
+	catchupFrom = map[string]time.Time{}
+)
+
+func noteCatchupStart(u string) {
+	catchupMu.Lock()
+	catchupFrom[u] = time.Now()
+	catchupMu.Unlock()
+}
+
+func noteCatchupDone(u string, dropped bool) {
+	catchupMu.Lock()
+	ms := 0
+	if t, ok := catchupFrom[u]; ok {
+		ms = int(time.Since(t).Milliseconds())
+		delete(catchupFrom, u)
+	}
+	catchupLast[u] = catchupRun{Ms: ms, Dropped: dropped}
+	catchupMu.Unlock()
+	if dropped {
+		log.Printf("nostr: %s still catching up after %s - dropped for this check-in", u, catchupCap)
+	}
+}
+
+// the last catch-up for this relay: milliseconds, whether it was dropped, and
+// whether there has been one at all.
+func catchupOf(u string) (int, bool, bool) {
+	catchupMu.Lock()
+	defer catchupMu.Unlock()
+	r, ok := catchupLast[u]
+	return r.Ms, r.Dropped, ok
+}
+
 // one page of stored events, closed again as soon as the relay says that
 // was all. a relay that never says so costs the page its 45 seconds and the
 // catch-up its anchor, and the next connect asks again.
@@ -790,10 +847,28 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 				// missed, so a check-in knows when it may stop tor again
 				atomic.AddInt32(&catchupActive, 1)
 				atomic.AddInt64(&catchupStarted, 1)
+				noteCatchupStart(u)
 				var settleOnce sync.Once
+				var capT *time.Timer
 				settled := func() {
-					settleOnce.Do(func() { atomic.AddInt32(&catchupActive, -1) })
+					settleOnce.Do(func() {
+						if capT != nil {
+							capT.Stop()
+						}
+						atomic.AddInt32(&catchupActive, -1)
+						noteCatchupDone(u, false)
+					})
 				}
+				// nobody waits on one relay for longer than this. whichever
+				// of the two fires first wins the Once, so a relay is either
+				// finished or dropped, never both.
+				capT = time.AfterFunc(catchupCap, func() {
+					settleOnce.Do(func() {
+						atomic.AddInt32(&catchupActive, -1)
+						noteCatchupDone(u, true)
+						ccancel()
+					})
+				})
 				eose := sub.EndOfStoredEvents
 				stored := 0
 				var oldest nostr.Timestamp

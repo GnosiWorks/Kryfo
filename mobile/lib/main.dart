@@ -4771,6 +4771,8 @@ class AppState extends ChangeNotifier {
   // gave up is the thing a person needs to see, and it used to leave no
   // trace at all: the line just said there had never been one.
   String lastCheckHow = '';
+  // "relay.example 4.1s · other.example 30.0s dropped"
+  String lastCheckRelays = '';
   int lastCheckTriedAt = 0;
 
   // the nudge. nothing vendor-specific is read: while kryfo is supposed to
@@ -4839,7 +4841,46 @@ class AppState extends ChangeNotifier {
       lastCheckAt = prefs.getInt(kLastCheckKey) ?? 0;
       lastWakeAt = prefs.getInt(kLastWakeKey) ?? 0;
       lastCheckHow = prefs.getString(kLastCheckHowKey) ?? '';
+      lastCheckRelays = prefs.getString(kLastCheckRelaysKey) ?? '';
     } catch (_) {}
+  }
+
+  // the 15-minute job runs in its own isolate and writes these to prefs; this
+  // process never sees that write, so its copy goes stale and stays stale for
+  // as long as the app is up. one screen showed "ok, 10s" for a whole morning
+  // that way, from a run days earlier. the transport screen calls this when it
+  // opens so what is on it came from disk, not from memory.
+  Future<void> refreshFromDisk() async {
+    await loadHeartbeat();
+    await _loadDeliveryTimes();
+    notifyListeners();
+  }
+
+  // who took how long on the last catch-up. relay host and seconds, nothing
+  // else - no counts, no content. this is what identifies a slow relay
+  // without a debug build.
+  String _relayCatchupLine() {
+    try {
+      final rs = (engine.transportState()['relays'] as List?) ?? const [];
+      final parts = <String>[];
+      for (final r in rs) {
+        final m = r as Map;
+        if (m['catchup_seen'] != true) continue;
+        final host = (m['url'] as String? ?? '')
+            .replaceFirst(RegExp(r'^wss?://'), '')
+            .split('/')
+            .first;
+        final secs = ((m['catchup_ms'] as int? ?? 0) / 1000).toStringAsFixed(1);
+        parts.add(
+          m['catchup_dropped'] == true
+              ? '$host ${secs}s dropped'
+              : '$host ${secs}s',
+        );
+      }
+      return parts.join(' · ');
+    } catch (_) {
+      return '';
+    }
   }
 
   Future<void> setDeliveryMode(DeliveryMode m) async {
@@ -4951,19 +4992,43 @@ class AppState extends ChangeNotifier {
       } catch (e) {
         dlog('checkin: kick: $e');
       }
-      // wait for the relays to be asked, then for every answer to be in,
-      // paging included. the ceiling is the job's window, not the work.
+      // wait for the relays to be asked, then for every answer to be in.
+      //
+      // the engine caps each relay at catchupCap (30s) and drops its backfill
+      // past that, so this now ends when they have all either finished or
+      // been given up on. before that cap one slow relay could hold the loop
+      // to its 140s ceiling - measured at 143s on the samsung, every quarter
+      // of an hour, in the mode that exists to save battery.
+      //
+      // the two escapes are for the case the cap cannot help with: no relay
+      // ever getting going, where there is nothing to wait for at all.
       var quiet = 0;
-      while (DateTime.now().difference(started).inSeconds < 140) {
-        await Future.delayed(const Duration(seconds: 1));
+      var began = false;
+      var tail = '';
+      while (true) {
+        final secs = DateTime.now().difference(started).inSeconds;
         final (active, begun) = engine.catchupState();
-        if (begun > begunBefore && active == 0) {
+        if (begun > begunBefore) began = true;
+        if (began && active == 0) {
           quiet++;
           if (quiet >= 4) break;
         } else {
           quiet = 0;
         }
+        if (!began && secs >= 45) {
+          tail = ', no relay began';
+          break;
+        }
+        // relays are capped at 30s each, so this should never bite. if it
+        // ever does, something is holding catchupActive up and the line on
+        // the transport screen will say which relay.
+        if (secs >= 90) {
+          tail = ', capped';
+          break;
+        }
+        await Future.delayed(const Duration(seconds: 1));
       }
+      lastCheckRelays = _relayCatchupLine();
       // what came in is drained by the one-second poll. let it finish, and
       // let receipts and slice requests that answer it get out.
       await Future.delayed(const Duration(seconds: 3));
@@ -4971,7 +5036,7 @@ class AppState extends ChangeNotifier {
       for (var i = 0; i < 10 && _queued > 0; i++) {
         await Future.delayed(const Duration(seconds: 1));
       }
-      how = 'ok';
+      how = 'ok$tail';
       lastCheckAt = DateTime.now().millisecondsSinceEpoch;
       if (why == 'push') lastWakeAt = lastCheckAt;
       try {
@@ -4991,6 +5056,7 @@ class AppState extends ChangeNotifier {
       try {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(kLastCheckHowKey, lastCheckHow);
+        await prefs.setString(kLastCheckRelaysKey, lastCheckRelays);
       } catch (_) {}
       // only put it back to sleep if it was asleep: a check-in that ran
       // while the person had the app open leaves tor alone

@@ -152,6 +152,12 @@ type relayView struct {
 	Fails    int    `json:"fails"`
 	Benched  bool   `json:"benched"`
 	BenchFor int    `json:"bench_for_s"`
+	// the last time this relay caught up: how long it took, whether it was
+	// given up on at catchupCap, and whether it has ever done one. this is
+	// how a slow relay is identified without a debug build.
+	CatchupMs   int  `json:"catchup_ms"`
+	CatchupDrop bool `json:"catchup_dropped"`
+	CatchupSeen bool `json:"catchup_seen"`
 }
 
 type transportView struct {
@@ -204,6 +210,7 @@ func transportSnapshot() transportView {
 	relayHealthMu.Lock()
 	for _, u := range urls {
 		rv := relayView{URL: u, Fails: relayFails[u]}
+		rv.CatchupMs, rv.CatchupDrop, rv.CatchupSeen = catchupOf(u)
 		if till, ok := relayCoolTill[u]; ok && now.Before(till) {
 			rv.Benched = true
 			rv.BenchFor = int(time.Until(till).Seconds())
