@@ -24,8 +24,18 @@
    take the certificate sha-256, lowercase, colons removed. that goes in
    AllowedAPKSigningKeys.
 
-5. fill every FILL_ME in halo.yml, rename it to <applicationId>.yml, open a
-   merge request against https://gitlab.com/fdroid/fdroiddata
+5. DONE. the recipe is `fdroiddata/app.kryfo.yml` in this repo, which is the
+   copy of what went to https://gitlab.com/fdroid/fdroiddata. it pins
+   v0.2.10 on versionCodes 121/122/123 and sets `AutoUpdateMode: Version`
+   with `UpdateCheckMode: Tags`, so every tag after that is picked up without
+   another merge request. the template this was written from is gone; edit
+   the recipe itself.
+
+   full-apk reproducibility is no longer unproven either - see the note under
+   "what can go wrong" below, which is kept for the record. `repro/release.sh`
+   builds the three apks in the pinned container and `repro/verify.sh` checks
+   them with apksigcopier, which is the check f-droid runs. 0.2.11 came back
+   MATCH and SAME on all three.
 
 ## what can go wrong
 
