@@ -10,7 +10,7 @@ import '../lock_state.dart';
 import '../intro_prefs.dart';
 import '../scam_prefs.dart';
 import '../miui_autostart.dart';
-import '../widgets/motion.dart' show TorStatus, haloRoute;
+import '../widgets/motion.dart' show haloRoute;
 import 'why_kryfo_screen.dart';
 import 'transport_screen.dart';
 import 'bridges_screen.dart';
@@ -20,7 +20,6 @@ import '../theme.dart';
 import '../notif_permission.dart';
 import 'modes_screen.dart';
 import 'blocked_screen.dart';
-import 'push_settings_screen.dart';
 import 'pins_screen.dart';
 import 'backup_screen.dart';
 import '../wipe.dart';
@@ -145,7 +144,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ListenableBuilder(
             listenable: Listenable.merge([appState, lockState]),
             builder: (_, _) {
-              final tor = appState.torStatus == TorStatus.reachable;
+              // the same predicate the home pill uses, or the two screens
+              // disagree about the same tor
+              final tor = appState.torUsable;
               // relay and fast modes never use tor, so "connecting" there
               // would be a promise nothing is trying to keep
               final onTor = appState.sendMode == 'private';
@@ -230,31 +231,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (mounted) setState(() {});
                 },
               ),
+              // one row, not two. notifications had a screen of its own until
+              // the wake-up picker that shared it went; what was left was a
+              // single switch on an otherwise blank page. how messages arrive
+              // and what they say when they do belong together.
               HaloRow(
                 icon: Icons.mark_email_unread_outlined,
                 label: 'Getting messages',
-                value: deliveryModeName(appState.deliveryMode),
+                value: switch (_hidePreview) {
+                  null => deliveryModeName(appState.deliveryMode),
+                  true =>
+                    '${deliveryModeName(appState.deliveryMode)} · preview hidden',
+                  false =>
+                    '${deliveryModeName(appState.deliveryMode)} · preview shown',
+                },
                 onTap: () async {
                   await Navigator.of(
                     context,
                   ).push(haloRoute(const GettingMessagesScreen()));
-                  if (mounted) setState(() {});
-                },
-              ),
-              HaloRow(
-                icon: Icons.notifications_none,
-                label: 'Notifications',
-                value: switch (_hidePreview) {
-                  null => '',
-                  true => 'Preview hidden',
-                  false => 'Preview shown',
-                },
-                onTap: () async {
-                  await Navigator.of(
-                    context,
-                  ).push(haloRoute(const PushSettingsScreen()));
                   final v = await loadHideNotifContent();
-                  if (mounted) setState(() => _hidePreview = v);
+                  if (mounted) {
+                    setState(() => _hidePreview = v);
+                  }
                 },
               ),
               HaloRow(

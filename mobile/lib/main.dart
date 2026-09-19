@@ -29,6 +29,7 @@ import 'media_resend.dart';
 import 'delivery_mode.dart';
 import 'offline_gate.dart';
 import 'helper_push.dart';
+import 'screens/getting_messages_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/new_group_screen.dart';
 import 'screens/room_create_sheet.dart';
@@ -38,7 +39,6 @@ import 'screens/chat_screen.dart';
 import 'screens/pair_code_screen.dart';
 import 'screens/scan_screen.dart';
 import 'screens/modes_screen.dart';
-import 'screens/push_settings_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/my_kryfo_screen.dart';
 import 'screens/onboarding_screen.dart';
@@ -6047,8 +6047,13 @@ class AppState extends ChangeNotifier {
   // a bootstrap, so "ready" is simply whether we have a network - otherwise
   // the stale-send reaper never runs in relay mode and failed sends sit
   // frozen with no way to retry them.
-  bool get torReady =>
-      _sendMode != 'private' ||
+  bool get torReady => _sendMode != 'private' || torUsable;
+
+  // tor can carry traffic. "reachable" is the end of publishing, not the
+  // start of being usable, so treating only that as connected made the
+  // settings screen say "connecting" while the home pill said "Tor ready"
+  // about the same state. one predicate, used by both.
+  bool get torUsable =>
       _torStatus == TorStatus.bootstrapped ||
       _torStatus == TorStatus.publishing ||
       _torStatus == TorStatus.reachable;
@@ -9126,9 +9131,9 @@ class _DevScreenState extends State<DevScreen> {
               GestureDetector(
                 onTap: () => Navigator.of(
                   context,
-                ).push(haloRoute(const PushSettingsScreen())),
+                ).push(haloRoute(const GettingMessagesScreen())),
                 child: Text(
-                  'Notifications →',
+                  'Getting messages →',
                   style: HaloType.mono(size: 11, color: HaloColors.amber),
                 ),
               ),

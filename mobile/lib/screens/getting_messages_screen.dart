@@ -8,9 +8,11 @@ import 'package:flutter/material.dart';
 import '../delivery_mode.dart';
 import '../main.dart' show appState;
 import '../miui_autostart.dart';
+import '../notifications.dart';
 import '../theme.dart';
 import '../widgets/motion.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/halo_switch.dart';
 import '../widgets/stagger_in.dart';
 
 class GettingMessagesScreen extends StatefulWidget {
@@ -23,10 +25,23 @@ class GettingMessagesScreen extends StatefulWidget {
 class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
   Timer? _tick;
   bool _busy = false;
+  // what a notification shows on the lock screen. it had a screen of its own
+  // until the wake-up picker that shared it was removed, and what was left
+  // was one switch on an otherwise blank page. how messages arrive and what
+  // they say when they do are the same question.
+  bool _hidePreview = true;
 
   @override
   void initState() {
     super.initState();
+    // no .then() without a catch: this used to be the only thing standing
+    // between the old screen and a blank page, and a throw here left it
+    // blank for good.
+    loadHideNotifContent()
+        .then((v) {
+          if (mounted) setState(() => _hidePreview = v);
+        })
+        .catchError((_) {});
     appState.addListener(_changed);
     // "4 min ago" has to become "5 min ago" on its own
     _tick = Timer.periodic(const Duration(seconds: 20), (_) => _changed());
@@ -128,6 +143,54 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                     'Kryfo looks for messages every 15 minutes. Easy on battery, but messages can be late.',
                 on: mode == DeliveryMode.checkins,
                 onTap: () => _pick(DeliveryMode.checkins),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 18, 22, 2),
+                child: Text(
+                  'On the lock screen',
+                  style: HaloType.mono(
+                    size: 10.5,
+                    color: HaloColors.text3,
+                    letter: 0.06,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 4, 22, 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Hide message preview',
+                            style: HaloType.sans(
+                              size: 14,
+                              color: HaloColors.text,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'A generic alert, with no sender and no message text',
+                            style: HaloType.sans(
+                              size: 12,
+                              color: HaloColors.text3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    HaloSwitch(
+                      value: _hidePreview,
+                      onChanged: (v) {
+                        setState(() => _hidePreview = v);
+                        setHideNotifContent(v);
+                      },
+                    ),
+                  ],
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(22, 14, 22, 0),
