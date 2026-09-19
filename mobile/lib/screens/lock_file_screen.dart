@@ -331,12 +331,19 @@ class _LockFileScreenState extends State<LockFileScreen> {
     _pw2.addListener(_typed);
   }
 
-  void _typed() => setState(() => _error = null);
+  void _typed() {
+    if (!mounted) return;
+    setState(() => _error = null);
+  }
 
   @override
   void dispose() {
     _poll?.cancel();
     if (_working) ageCancel();
+    // same reason as the open screen: clear() notifies, and a notify after
+    // the element is defunct asserts inside setState.
+    _pw1.removeListener(_typed);
+    _pw2.removeListener(_typed);
     _pw1
       ..clear()
       ..dispose();

@@ -44,9 +44,13 @@ class _OpenLockedScreenState extends State<OpenLockedScreen> {
   @override
   void initState() {
     super.initState();
-    _pw.addListener(() {
-      if (_error != null) setState(() => _error = null);
-    });
+    // every keystroke has to rebuild, not only the ones that clear an error.
+    // the Open file button decides its handler at build time from whether
+    // this field is empty, so with a rebuild only on error the button was
+    // built once against an empty field, kept a null handler, and stayed
+    // dead however much was typed into it. the sibling lock screen always
+    // rebuilt, which is why locking worked and opening did not.
+    _pw.addListener(_typed);
   }
 
   @override
@@ -54,10 +58,18 @@ class _OpenLockedScreenState extends State<OpenLockedScreen> {
     _poll?.cancel();
     if (_stage == _Stage.writing) ageCancel();
     if (_stage == _Stage.checking) ageOpenDrop();
+    // the listener goes first: clear() notifies, and a notify after the
+    // element is defunct asserts inside setState.
+    _pw.removeListener(_typed);
     _pw
       ..clear()
       ..dispose();
     super.dispose();
+  }
+
+  void _typed() {
+    if (!mounted) return;
+    setState(() => _error = null);
   }
 
   Future<void> _change() async {
