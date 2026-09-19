@@ -1,5 +1,7 @@
-A new Tools tab. See what a photo gives away, keep a clean copy with all of it removed, make a private QR code, and lock a file behind a password. Everything happens on your phone.
+A new Tools tab: see what a photo gives away, keep a clean copy with all of it removed, make a private QR code, lock a file behind a password. All on your phone.
 
-You can now choose how messages arrive: always on, or check-ins every fifteen minutes to save battery.
+Choose how messages arrive: always on, or check-ins every fifteen minutes to save battery.
 
-A file that arrived with pieces missing now asks for them. Changing bridges no longer restarts Tor, so it takes about half a second.
+Tor could get stuck off with nothing on screen to say so. Commands to Tor now time out, a stuck connection is replaced, and five minutes offline says so.
+
+A file that arrived with pieces missing now asks for them.
