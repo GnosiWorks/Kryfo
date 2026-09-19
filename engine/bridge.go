@@ -352,12 +352,27 @@ func startListener(dataDir string) string {
 
 	setStatus("starting")
 	log.Println("halo: starting embedded tor...")
-	t, err := tor.Start(nil, &tor.StartConf{
-		ProcessCreator: libtor.Creator,
-		DataDir:        torDataDir,
-		DebugWriter:    newTorDebugWriter(),
-		ExtraArgs:      torArgs(),
-	})
+	choosePinnedSocks()
+	start := func() (*tor.Tor, error) {
+		return tor.Start(nil, &tor.StartConf{
+			ProcessCreator: libtor.Creator,
+			DataDir:        torDataDir,
+			DebugWriter:    newTorDebugWriter(),
+			ExtraArgs:      torArgs(),
+			// torArgs names the port itself when the pin holds; bine would
+			// otherwise add "--SocksPort auto" alongside it.
+			NoAutoSocksPort: socksPin() != 0,
+		})
+	}
+	t, err := start()
+	if err != nil && socksPin() != 0 {
+		// something else took the port between choosing it and tor binding
+		// it. not worth failing a start over - let tor choose, and the cache
+		// resets go back to being the thing that keeps one-shot requests
+		// working across a bounce.
+		dropSocksPin(err.Error())
+		t, err = start()
+	}
 	if err != nil {
 		return fmt.Sprintf("error: tor start: %v", err)
 	}

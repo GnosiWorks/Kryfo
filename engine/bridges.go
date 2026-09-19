@@ -26,6 +26,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -129,7 +130,13 @@ func bridgeLines() []string {
 // burns but every attempt writes a kernel audit line, and the log is worth
 // more than that. vanilla is what tor falls back to anyway.
 func torArgs() []string {
-	return append([]string{"--Schedulers", "Vanilla"}, bridgeTorArgs()...)
+	a := []string{"--Schedulers", "Vanilla"}
+	// an explicit socks port, so a DisableNetwork bounce reopens the same one
+	// and a dialer built before it keeps working. see socksport.go.
+	if p := socksPin(); p != 0 {
+		a = append(a, "--SocksPort", strconv.Itoa(p))
+	}
+	return append(a, bridgeTorArgs()...)
 }
 
 func bridgeTorArgs() []string {
