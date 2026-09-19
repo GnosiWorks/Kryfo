@@ -34,8 +34,15 @@
    full-apk reproducibility is no longer unproven either - see the note under
    "what can go wrong" below, which is kept for the record. `repro/release.sh`
    builds the three apks in the pinned container and `repro/verify.sh` checks
-   them with apksigcopier, which is the check f-droid runs. 0.2.11 came back
+   them with apksigcopier, which is the check f-droid runs. 0.2.12 came back
    MATCH and SAME on all three.
+
+   **the first tag is v0.2.12, not v0.2.11.** 0.2.11 is skipped: the commit it
+   would have gone on, `2da465f9`, carries the control-port wedge that left a
+   phone offline for ten and a half hours (see
+   `~/kryfo-notes/CONTROL-PORT-2026-09-19.md`). the tag goes on **`f6f0f953`**,
+   which is the commit verified MATCH + SAME on all three abis, and only once
+   f-droid has merged.
 
 ## what can go wrong
 
