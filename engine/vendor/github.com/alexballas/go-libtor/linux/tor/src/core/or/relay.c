@@ -435,7 +435,9 @@ circuit_package_relay_cell, (cell_t *cell, circuit_t *circ,
       return 0; /* just drop it */
     }
     or_circuit_t *or_circ = TO_OR_CIRCUIT(circ);
-    relay_encrypt_cell_inbound(cell, or_circ);
+    if (relay_encrypt_cell_inbound(cell, or_circ) < 0) {
+      return -1;
+    }
     chan = or_circ->p_chan;
   }
   ++stats_n_relay_cells_relayed;
@@ -843,6 +845,11 @@ connection_ap_process_end_not_open(
     entry_connection_t *conn, crypt_path_t *layer_hint)
 {
   node_t *exitrouter;
+  /* Defense in depth, the caller checks this but this protect us for the
+   * future, this is C afterall. No reason in the END cell. */
+  if (msg->length == 0) {
+    return -END_CIRC_REASON_TORPROTOCOL;
+  }
   int reason = get_uint8(msg->body);
   int control_reason;
   edge_connection_t *edge_conn = ENTRY_TO_EDGE_CONN(conn);
@@ -872,10 +879,6 @@ connection_ap_process_end_not_open(
 
   /* This end cell is now valid. */
   circuit_read_valid_data(circ, msg->length);
-
-  if (msg->length == 0) {
-    reason = END_STREAM_REASON_MISC;
-  }
 
   control_reason = reason | END_STREAM_REASON_FLAG_REMOTE;
 
@@ -1398,6 +1401,10 @@ connection_edge_process_relay_cell_not_open(
     edge_connection_t *conn, crypt_path_t *layer_hint)
 {
   if (msg->command == RELAY_COMMAND_END) {
+    /* No reason in the END cell. */
+    if (msg->length == 0) {
+      return -END_CIRC_REASON_TORPROTOCOL;
+    }
     if (CIRCUIT_IS_ORIGIN(circ) && conn->base_.type == CONN_TYPE_AP) {
       return connection_ap_process_end_not_open(msg,
                                                 TO_ORIGIN_CIRCUIT(circ),
@@ -1782,7 +1789,11 @@ handle_relay_msg(const relay_msg_t *msg, circuit_t *circ,
       }
       return 0;
     case RELAY_COMMAND_END:
-      reason = msg->length > 0 ? get_uint8(msg->body) : END_STREAM_REASON_MISC;
+      /* Kill the circuit, the END cell has no reason. */
+      if (msg->length == 0) {
+        return -END_CIRC_REASON_TORPROTOCOL;
+      }
+      reason = get_uint8(msg->body);
       if (!conn) {
         if (CIRCUIT_IS_ORIGIN(circ)) {
           origin_circuit_t *ocirc = TO_ORIGIN_CIRCUIT(circ);
@@ -1913,6 +1924,10 @@ handle_relay_msg(const relay_msg_t *msg, circuit_t *circ,
         circuit_set_state(circ, CIRCUIT_STATE_OPEN);
       }
       if (circ->n_chan) {
+        /* The TRUNCATE cell doesn't contain a reason, protocol violation. */
+        if (msg->length == 0) {
+          return -END_CIRC_REASON_TORPROTOCOL;
+        }
         uint8_t trunc_reason = get_uint8(msg->body);
         circuit_synchronize_written_or_bandwidth(circ, CIRCUIT_N_CHAN);
         circuit_clear_cell_queue(circ, circ->n_chan);
@@ -1939,6 +1954,10 @@ handle_relay_msg(const relay_msg_t *msg, circuit_t *circ,
        * circuit is being torn down anyway, though.  */
       if (CIRCUIT_IS_ORIGIN(circ)) {
         circuit_read_valid_data(TO_ORIGIN_CIRCUIT(circ), msg->length);
+      }
+      /* The TRUNCATED cell doesn't contain a reason, protocol violation. */
+      if (msg->length == 0) {
+        return -END_CIRC_REASON_TORPROTOCOL;
       }
       circuit_truncated(TO_ORIGIN_CIRCUIT(circ), get_uint8(msg->body));
       return 0;
@@ -2853,10 +2872,15 @@ uint64_t oom_stats_n_bytes_removed_cell = 0;
 uint64_t oom_stats_n_bytes_removed_geoip = 0;
 uint64_t oom_stats_n_bytes_removed_hsdir = 0;
 
+/** If true, the mainloop needs to run cell_queues_reclaim_memory(). */
+bool mainloop_must_free_memory = false;
+
 /** Check whether we've got too much space used for cells.  If so,
- * call the OOM handler and return 1.  Otherwise, return 0. */
-STATIC int
-cell_queues_check_size(void)
+ * then schedle the OOM handler (if reclaim_immediately is true) or
+ * free the memory (if reclaim_immediately is false) and return 1.
+ * Otherwise, return 0. */
+static int
+cell_queues_check_reclaim_impl(bool reclaim_immediately)
 {
   size_t removed = 0;
   time_t now = time(NULL);
@@ -2873,9 +2897,26 @@ cell_queues_check_size(void)
   alloc += dns_cache_total;
   const size_t conflux_total = conflux_get_total_bytes_allocation();
   alloc += conflux_total;
+
   if (alloc >= get_options()->MaxMemInQueues_low_threshold) {
     last_time_under_memory_pressure = approx_time();
-    if (alloc >= get_options()->MaxMemInQueues) {
+
+    if (alloc >= get_options()->MaxMemInQueues && ! reclaim_immediately) {
+      /* Note that we're breaking the mainloop because we are OOM. */
+      mainloop_must_free_memory = true;
+
+      /* We stop invoking any more pending callbacks after this one,
+       * since we want to reclaim free memory immediately.
+       *
+       * We do not use a post-loop callback since that would wait
+       * for many other callbacks, which could themselves allocate more
+       * memory.
+       */
+      tor_libevent_exit_loop_after_callback(tor_libevent_get_base());
+      return 1;
+    } else if (alloc >= get_options()->MaxMemInQueues && reclaim_immediately) {
+      /* We are reclaiming the memory _now_ */
+
       /* Note this overload down */
       rep_hist_note_overload(OVERLOAD_GENERAL);
 
@@ -2923,6 +2964,30 @@ cell_queues_check_size(void)
     }
   }
   return 0;
+}
+
+/**
+ * Check whether we are out of ram; if so, schedule an OOM scan, and
+ * return 1.  Otherwise return 0.
+ */
+STATIC int
+cell_queues_check_size(void)
+{
+  return cell_queues_check_reclaim_impl(false);
+}
+
+/**
+ * Assuming we are out of ram,
+ * try to reclaim memory until we are below our threshold.
+ *
+ * Note that this function tends to free circuits, conflux join points,
+ * and other structures.  Do not call it while holding live references
+ * to such objects. */
+void
+cell_queues_reclaim_memory(void)
+{
+  cell_queues_check_reclaim_impl(true);
+  mainloop_must_free_memory = false;
 }
 
 /** Return true if we've been under memory pressure in the last

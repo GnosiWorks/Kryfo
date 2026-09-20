@@ -4037,7 +4037,7 @@ begin_cell_parse(const relay_msg_t *msg, begin_cell_t *bcell,
     *end_reason_out = END_STREAM_REASON_TORPROTOCOL;
     return -1;
   }
-  if (body + msg->length >= nul + 4)
+  if (body + msg->length > nul + 4)
     bcell->flags = ntohl(get_uint32(nul+1));
 
   return 0;
@@ -4223,6 +4223,7 @@ connection_exit_begin_conn(const relay_msg_t *msg, circuit_t *circ)
     }
   } else if (msg->command == RELAY_COMMAND_BEGIN_DIR) {
     if (!directory_permits_begindir_requests(options) ||
+        CIRCUIT_IS_CONFLUX(circ) || /* Cannot be used for dir streams */
         circ->purpose != CIRCUIT_PURPOSE_OR) {
       relay_send_end_cell_from_edge(msg->stream_id, circ,
                                     END_STREAM_REASON_NOTDIRECTORY,
@@ -4707,6 +4708,13 @@ connection_exit_connect_dir(edge_connection_t *exitconn)
   /* link exitconn to circ, now that we know we can use it. */
   exitconn->next_stream = circ->n_streams;
   circ->n_streams = exitconn;
+  /* Conflux is not supported for directory streams, but if we *do* get here
+   * with a conflux circuit, we need to keep our lists are coherent. This BUG()
+   * condition is actually guarded against in connection_exit_begin_conn(),
+   * but the maze is powerful and contains many roving minotaurs */
+  if (BUG(CIRCUIT_IS_CONFLUX(TO_CIRCUIT(circ)))) {
+    conflux_update_n_streams(circ, exitconn);
+  }
 
   if (connection_add(TO_CONN(dirconn))<0) {
     connection_edge_end(exitconn, END_STREAM_REASON_RESOURCELIMIT);
@@ -4935,6 +4943,7 @@ connection_edge_update_circuit_isolation(const entry_connection_t *conn,
     circ->socks_password_len = sr->passwordlen;
 
     circ->isolation_values_set = 1;
+    circuit_sync_isolation(circ);
     return 0;
   } else {
     uint8_t mixed = 0;
@@ -4965,6 +4974,7 @@ connection_edge_update_circuit_isolation(const entry_connection_t *conn,
                "isolation flags.");
     }
     circ->isolation_flags_mixed |= mixed;
+    circuit_sync_isolation(circ);
     return 0;
   }
 }
@@ -4993,25 +5003,8 @@ circuit_clear_isolation(origin_circuit_t *circ)
     return;
   }
 
-  circ->isolation_values_set = 0;
-  circ->isolation_flags_mixed = 0;
-  circ->associated_isolated_stream_global_id = 0;
-  circ->client_proto_type = 0;
-  circ->client_proto_socksver = 0;
-  circ->dest_port = 0;
-  tor_addr_make_unspec(&circ->client_addr);
-  tor_free(circ->dest_address);
-  circ->session_group = -1;
-  circ->nym_epoch = 0;
-  if (circ->socks_username) {
-    memwipe(circ->socks_username, 0x11, circ->socks_username_len);
-    tor_free(circ->socks_username);
-  }
-  if (circ->socks_password) {
-    memwipe(circ->socks_password, 0x05, circ->socks_password_len);
-    tor_free(circ->socks_password);
-  }
-  circ->socks_username_len = circ->socks_password_len = 0;
+  circuit_reset_isolation(circ);
+  circuit_sync_isolation(circ);
 }
 
 /** Send an END and mark for close the given edge connection conn using the
