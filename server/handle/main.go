@@ -26,9 +26,11 @@ import (
 	"html"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -123,6 +125,46 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 	_ = json.NewEncoder(w).Encode(v)
 }
 
+// the invite is rendered into an href on the public page, so its scheme
+// matters as much as its characters. html.EscapeString stops a value breaking
+// out of the attribute; it does nothing about "javascript:alert(1)", which
+// would render as a working link and run on this origin when someone presses
+// "message on kryfo".
+//
+// so only the shape the app actually builds is accepted:
+//
+//	kryfo://share?id=..&onion=..&xpub=..            v1
+//	kryfo://share?id=..&onion=..&v=2&bundle=..      v2
+//	kryfo://share?id=..&onion=..&v=3&bundle=..&fc=..  v3
+//
+// anything else is a 400. run `handle -check-invites <file>` over the live
+// store before deploying this, or a stricter rule than reality locks someone
+// out of their own page.
+func inviteOK(s string) bool {
+	if s == "" || len(s) > 8000 {
+		return false
+	}
+	u, err := url.Parse(s)
+	if err != nil || u.Scheme != "kryfo" || u.Host != "share" {
+		return false
+	}
+	q := u.Query()
+	if q.Get("id") == "" || q.Get("onion") == "" {
+		return false
+	}
+	switch q.Get("v") {
+	case "", "1":
+		return q.Get("xpub") != ""
+	case "2", "3":
+		return q.Get("bundle") != ""
+	}
+	return false
+}
+
+func refuseCode(w http.ResponseWriter, code int, msg string) {
+	writeJSON(w, code, map[string]any{"ok": false, "error": msg})
+}
+
 func refuse(w http.ResponseWriter, msg string) {
 	writeJSON(w, http.StatusOK, map[string]any{"ok": false, "error": msg})
 }
@@ -135,7 +177,52 @@ func refuse(w http.ResponseWriter, msg string) {
 //go:embed fonts/*.ttf
 var fontFS embed.FS
 
+// a pre-deploy gate. the invite rule below is new, and a rule stricter than
+// the store locks people out of their own pages, so read the live file and
+// say so before swapping the binary:
+//
+//	handle -check-invites /opt/kryfo-handles/handles.json
+//
+// exits 0 when every invite passes, 1 when any does not, naming them.
+func checkInvites(path string) int {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "cannot read %s: %v\n", path, err)
+		return 2
+	}
+	var all map[string]entry
+	if err := json.Unmarshal(b, &all); err != nil {
+		fmt.Fprintf(os.Stderr, "cannot parse %s: %v\n", path, err)
+		return 2
+	}
+	bad := 0
+	names := make([]string, 0, len(all))
+	for h := range all {
+		names = append(names, h)
+	}
+	sort.Strings(names)
+	for _, h := range names {
+		if !inviteOK(all[h].Invite) {
+			bad++
+			inv := all[h].Invite
+			if len(inv) > 70 {
+				inv = inv[:70] + "…"
+			}
+			fmt.Printf("  WOULD REJECT @%s  %q\n", h, inv)
+		}
+	}
+	fmt.Printf("%d handles, %d would be rejected by the new invite rule\n",
+		len(all), bad)
+	if bad > 0 {
+		return 1
+	}
+	return 0
+}
+
 func main() {
+	if len(os.Args) == 3 && os.Args[1] == "-check-invites" {
+		os.Exit(checkInvites(os.Args[2]))
+	}
 	addr := os.Getenv("HANDLE_ADDR")
 	if addr == "" {
 		addr = "127.0.0.1:3336"
@@ -184,8 +271,8 @@ func main() {
 			refuse(w, "that handle is not available")
 			return
 		}
-		if in.Invite == "" || len(in.Invite) > 8000 {
-			refuse(w, "bad invite")
+		if !inviteOK(in.Invite) {
+			refuseCode(w, http.StatusBadRequest, "bad invite")
 			return
 		}
 		if len(in.Bio) > 200 {
@@ -266,7 +353,7 @@ func main() {
 	// chat. static, no analytics, nothing recorded about whoever reads it.
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if !strings.HasPrefix(r.URL.Path, "/@") {
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			writeHTMLHeaders(w)
 			w.WriteHeader(http.StatusNotFound)
 			fmt.Fprint(w, page("not found", "", "", ""))
 			return
@@ -275,14 +362,13 @@ func main() {
 		h = strings.Trim(h, "/")
 		e, ok := st.get(h)
 		if !ok {
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			writeHTMLHeaders(w)
 			w.WriteHeader(http.StatusNotFound)
 			fmt.Fprint(w, page("not found", "", "", ""))
 			return
 		}
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		writeHTMLHeaders(w)
 		w.Header().Set("Cache-Control", "no-store")
-		w.Header().Set("Referrer-Policy", "no-referrer")
 		fmt.Fprint(w, page(h, e.Bio, e.Invite, fingerprint(e.Pubkey)))
 	})
 
@@ -330,6 +416,21 @@ func page(handle, bio, invite, fp string) string {
   <div class=fp>key fingerprint · ` + html.EscapeString(fp) + `<br><span>check it matches in the app before you trust it</span></div>
   <div class=foot>this page learns nothing about you · no analytics, no cookies, no log</div>
 </div></div>`
+}
+
+// no script-src at all, so nothing on this page can execute - not an inline
+// block, not a src, and not a javascript: url in an href. the fonts and the
+// one inline <style> below are the only things allowed, and both are ours.
+const csp = "default-src 'none'; style-src 'self' 'unsafe-inline'; " +
+	"font-src 'self'; base-uri 'none'; form-action 'none'; " +
+	"frame-ancestors 'none'"
+
+func writeHTMLHeaders(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Content-Security-Policy", csp)
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Referrer-Policy", "no-referrer")
+	w.Header().Set("X-Frame-Options", "DENY")
 }
 
 const head = `<meta name=viewport content="width=device-width,initial-scale=1">
