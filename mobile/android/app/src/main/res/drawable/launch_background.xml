@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- android 11 and below. 12+ uses windowSplashScreenAnimatedIcon instead.
+     the ring sits on the same colour the first screen uses, so there is no
+     flash between them. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/ic_launcher_background"/>
     <item>
         <bitmap
             android:gravity="center"
-            android:src="@drawable/splash_seal"/>
+            android:src="@drawable/splash"/>
     </item>
 </layer-list>
