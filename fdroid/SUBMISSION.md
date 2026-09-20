@@ -40,7 +40,7 @@
    **the first tag is v0.2.12, not v0.2.11.** 0.2.11 is skipped: the commit it
    would have gone on, `2da465f9`, carries the control-port wedge that left a
    phone offline for ten and a half hours (see
-   `~/kryfo-notes/CONTROL-PORT-2026-09-19.md`). the tag goes on **`f6f0f953`**,
+   `~/kryfo-notes/CONTROL-PORT-2026-09-19.md`). the tag goes on **`d6f3ab12`**,
    which is the commit verified MATCH + SAME on all three abis, and only once
    f-droid has merged.
 
