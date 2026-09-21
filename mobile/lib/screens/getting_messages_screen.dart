@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../delivery_mode.dart';
+import '../lock_state.dart';
 import '../main.dart' show appState;
 import '../miui_autostart.dart';
 import '../notifications.dart';
@@ -178,6 +179,18 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                               color: HaloColors.text3,
                             ),
                           ),
+                          // a pin turns previews off. if someone turns them
+                          // back on, say what that gives away.
+                          if (lockState.enabled && !_hidePreview) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              'Shows message text in notifications, even while Kryfo is locked.',
+                              style: HaloType.sans(
+                                size: 12,
+                                color: HaloColors.rose,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),

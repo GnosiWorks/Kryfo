@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'dlog.dart';
-import 'lock_state.dart' as lock;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 final FlutterLocalNotificationsPlugin notifPlugin =
@@ -81,13 +80,7 @@ Future<void> showMessageNotification({
   required String body,
   String? payload,
 }) async {
-  // a pin on the app means the app is not to be read without it, and the
-  // notification shade is the app read without it. on the two-phone pass a
-  // locked samsung showed the sender and the full message text in its shade.
-  final locked = lock.lockState.loaded
-      ? lock.lockState.enabled
-      : await lock.LockState.enabledStored();
-  final hidden = locked || await loadHideNotifContent();
+  final hidden = await loadHideNotifContent();
   if (hidden) {
     title = 'kryfo';
     body = 'new message';

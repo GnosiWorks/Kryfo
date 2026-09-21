@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'dlog.dart';
+import 'notifications.dart';
 import 'package:local_auth/local_auth.dart';
 
 enum PinResult { normal, panic, invalid, throttled }
@@ -57,19 +58,6 @@ class LockState extends ChangeNotifier {
   bool get bioSupported => _bioSupported;
   bool get panicEnabled => _panicEnabled;
 
-  // whether a pin is set, straight from storage. for callers that can run
-  // before load() has - a notification shown by a process the service
-  // brought back must not take "not loaded yet" for "no pin".
-  static Future<bool> enabledStored() async {
-    try {
-      return (await _storage.read(key: _kEnabled)) == 'true';
-    } catch (_) {
-      // a keystore that will not answer: assume locked. the cost is a
-      // generic notification, not a lockout.
-      return true;
-    }
-  }
-
   Future<void> load() async {
     try {
       _enabled = (await _storage.read(key: _kEnabled)) == 'true';
@@ -104,12 +92,19 @@ class LockState extends ChangeNotifier {
       final ps = await _storage.read(key: _kPanicSalt);
       if (ph != null && ps != null && _hashPin(pin, ps) == ph) return false;
     }
+    final wasOn = _enabled;
     final salt = _randomSalt();
     final hash = _hashPin(pin, salt);
     await _storage.write(key: _kHash, value: hash);
     await _storage.write(key: _kSalt, value: salt);
     await _storage.write(key: _kEnabled, value: 'true');
     _enabled = true;
+    // a pin means the app is not to be read without it, and a notification
+    // with the message in it is the app read without it. so setting one turns
+    // previews off. turning them back on afterwards is the person's call, and
+    // the switch says what it costs. a locked samsung on the two-phone pass
+    // showed sender and full text in its shade, because nothing linked the two.
+    if (!wasOn) await setHideNotifContent(true);
     _locked = false;
     notifyListeners();
     return true;
