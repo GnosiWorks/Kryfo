@@ -53,17 +53,35 @@ func routeNoteOK() {
 	correctStaleStart()
 }
 
+// set from the start of a bounce until tor is back on the network. a connect
+// that finishes in that window went through the tor that is going.
+var bounceOff int32
+
 // a relay has just connected through tor, so tor can carry traffic whatever
 // its own status says. seen on the redmi on 2026-09-21: back from a check-in
 // pause, the engine's status sat at "starting, 0%" for over ten minutes while
 // six relay subscriptions ran through tor. the app said "still connecting to
 // tor", a paused upload waited for a ready that never came, and the stall
 // rule above would have bounced a working tor every few minutes. the relay
-// is the witness that cannot lie; the status follows it. not during a
-// reconnect: a connect finishing inside the bounce belongs to the tor that
-// is going.
+// is the witness that cannot lie; the status follows it.
+//
+// the first version skipped this whenever a reconnect was running, and the
+// relays reconnect in the tail of a reconnect - after the network is back,
+// before it returns - so the correction never happened: the verified build
+// sat at "starting, 0%" after flight mode with every relay ok and a message
+// in the outbox. what matters is only whether the connect came after tor was
+// back on the network. reconnectOn bumps the route generation a second time
+// at exactly that point, so okGen == routeGen says so, and bounceOff covers
+// the window before it. the route watch also applies this on every tick, for
+// a connect that landed while bounceOff was still set.
 func correctStaleStart() {
-	if !modeNeedsTor() || torIsPaused() || atomic.LoadInt32(&reconnectRunning) == 1 {
+	if !modeNeedsTor() || torIsPaused() || atomic.LoadInt32(&bounceOff) == 1 {
+		return
+	}
+	routeMu.Lock()
+	proven := okGen == routeGen
+	routeMu.Unlock()
+	if !proven {
 		return
 	}
 	statusMu.Lock()
@@ -160,6 +178,7 @@ func startRouteWatch() {
 func routeWatch() {
 	for {
 		time.Sleep(10 * time.Second)
+		correctStaleStart()
 		if why := routeNeedsRescue(time.Now()); why != "" {
 			log.Printf("halo: route rescue - %s", why)
 			atomic.StoreInt64(&lastTorRestart, 0)

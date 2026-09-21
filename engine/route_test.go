@@ -24,6 +24,7 @@ func resetRoute(t *testing.T, status string, pct int) {
 	atomic.StoreInt32(&torPaused, 0)
 	atomic.StoreInt32(&reconnectRunning, 0)
 	atomic.StoreInt32(&torRestarting, 0)
+	atomic.StoreInt32(&bounceOff, 0)
 }
 
 func setTestStatus(status string, pct int) {
@@ -244,40 +245,53 @@ func TestFlappingNetworkIsBouncedOnceSettled(t *testing.T) {
 }
 
 // tor says starting, a relay connects through it anyway: the status was
-// stale and follows the relay. not while a reconnect is running, and not
-// while tor is asleep on purpose.
+// stale and follows the relay. a connect that finished while tor was off the
+// network for a bounce does not vouch; one after it came back does, even
+// while the reconnect that brought it back is still finishing - which is
+// exactly where the relays reconnect, and where the first version of this
+// skipped the correction and left the verified build at "starting, 0%".
 func TestARelayConnectingCorrectsAStaleStart(t *testing.T) {
+	status := func() (string, int) {
+		statusMu.RLock()
+		defer statusMu.RUnlock()
+		return torStatus, bootstrapPct
+	}
 	resetRoute(t, "starting", 0)
 	routeNoteOK()
-	statusMu.RLock()
-	st, pct := torStatus, bootstrapPct
-	statusMu.RUnlock()
-	if st != "publishing" || pct != 100 {
+	if st, pct := status(); st != "publishing" || pct != 100 {
 		t.Fatalf("status %q %d%% after a relay connected, want publishing 100%%", st, pct)
 	}
 	if !routeOK() {
 		t.Fatal("route not ok after the correction")
 	}
 
+	// a bounce: network off, a stale connect lands, network back on
 	resetRoute(t, "starting", 0)
+	atomic.StoreInt32(&bounceOff, 1)
+	routeBump()
+	routeNoteOK()
+	if st, _ := status(); st != "starting" {
+		t.Fatalf("a connect inside the bounce corrected the status: %q", st)
+	}
+	routeBump()
+	atomic.StoreInt32(&bounceOff, 0)
+	correctStaleStart() // the watch tick
+	if st, _ := status(); st != "starting" {
+		t.Fatalf("the tick corrected on a connect from before tor came back: %q", st)
+	}
+	// the relays reconnect in the tail of the reconnect
 	atomic.StoreInt32(&reconnectRunning, 1)
 	routeNoteOK()
-	statusMu.RLock()
-	st = torStatus
-	statusMu.RUnlock()
 	atomic.StoreInt32(&reconnectRunning, 0)
-	if st != "starting" {
-		t.Fatalf("status corrected during a reconnect: %q", st)
+	if st, _ := status(); st != "publishing" {
+		t.Fatalf("a connect after tor came back did not correct it: %q", st)
 	}
 
 	resetRoute(t, "starting", 0)
 	atomic.StoreInt32(&torPaused, 1)
 	routeNoteOK()
-	statusMu.RLock()
-	st = torStatus
-	statusMu.RUnlock()
 	atomic.StoreInt32(&torPaused, 0)
-	if st != "starting" {
+	if st, _ := status(); st != "starting" {
 		t.Fatalf("status corrected while paused: %q", st)
 	}
 }

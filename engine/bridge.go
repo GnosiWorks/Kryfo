@@ -729,6 +729,7 @@ func reconnectTor() string {
 func reconnectOn(t *tor.Tor, addr string) string {
 	log.Println("halo: reconnecting tor (config change or wedged dialer)")
 	noteStep("start")
+	atomic.StoreInt32(&bounceOff, 1)
 	routeBump()
 	statusMu.Lock()
 	hsdirUploads = 0
@@ -756,6 +757,7 @@ func reconnectOn(t *tor.Tor, addr string) string {
 		return c.SetConf(control.KeyVals("DisableNetwork", "1")...)
 	}); err != nil {
 		log.Printf("halo: tor would not leave the network: %v", err)
+		atomic.StoreInt32(&bounceOff, 0)
 		setStatus("off")
 		return "error: " + err.Error()
 	}
@@ -770,9 +772,14 @@ func reconnectOn(t *tor.Tor, addr string) string {
 		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)
 	}); err != nil {
 		log.Printf("halo: tor would not come back: %v", err)
+		atomic.StoreInt32(&bounceOff, 0)
 		setStatus("off")
 		return "error: " + err.Error()
 	}
+	// the new route starts here. anything that connects from now on went
+	// through the tor that came back, so it may vouch for it.
+	routeBump()
+	atomic.StoreInt32(&bounceOff, 0)
 	// and again now the network is back, which is the one that matters.
 	// tor closes its socks listener on DisableNetwork=1 and opens a new one
 	// on the way back, so every client built against the old port is dead.
