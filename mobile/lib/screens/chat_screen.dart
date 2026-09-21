@@ -7102,50 +7102,76 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
   Future<void> _start() async {
     if (_busy) return;
     _busy = true;
-    if (!await _rec.hasPermission()) {
+    // _busy used to be cleared only on the paths this function expected. if
+    // anything below threw, it stayed set, and every later hold returned on
+    // the first line with no overlay, no toast, nothing - the mic was dead
+    // until the chat was reopened. found on the redmi on 2026-09-21.
+    try {
+      if (!await _rec.hasPermission()) {
+        if (mounted) showHaloToast(context, 'Mic permission needed');
+        return;
+      }
+      // the permission prompt eats the long-press: by the time the user
+      // grants, the finger is gone and nothing would ever stop the
+      // recording. bail out and let them hold again.
+      if (!_live) return;
+      final dir = await getTemporaryDirectory();
+      final path =
+          '${dir.path}/vn_${DateTime.now().millisecondsSinceEpoch}.wav';
+      await _rec.start(
+        const RecordConfig(
+          encoder: AudioEncoder.wav,
+          sampleRate: 16000,
+          numChannels: 1,
+        ),
+        path: path,
+      );
+      _path = path;
+      // the finger came up while the recorder was starting. _end already ran
+      // and found nothing to stop, so without this the mic would keep going
+      // with no hold behind it.
+      if (!_live) {
+        final p = await _rec.stop();
+        await shredFile(p ?? path);
+        _path = null;
+        return;
+      }
+      _ms = 0;
+      _willCancel = false;
+      _dragDx = 0;
+      HapticFeedback.mediumImpact();
+      _ticker = Timer.periodic(const Duration(milliseconds: 100), (_) {
+        _ms += 100;
+        _overlay?.markNeedsBuild();
+      });
+      if (mounted) {
+        // the scaffold strips the keyboard inset from its body's media
+        // query, so it has to come from the view itself or it reads as zero
+        final view = MediaQueryData.fromView(View.of(context));
+        _bottomInset = view.padding.bottom;
+        _keyboardInset = view.viewInsets.bottom;
+      }
+      _overlay = OverlayEntry(builder: (_) => _bar());
+      if (mounted) Overlay.of(context).insert(_overlay!);
+    } catch (e) {
+      dlog('voice: could not start: $e');
+      _ticker?.cancel();
+      _ticker = null;
+      _overlay?.remove();
+      _overlay = null;
+      final p = _path;
+      _path = null;
+      if (p != null) shredFile(p).ignore();
+      if (mounted) showHaloToast(context, 'The mic would not start. Try again');
+    } finally {
       _busy = false;
-      if (mounted) showHaloToast(context, 'Mic permission needed');
-      return;
     }
-    // the permission prompt eats the long-press: by the time the user grants,
-    // the finger is gone and nothing would ever stop the recording. bail out
-    // and let them hold again.
-    if (!_live) {
-      _busy = false;
-      return;
-    }
-    final dir = await getTemporaryDirectory();
-    final path = '${dir.path}/vn_${DateTime.now().millisecondsSinceEpoch}.wav';
-    await _rec.start(
-      const RecordConfig(
-        encoder: AudioEncoder.wav,
-        sampleRate: 16000,
-        numChannels: 1,
-      ),
-      path: path,
-    );
-    _path = path;
-    _ms = 0;
-    _willCancel = false;
-    _dragDx = 0;
-    HapticFeedback.mediumImpact();
-    _ticker = Timer.periodic(const Duration(milliseconds: 100), (_) {
-      _ms += 100;
-      _overlay?.markNeedsBuild();
-    });
-    if (mounted) {
-      // the scaffold strips the keyboard inset from its body's media query,
-      // so it has to come from the view itself or it reads as zero
-      final view = MediaQueryData.fromView(View.of(context));
-      _bottomInset = view.padding.bottom;
-      _keyboardInset = view.viewInsets.bottom;
-    }
-    _overlay = OverlayEntry(builder: (_) => _bar());
-    if (mounted) Overlay.of(context).insert(_overlay!);
-    _busy = false;
   }
 
   Future<void> _end() async {
+    // still starting: _start sees the finger is gone and cleans up itself
+    if (_busy) return;
+    if (_ticker == null && _overlay == null) return;
     _ticker?.cancel();
     _ticker = null;
     _overlay?.remove();
