@@ -57,6 +57,19 @@ class LockState extends ChangeNotifier {
   bool get bioSupported => _bioSupported;
   bool get panicEnabled => _panicEnabled;
 
+  // whether a pin is set, straight from storage. for callers that can run
+  // before load() has - a notification shown by a process the service
+  // brought back must not take "not loaded yet" for "no pin".
+  static Future<bool> enabledStored() async {
+    try {
+      return (await _storage.read(key: _kEnabled)) == 'true';
+    } catch (_) {
+      // a keystore that will not answer: assume locked. the cost is a
+      // generic notification, not a lockout.
+      return true;
+    }
+  }
+
   Future<void> load() async {
     try {
       _enabled = (await _storage.read(key: _kEnabled)) == 'true';
