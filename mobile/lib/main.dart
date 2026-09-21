@@ -213,7 +213,9 @@ class HaloEngine {
     return raw.split('\n');
   }
 
-  String getStatus() => _getStatus().toDartString();
+  // polled every second by the watchdog, so a string that was not freed here
+  // was a leak once a second for the life of the app.
+  String getStatus() => _take(_getStatus());
 
   // every relay socket dropped and reopened now, since window and all
   String nostrKick() => _nostrKick().toDartString();
@@ -337,7 +339,29 @@ class HaloEngine {
   // "on|count|port"
   String bridgeState() => _bridgeState().toDartString();
 
-  void restartTor() => _restartTor();
+  void restartTor() => _take(_restartTor());
+
+  // android says the default network changed: tor is bounced once the
+  // network has been quiet for a few seconds. looked up on first use so an
+  // engine from before it still loads.
+  late final CStrFnDart _networkChanged = _lib
+      .lookupFunction<CStrFn, CStrFnDart>('HaloNetworkChanged');
+  void networkChanged() {
+    try {
+      _take(_networkChanged());
+    } catch (_) {}
+  }
+
+  // read a C.CString from the go side and free it. C.CString mallocs, so the
+  // string is ours; see lastReconnect for the pattern and why.
+  static String _take(Pointer<Utf8> p) {
+    if (p == nullptr) return '';
+    try {
+      return p.toDartString();
+    } finally {
+      malloc.free(p);
+    }
+  }
 
   // the registry is a request over tor: off the ui thread, or claiming a
   // handle froze the screen until it answered and android called it an anr
@@ -6018,6 +6042,12 @@ class AppState extends ChangeNotifier {
   TorStatus _torStatus = TorStatus.off;
   int _bootstrapPct = 0;
   TorStatus get torStatus => _torStatus;
+  // whether the route carries traffic, from the engine's relay verdict, and
+  // how many times it has been torn down on purpose. see engine/route.go.
+  bool _routeOK = true;
+  int _routeGen = 0;
+  bool get routeOK => _routeOK;
+  int get routeGen => _routeGen;
 
   // called from the status poll. the clock runs while tor is trying and
   // resets the moment it can carry traffic.
@@ -6053,10 +6083,17 @@ class AppState extends ChangeNotifier {
   // start of being usable, so treating only that as connected made the
   // settings screen say "connecting" while the home pill said "Tor ready"
   // about the same state. one predicate, used by both.
+  //
+  // and tor's word is not enough on its own. a samsung back from flight mode
+  // had tor saying publishing while every relay connection through it failed
+  // for sixteen minutes, and this said ready the whole time. so usable also
+  // needs the engine's verdict that a relay has actually connected since the
+  // route was last torn down, and that they are not all failing now.
   bool get torUsable =>
-      _torStatus == TorStatus.bootstrapped ||
-      _torStatus == TorStatus.publishing ||
-      _torStatus == TorStatus.reachable;
+      _routeOK &&
+      (_torStatus == TorStatus.bootstrapped ||
+          _torStatus == TorStatus.publishing ||
+          _torStatus == TorStatus.reachable);
   int get bootstrapPct => _bootstrapPct;
 
   // how long tor has been unable to carry traffic while kryfo is meant to be
@@ -6476,8 +6513,15 @@ class AppState extends ChangeNotifier {
       final raw = engine.getStatus();
       final st = parseTorStatus(raw);
       final pct = parseBootstrapPct(raw);
-      if (st != _torStatus || pct != _bootstrapPct) {
+      final rok = parseRouteOK(raw);
+      final rgen = parseRouteGen(raw);
+      if (st != _torStatus ||
+          pct != _bootstrapPct ||
+          rok != _routeOK ||
+          rgen != _routeGen) {
         _torStatus = st;
+        _routeOK = rok;
+        _routeGen = rgen;
         _noteTorProgress();
         _bootstrapPct = pct;
         notifyListeners();
@@ -6882,15 +6926,28 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _initConnectivity() async {
+    // what the network was when we started, so the first event the listener
+    // delivers is not taken for a change and bounced
+    var lastKinds = '';
     try {
       final init = await Connectivity().checkConnectivity();
       _online = init.any((r) => r != ConnectivityResult.none);
+      lastKinds = (init.map((r) => r.name).toList()..sort()).join(',');
       notifyListeners();
     } catch (e) {
       dlog('connectivity init: $e');
     }
     Connectivity().onConnectivityChanged.listen((results) {
       final on = results.any((r) => r != ConnectivityResult.none);
+      final kinds = (results.map((r) => r.name).toList()..sort()).join(',');
+      // back online, or a different kind of network while online (wifi to
+      // mobile data): tor's open connections belong to the network that went.
+      // nothing used to tell it - it found out one timeout at a time, and a
+      // phone back from flight mode sat saying ready for sixteen minutes. the
+      // engine waits for the network to settle before it bounces, so a
+      // flapping one is not bounced on every flap.
+      if (on && (!_online || kinds != lastKinds)) engine.networkChanged();
+      lastKinds = kinds;
       if (on != _online) {
         _online = on;
         notifyListeners();

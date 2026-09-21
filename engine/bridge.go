@@ -324,6 +324,7 @@ func startListener(dataDir string) string {
 	if torIsPaused() {
 		return "error: tor is stopped, resume first"
 	}
+	startRouteWatch()
 	mu.Lock()
 	if myAddr != "" {
 		addr := myAddr
@@ -728,6 +729,7 @@ func reconnectTor() string {
 func reconnectOn(t *tor.Tor, addr string) string {
 	log.Println("halo: reconnecting tor (config change or wedged dialer)")
 	noteStep("start")
+	routeBump()
 	statusMu.Lock()
 	hsdirUploads = 0
 	bootstrapPct = 0
@@ -781,6 +783,8 @@ func reconnectOn(t *tor.Tor, addr string) string {
 	// that is why a handle claim timed out on a phone whose relays were fine:
 	// the relays heal through relaysAllDead(), a one-shot request does not.
 	nostrResetClient()
+	relayClearBenches()
+	kickRelays()
 	noteStep("watchers")
 	goWatchBootstrap(t)
 	goWatchPublished(t, strings.TrimSuffix(addr, ".onion"))
@@ -943,9 +947,14 @@ func handleConn(conn net.Conn) {
 
 //export HaloGetStatus
 func HaloGetStatus() *C.char {
+	ok, gen := 0, routeGeneration()
+	if routeOK() {
+		ok = 1
+	}
 	statusMu.RLock()
 	defer statusMu.RUnlock()
-	return C.CString(fmt.Sprintf("%s|%d|%d", torStatus, bootstrapPct, hsdirUploads))
+	// status|bootstrap|hsdir uploads|route carries traffic|route generation
+	return C.CString(fmt.Sprintf("%s|%d|%d|%d|%d", torStatus, bootstrapPct, hsdirUploads, ok, gen))
 }
 
 //export HaloDrainInbox

@@ -61,6 +61,7 @@ func noteRelayConnected() {
 	txMu.Lock()
 	lastRelayOK = time.Now()
 	txMu.Unlock()
+	routeNoteOK()
 }
 
 // called when the dead man switch fires. it restarts the three minute clock

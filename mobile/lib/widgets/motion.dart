@@ -79,6 +79,22 @@ int parseBootstrapPct(String raw) {
   return int.tryParse(parts[1]) ?? 0;
 }
 
+// whether the route carries traffic, judged by relay connections rather than
+// by tor's own report. an engine from before the field reads as true, so an
+// old engine behaves as it always did.
+bool parseRouteOK(String raw) {
+  final parts = raw.split('|');
+  if (parts.length < 4) return true;
+  return parts[3] == '1';
+}
+
+// bumped every time the route is torn down on purpose
+int parseRouteGen(String raw) {
+  final parts = raw.split('|');
+  if (parts.length < 5) return 0;
+  return int.tryParse(parts[4]) ?? 0;
+}
+
 // === TOR WARMUP GRAPH ===
 // 4 onions on a zig-zag wave (SELF/GUARD/MIDDLE/HSDIR), curve fills as
 // we progress, active onion glows with expanding rings, on REACHABLE

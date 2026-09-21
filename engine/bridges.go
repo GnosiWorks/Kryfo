@@ -329,7 +329,16 @@ func HaloSetBridges(cLines *C.char, on C.int) *C.char {
 func HaloRestartTor() *C.char {
 	// asked for by hand, so the loop guard does not apply
 	atomic.StoreInt64(&lastTorRestart, 0)
+	routeBump()
 	go reconnectTor()
+	return C.CString("ok")
+}
+
+// android says the default network changed. see networkChanged.
+//
+//export HaloNetworkChanged
+func HaloNetworkChanged() *C.char {
+	networkChanged()
 	return C.CString("ok")
 }
 

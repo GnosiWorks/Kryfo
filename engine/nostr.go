@@ -339,6 +339,9 @@ func relayFailed(u string) {
 	if modeNeedsTor() && !torReadyNow() {
 		return
 	}
+	if modeNeedsTor() {
+		routeNoteFail(u)
+	}
 	relayHealthMu.Lock()
 	defer relayHealthMu.Unlock()
 	relayFails[u]++
@@ -346,6 +349,29 @@ func relayFailed(u string) {
 		relayCoolTill[u] = time.Now().Add(d)
 		log.Printf("nostr: benching %s for %s, %d failures in a row", u, d, relayFails[u])
 	}
+}
+
+// forget every bench. a relay benched while the route under it was dead did
+// nothing wrong, and holding it out for five more minutes after the route is
+// rebuilt is five more minutes of a message sitting in the outbox.
+func relayClearBenches() {
+	relayHealthMu.Lock()
+	for k := range relayFails {
+		delete(relayFails, k)
+	}
+	for k := range relayCoolTill {
+		delete(relayCoolTill, k)
+	}
+	relayHealthMu.Unlock()
+}
+
+// end every runner's backoff now, so it dials again instead of waiting out a
+// sleep that was sized for the route that is gone.
+func kickRelays() {
+	kickMu.Lock()
+	close(kickCh)
+	kickCh = make(chan struct{})
+	kickMu.Unlock()
 }
 
 func relayOK(u string) {
@@ -1253,10 +1279,7 @@ func HaloNostrSendFirstContact(cPeerXPubHex, cFcPk, cMsg *C.char) *C.char {
 //
 //export HaloNostrKick
 func HaloNostrKick() *C.char {
-	kickMu.Lock()
-	close(kickCh)
-	kickCh = make(chan struct{})
-	kickMu.Unlock()
+	kickRelays()
 	return C.CString("ok")
 }
 
