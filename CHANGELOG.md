@@ -2,6 +2,20 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Security
+- tor is updated from 0.4.9.5 to 0.4.9.12, which carries fixes for two use-after-free bugs in the part of tor that splits traffic over several paths, and for a crash a malformed name lookup could cause.
+- three fixes from openssl 3.6.3 are carried into the copy of openssl inside kryfo: an oversized piece of text in a certificate could overflow a buffer, a certificate field over two gigabytes long could be read past its end, and a peer could choose part of the numbers used to agree a key instead of having it checked. tor reads certificates from the network, so these are the ones that reach kryfo. the rest of that openssl release is in parts kryfo does not use.
+- a video opened with another app was left behind as a decrypted copy until the next file was opened, so one from a timed message could outlast the message by any length of time. it is removed as soon as you come back to kryfo, and on every start.
+- every voice note left the recording of your voice as spoken, before any disguise, in the app's cache for good. it is removed as soon as the note is sent, and anything left over is cleared at start.
+- with a pin on kryfo, notifications still showed who wrote and what they said once the phone was unlocked. setting a pin now turns message previews off. you can turn them back on, and the setting says what that shows.
+
+### Fixed
+- messages could sit unsent for minutes after the network changed: flight mode, a dropped wi-fi, a switch to mobile data. kryfo said it was ready and was not. it now tells tor the network has changed the moment the phone says so, and it judges "ready" by whether messages are actually getting through rather than by tor's word. if they stop getting through for a minute, the connection is rebuilt. in testing, a message written in flight mode went out 28 seconds after the network came back, where it had taken six minutes, and on one phone had not gone after sixteen.
+- the bridges screen could say "connected" before the new connection had even started. it now waits until a message path actually works through the bridges.
+- holding the microphone could stop doing anything for the rest of a chat, until the chat was closed and opened again.
+
 ## [0.2.12] - 2026-09-19
 
 ### Added
