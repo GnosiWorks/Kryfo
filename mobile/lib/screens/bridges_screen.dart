@@ -127,8 +127,13 @@ class _BridgesScreenState extends State<BridgesScreen> {
     HapticFeedback.mediumImpact();
     final lines = _ctrl.text.trim();
     final r = await appState.applyBridges(lines, _on && lines.isNotEmpty);
-    // tor reads its config once, so a change means a restart. that costs a
-    // fresh bootstrap, worth saying rather than leaving someone on a spinner.
+    // the route generation before the reconnect. restartTor bumps it before
+    // it returns, and the reconnect itself happens later - so a "ready" read
+    // in the next second or two is the tor that is about to go, and this
+    // screen used to say Connected on the strength of it while the new tor
+    // sat at 0%. connected now means: a newer route, and a relay has actually
+    // connected through it.
+    final genBefore = appState.routeGen;
     engine.restartTor();
     if (!mounted) return;
     setState(() {
@@ -145,15 +150,18 @@ class _BridgesScreenState extends State<BridgesScreen> {
         return;
       }
       setState(() => _elapsed++);
-      if (appState.torReady || _elapsed > 240) {
+      final through = appState.routeGen > genBefore && appState.torReady;
+      if (through || _elapsed > 240) {
         t.cancel();
         setState(() {
           _reconnecting = false;
           _busy = false;
         });
-        if (appState.torReady) {
+        if (through) {
           HapticFeedback.mediumImpact();
           showHaloToast(context, 'Connected');
+        } else {
+          showHaloToast(context, 'Not through yet. Tor keeps trying');
         }
       }
     });
@@ -177,8 +185,10 @@ class _BridgesScreenState extends State<BridgesScreen> {
   Widget build(BuildContext context) {
     final n = _lineCount;
     final live = _on && n > 0;
-    // connected: bridges are saved, on, and tor is carrying traffic
-    final connected = live && appState.bridgesOn && appState.torReady;
+    // connected: bridges are saved, on, and a relay has connected through
+    // them. never while a reconnect this screen started is still settling.
+    final connected =
+        live && appState.bridgesOn && appState.torReady && !_reconnecting;
     return Scaffold(
       backgroundColor: HaloColors.surface,
       appBar: AppBar(
