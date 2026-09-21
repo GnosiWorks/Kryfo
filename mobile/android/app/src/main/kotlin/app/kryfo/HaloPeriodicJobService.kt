@@ -1,6 +1,7 @@
 package app.kryfo
 
 import android.app.job.JobParameters
+import android.app.job.JobScheduler
 import android.app.job.JobService
 import android.content.Intent
 import android.os.Build
@@ -23,6 +24,13 @@ class HaloPeriodicJobService : JobService() {
         // the same service instance serves every firing in a warm process,
         // so this has to be reset here or the second run never finishes
         done = false
+        // wiped: this job outlived the data it was for. end it for good
+        // instead of booting a fresh identity nobody asked for.
+        if (!KryfoState.hasData(this)) {
+            Log.i("halo-engine", "periodic job: no data, cancelling")
+            getSystemService(JobScheduler::class.java)?.cancelAll()
+            return false
+        }
         Log.i("halo-engine", "periodic job: start")
         // bring the listener back if something took it. not allowed from
         // the background on newer androids, and that is fine: the engine

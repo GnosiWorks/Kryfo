@@ -6343,6 +6343,33 @@ class AppState extends ChangeNotifier {
   // the gate can show it.
   String? bootError;
 
+  AppLifecycleListener? _seen;
+
+  // a window is not the same as a person. a samsung relaunches a recently
+  // used app's activity, unseen, two seconds after its data is cleared
+  // ("IpmLaunch"), and booting on that made a fresh identity, an onion key
+  // and a running tor out of a panic wipe. a phone that has been set up boots
+  // at once, as before. one with nothing yet waits until the app is actually
+  // in front of someone. both first-screen widgets come through here.
+  Future<void> bootWhenWanted() async {
+    final state = WidgetsBinding.instance.lifecycleState;
+    dlog('LAUNCH lifecycle at boot request: $state');
+    if (state == AppLifecycleState.resumed || await _hasLocalData()) {
+      await boot();
+      return;
+    }
+    if (_seen != null) return;
+    dlog('LAUNCH nothing here and not in front - boot waits');
+    _seen = AppLifecycleListener(
+      onResume: () {
+        _seen?.dispose();
+        _seen = null;
+        dlog('LAUNCH in front now - booting');
+        unawaited(boot());
+      },
+    );
+  }
+
   Future<void> boot() async {
     try {
       await _boot();
@@ -8332,7 +8359,20 @@ void main() async {
   );
   if (PlatformDispatcher.instance.implicitView == null) {
     dlog('LAUNCH headless');
-    unawaited(appState.boot());
+    // no window and nothing here yet - a panic wipe has just run, say. on a
+    // samsung the system relaunches a recently used app's process two
+    // seconds after its data is cleared ("IpmLaunch"), and booting here made
+    // a fresh identity, an onion key and a running tor out of a wipe, with
+    // nobody holding the phone. so a headless start only boots an engine
+    // that has something to serve; everything else waits for a window, and
+    // the window boots it the usual way.
+    unawaited(() async {
+      if (await _hasLocalData()) {
+        await appState.boot();
+      } else {
+        dlog('LAUNCH headless with nothing here - waiting for a window');
+      }
+    }());
     Timer.periodic(const Duration(milliseconds: 400), (t) {
       if (PlatformDispatcher.instance.implicitView == null) return;
       t.cancel();
@@ -8439,7 +8479,9 @@ class _RootShellState extends State<RootShell> {
     // boot after the first frame is on screen. loading libhalo.so pulls in the
     // whole go runtime + embedded tor and blocks briefly; doing it before the
     // first paint let android's anr watchdog kill a cold start on weak phones.
-    WidgetsBinding.instance.addPostFrameCallback((_) => appState.boot());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => appState.bootWhenWanted(),
+    );
   }
 
   void _onChange() => setState(() {});
@@ -9281,7 +9323,7 @@ class _OnboardingGateState extends State<_OnboardingGate> {
   void initState() {
     super.initState();
     if (!appState.ready) {
-      appState.boot();
+      appState.bootWhenWanted();
       _hold = true;
       Future.delayed(const Duration(milliseconds: 2500), () {
         if (mounted) setState(() => _hold = false);
@@ -9683,4 +9725,18 @@ Future<void> _sweepPlaintextLeftovers() async {
       }
     }
   } catch (_) {}
+}
+
+// the database exists: this phone has been set up at some point. a plain file
+// check on purpose - reading secure storage on a wiped app would create its
+// keystore key and write a prefs file, which is a trace of its own. the
+// native side asks the same question (KryfoState.hasData).
+Future<bool> _hasLocalData() async {
+  try {
+    final dir = await getApplicationDocumentsDirectory();
+    return File('${dir.path}/halo.db').exists();
+  } catch (_) {
+    // cannot tell: behave as before
+    return true;
+  }
 }

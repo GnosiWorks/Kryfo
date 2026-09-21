@@ -96,6 +96,7 @@ class MainActivity : FlutterFragmentActivity() {
 
     private fun startListenerService() {
         if (!DeliveryPrefs.staysOn(this)) return
+        if (!KryfoState.hasData(this)) return
         val intent = Intent(this, HaloListenerService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent)
@@ -319,6 +320,13 @@ class MainActivity : FlutterFragmentActivity() {
                             applicationContext.stopService(
                                 Intent(applicationContext, HaloListenerService::class.java)
                             )
+                        } catch (e: Exception) {
+                        }
+                        // and the periodic job: it survived the clear and
+                        // started the process again within a minute, which
+                        // made a fresh identity and brought tor up.
+                        try {
+                            applicationContext.getSystemService(JobScheduler::class.java)?.cancelAll()
                         } catch (e: Exception) {
                         }
                         val am = applicationContext

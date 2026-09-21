@@ -53,6 +53,15 @@ class HaloListenerService : Service() {
         } else {
             startForeground(NOTIFICATION_ID, notification)
         }
+        // wiped, or never opened: nothing to stay connected for. it has to
+        // have called startForeground first - a service started as a
+        // foreground one that stops without it takes the process down - so
+        // it does, and then leaves at once and asks not to be brought back.
+        if (!KryfoState.hasData(this)) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+            return START_NOT_STICKY
+        }
         return START_STICKY
     }
 

@@ -13,6 +13,9 @@ object JobSetup {
     const val PERIODIC_JOB_ID = 2001
 
     fun schedule(context: Context) {
+        // nothing to check in for, and scheduling it is what brought a wiped
+        // app back to life. see KryfoState.
+        if (!KryfoState.hasData(context)) return
         val scheduler = context.getSystemService(JobScheduler::class.java) ?: return
         if (scheduler.getPendingJob(PERIODIC_JOB_ID) != null) return
         val component = ComponentName(context, HaloPeriodicJobService::class.java)

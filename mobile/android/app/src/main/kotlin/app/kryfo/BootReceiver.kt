@@ -8,6 +8,7 @@ import android.os.Build
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
         if (intent?.action != Intent.ACTION_BOOT_COMPLETED) return
+        if (!KryfoState.hasData(context)) return
         JobSetup.schedule(context)
         if (!DeliveryPrefs.staysOn(context)) return
         val serviceIntent = Intent(context, HaloListenerService::class.java)
