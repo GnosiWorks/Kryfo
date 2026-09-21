@@ -199,8 +199,10 @@ func TestRouteOKFollowsRelaysNotTor(t *testing.T) {
 	if routeOK() {
 		t.Fatal("ok while every relay has been failing for 30s")
 	}
-	setTestStatus("starting", 40)
+	// tor restarting with nothing connected through it since: not ok. (a
+	// relay that does connect corrects the status - see the stale start test.)
 	routeNoteOK()
+	setTestStatus("starting", 40)
 	if routeOK() {
 		t.Fatal("ok while tor itself is not ready")
 	}
@@ -238,5 +240,44 @@ func TestFlappingNetworkIsBouncedOnceSettled(t *testing.T) {
 	time.Sleep(900 * time.Millisecond)
 	if got := atomic.LoadInt32(&n); got != 2 {
 		t.Fatalf("the change after the gap was dropped: %d bounces", got)
+	}
+}
+
+// tor says starting, a relay connects through it anyway: the status was
+// stale and follows the relay. not while a reconnect is running, and not
+// while tor is asleep on purpose.
+func TestARelayConnectingCorrectsAStaleStart(t *testing.T) {
+	resetRoute(t, "starting", 0)
+	routeNoteOK()
+	statusMu.RLock()
+	st, pct := torStatus, bootstrapPct
+	statusMu.RUnlock()
+	if st != "publishing" || pct != 100 {
+		t.Fatalf("status %q %d%% after a relay connected, want publishing 100%%", st, pct)
+	}
+	if !routeOK() {
+		t.Fatal("route not ok after the correction")
+	}
+
+	resetRoute(t, "starting", 0)
+	atomic.StoreInt32(&reconnectRunning, 1)
+	routeNoteOK()
+	statusMu.RLock()
+	st = torStatus
+	statusMu.RUnlock()
+	atomic.StoreInt32(&reconnectRunning, 0)
+	if st != "starting" {
+		t.Fatalf("status corrected during a reconnect: %q", st)
+	}
+
+	resetRoute(t, "starting", 0)
+	atomic.StoreInt32(&torPaused, 1)
+	routeNoteOK()
+	statusMu.RLock()
+	st = torStatus
+	statusMu.RUnlock()
+	atomic.StoreInt32(&torPaused, 0)
+	if st != "starting" {
+		t.Fatalf("status corrected while paused: %q", st)
 	}
 }

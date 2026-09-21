@@ -50,6 +50,32 @@ func routeNoteOK() {
 	okGen = routeGen
 	rescues = 0
 	routeMu.Unlock()
+	correctStaleStart()
+}
+
+// a relay has just connected through tor, so tor can carry traffic whatever
+// its own status says. seen on the redmi on 2026-09-21: back from a check-in
+// pause, the engine's status sat at "starting, 0%" for over ten minutes while
+// six relay subscriptions ran through tor. the app said "still connecting to
+// tor", a paused upload waited for a ready that never came, and the stall
+// rule above would have bounced a working tor every few minutes. the relay
+// is the witness that cannot lie; the status follows it. not during a
+// reconnect: a connect finishing inside the bounce belongs to the tor that
+// is going.
+func correctStaleStart() {
+	if !modeNeedsTor() || torIsPaused() || atomic.LoadInt32(&reconnectRunning) == 1 {
+		return
+	}
+	statusMu.Lock()
+	stale := torStatus == "starting"
+	if stale {
+		bootstrapPct = 100
+	}
+	statusMu.Unlock()
+	if stale {
+		log.Println("halo: a relay connected through tor while it said starting - it is up")
+		setStatus("publishing")
+	}
 }
 
 // a relay connect failed while tor said it was ready.
