@@ -8303,6 +8303,7 @@ final appState = AppState();
 void main() async {
   dlog('LAUNCH main');
   WidgetsFlutterBinding.ensureInitialized();
+  unawaited(_sweepPlaintextLeftovers());
   // not awaited: this is a platform call, and with no activity attached it
   // never answers. awaiting it is how main() stopped on its second line in
   // every process the service brought back.
@@ -9666,4 +9667,20 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
       ),
     );
   }
+}
+
+// raw voice recordings a crash, or an older build, left in the cache. they are
+// the voice as spoken, before any disguise, and nothing else would ever delete
+// them. the decrypted open-with copies are cleared on the native side, on
+// every resume.
+Future<void> _sweepPlaintextLeftovers() async {
+  try {
+    final dir = await getTemporaryDirectory();
+    await for (final e in dir.list()) {
+      final name = e.uri.pathSegments.isEmpty ? '' : e.uri.pathSegments.last;
+      if (e is File && name.startsWith('vn_') && name.endsWith('.wav')) {
+        await e.delete();
+      }
+    }
+  } catch (_) {}
 }

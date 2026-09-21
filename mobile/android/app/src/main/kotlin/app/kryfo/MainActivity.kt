@@ -81,6 +81,14 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun onResume() {
         super.onResume()
+        // a file opened with another app is a decrypted copy in cache/open.
+        // coming back here is the only sign that app is done with it, and a
+        // resume also follows every start - so this is both "the moment the
+        // player closes" and "on every app start". it used to be cleared only
+        // by the next open, so a video from a timed message that had burned
+        // sat there in plain text until some other file was opened. an app
+        // that still holds it open keeps its descriptor; the name is gone.
+        clearOpenCopies()
         askForNotificationsOnce()
         startListenerService()
         schedulePeriodicJob()
@@ -374,6 +382,10 @@ class MainActivity : FlutterFragmentActivity() {
     // to: the file is copied to cache/open/, the only folder the provider
     // serves, and the uri is granted to the one app that gets the intent.
     // the folder holds one file; the last one goes before the next arrives.
+    private fun clearOpenCopies() {
+        Thread { File(cacheDir, "open").deleteRecursively() }.start()
+    }
+
     private fun openFile(path: String, name: String?, result: MethodChannel.Result) {
         Thread {
             var ok = false

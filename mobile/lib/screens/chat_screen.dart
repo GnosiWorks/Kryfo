@@ -2614,16 +2614,28 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   void _onVoiceComplete(String path, int ms, bool cancelled) {
-    if (cancelled || path.isEmpty) return;
+    if (path.isEmpty) return;
+    if (cancelled) {
+      // the raw recording, undisguised. nothing else will ever delete it.
+      File(path).delete().ignore();
+      return;
+    }
     _sendVoice(path, ms);
   }
 
   Future<void> _sendVoice(String srcPath, int ms) async {
-    if (_requestLocked) return;
     final src = File(srcPath);
+    if (_requestLocked) {
+      src.delete().ignore();
+      return;
+    }
     if (!await src.exists()) return;
     if (_requestPending) setState(() => _sentCount++);
     var bytes = await src.readAsBytes();
+    // the recorder's own file is the voice as spoken, before any disguise.
+    // the copy kept with the message is below; this one has done its job and
+    // used to stay in the cache for good, which quietly undid the disguise.
+    src.delete().ignore();
     if (_disguise) bytes = disguiseWav(bytes);
     final msgUid = _newMsgUid();
     final dir = await getApplicationDocumentsDirectory();
