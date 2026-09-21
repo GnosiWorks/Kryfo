@@ -214,6 +214,10 @@ extern char* HaloSetBridges(char* cLines, int on);
 // never restarted for this: see reconnectTor for why it cannot be.
 //
 extern char* HaloRestartTor(void);
+
+// android says the default network changed. see networkChanged.
+//
+extern char* HaloNetworkChanged(void);
 extern char* HaloBridgeState(void);
 
 //
