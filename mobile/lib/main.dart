@@ -6501,7 +6501,13 @@ class AppState extends ChangeNotifier {
     // drop week-old partial transfers nobody ever completed.
     unawaited(db.sweepMediaChunks());
     _deliveryMode = await loadDeliveryMode();
-    _inFront = PlatformDispatcher.instance.implicitView != null;
+    // in front means resumed, not that a view exists: android hands every
+    // engine an implicit view, window or not, so the old test called each
+    // process the job started a person looking. tor then ran for good in
+    // check-ins, the job only knocked, and no check-in ran all night.
+    _inFront =
+        _inFront ||
+        WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
     await _judgeLastRun();
     // a knock wakes a check-in, whatever mode is set: a helper app still
     // registered from before should not be answered with silence
@@ -9383,9 +9389,11 @@ class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     lockState.addListener(_sync);
     lockState.load();
-    // a window exists, so someone is looking: the lifecycle only reports
-    // changes, and a fresh start is not one
-    appState.appInFront(true);
+    // the lifecycle only reports changes, and a fresh start in front is not
+    // one. a process the job started builds this too, with nobody looking.
+    if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+      appState.appInFront(true);
+    }
   }
 
   @override
