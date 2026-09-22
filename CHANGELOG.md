@@ -2,7 +2,7 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [0.3.0] - 2026-09-22
 
 ### Security
 - tor is updated from 0.4.9.5 to 0.4.9.12, which carries fixes for two use-after-free bugs in the part of tor that splits traffic over several paths, and for a crash a malformed name lookup could cause.
@@ -16,6 +16,7 @@ All notable user-facing changes to kryfo will land here. Format loosely follows 
 - messages could sit unsent for minutes after the network changed: flight mode, a dropped wi-fi, a switch to mobile data. kryfo said it was ready and was not. it now tells tor the network has changed the moment the phone says so, and it judges "ready" by whether messages are actually getting through rather than by tor's word. if they stop getting through for a minute, the connection is rebuilt. in testing, a message written in flight mode went out 28 seconds after the network came back, where it had taken six minutes, and on one phone had not gone after sixteen.
 - the bridges screen could say "connected" before the new connection had even started. it now waits until a message path actually works through the bridges.
 - holding the microphone could stop doing anything for the rest of a chat, until the chat was closed and opened again.
+- check-ins did not check in. whenever the phone had closed kryfo and the fifteen-minute job brought it back, kryfo took the job for someone opening the app: tor stayed connected for good, which is always on without the notification that keeps it alive, and no check-in ran. overnight on a test phone, none ran for ten hours and the phone stopped kryfo twice for using the processor in the background. check-ins now wake, fetch and sleep as they were meant to.
 
 ## [0.2.12] - 2026-09-19
 

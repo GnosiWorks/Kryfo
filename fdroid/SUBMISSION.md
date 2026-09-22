@@ -35,14 +35,24 @@
    "what can go wrong" below, which is kept for the record. `repro/release.sh`
    builds the three apks in the pinned container and `repro/verify.sh` checks
    them with apksigcopier, which is the check f-droid runs. 0.2.12 came back
-   MATCH and SAME on all three.
+   MATCH and SAME on all three, and every release since is checked the same
+   way before it is tagged.
 
-   **the first tag is v0.2.12, not v0.2.11.** 0.2.11 is skipped: the commit it
-   would have gone on, `2da465f9`, carries the control-port wedge that left a
-   phone offline for ten and a half hours (see
-   `~/kryfo-notes/CONTROL-PORT-2026-09-19.md`). the tag goes on **`d6f3ab12`**,
-   which is the commit verified MATCH + SAME on all three abis, and only once
-   f-droid has merged.
+   **the first tag after f-droid merges is v0.3.0**, and it has to match
+   `versionName` in mobile/pubspec.yaml exactly (`version: 0.3.0+15`, so
+   versionCodes 151/152/153). f-droid's update check finds the tag, then
+   reads versionName and versionCode out of pubspec.yaml at that tag
+   (`UpdateCheckData`), so a tag that says one thing while pubspec says
+   another publishes under pubspec's number and not the tag's. no suffix,
+   no missing digit: `v` + versionName, nothing else.
+
+   0.2.11 and 0.2.12 are never tagged. 0.2.11's commit, `2da465f9`, carries
+   the control-port wedge that left a phone offline for ten and a half hours
+   (see `~/kryfo-notes/CONTROL-PORT-2026-09-19.md`). 0.2.12 was verified
+   MATCH + SAME on `d6f3ab12` but is folded into 0.3.0, which adds the tor
+   and openssl security updates and the delivery fixes on top. the tag goes
+   on the 0.3.0 commit that comes back MATCH + SAME on all three abis, and
+   only once f-droid has merged.
 
 ## what can go wrong
 
