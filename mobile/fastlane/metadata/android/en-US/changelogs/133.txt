@@ -1,5 +1,0 @@
-Security first. Ntfy push is removed: it connected outside Tor and gave nothing back. Photos sent as files are now cleaned of where, when and on what phone they were taken. Reactions are now only accepted from people in that chat, same as pins. The engine's C code is built with stack protection.
-
-Fixed: pay with bitcoin froze the app, voice notes stopped after a second, a video could send twice.
-
-New: videos look like videos, tapping a file opens it, pins have a list, room links are invites.

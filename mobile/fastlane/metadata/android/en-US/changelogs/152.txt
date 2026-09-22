@@ -1,0 +1,5 @@
+Security first. Tor 0.4.9.12 and three OpenSSL fixes. Photos sent as files lose where, when and on what phone. Ntfy push is gone: it connected outside Tor. A pin now hides message text in notifications. A panic wipe stays wiped. Voice notes and opened videos leave no copies behind.
+
+New: a Tools tab, and check-ins every fifteen minutes to save battery.
+
+Fixed: messages stuck for minutes after a network change, Tor stuck off, videos sent twice, voice notes stopping.

@@ -1,7 +1,0 @@
-A new Tools tab: see what a photo gives away, keep a clean copy with all of it removed, make a private QR code, lock a file behind a password. All on your phone.
-
-Choose how messages arrive: always on, or check-ins every fifteen minutes to save battery.
-
-Tor's control port stops answering now and then. That could leave Tor stuck off with nothing on screen. Kryfo now times out, replaces the connection, and says so.
-
-A file that arrived with pieces missing now asks for them.

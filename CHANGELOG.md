@@ -4,6 +4,8 @@ All notable user-facing changes to kryfo will land here. Format loosely follows 
 
 ## [0.3.0] - 2026-09-22
 
+0.2.11 and 0.2.12 were never released, so this is everything since 0.2.10.
+
 ### Security
 - tor is updated from 0.4.9.5 to 0.4.9.12, which carries fixes for two use-after-free bugs in the part of tor that splits traffic over several paths, and for a crash a malformed name lookup could cause.
 - three fixes from openssl 3.6.3 are carried into the copy of openssl inside kryfo: an oversized piece of text in a certificate could overflow a buffer, a certificate field over two gigabytes long could be read past its end, and a peer could choose part of the numbers used to agree a key instead of having it checked. tor reads certificates from the network, so these are the ones that reach kryfo. the rest of that openssl release is in parts kryfo does not use.
@@ -11,31 +13,6 @@ All notable user-facing changes to kryfo will land here. Format loosely follows 
 - every voice note left the recording of your voice as spoken, before any disguise, in the app's cache for good. it is removed as soon as the note is sent, and anything left over is cleared at start.
 - with a pin on kryfo, notifications still showed who wrote and what they said once the phone was unlocked. setting a pin now turns message previews off. you can turn them back on, and the setting says what that shows.
 - after a panic wipe, kryfo started itself again within a minute: its "kryfo is on" notification came back, it made a new identity and connected to tor, with nobody having opened it. the wiped messages and keys were gone, but a wipe that announces itself defeats the point. nothing starts kryfo in the background now until it has been opened again.
-
-### Fixed
-- messages could sit unsent for minutes after the network changed: flight mode, a dropped wi-fi, a switch to mobile data. kryfo said it was ready and was not. it now tells tor the network has changed the moment the phone says so, and it judges "ready" by whether messages are actually getting through rather than by tor's word. if they stop getting through for a minute, the connection is rebuilt. in testing, a message written in flight mode went out 28 seconds after the network came back, where it had taken six minutes, and on one phone had not gone after sixteen.
-- the bridges screen could say "connected" before the new connection had even started. it now waits until a message path actually works through the bridges.
-- holding the microphone could stop doing anything for the rest of a chat, until the chat was closed and opened again.
-- check-ins did not check in. whenever the phone had closed kryfo and the fifteen-minute job brought it back, kryfo took the job for someone opening the app: tor stayed connected for good, which is always on without the notification that keeps it alive, and no check-in ran. overnight on a test phone, none ran for ten hours and the phone stopped kryfo twice for using the processor in the background. check-ins now wake, fetch and sleep as they were meant to.
-
-## [0.2.12] - 2026-09-19
-
-### Added
-- a tools tab. four things, all of them on your phone and none of them touching the network: what a photo gives away (where it was taken, drawn on a map the app carries itself, and on what phone and when), a clean copy of a photo or video with all of that removed, a private qr code for links, wi-fi, contacts and more, and locking a file behind a password so it can be sent anywhere and opened with the free tool age. a photo shared to kryfo from the gallery lands straight in the cleaner.
-- a choice of how messages arrive, in settings. "always on" is what kryfo has always done. "check-ins" wakes every fifteen minutes, looks for messages and goes back to sleep, which is far easier on the battery and can make messages late. the screen says when the last check-in really happened, not when one was promised.
-- if your phone keeps stopping kryfo while it is meant to be staying connected, kryfo notices on its own and offers check-ins once. it reads nothing about your phone to work that out.
-
-### Fixed
-- a file that arrived with pieces missing stayed stuck. the receiver now works out exactly which pieces it never got and asks for those, and the sender sends only those.
-- coming back after a long time away could leave messages behind for good. relays hand back only the newest hundred stored messages, and anything behind that was never asked for again; now kryfo pages back through the lot, and does not move its place in the queue until it has all of it.
-- changing bridges, or recovering from a stalled connection, used to restart tor. tor survives one shutdown per run and the second one could hang or kill the app, so this could have taken kryfo down at any time since bridges shipped. tor is reconfigured where it stands now, which is also far quicker: switching bridges takes about half a second instead of a full reconnect.
-- a heic photo from a samsung carried a block of the camera's own after the picture, and it survived cleaning. it is removed now, in the tools tab and when a photo is sent as a file.
-- tor could get stuck off and stay that way. if tor's control port stopped answering - which it does now and then, and is tor's own behaviour, not kryfo's - the attempt to bring it back waited for an answer that never came, while holding the lock every later attempt needed. a phone was found like this after ten and a half hours: online, running, and quietly unable to send or receive anything. every command to tor now has a time limit, a connection that stops answering is thrown away and replaced, and tor itself is never restarted to do it.
-- and if it ever does go quiet again, kryfo says so. five minutes unable to connect, while it is meant to be connected, and the home screen says "kryfo is offline" with a button to try again. it should never again be possible to be offline for hours with nothing on screen.
-
-## [0.2.11] - 2026-09-18
-
-### Security
 - ntfy push is gone, all of it. the option opened a connection to a public server from outside tor, so that server had your address for as long as the app ran, and the wake-up it waited for did nothing. while it existed every message also carried an address for the other side to call after sending, and off onion mode that call went out directly: a contact could have learned where you were by naming a server of their own. nobody needed the option on for that part. the option, the field and the call are removed, and what they had stored is cleared the first time this version starts. if push ever comes back it goes over tor or not at all.
 - a photo sent as a file kept everything the camera wrote in it: where, when, on what phone. the photo button has always cleaned that off; the file button sent the file as it was, and the other side then showed it as a photo. pictures sent as files are cleaned now, without touching the picture itself: jpeg, png, webp, heic, avif, and gifs on the gif button. one the app cannot read through is not sent.
 - the cleaning itself missed things, found by running it on real photos instead of test files. a samsung camera writes a block of its own after the end of the picture, and that came through. some phones hang a second image off the first, and that came through. a png can carry a record of what made it and under which account, and that came through. all three are gone now, and a png keeps only what it takes to draw it.
@@ -43,7 +20,25 @@ All notable user-facing changes to kryfo will land here. Format loosely follows 
 - anyone who could reach you and knew a message's id could pin or unpin it on your phone. nothing could be read or changed that way, but it should not have been possible. a pin is accepted only from the other person in that chat, or from a member of that group.
 - reactions are now only accepted from people in that chat, same as pins.
 
+### Added
+- a tools tab. four things, all of them on your phone and none of them touching the network: what a photo gives away (where it was taken, drawn on a map the app carries itself, and on what phone and when), a clean copy of a photo or video with all of that removed, a private qr code for links, wi-fi, contacts and more, and locking a file behind a password so it can be sent anywhere and opened with the free tool age. a photo shared to kryfo from the gallery lands straight in the cleaner.
+- a choice of how messages arrive, in settings. "always on" is what kryfo has always done. "check-ins" wakes every fifteen minutes, looks for messages and goes back to sleep, which is far easier on the battery and can make messages late. the screen says when the last check-in really happened, not when one was promised.
+- if your phone keeps stopping kryfo while it is meant to be staying connected, kryfo notices on its own and offers check-ins once. it reads nothing about your phone to work that out.
+- videos look like videos: the first frame, how long it runs, and a play button, in chats and groups. tap one and it opens in your phone's player. the frame is never written to the phone, so nothing of a video outlives a message that burns.
+- tapping a file opens it, in whatever your phone has for that kind of file. it only ever offered to share it. share is under a long press now.
+- pins work the way you would expect from discord. the pin in the top bar is always there and opens the list: newest first, who wrote it, when, a picture if there is one, jump and unpin. a pin in a one to one chat shows for both of you, as it always has in groups. pinning asks first. fifty to a chat, up from three. the strip that sat under the top bar is gone.
+- a room link on its own in a message is an invitation with a join button, and the room opens once you are in. the room's link sheet can share the link or send it to a contact, after saying what that costs: they will know the room came from you.
+
 ### Fixed
+- messages could sit unsent for minutes after the network changed: flight mode, a dropped wi-fi, a switch to mobile data. kryfo said it was ready and was not. it now tells tor the network has changed the moment the phone says so, and it judges "ready" by whether messages are actually getting through rather than by tor's word. if they stop getting through for a minute, the connection is rebuilt. in testing, a message written in flight mode went out 28 seconds after the network came back, where it had taken six minutes, and on one phone had not gone after sixteen.
+- the bridges screen could say "connected" before the new connection had even started. it now waits until a message path actually works through the bridges.
+- holding the microphone could stop doing anything for the rest of a chat, until the chat was closed and opened again.
+- a file that arrived with pieces missing stayed stuck. the receiver now works out exactly which pieces it never got and asks for those, and the sender sends only those.
+- coming back after a long time away could leave messages behind for good. relays hand back only the newest hundred stored messages, and anything behind that was never asked for again; now kryfo pages back through the lot, and does not move its place in the queue until it has all of it.
+- changing bridges, or recovering from a stalled connection, used to restart tor. tor survives one shutdown per run and the second one could hang or kill the app, so this could have taken kryfo down at any time since bridges shipped. tor is reconfigured where it stands now, which is also far quicker: switching bridges takes about half a second instead of a full reconnect.
+- a heic photo from a samsung carried a block of the camera's own after the picture, and it survived cleaning. it is removed now, in the tools tab and when a photo is sent as a file.
+- tor could get stuck off and stay that way. if tor's control port stopped answering - which it does now and then, and is tor's own behaviour, not kryfo's - the attempt to bring it back waited for an answer that never came, while holding the lock every later attempt needed. a phone was found like this after ten and a half hours: online, running, and quietly unable to send or receive anything. every command to tor now has a time limit, a connection that stops answering is thrown away and replaced, and tor itself is never restarted to do it.
+- and if it ever does go quiet again, kryfo says so. five minutes unable to connect, while it is meant to be connected, and the home screen says "kryfo is offline" with a button to try again. it should never again be possible to be offline for hours with nothing on screen.
 - pay with bitcoin froze the app while it reached the payment service over tor, fifteen or twenty seconds on a slow connection, long enough that some phones said kryfo had stopped working. the work was being done in the one place nothing else can happen. it is not now: the screen shows that it is waiting and for how long, and after twenty seconds offers the plain address instead.
 - voice notes stopped a second or two in and had to be started again. every delivery tick rebuilt the whole conversation on screen, and the player went with it. a row keeps what it is doing now when the list under it changes.
 - a video or a big file could be sent twice. the first pass got to 99%, the bar started again from nothing, and it arrived at the end of the second pass. the app had marked a send that was still running as failed and then retried it. a file goes out once. the receiving phone also stops collecting pieces of a file it already has, which had left a "receiving" strip counting towards nothing.
@@ -52,12 +47,6 @@ All notable user-facing changes to kryfo will land here. Format loosely follows 
 - tapping a pin a second time scrolled past the message. a jump lands on the message now, however many times you ask and wherever you were.
 - a room link sent in a chat was a wall of text that could not be tapped, and pasted with anything around it the app called it invalid. opened from outside the app, nothing told you what had happened.
 - a phone whose account has moved still said it was building a private route and that what you sent would deliver itself.
-
-### Added
-- videos look like videos: the first frame, how long it runs, and a play button, in chats and groups. tap one and it opens in your phone's player. the frame is never written to the phone, so nothing of a video outlives a message that burns.
-- tapping a file opens it, in whatever your phone has for that kind of file. it only ever offered to share it. share is under a long press now.
-- pins work the way you would expect from discord. the pin in the top bar is always there and opens the list: newest first, who wrote it, when, a picture if there is one, jump and unpin. a pin in a one to one chat shows for both of you, as it always has in groups. pinning asks first. fifty to a chat, up from three. the strip that sat under the top bar is gone.
-- a room link on its own in a message is an invitation with a join button, and the room opens once you are in. the room's link sheet can share the link or send it to a contact, after saying what that costs: they will know the room came from you.
 
 ### Changed
 - the link preview setting is gone. it was a switch for whether you would be offered a button, and the button is already a choice you make per message. the button is offered whenever tor is up, and your phone still never fetches a link someone sent you.
