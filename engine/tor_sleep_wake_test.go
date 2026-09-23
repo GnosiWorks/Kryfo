@@ -30,7 +30,7 @@ import (
 )
 
 // the app's private-mode relay list, our own onion relay first
-const testRelays = "wss://z4waup3c6j6gknkjba72cqjjuffhgg6gtgqfu3vetzcvgoluvr42srid.onion," +
+const testRelays = "ws://z4waup3c6j6gknkjba72cqjjuffhgg6gtgqfu3vetzcvgoluvr42srid.onion," +
 	"wss://relay.kryfo.app,wss://nos.lol,wss://relay.primal.net,wss://nostr.mom,wss://nostr.oxtr.dev"
 
 // runs f and fails the test with a full goroutine dump if it has not come
@@ -100,7 +100,7 @@ func TestSleepWakeThenModeSwitch(t *testing.T) {
 
 	// the gaps between the last sleep and the wake that hung on the phone
 	// are not known to the second; try the ones a person and a job produce.
-	for round, gap := range []time.Duration{2 * time.Second, 20 * time.Second, 0, 45 * time.Second} {
+	for round, gap := range []time.Duration{2 * time.Second, 20 * time.Second, 0, 45 * time.Second, 150 * time.Second} {
 		t.Logf("--- round %d, gap %s ---", round, gap)
 		// check-ins chosen: tor goes to sleep
 		if r := mustReturn(t, "stop (mode -> check-ins)", 90*time.Second, torStop); r != "ok" {
@@ -126,6 +126,49 @@ func TestSleepWakeThenModeSwitch(t *testing.T) {
 			t.Fatalf("round %d wake: %s", round, r)
 		}
 		mustReturn(t, "start after wake", 90*time.Second, func() string { return startListener(dir) })
+		// no kick from the test here: the app does not send one when the
+		// mode goes back to always on, so a relay has to connect on the
+		// strength of the resume alone. on 2026-09-23 none did - the runners
+		// sat out the fifteen-minute sleep they take while tor is paused, and
+		// a phone that said "Tor ready" received nothing until the next job.
+		woke := time.Now()
+		since := func(at func(string) time.Time) (got, missing []string) {
+			for _, u := range strings.Split(testRelays, ",") {
+				if at(u).After(woke) {
+					got = append(got, u)
+				} else {
+					missing = append(missing, u)
+				}
+			}
+			return
+		}
+		// awake: every runner dials within seconds of the wake. this is the
+		// bug - before the fix they slept out fifteen minutes.
+		for time.Since(woke) < 10*time.Second {
+			if _, m := since(relayDialledAt); len(m) == 0 {
+				break
+			}
+			time.Sleep(250 * time.Millisecond)
+		}
+		if _, m := since(relayDialledAt); len(m) > 0 {
+			t.Fatalf("round %d: %d of 6 relays not even tried 10s after the wake - "+
+				"their runners are asleep: %v", round, len(m), m)
+		}
+		// and through: most of them connect. a relay that is slow or down
+		// on this network that day is not the phone's fault, so not all.
+		for time.Since(woke) < 90*time.Second {
+			if got, _ := since(relayConnectedAt); len(got) == 6 {
+				break
+			}
+			time.Sleep(time.Second)
+		}
+		got, missing := since(relayConnectedAt)
+		if len(got) < 4 {
+			t.Fatalf("round %d: only %d of 6 relays connected in 90s after the wake; not: %v",
+				round, len(got), missing)
+		}
+		t.Logf("round %d: all 6 tried at once, %d connected within %s (not: %v)",
+			round, len(got), time.Since(woke).Round(time.Second), missing)
 		// and the network change that followed
 		atomic.StoreInt64(&lastTorRestart, 0)
 		if r := mustReturn(t, "reconnect (network change)", 3*time.Minute, reconnectTor); r != "ok" {

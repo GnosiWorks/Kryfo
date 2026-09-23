@@ -132,7 +132,10 @@ func pairCodeQuery(ctx context.Context, pk string) []nostr.Event {
 				return
 			}
 			r := nostr.NewRelay(ctx, u, nostr.RelayOptions{})
-			if err := r.ConnectWithClient(ctx, client); err != nil {
+			dctx, dcancel := relayDialCtx(ctx, u)
+			err = r.ConnectWithClient(dctx, client)
+			dcancel()
+			if err != nil {
 				return
 			}
 			defer r.Close()

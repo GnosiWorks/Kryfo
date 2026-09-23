@@ -915,6 +915,12 @@ func torResume() string {
 	if id := strings.TrimSuffix(addr, ".onion"); id != "" {
 		goWatchPublished(t, id)
 	}
+	// every relay runner that found tor asleep is parked in a fifteen-minute
+	// sleep that only a kick ends. a check-in sends one; going back to always
+	// on did not, and a phone that said "Tor ready" heard nothing until the
+	// next job came round. the wake is the kick now, whoever asked for it.
+	relayClearBenches()
+	kickRelays()
 	log.Println("halo: tor is back on the network")
 	return "ok"
 }

@@ -201,12 +201,36 @@ var (
 	// the walk that is running now, folded into catchupLast when it ends
 	catchupPend = map[string]catchupRun{}
 	connectLast = map[string]int{}
+	connectAt   = map[string]time.Time{}
+	dialAt      = map[string]time.Time{}
 )
 
 func noteRelayConnect(u string, ms int) {
 	catchupMu.Lock()
 	connectLast[u] = ms
+	connectAt[u] = time.Now()
 	catchupMu.Unlock()
+}
+
+func noteRelayDial(u string) {
+	catchupMu.Lock()
+	dialAt[u] = time.Now()
+	catchupMu.Unlock()
+}
+
+// when each relay was last dialled, whatever came of it.
+func relayDialledAt(u string) time.Time {
+	catchupMu.Lock()
+	defer catchupMu.Unlock()
+	return dialAt[u]
+}
+
+// when each relay last connected. the sleep/wake test reads it to tell a
+// runner that woke from one that is still asleep.
+func relayConnectedAt(u string) time.Time {
+	catchupMu.Lock()
+	defer catchupMu.Unlock()
+	return connectAt[u]
 }
 
 func noteCatchupPages(u string, pages, events int) {
@@ -480,6 +504,22 @@ func nostrResetClient() {
 	dropSocksAddr()
 }
 
+// how long a relay's websocket may take to open. the relay library gives
+// seven seconds when the context has no deadline of its own, and an onion
+// relay takes longer than that whenever tor has to find it again: the
+// descriptor, an introduction and a rendezvous, six hops, then tls. after
+// every sleep and wake it failed every attempt ("connection took too long"),
+// was benched, and was the relay that ran out the catch-up cap. only the
+// handshake is bounded by this; the connection lives on the relay's own
+// context.
+func relayDialCtx(parent context.Context, u string) (context.Context, context.CancelFunc) {
+	d := 20 * time.Second
+	if strings.Contains(u, ".onion") {
+		d = 45 * time.Second
+	}
+	return context.WithTimeout(parent, d)
+}
+
 // nothing in here talks to tor: the socks address is pinned or remembered,
 // and bine builds a plain socks5 dialer from it. so the mutex is held for
 // microseconds, and a resume or a reconnect that resets the client never
@@ -567,7 +607,10 @@ func nostrPublishMulti(ctx context.Context, ev nostr.Event) (ok int) {
 				return
 			}
 			r := nostr.NewRelay(bg, u, nostr.RelayOptions{})
-			if err := r.ConnectWithClient(bg, client); err != nil {
+			dctx, dcancel := relayDialCtx(bg, u)
+			err = r.ConnectWithClient(dctx, client)
+			dcancel()
+			if err != nil {
 				log.Printf("nostr: connect %s: %v", u, err)
 				relayFailed(u)
 				result <- false
@@ -806,7 +849,11 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 				}
 				r := nostr.NewRelay(ctx, u, nostr.RelayOptions{})
 				dialAt := time.Now()
-				if err := r.ConnectWithClient(ctx, client); err != nil {
+				noteRelayDial(u)
+				dctx, dcancel := relayDialCtx(ctx, u)
+				err = r.ConnectWithClient(dctx, client)
+				dcancel()
+				if err != nil {
 					log.Printf("nostr: subscribe-connect %s: %v", u, err)
 					relayFailed(u)
 					sleepOrKick(relayRetryAfter(u, retry, own))
