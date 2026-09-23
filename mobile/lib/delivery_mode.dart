@@ -22,6 +22,10 @@ const kHeartbeatKey = 'delivery_heartbeat';
 const kKillsKey = 'delivery_kills';
 const kNudgeShownKey = 'delivery_nudge_shown';
 const kLastCheckHowKey = 'delivery_last_how';
+// when the last check-in was attempted, whatever came of it. the line on
+// the transport screen paired the last attempt's words with the last
+// success's age, so a fresh failure read "10h ago".
+const kLastCheckTriedKey = 'delivery_last_tried';
 const kLastCheckRelaysKey = 'delivery_last_relays';
 
 DeliveryMode deliveryModeOf(String? raw) => switch (raw) {

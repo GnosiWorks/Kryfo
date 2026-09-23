@@ -2,6 +2,7 @@
 // what the network is actually doing. built after a night spent guessing at
 // state that was already known internally: the phone had zero relay
 // subscriptions and nothing anywhere said so.
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -278,11 +279,21 @@ class _AliveState extends State<_Alive> {
   int? _uptimeMs;
   Map<String, dynamic>? _exit;
   Map<String, dynamic> _mem = const {};
+  // the block below was read once when the screen opened and never again,
+  // so a screen left open showed numbers from whenever that was
+  Timer? _tick;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _tick = Timer.periodic(const Duration(seconds: 5), (_) => _load());
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -385,7 +396,7 @@ class _AliveState extends State<_Alive> {
           'last check-in',
           appState.lastCheckHow.isEmpty
               ? 'None yet'
-              : '${appState.lastCheckHow} · ${_ago(appState.lastCheckAt)}',
+              : '${appState.lastCheckHow} · ${_ago(appState.lastCheckTriedAt > 0 ? appState.lastCheckTriedAt : appState.lastCheckAt)}',
           appState.lastCheckHow.startsWith('ok')
               ? HaloColors.green
               : appState.lastCheckHow.isEmpty

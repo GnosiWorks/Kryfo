@@ -4866,6 +4866,7 @@ class AppState extends ChangeNotifier {
       lastWakeAt = prefs.getInt(kLastWakeKey) ?? 0;
       lastCheckHow = prefs.getString(kLastCheckHowKey) ?? '';
       lastCheckRelays = prefs.getString(kLastCheckRelaysKey) ?? '';
+      lastCheckTriedAt = prefs.getInt(kLastCheckTriedKey) ?? 0;
     } catch (_) {}
   }
 
@@ -4901,12 +4902,23 @@ class AppState extends ChangeNotifier {
             .replaceFirst(RegExp(r'^wss?://'), '')
             .split('/')
             .first;
-        final secs = ((m['catchup_ms'] as int? ?? 0) / 1000).toStringAsFixed(1);
+        final ms = m['catchup_ms'] as int? ?? 0;
+        final secs = (ms / 1000).toStringAsFixed(1);
         final long = m['catchup_long'] == true ? ' long window' : '';
+        final dropped = m['catchup_dropped'] == true;
+        // a slow one says what it was doing: how long the connect took
+        // before it, and how far back it walked
+        var why = '';
+        if (dropped || ms > 5000) {
+          final c = ((m['connect_ms'] as int? ?? 0) / 1000).toStringAsFixed(1);
+          final p = m['catchup_pages'] as int? ?? 0;
+          final e = m['catchup_events'] as int? ?? 0;
+          why = ' (connect ${c}s, $p pages, $e events)';
+        }
         parts.add(
-          m['catchup_dropped'] == true
-              ? '$host ${secs}s dropped$long'
-              : '$host ${secs}s$long',
+          dropped
+              ? '$host ${secs}s dropped$long$why'
+              : '$host ${secs}s$long$why',
         );
       }
       return parts.join(' · ');
@@ -5089,6 +5101,7 @@ class AppState extends ChangeNotifier {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(kLastCheckHowKey, lastCheckHow);
         await prefs.setString(kLastCheckRelaysKey, lastCheckRelays);
+        await prefs.setInt(kLastCheckTriedKey, lastCheckTriedAt);
       } catch (_) {}
       // only put it back to sleep if it was asleep: a check-in that ran
       // while the person had the app open leaves tor alone
