@@ -383,6 +383,7 @@ func startListener(dataDir string) string {
 	// whatever control socket we held belonged to the tor before this one,
 	// and so did the socks port any cached http client was built against.
 	ctrlReset()
+	eventReset()
 	nostrResetClient()
 	// stay "starting" - tor.Start returns before any circuit exists. the
 	// bootstrap watcher owns the flip at a real 100%.
@@ -413,8 +414,12 @@ func startListener(dataDir string) string {
 	hsCh, hsSubbed := listenForUploads(t)
 	// tor starts with the network off. bine normally turns it on inside
 	// Listen, but only on the branch we skip with NoWait - so the onion got
-	// created and never published. turn it on ourselves before listening.
-	if eerr := t.EnableNetwork(ctx, false); eerr != nil {
+	// created and never published. turn it on ourselves before listening,
+	// over the engine's own connection - bine's is not asked for anything
+	// any more (control_events.go).
+	if eerr := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
+		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)
+	}); eerr != nil {
 		log.Printf("halo: enable network: %v", eerr)
 	}
 
@@ -528,7 +533,13 @@ func listenForUploads(t *tor.Tor) (chan control.Event, bool) {
 	if t == nil || t.Control == nil {
 		return hsCh, false
 	}
-	if aerr := t.Control.AddEventListener(hsCh, control.EventCodeHSDesc); aerr != nil {
+	// on the event connection, never on bine's: see control_events.go
+	c, err := eventConn(t)
+	if err != nil {
+		log.Printf("halo: HSDesc subscribe failed: %v", err)
+		return hsCh, false
+	}
+	if aerr := c.AddEventListener(hsCh, control.EventCodeHSDesc); aerr != nil {
 		log.Printf("halo: HSDesc subscribe failed: %v", aerr)
 		return hsCh, false
 	}
@@ -538,8 +549,11 @@ func listenForUploads(t *tor.Tor) (chan control.Event, bool) {
 func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionID string) {
 	if hsSubbed {
 		defer func() {
-			if t.Control != nil {
-				t.Control.RemoveEventListener(hsCh, control.EventCodeHSDesc)
+			evMu.Lock()
+			c := evConn
+			evMu.Unlock()
+			if c != nil {
+				c.RemoveEventListener(hsCh, control.EventCodeHSDesc)
 			}
 		}()
 	}
@@ -636,6 +650,8 @@ var (
 	reconnectStep    atomic.Value // string, where a running reconnect is
 	reconnectOutcome atomic.Value // string, how the last one ended
 	reconnectRunning int32
+	// when the running one began, unix nanos, 0 when none is
+	reconnectSince int64
 )
 
 func noteStep(s string) { reconnectStep.Store(s) }
@@ -675,7 +691,18 @@ func reconnectTor() string {
 		return "error: tor is asleep"
 	}
 	if !atomic.CompareAndSwapInt32(&torRestarting, 0, 1) {
-		return "error: one already running"
+		// one that has run for five minutes is not running, it is stuck,
+		// and "one already running" for ever is how the offline card's
+		// button did nothing on the redmi for twenty hours. take the flag
+		// over; the stuck one clears it again when and if it ever returns,
+		// which is harmless.
+		since := atomic.LoadInt64(&reconnectSince)
+		if since == 0 || time.Since(time.Unix(0, since)) < 5*time.Minute {
+			return "error: one already running"
+		}
+		log.Printf("halo: a reconnect has sat at %q for %s - abandoning it",
+			lastReconnectStep(), time.Since(time.Unix(0, since)).Round(time.Second))
+		noteOutcome("abandoned at " + lastReconnectStep())
 	}
 	defer atomic.StoreInt32(&torRestarting, 0)
 
@@ -715,9 +742,11 @@ func reconnectTor() string {
 	// does; a wedged control port comes back as an error rather than as a
 	// lock nobody will ever release.
 	started := time.Now()
+	atomic.StoreInt64(&reconnectSince, started.UnixNano())
 	atomic.StoreInt32(&reconnectRunning, 1)
 	r := reconnectOn(t, addr)
 	atomic.StoreInt32(&reconnectRunning, 0)
+	atomic.StoreInt64(&reconnectSince, 0)
 	noteOutcome(fmt.Sprintf("%s after %s", r, time.Since(started).Round(time.Millisecond)))
 	return r
 }
@@ -992,7 +1021,7 @@ func HaloSendTo(cAddr *C.char, cMsg *C.char) *C.char {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	dialer, err := t.Dialer(ctx, nil)
+	dialer, err := torDialer(ctx, t)
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: dialer: %v", err))
 	}

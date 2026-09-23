@@ -3,9 +3,16 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"net"
+	"strings"
+	"sync"
 	"sync/atomic"
+
+	"github.com/cretz/bine/control"
+	"github.com/cretz/bine/tor"
 )
 
 // bine starts tor with "--SocksPort auto", and tor picks a fresh ephemeral
@@ -56,4 +63,62 @@ func dropSocksPin(why string) {
 			"falling back to auto, the client resets have to carry it", p, why)
 	}
 	atomic.StoreInt32(&pinnedSocks, 0)
+}
+
+// where tor's socks listener is, for dialers. bine's Dialer asked tor over
+// the shared control connection every time, and re-enabled the network on
+// the way - the two things that wedged the redmi (see control_events.go).
+// the pin answers without asking tor at all. when tor chose the port itself
+// it is asked once, over the engine's own connection and under its
+// deadline, and remembered until the next client reset.
+var (
+	socksAddrMu     sync.Mutex
+	socksAddrCached string
+)
+
+func socksAddr(t *tor.Tor) (string, error) {
+	if p := socksPin(); p != 0 {
+		return fmt.Sprintf("127.0.0.1:%d", p), nil
+	}
+	socksAddrMu.Lock()
+	defer socksAddrMu.Unlock()
+	if socksAddrCached != "" {
+		return socksAddrCached, nil
+	}
+	var kv []*control.KeyVal
+	err := ctrlDo(t, "GETINFO net/listeners/socks", func(c *control.Conn) error {
+		var e error
+		kv, e = c.GetInfo("net/listeners/socks")
+		return e
+	})
+	if err != nil {
+		return "", err
+	}
+	if len(kv) == 0 || kv[0].Val == "" {
+		return "", fmt.Errorf("tor has no socks listener")
+	}
+	a := strings.Trim(strings.Fields(kv[0].Val)[0], "\"")
+	socksAddrCached = a
+	log.Printf("halo: socks listener at %s", a)
+	return a, nil
+}
+
+func dropSocksAddr() {
+	socksAddrMu.Lock()
+	socksAddrCached = ""
+	socksAddrMu.Unlock()
+}
+
+// a dialer through tor that never touches the control port and never
+// changes tor's configuration. it is built in microseconds.
+func torDialer(ctx context.Context, t *tor.Tor) (*tor.Dialer, error) {
+	a, err := socksAddr(t)
+	if err != nil {
+		return nil, err
+	}
+	return t.Dialer(ctx, &tor.DialConf{
+		SkipEnableNetwork: true,
+		ProxyNetwork:      "tcp",
+		ProxyAddress:      a,
+	})
 }

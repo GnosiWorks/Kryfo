@@ -36,6 +36,12 @@ bottom. each step exists because skipping it has bitten us once.
   files". HALO_FULL matters: go's cache does not see the hand-patched
   headers under engine/vendor (see engine/VENDOR_PATCHES.md), and a plain
   rebuild after touching them ships a 32-bit engine that never connects.
+- the tests that need a real tor pass: `cd engine && ./torconf-tests.sh`.
+  about half an hour, and it needs the network. each test runs in its own
+  process on purpose. `TestSleepWakeThenModeSwitch` is the one that found a
+  phone deaf for twenty hours after check-ins and back to always on: on a
+  failure it leaves a goroutine dump in `/tmp/halo-wedge-*.txt`, which is
+  the thing to keep.
 - the shipped manifest still says what you think. after any plugin change,
   build once and read `build/app/intermediates/merged_manifests/debug/processDebugManifest/AndroidManifest.xml`,
   not the source one: plugins merge permissions and components in silently.

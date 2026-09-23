@@ -160,6 +160,10 @@ type relayView struct {
 	CatchupDrop bool `json:"catchup_dropped"`
 	CatchupLong bool `json:"catchup_long"`
 	CatchupSeen bool `json:"catchup_seen"`
+	// what that catch-up covered, so a slow one can be read
+	ConnectMs     int `json:"connect_ms"`
+	CatchupPages  int `json:"catchup_pages"`
+	CatchupEvents int `json:"catchup_events"`
 }
 
 type transportView struct {
@@ -213,6 +217,7 @@ func transportSnapshot() transportView {
 	for _, u := range urls {
 		rv := relayView{URL: u, Fails: relayFails[u]}
 		rv.CatchupMs, rv.CatchupDrop, rv.CatchupLong, rv.CatchupSeen = catchupOf(u)
+		rv.ConnectMs, rv.CatchupPages, rv.CatchupEvents = catchupDetailOf(u)
 		if till, ok := relayCoolTill[u]; ok && now.Before(till) {
 			rv.Benched = true
 			rv.BenchFor = int(time.Until(till).Seconds())
