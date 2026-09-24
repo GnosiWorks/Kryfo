@@ -8161,12 +8161,6 @@ class AppState extends ChangeNotifier {
         preview: preview == null ? null : jsonEncode(preview),
         poll: poll?.toRow(),
       );
-      // a poll has no optimistic bubble on the screen: it shows now, not
-      // once every member has been tried
-      if (poll != null) {
-        _bumpChatRev('group:$groupId');
-        notifyListeners();
-      }
     }
     final members = await db.getGroupMembers(groupId);
     // if we are the group admin, ride the full roster on the message so any

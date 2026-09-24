@@ -1231,14 +1231,51 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   Future<void> _newPoll() async {
     final d = await showNewPollSheet(context);
     if (d == null || !mounted) return;
-    unawaited(
-      appState.sendToGroup(
+    final uid = newMsgUid();
+    final burnSeconds = _ghost ? _burnSeconds : null;
+    final poll = PollSpec(options: d.options, multi: d.multi);
+    // on screen at once, like a typed message, and settled by this send
+    // when it is done: a row that only the database said was sending kept
+    // the screen from reloading, votes and all
+    final optimistic =
+        _GMsg(
+            sender: appState.myId,
+            direction: 'out',
+            text: d.question,
+            when: DateTime.now(),
+            msgUid: uid,
+            sending: true,
+            burnSecs: burnSeconds,
+            burnAt: burnSeconds == null
+                ? null
+                : DateTime.now().millisecondsSinceEpoch + burnSeconds * 1000,
+          )
+          ..fresh = true
+          ..poll = poll;
+    setState(() {
+      _messages.add(optimistic);
+      _normaliseMessages();
+    });
+    _scrollToEnd();
+    var ok = false;
+    try {
+      ok = await appState.sendToGroup(
         widget.groupId,
         d.question,
-        poll: PollSpec(options: d.options, multi: d.multi),
-        burnSeconds: _ghost ? _burnSeconds : null,
-      ),
-    );
+        msgUid: uid,
+        poll: poll,
+        burnSeconds: burnSeconds,
+      );
+    } catch (e) {
+      dlog('group poll send failed: $e');
+    }
+    if (!mounted) return;
+    final live = _liveMsg(uid) ?? optimistic;
+    setState(() {
+      live.sending = false;
+      live.failed = !ok;
+    });
+    if (!_messages.any((x) => x.sending)) _tryAppendNew();
   }
 
   // a video from the gallery, same reasoning as the one-to-one chat

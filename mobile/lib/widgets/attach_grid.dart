@@ -117,40 +117,42 @@ class _Tile extends StatelessWidget {
         Navigator.of(context).pop();
         item.onTap();
       },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Column(
-          children: [
-            Container(
-              width: 58,
-              height: 58,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: item.tint.withValues(alpha: 0.14),
-                border: Border.all(
-                  color: item.tint.withValues(alpha: 0.35),
-                  width: 0.8,
+      child: ExcludeSemantics(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            children: [
+              Container(
+                width: 58,
+                height: 58,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: item.tint.withValues(alpha: 0.14),
+                  border: Border.all(
+                    color: item.tint.withValues(alpha: 0.35),
+                    width: 0.8,
+                  ),
+                ),
+                child: IconTheme(
+                  data: IconThemeData(color: item.tint, size: 25),
+                  child: SizedBox(
+                    width: 25,
+                    height: 25,
+                    child: item.icon(item.tint),
+                  ),
                 ),
               ),
-              child: IconTheme(
-                data: IconThemeData(color: item.tint, size: 25),
-                child: SizedBox(
-                  width: 25,
-                  height: 25,
-                  child: item.icon(item.tint),
-                ),
+              const SizedBox(height: 8),
+              Text(
+                item.label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: HaloType.sans(size: 12.5, color: HaloColors.text2),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              item.label,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: HaloType.sans(size: 12.5, color: HaloColors.text2),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

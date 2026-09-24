@@ -18,7 +18,7 @@ import 'press_scale.dart';
 import 'sheet_handle.dart';
 import 'stroke_icon.dart';
 
-const pollGlyph = ['M5 20v-8', 'M12 20V5', 'M19 20v-5', 'M3 20h18'];
+const pollGlyph = ['M6 19v-6', 'M12 19V5', 'M18 19v-9'];
 
 class PollCard extends StatefulWidget {
   final String question;
@@ -151,7 +151,9 @@ class _PollCardState extends State<PollCard> {
     final t = _tally;
     final mine = _sent ?? t.mine;
     final closed = widget.poll.closed;
-    final results = closed || mine.isNotEmpty || widget.mine;
+    // the creator sees the count once there is one; with none yet it can
+    // vote like everyone else
+    final results = closed || mine.isNotEmpty || (widget.mine && t.voters > 0);
     final still = MediaQuery.of(context).disableAnimations;
     final w = MediaQuery.of(context).size.width;
     final width = (w * 0.78).clamp(220.0, 320.0);
@@ -316,7 +318,7 @@ class _PollCardState extends State<PollCard> {
           const SizedBox(height: 8),
           Row(
             children: [
-              Flexible(
+              Expanded(
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: voters > 0 ? _showVoters : null,
@@ -408,6 +410,7 @@ class _Link extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Text(
           text,
+          semanticsLabel: '',
           style: HaloType.sans(
             size: 12,
             weight: strong ? FontWeight.w600 : FontWeight.w400,

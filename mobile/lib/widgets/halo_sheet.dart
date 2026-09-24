@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // one way to open a sheet. same surface, same corner, same dim behind it and
 // the same rise, so a sheet from the chat feels like a sheet from home.
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
@@ -32,7 +34,17 @@ Future<T?> showHaloSheet<T>(
                 context: ctx,
                 removeBottom: true,
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: mq.size.height * 0.9),
+                  // with the keyboard up the sheet still stops below the
+                  // status bar, and its content scrolls
+                  constraints: BoxConstraints(
+                    maxHeight: math.min(
+                      mq.size.height * 0.9,
+                      mq.size.height -
+                          mq.viewInsets.bottom -
+                          mq.padding.top -
+                          12,
+                    ),
+                  ),
                   child: SingleChildScrollView(child: builder(ctx)),
                 ),
               ),
