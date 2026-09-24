@@ -10880,6 +10880,336 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Video'**
   String get videoBubbleVideo;
+
+  /// notifications.dart
+  ///
+  /// In en, this message translates to:
+  /// **'messages'**
+  String get notificationsChannelName;
+
+  /// screens/camera_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'close'**
+  String get cameraClose;
+
+  /// screens/camera_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'flash'**
+  String get cameraFlash;
+
+  /// screens/camera_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'photo'**
+  String get cameraPhoto;
+
+  /// screens/camera_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'video'**
+  String get cameraVideo;
+
+  /// screens/camera_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'retake'**
+  String get cameraRetake;
+
+  /// screens/seen_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'introductions'**
+  String get seenIntroductions;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'address'**
+  String get donateAddress;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'copy'**
+  String get donateCopy;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'done'**
+  String get donateDone;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'supporter'**
+  String get donateTierSupporter;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'patron'**
+  String get donateTierPatron;
+
+  /// screens/donate_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'guardian'**
+  String get donateTierGuardian;
+
+  /// screens/chat_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'block'**
+  String get chatBlock;
+
+  /// screens/chat_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'decline'**
+  String get chatDecline;
+
+  /// screens/chat_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'accept'**
+  String get chatAccept;
+
+  /// screens/bridges_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'connecting'**
+  String get bridgesConnecting;
+
+  /// screens/restore_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'made'**
+  String get restoreMade;
+
+  /// screens/restore_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'contacts'**
+  String get restoreContacts;
+
+  /// screens/restore_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'messages'**
+  String get restoreMessages;
+
+  /// screens/restore_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'attachments'**
+  String get restoreAttachments;
+
+  /// screens/shield_sheet.dart
+  ///
+  /// In en, this message translates to:
+  /// **'block'**
+  String get shieldBlock;
+
+  /// screens/shield_sheet.dart
+  ///
+  /// In en, this message translates to:
+  /// **'delete'**
+  String get shieldDelete;
+
+  /// screens/shield_sheet.dart
+  ///
+  /// In en, this message translates to:
+  /// **'ignore'**
+  String get shieldIgnore;
+
+  /// screens/profile_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'identity'**
+  String get profileIdentity;
+
+  /// screens/avatar_picker_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'shape'**
+  String get avatarPickerShape;
+
+  /// screens/avatar_picker_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'colour'**
+  String get avatarPickerColour;
+
+  /// screens/avatar_picker_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'turn'**
+  String get avatarPickerTurn;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'status'**
+  String get transportStatus;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'bootstrap'**
+  String get transportBootstrap;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'network'**
+  String get transportNetwork;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'connectivity'**
+  String get transportConnectivity;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'relays'**
+  String get transportRelays;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'traffic'**
+  String get transportTraffic;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'contacts'**
+  String get transportContacts;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'known'**
+  String get transportKnown;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'listening'**
+  String get transportListening;
+
+  /// screens/transport_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'memory'**
+  String get transportMemory;
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'connected'**
+  String get settingsConnected;
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'screenshots'**
+  String get settingsScreenshots;
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'blocked'**
+  String get settingsBlocked2;
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'allowed'**
+  String get settingsAllowed;
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'on'**
+  String get settingsOn;
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'off'**
+  String get settingsOff;
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'notifications'**
+  String get settingsNotifications;
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'privacy'**
+  String get settingsPrivacy;
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'security'**
+  String get settingsSecurity;
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'backup'**
+  String get settingsBackup;
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'voice'**
+  String get settingsVoice;
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'about'**
+  String get settingsAbout;
+
+  /// screens/wallpaper_sheet.dart
+  ///
+  /// In en, this message translates to:
+  /// **'gradients'**
+  String get wallpaperGradients;
+
+  /// screens/wallpaper_sheet.dart
+  ///
+  /// In en, this message translates to:
+  /// **'patterns'**
+  String get wallpaperPatterns;
+
+  /// widgets/confirm_sheet.dart
+  ///
+  /// In en, this message translates to:
+  /// **'keep'**
+  String get confirmSheetKeep;
+
+  /// widgets/confirm_sheet.dart
+  ///
+  /// In en, this message translates to:
+  /// **'save'**
+  String get confirmSheetSave;
+
+  /// widgets/confirm_sheet.dart
+  ///
+  /// In en, this message translates to:
+  /// **'cancel'**
+  String get confirmSheetCancel;
 }
 
 class _AppLocalizationsDelegate

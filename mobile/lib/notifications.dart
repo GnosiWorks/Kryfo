@@ -31,7 +31,7 @@ Future<void> initNotifications({void Function(String? payload)? onTap}) async {
   await android?.deleteNotificationChannel(channelId: 'halo_messages');
   final channel = AndroidNotificationChannel(
     'halo_messages_v2',
-    'messages',
+    l10n.notificationsChannelName,
     description: l10n.notificationsNewEncryptedMessagesFrom,
     importance: Importance.max,
     playSound: true,
@@ -88,7 +88,7 @@ Future<void> showMessageNotification({
   }
   final details = AndroidNotificationDetails(
     'halo_messages_v2',
-    'messages',
+    l10n.notificationsChannelName,
     channelDescription: l10n.notificationsNewEncryptedMessagesFromYourContacts,
     importance: Importance.max,
     priority: Priority.high,

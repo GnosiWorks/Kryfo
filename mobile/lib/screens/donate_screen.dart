@@ -232,17 +232,17 @@ class _DonateScreenState extends State<DonateScreen> {
   Widget _tiers() {
     return Row(
       children: [
-        _tierCard(20, 'supporter', '\u25CF', const [
+        _tierCard(20, l10n.donateTierSupporter, '\u25CF', const [
           Color(0xFF60A5FA),
           Color(0xFF2563EB),
         ], const Color(0xFF0C1F3F)),
         const SizedBox(width: 8),
-        _tierCard(50, 'patron', '\u25C6', const [
+        _tierCard(50, l10n.donateTierPatron, '\u25C6', const [
           Color(0xFFA78BFA),
           Color(0xFF6D28D9),
         ], const Color(0xFF1E1B4B)),
         const SizedBox(width: 8),
-        _tierCard(100, 'guardian', '\u2726', const [
+        _tierCard(100, l10n.donateTierGuardian, '\u2726', const [
           Color(0xFFF59E0B),
           Color(0xFFD97706),
         ], HaloColors.onAmber),
@@ -953,7 +953,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           const SizedBox(height: 16),
           Center(child: _QrCard(data: inv.uri, size: 190)),
           const SizedBox(height: 16),
-          _copyRow('address', inv.address),
+          _copyRow(l10n.donateAddress, inv.address),
           const SizedBox(height: 14),
           _watchingPill(),
           const SizedBox(height: 14),
@@ -968,7 +968,9 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
                 }),
               ),
               const SizedBox(width: 10),
-              Expanded(child: _ghostButton('copy', () => _copy(inv.address))),
+              Expanded(
+                child: _ghostButton(l10n.donateCopy, () => _copy(inv.address)),
+              ),
             ],
           ),
           const SizedBox(height: 18),
@@ -1261,7 +1263,7 @@ class _ConfirmedViewState extends State<_ConfirmedView>
               opacity: _showBadge ? 1 : 0,
               duration: const Duration(milliseconds: 280),
               child: t == SupporterTier.none
-                  ? _fill('done', () => _choose(false))
+                  ? _fill(l10n.donateDone, () => _choose(false))
                   : Column(
                       children: [
                         _fill(l10n.donateWearMyBadge, () => _choose(true)),

@@ -203,7 +203,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
               const SizedBox(height: 24),
 
-              _reveal(1, const _Section('identity')),
+              _reveal(1, _Section(l10n.profileIdentity)),
               _reveal(
                 1,
                 Container(

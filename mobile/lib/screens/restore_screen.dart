@@ -647,11 +647,14 @@ class _SummaryCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          _line('made', date),
-          _line('contacts', '${summary.contacts}'),
-          _line('messages', '${summary.messages}'),
+          _line(l10n.restoreMade, date),
+          _line(l10n.restoreContacts, '${summary.contacts}'),
+          _line(l10n.restoreMessages, '${summary.messages}'),
           if (summary.files > 0)
-            _line('attachments', '${summary.files} · ${_mb(summary.bytes)}'),
+            _line(
+              l10n.restoreAttachments,
+              '${summary.files} · ${_mb(summary.bytes)}',
+            ),
           const SizedBox(height: 8),
           Text(
             l10n.restoreMessagesSentOrReceived,

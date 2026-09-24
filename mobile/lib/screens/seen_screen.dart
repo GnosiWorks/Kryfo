@@ -115,7 +115,7 @@ final _rows = [
     _never,
     _never,
   ], l10n.seenKryfoDoesNotScan),
-  _Row('introductions', [
+  _Row(l10n.seenIntroductions, [
     _Cell(l10n.seenIntroducer, _Tone.good),
     _Cell(l10n.seenIntroducer, _Tone.good),
     _Cell(l10n.seenIntroducer, _Tone.good),

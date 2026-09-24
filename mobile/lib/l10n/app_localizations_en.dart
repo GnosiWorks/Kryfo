@@ -6194,4 +6194,169 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoBubbleVideo => 'Video';
+
+  @override
+  String get notificationsChannelName => 'messages';
+
+  @override
+  String get cameraClose => 'close';
+
+  @override
+  String get cameraFlash => 'flash';
+
+  @override
+  String get cameraPhoto => 'photo';
+
+  @override
+  String get cameraVideo => 'video';
+
+  @override
+  String get cameraRetake => 'retake';
+
+  @override
+  String get seenIntroductions => 'introductions';
+
+  @override
+  String get donateAddress => 'address';
+
+  @override
+  String get donateCopy => 'copy';
+
+  @override
+  String get donateDone => 'done';
+
+  @override
+  String get donateTierSupporter => 'supporter';
+
+  @override
+  String get donateTierPatron => 'patron';
+
+  @override
+  String get donateTierGuardian => 'guardian';
+
+  @override
+  String get chatBlock => 'block';
+
+  @override
+  String get chatDecline => 'decline';
+
+  @override
+  String get chatAccept => 'accept';
+
+  @override
+  String get bridgesConnecting => 'connecting';
+
+  @override
+  String get restoreMade => 'made';
+
+  @override
+  String get restoreContacts => 'contacts';
+
+  @override
+  String get restoreMessages => 'messages';
+
+  @override
+  String get restoreAttachments => 'attachments';
+
+  @override
+  String get shieldBlock => 'block';
+
+  @override
+  String get shieldDelete => 'delete';
+
+  @override
+  String get shieldIgnore => 'ignore';
+
+  @override
+  String get profileIdentity => 'identity';
+
+  @override
+  String get avatarPickerShape => 'shape';
+
+  @override
+  String get avatarPickerColour => 'colour';
+
+  @override
+  String get avatarPickerTurn => 'turn';
+
+  @override
+  String get transportStatus => 'status';
+
+  @override
+  String get transportBootstrap => 'bootstrap';
+
+  @override
+  String get transportNetwork => 'network';
+
+  @override
+  String get transportConnectivity => 'connectivity';
+
+  @override
+  String get transportRelays => 'relays';
+
+  @override
+  String get transportTraffic => 'traffic';
+
+  @override
+  String get transportContacts => 'contacts';
+
+  @override
+  String get transportKnown => 'known';
+
+  @override
+  String get transportListening => 'listening';
+
+  @override
+  String get transportMemory => 'memory';
+
+  @override
+  String get settingsConnected => 'connected';
+
+  @override
+  String get settingsScreenshots => 'screenshots';
+
+  @override
+  String get settingsBlocked2 => 'blocked';
+
+  @override
+  String get settingsAllowed => 'allowed';
+
+  @override
+  String get settingsOn => 'on';
+
+  @override
+  String get settingsOff => 'off';
+
+  @override
+  String get settingsNotifications => 'notifications';
+
+  @override
+  String get settingsPrivacy => 'privacy';
+
+  @override
+  String get settingsSecurity => 'security';
+
+  @override
+  String get settingsBackup => 'backup';
+
+  @override
+  String get settingsVoice => 'voice';
+
+  @override
+  String get settingsAbout => 'about';
+
+  @override
+  String get wallpaperGradients => 'gradients';
+
+  @override
+  String get wallpaperPatterns => 'patterns';
+
+  @override
+  String get confirmSheetKeep => 'keep';
+
+  @override
+  String get confirmSheetSave => 'save';
+
+  @override
+  String get confirmSheetCancel => 'cancel';
 }

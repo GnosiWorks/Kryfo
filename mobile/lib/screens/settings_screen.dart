@@ -168,7 +168,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _postureLine(
                       l10n.settingsTorRouting,
                       onTor && tor,
-                      'connected',
+                      l10n.settingsConnected,
                       onTor
                           ? l10n.settingsConnecting
                           : l10n.settingsOffMode(
@@ -176,16 +176,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                     ),
                     _postureLine(
-                      'screenshots',
+                      l10n.settingsScreenshots,
                       appState.blockScreenshotsApplied,
-                      'blocked',
-                      'allowed',
+                      l10n.settingsBlocked2,
+                      l10n.settingsAllowed,
                     ),
                     _postureLine(
                       l10n.settingsAppLock,
                       lockState.enabled,
-                      'on',
-                      'off',
+                      l10n.settingsOn,
+                      l10n.settingsOff,
                     ),
                     // only when android is blocking them: a line that says
                     // so outlives the home banner, which can be dismissed
@@ -193,7 +193,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       future: notificationsEnabled(),
                       builder: (_, snap) => snap.data == false
                           ? _postureLine(
-                              'notifications',
+                              l10n.settingsNotifications,
                               false,
                               '',
                               l10n.settingsBlockedByAndroid,
@@ -206,7 +206,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
 
-          HaloSection('privacy'),
+          HaloSection(l10n.settingsPrivacy),
           HaloGroup(
             children: [
               HaloRow(
@@ -307,7 +307,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 24),
 
-          HaloSection('security'),
+          HaloSection(l10n.settingsSecurity),
           HaloGroup(
             children: [
               // one switch for the whole app, applied at the next start.
@@ -362,7 +362,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 24),
 
-          HaloSection('backup'),
+          HaloSection(l10n.settingsBackup),
           HaloGroup(
             children: [
               HaloRow(
@@ -384,7 +384,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 24),
 
-          HaloSection('voice'),
+          HaloSection(l10n.settingsVoice),
           HaloGroup(
             children: [
               HaloRow(
@@ -401,7 +401,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 24),
 
-          HaloSection('about'),
+          HaloSection(l10n.settingsAbout),
           HaloGroup(
             children: [
               HaloRow(

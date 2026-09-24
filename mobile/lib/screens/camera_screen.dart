@@ -427,7 +427,11 @@ class _CameraScreenState extends State<CameraScreen>
           right: 8,
           child: Row(
             children: [
-              _round(Icons.close, 'close', () => Navigator.of(context).pop()),
+              _round(
+                Icons.close,
+                l10n.cameraClose,
+                () => Navigator.of(context).pop(),
+              ),
               const Spacer(),
               if (_recording)
                 Container(
@@ -450,7 +454,7 @@ class _CameraScreenState extends State<CameraScreen>
                   ),
                 ),
               const Spacer(),
-              _round(_flashIcon(), 'flash', _cycleFlash),
+              _round(_flashIcon(), l10n.cameraFlash, _cycleFlash),
               const SizedBox(width: 8),
               _round(
                 Icons.cameraswitch_outlined,
@@ -530,9 +534,13 @@ class _CameraScreenState extends State<CameraScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _modeTab('photo', !_video, () => setState(() => _video = false)),
+            _modeTab(
+              l10n.cameraPhoto,
+              !_video,
+              () => setState(() => _video = false),
+            ),
             const SizedBox(width: 18),
-            _modeTab('video', _video, _toVideo),
+            _modeTab(l10n.cameraVideo, _video, _toVideo),
           ],
         ),
         const SizedBox(height: 16),
@@ -608,7 +616,7 @@ class _CameraScreenState extends State<CameraScreen>
         children: [
           Row(
             children: [
-              Expanded(child: _ghost('retake', _retake)),
+              Expanded(child: _ghost(l10n.cameraRetake, _retake)),
               const SizedBox(width: 10),
               Expanded(child: _ghost(l10n.cameraKeepACopy, _keepCopy)),
             ],

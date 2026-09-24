@@ -58,9 +58,9 @@ class TransportScreen extends StatelessWidget {
               const SizedBox(height: 24),
 
               _Head('tor'),
-              _Line('status', _torWord(tor), _torTint(tor)),
+              _Line(l10n.transportStatus, _torWord(tor), _torTint(tor)),
               if (tor == TorStatus.starting)
-                _Line('bootstrap', '$pct%', HaloColors.amber),
+                _Line(l10n.transportBootstrap, '$pct%', HaloColors.amber),
               _Line(
                 l10n.transportCanSend,
                 appState.torReady ? l10n.commonYes : l10n.transportNotYet,
@@ -68,9 +68,9 @@ class TransportScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 20),
-              _Head('network'),
+              _Head(l10n.transportNetwork),
               _Line(
-                'connectivity',
+                l10n.transportConnectivity,
                 appState.online ? l10n.transportOnline : l10n.transportOffline,
                 appState.online ? HaloColors.green : HaloColors.rose,
               ),
@@ -94,7 +94,7 @@ class TransportScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              _Head('relays'),
+              _Head(l10n.transportRelays),
 
               for (final r in relays)
                 _Line(
@@ -115,7 +115,7 @@ class TransportScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              _Head('traffic'),
+              _Head(l10n.transportTraffic),
 
               _Line(
                 l10n.transportRelaySubscriptions,
@@ -138,11 +138,11 @@ class TransportScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 20),
-              _Head('contacts'),
+              _Head(l10n.transportContacts),
               // zero contacts means zero relay subscriptions, which means
               // nothing can arrive. that was the whole aug 4 mystery.
               _Line(
-                'known',
+                l10n.transportKnown,
                 '$contacts',
                 contacts == 0 ? HaloColors.rose : HaloColors.text2,
               ),
@@ -345,7 +345,7 @@ class _AliveState extends State<_Alive> {
     return Column(
       children: [
         _Line(
-          'listening',
+          l10n.transportListening,
           listening
               ? l10n.transportYesCheckedJustNow
               : l10n.transportNoLast(_ago(listen)),
@@ -387,7 +387,7 @@ class _AliveState extends State<_Alive> {
             (exit['reason'] as int?) == 2 ? HaloColors.rose : HaloColors.text2,
           ),
         _Line(
-          'memory',
+          l10n.transportMemory,
           l10n.transportEngine(_mb(rss), _mb(_mem['heapAlloc'] as num?)),
           HaloColors.text,
         ),

@@ -8551,5 +8551,225 @@
   "videoBubbleVideo": "Video",
   "@videoBubbleVideo": {
     "description": "widgets/video_bubble.dart"
+  },
+  "notificationsChannelName": "messages",
+  "@notificationsChannelName": {
+    "description": "notifications.dart"
+  },
+  "cameraClose": "close",
+  "@cameraClose": {
+    "description": "screens/camera_screen.dart"
+  },
+  "cameraFlash": "flash",
+  "@cameraFlash": {
+    "description": "screens/camera_screen.dart"
+  },
+  "cameraPhoto": "photo",
+  "@cameraPhoto": {
+    "description": "screens/camera_screen.dart"
+  },
+  "cameraVideo": "video",
+  "@cameraVideo": {
+    "description": "screens/camera_screen.dart"
+  },
+  "cameraRetake": "retake",
+  "@cameraRetake": {
+    "description": "screens/camera_screen.dart"
+  },
+  "seenIntroductions": "introductions",
+  "@seenIntroductions": {
+    "description": "screens/seen_screen.dart"
+  },
+  "donateAddress": "address",
+  "@donateAddress": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateCopy": "copy",
+  "@donateCopy": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateDone": "done",
+  "@donateDone": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateTierSupporter": "supporter",
+  "@donateTierSupporter": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateTierPatron": "patron",
+  "@donateTierPatron": {
+    "description": "screens/donate_screen.dart"
+  },
+  "donateTierGuardian": "guardian",
+  "@donateTierGuardian": {
+    "description": "screens/donate_screen.dart"
+  },
+  "chatBlock": "block",
+  "@chatBlock": {
+    "description": "screens/chat_screen.dart"
+  },
+  "chatDecline": "decline",
+  "@chatDecline": {
+    "description": "screens/chat_screen.dart"
+  },
+  "chatAccept": "accept",
+  "@chatAccept": {
+    "description": "screens/chat_screen.dart"
+  },
+  "bridgesConnecting": "connecting",
+  "@bridgesConnecting": {
+    "description": "screens/bridges_screen.dart"
+  },
+  "restoreMade": "made",
+  "@restoreMade": {
+    "description": "screens/restore_screen.dart"
+  },
+  "restoreContacts": "contacts",
+  "@restoreContacts": {
+    "description": "screens/restore_screen.dart"
+  },
+  "restoreMessages": "messages",
+  "@restoreMessages": {
+    "description": "screens/restore_screen.dart"
+  },
+  "restoreAttachments": "attachments",
+  "@restoreAttachments": {
+    "description": "screens/restore_screen.dart"
+  },
+  "shieldBlock": "block",
+  "@shieldBlock": {
+    "description": "screens/shield_sheet.dart"
+  },
+  "shieldDelete": "delete",
+  "@shieldDelete": {
+    "description": "screens/shield_sheet.dart"
+  },
+  "shieldIgnore": "ignore",
+  "@shieldIgnore": {
+    "description": "screens/shield_sheet.dart"
+  },
+  "profileIdentity": "identity",
+  "@profileIdentity": {
+    "description": "screens/profile_screen.dart"
+  },
+  "avatarPickerShape": "shape",
+  "@avatarPickerShape": {
+    "description": "screens/avatar_picker_screen.dart"
+  },
+  "avatarPickerColour": "colour",
+  "@avatarPickerColour": {
+    "description": "screens/avatar_picker_screen.dart"
+  },
+  "avatarPickerTurn": "turn",
+  "@avatarPickerTurn": {
+    "description": "screens/avatar_picker_screen.dart"
+  },
+  "transportStatus": "status",
+  "@transportStatus": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportBootstrap": "bootstrap",
+  "@transportBootstrap": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportNetwork": "network",
+  "@transportNetwork": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportConnectivity": "connectivity",
+  "@transportConnectivity": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportRelays": "relays",
+  "@transportRelays": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportTraffic": "traffic",
+  "@transportTraffic": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportContacts": "contacts",
+  "@transportContacts": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportKnown": "known",
+  "@transportKnown": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportListening": "listening",
+  "@transportListening": {
+    "description": "screens/transport_screen.dart"
+  },
+  "transportMemory": "memory",
+  "@transportMemory": {
+    "description": "screens/transport_screen.dart"
+  },
+  "settingsConnected": "connected",
+  "@settingsConnected": {
+    "description": "screens/settings_screen.dart"
+  },
+  "settingsScreenshots": "screenshots",
+  "@settingsScreenshots": {
+    "description": "screens/settings_screen.dart"
+  },
+  "settingsBlocked2": "blocked",
+  "@settingsBlocked2": {
+    "description": "screens/settings_screen.dart"
+  },
+  "settingsAllowed": "allowed",
+  "@settingsAllowed": {
+    "description": "screens/settings_screen.dart"
+  },
+  "settingsOn": "on",
+  "@settingsOn": {
+    "description": "screens/settings_screen.dart"
+  },
+  "settingsOff": "off",
+  "@settingsOff": {
+    "description": "screens/settings_screen.dart"
+  },
+  "settingsNotifications": "notifications",
+  "@settingsNotifications": {
+    "description": "screens/settings_screen.dart"
+  },
+  "settingsPrivacy": "privacy",
+  "@settingsPrivacy": {
+    "description": "screens/settings_screen.dart"
+  },
+  "settingsSecurity": "security",
+  "@settingsSecurity": {
+    "description": "screens/settings_screen.dart"
+  },
+  "settingsBackup": "backup",
+  "@settingsBackup": {
+    "description": "screens/settings_screen.dart"
+  },
+  "settingsVoice": "voice",
+  "@settingsVoice": {
+    "description": "screens/settings_screen.dart"
+  },
+  "settingsAbout": "about",
+  "@settingsAbout": {
+    "description": "screens/settings_screen.dart"
+  },
+  "wallpaperGradients": "gradients",
+  "@wallpaperGradients": {
+    "description": "screens/wallpaper_sheet.dart"
+  },
+  "wallpaperPatterns": "patterns",
+  "@wallpaperPatterns": {
+    "description": "screens/wallpaper_sheet.dart"
+  },
+  "confirmSheetKeep": "keep",
+  "@confirmSheetKeep": {
+    "description": "widgets/confirm_sheet.dart"
+  },
+  "confirmSheetSave": "save",
+  "@confirmSheetSave": {
+    "description": "widgets/confirm_sheet.dart"
+  },
+  "confirmSheetCancel": "cancel",
+  "@confirmSheetCancel": {
+    "description": "widgets/confirm_sheet.dart"
   }
 }

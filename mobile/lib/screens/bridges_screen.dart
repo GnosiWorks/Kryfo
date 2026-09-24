@@ -552,7 +552,7 @@ class _BridgeCard extends StatelessWidget {
                     : reconnecting
                     ? Text(
                         key: const ValueKey('re'),
-                        'connecting',
+                        l10n.bridgesConnecting,
                         style: HaloType.mono(
                           size: 10,
                           color: HaloColors.violet,

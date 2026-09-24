@@ -5052,10 +5052,15 @@ class _AcceptRequestBar extends StatelessWidget {
           const SizedBox(height: 11),
           Row(
             children: [
-              _reqBtn('block', HaloColors.rose, HaloColors.surface2, onBlock),
+              _reqBtn(
+                l10n.chatBlock,
+                HaloColors.rose,
+                HaloColors.surface2,
+                onBlock,
+              ),
               const SizedBox(width: 8),
               _reqBtn(
-                'decline',
+                l10n.chatDecline,
                 HaloColors.text,
                 HaloColors.surface2,
                 onDecline,
@@ -5063,7 +5068,7 @@ class _AcceptRequestBar extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _reqBtn(
-                  'accept',
+                  l10n.chatAccept,
                   HaloColors.onAmber,
                   HaloColors.amber,
                   onAccept,

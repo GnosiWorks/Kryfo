@@ -85,7 +85,7 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
         ),
         const SizedBox(height: 26),
 
-        _Label('shape'),
+        _Label(l10n.avatarPickerShape),
         const SizedBox(height: 10),
         Wrap(
           spacing: 12,
@@ -110,7 +110,7 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
         ),
 
         const SizedBox(height: 26),
-        _Label('colour'),
+        _Label(l10n.avatarPickerColour),
         const SizedBox(height: 10),
         Wrap(
           spacing: 12,
@@ -134,7 +134,7 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
 
         if (_shape != null) ...[
           const SizedBox(height: 26),
-          _Label('turn'),
+          _Label(l10n.avatarPickerTurn),
           const SizedBox(height: 10),
           Row(
             children: [

@@ -8,6 +8,7 @@ import '../copy.dart';
 import '../theme.dart';
 import 'halo_sheet.dart';
 import 'sheet_handle.dart';
+import '../l10n/l10n.dart';
 
 Widget _frame(BuildContext ctx, List<Widget> children) => Padding(
   padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
@@ -88,7 +89,7 @@ Future<bool> showConfirmSheet(
   required String title,
   required String line,
   required String yes,
-  String keep = 'keep',
+  String? keep,
   bool rose = true,
 }) async {
   final r = await showHaloSheet<bool>(
@@ -100,7 +101,7 @@ Future<bool> showConfirmSheet(
       const SizedBox(height: 16),
       _primary(yes, () => Navigator.pop(ctx, true), rose: rose),
       const SizedBox(height: 6),
-      _quiet(keep, () => Navigator.pop(ctx, false)),
+      _quiet(keep ?? l10n.confirmSheetKeep, () => Navigator.pop(ctx, false)),
     ]),
   );
   return r == true;
@@ -113,7 +114,7 @@ Future<String?> showInputSheet(
   String? line,
   String? initial,
   String? hint,
-  String save = 'save',
+  String? save,
   bool mono = false,
   bool rose = false,
   int maxLength = 60,
@@ -152,9 +153,13 @@ Future<String?> showInputSheet(
         ),
       ),
       const SizedBox(height: 12),
-      _primary(save, () => Navigator.pop(ctx, ctrl.text), rose: rose),
+      _primary(
+        save ?? l10n.confirmSheetSave,
+        () => Navigator.pop(ctx, ctrl.text),
+        rose: rose,
+      ),
       const SizedBox(height: 6),
-      _quiet('cancel', () => Navigator.pop(ctx)),
+      _quiet(l10n.confirmSheetCancel, () => Navigator.pop(ctx)),
     ]),
   ).whenComplete(ctrl.dispose);
 }

@@ -93,7 +93,7 @@ class _PickerState extends State<_Picker> {
                 from: 0,
               ),
               const SizedBox(height: 16),
-              _Head('gradients'),
+              _Head(l10n.wallpaperGradients),
               const SizedBox(height: 10),
               _Swatches(
                 items: gradients,
@@ -102,7 +102,7 @@ class _PickerState extends State<_Picker> {
                 from: 7,
               ),
               const SizedBox(height: 16),
-              _Head('patterns'),
+              _Head(l10n.wallpaperPatterns),
               const SizedBox(height: 10),
               _Swatches(
                 items: patterns,

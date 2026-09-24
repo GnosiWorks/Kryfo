@@ -97,14 +97,14 @@ class _ShieldSheet extends StatelessWidget {
             Row(
               children: [
                 _Btn(
-                  'block',
+                  l10n.shieldBlock,
                   HaloColors.rose,
                   onTap: () => Navigator.pop(context, ShieldChoice.block),
                 ),
                 if (!group) ...[
                   const SizedBox(width: 8),
                   _Btn(
-                    'delete',
+                    l10n.shieldDelete,
                     HaloColors.text,
                     onTap: () => Navigator.pop(context, ShieldChoice.delete),
                   ),
@@ -112,7 +112,7 @@ class _ShieldSheet extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: _Btn(
-                    'ignore',
+                    l10n.shieldIgnore,
                     HaloColors.text,
                     fill: true,
                     onTap: () => Navigator.pop(context, ShieldChoice.ignore),
