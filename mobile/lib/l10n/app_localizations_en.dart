@@ -2036,8 +2036,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get donateText2 => 'Ξ';
 
   @override
-  String donateYourEarlierBitcoinPayment(Object tierName) {
-    return 'Your earlier bitcoin payment was seen · $tierName badge unlocked';
+  String donateYourEarlierBitcoinPayment(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Your earlier bitcoin payment was seen · supporter badge unlocked',
+      'patron': 'Your earlier bitcoin payment was seen · patron badge unlocked',
+      'guardian':
+          'Your earlier bitcoin payment was seen · guardian badge unlocked',
+      'other':
+          'Your earlier bitcoin payment was seen · supporter badge unlocked',
+    });
+    return '$_temp0';
   }
 
   @override
@@ -2156,8 +2165,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Thank you for keeping kryfo independent.';
 
   @override
-  String donateVerifiedOnChainYou(Object tierName) {
-    return 'verified on-chain - you\'re a $tierName now. No one can take that off you.';
+  String donateVerifiedOnChainYou(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'verified on-chain - you\'re a supporter now. No one can take that off you.',
+      'patron':
+          'verified on-chain - you\'re a patron now. No one can take that off you.',
+      'guardian':
+          'verified on-chain - you\'re a guardian now. No one can take that off you.',
+      'other':
+          'verified on-chain - you\'re a supporter now. No one can take that off you.',
+    });
+    return '$_temp0';
   }
 
   @override
@@ -4005,8 +4024,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileSupporterBadge => 'Supporter badge';
 
   @override
-  String profileYouAreAThank(Object tierName) {
-    return 'You are a $tierName. thank you.';
+  String profileYouAreAThank(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'You are a supporter. thank you.',
+      'patron': 'You are a patron. thank you.',
+      'guardian': 'You are a guardian. thank you.',
+      'other': 'You are a supporter. thank you.',
+    });
+    return '$_temp0';
   }
 
   @override

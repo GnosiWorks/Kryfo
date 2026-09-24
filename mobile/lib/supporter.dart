@@ -5,6 +5,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'badge_client.dart' show fetchReceipt, ReceiptState;
+import 'l10n/l10n.dart';
 
 enum SupporterTier { none, supporter, patron, guardian }
 
@@ -41,7 +42,8 @@ String tierGlyph(SupporterTier t) {
   }
 }
 
-String tierName(SupporterTier t) {
+// the tier as the badge service and the prefs know it. never shown.
+String tierKey(SupporterTier t) {
   switch (t) {
     case SupporterTier.supporter:
       return 'supporter';
@@ -53,6 +55,14 @@ String tierName(SupporterTier t) {
       return '';
   }
 }
+
+// the tier as a person reads it
+String tierLabel(SupporterTier t) => switch (t) {
+  SupporterTier.supporter => l10n.donateTierSupporter,
+  SupporterTier.patron => l10n.donateTierPatron,
+  SupporterTier.guardian => l10n.donateTierGuardian,
+  SupporterTier.none => '',
+};
 
 Future<SupporterTier> loadSupporterTier() async {
   final prefs = await SharedPreferences.getInstance();

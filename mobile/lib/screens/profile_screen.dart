@@ -292,7 +292,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
-                                l10n.profileYouAreAThank(tierName(_tier)),
+                                l10n.profileYouAreAThank(tierKey(_tier)),
                                 style: HaloType.sans(
                                   size: 13,
                                   color: HaloColors.text2,
@@ -486,7 +486,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
           const SizedBox(width: 4),
           Text(
-            tierName(t),
+            tierLabel(t),
             style: HaloType.mono(size: 8, color: HaloColors.amber),
           ),
         ],

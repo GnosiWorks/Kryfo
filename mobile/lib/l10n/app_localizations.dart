@@ -3418,11 +3418,11 @@ abstract class AppLocalizations {
   /// **'Ξ'**
   String get donateText2;
 
-  /// screens/donate_screen.dart
+  /// screens/donate_screen.dart. tier is the supporter tier: supporter, patron or guardian (see donateTierSupporter...)
   ///
   /// In en, this message translates to:
-  /// **'Your earlier bitcoin payment was seen · {tierName} badge unlocked'**
-  String donateYourEarlierBitcoinPayment(Object tierName);
+  /// **'{tier, select, supporter{Your earlier bitcoin payment was seen · supporter badge unlocked} patron{Your earlier bitcoin payment was seen · patron badge unlocked} guardian{Your earlier bitcoin payment was seen · guardian badge unlocked} other{Your earlier bitcoin payment was seen · supporter badge unlocked}}'**
+  String donateYourEarlierBitcoinPayment(String tier);
 
   /// screens/donate_screen.dart
   ///
@@ -3616,11 +3616,11 @@ abstract class AppLocalizations {
   /// **'Thank you for keeping kryfo independent.'**
   String get donateThankYouForKeeping;
 
-  /// screens/donate_screen.dart
+  /// screens/donate_screen.dart. tier is the supporter tier
   ///
   /// In en, this message translates to:
-  /// **'verified on-chain - you\'re a {tierName} now. No one can take that off you.'**
-  String donateVerifiedOnChainYou(Object tierName);
+  /// **'{tier, select, supporter{verified on-chain - you\'re a supporter now. No one can take that off you.} patron{verified on-chain - you\'re a patron now. No one can take that off you.} guardian{verified on-chain - you\'re a guardian now. No one can take that off you.} other{verified on-chain - you\'re a supporter now. No one can take that off you.}}'**
+  String donateVerifiedOnChainYou(String tier);
 
   /// screens/donate_screen.dart
   ///
@@ -6706,11 +6706,11 @@ abstract class AppLocalizations {
   /// **'Supporter badge'**
   String get profileSupporterBadge;
 
-  /// screens/profile_screen.dart
+  /// screens/profile_screen.dart. tier is the supporter tier
   ///
   /// In en, this message translates to:
-  /// **'You are a {tierName}. thank you.'**
-  String profileYouAreAThank(Object tierName);
+  /// **'{tier, select, supporter{You are a supporter. thank you.} patron{You are a patron. thank you.} guardian{You are a guardian. thank you.} other{You are a supporter. thank you.}}'**
+  String profileYouAreAThank(String tier);
 
   /// screens/profile_screen.dart
   ///

@@ -1040,8 +1040,20 @@ void main() {
     expect(l.donateEthereum, "Ethereum");
     expect(l.donateText2, "Ξ");
     expect(
-      l.donateYourEarlierBitcoinPayment("<tierName>"),
-      "Your earlier bitcoin payment was seen · <tierName> badge unlocked",
+      l.donateYourEarlierBitcoinPayment("supporter"),
+      "Your earlier bitcoin payment was seen · supporter badge unlocked",
+    );
+    expect(
+      l.donateYourEarlierBitcoinPayment("patron"),
+      "Your earlier bitcoin payment was seen · patron badge unlocked",
+    );
+    expect(
+      l.donateYourEarlierBitcoinPayment("guardian"),
+      "Your earlier bitcoin payment was seen · guardian badge unlocked",
+    );
+    expect(
+      l.donateYourEarlierBitcoinPayment("other"),
+      "Your earlier bitcoin payment was seen · supporter badge unlocked",
     );
     expect(l.donateSupport, "Support");
     expect(l.donateKeepKryfo, "Keep kryfo *independent*");
@@ -1118,8 +1130,20 @@ void main() {
       "Thank you for keeping kryfo independent.",
     );
     expect(
-      l.donateVerifiedOnChainYou("<tierName>"),
-      "verified on-chain - you're a <tierName> now. No one can take that off you.",
+      l.donateVerifiedOnChainYou("supporter"),
+      "verified on-chain - you're a supporter now. No one can take that off you.",
+    );
+    expect(
+      l.donateVerifiedOnChainYou("patron"),
+      "verified on-chain - you're a patron now. No one can take that off you.",
+    );
+    expect(
+      l.donateVerifiedOnChainYou("guardian"),
+      "verified on-chain - you're a guardian now. No one can take that off you.",
+    );
+    expect(
+      l.donateVerifiedOnChainYou("other"),
+      "verified on-chain - you're a supporter now. No one can take that off you.",
     );
     expect(l.donateWearMyBadge, "wear my badge");
     expect(l.donateJustGladToHelp, "Just glad to help");
@@ -2164,9 +2188,12 @@ void main() {
     expect(l.profileOnionAddress, "onion address");
     expect(l.profileSupporterBadge, "Supporter badge");
     expect(
-      l.profileYouAreAThank("<tierName>"),
-      "You are a <tierName>. thank you.",
+      l.profileYouAreAThank("supporter"),
+      "You are a supporter. thank you.",
     );
+    expect(l.profileYouAreAThank("patron"), "You are a patron. thank you.");
+    expect(l.profileYouAreAThank("guardian"), "You are a guardian. thank you.");
+    expect(l.profileYouAreAThank("other"), "You are a supporter. thank you.");
     expect(l.profileShowMyBadge, "show my badge");
     expect(l.profileOnMyOwnScreens, "On my own screens");
     expect(l.profileLetContactsSeeIt, "Let contacts see it");

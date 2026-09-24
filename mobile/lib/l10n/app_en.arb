@@ -2715,12 +2715,12 @@
   "@donateText2": {
     "description": "screens/donate_screen.dart"
   },
-  "donateYourEarlierBitcoinPayment": "Your earlier bitcoin payment was seen · {tierName} badge unlocked",
+  "donateYourEarlierBitcoinPayment": "{tier, select, supporter{Your earlier bitcoin payment was seen · supporter badge unlocked} patron{Your earlier bitcoin payment was seen · patron badge unlocked} guardian{Your earlier bitcoin payment was seen · guardian badge unlocked} other{Your earlier bitcoin payment was seen · supporter badge unlocked}}",
   "@donateYourEarlierBitcoinPayment": {
-    "description": "screens/donate_screen.dart",
+    "description": "screens/donate_screen.dart. tier is the supporter tier: supporter, patron or guardian (see donateTierSupporter...)",
     "placeholders": {
-      "tierName": {
-        "type": "Object"
+      "tier": {
+        "type": "String"
       }
     }
   },
@@ -2872,12 +2872,12 @@
   "@donateThankYouForKeeping": {
     "description": "screens/donate_screen.dart"
   },
-  "donateVerifiedOnChainYou": "verified on-chain - you're a {tierName} now. No one can take that off you.",
+  "donateVerifiedOnChainYou": "{tier, select, supporter{verified on-chain - you're a supporter now. No one can take that off you.} patron{verified on-chain - you're a patron now. No one can take that off you.} guardian{verified on-chain - you're a guardian now. No one can take that off you.} other{verified on-chain - you're a supporter now. No one can take that off you.}}",
   "@donateVerifiedOnChainYou": {
-    "description": "screens/donate_screen.dart",
+    "description": "screens/donate_screen.dart. tier is the supporter tier",
     "placeholders": {
-      "tierName": {
-        "type": "Object"
+      "tier": {
+        "type": "String"
       }
     }
   },
@@ -5231,12 +5231,12 @@
   "@profileSupporterBadge": {
     "description": "screens/profile_screen.dart"
   },
-  "profileYouAreAThank": "You are a {tierName}. thank you.",
+  "profileYouAreAThank": "{tier, select, supporter{You are a supporter. thank you.} patron{You are a patron. thank you.} guardian{You are a guardian. thank you.} other{You are a supporter. thank you.}}",
   "@profileYouAreAThank": {
-    "description": "screens/profile_screen.dart",
+    "description": "screens/profile_screen.dart. tier is the supporter tier",
     "placeholders": {
-      "tierName": {
-        "type": "Object"
+      "tier": {
+        "type": "String"
       }
     }
   },

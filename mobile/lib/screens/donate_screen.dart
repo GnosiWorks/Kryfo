@@ -89,7 +89,7 @@ class _DonateScreenState extends State<DonateScreen> {
           HapticFeedback.mediumImpact();
           showHaloToast(
             context,
-            l10n.donateYourEarlierBitcoinPayment(tierName(t)),
+            l10n.donateYourEarlierBitcoinPayment(tierKey(t)),
           );
         }
       });
@@ -419,13 +419,13 @@ class _DonateScreenState extends State<DonateScreen> {
     // old path asked the service for a supporter invoice anyway and then
     // granted nothing for paying it
     if (tier == SupporterTier.none) return;
-    final tierKey = tierName(tier);
+    final key = tierKey(tier);
     HapticFeedback.mediumImpact();
     Navigator.of(context).push(
       haloRoute(
         _InvoiceScreen(
           tier: tier,
-          tierKey: tierKey,
+          tierKey: key,
           fallbackAddress: _addrs['btc'] ?? '',
         ),
       ),
@@ -1241,7 +1241,7 @@ class _ConfirmedViewState extends State<_ConfirmedView>
             Text(
               t == SupporterTier.none
                   ? l10n.donateThankYouForKeeping
-                  : l10n.donateVerifiedOnChainYou(tierName(t)),
+                  : l10n.donateVerifiedOnChainYou(tierKey(t)),
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 13.5,
