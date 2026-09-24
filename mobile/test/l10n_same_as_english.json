@@ -1,4 +1,22 @@
 {
+ "ar": [
+  "appTor",
+  "donateBitcoin",
+  "donateEthereum",
+  "donateMonero",
+  "donateSolana",
+  "donateText",
+  "donateText2",
+  "handleWren",
+  "modesIp",
+  "modesOnion",
+  "myKryfoWren",
+  "onboardingOnion",
+  "qrBitcoin",
+  "qrSms",
+  "qrWiFi",
+  "seenOnion"
+ ],
  "de": [
   "appOffline",
   "appOk",
@@ -145,6 +163,22 @@
   "videoBubbleKb",
   "videoBubbleMb",
   "videoBubbleVideo"
+ ],
+ "fa": [
+  "appTor",
+  "donateBitcoin",
+  "donateEthereum",
+  "donateMonero",
+  "donateSolana",
+  "donateText",
+  "donateText2",
+  "modesIp",
+  "modesOnion",
+  "onboardingOnion",
+  "qrBitcoin",
+  "qrSms",
+  "qrWiFi",
+  "seenOnion"
  ],
  "fr": [
   "appOk",

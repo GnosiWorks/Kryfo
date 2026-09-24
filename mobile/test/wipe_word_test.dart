@@ -13,6 +13,9 @@ void main() {
     expect(isWipeWord('стереть', 'стереть'), isTrue);
     expect(isWipeWord('抹掉', '抹掉'), isTrue);
     expect(isWipeWord('wipe', 'стереть'), isTrue);
+    expect(isWipeWord('پاك', 'پاک'), isTrue); // arabic kaf for persian
+    expect(isWipeWord('اِمسَح', 'امسح'), isTrue); // with vowel marks
+    expect(isWipeWord('إمسح', 'امسح'), isTrue); // hamza under the alef
   });
 
   test('anything else is not', () {

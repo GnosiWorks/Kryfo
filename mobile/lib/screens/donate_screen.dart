@@ -826,7 +826,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           Text(
             _waited < 5
                 ? l10n.donateThisCanTakeUp
-                : l10n.donateSThisCanTake(_waited),
+                : l10n.donateSThisCanTake(whole(_waited)),
             style: HaloType.mono(size: 10.5, color: HaloColors.text3),
           ),
           // held back until the wait is long enough to doubt

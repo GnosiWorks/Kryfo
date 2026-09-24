@@ -2659,12 +2659,12 @@ Widget _groupStamp(_GMsg m) => Container(
   ),
   child: Text(
     hourMinute(m.when),
-    style: const TextStyle(
+    style: TextStyle(
       fontFamily: 'JetBrains Mono',
       fontFamilyFallback: HaloType.monoFallback,
       fontSize: 9,
       color: Colors.white,
-      letterSpacing: 0.4,
+      letterSpacing: track(0.4),
     ),
   ),
 );

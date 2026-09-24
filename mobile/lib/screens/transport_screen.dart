@@ -87,9 +87,9 @@ class TransportScreen extends StatelessWidget {
                 l10n.transportOnionPublished,
 
                 uploads > 0
-                    ? l10n.transportYes(uploads)
+                    ? l10n.transportYes(whole(uploads))
                     : pubFor > 0
-                    ? l10n.transportTryingS(pubFor)
+                    ? l10n.transportTryingS(whole(pubFor))
                     : l10n.transportNotYet,
 
                 uploads > 0 ? HaloColors.green : HaloColors.rose,
@@ -130,13 +130,13 @@ class TransportScreen extends StatelessWidget {
 
               _Line(
                 l10n.transportLastSent,
-                sx < 0 ? l10n.transportNever : l10n.transportSAgo(sx),
+                sx < 0 ? l10n.transportNever : l10n.transportSAgo(whole(sx)),
                 HaloColors.text2,
               ),
 
               _Line(
                 l10n.transportLastReceived,
-                rx < 0 ? l10n.transportNever : l10n.transportSAgo2(rx),
+                rx < 0 ? l10n.transportNever : l10n.transportSAgo2(whole(rx)),
                 HaloColors.text2,
               ),
 
@@ -459,7 +459,10 @@ class _AliveState extends State<_Alive> {
           l10n.transportJobRuns,
           appState.jobRuns == 0
               ? l10n.transportNoneYet
-              : l10n.transportLast(appState.jobRuns, _ago(appState.lastJobAt)),
+              : l10n.transportLast(
+                  whole(appState.jobRuns),
+                  _ago(appState.lastJobAt),
+                ),
           appState.jobRuns == 0 ? HaloColors.text2 : HaloColors.text,
         ),
         _Line(

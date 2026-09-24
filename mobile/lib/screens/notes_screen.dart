@@ -85,7 +85,7 @@ class _NotesScreenState extends State<NotesScreen> {
         style: HaloType.mono(
           size: 8.5,
           color: HaloColors.text3,
-        ).copyWith(letterSpacing: 1.6),
+        ).copyWith(letterSpacing: track(1.6)),
       ),
     ),
   );

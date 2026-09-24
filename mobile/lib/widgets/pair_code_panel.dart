@@ -10,6 +10,7 @@ import '../main.dart' show appState, engine, buildHaloUriV3;
 import '../theme.dart';
 import 'motion.dart' show BreathDot;
 import '../l10n/l10n.dart';
+import '../l10n/numbers.dart';
 
 class PairCodePanel extends StatefulWidget {
   // compact drops the explanatory lines, for use under a qr
@@ -149,8 +150,8 @@ class _PairCodePanelState extends State<PairCodePanel> {
   }
 
   Widget _live() {
-    final mm = (_left ~/ 60).toString();
-    final ss = (_left % 60).toString().padLeft(2, '0');
+    final mm = whole(_left ~/ 60);
+    final ss = twoDigits(_left % 60);
     return Column(
       key: const ValueKey('live'),
       children: [

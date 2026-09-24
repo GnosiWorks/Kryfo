@@ -115,6 +115,18 @@ class HaloColors {
   static Color get onAmber => _p.onAmber;
 }
 
+// persian and arabic join their letters. letter spacing pulls the joins
+// apart, and their fonts have no italic, so a slant would be faked: in
+// those languages text is set with no tracking and upright (the accent
+// words keep their colour).
+bool get _joinedScript => const {'fa', 'ar'}.contains(l10nLocale.languageCode);
+
+/// letter spacing, or none where the script joins its letters
+double track(double v) => _joinedScript ? 0 : v;
+
+/// italic, or upright where the script has no italic
+FontStyle slant() => _joinedScript ? FontStyle.normal : FontStyle.italic;
+
 class HaloType {
   // what draws the letters our own fonts do not have. flutter asks these,
   // in order, for any character the family lacks, before the phone's fonts;
@@ -144,10 +156,10 @@ class HaloType {
     fontFamilyFallback: serifFallback,
     fontSize: size,
     fontWeight: weight,
-    fontStyle: italic ? FontStyle.italic : FontStyle.normal,
+    fontStyle: italic ? slant() : FontStyle.normal,
     color: color ?? HaloColors.text,
     height: height,
-    letterSpacing: letter,
+    letterSpacing: track(letter),
   );
 
   static TextStyle sans({
@@ -163,7 +175,7 @@ class HaloType {
     fontWeight: weight,
     color: color ?? HaloColors.text,
     height: height,
-    letterSpacing: letter,
+    letterSpacing: track(letter),
   );
 
   static TextStyle mono({
@@ -177,7 +189,7 @@ class HaloType {
     fontSize: size,
     fontWeight: weight,
     color: color ?? HaloColors.text2,
-    letterSpacing: letter,
+    letterSpacing: track(letter),
   );
 }
 

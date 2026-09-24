@@ -148,7 +148,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
           style: HaloType.mono(
             size: 10,
             color: HaloColors.amber,
-          ).copyWith(letterSpacing: 4, fontWeight: FontWeight.w500),
+          ).copyWith(letterSpacing: track(4), fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 22),
         RichText(
@@ -216,7 +216,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
             style: HaloType.mono(
               size: 10,
               color: HaloColors.text3,
-            ).copyWith(letterSpacing: 2),
+            ).copyWith(letterSpacing: track(2)),
           ),
         ),
       ],
@@ -341,7 +341,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
               style: HaloType.mono(
                 size: 10,
                 color: HaloColors.amber,
-              ).copyWith(letterSpacing: 4, fontWeight: FontWeight.w500),
+              ).copyWith(letterSpacing: track(4), fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 14),
             _shimmerPill(words),
@@ -566,7 +566,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
                 style: HaloType.mono(
                   size: 14,
                   color: HaloColors.amber,
-                ).copyWith(letterSpacing: 0.4, fontWeight: FontWeight.w500),
+                ).copyWith(letterSpacing: track(0.4), fontWeight: FontWeight.w500),
               ),
             ),
           ),
@@ -1142,7 +1142,7 @@ class _Step extends StatelessWidget {
       style: HaloType.mono(
         size: 10,
         color: HaloColors.amber,
-      ).copyWith(letterSpacing: 3, fontWeight: FontWeight.w500),
+      ).copyWith(letterSpacing: track(3), fontWeight: FontWeight.w500),
     );
   }
 }
@@ -1195,7 +1195,7 @@ class _Card extends StatelessWidget {
                     style: HaloType.mono(
                       size: 10,
                       color: HaloColors.amber,
-                    ).copyWith(letterSpacing: 2, fontWeight: FontWeight.w500),
+                    ).copyWith(letterSpacing: track(2), fontWeight: FontWeight.w500),
                   )
                 : Icon(icon, size: 16, color: HaloColors.amber),
           ),

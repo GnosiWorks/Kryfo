@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- written by tool/arb_android.py from lib/l10n/app_fa.arb -->
+<resources>
+    <string name="service_title">kryfo روشن است</string>
+    <string name="service_text">خط رمزگذاری‌شده‌ی شما باز می‌ماند تا پیام‌ها برسند</string>
+    <string name="channel_name">متصل ماندن</string>
+    <string name="channel_description">kryfo را متصل نگه می‌دارد تا پیام‌های رمزگذاری‌شده وقتی بسته است هم برسند. خاموش کردنش، رسیدن پیام‌ها را متوقف می‌کند.</string>
+</resources>

@@ -7,7 +7,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../l10n/l10n.dart';
-import '../theme.dart' show HaloType;
+import '../theme.dart' show HaloType, track, slant;
 import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
 
@@ -325,7 +325,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
               fontFamily: 'JetBrains Mono',
               fontFamilyFallback: HaloType.monoFallback,
               fontSize: 11,
-              letterSpacing: 4,
+              letterSpacing: track(4),
               fontWeight: FontWeight.w500,
               color: _accent,
             ),
@@ -336,14 +336,14 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
             child: Text(
               _italic,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'Fraunces',
                 fontFamilyFallback: HaloType.serifFallback,
-                fontStyle: FontStyle.italic,
+                fontStyle: slant(),
                 fontSize: 22,
                 fontWeight: FontWeight.w300,
                 color: kText,
-                letterSpacing: -0.3,
+                letterSpacing: track(-0.3),
                 height: 1.15,
               ),
             ),
@@ -373,12 +373,12 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
               children: [
                 RichText(
                   text: TextSpan(
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'JetBrains Mono',
                       fontFamilyFallback: HaloType.monoFallback,
                       fontSize: 10.5,
                       color: kText2,
-                      letterSpacing: 0.4,
+                      letterSpacing: track(0.4),
                     ),
                     children: markedSpans(
                       l10n.motionCircuit(_circuit),
@@ -394,7 +394,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
                     fontSize: 10.5,
                     color: _accent,
                     fontWeight: FontWeight.w500,
-                    letterSpacing: 0.4,
+                    letterSpacing: track(0.4),
                   ),
                 ),
               ],
@@ -610,7 +610,7 @@ class _ZigZagWarmupPainter extends CustomPainter {
           fontSize: 7,
           fontWeight: FontWeight.w500,
           color: green || activeIdx >= 0 || lit.isNotEmpty ? accent : kText3,
-          letterSpacing: 1.3,
+          letterSpacing: track(1.3),
         ),
       ),
       textDirection: TextDirection.ltr,
@@ -789,7 +789,7 @@ class _SendPillState extends State<SendPill>
               fontFamily: 'JetBrains Mono',
               fontFamilyFallback: HaloType.monoFallback,
               fontSize: 9.5,
-              letterSpacing: 0.5,
+              letterSpacing: track(0.5),
               fontWeight: FontWeight.w500,
               color: _color,
             ),

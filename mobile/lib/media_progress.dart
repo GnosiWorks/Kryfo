@@ -190,8 +190,8 @@ class IncomingMediaBanner extends StatelessWidget {
                         ? l10n.mediaProgressSendingKeepTheApp(percent(v))
                         : stalled && count != null
                         ? l10n.mediaProgressPausedOfWaitingFor(
-                            count.$1,
-                            count.$2,
+                            whole(count.$1),
+                            whole(count.$2),
                           )
                         : l10n.mediaProgressReceivingMedia(percent(v)),
                     style: HaloType.mono(

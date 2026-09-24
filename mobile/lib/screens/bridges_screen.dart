@@ -15,6 +15,7 @@ import '../widgets/motion.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/halo_switch.dart';
 import '../l10n/l10n.dart';
+import '../l10n/numbers.dart';
 
 class BridgesScreen extends StatefulWidget {
   const BridgesScreen({super.key});
@@ -425,8 +426,8 @@ class _BridgesScreenState extends State<BridgesScreen> {
                           _elapsed < 20
                               ? l10n.bridgesRestartingTor
                               : _elapsed < 60
-                              ? l10n.bridgesFindingABridgeS(_elapsed)
-                              : l10n.bridgesStillTryingS(_elapsed),
+                              ? l10n.bridgesFindingABridgeS(whole(_elapsed))
+                              : l10n.bridgesStillTryingS(whole(_elapsed)),
                           style: HaloType.mono(
                             size: 12.5,
                             color: HaloColors.text2,

@@ -151,7 +151,7 @@ class _Head extends StatelessWidget {
             style: HaloType.serif(
               size: 31,
               color: HaloColors.text,
-            ).copyWith(letterSpacing: -0.62, height: 1.05),
+            ).copyWith(letterSpacing: track(-0.62), height: 1.05),
           ),
           Text(
             l10n.toolsTheFirstMinute,
@@ -161,7 +161,7 @@ class _Head extends StatelessWidget {
                   italic: true,
                   color: HaloColors.amber,
                 ).copyWith(
-                  letterSpacing: -0.62,
+                  letterSpacing: track(-0.62),
                   height: 1.1,
                   fontWeight: FontWeight.w300,
                 ),

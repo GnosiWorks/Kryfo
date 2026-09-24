@@ -323,12 +323,12 @@ Widget _mediaStamp(_Msg msg, bool pending, bool failedShown, bool ackOk) =>
         children: [
           Text(
             _fmtTime(msg.when),
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'JetBrains Mono',
               fontFamilyFallback: HaloType.monoFallback,
               fontSize: 9,
               color: Colors.white,
-              letterSpacing: 0.4,
+              letterSpacing: track(0.4),
             ),
           ),
           const SizedBox(width: 3),
@@ -352,7 +352,7 @@ Widget _mediaStamp(_Msg msg, bool pending, bool failedShown, bool ackOk) =>
                   fontSize: 8.5,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
-                  letterSpacing: 0.3,
+                  letterSpacing: track(0.3),
                 ),
               ),
             ],
@@ -394,7 +394,7 @@ String _fmtTime(DateTime d) => hourMinute(d);
 // 4m 23s / 38s / 1h 02m. clamps at 0.
 // human-friendly label for a burn duration in seconds.
 String _humanBurn(int seconds) {
-  if (seconds < 60) return l10n.chatS(seconds);
+  if (seconds < 60) return l10n.chatS(whole(seconds));
   if (seconds < 3600) return l10n.chatM(whole(seconds ~/ 60));
   if (seconds < 86400) return l10n.chatH(whole(seconds ~/ 3600));
   return l10n.chatD(whole(seconds ~/ 86400));
@@ -6321,7 +6321,7 @@ class _Bubble extends StatelessWidget {
                                                   HaloType.monoFallback,
                                               fontSize: 9,
                                               color: metaColor,
-                                              letterSpacing: 0.4,
+                                              letterSpacing: track(0.4),
                                             ),
                                           ),
                                           if (msg.edited) ...[
@@ -6334,8 +6334,8 @@ class _Bubble extends StatelessWidget {
                                                     HaloType.monoFallback,
                                                 fontSize: 9,
                                                 color: metaColor,
-                                                fontStyle: FontStyle.italic,
-                                                letterSpacing: 0.4,
+                                                fontStyle: slant(),
+                                                letterSpacing: track(0.4),
                                               ),
                                             ),
                                           ],
@@ -6360,7 +6360,7 @@ class _Bubble extends StatelessWidget {
                                                 fontSize: 8.5,
                                                 fontWeight: FontWeight.w600,
                                                 color: metaColor,
-                                                letterSpacing: 0.3,
+                                                letterSpacing: track(0.3),
                                               ),
                                             ),
                                           ],
@@ -6399,8 +6399,8 @@ class _Bubble extends StatelessWidget {
                                           color: HaloColors.amber.withValues(
                                             alpha: 0.55,
                                           ),
-                                          fontStyle: FontStyle.italic,
-                                          letterSpacing: 0.4,
+                                          fontStyle: slant(),
+                                          letterSpacing: track(0.4),
                                         ),
                                       ),
                                     ],
@@ -6432,16 +6432,19 @@ class _Bubble extends StatelessWidget {
                                             const SizedBox(width: 4),
                                             Text(
                                               _fmtBurn(msg.burnAt!),
-                                              style: HaloType.mono(
-                                                size: 9.5,
-                                                color: (isOut && !isImage)
-                                                    ? HaloColors.onAmber
-                                                    : HaloColors.amber
-                                                          .withValues(
-                                                            alpha: 0.75,
-                                                          ),
-                                                weight: FontWeight.w600,
-                                              ).copyWith(letterSpacing: 0.3),
+                                              style:
+                                                  HaloType.mono(
+                                                    size: 9.5,
+                                                    color: (isOut && !isImage)
+                                                        ? HaloColors.onAmber
+                                                        : HaloColors.amber
+                                                              .withValues(
+                                                                alpha: 0.75,
+                                                              ),
+                                                    weight: FontWeight.w600,
+                                                  ).copyWith(
+                                                    letterSpacing: track(0.3),
+                                                  ),
                                             ),
                                           ],
                                         ),
@@ -6461,7 +6464,7 @@ class _Bubble extends StatelessWidget {
                                           color: HaloColors.onAmber.withValues(
                                             alpha: 0.95,
                                           ),
-                                          letterSpacing: 0.4,
+                                          letterSpacing: track(0.4),
                                         ),
                                       ),
                                     ],
