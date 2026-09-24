@@ -891,15 +891,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get archivedCount10 => '十个';
 
   @override
-  String archivedChatRestingHereIt(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '聊天在这里歇着。有人发消息之前它们会保持安静，之后会回到顶部。',
-      one: '聊天在这里歇着。对方发消息之前它会保持安静，之后会回到顶部。',
-    );
-    return '$_temp0';
-  }
+  String get archivedChatRestingHereIt => '聊天在这里歇着。对方发消息之前它会保持安静，之后会回到顶部。';
+
+  @override
+  String get archivedChatsRestingHere => '聊天在这里歇着。有人发消息之前它们会保持安静，之后会回到顶部。';
 
   @override
   String get archivedNothingArchived => '没有归档的聊天';

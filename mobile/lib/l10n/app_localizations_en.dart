@@ -921,17 +921,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get archivedCount10 => 'ten';
 
   @override
-  String archivedChatRestingHereIt(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other:
-          'Chats resting here. They stay quiet until someone writes, then come back to the top.',
-      one:
-          'Chat resting here. It stays quiet until they write, then comes back to the top.',
-    );
-    return '$_temp0';
-  }
+  String get archivedChatRestingHereIt =>
+      'Chat resting here. It stays quiet until they write, then comes back to the top.';
+
+  @override
+  String get archivedChatsRestingHere =>
+      'Chats resting here. They stay quiet until someone writes, then come back to the top.';
 
   @override
   String get archivedNothingArchived => 'Nothing archived';
@@ -4169,10 +4164,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String profileYouAreAThank(String tier) {
     String _temp0 = intl.Intl.selectLogic(tier, {
-      'supporter': 'You are a supporter. thank you.',
-      'patron': 'You are a patron. thank you.',
-      'guardian': 'You are a guardian. thank you.',
-      'other': 'You are a supporter. thank you.',
+      'supporter': 'You are a supporter. Thank you.',
+      'patron': 'You are a patron. Thank you.',
+      'guardian': 'You are a guardian. Thank you.',
+      'other': 'You are a supporter. Thank you.',
     });
     return '$_temp0';
   }

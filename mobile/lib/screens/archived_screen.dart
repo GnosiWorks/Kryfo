@@ -84,9 +84,11 @@ class ArchivedScreen extends StatelessWidget {
                             ),
                           ),
                           TextSpan(
-                            text: l10n.archivedChatRestingHereIt(
-                              archived.length,
-                            ),
+                            // exactly one, not the plural "one": in russian
+                            // that also means 21, 31...
+                            text: archived.length == 1
+                                ? l10n.archivedChatRestingHereIt
+                                : l10n.archivedChatsRestingHere,
                             style: HaloType.sans(
                               size: 12.5,
                               color: HaloColors.text3,

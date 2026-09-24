@@ -482,19 +482,11 @@ void main() {
     expect(l.archivedCount9, "nine");
     expect(l.archivedCount10, "ten");
     expect(
-      l.archivedChatRestingHereIt(0),
-      "Chats resting here. They stay quiet until someone writes, then come back to the top.",
-    );
-    expect(
-      l.archivedChatRestingHereIt(1),
+      l.archivedChatRestingHereIt,
       "Chat resting here. It stays quiet until they write, then comes back to the top.",
     );
     expect(
-      l.archivedChatRestingHereIt(2),
-      "Chats resting here. They stay quiet until someone writes, then come back to the top.",
-    );
-    expect(
-      l.archivedChatRestingHereIt(5),
+      l.archivedChatsRestingHere,
       "Chats resting here. They stay quiet until someone writes, then come back to the top.",
     );
     expect(l.archivedNothingArchived, "Nothing archived");
@@ -2180,11 +2172,11 @@ void main() {
     expect(l.profileSupporterBadge, "Supporter badge");
     expect(
       l.profileYouAreAThank("supporter"),
-      "You are a supporter. thank you.",
+      "You are a supporter. Thank you.",
     );
-    expect(l.profileYouAreAThank("patron"), "You are a patron. thank you.");
-    expect(l.profileYouAreAThank("guardian"), "You are a guardian. thank you.");
-    expect(l.profileYouAreAThank("other"), "You are a supporter. thank you.");
+    expect(l.profileYouAreAThank("patron"), "You are a patron. Thank you.");
+    expect(l.profileYouAreAThank("guardian"), "You are a guardian. Thank you.");
+    expect(l.profileYouAreAThank("other"), "You are a supporter. Thank you.");
     expect(l.profileShowMyBadge, "show my badge");
     expect(l.profileOnMyOwnScreens, "On my own screens");
     expect(l.profileLetContactsSeeIt, "Let contacts see it");

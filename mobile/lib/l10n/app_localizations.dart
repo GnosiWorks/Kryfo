@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_en.dart';
+import 'app_localizations_ru.dart';
 import 'app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
@@ -95,6 +96,7 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
+    Locale('ru'),
     Locale('zh'),
   ];
 
@@ -1388,11 +1390,17 @@ abstract class AppLocalizations {
   /// **'ten'**
   String get archivedCount10;
 
-  /// screens/archived_screen.dart
+  /// screens/archived_screen.dart: under the count when exactly one chat is archived
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, one{Chat resting here. It stays quiet until they write, then comes back to the top.} other{Chats resting here. They stay quiet until someone writes, then come back to the top.}}'**
-  String archivedChatRestingHereIt(int count);
+  /// **'Chat resting here. It stays quiet until they write, then comes back to the top.'**
+  String get archivedChatRestingHereIt;
+
+  /// screens/archived_screen.dart: under the count when two or more chats are archived
+  ///
+  /// In en, this message translates to:
+  /// **'Chats resting here. They stay quiet until someone writes, then come back to the top.'**
+  String get archivedChatsRestingHere;
 
   /// screens/archived_screen.dart
   ///
@@ -6677,7 +6685,7 @@ abstract class AppLocalizations {
   /// screens/profile_screen.dart. tier is the supporter tier
   ///
   /// In en, this message translates to:
-  /// **'{tier, select, supporter{You are a supporter. thank you.} patron{You are a patron. thank you.} guardian{You are a guardian. thank you.} other{You are a supporter. thank you.}}'**
+  /// **'{tier, select, supporter{You are a supporter. Thank you.} patron{You are a patron. Thank you.} guardian{You are a guardian. Thank you.} other{You are a supporter. Thank you.}}'**
   String profileYouAreAThank(String tier);
 
   /// screens/profile_screen.dart
@@ -10502,7 +10510,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en', 'zh'].contains(locale.languageCode);
+      <String>['en', 'ru', 'zh'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -10513,6 +10521,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   switch (locale.languageCode) {
     case 'en':
       return AppLocalizationsEn();
+    case 'ru':
+      return AppLocalizationsRu();
     case 'zh':
       return AppLocalizationsZh();
   }

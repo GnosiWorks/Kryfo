@@ -1164,14 +1164,13 @@
   "@archivedCount10": {
     "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
   },
-  "archivedChatRestingHereIt": "{count, plural, one{Chat resting here. It stays quiet until they write, then comes back to the top.} other{Chats resting here. They stay quiet until someone writes, then come back to the top.}}",
+  "archivedChatRestingHereIt": "Chat resting here. It stays quiet until they write, then comes back to the top.",
   "@archivedChatRestingHereIt": {
-    "description": "screens/archived_screen.dart",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
+    "description": "screens/archived_screen.dart: under the count when exactly one chat is archived"
+  },
+  "archivedChatsRestingHere": "Chats resting here. They stay quiet until someone writes, then come back to the top.",
+  "@archivedChatsRestingHere": {
+    "description": "screens/archived_screen.dart: under the count when two or more chats are archived"
   },
   "archivedNothingArchived": "Nothing archived",
   "@archivedNothingArchived": {
@@ -5247,7 +5246,7 @@
   "@profileSupporterBadge": {
     "description": "screens/profile_screen.dart"
   },
-  "profileYouAreAThank": "{tier, select, supporter{You are a supporter. thank you.} patron{You are a patron. thank you.} guardian{You are a guardian. thank you.} other{You are a supporter. thank you.}}",
+  "profileYouAreAThank": "{tier, select, supporter{You are a supporter. Thank you.} patron{You are a patron. Thank you.} guardian{You are a guardian. Thank you.} other{You are a supporter. Thank you.}}",
   "@profileYouAreAThank": {
     "description": "screens/profile_screen.dart. tier is the supporter tier",
     "placeholders": {
