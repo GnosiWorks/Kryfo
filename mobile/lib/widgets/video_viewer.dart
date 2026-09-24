@@ -281,37 +281,42 @@ class _VideoViewerState extends State<_VideoViewer>
       animation: widget.route,
       builder: (context, _) {
         final shown = widget.route.value;
-        return Stack(
-          children: [
-            // the dark behind it thins as it is pulled down
-            Positioned.fill(
-              child: GestureDetector(
-                onTap: _tapVideo,
-                child: ColoredBox(
-                  color: Colors.black.withValues(
-                    alpha: shown * (1 - pulled * 0.75),
+        // the swipe down wraps everything, buttons included: a pull that
+        // starts on the play mark still pulls
+        return GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onVerticalDragUpdate: _dragUpdate,
+          onVerticalDragEnd: _dragEnd,
+          child: Stack(
+            children: [
+              // the dark behind it thins as it is pulled down
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: _tapVideo,
+                  child: ColoredBox(
+                    color: Colors.black.withValues(
+                      alpha: shown * (1 - pulled * 0.75),
+                    ),
                   ),
                 ),
               ),
-            ),
-            Positioned.fill(
-              child: GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onTap: _tapVideo,
-                onDoubleTap: _failed ? null : _toggle,
-                onVerticalDragUpdate: _dragUpdate,
-                onVerticalDragEnd: _dragEnd,
-                child: Transform.translate(
-                  offset: Offset(0, _drag),
-                  child: Transform.scale(
-                    scale: 1 - pulled * 0.12,
-                    child: Center(child: _failed ? _cannotPlay() : _video()),
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: _tapVideo,
+                  onDoubleTap: _failed ? null : _toggle,
+                  child: Transform.translate(
+                    offset: Offset(0, _drag),
+                    child: Transform.scale(
+                      scale: 1 - pulled * 0.12,
+                      child: Center(child: _failed ? _cannotPlay() : _video()),
+                    ),
                   ),
                 ),
               ),
-            ),
-            if (!_failed) ..._chrome(pad, shown * (1 - pulled)),
-          ],
+              if (!_failed) ..._chrome(pad, shown * (1 - pulled)),
+            ],
+          ),
         );
       },
     );
