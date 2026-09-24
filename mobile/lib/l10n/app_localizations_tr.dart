@@ -6664,4 +6664,101 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get languageLaterLine =>
       'Bunu istediğin zaman ayarlardan değiştirebilirsin.';
+
+  @override
+  String get pollAttach => 'Anket';
+
+  @override
+  String get pollNewTitle => 'Yeni anket';
+
+  @override
+  String get pollQuestionHint => 'Gruba bir şey sor';
+
+  @override
+  String get pollOptionsLabel => 'Seçenekler';
+
+  @override
+  String pollOptionHint(Object n) {
+    return 'Seçenek $n';
+  }
+
+  @override
+  String get pollAddOption => 'Seçenek ekle';
+
+  @override
+  String get pollMaxLine => 'En fazla on iki seçenek.';
+
+  @override
+  String get pollMultiple => 'Birden fazla yanıt';
+
+  @override
+  String get pollMultipleLine => 'Birden fazlası seçilebilir.';
+
+  @override
+  String get pollSend => 'Anketi gönder';
+
+  @override
+  String get pollKind => 'Anket';
+
+  @override
+  String get pollKindMulti => 'Anket · birden fazla yanıt';
+
+  @override
+  String get pollKindClosed => 'Sonuç';
+
+  @override
+  String pollVotes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count oy',
+      one: '$count oy',
+      zero: 'Henüz oy yok',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pollVote => 'Oy ver';
+
+  @override
+  String get pollTakeBack => 'Oyumu geri al';
+
+  @override
+  String get pollClose => 'Anketi kapat';
+
+  @override
+  String get pollCloseTitle => 'Bu anket kapatılsın mı?';
+
+  @override
+  String get pollCloseLine =>
+      'Herkes nihai sonucu görür ve bundan sonra kimse oy veremez.';
+
+  @override
+  String get pollCloseYes => 'Kapat';
+
+  @override
+  String pollPreview(Object question) {
+    return 'Anket: $question';
+  }
+
+  @override
+  String get pollWhoVoted => 'Kimler oy verdi';
+
+  @override
+  String get pollNobody => 'Henüz kimse yok';
+
+  @override
+  String get pollYou => 'Sen';
+
+  @override
+  String pollOptionA11y(Object option, Object share) {
+    return '$option, $share';
+  }
+
+  @override
+  String get pollPickOne => 'Birini seç';
+
+  @override
+  String get pollPickSeveral => 'Bir veya daha fazlasını seç';
 }

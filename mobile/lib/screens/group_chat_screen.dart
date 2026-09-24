@@ -74,6 +74,11 @@ import '../l10n/dates.dart';
 import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
 import '../widgets/video_viewer.dart';
+import '../polls.dart';
+import '../widgets/attach_grid.dart';
+import '../widgets/new_poll_sheet.dart';
+import '../widgets/poll_card.dart';
+import '../widgets/stroke_icon.dart';
 
 final Map<String, String> _draftPerGroup = {};
 
@@ -100,6 +105,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   int _seenCount = 0;
   String _groupName = '';
   int _memberCount = 0;
+  // who this phone is in this chat: its kryfo id, or its key in a room
+  String _me = '';
+
+  String _nameOf(String id) {
+    for (final c in appState.contacts) {
+      final n = c.nickname;
+      if (c.haloId == id && n != null && n.isNotEmpty) return n;
+    }
+    return _senderLabel(const {}, id) ?? id;
+  }
+
   // burner room state: when it ends, and whether this is the first open
   int? _roomExpiresAt;
   bool _roomBanner = false;
@@ -405,6 +421,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           .cast<String>()
           .toList();
       final reactions = await db.loadReactionsFor(uids);
+      final votes = await db.pollVotesFor(uids);
       if (!mounted) return;
       final nickById = <String, String>{};
       for (final c in appState.contacts) {
@@ -440,6 +457,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           reactions: rxMap,
         );
         m.preview = _decodePv(r['preview'] as String?);
+        m.poll = PollSpec.parse(r['poll']);
+        m.votes = votes[uid] ?? const {};
         m.rowid = (r['rowid'] as int?) ?? 0;
         older.add(m);
       }
@@ -503,6 +522,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         return;
       }
       final members = await db.getGroupMembers(widget.groupId);
+      _me = await appState.meIn(widget.groupId);
       // keep whatever window the user has expanded to - a mid-scroll reaction
       // used to collapse the list back to one page and yank the view.
       final wantAll = _searching || _pagedOut || _messages.length > _pageSize;
@@ -523,6 +543,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           .cast<String>()
           .toList();
       final reactions = await db.loadReactionsFor(uids);
+      final votes = await db.pollVotesFor(uids);
       // local nickname is the display source of truth. fall back to the 3-word
       // id when we have no nickname for that member.
       final nickById = <String, String>{};
@@ -581,6 +602,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 reactions: rxMap,
               );
               m.preview = _decodePv(r['preview'] as String?);
+              m.poll = PollSpec.parse(r['poll']);
+              m.votes = votes[uid] ?? const {};
               m.rowid = (r['rowid'] as int?) ?? 0;
               // only a STALE sending out-message is dead. a live send (<60s old,
               // future still running) must keep its pill or a working media send
@@ -749,6 +772,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         .cast<String>()
         .toList();
     final reactions = await db.loadReactionsFor(uids);
+    final votes = await db.pollVotesFor(uids);
     if (!mounted) return;
     final fresh = <_GMsg>[];
     for (final r in brandNew) {
@@ -780,6 +804,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         reactions: rxMap,
       );
       m.preview = _decodePv(r['preview'] as String?);
+      m.poll = PollSpec.parse(r['poll']);
+      m.votes = votes[uid] ?? const {};
       m.rowid = (r['rowid'] as int?) ?? 0;
       if (dir == 'in') m.fresh = true;
       fresh.add(m);
@@ -831,7 +857,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             ? l10n.groupChatYou
             : orig.senderName;
       }
-      if (orig.text.isNotEmpty) {
+      if (orig.poll != null) {
+        quoted = l10n.pollPreview(orig.text);
+      } else if (orig.text.isNotEmpty) {
         quoted = orig.text;
       } else if (orig.mediaPath != null) {
         quoted = l10n.groupChatQuotedPhoto;
@@ -868,6 +896,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 child: _GroupBubble(
                   m: m,
                   showSender: showSender,
+                  me: _me,
+                  nameOf: _nameOf,
+                  onVote: m.poll == null || m.msgUid == null
+                      ? null
+                      : (c) => appState.votePoll(widget.groupId, m.msgUid!, c),
+                  onClosePoll: m.poll == null || m.msgUid == null
+                      ? null
+                      : () => appState.closePoll(widget.groupId, m.msgUid!),
                   senderBadge: _badgeFor(m.sender),
                   shieldFlag: shieldFlag,
                   onShield: shieldFlag == null
@@ -1147,53 +1183,61 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     HapticFeedback.selectionClick();
     showHaloSheet<void>(
       context,
-      builder: (sheetCtx) {
-        Widget tile(IconData icon, String label, VoidCallback go) {
-          return ListTile(
-            leading: Icon(icon, color: HaloColors.amber, size: 22),
-            title: Text(
-              label,
-              style: HaloType.sans(size: 15, color: HaloColors.text),
-            ),
-            onTap: () {
-              Navigator.of(sheetCtx).pop();
-              go();
-            },
-          );
-        }
-
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SheetHandle(),
-              const SizedBox(height: 6),
-              tile(
-                Icons.photo_camera_outlined,
-                l10n.groupChatCamera,
-                _openGroupCamera,
-              ),
-              tile(
-                Icons.photo_library_outlined,
-                l10n.groupChatGallery,
-                _pickGroupMultiple,
-              ),
-              tile(
-                Icons.videocam_outlined,
-                l10n.groupChatVideo,
-                _pickGroupVideo,
-              ),
-              tile(
-                Icons.gif_box_outlined,
-                l10n.groupChatGifFromPhone,
-                _pickGroupGif,
-              ),
-              tile(Icons.attach_file, l10n.groupChatFile, _pickGroupFile),
-              const SizedBox(height: 8),
-            ],
+      builder: (sheetCtx) => AttachGrid(
+        items: [
+          AttachItem(
+            icon: (c) => Icon(Icons.photo_camera_outlined, color: c),
+            tint: HaloColors.amber,
+            label: l10n.groupChatCamera,
+            onTap: _openGroupCamera,
           ),
-        );
-      },
+          AttachItem(
+            icon: (c) => Icon(Icons.photo_library_outlined, color: c),
+            tint: HaloColors.violet,
+            label: l10n.groupChatGallery,
+            onTap: _pickGroupMultiple,
+          ),
+          AttachItem(
+            icon: (c) => Icon(Icons.videocam_outlined, color: c),
+            tint: HaloColors.rose,
+            label: l10n.groupChatVideo,
+            onTap: _pickGroupVideo,
+          ),
+          AttachItem(
+            icon: (c) => StrokeIcon(pollGlyph, color: c, stroke: 1.9),
+            tint: HaloColors.green,
+            label: l10n.pollAttach,
+            onTap: _newPoll,
+          ),
+          AttachItem(
+            icon: (c) => Icon(Icons.gif_box_outlined, color: c),
+            tint: HaloColors.violet,
+            label: l10n.groupChatGifFromPhone,
+            onTap: _pickGroupGif,
+          ),
+          AttachItem(
+            icon: (c) => Icon(Icons.attach_file, color: c),
+            tint: HaloColors.amber,
+            label: l10n.groupChatFile,
+            onTap: _pickGroupFile,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // a poll goes out like a message: timed when the chat is, into a room as
+  // into a group
+  Future<void> _newPoll() async {
+    final d = await showNewPollSheet(context);
+    if (d == null || !mounted) return;
+    unawaited(
+      appState.sendToGroup(
+        widget.groupId,
+        d.question,
+        poll: PollSpec(options: d.options, multi: d.multi),
+        burnSeconds: _ghost ? _burnSeconds : null,
+      ),
     );
   }
 
@@ -2699,6 +2743,9 @@ class _GMsg {
   Map<String, String>? preview;
   int rowid = 0; // db insertion order, for append-fast-path
   final Map<String, String> reactions;
+  // a poll: its answers on the row, the votes this phone holds for it
+  PollSpec? poll;
+  Map<String, PollVote> votes = const {};
   _GMsg({
     required this.sender,
     String? senderName,
@@ -3302,9 +3349,18 @@ class _GroupBubble extends StatelessWidget {
   final VoidCallback? onReplyTap;
   final String? linkTitle;
   final bool linkBySender;
+  // a poll: who this phone is in the chat, voting, closing, and names
+  final String me;
+  final void Function(List<int>)? onVote;
+  final VoidCallback? onClosePoll;
+  final String Function(String id)? nameOf;
   const _GroupBubble({
     required this.m,
     required this.showSender,
+    this.me = '',
+    this.onVote,
+    this.onClosePoll,
+    this.nameOf,
     this.senderBadge,
     this.shieldFlag,
     this.onShield,
@@ -3445,6 +3501,16 @@ class _GroupBubble extends StatelessWidget {
                     children: [
                       Builder(
                         builder: (ctx) {
+                          // a poll is its own card, on either side
+                          if (m.poll != null) {
+                            return GestureDetector(
+                              onTap: m.failed ? onRetry : null,
+                              onLongPress: onLongPress == null
+                                  ? null
+                                  : () => onLongPress!(ctx),
+                              child: _pollCard(),
+                            );
+                          }
                           return GestureDetector(
                             onTap: m.failed ? onRetry : null,
                             onLongPress: onLongPress == null
@@ -3932,6 +3998,65 @@ class _GroupBubble extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _pollCard() {
+    final isOut = m.direction == 'out';
+    return PollCard(
+      key: ValueKey('poll_${m.msgUid}'),
+      question: m.text,
+      poll: m.poll!,
+      votes: m.votes,
+      me: me,
+      mine: isOut,
+      isOut: isOut,
+      onVote: (c) => onVote?.call(c),
+      onClose: isOut ? onClosePoll : null,
+      nameOf: nameOf ?? (id) => id,
+      burn: m.burnAt == null
+          ? null
+          : Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              decoration: BoxDecoration(
+                color: HaloColors.amberSoft,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                _remaining(m.burnAt!),
+                style: HaloType.mono(size: 9, color: HaloColors.amber),
+              ),
+            ),
+      stamp: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            _fmtTime(m.when),
+            style: HaloType.mono(size: 9.5, color: HaloColors.text2),
+          ),
+          if (isOut && !m.pending && !m.looksFailed) ...[
+            const SizedBox(width: 3),
+            Text(
+              '✓',
+              style: TextStyle(
+                fontFamily: HaloType.monoFamily,
+                fontFamilyFallback: HaloType.monoFallbackNow,
+                fontSize: 11,
+                color: HaloColors.amber,
+                fontWeight: FontWeight.w700,
+                height: 1,
+              ),
+            ),
+          ],
+          if (m.looksFailed) ...[
+            const SizedBox(width: 6),
+            Text(
+              l10n.groupChatTapToRetry,
+              style: HaloType.mono(size: 9, color: HaloColors.rose),
+            ),
+          ],
+        ],
       ),
     );
   }

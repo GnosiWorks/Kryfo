@@ -6703,4 +6703,101 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get languageLaterLine =>
       'Puoi cambiarla quando vuoi nelle impostazioni.';
+
+  @override
+  String get pollAttach => 'Sondaggio';
+
+  @override
+  String get pollNewTitle => 'Nuovo sondaggio';
+
+  @override
+  String get pollQuestionHint => 'Chiedi qualcosa al gruppo';
+
+  @override
+  String get pollOptionsLabel => 'Opzioni';
+
+  @override
+  String pollOptionHint(Object n) {
+    return 'Opzione $n';
+  }
+
+  @override
+  String get pollAddOption => 'Aggiungi un’opzione';
+
+  @override
+  String get pollMaxLine => 'Al massimo dodici opzioni.';
+
+  @override
+  String get pollMultiple => 'Più risposte';
+
+  @override
+  String get pollMultipleLine => 'Si può sceglierne più di una.';
+
+  @override
+  String get pollSend => 'Invia sondaggio';
+
+  @override
+  String get pollKind => 'Sondaggio';
+
+  @override
+  String get pollKindMulti => 'Sondaggio · più risposte';
+
+  @override
+  String get pollKindClosed => 'Risultato finale';
+
+  @override
+  String pollVotes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voti',
+      one: '$count voto',
+      zero: 'Ancora nessun voto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pollVote => 'Vota';
+
+  @override
+  String get pollTakeBack => 'Ritira il mio voto';
+
+  @override
+  String get pollClose => 'Chiudi sondaggio';
+
+  @override
+  String get pollCloseTitle => 'Chiudere questo sondaggio?';
+
+  @override
+  String get pollCloseLine =>
+      'Tutti vedono il risultato finale e nessuno potrà più votare.';
+
+  @override
+  String get pollCloseYes => 'Chiudilo';
+
+  @override
+  String pollPreview(Object question) {
+    return 'Sondaggio: $question';
+  }
+
+  @override
+  String get pollWhoVoted => 'Chi ha votato';
+
+  @override
+  String get pollNobody => 'Ancora nessuno';
+
+  @override
+  String get pollYou => 'Tu';
+
+  @override
+  String pollOptionA11y(Object option, Object share) {
+    return '$option, $share';
+  }
+
+  @override
+  String get pollPickOne => 'Scegline una';
+
+  @override
+  String get pollPickSeveral => 'Scegline una o più';
 }

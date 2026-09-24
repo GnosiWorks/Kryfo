@@ -6623,4 +6623,100 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get languageLaterLine =>
       'Bạn có thể đổi bất cứ lúc nào trong cài đặt.';
+
+  @override
+  String get pollAttach => 'Bình chọn';
+
+  @override
+  String get pollNewTitle => 'Cuộc bình chọn mới';
+
+  @override
+  String get pollQuestionHint => 'Hỏi nhóm một điều gì đó';
+
+  @override
+  String get pollOptionsLabel => 'Các lựa chọn';
+
+  @override
+  String pollOptionHint(Object n) {
+    return 'Lựa chọn $n';
+  }
+
+  @override
+  String get pollAddOption => 'Thêm lựa chọn';
+
+  @override
+  String get pollMaxLine => 'Tối đa mười hai lựa chọn.';
+
+  @override
+  String get pollMultiple => 'Nhiều câu trả lời';
+
+  @override
+  String get pollMultipleLine => 'Mọi người có thể chọn nhiều hơn một.';
+
+  @override
+  String get pollSend => 'Gửi bình chọn';
+
+  @override
+  String get pollKind => 'Bình chọn';
+
+  @override
+  String get pollKindMulti => 'Bình chọn · nhiều câu trả lời';
+
+  @override
+  String get pollKindClosed => 'Kết quả cuối cùng';
+
+  @override
+  String pollVotes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count phiếu',
+      zero: 'Chưa có phiếu nào',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pollVote => 'Bình chọn';
+
+  @override
+  String get pollTakeBack => 'Rút lại phiếu của tôi';
+
+  @override
+  String get pollClose => 'Kết thúc bình chọn';
+
+  @override
+  String get pollCloseTitle => 'Kết thúc cuộc bình chọn này?';
+
+  @override
+  String get pollCloseLine =>
+      'Mọi người sẽ thấy kết quả cuối cùng và không ai có thể bình chọn nữa.';
+
+  @override
+  String get pollCloseYes => 'Kết thúc';
+
+  @override
+  String pollPreview(Object question) {
+    return 'Bình chọn: $question';
+  }
+
+  @override
+  String get pollWhoVoted => 'Ai đã bình chọn';
+
+  @override
+  String get pollNobody => 'Chưa có ai';
+
+  @override
+  String get pollYou => 'Bạn';
+
+  @override
+  String pollOptionA11y(Object option, Object share) {
+    return '$option, $share';
+  }
+
+  @override
+  String get pollPickOne => 'Chọn một';
+
+  @override
+  String get pollPickSeveral => 'Chọn một hoặc nhiều';
 }

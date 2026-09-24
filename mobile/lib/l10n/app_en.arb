@@ -8436,5 +8436,136 @@
   "languageLaterLine": "You can change this any time in settings.",
   "@languageLaterLine": {
     "description": "under the title of the language sheet during onboarding: the choice is not final"
+  },
+  "pollAttach": "Poll",
+  "@pollAttach": {
+    "description": "the poll item in the attach sheet of a group chat"
+  },
+  "pollNewTitle": "New poll",
+  "@pollNewTitle": {
+    "description": "title of the sheet that makes a poll"
+  },
+  "pollQuestionHint": "Ask the group something",
+  "@pollQuestionHint": {
+    "description": "hint in the question field of a new poll"
+  },
+  "pollOptionsLabel": "Options",
+  "@pollOptionsLabel": {
+    "description": "small label above the answer fields of a new poll"
+  },
+  "pollOptionHint": "Option {n}",
+  "@pollOptionHint": {
+    "description": "hint in an empty answer field; {n} is its number",
+    "placeholders": {
+      "n": {
+        "type": "Object"
+      }
+    }
+  },
+  "pollAddOption": "Add an option",
+  "@pollAddOption": {
+    "description": "button under the answer fields"
+  },
+  "pollMaxLine": "Twelve options at most.",
+  "@pollMaxLine": {
+    "description": "shown when the twelfth answer field is there"
+  },
+  "pollMultiple": "Several answers",
+  "@pollMultiple": {
+    "description": "switch on the new-poll sheet: people may pick more than one answer"
+  },
+  "pollMultipleLine": "People can pick more than one.",
+  "@pollMultipleLine": {
+    "description": "the line under that switch"
+  },
+  "pollSend": "Send poll",
+  "@pollSend": {
+    "description": "the button that sends the poll"
+  },
+  "pollKind": "Poll",
+  "@pollKind": {
+    "description": "small label at the top of a poll in the chat"
+  },
+  "pollKindMulti": "Poll · several answers",
+  "@pollKindMulti": {
+    "description": "the same label on a poll where more than one answer can be picked"
+  },
+  "pollKindClosed": "Final result",
+  "@pollKindClosed": {
+    "description": "the label once the creator closed the poll"
+  },
+  "pollVotes": "{count, plural, =0{No votes yet} one{{count} vote} other{{count} votes}}",
+  "@pollVotes": {
+    "description": "how many people voted; tapping it shows who",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pollVote": "Vote",
+  "@pollVote": {
+    "description": "button under a several-answers poll once answers are picked"
+  },
+  "pollTakeBack": "Take my vote back",
+  "@pollTakeBack": {
+    "description": "link on a poll: removes your vote"
+  },
+  "pollClose": "Close poll",
+  "@pollClose": {
+    "description": "link on a poll, only for the person who made it"
+  },
+  "pollCloseTitle": "Close this poll?",
+  "@pollCloseTitle": {
+    "description": "title of the sheet that asks before closing a poll"
+  },
+  "pollCloseLine": "Everyone sees the final result, and nobody can vote after this.",
+  "@pollCloseLine": {
+    "description": "its line"
+  },
+  "pollCloseYes": "Close it",
+  "@pollCloseYes": {
+    "description": "its button"
+  },
+  "pollPreview": "Poll: {question}",
+  "@pollPreview": {
+    "description": "the preview of a poll in the chat list, a notification and a quoted reply",
+    "placeholders": {
+      "question": {
+        "type": "Object"
+      }
+    }
+  },
+  "pollWhoVoted": "Who voted",
+  "@pollWhoVoted": {
+    "description": "title of the sheet listing who picked what"
+  },
+  "pollNobody": "Nobody yet",
+  "@pollNobody": {
+    "description": "under an answer nobody picked, in that sheet"
+  },
+  "pollYou": "You",
+  "@pollYou": {
+    "description": "you, in that list"
+  },
+  "pollOptionA11y": "{option}, {share}",
+  "@pollOptionA11y": {
+    "description": "what a screen reader says for one answer: the answer and its share, e.g. \"Pizza, 40%\"",
+    "placeholders": {
+      "option": {
+        "type": "Object"
+      },
+      "share": {
+        "type": "Object"
+      }
+    }
+  },
+  "pollPickOne": "Pick one",
+  "@pollPickOne": {
+    "description": "hint on a poll before voting: one answer"
+  },
+  "pollPickSeveral": "Pick one or more",
+  "@pollPickSeveral": {
+    "description": "hint on a poll before voting: one or more answers"
   }
 }

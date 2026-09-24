@@ -6708,4 +6708,101 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get languageLaterLine =>
       'Du kannst das jederzeit in den Einstellungen ändern.';
+
+  @override
+  String get pollAttach => 'Umfrage';
+
+  @override
+  String get pollNewTitle => 'Neue Umfrage';
+
+  @override
+  String get pollQuestionHint => 'Frag die Gruppe etwas';
+
+  @override
+  String get pollOptionsLabel => 'Optionen';
+
+  @override
+  String pollOptionHint(Object n) {
+    return 'Option $n';
+  }
+
+  @override
+  String get pollAddOption => 'Option hinzufügen';
+
+  @override
+  String get pollMaxLine => 'Höchstens zwölf Optionen.';
+
+  @override
+  String get pollMultiple => 'Mehrere Antworten';
+
+  @override
+  String get pollMultipleLine => 'Man kann mehr als eine wählen.';
+
+  @override
+  String get pollSend => 'Umfrage senden';
+
+  @override
+  String get pollKind => 'Umfrage';
+
+  @override
+  String get pollKindMulti => 'Umfrage · mehrere Antworten';
+
+  @override
+  String get pollKindClosed => 'Endergebnis';
+
+  @override
+  String pollVotes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Stimmen',
+      one: '$count Stimme',
+      zero: 'Noch keine Stimmen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pollVote => 'Abstimmen';
+
+  @override
+  String get pollTakeBack => 'Meine Stimme zurückziehen';
+
+  @override
+  String get pollClose => 'Umfrage beenden';
+
+  @override
+  String get pollCloseTitle => 'Diese Umfrage beenden?';
+
+  @override
+  String get pollCloseLine =>
+      'Alle sehen das Endergebnis, und danach kann niemand mehr abstimmen.';
+
+  @override
+  String get pollCloseYes => 'Beenden';
+
+  @override
+  String pollPreview(Object question) {
+    return 'Umfrage: $question';
+  }
+
+  @override
+  String get pollWhoVoted => 'Wer abgestimmt hat';
+
+  @override
+  String get pollNobody => 'Noch niemand';
+
+  @override
+  String get pollYou => 'Du';
+
+  @override
+  String pollOptionA11y(Object option, Object share) {
+    return '$option, $share';
+  }
+
+  @override
+  String get pollPickOne => 'Wähle eine';
+
+  @override
+  String get pollPickSeveral => 'Wähle eine oder mehrere';
 }

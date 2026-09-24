@@ -6627,4 +6627,101 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get languageLaterLine => 'You can change this any time in settings.';
+
+  @override
+  String get pollAttach => 'Poll';
+
+  @override
+  String get pollNewTitle => 'New poll';
+
+  @override
+  String get pollQuestionHint => 'Ask the group something';
+
+  @override
+  String get pollOptionsLabel => 'Options';
+
+  @override
+  String pollOptionHint(Object n) {
+    return 'Option $n';
+  }
+
+  @override
+  String get pollAddOption => 'Add an option';
+
+  @override
+  String get pollMaxLine => 'Twelve options at most.';
+
+  @override
+  String get pollMultiple => 'Several answers';
+
+  @override
+  String get pollMultipleLine => 'People can pick more than one.';
+
+  @override
+  String get pollSend => 'Send poll';
+
+  @override
+  String get pollKind => 'Poll';
+
+  @override
+  String get pollKindMulti => 'Poll · several answers';
+
+  @override
+  String get pollKindClosed => 'Final result';
+
+  @override
+  String pollVotes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count votes',
+      one: '$count vote',
+      zero: 'No votes yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pollVote => 'Vote';
+
+  @override
+  String get pollTakeBack => 'Take my vote back';
+
+  @override
+  String get pollClose => 'Close poll';
+
+  @override
+  String get pollCloseTitle => 'Close this poll?';
+
+  @override
+  String get pollCloseLine =>
+      'Everyone sees the final result, and nobody can vote after this.';
+
+  @override
+  String get pollCloseYes => 'Close it';
+
+  @override
+  String pollPreview(Object question) {
+    return 'Poll: $question';
+  }
+
+  @override
+  String get pollWhoVoted => 'Who voted';
+
+  @override
+  String get pollNobody => 'Nobody yet';
+
+  @override
+  String get pollYou => 'You';
+
+  @override
+  String pollOptionA11y(Object option, Object share) {
+    return '$option, $share';
+  }
+
+  @override
+  String get pollPickOne => 'Pick one';
+
+  @override
+  String get pollPickSeveral => 'Pick one or more';
 }

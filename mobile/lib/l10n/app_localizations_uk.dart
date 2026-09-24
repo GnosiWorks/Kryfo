@@ -6753,4 +6753,103 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get languageLaterLine =>
       'Мову можна будь-коли змінити в налаштуваннях.';
+
+  @override
+  String get pollAttach => 'Опитування';
+
+  @override
+  String get pollNewTitle => 'Нове опитування';
+
+  @override
+  String get pollQuestionHint => 'Запитай щось у групи';
+
+  @override
+  String get pollOptionsLabel => 'Варіанти';
+
+  @override
+  String pollOptionHint(Object n) {
+    return 'Варіант $n';
+  }
+
+  @override
+  String get pollAddOption => 'Додати варіант';
+
+  @override
+  String get pollMaxLine => 'Не більше дванадцяти варіантів.';
+
+  @override
+  String get pollMultiple => 'Кілька відповідей';
+
+  @override
+  String get pollMultipleLine => 'Можна вибрати більше одного.';
+
+  @override
+  String get pollSend => 'Надіслати опитування';
+
+  @override
+  String get pollKind => 'Опитування';
+
+  @override
+  String get pollKindMulti => 'Опитування · кілька відповідей';
+
+  @override
+  String get pollKindClosed => 'Підсумки';
+
+  @override
+  String pollVotes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count голосу',
+      many: '$count голосів',
+      few: '$count голоси',
+      one: '$count голос',
+      zero: 'Ще ніхто не голосував',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pollVote => 'Проголосувати';
+
+  @override
+  String get pollTakeBack => 'Відкликати мій голос';
+
+  @override
+  String get pollClose => 'Завершити опитування';
+
+  @override
+  String get pollCloseTitle => 'Завершити це опитування?';
+
+  @override
+  String get pollCloseLine =>
+      'Усі побачать підсумки, і голосувати більше буде не можна.';
+
+  @override
+  String get pollCloseYes => 'Завершити';
+
+  @override
+  String pollPreview(Object question) {
+    return 'Опитування: $question';
+  }
+
+  @override
+  String get pollWhoVoted => 'Хто голосував';
+
+  @override
+  String get pollNobody => 'Поки нікого';
+
+  @override
+  String get pollYou => 'Ти';
+
+  @override
+  String pollOptionA11y(Object option, Object share) {
+    return '$option, $share';
+  }
+
+  @override
+  String get pollPickOne => 'Вибери один';
+
+  @override
+  String get pollPickSeveral => 'Вибери один або кілька';
 }

@@ -6650,4 +6650,101 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get languageLaterLine =>
       'هر وقت خواستید می‌توانید این را در تنظیمات تغییر دهید.';
+
+  @override
+  String get pollAttach => 'نظرسنجی';
+
+  @override
+  String get pollNewTitle => 'نظرسنجی تازه';
+
+  @override
+  String get pollQuestionHint => 'از گروه چیزی بپرسید';
+
+  @override
+  String get pollOptionsLabel => 'گزینه‌ها';
+
+  @override
+  String pollOptionHint(Object n) {
+    return 'گزینهٔ ⁨$n⁩';
+  }
+
+  @override
+  String get pollAddOption => 'افزودن گزینه';
+
+  @override
+  String get pollMaxLine => 'حداکثر دوازده گزینه.';
+
+  @override
+  String get pollMultiple => 'چند پاسخ';
+
+  @override
+  String get pollMultipleLine => 'می‌شود بیش از یکی را انتخاب کرد.';
+
+  @override
+  String get pollSend => 'فرستادن نظرسنجی';
+
+  @override
+  String get pollKind => 'نظرسنجی';
+
+  @override
+  String get pollKindMulti => 'نظرسنجی · چند پاسخ';
+
+  @override
+  String get pollKindClosed => 'نتیجهٔ نهایی';
+
+  @override
+  String pollVotes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$count⁩ رأی',
+      one: '⁨$count⁩ رأی',
+      zero: 'هنوز رأیی نیست',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pollVote => 'رأی دادن';
+
+  @override
+  String get pollTakeBack => 'پس گرفتن رأی من';
+
+  @override
+  String get pollClose => 'بستن نظرسنجی';
+
+  @override
+  String get pollCloseTitle => 'این نظرسنجی بسته شود؟';
+
+  @override
+  String get pollCloseLine =>
+      'همه نتیجهٔ نهایی را می‌بینند و پس از این کسی نمی‌تواند رأی بدهد.';
+
+  @override
+  String get pollCloseYes => 'بستن';
+
+  @override
+  String pollPreview(Object question) {
+    return 'نظرسنجی: ⁨$question⁩';
+  }
+
+  @override
+  String get pollWhoVoted => 'چه کسانی رأی دادند';
+
+  @override
+  String get pollNobody => 'هنوز کسی نه';
+
+  @override
+  String get pollYou => 'شما';
+
+  @override
+  String pollOptionA11y(Object option, Object share) {
+    return '⁨$option⁩، ⁨$share⁩';
+  }
+
+  @override
+  String get pollPickOne => 'یکی را انتخاب کنید';
+
+  @override
+  String get pollPickSeveral => 'یک یا چند گزینه را انتخاب کنید';
 }

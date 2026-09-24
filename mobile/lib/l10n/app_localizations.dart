@@ -10658,6 +10658,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You can change this any time in settings.'**
   String get languageLaterLine;
+
+  /// the poll item in the attach sheet of a group chat
+  ///
+  /// In en, this message translates to:
+  /// **'Poll'**
+  String get pollAttach;
+
+  /// title of the sheet that makes a poll
+  ///
+  /// In en, this message translates to:
+  /// **'New poll'**
+  String get pollNewTitle;
+
+  /// hint in the question field of a new poll
+  ///
+  /// In en, this message translates to:
+  /// **'Ask the group something'**
+  String get pollQuestionHint;
+
+  /// small label above the answer fields of a new poll
+  ///
+  /// In en, this message translates to:
+  /// **'Options'**
+  String get pollOptionsLabel;
+
+  /// hint in an empty answer field; {n} is its number
+  ///
+  /// In en, this message translates to:
+  /// **'Option {n}'**
+  String pollOptionHint(Object n);
+
+  /// button under the answer fields
+  ///
+  /// In en, this message translates to:
+  /// **'Add an option'**
+  String get pollAddOption;
+
+  /// shown when the twelfth answer field is there
+  ///
+  /// In en, this message translates to:
+  /// **'Twelve options at most.'**
+  String get pollMaxLine;
+
+  /// switch on the new-poll sheet: people may pick more than one answer
+  ///
+  /// In en, this message translates to:
+  /// **'Several answers'**
+  String get pollMultiple;
+
+  /// the line under that switch
+  ///
+  /// In en, this message translates to:
+  /// **'People can pick more than one.'**
+  String get pollMultipleLine;
+
+  /// the button that sends the poll
+  ///
+  /// In en, this message translates to:
+  /// **'Send poll'**
+  String get pollSend;
+
+  /// small label at the top of a poll in the chat
+  ///
+  /// In en, this message translates to:
+  /// **'Poll'**
+  String get pollKind;
+
+  /// the same label on a poll where more than one answer can be picked
+  ///
+  /// In en, this message translates to:
+  /// **'Poll · several answers'**
+  String get pollKindMulti;
+
+  /// the label once the creator closed the poll
+  ///
+  /// In en, this message translates to:
+  /// **'Final result'**
+  String get pollKindClosed;
+
+  /// how many people voted; tapping it shows who
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No votes yet} one{{count} vote} other{{count} votes}}'**
+  String pollVotes(int count);
+
+  /// button under a several-answers poll once answers are picked
+  ///
+  /// In en, this message translates to:
+  /// **'Vote'**
+  String get pollVote;
+
+  /// link on a poll: removes your vote
+  ///
+  /// In en, this message translates to:
+  /// **'Take my vote back'**
+  String get pollTakeBack;
+
+  /// link on a poll, only for the person who made it
+  ///
+  /// In en, this message translates to:
+  /// **'Close poll'**
+  String get pollClose;
+
+  /// title of the sheet that asks before closing a poll
+  ///
+  /// In en, this message translates to:
+  /// **'Close this poll?'**
+  String get pollCloseTitle;
+
+  /// its line
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone sees the final result, and nobody can vote after this.'**
+  String get pollCloseLine;
+
+  /// its button
+  ///
+  /// In en, this message translates to:
+  /// **'Close it'**
+  String get pollCloseYes;
+
+  /// the preview of a poll in the chat list, a notification and a quoted reply
+  ///
+  /// In en, this message translates to:
+  /// **'Poll: {question}'**
+  String pollPreview(Object question);
+
+  /// title of the sheet listing who picked what
+  ///
+  /// In en, this message translates to:
+  /// **'Who voted'**
+  String get pollWhoVoted;
+
+  /// under an answer nobody picked, in that sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody yet'**
+  String get pollNobody;
+
+  /// you, in that list
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get pollYou;
+
+  /// what a screen reader says for one answer: the answer and its share, e.g. "Pizza, 40%"
+  ///
+  /// In en, this message translates to:
+  /// **'{option}, {share}'**
+  String pollOptionA11y(Object option, Object share);
+
+  /// hint on a poll before voting: one answer
+  ///
+  /// In en, this message translates to:
+  /// **'Pick one'**
+  String get pollPickOne;
+
+  /// hint on a poll before voting: one or more answers
+  ///
+  /// In en, this message translates to:
+  /// **'Pick one or more'**
+  String get pollPickSeveral;
 }
 
 class _AppLocalizationsDelegate

@@ -53,6 +53,9 @@ class UnwrappedMessage {
   final IntroFrame? intro; // 'in' - a contact's card, vouched by the sender
   final NeedFrame? need; // 'nd' - slices of a file the receiver never got
   final bool canResend; // 'cr' - on a slice: this sender answers an 'nd'
+  final Object? poll; // 'pl' - the options of a poll; the question is 'm'
+  final VoteFrame? vote; // 'vt' - a vote on a poll
+  final PollCloseFrame? pollClose; // 'pc' - the creator closed a poll
   UnwrappedMessage(
     this.message, {
     this.secure = false,
@@ -89,6 +92,9 @@ class UnwrappedMessage {
     this.intro,
     this.need,
     this.canResend = false,
+    this.poll,
+    this.vote,
+    this.pollClose,
   });
 }
 
@@ -119,6 +125,27 @@ class ReactionFrame {
   final String targetUid; // the msg_uid this reaction applies to
   final String emoji; // '' means remove the reactor's reaction
   const ReactionFrame({required this.targetUid, required this.emoji});
+}
+
+// a vote on a poll. choices are option numbers; none takes the vote back.
+// seq only goes up for one voter on one poll: the highest one held wins.
+class VoteFrame {
+  final String pollUid;
+  final List<Object?> choices;
+  final int seq;
+  const VoteFrame({
+    required this.pollUid,
+    required this.choices,
+    required this.seq,
+  });
+}
+
+// the creator closed a poll. carries the votes as the creator had them, so
+// every phone shows the same final result.
+class PollCloseFrame {
+  final String pollUid;
+  final Object? finalVotes;
+  const PollCloseFrame({required this.pollUid, this.finalVotes});
 }
 
 class PinFrame {
@@ -247,8 +274,18 @@ Future<String> wrapMessage(
   IntroFrame? intro,
   NeedFrame? need,
   bool canResend = false,
+  Map<String, Object>? poll,
+  VoteFrame? vote,
+  PollCloseFrame? pollClose,
 }) async {
   final body = <String, dynamic>{'m': plain};
+  if (poll != null) body['pl'] = poll;
+  if (vote != null) {
+    body['vt'] = {'u': vote.pollUid, 'c': vote.choices, 's': vote.seq};
+  }
+  if (pollClose != null) {
+    body['pc'] = {'u': pollClose.pollUid, 'f': pollClose.finalVotes};
+  }
   if (msgUid != null) body['u'] = msgUid;
   if (reaction != null) {
     body['r'] = {'u': reaction.targetUid, 'e': reaction.emoji};
@@ -366,6 +403,26 @@ UnwrappedMessage unwrapMessage(String wrapped) {
         );
       }
     }
+    VoteFrame? vote;
+    final vtRaw = json['vt'];
+    if (vtRaw is Map &&
+        vtRaw['u'] is String &&
+        vtRaw['c'] is List &&
+        vtRaw['s'] is num) {
+      vote = VoteFrame(
+        pollUid: vtRaw['u'] as String,
+        choices: vtRaw['c'] as List,
+        seq: (vtRaw['s'] as num).toInt(),
+      );
+    }
+    PollCloseFrame? pollClose;
+    final pcRaw = json['pc'];
+    if (pcRaw is Map && pcRaw['u'] is String) {
+      pollClose = PollCloseFrame(
+        pollUid: pcRaw['u'] as String,
+        finalVotes: pcRaw['f'],
+      );
+    }
     GroupControl? gc;
     final gcRaw = json['gc'];
     if (gcRaw is Map) {
@@ -435,6 +492,9 @@ UnwrappedMessage unwrapMessage(String wrapped) {
                 (e as Map).map((k, v) => MapEntry(k.toString(), v.toString())),
           )
           .toList(),
+      poll: json['pl'],
+      vote: vote,
+      pollClose: pollClose,
     );
   } catch (e) {
     dlog(

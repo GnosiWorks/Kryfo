@@ -56,6 +56,7 @@ import 'rooms.dart';
 import 'outbox.dart';
 import 'supporter.dart';
 import 'message_envelope.dart';
+import 'polls.dart';
 import 'widgets/motion.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:app_links/app_links.dart';
@@ -961,7 +962,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 49,
+      version: 50,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1022,6 +1023,7 @@ class HaloDb {
             preview TEXT,
             pow_nonce INTEGER,
             burn_secs INTEGER,
+            poll TEXT,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
         ''');
@@ -1093,8 +1095,18 @@ class HaloDb {
         await _mediaWantsTable(db);
         await _heldTable(db);
         await _signalTables(db);
+        await _pollTables(db);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 50) {
+          // polls: the options on the row, the votes beside it
+          try {
+            await db.execute('ALTER TABLE messages ADD COLUMN poll TEXT');
+          } catch (_) {
+            // already present - a migration must be safe to re-run
+          }
+          await _pollTables(db);
+        }
         if (oldV < 49) {
           await _mediaWantsTable(db);
         }
@@ -2219,6 +2231,7 @@ class HaloDb {
     int sent = 1,
     String? preview,
     bool secure = false,
+    String? poll,
   }) async {
     final db = await open();
     await db.insert('messages', {
@@ -2239,6 +2252,7 @@ class HaloDb {
       'saved': saved ? 1 : 0,
       'sent': sent,
       'secure': secure ? 1 : 0,
+      'poll': ?poll,
     });
     // any inbound message proves the peer knows us, so flip back_paired.
     // subsequent sends to them can use nostr safely.
@@ -2964,6 +2978,170 @@ class HaloDb {
   }
 
   // did this sender write this row. what edit and unsend frames check.
+  // ---- polls ----
+
+  /// the poll on a row, the chat it is in, and whether it is ours
+  Future<({PollSpec spec, String? groupId, bool mine})?> pollRow(
+    String uid,
+  ) async {
+    final db = await open();
+    final r = await db.query(
+      'messages',
+      columns: ['poll', 'group_id', 'direction'],
+      where: 'msg_uid = ? AND poll IS NOT NULL',
+      whereArgs: [uid],
+      limit: 1,
+    );
+    if (r.isEmpty) return null;
+    final spec = PollSpec.parse(r.first['poll']);
+    if (spec == null) return null;
+    return (
+      spec: spec,
+      groupId: r.first['group_id'] as String?,
+      mine: r.first['direction'] == 'out',
+    );
+  }
+
+  Future<int?> pollVoteSeq(String pollUid, String voter) async {
+    final db = await open();
+    final r = await db.query(
+      'poll_votes',
+      columns: ['seq'],
+      where: 'poll_uid = ? AND voter = ?',
+      whereArgs: [pollUid, voter],
+      limit: 1,
+    );
+    return r.isEmpty ? null : (r.first['seq'] as num).toInt();
+  }
+
+  /// keeps the vote when it is newer than the one held. false when it was
+  /// a duplicate or an old vote arriving late.
+  Future<bool> putPollVote(
+    String pollUid,
+    String voter,
+    String? groupId,
+    List<int> choices,
+    int seq,
+  ) async {
+    final db = await open();
+    return db.transaction((tx) async {
+      final r = await tx.query(
+        'poll_votes',
+        columns: ['seq'],
+        where: 'poll_uid = ? AND voter = ?',
+        whereArgs: [pollUid, voter],
+        limit: 1,
+      );
+      final held = r.isEmpty ? null : (r.first['seq'] as num).toInt();
+      if (!voteIsNewer(held, seq)) return false;
+      await tx.insert('poll_votes', {
+        'poll_uid': pollUid,
+        'voter': voter,
+        'group_id': groupId,
+        'choices': jsonEncode(choices),
+        'seq': seq,
+        'at': DateTime.now().millisecondsSinceEpoch,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      return true;
+    });
+  }
+
+  /// every vote held for these polls, voter by voter
+  Future<Map<String, Map<String, PollVote>>> pollVotesFor(
+    List<String> uids,
+  ) async {
+    final out = <String, Map<String, PollVote>>{};
+    if (uids.isEmpty) return out;
+    final db = await open();
+    for (var i = 0; i < uids.length; i += 400) {
+      final part = uids.sublist(
+        i,
+        i + 400 > uids.length ? uids.length : i + 400,
+      );
+      final rows = await db.query(
+        'poll_votes',
+        where: 'poll_uid IN (${List.filled(part.length, '?').join(',')})',
+        whereArgs: part,
+      );
+      for (final r in rows) {
+        List<int> picks;
+        try {
+          picks = (jsonDecode(r['choices'] as String) as List)
+              .whereType<int>()
+              .toList();
+        } catch (_) {
+          continue;
+        }
+        out.putIfAbsent(r['poll_uid'] as String, () => {})[r['voter']
+            as String] = PollVote(
+          picks,
+          (r['seq'] as num).toInt(),
+        );
+      }
+    }
+    return out;
+  }
+
+  /// the poll is closed: the row says so, and the votes are the final ones
+  /// from the close. held above any seq a voter can send, so nothing late
+  /// moves them.
+  Future<void> closePollRow(
+    String uid,
+    PollSpec spec,
+    Map<String, List<int>> finals,
+    String? groupId,
+  ) async {
+    final db = await open();
+    await db.transaction((tx) async {
+      await tx.update(
+        'messages',
+        {'poll': spec.closedNow().toRow()},
+        where: 'msg_uid = ?',
+        whereArgs: [uid],
+      );
+      await tx.delete('poll_votes', where: 'poll_uid = ?', whereArgs: [uid]);
+      final now = DateTime.now().millisecondsSinceEpoch;
+      for (final e in finals.entries) {
+        await tx.insert('poll_votes', {
+          'poll_uid': uid,
+          'voter': e.key,
+          'group_id': groupId,
+          'choices': jsonEncode(e.value),
+          'seq': kPollFinalSeq,
+          'at': now,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+    });
+  }
+
+  Future<bool> pollGone(String uid) async {
+    final db = await open();
+    final r = await db.query(
+      'polls_gone',
+      where: 'uid = ?',
+      whereArgs: [uid],
+      limit: 1,
+    );
+    return r.isNotEmpty;
+  }
+
+  /// votes still waiting for a poll that never came: after an hour the
+  /// poll is not coming, it burned or was deleted. dropped, and the marks
+  /// of polls that went with them.
+  Future<void> purgeStrayVotes({
+    Duration after = const Duration(hours: 1),
+  }) async {
+    final db = await open();
+    final cut = DateTime.now().subtract(after).millisecondsSinceEpoch;
+    await db.rawDelete(
+      'DELETE FROM poll_votes WHERE at < ? AND poll_uid NOT IN '
+      '(SELECT msg_uid FROM messages WHERE msg_uid IS NOT NULL '
+      'AND poll IS NOT NULL)',
+      [cut],
+    );
+    await db.delete('polls_gone', where: 'at < ?', whereArgs: [cut]);
+  }
+
   Future<bool> isTheirs(String msgUid, String sender) async {
     final db = await open();
     final r = await db.query(
@@ -3399,6 +3577,44 @@ class HaloDb {
     );
     return rows.isEmpty ? null : rows.first;
   }
+}
+
+// a poll's votes: one row per voter, the highest seq they sent. a vote can
+// overtake its poll (members write to us separately), so a row may wait a
+// while for the poll it names. when the poll's message goes - burned,
+// unsent, deleted, a chat cleared - its votes go with it, whichever path
+// removed it: the trigger does that, not each delete.
+Future<void> _pollTables(Database db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS poll_votes (
+      poll_uid TEXT NOT NULL,
+      voter TEXT NOT NULL,
+      group_id TEXT,
+      choices TEXT NOT NULL,
+      seq INTEGER NOT NULL,
+      at INTEGER NOT NULL,
+      PRIMARY KEY (poll_uid, voter)
+    )
+  ''');
+  await db.execute(
+    'CREATE TRIGGER IF NOT EXISTS poll_votes_follow AFTER DELETE ON messages '
+    'WHEN old.msg_uid IS NOT NULL BEGIN '
+    'DELETE FROM poll_votes WHERE poll_uid = old.msg_uid; END',
+  );
+  // a poll that just went, for an hour: a vote naming it after that is
+  // dropped at the door instead of waiting for a poll that is not coming
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS polls_gone (
+      uid TEXT PRIMARY KEY,
+      at INTEGER NOT NULL
+    )
+  ''');
+  await db.execute(
+    'CREATE TRIGGER IF NOT EXISTS polls_gone_mark AFTER DELETE ON messages '
+    'WHEN old.poll IS NOT NULL AND old.msg_uid IS NOT NULL BEGIN '
+    'INSERT OR REPLACE INTO polls_gone (uid, at) VALUES '
+    "(old.msg_uid, CAST(strftime('%s','now') AS INTEGER) * 1000); END",
+  );
 }
 
 // a direct-onion message past a stranger's two has no relay to wait on. it
@@ -5398,6 +5614,13 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  String? _arrivingPoll(Object? raw) {
+    final p = PollSpec.parse(raw);
+    return p == null
+        ? null
+        : PollSpec(options: p.options, multi: p.multi).toRow();
+  }
+
   // unified incoming routing. handles three payload variants:
   //   1) group control msg (no chat row, no notif)
   //   2) reaction       (add/remove on a target uid, no chat row, no notif)
@@ -5483,6 +5706,15 @@ class AppState extends ChangeNotifier {
       }
       await db.setPinned(env.pin!.targetUid, env.pin!.pinned);
       notifyListeners();
+      return;
+    }
+    // polls: a vote, or the creator closing one
+    if (env.vote != null) {
+      await _applyVote(senderHaloId, env);
+      return;
+    }
+    if (env.pollClose != null) {
+      await _applyPollClose(senderHaloId, env);
       return;
     }
     // 2) reaction
@@ -5780,6 +6012,10 @@ class AppState extends ChangeNotifier {
       // also a contact of yours. a room's frames never reach this path.
       preview: shippedPreview(env.preview, accepted: isGroup || senderAccepted),
       secure: env.secure,
+      // a poll lives in a group or a room; in a 1:1 it is just its question.
+      // never closed on arrival, whatever the frame says: only a close from
+      // its creator does that
+      poll: isGroup ? _arrivingPoll(env.poll) : null,
     );
     // remember the face they picked. cheap, and it arrives with every
     // message so it stays current if they change it.
@@ -5837,7 +6073,9 @@ class AppState extends ChangeNotifier {
     if (isGroup) {
       final g = await db.getGroup(env.groupId!);
       notifTitle = (g?['name'] as String?) ?? l10n.appGroup2;
-      final gBody = env.message.isNotEmpty
+      final gBody = env.poll != null && PollSpec.parse(env.poll) != null
+          ? l10n.pollPreview(env.message)
+          : env.message.isNotEmpty
           ? env.message
           : (fileName == 'voice.wav'
                 ? l10n.appVoiceMessage
@@ -6670,10 +6908,12 @@ class AppState extends ChangeNotifier {
     // that keeps failing means burned messages are staying, which the
     // user was promised would not happen, so after a minute of it say so
     var sweepFails = 0;
+    var sweeps = 0;
     Timer.periodic(const Duration(seconds: 5), (_) async {
       if (haloWiping) return;
       try {
         final gone = await db.purgeExpired();
+        if (++sweeps % 12 == 0) await db.purgeStrayVotes();
         sweepFails = 0;
         // a row whose newest message just burned needs a new preview
         if (gone > 0) {
@@ -7892,7 +8132,12 @@ class AppState extends ChangeNotifier {
     String? replyTo,
     int? burnSeconds,
     Map<String, String>? preview,
+    PollSpec? poll,
   }) async {
+    // a retry of a poll passes only its uid: the options come off the row
+    if (poll == null && msgUid != null) {
+      poll = (await db.pollRow(msgUid))?.spec;
+    }
     msgUid ??= newMsgUid();
     final burnAt = (burnSeconds != null && burnSeconds > 0)
         ? DateTime.now().millisecondsSinceEpoch + burnSeconds * 1000
@@ -7914,7 +8159,14 @@ class AppState extends ChangeNotifier {
         // ticked message nobody ever received. media already does this.
         sent: 0,
         preview: preview == null ? null : jsonEncode(preview),
+        poll: poll?.toRow(),
       );
+      // a poll has no optimistic bubble on the screen: it shows now, not
+      // once every member has been tried
+      if (poll != null) {
+        _bumpChatRev('group:$groupId');
+        notifyListeners();
+      }
     }
     final members = await db.getGroupMembers(groupId);
     // if we are the group admin, ride the full roster on the message so any
@@ -7936,6 +8188,7 @@ class AppState extends ChangeNotifier {
       rosterParticipants: rosterParts,
       supporterBadge: await sharedBadge(),
       sender: _mySender(),
+      poll: poll?.toWire(),
     );
     dlog('GRPSEND group=$groupId members=$members me=$myId admin=$amAdmin');
     final results = await Future.wait([
@@ -8132,6 +8385,130 @@ class AppState extends ChangeNotifier {
           if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
       ]),
     );
+  }
+
+  // ---- polls ----
+
+  // who this phone is in a chat. in a room it is the room key, never the
+  // kryfo id: a vote, or the final count a close carries, would otherwise
+  // put the real id in front of the room.
+  Future<String> meIn(String groupId) async =>
+      (await _roomOf(groupId))?.pub ?? myId;
+
+  // a vote goes out like a reaction: shown here at once, then to every
+  // member. choosing nothing takes the vote back.
+  Future<void> votePoll(
+    String groupId,
+    String pollUid,
+    List<int> choices,
+  ) async {
+    final row = await db.pollRow(pollUid);
+    if (row == null || row.spec.closed || row.groupId != groupId) return;
+    final me = await meIn(groupId);
+    final picks = cleanChoices(choices, row.spec);
+    final seq = nextVoteSeq(
+      await db.pollVoteSeq(pollUid, me),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+    await db.putPollVote(pollUid, me, groupId, picks, seq);
+    _bumpChatRev('group:$groupId');
+    notifyListeners();
+    final wrapped = await wrapMessage(
+      '',
+      groupId: groupId,
+      vote: VoteFrame(pollUid: pollUid, choices: picks, seq: seq),
+      sender: _mySender(),
+    );
+    final members = await db.getGroupMembers(groupId);
+    unawaited(
+      Future.wait([
+        for (final m in members)
+          if (m != myId && m != me) _sendGroupEnvelope(groupId, m, wrapped),
+      ]),
+    );
+  }
+
+  // only the poll's creator closes it. the close carries the votes as this
+  // phone holds them, and every member takes those as the final result.
+  Future<void> closePoll(String groupId, String pollUid) async {
+    final row = await db.pollRow(pollUid);
+    if (row == null || !row.mine || row.spec.closed || row.groupId != groupId) {
+      return;
+    }
+    final held = (await db.pollVotesFor([pollUid]))[pollUid] ?? const {};
+    final finals = <String, List<int>>{};
+    for (final e in held.entries) {
+      final picks = cleanChoices(e.value.choices, row.spec);
+      if (picks.isNotEmpty) finals[e.key] = picks;
+    }
+    await db.closePollRow(pollUid, row.spec, finals, groupId);
+    _bumpChatRev('group:$groupId');
+    notifyListeners();
+    final wrapped = await wrapMessage(
+      '',
+      groupId: groupId,
+      pollClose: PollCloseFrame(pollUid: pollUid, finalVotes: finals),
+      sender: _mySender(),
+    );
+    final me = await meIn(groupId);
+    final members = await db.getGroupMembers(groupId);
+    await Future.wait([
+      for (final m in members)
+        if (m != myId && m != me) _sendGroupEnvelope(groupId, m, wrapped),
+    ]);
+  }
+
+  // a vote from a member. members write to us separately, so a vote can
+  // overtake the poll it names; it waits then, an hour at most, and counts
+  // once the poll is here. a vote for a poll that already went is dropped.
+  Future<void> _applyVote(String sender, UnwrappedMessage env) async {
+    final v = env.vote!;
+    final gid = env.groupId;
+    if (gid == null || !await db.groupExists(gid)) return;
+    final row = await db.pollRow(v.pollUid);
+    final fate = voteFate(
+      member: (await db.getGroupMembers(gid)).contains(sender),
+      pollHere: row != null,
+      pollGone: row == null && await db.pollGone(v.pollUid),
+      sameChat: row?.groupId == gid,
+      closed: row?.spec.closed ?? false,
+    );
+    switch (fate) {
+      case VoteFate.drop:
+        dlog('vote: dropped');
+      case VoteFate.hold:
+        final raw = <int>{
+          for (final c in v.choices)
+            if (c is int && c >= 0 && c < kPollMaxOptions) c,
+        }.toList()..sort();
+        await db.putPollVote(v.pollUid, sender, gid, raw, v.seq);
+      case VoteFate.count:
+        final picks = cleanChoices(v.choices, row!.spec);
+        if (await db.putPollVote(v.pollUid, sender, gid, picks, v.seq)) {
+          notifyListeners();
+        }
+    }
+  }
+
+  Future<void> _applyPollClose(String sender, UnwrappedMessage env) async {
+    final c = env.pollClose!;
+    final row = await db.pollRow(c.pollUid);
+    if (!closeAccepted(
+      pollHere: row != null,
+      fromCreator: row != null && await db.isTheirs(c.pollUid, sender),
+      sameChat: row?.groupId == env.groupId,
+      closed: row?.spec.closed ?? false,
+    )) {
+      dlog('poll close: dropped');
+      return;
+    }
+    await db.closePollRow(
+      c.pollUid,
+      row!.spec,
+      cleanFinal(c.finalVotes, row.spec),
+      row.groupId,
+    );
+    notifyListeners();
   }
 
   // recall a group message everywhere: delete locally, tell every member.

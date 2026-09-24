@@ -6636,4 +6636,100 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get languageLaterLine =>
       'Kamu bisa mengubahnya kapan saja di pengaturan.';
+
+  @override
+  String get pollAttach => 'Polling';
+
+  @override
+  String get pollNewTitle => 'Polling baru';
+
+  @override
+  String get pollQuestionHint => 'Tanyakan sesuatu ke grup';
+
+  @override
+  String get pollOptionsLabel => 'Pilihan';
+
+  @override
+  String pollOptionHint(Object n) {
+    return 'Pilihan $n';
+  }
+
+  @override
+  String get pollAddOption => 'Tambah pilihan';
+
+  @override
+  String get pollMaxLine => 'Paling banyak dua belas pilihan.';
+
+  @override
+  String get pollMultiple => 'Beberapa jawaban';
+
+  @override
+  String get pollMultipleLine => 'Orang bisa memilih lebih dari satu.';
+
+  @override
+  String get pollSend => 'Kirim polling';
+
+  @override
+  String get pollKind => 'Polling';
+
+  @override
+  String get pollKindMulti => 'Polling · beberapa jawaban';
+
+  @override
+  String get pollKindClosed => 'Hasil akhir';
+
+  @override
+  String pollVotes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count suara',
+      zero: 'Belum ada suara',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pollVote => 'Beri suara';
+
+  @override
+  String get pollTakeBack => 'Tarik suaraku';
+
+  @override
+  String get pollClose => 'Tutup polling';
+
+  @override
+  String get pollCloseTitle => 'Tutup polling ini?';
+
+  @override
+  String get pollCloseLine =>
+      'Semua orang melihat hasil akhirnya, dan tidak ada yang bisa memilih lagi setelah ini.';
+
+  @override
+  String get pollCloseYes => 'Tutup';
+
+  @override
+  String pollPreview(Object question) {
+    return 'Polling: $question';
+  }
+
+  @override
+  String get pollWhoVoted => 'Yang memberi suara';
+
+  @override
+  String get pollNobody => 'Belum ada';
+
+  @override
+  String get pollYou => 'Kamu';
+
+  @override
+  String pollOptionA11y(Object option, Object share) {
+    return '$option, $share';
+  }
+
+  @override
+  String get pollPickOne => 'Pilih satu';
+
+  @override
+  String get pollPickSeveral => 'Pilih satu atau lebih';
 }

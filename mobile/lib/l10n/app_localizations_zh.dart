@@ -6385,6 +6385,101 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get languageLaterLine => '你随时可以在设置里更改。';
+
+  @override
+  String get pollAttach => '投票';
+
+  @override
+  String get pollNewTitle => '新建投票';
+
+  @override
+  String get pollQuestionHint => '向群组提个问题';
+
+  @override
+  String get pollOptionsLabel => '选项';
+
+  @override
+  String pollOptionHint(Object n) {
+    return '选项 $n';
+  }
+
+  @override
+  String get pollAddOption => '添加选项';
+
+  @override
+  String get pollMaxLine => '最多十二个选项。';
+
+  @override
+  String get pollMultiple => '多选';
+
+  @override
+  String get pollMultipleLine => '大家可以选择不止一项。';
+
+  @override
+  String get pollSend => '发送投票';
+
+  @override
+  String get pollKind => '投票';
+
+  @override
+  String get pollKindMulti => '投票 · 多选';
+
+  @override
+  String get pollKindClosed => '最终结果';
+
+  @override
+  String pollVotes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 票',
+      zero: '还没有人投票',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pollVote => '投票';
+
+  @override
+  String get pollTakeBack => '撤回我的投票';
+
+  @override
+  String get pollClose => '结束投票';
+
+  @override
+  String get pollCloseTitle => '要结束这个投票吗？';
+
+  @override
+  String get pollCloseLine => '所有人都会看到最终结果，之后谁也不能再投票。';
+
+  @override
+  String get pollCloseYes => '结束';
+
+  @override
+  String pollPreview(Object question) {
+    return '投票：$question';
+  }
+
+  @override
+  String get pollWhoVoted => '谁投了票';
+
+  @override
+  String get pollNobody => '还没有人';
+
+  @override
+  String get pollYou => '你';
+
+  @override
+  String pollOptionA11y(Object option, Object share) {
+    return '$option，$share';
+  }
+
+  @override
+  String get pollPickOne => '选一项';
+
+  @override
+  String get pollPickSeveral => '选一项或多项';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -12768,4 +12863,99 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get languageLaterLine => '你隨時可以在設定中更改。';
+
+  @override
+  String get pollAttach => '投票';
+
+  @override
+  String get pollNewTitle => '新增投票';
+
+  @override
+  String get pollQuestionHint => '向群組提個問題';
+
+  @override
+  String get pollOptionsLabel => '選項';
+
+  @override
+  String pollOptionHint(Object n) {
+    return '選項 $n';
+  }
+
+  @override
+  String get pollAddOption => '新增選項';
+
+  @override
+  String get pollMaxLine => '最多十二個選項。';
+
+  @override
+  String get pollMultiple => '多選';
+
+  @override
+  String get pollMultipleLine => '大家可以選擇不只一項。';
+
+  @override
+  String get pollSend => '送出投票';
+
+  @override
+  String get pollKind => '投票';
+
+  @override
+  String get pollKindMulti => '投票 · 多選';
+
+  @override
+  String get pollKindClosed => '最終結果';
+
+  @override
+  String pollVotes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 票',
+      zero: '還沒有人投票',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pollVote => '投票';
+
+  @override
+  String get pollTakeBack => '撤回我的投票';
+
+  @override
+  String get pollClose => '結束投票';
+
+  @override
+  String get pollCloseTitle => '要結束這個投票嗎？';
+
+  @override
+  String get pollCloseLine => '所有人都會看到最終結果，之後誰也不能再投票。';
+
+  @override
+  String get pollCloseYes => '結束';
+
+  @override
+  String pollPreview(Object question) {
+    return '投票：$question';
+  }
+
+  @override
+  String get pollWhoVoted => '誰投了票';
+
+  @override
+  String get pollNobody => '還沒有人';
+
+  @override
+  String get pollYou => '你';
+
+  @override
+  String pollOptionA11y(Object option, Object share) {
+    return '$option，$share';
+  }
+
+  @override
+  String get pollPickOne => '選一項';
+
+  @override
+  String get pollPickSeveral => '選一項或多項';
 }
