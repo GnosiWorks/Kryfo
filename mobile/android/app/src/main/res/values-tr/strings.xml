@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- written by tool/arb_android.py from lib/l10n/app_tr.arb -->
+<resources>
+    <string name="service_title">kryfo açık</string>
+    <string name="service_text">mesajlar gelsin diye şifreli hattın açık kalıyor</string>
+    <string name="channel_name">bağlı kalma</string>
+    <string name="channel_description">kryfo kapalıyken şifreli mesajlar gelsin diye onu bağlı tutar. bunu kapatmak teslimatı durdurur.</string>
+</resources>

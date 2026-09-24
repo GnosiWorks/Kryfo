@@ -1,0 +1,5 @@
+Önce güvenlik. Tor 0.4.9.12 ve üç OpenSSL düzeltmesi. Dosya olarak giden fotoğraflardan yer, zaman ve telefon bilgisi siliniyor. Ntfy push kaldırıldı: Tor dışından bağlanıyordu. PIN artık bildirimlerde mesaj metnini gizliyor. Panik silme artık kalıcı. Sesli notlar ve açılan videolar kopya bırakmıyor.
+
+Yeni: Araçlar sekmesi ve pil tasarrufu için 15 dakikada bir kontrol.
+
+Düzeltildi: ağ değişince dakikalarca takılan mesajlar, kapalı kalan Tor, iki kez giden videolar, yarıda kesilen sesli notlar.

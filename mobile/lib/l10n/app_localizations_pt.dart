@@ -1,0 +1,6600 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Portuguese (`pt`).
+class AppLocalizationsPt extends AppLocalizations {
+  AppLocalizationsPt([String locale = 'pt']) : super(locale);
+
+  @override
+  String get atmosphereNone => 'nenhuma';
+
+  @override
+  String get atmosphereEmber => 'brasa';
+
+  @override
+  String get atmosphereDusk => 'crepúsculo';
+
+  @override
+  String get atmosphereMoss => 'musgo';
+
+  @override
+  String get atmosphereRose => 'rosa';
+
+  @override
+  String get atmosphereDots => 'bolinhas';
+
+  @override
+  String get atmosphereGrid => 'grade';
+
+  @override
+  String get atmosphereWaves => 'ondas';
+
+  @override
+  String get atmosphereRain => 'chuva';
+
+  @override
+  String get atmosphereLateNight => 'Madrugada';
+
+  @override
+  String get atmosphereWarmAfternoon => 'Tarde quente';
+
+  @override
+  String get atmosphereSnow => 'neve';
+
+  @override
+  String get atmosphereDesert => 'deserto';
+
+  @override
+  String get atmospherePaper => 'papel';
+
+  @override
+  String get backupThatPassphraseDoesNot =>
+      'Essa frase-senha não abre este arquivo';
+
+  @override
+  String get backupThatFileIsNot => 'Esse arquivo não é um backup do kryfo';
+
+  @override
+  String get backupThisBackupIsFrom =>
+      'Este backup é de um kryfo mais novo. Atualize o app e tente de novo';
+
+  @override
+  String get backupThisFileIsDamaged =>
+      'Este arquivo está danificado e não pode ser lido';
+
+  @override
+  String get backupCouldNotMakeThe => 'não foi possível criar a chave';
+
+  @override
+  String get contactCardMessageMeOn => 'Fale comigo no';
+
+  @override
+  String get contactCardScanItOrType =>
+      'Escaneie ou digite as três palavras no kryfo.\nEste cartão não sabe mais nada sobre você.';
+
+  @override
+  String contactCardMessageMeOnKryfo(Object haloId) {
+    return 'Fale comigo no kryfo · $haloId';
+  }
+
+  @override
+  String get contactStatusBlocked => 'bloqueado';
+
+  @override
+  String get contactStatusKeysVerifiedInPerson =>
+      'Chaves verificadas pessoalmente';
+
+  @override
+  String get contactStatusWaitingInRequests => 'Esperando nos pedidos';
+
+  @override
+  String get contactStatusAddedByHand => 'Adicionado à mão';
+
+  @override
+  String get deliveryModeAlwaysOn => 'Sempre ativo';
+
+  @override
+  String get deliveryModeCheckIns => 'Consultas';
+
+  @override
+  String get deliveryModeThroughAHelperApp => 'Por um app auxiliar';
+
+  @override
+  String get deliveryModeNotYet => 'ainda não';
+
+  @override
+  String get deliveryModeJustNow => 'agora mesmo';
+
+  @override
+  String deliveryModeMinAgo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'há $countString min',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String deliveryMode1HourAgo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'há $countString horas',
+      one: 'há $countString hora',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deliveryModeYesterday => 'ontem';
+
+  @override
+  String deliveryModeDaysAgo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'há $countString dias',
+      one: 'há $countString dia',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deliveryModeConnected => 'Conectado';
+
+  @override
+  String get deliveryModeConnecting => 'Conectando';
+
+  @override
+  String get deliveryModeNotConnected => 'Desconectado';
+
+  @override
+  String get deliveryModeCheckingNow => 'Consultando agora';
+
+  @override
+  String deliveryModeLastCheckIn(Object agoLine) {
+    return 'última consulta $agoLine';
+  }
+
+  @override
+  String get deliveryModeNoCheckInYet => 'nenhuma consulta ainda';
+
+  @override
+  String deliveryModeConnectedNow(Object last) {
+    return 'Conectado agora · $last';
+  }
+
+  @override
+  String deliveryModeConnecting2(Object last) {
+    return 'Conectando · $last';
+  }
+
+  @override
+  String get deliveryModeNoCheckInYet2 => 'Nenhuma consulta ainda';
+
+  @override
+  String deliveryModeLastChecked(Object agoLine) {
+    return 'Última consulta $agoLine';
+  }
+
+  @override
+  String get deliveryModeAHelperApp => 'um app auxiliar';
+
+  @override
+  String deliveryModeWokenByNoWake(Object who) {
+    return 'Acordado por $who · nenhum despertar ainda';
+  }
+
+  @override
+  String deliveryModeWokenByLastWake(Object who, Object agoLine) {
+    return 'Acordado por $who · último despertar $agoLine';
+  }
+
+  @override
+  String get introBudgetTomorrow => 'amanhã';
+
+  @override
+  String introBudgetInDays(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'em $countString dias',
+      one: 'em $countString dia',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get introBudgetInAnHour => 'em uma hora';
+
+  @override
+  String introBudgetInHours(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'em $countString horas',
+      one: 'em $countString hora',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get introBudgetInAFewMinutes => 'em alguns minutos';
+
+  @override
+  String get lockStateUnlockKryfo => 'Desbloquear o kryfo';
+
+  @override
+  String get appInvalidUri => 'uri inválida';
+
+  @override
+  String appBundleError(Object e) {
+    return 'Erro no pacote: $e';
+  }
+
+  @override
+  String appAlreadySaved(Object parsed) {
+    return 'Já salvo: $parsed';
+  }
+
+  @override
+  String appAddedYouCanMessage(Object parsed) {
+    return 'Adicionado: $parsed · você já pode mandar mensagem';
+  }
+
+  @override
+  String appPeerImportedV1(Object parsed) {
+    return 'Contato importado (v1): $parsed';
+  }
+
+  @override
+  String appLongWindow(Object line) {
+    return '$line janela longa';
+  }
+
+  @override
+  String appOf(Object line, int held, int subs, Object c, int p, int e) {
+    final intl.NumberFormat heldNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String heldString = heldNumberFormat.format(held);
+    final intl.NumberFormat subsNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String subsString = subsNumberFormat.format(subs);
+    final intl.NumberFormat pNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String pString = pNumberFormat.format(p);
+    final intl.NumberFormat eNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String eString = eNumberFormat.format(e);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      p,
+      locale: localeName,
+      other: '$pString páginas',
+      one: '$pString página',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      e,
+      locale: localeName,
+      other: '$eString eventos',
+      one: '$eString evento',
+    );
+    return '$line ($heldString de $subsString, conexão ${c}s, $_temp0, $_temp1)';
+  }
+
+  @override
+  String appConnectSPagesEvents(Object line, Object c, int p, int e) {
+    final intl.NumberFormat pNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String pString = pNumberFormat.format(p);
+    final intl.NumberFormat eNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String eString = eNumberFormat.format(e);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      p,
+      locale: localeName,
+      other: '$pString páginas',
+      one: '$pString página',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      e,
+      locale: localeName,
+      other: '$eString eventos',
+      one: '$eString evento',
+    );
+    return '$line (conexão ${c}s, $_temp0, $_temp1)';
+  }
+
+  @override
+  String appSDropped(Object host, Object secs) {
+    return '$host ${secs}s caiu';
+  }
+
+  @override
+  String appS(Object host, Object secs) {
+    return '$host ${secs}s';
+  }
+
+  @override
+  String get appTorWouldNotWake => 'o tor não quis acordar';
+
+  @override
+  String get appCheckStarted => 'iniciada';
+
+  @override
+  String get appTorNotReadyIn => 'tor não ficou pronto em 75s';
+
+  @override
+  String get appOk => 'ok';
+
+  @override
+  String get appOkNoRelayBegan => 'ok, sem retransmissor';
+
+  @override
+  String get appOkCapped => 'ok, cortada';
+
+  @override
+  String appSBy(Object how, int secs, String why) {
+    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String secsString = secsNumberFormat.format(secs);
+
+    String _temp0 = intl.Intl.selectLogic(why, {
+      'push': '$how, ${secsString}s, por push',
+      'other': '$how, ${secsString}s, por tarefa',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get appAnAttachmentCouldNot =>
+      'Um anexo não pôde ser salvo neste celular';
+
+  @override
+  String get appGroup2 => 'grupo';
+
+  @override
+  String get appVoiceMessage => 'Mensagem de voz';
+
+  @override
+  String get appPhoto => 'foto';
+
+  @override
+  String get appNewRequest => 'Novo pedido';
+
+  @override
+  String get appSomeoneYouHaveNot =>
+      'Alguém que você não adicionou escreveu para você';
+
+  @override
+  String get appSettingUpYourKeys => 'Preparando suas chaves';
+
+  @override
+  String get appOpeningYourChats => 'Abrindo suas conversas';
+
+  @override
+  String get appStartingTor => 'iniciando o Tor';
+
+  @override
+  String get appTimedMessagesAreNot =>
+      'As mensagens temporárias não estão sumindo. Reinicie o kryfo';
+
+  @override
+  String get appVoiceMessage2 => 'mensagem de voz';
+
+  @override
+  String appYou(Object body) {
+    return 'você: $body';
+  }
+
+  @override
+  String get appThisRoomHasAlready => 'Esta sala já expirou';
+
+  @override
+  String get appYouAreAlreadyIn => 'Você já está nesta sala';
+
+  @override
+  String get appCouldNotMakeA => 'não foi possível criar a chave da sala';
+
+  @override
+  String appJoinedButYourHello(Object linkName) {
+    return 'Você entrou em $linkName, mas seu oi ficou retido';
+  }
+
+  @override
+  String appJoined(Object linkName) {
+    return 'Você entrou em $linkName';
+  }
+
+  @override
+  String appJoinedButTheCreator(Object linkName) {
+    return 'Você entrou em $linkName, mas ainda não foi possível falar com quem criou a sala';
+  }
+
+  @override
+  String get appBooting => 'iniciando...';
+
+  @override
+  String get appSettingUpYourIdentity => 'Preparando sua identidade...';
+
+  @override
+  String get appAddSomeone => 'Adicionar alguém';
+
+  @override
+  String get appScanTheirCodeOr =>
+      'Escaneie o código da pessoa ou cole o que ela passou: um link, um @nome de usuário ou um link de sala.';
+
+  @override
+  String get appScanTheirCode => 'Escanear o código';
+
+  @override
+  String get appAKryfoLinkA => 'Um link do kryfo, um link de sala ou @wren';
+
+  @override
+  String get appAddThem => 'Adicionar';
+
+  @override
+  String get appEveryWayToAdd => 'Todas as formas de adicionar';
+
+  @override
+  String get appShowYourCodeSend =>
+      'Mostre seu código, envie um link, reserve um nome de usuário';
+
+  @override
+  String get appHelloFromTheOther => 'Oi do outro lado';
+
+  @override
+  String get appIdentityRestored => 'Identidade restaurada';
+
+  @override
+  String get appIdentityCreated => 'Identidade criada';
+
+  @override
+  String get appStartingTor30s => 'Iniciando o tor (~30s)...';
+
+  @override
+  String get appScanOrImportA => 'escaneie ou importe um contato primeiro';
+
+  @override
+  String get appEncryptingSending30s => 'Criptografando + enviando (~30s)...';
+
+  @override
+  String get appTapStartListeningFirst => 'Toque em Começar a escutar primeiro';
+
+  @override
+  String get appYourKryfo => 'Seu kryfo';
+
+  @override
+  String get appUriCopied => 'Uri copiada';
+
+  @override
+  String get appCopyUri => 'Copiar uri';
+
+  @override
+  String get appAddAKryfo => 'Adicionar um kryfo';
+
+  @override
+  String get appScanQr => 'Escanear QR';
+
+  @override
+  String get appPairingCode => 'Código de pareamento';
+
+  @override
+  String get appOrPaste => '- ou cole -';
+
+  @override
+  String get commonCancel => 'Cancelar';
+
+  @override
+  String get appImport => 'Importar';
+
+  @override
+  String get appDev => 'Dev';
+
+  @override
+  String get appYourKryfo2 => 'Seu kryfo:';
+
+  @override
+  String get appRestoredFromDisk => 'Restaurado do disco';
+
+  @override
+  String get appStartListening => 'Começar a escutar';
+
+  @override
+  String get appListening => 'escutando';
+
+  @override
+  String get appShowMyQr => 'Mostrar meu QR';
+
+  @override
+  String get appImportPeer => 'Importar contato';
+
+  @override
+  String get appPeer => 'contato:';
+
+  @override
+  String get appMessageWillBeEncrypted => 'Mensagem (será criptografada)';
+
+  @override
+  String get appEncryptSend => 'Criptografar + enviar';
+
+  @override
+  String appStatus(Object status) {
+    return 'status: $status';
+  }
+
+  @override
+  String get appSpeedPrivacy => 'Velocidade e privacidade →';
+
+  @override
+  String get appGettingMessages => 'Receber mensagens →';
+
+  @override
+  String get appDisableAppLock => 'Desativar o bloqueio?';
+
+  @override
+  String get appThePinWillBe =>
+      'O PIN será removido. Qualquer pessoa com seu celular vai ver o kryfo ao abri-lo.';
+
+  @override
+  String get appDisable => 'Desativar';
+
+  @override
+  String get appAppLockOn => 'Bloqueio · ativado →';
+
+  @override
+  String get appAppLockOff => 'Bloqueio · desativado →';
+
+  @override
+  String get appTorIsOff => 'Tor desligado';
+
+  @override
+  String get appConnectedRoutedThrough3 =>
+      'Conectado · roteado por 3 retransmissores';
+
+  @override
+  String get appReadyToSendPublishing =>
+      'Pronto para enviar · publicando seu endereço';
+
+  @override
+  String get appReadyToSendFinishing =>
+      'Pronto para enviar · terminando a configuração';
+
+  @override
+  String appConnecting(Object pct) {
+    return 'Conectando · $pct';
+  }
+
+  @override
+  String get appTor => 'Tor';
+
+  @override
+  String get appTorIsOffTurn =>
+      'O tor está desligado. Ligue-o para se conectar com privacidade.';
+
+  @override
+  String get appTheFirstConnectionTakes =>
+      'A primeira conexão leva um ou dois minutos enquanto o tor monta uma rota privada. Depois disso ela fica em cache, então abrir o kryfo mais tarde é bem mais rápido.';
+
+  @override
+  String get appRelayAndFastModes =>
+      'Os modos retransmissor e rápido pulam o tor e são mais velozes. Eles ficam nas configurações, em velocidade e privacidade, e cada um diz o que custa.';
+
+  @override
+  String get appViaRelay => 'Via retransmissor';
+
+  @override
+  String get appOffline => 'offline';
+
+  @override
+  String get appFast => 'Rápido';
+
+  @override
+  String get appTorOff => 'Tor desligado';
+
+  @override
+  String get appTorReady => 'Tor pronto';
+
+  @override
+  String get appConnecting2 => 'conectando';
+
+  @override
+  String mediaProgressSendingKeepTheApp(Object v) {
+    return 'Enviando · $v · mantenha o app aberto';
+  }
+
+  @override
+  String mediaProgressPausedOfWaitingFor(Object count, Object count2) {
+    return 'Pausado · $count de $count2 · esperando o resto';
+  }
+
+  @override
+  String mediaProgressReceivingMedia(Object v) {
+    return 'Recebendo mídia · $v';
+  }
+
+  @override
+  String get mediaProgressCancelSending => 'Cancelar envio';
+
+  @override
+  String get metaReaderEndsBeforeItShould => 'termina antes do esperado';
+
+  @override
+  String get metaReaderCouldNotBeRead => 'não pôde ser lido';
+
+  @override
+  String get metaReaderExifThatCannotBe => 'exif que não pode ser lido';
+
+  @override
+  String get metaReaderSamsungTrailer => 'trailer da samsung';
+
+  @override
+  String metaReaderChunk(Object type) {
+    return 'bloco $type';
+  }
+
+  @override
+  String get metaReaderExifFlagSet => 'flag exif ativada';
+
+  @override
+  String get metaReaderXmpFlagSet => 'flag xmp ativada';
+
+  @override
+  String metaReaderAppBlock(Object id) {
+    return 'bloco de app $id';
+  }
+
+  @override
+  String get metaReaderUuidBox => 'caixa uuid';
+
+  @override
+  String metaReaderBox(Object printable) {
+    return 'caixa $printable';
+  }
+
+  @override
+  String get metaReaderAttachedData => 'dados anexados';
+
+  @override
+  String metaReaderItem(Object printable) {
+    return 'item $printable';
+  }
+
+  @override
+  String get miuiAutostartAlreadyAllowedToRun =>
+      'Já pode rodar em segundo plano';
+
+  @override
+  String get miuiAutostartLetKryfoRunIn =>
+      'Deixe o kryfo rodar em segundo plano';
+
+  @override
+  String get miuiAutostartYourPhonePausesApps =>
+      'Seu celular pausa apps para economizar bateria. Sem uma exceção, o kryfo não consegue receber mensagens enquanto está fechado.';
+
+  @override
+  String get commonAllow => 'Permitir';
+
+  @override
+  String get commonSkip => 'Pular';
+
+  @override
+  String get miuiAutostartXiaomiTurnsOffBackground =>
+      'A Xiaomi desliga apps em segundo plano por padrão. Sem o início automático, o kryfo não consegue entregar mensagens quando o app está fechado. Na próxima tela, encontre o kryfo na lista e ative a opção.';
+
+  @override
+  String get miuiAutostartOpenSettings => 'Abrir configurações';
+
+  @override
+  String get miuiAutostartCouldnTOpenIt =>
+      'não deu para abrir. procure início automático nas configurações do celular';
+
+  @override
+  String get notificationsNewEncryptedMessagesFrom =>
+      'Novas mensagens criptografadas dos seus contatos';
+
+  @override
+  String get notificationsNewMessage => 'nova mensagem';
+
+  @override
+  String get notificationsNewEncryptedMessagesFromYourContacts =>
+      'novas mensagens criptografadas dos seus contatos';
+
+  @override
+  String get notificationsNewMessage2 => 'Nova mensagem';
+
+  @override
+  String get notificationsEncrypted => 'criptografada';
+
+  @override
+  String get rooms24h => '24h';
+
+  @override
+  String roomsD(Object inDays) {
+    return '${inDays}d';
+  }
+
+  @override
+  String roomsH(Object inHours) {
+    return '${inHours}h';
+  }
+
+  @override
+  String get rooms24Hours => '24 horas';
+
+  @override
+  String roomsDays(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString dias',
+      one: '$countString dia',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get roomsAnHour => 'uma hora';
+
+  @override
+  String get roomsAboutAnHour => 'cerca de uma hora';
+
+  @override
+  String roomsHours(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString horas',
+      one: '$countString hora',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String roomsAboutHours(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'cerca de $countString horas',
+      one: 'cerca de $countString hora',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String roomsMinutes(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString minutos',
+      one: '$countString minuto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get roomsAMinute => 'um minuto';
+
+  @override
+  String get roomsExpired => 'expirada';
+
+  @override
+  String roomsDH(Object inDays, Object h) {
+    return '${inDays}d ${h}h';
+  }
+
+  @override
+  String roomsHM(Object inHours, Object m) {
+    return '${inHours}h ${m}min';
+  }
+
+  @override
+  String roomsM(Object inMinutes) {
+    return '${inMinutes}min';
+  }
+
+  @override
+  String get scamShieldLooksLikeAScam => 'Parece golpe';
+
+  @override
+  String scamShieldThisNameMatches(Object shown) {
+    return 'Este nome é igual a $shown';
+  }
+
+  @override
+  String scamShieldNameMatchesYourContact(Object shown) {
+    return 'O nome é igual ao do seu contato $shown';
+  }
+
+  @override
+  String scamShieldSameFaceAsYour(Object shown) {
+    return 'mesmo rosto do seu contato $shown';
+  }
+
+  @override
+  String get scamShieldContainsACryptoAddress =>
+      'Contém um endereço de criptomoeda';
+
+  @override
+  String get scamShieldMentionsMoneyAndUrgency =>
+      'Fala de dinheiro e urgência ao mesmo tempo';
+
+  @override
+  String get scamShieldAsksYouToMove => 'Pede para você ir para outro app';
+
+  @override
+  String get scamShieldLinksToALookalike =>
+      'Tem link para uma imitação de um site conhecido';
+
+  @override
+  String get scamShieldALongOpenerFrom =>
+      'Uma primeira mensagem longa de alguém sem histórico';
+
+  @override
+  String get scamShieldAsksForACode =>
+      'Pede um código, frase-semente ou arquivo de recuperação';
+
+  @override
+  String scamShieldAlso(Object shown) {
+    return 'Também: o nome é igual ao do seu contato $shown';
+  }
+
+  @override
+  String get commonBack => 'Voltar';
+
+  @override
+  String get archivedArchived => 'Arquivadas';
+
+  @override
+  String get archivedCount0 => 'nenhuma';
+
+  @override
+  String get archivedCount1 => 'uma';
+
+  @override
+  String get archivedCount2 => 'duas';
+
+  @override
+  String get archivedCount3 => 'três';
+
+  @override
+  String get archivedCount4 => 'quatro';
+
+  @override
+  String get archivedCount5 => 'cinco';
+
+  @override
+  String get archivedCount6 => 'seis';
+
+  @override
+  String get archivedCount7 => 'sete';
+
+  @override
+  String get archivedCount8 => 'oito';
+
+  @override
+  String get archivedCount9 => 'nove';
+
+  @override
+  String get archivedCount10 => 'dez';
+
+  @override
+  String get archivedChatRestingHereIt =>
+      'Conversa descansando aqui. Ela fica quieta até a pessoa escrever e aí volta para o topo.';
+
+  @override
+  String get archivedChatsRestingHere =>
+      'Conversas descansando aqui. Elas ficam quietas até alguém escrever e aí voltam para o topo.';
+
+  @override
+  String get archivedNothingArchived => 'Nada arquivado';
+
+  @override
+  String get archivedArchivedChatsAreStill =>
+      'Conversas arquivadas continuam criptografadas de ponta a ponta';
+
+  @override
+  String get archivedUnarchive => 'Desarquivar';
+
+  @override
+  String get avatarPickerThePeopleYouMessage =>
+      'As pessoas com quem você conversa também veem isso';
+
+  @override
+  String get avatarPickerBackToYourInitial => 'voltar para sua inicial';
+
+  @override
+  String get avatarPickerThatOneIsYours => 'esse é o seu';
+
+  @override
+  String get avatarPickerPickAFace => 'Escolha um rosto';
+
+  @override
+  String get commonSave => 'Salvar';
+
+  @override
+  String get backupPassphraseMustBeAt =>
+      'a frase-senha precisa ter pelo menos 6 caracteres';
+
+  @override
+  String get backupPassphrasesDonTMatch => 'as frases-senha não são iguais';
+
+  @override
+  String get backupBackupSavedKeepThe =>
+      'Backup salvo · guarde bem a frase-senha';
+
+  @override
+  String get backupKryfoBackup => 'Backup do kryfo';
+
+  @override
+  String get backupYourEncryptedKryfoBackup =>
+      'Seu backup criptografado do kryfo. Guarde bem este arquivo E a sua frase-senha - você precisa dos dois para restaurar.';
+
+  @override
+  String get backupBackUpKryfo => 'Fazer backup do kryfo';
+
+  @override
+  String get backupBackUp => 'Fazer backup';
+
+  @override
+  String get backupACopyToKeep =>
+      'Uma cópia para guardar. Este celular continua como está.';
+
+  @override
+  String get backupMoveToAnotherDevice => 'Mudar para outro aparelho';
+
+  @override
+  String get backupTheFileTakesThis =>
+      'O arquivo leva esta identidade junto. Depois que ele for criado, este celular para: nada novo chega aqui, e nada enviado daqui chega a ninguém.';
+
+  @override
+  String get backupOneEncryptedFileYour =>
+      'Um arquivo criptografado: sua identidade, seus contatos, todas as mensagens e todas as fotos, áudios e arquivos. Importe no outro aparelho com a frase-senha. Até você fazer isso, ainda dá para ficar com este celular.';
+
+  @override
+  String get backupOneEncryptedFileYourIdentityYour =>
+      'Um arquivo criptografado: sua identidade, seus contatos, todas as mensagens e todas as fotos, áudios e arquivos que estão neste celular agora. Nada do que for dito depois de hoje estará nele, então faça outro quando for importante. Para restaurar, você precisa do arquivo e da frase-senha, dos dois.';
+
+  @override
+  String get backupPassphrase => 'Frase-senha';
+
+  @override
+  String get backupConfirmPassphrase => 'Confirmar frase-senha';
+
+  @override
+  String backupWriting(Object progress) {
+    return 'gravando… $progress';
+  }
+
+  @override
+  String get backupCreating => 'criando…';
+
+  @override
+  String get backupMakeTheFileAnd => 'Criar o arquivo e mudar';
+
+  @override
+  String get backupCreateBackup => 'Criar backup';
+
+  @override
+  String get blockedBlocked => 'Bloqueados';
+
+  @override
+  String get blockedNoOneIsBlocked => 'Ninguém está bloqueado';
+
+  @override
+  String get commonUnblock => 'Desbloquear';
+
+  @override
+  String get bridgesThatWasNotIt => 'Não era isso. Aqui vai outro.';
+
+  @override
+  String get bridgesGotBridgesSaveTo => 'Pontes recebidas · salve para usar';
+
+  @override
+  String get bridgesConnected => 'Conectado';
+
+  @override
+  String get bridgesNotThroughYetTor =>
+      'Ainda não passou. O tor continua tentando';
+
+  @override
+  String get bridgesBridges => 'Pontes';
+
+  @override
+  String get bridgesTorIsBlockedWhere => 'O tor está bloqueado onde você está?';
+
+  @override
+  String get bridgesBridgesDisguiseYourConnection =>
+      'As pontes disfarçam sua conexão para que ela consiga sair. Escolha uma entrada, salve, e o tor se reconecta por ela.';
+
+  @override
+  String get bridgesBridgesOnlyChangeHow =>
+      'As pontes só mudam como o tor se conecta, e você não está no modo onion agora. O que você definir aqui fica salvo, só não faz nada até você voltar para ele.';
+
+  @override
+  String get bridgesFromTheTorProject => 'Do projeto tor';
+
+  @override
+  String get bridgesNoise => 'ruído';
+
+  @override
+  String get bridgesGood => 'boa';
+
+  @override
+  String get bridgesMakesTorTrafficLook =>
+      'Faz o tráfego do tor não parecer nada em particular. A melhor opção padrão para a maioria das redes bloqueadas. Você responde um captcha e recebe algumas linhas.';
+
+  @override
+  String get bridgesPrivateBridge => 'Ponte privada';
+
+  @override
+  String get bridgesALineFromA => 'Uma linha de um amigo';
+
+  @override
+  String get bridgesWhateverTheLineSays => 'O que a linha disser';
+
+  @override
+  String get bridgesDepends => 'depende';
+
+  @override
+  String get bridgesGotABridgeLine =>
+      'Recebeu uma linha de ponte de alguém de confiança ou do bridges.torproject.org? Cole aqui. Só linhas obfs4, o kryfo ainda não fala as outras.';
+
+  @override
+  String get bridgesPasteFromClipboard => 'Colar da área de transferência';
+
+  @override
+  String get bridgesUseBridges => 'Usar pontes';
+
+  @override
+  String get bridgesNoLinesYet => 'Nenhuma linha ainda';
+
+  @override
+  String bridges1LineSaved(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString linhas salvas',
+      one: '$countString linha salva',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bridgesRestartingTor => 'Reiniciando o tor…';
+
+  @override
+  String bridgesFindingABridgeS(Object elapsed) {
+    return 'Procurando uma ponte… ${elapsed}s';
+  }
+
+  @override
+  String bridgesStillTryingS(Object elapsed) {
+    return 'Ainda tentando… ${elapsed}s';
+  }
+
+  @override
+  String get bridgesApplying => 'Aplicando…';
+
+  @override
+  String get bridgesSaveAndReconnect => 'Salvar e reconectar';
+
+  @override
+  String get bridgesWhatABridgeIs => 'O que é uma ponte';
+
+  @override
+  String get bridgesATorEntryPoint =>
+      'Uma entrada do tor que ninguém publicou, alcançada por um invólucro para que a conexão não pareça tor. O resto da rota são os três saltos de sempre.';
+
+  @override
+  String get bridgesLooksLike => 'Parece';
+
+  @override
+  String get bridgesSpeed => 'velocidade';
+
+  @override
+  String get bridgesGetBridges => 'Obter pontes';
+
+  @override
+  String get bridgesAskTheTorProject =>
+      'Peça direto ao projeto tor. Você resolve um desafio para que robôs não esgotem o estoque.';
+
+  @override
+  String get bridgesTypeWhatYouSee =>
+      'digite o que você vê. minúsculas servem.';
+
+  @override
+  String get bridgesThisOneRequestDoes =>
+      'Esta única solicitação não passa pelo tor - nem pode, já que o tor é o que não está funcionando. Quem administra sua rede vai ver você contatando o projeto tor. Se só isso já é um problema onde você está, consiga pontes em outro lugar e cole abaixo.';
+
+  @override
+  String get bridgesCouldNotDrawThe => 'Não foi possível desenhar o desafio';
+
+  @override
+  String get bridgesAnswer => 'Resposta';
+
+  @override
+  String get bridgesAsking => 'Pedindo…';
+
+  @override
+  String get bridgesRequestBridges => 'Pedir pontes';
+
+  @override
+  String get bridgesDifferentPuzzle => 'Outro desafio';
+
+  @override
+  String get cameraNoCameraOnThis => 'Nenhuma câmera neste celular';
+
+  @override
+  String get cameraCameraNotAvailable => 'Câmera indisponível';
+
+  @override
+  String get cameraCameraPermissionIsOff =>
+      'Permissão da câmera desativada · toque para tentar de novo';
+
+  @override
+  String get cameraCouldNotStripThat =>
+      'Não foi possível limpar essa foto, ela foi descartada';
+
+  @override
+  String get cameraNoPhotoCameOut => 'Nenhuma foto saiu';
+
+  @override
+  String get cameraCouldNotStartRecording =>
+      'Não foi possível começar a gravar';
+
+  @override
+  String get cameraTheRecordingWasLost => 'A gravação se perdeu';
+
+  @override
+  String get cameraACopyIsIn => 'Tem uma cópia nas suas fotos';
+
+  @override
+  String get cameraCouldNotSaveA =>
+      'Não foi possível salvar uma cópia neste celular';
+
+  @override
+  String get cameraTooLongForA => 'Longo demais para uma mensagem · máx. 8 mb';
+
+  @override
+  String get cameraNeverSavedToYour => 'Nunca salvo nas suas fotos';
+
+  @override
+  String get cameraNoExifNeverSaved => 'Sem exif, nunca salvo nas suas fotos';
+
+  @override
+  String get cameraRec => 'Gravar';
+
+  @override
+  String get cameraSwitchCamera => 'trocar câmera';
+
+  @override
+  String cameraClipSMb(Object secs, Object mb) {
+    return 'Clipe · ${secs}s · $mb mb';
+  }
+
+  @override
+  String get cameraStopRecording => 'Parar de gravar';
+
+  @override
+  String get cameraStartRecording => 'Começar a gravar';
+
+  @override
+  String get cameraTakeAPhoto => 'Tirar foto';
+
+  @override
+  String get cameraKeepACopy => 'guardar uma cópia';
+
+  @override
+  String get cameraUseThis => 'Usar';
+
+  @override
+  String chatB(Object bytes) {
+    return '$bytes b';
+  }
+
+  @override
+  String chatKb(Object bytes) {
+    return '$bytes kb';
+  }
+
+  @override
+  String chatMb(Object bytes) {
+    return '$bytes mb';
+  }
+
+  @override
+  String get chatFile => 'ARQUIVO';
+
+  @override
+  String get chatYouAreOfflineThis =>
+      'você está offline · a mensagem sai sozinha quando você se reconectar';
+
+  @override
+  String get chatStillConnectingToTor =>
+      'ainda conectando ao tor · ela vai sair sozinha';
+
+  @override
+  String chatS(Object seconds) {
+    return '${seconds}s';
+  }
+
+  @override
+  String chatM(Object seconds) {
+    return '${seconds}min';
+  }
+
+  @override
+  String chatH(Object seconds) {
+    return '${seconds}h';
+  }
+
+  @override
+  String chatD(Object seconds) {
+    return '${seconds}d';
+  }
+
+  @override
+  String get chat0s => '0s';
+
+  @override
+  String chatHM(Object h, Object m) {
+    return '${h}h ${m}min';
+  }
+
+  @override
+  String chatMS(Object m, Object s) {
+    return '${m}min ${s}s';
+  }
+
+  @override
+  String chatS2(Object s) {
+    return '${s}s';
+  }
+
+  @override
+  String get chatNewMessages => 'Novas mensagens';
+
+  @override
+  String get chatUnsave => 'Tirar dos salvos';
+
+  @override
+  String get chatForward => 'Encaminhar';
+
+  @override
+  String get commonShare => 'Compartilhar';
+
+  @override
+  String get commonCopied => 'Copiado';
+
+  @override
+  String get commonCopy => 'Copiar';
+
+  @override
+  String get chatUnpin => 'Desafixar';
+
+  @override
+  String get chatPin => 'Fixar';
+
+  @override
+  String get chatStopSending => 'Parar envio';
+
+  @override
+  String get chatUnsend => 'Desfazer envio';
+
+  @override
+  String get commonEdit => 'Editar';
+
+  @override
+  String get chatYou => 'Você';
+
+  @override
+  String get chatUnsendMessage => 'Desfazer envio';
+
+  @override
+  String get chatItDisappearsWithNo =>
+      'Ela some sem deixar rastro. Isso não pode ser desfeito.';
+
+  @override
+  String chatThisChatHasPins(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Esta conversa já tem $countString mensagens fixadas',
+      one: 'Esta conversa já tem $countString mensagem fixada',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get chatUnpinThisMessage => 'Desafixar esta mensagem?';
+
+  @override
+  String get chatPinThisMessage => 'Fixar esta mensagem?';
+
+  @override
+  String get chatItLeavesThePinned =>
+      'Ela sai da lista de fixadas para vocês dois.';
+
+  @override
+  String get chatItGoesUnderThe =>
+      'Ela entra nas fixadas, no topo da conversa, para vocês dois.';
+
+  @override
+  String get chatPinIt => 'Fixar';
+
+  @override
+  String get chatNotNow => 'Agora não';
+
+  @override
+  String get chatEditMessage => 'Editar mensagem';
+
+  @override
+  String get chat30Seconds => '30 segundos';
+
+  @override
+  String get chat1Minute => '1 minuto';
+
+  @override
+  String get chat5Minutes => '5 minutos';
+
+  @override
+  String get chat1Hour => '1 hora';
+
+  @override
+  String get chat24Hours => '24 horas';
+
+  @override
+  String get chatGhostTimer => 'Timer fantasma';
+
+  @override
+  String get chatHowLongBeforeSent =>
+      'Quanto tempo até as mensagens enviadas sumirem?';
+
+  @override
+  String get chatCamera => 'Câmera';
+
+  @override
+  String get chatNoExifNeverSaved => 'Sem exif, nunca salvo nas suas fotos';
+
+  @override
+  String get chatGallery => 'Galeria';
+
+  @override
+  String get chatVideo => 'Vídeo';
+
+  @override
+  String get chatGifFromPhone => 'Gif do celular';
+
+  @override
+  String get chatFile2 => 'Arquivo';
+
+  @override
+  String get chatAFewSeconds => 'Alguns segundos';
+
+  @override
+  String get chatUnderAMinute => 'Menos de um minuto';
+
+  @override
+  String chatRoughlyMin(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Cerca de $countString min',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String chatB2(Object b) {
+    return '$b b';
+  }
+
+  @override
+  String chatKb2(Object b) {
+    return '$b kb';
+  }
+
+  @override
+  String chatMb2(Object b) {
+    return '$b mb';
+  }
+
+  @override
+  String get chatSendThis => 'Enviar este arquivo?';
+
+  @override
+  String chatOverTor(Object humanBytes, Object wireEstimate) {
+    return '$humanBytes · $wireEstimate pelo tor';
+  }
+
+  @override
+  String get chatBigFilesGoOut =>
+      'Arquivos grandes saem em pequenos pedaços criptografados, então demoram um pouco. Mantenha o app aberto e o envio continua.';
+
+  @override
+  String get chatSendIt => 'Enviar';
+
+  @override
+  String get chatCouldNotReadThat => 'Não foi possível ler esse arquivo';
+
+  @override
+  String get chatFileTooBig8 => 'Arquivo grande demais · máx. 8 mb';
+
+  @override
+  String get chatCouldNotCleanThat => 'Não foi possível limpar esse vídeo';
+
+  @override
+  String get chatCouldNotCleanThatPictureSend =>
+      'Não foi possível limpar essa imagem · envie como foto';
+
+  @override
+  String get chatGifTooBig8 => 'Gif grande demais · máx. 8 mb';
+
+  @override
+  String get chatCouldNotCleanThatGif => 'Não foi possível limpar esse gif';
+
+  @override
+  String get chatTorIsNotUp =>
+      'O tor ainda não está pronto · enviando sem prévia';
+
+  @override
+  String get chatCouldnTReachIt => 'Não deu para acessar · enviando sem prévia';
+
+  @override
+  String get chatNoTitleCameBack =>
+      'Nenhum título voltou · enviando sem prévia';
+
+  @override
+  String get chatCouldnTFetchIt => 'Não deu para buscar · enviando sem prévia';
+
+  @override
+  String get chatNoSignalSessionRe => 'Sem sessão Signal - pareie de novo';
+
+  @override
+  String get chatMessageUnavailable => 'Mensagem indisponível';
+
+  @override
+  String get chatYou2 => 'você';
+
+  @override
+  String get chatThem => 'a pessoa';
+
+  @override
+  String get chatVoiceMessage => 'mensagem de voz';
+
+  @override
+  String get chatQuotedPhoto => 'foto';
+
+  @override
+  String get chatViewContact => 'Ver contato';
+
+  @override
+  String get chatSharedPhotos => 'Fotos compartilhadas';
+
+  @override
+  String chatSharedPhotoCount(int count, Object title) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString fotos',
+      one: '$countString foto',
+    );
+    return '$_temp0 · $title';
+  }
+
+  @override
+  String get chatUnmuteNotifications => 'Ativar notificações';
+
+  @override
+  String get chatMuteNotifications => 'Silenciar notificações';
+
+  @override
+  String get chatArchiveChat => 'Arquivar conversa';
+
+  @override
+  String get chatWallpaper => 'Papel de parede';
+
+  @override
+  String get chatClearConversation => 'Limpar conversa';
+
+  @override
+  String get chatNoteOnThisContact => 'Nota sobre este contato';
+
+  @override
+  String get chatPinToTop => 'Fixar no topo';
+
+  @override
+  String get chatBlockContact => 'Bloquear contato';
+
+  @override
+  String get chatUnpinned => 'Desafixada';
+
+  @override
+  String get chatPinnedToTop => 'Fixada no topo';
+
+  @override
+  String get chatJustForYouNever =>
+      'Só para você. Nunca é enviada, nunca sai deste celular.';
+
+  @override
+  String get chatAQuietReminder => 'Um lembrete discreto…';
+
+  @override
+  String get chatNoteSaved => 'Nota salva';
+
+  @override
+  String get chatClearThisConversation => 'Limpar esta conversa?';
+
+  @override
+  String get chatEveryMessageHereIs =>
+      'Todas as mensagens daqui são apagadas deste celular. Isso só limpa a sua cópia - não mexe no aparelho da pessoa.';
+
+  @override
+  String get chatClear => 'Limpar';
+
+  @override
+  String get chatBlockThisContact => 'Bloquear este contato?';
+
+  @override
+  String get chatTheirMessagesStopArriving =>
+      'As mensagens dessa pessoa param de chegar e ela some das suas conversas. Ela nunca fica sabendo. Você pode desbloquear quando quiser nas configurações.';
+
+  @override
+  String get commonBlock => 'Bloquear';
+
+  @override
+  String get chatSaved => 'Salvo';
+
+  @override
+  String get chatRemovedFromSaved => 'Removido dos salvos';
+
+  @override
+  String get chatForwardTo => 'Encaminhar para';
+
+  @override
+  String get chatNoContactsToForward => 'Nenhum contato para encaminhar';
+
+  @override
+  String get chatToday => 'hoje';
+
+  @override
+  String get chatYesterday => 'ontem';
+
+  @override
+  String get chatThisMessageCanT => 'Esta mensagem não pode ser exibida';
+
+  @override
+  String get chatJumpToTheNewest => 'Ir para a mais recente';
+
+  @override
+  String get chatBuildingAPrivateRoute =>
+      'Montando uma rota privada · a primeira conexão é a lenta, as próximas são rápidas. O que você enviar agora fica na fila e é entregue sozinho.';
+
+  @override
+  String get chatLooksSafeNothingSuspicious =>
+      'Parece seguro · nada suspeito na primeira mensagem';
+
+  @override
+  String get chatTheNextPhotoYou =>
+      'A próxima foto que você enviar abre protegida · a pessoa não consegue fazer captura de tela dela';
+
+  @override
+  String get chatPhotoProtectionOff => 'Proteção de foto desativada';
+
+  @override
+  String get chatAcceptToReplyThey =>
+      'Aceite para responder - a pessoa só pode mandar mais uma mensagem até você aceitar.';
+
+  @override
+  String chatIntroducedYouAcceptTo(Object introducer) {
+    return 'Vocês foram apresentados por $introducer. Aceite para responder.';
+  }
+
+  @override
+  String chatIntroducedYouSayHello(Object vouchNames) {
+    return 'Vocês foram apresentados por $vouchNames. Dê um oi - a pessoa também recebeu seu cartão.';
+  }
+
+  @override
+  String get chatIntroduceTo => 'Apresentar a...';
+
+  @override
+  String get chatAcceptThemFirst => 'Aceite a pessoa primeiro';
+
+  @override
+  String get chatMessageRequest => 'Pedido de mensagem';
+
+  @override
+  String get chatTheyNeedToAccept =>
+      'A pessoa precisa aceitar para vocês continuarem conversando.';
+
+  @override
+  String get chatWaitingForThemTo => 'Esperando a pessoa aceitar seu pedido';
+
+  @override
+  String get chatYouBlockedThisContact => 'Você bloqueou este contato';
+
+  @override
+  String get chatSupporter => 'Apoiador';
+
+  @override
+  String get chatEncryptedViaRelay => 'Criptografado · via retransmissor';
+
+  @override
+  String get chatEncryptedDirect => 'Criptografado · direto';
+
+  @override
+  String get chatEncryptedOverTor => 'Criptografado · pelo tor';
+
+  @override
+  String get chatSearchThisChat => 'Buscar nesta conversa';
+
+  @override
+  String get chatContactOptions => 'Opções do contato';
+
+  @override
+  String get commonClose => 'Fechar';
+
+  @override
+  String get chatFindInConversation => 'Buscar na conversa';
+
+  @override
+  String get chatNoMatches => 'Nenhum resultado';
+
+  @override
+  String chatOf(int count, int pos) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+    final intl.NumberFormat posNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String posString = posNumberFormat.format(pos);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '*$posString* de $countString resultados',
+      one: '*$posString* de $countString resultado',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get chatPreviousMatch => 'Resultado anterior';
+
+  @override
+  String get chatNextMatch => 'Próximo resultado';
+
+  @override
+  String get chatPhotoUnavailable => 'Foto indisponível';
+
+  @override
+  String get chatDelivered => 'Entregue';
+
+  @override
+  String get chatEdited => 'Editada';
+
+  @override
+  String get chatWaitingForThemToComeOnline =>
+      'Esperando a pessoa ficar online ou adicionar você de volta';
+
+  @override
+  String get chatFailedTapToRetry => 'Falhou · toque para repetir';
+
+  @override
+  String get chatReplyingTo => 'Respondendo à pessoa';
+
+  @override
+  String get chatReplyingToYourself => 'Respondendo à própria mensagem';
+
+  @override
+  String get chatReply => 'Responder';
+
+  @override
+  String get chatSayHi => 'Dê um oi.';
+
+  @override
+  String get chatJustTheTwoOf =>
+      'Só vocês dois, com criptografia de ponta a ponta.';
+
+  @override
+  String get chatMicPermissionNeeded => 'Precisa da permissão do microfone';
+
+  @override
+  String get chatTheMicWouldNot => 'O microfone não quis ligar. Tente de novo';
+
+  @override
+  String get chatReleaseToCancel => 'Solte para cancelar';
+
+  @override
+  String get chatVoiceHiddenSlideTo => 'Voz oculta · deslize para cancelar';
+
+  @override
+  String get chatSlideToCancel => 'Deslize para cancelar';
+
+  @override
+  String get chatGhostMode => 'Modo fantasma';
+
+  @override
+  String chatMessagesBurnAfter(Object humanBurn) {
+    return 'As mensagens somem após $humanBurn';
+  }
+
+  @override
+  String get chatTimedMessages => 'Mensagens temporárias';
+
+  @override
+  String get chatOpenTheCamera => 'Abrir a câmera';
+
+  @override
+  String get chatAttachAPhoto => 'Anexar uma foto';
+
+  @override
+  String get chatMessage => 'Mensagem';
+
+  @override
+  String get chatDisguiseVoice => 'Disfarçar a voz';
+
+  @override
+  String get commonSend => 'Enviar';
+
+  @override
+  String get chatNoPhotosInThis => 'Nenhuma foto nesta conversa ainda';
+
+  @override
+  String get chatSendPhoto => 'Enviar foto';
+
+  @override
+  String get chatAddACaption => 'Adicionar uma legenda…';
+
+  @override
+  String get chatSecurityCodeChanged => 'O código de segurança mudou';
+
+  @override
+  String chatMayHaveReinstalledOr(Object peerName) {
+    return '$peerName pode ter reinstalado o app, ou alguém pode estar se passando por essa pessoa. Compare os números de segurança para ter certeza.';
+  }
+
+  @override
+  String get chatOk => 'Ok';
+
+  @override
+  String get chatVerify => 'Verificar';
+
+  @override
+  String get cleanKryfoCanTClean =>
+      'O Kryfo ainda não consegue limpar este tipo de arquivo.';
+
+  @override
+  String get cleanThisIsAMotion => 'Esta é uma foto em movimento.';
+
+  @override
+  String get cleanThisPictureIsToo =>
+      'Esta imagem é grande demais para limpar aqui.';
+
+  @override
+  String get cleanThisFileIsDamaged =>
+      'Este arquivo está danificado ou incompleto.';
+
+  @override
+  String get cleanKryfoCouldNotMake =>
+      'O Kryfo não conseguiu deixar este limpo.';
+
+  @override
+  String get cleanNotEnoughRoomOn => 'Não há espaço suficiente no celular.';
+
+  @override
+  String get cleanKryfoCouldNotOpen =>
+      'O Kryfo não conseguiu abrir esse arquivo.';
+
+  @override
+  String get cleanItCleansJpegPng =>
+      'Ele limpa JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 e MOV. Nada foi alterado.';
+
+  @override
+  String get cleanItHoldsAShort =>
+      'Ela guarda um vídeo curto junto da imagem, e o Kryfo ainda não consegue limpar essa parte. Desative o movimento na câmera ou envie uma captura de tela dela.';
+
+  @override
+  String get cleanPicturesOver64Mb =>
+      'Imagens acima de 64 MB não são limpas no celular. Nada foi alterado.';
+
+  @override
+  String get cleanKryfoCouldNotRead =>
+      'O Kryfo não conseguiu ler até o fim, então não vai dizer que está limpo. Nenhuma cópia foi feita.';
+
+  @override
+  String get cleanSomethingInsideIsOf =>
+      'Tem algo dentro de um tipo que ele não sabe remover, então nenhuma cópia foi feita.';
+
+  @override
+  String get cleanFreeSomeSpaceAnd =>
+      'Libere espaço e tente de novo. Nada foi alterado.';
+
+  @override
+  String get cleanTheAppThatShared =>
+      'O app que compartilhou pode ter pegado de volta. Tente compartilhar de novo.';
+
+  @override
+  String get cleanNoAppOnThis => 'Nenhum app neste celular aceitou o arquivo.';
+
+  @override
+  String get cleanCouldNotSaveIt =>
+      'Não foi possível salvar. Veja se o celular tem espaço.';
+
+  @override
+  String get cleanTheOriginalIsGone =>
+      'O original foi excluído. A cópia limpa continua.';
+
+  @override
+  String get cleanAndroidWouldNotDelete =>
+      'O Android não quis excluí-lo. Remova da galeria manualmente.';
+
+  @override
+  String get cleanCleanCopy => 'Cópia limpa';
+
+  @override
+  String get cleanShareCleanCopy => 'Compartilhar cópia limpa';
+
+  @override
+  String get cleanSaveToGallery => 'Salvar na galeria';
+
+  @override
+  String get commonStop => 'Parar';
+
+  @override
+  String get cleanReadingTheFile => 'Lendo o arquivo';
+
+  @override
+  String get cleanCleaning => 'Limpando';
+
+  @override
+  String cleanOf(Object prettySize, Object prettySize2) {
+    return '$prettySize de $prettySize2';
+  }
+
+  @override
+  String get cleanEverythingStaysOnThis => 'Tudo fica neste celular.';
+
+  @override
+  String get cleanAlreadyClean => 'Já está limpo.';
+
+  @override
+  String get cleanClean => 'Limpo.';
+
+  @override
+  String get cleanThereWasNothingTo => 'Não havia nada para achar.';
+
+  @override
+  String get cleanNothingLeftToFind => 'Não sobrou nada para achar.';
+
+  @override
+  String get cleanSameVideoSameQuality => 'Mesmo vídeo, mesma qualidade';
+
+  @override
+  String get cleanSamePictureSameQuality => 'Mesma imagem, mesma qualidade';
+
+  @override
+  String cleanRemoved(Object label) {
+    return '$label: removido';
+  }
+
+  @override
+  String get cleanRemoved2 => 'REMOVIDO';
+
+  @override
+  String get cleanWithTheLocationInside =>
+      'com a localização dentro. Quem receber esse arquivo descobre a sua rua.';
+
+  @override
+  String get cleanWithEverythingItKnew => 'com tudo o que sabia ainda dentro.';
+
+  @override
+  String get cleanOriginal => 'ORIGINAL';
+
+  @override
+  String get cleanClean2 => 'LIMPO';
+
+  @override
+  String get cleanSavedToYourGallery => 'Salvo na sua galeria.';
+
+  @override
+  String cleanTheOriginalIsStill(Object what) {
+    return 'O original ainda está lá também, $what';
+  }
+
+  @override
+  String cleanTheOriginalIsStillWhereIt(Object what) {
+    return 'O original continua onde estava, $what O Kryfo não consegue removê-lo daqui, então exclua no app de onde ele veio.';
+  }
+
+  @override
+  String get cleanDeleteTheOriginal => 'Excluir o original';
+
+  @override
+  String get cleanKeepBoth => 'Manter os dois';
+
+  @override
+  String get commonDone => 'Pronto';
+
+  @override
+  String get cleanAndroidWillAskYou => 'O ANDROID VAI PEDIR CONFIRMAÇÃO';
+
+  @override
+  String get contactYourNameForThem => 'Seu apelido para a pessoa';
+
+  @override
+  String get contactStaysOnThisPhone =>
+      'Fica neste celular. A pessoa nunca vê.';
+
+  @override
+  String get contactClear => 'Limpar';
+
+  @override
+  String get contactMessage => 'Mensagem';
+
+  @override
+  String get contactKeysVerified => 'Chaves verificadas';
+
+  @override
+  String get contactVerifyKeys => 'Verificar chaves';
+
+  @override
+  String get contactVouches => 'Recomendações';
+
+  @override
+  String get contactUnmute => 'Ativar som';
+
+  @override
+  String get contactMute => 'Silenciar';
+
+  @override
+  String get contactUnpin => 'Desafixar';
+
+  @override
+  String get contactPinToTop => 'Fixar no topo';
+
+  @override
+  String get contactArchive => 'Arquivar';
+
+  @override
+  String get contactOutOfTheList =>
+      'Fora da lista até a pessoa escrever de novo';
+
+  @override
+  String contactBlock(Object name) {
+    return 'Bloquear $name?';
+  }
+
+  @override
+  String get contactTheirMessagesStopArriving =>
+      'As mensagens dessa pessoa param de chegar. Ela não fica sabendo.';
+
+  @override
+  String get contactDeleteChat => 'Excluir conversa';
+
+  @override
+  String get contactMessagesAndContactGone =>
+      'Mensagens e contato somem deste celular';
+
+  @override
+  String get contactDeleteThisChat => 'Excluir esta conversa?';
+
+  @override
+  String get contactEveryMessageAndThe =>
+      'Todas as mensagens e o contato somem deste celular. Nada é enviado para a pessoa.';
+
+  @override
+  String get commonDelete => 'Excluir';
+
+  @override
+  String get contactDeleted => 'Excluída';
+
+  @override
+  String get contactToday => 'hoje';
+
+  @override
+  String contactD(Object inDays) {
+    return '${inDays}d';
+  }
+
+  @override
+  String contactMo(Object d) {
+    return '$d mes.';
+  }
+
+  @override
+  String contactY(Object d) {
+    return '$d a.';
+  }
+
+  @override
+  String get contactVerified => 'Verificado';
+
+  @override
+  String get contactChatting => 'Conversando';
+
+  @override
+  String get contactNothingSharedYet => 'nada compartilhado ainda';
+
+  @override
+  String contactSharedMedia(Object count) {
+    return 'mídia compartilhada · $count';
+  }
+
+  @override
+  String get donateBitcoin => 'Bitcoin';
+
+  @override
+  String get donateText => '₿';
+
+  @override
+  String get donateBadgeUnlocks => 'libera o selo';
+
+  @override
+  String get donateMonero => 'Monero';
+
+  @override
+  String get donateManualNoBadge => 'manual · sem selo';
+
+  @override
+  String get donateSolana => 'Solana';
+
+  @override
+  String get donateEthereum => 'Ethereum';
+
+  @override
+  String get donateText2 => 'Ξ';
+
+  @override
+  String donateYourEarlierBitcoinPayment(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Seu pagamento anterior em bitcoin foi encontrado · selo de apoiador liberado',
+      'patron':
+          'Seu pagamento anterior em bitcoin foi encontrado · selo de mecenas liberado',
+      'guardian':
+          'Seu pagamento anterior em bitcoin foi encontrado · selo de guardião liberado',
+      'other':
+          'Seu pagamento anterior em bitcoin foi encontrado · selo de apoiador liberado',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get donateSupport => 'Apoiar';
+
+  @override
+  String get donateKeepKryfo => 'Mantenha o kryfo *independente*';
+
+  @override
+  String get donateNoAdsNoInvestors =>
+      'Sem anúncios, sem investidores, nada para vender. Ele se mantém com as doações de quem apoia.';
+
+  @override
+  String get donateBackItAnonymouslyBadge =>
+      'Apoie de forma anônima. Selo só se você quiser.\n*Privacidade nunca é recurso pago.*';
+
+  @override
+  String donateAddressCheckItAgainst(Object coinName) {
+    return 'Endereço $coinName · confira com a sua carteira';
+  }
+
+  @override
+  String get donateAddressCopiedClearsIn => 'Endereço copiado · some em 60s';
+
+  @override
+  String get donateCopyAddress => 'Copiar endereço';
+
+  @override
+  String get donateBitcoinIsVerifiedBy =>
+      'O bitcoin é verificado pelo nosso próprio nó, então seu selo é liberado sozinho assim que o pagamento chegar.';
+
+  @override
+  String get donateWeCanTVerify =>
+      'não temos como verificar esta blockchain sem perguntar sobre você a um serviço de fora, então não verificamos. envie se quiser. isso não vai liberar um selo.';
+
+  @override
+  String get donateBitcoinBadgesNeedOnion =>
+      'Selos em bitcoin precisam do modo onion';
+
+  @override
+  String get donateSwitchToOnion => 'Mudar para onion';
+
+  @override
+  String get donatePayWithBitcoin => 'Pagar com bitcoin  →';
+
+  @override
+  String get donateBadgesStartAt20 => 'Selos a partir de US\$ 20';
+
+  @override
+  String get donateReachingThePaymentService =>
+      'Acessando o serviço de pagamento pelo tor…';
+
+  @override
+  String get donateThisCanTakeUp => 'Isso pode levar até um minuto';
+
+  @override
+  String donateSThisCanTake(Object waited) {
+    return '${waited}s · isso pode levar até um minuto';
+  }
+
+  @override
+  String get donateUseTheAddressInstead => 'Usar o endereço no lugar';
+
+  @override
+  String get donateThePaymentServiceIs =>
+      'O serviço de pagamento é um onion, e só o modo onion consegue acessá-lo. Nada foi enviado.';
+
+  @override
+  String get donateTorWasSlowTo =>
+      'O tor demorou para acessar o serviço de pagamento. Você pode doar para o endereço abaixo - só que seu selo não vai ser liberado automaticamente. Tente de novo mais tarde para ganhar o selo.';
+
+  @override
+  String get donateThePaymentServiceIsHavingTrouble =>
+      'O serviço de pagamento está com problemas agora. Você ainda pode doar para o endereço abaixo - só que seu selo não vai ser liberado automaticamente. Tente de novo mais tarde para ganhar o selo.';
+
+  @override
+  String get commonTryAgain => 'Tentar de novo';
+
+  @override
+  String donateBtc(Object btc) {
+    return '$btc BTC';
+  }
+
+  @override
+  String donateSendExactlyThisAmount(Object fmtLeft) {
+    return 'Envie exatamente este valor · expira em $fmtLeft';
+  }
+
+  @override
+  String get donateOpenWallet => 'abrir carteira';
+
+  @override
+  String get donateThisScreenUpdatesItself =>
+      'Esta tela se atualiza sozinha assim que seu pagamento for visto.\nDeixe aberta - nada é guardado, nada identifica você.';
+
+  @override
+  String get donateWatchingTheChainFor =>
+      'Aguardando seu pagamento na blockchain';
+
+  @override
+  String get donateThisInvoiceExpired => 'Esta fatura expirou';
+
+  @override
+  String get donateInvoicesTimeOutIf =>
+      'Faturas expiram. Se você já enviou o pagamento, deixe isto aberto: perguntamos de novo ao serviço a cada minuto por um tempo, e da próxima vez que você abrir Apoiar. Comece uma nova quando quiser.';
+
+  @override
+  String get donateNewInvoice => 'Nova fatura';
+
+  @override
+  String get donateIPaidCheckAgain => 'Já paguei, verificar de novo';
+
+  @override
+  String get donatePaymentConfirmed => 'Pagamento confirmado';
+
+  @override
+  String get donateThankYouForKeeping =>
+      'Obrigado por manter o kryfo independente.';
+
+  @override
+  String donateVerifiedOnChainYou(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'verificado na blockchain - agora você é apoiador. Ninguém pode tirar isso de você.',
+      'patron':
+          'verificado na blockchain - agora você é mecenas. Ninguém pode tirar isso de você.',
+      'guardian':
+          'verificado na blockchain - agora você é guardião. Ninguém pode tirar isso de você.',
+      'other':
+          'verificado na blockchain - agora você é apoiador. Ninguém pode tirar isso de você.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get donateWearMyBadge => 'usar meu selo';
+
+  @override
+  String get donateJustGladToHelp => 'Fico feliz só de ajudar';
+
+  @override
+  String get gettingMessagesGettingMessages => 'Receber mensagens';
+
+  @override
+  String get gettingMessagesHowNewMessagesReach =>
+      'Como as novas mensagens chegam a este celular. Você pode mudar quando quiser.';
+
+  @override
+  String get gettingMessagesAlwaysOn => 'Sempre ativo';
+
+  @override
+  String get gettingMessagesMostPrivate => 'mais privado';
+
+  @override
+  String get gettingMessagesMessagesArriveInstantlyNothing =>
+      'As mensagens chegam na hora. Tudo fica dentro do Tor. Gasta mais bateria.';
+
+  @override
+  String get gettingMessagesCheckIns => 'Consultas';
+
+  @override
+  String get gettingMessagesLightest => 'mais leve';
+
+  @override
+  String get gettingMessagesKryfoLooksForMessages =>
+      'O kryfo procura mensagens a cada 15 minutos. Economiza bateria, mas as mensagens podem atrasar.';
+
+  @override
+  String get gettingMessagesOnTheLockScreen => 'Na tela de bloqueio';
+
+  @override
+  String get gettingMessagesHideMessagePreview => 'Ocultar prévia da mensagem';
+
+  @override
+  String get gettingMessagesAGenericAlertWith =>
+      'Um alerta genérico, sem remetente e sem texto da mensagem';
+
+  @override
+  String get gettingMessagesShowsMessageTextIn =>
+      'Mostra o texto das mensagens nas notificações, mesmo com o kryfo bloqueado.';
+
+  @override
+  String get gettingMessagesWhenThePhoneSits =>
+      'Quando o celular fica parado, o Android espaça mais as consultas. A linha acima mostra a última de verdade. Enquanto o kryfo está aberto, ele fica conectado.';
+
+  @override
+  String get groupChatJumpToTheNewest => 'Ir para a mais recente';
+
+  @override
+  String get groupChatBlockedEverywhere => 'Bloqueado em todo lugar';
+
+  @override
+  String get groupChatYou => 'você';
+
+  @override
+  String get groupChatVoiceMessage => 'mensagem de voz';
+
+  @override
+  String get groupChatQuotedPhoto => 'foto';
+
+  @override
+  String get groupChatMessageUnavailable => 'Mensagem indisponível';
+
+  @override
+  String get groupChatTorIsNotUp =>
+      'O tor ainda não está pronto · enviando sem prévia';
+
+  @override
+  String get groupChatCouldnTReachIt =>
+      'não deu para acessar · enviando sem prévia';
+
+  @override
+  String get groupChatNoTitleCameBack =>
+      'Nenhum título voltou · enviando sem prévia';
+
+  @override
+  String get groupChatCouldnTFetchIt =>
+      'não deu para buscar · enviando sem prévia';
+
+  @override
+  String get groupChatCamera => 'Câmera';
+
+  @override
+  String get groupChatGallery => 'Galeria';
+
+  @override
+  String get groupChatVideo => 'Vídeo';
+
+  @override
+  String get groupChatGifFromPhone => 'Gif do celular';
+
+  @override
+  String get groupChatFile => 'Arquivo';
+
+  @override
+  String get groupChatCouldNotReadThat => 'Não foi possível ler esse arquivo';
+
+  @override
+  String get groupChatGifTooBig8 => 'Gif grande demais · máx. 8 mb';
+
+  @override
+  String get groupChatCouldNotCleanThat => 'Não foi possível limpar esse gif';
+
+  @override
+  String get groupChatFileTooBig8 => 'Arquivo grande demais · máx. 8 mb';
+
+  @override
+  String get groupChatCouldNotCleanThatVideo =>
+      'Não foi possível limpar esse vídeo';
+
+  @override
+  String get groupChatCouldNotCleanThatPictureSend =>
+      'Não foi possível limpar essa imagem · envie como foto';
+
+  @override
+  String get groupChat30Seconds => '30 segundos';
+
+  @override
+  String get groupChat1Minute => '1 minuto';
+
+  @override
+  String get groupChat5Minutes => '5 minutos';
+
+  @override
+  String get groupChat1Hour => '1 hora';
+
+  @override
+  String get groupChat24Hours => '24 horas';
+
+  @override
+  String get groupChatBurnTimer => 'Tempo para sumir';
+
+  @override
+  String get groupChatNewMessagesDisappearAfter =>
+      'Novas mensagens somem depois desse tempo';
+
+  @override
+  String get groupChatToday => 'hoje';
+
+  @override
+  String get groupChatYesterday => 'ontem';
+
+  @override
+  String get groupChatYou2 => 'Você';
+
+  @override
+  String groupChatThisChatHasPins(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Esta conversa já tem $countString mensagens fixadas',
+      one: 'Esta conversa já tem $countString mensagem fixada',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupChatUnpinThisMessage => 'Desafixar esta mensagem?';
+
+  @override
+  String get groupChatPinThisMessage => 'Fixar esta mensagem?';
+
+  @override
+  String get groupChatItLeavesThePinned =>
+      'Ela sai da lista de fixadas para todos aqui.';
+
+  @override
+  String get groupChatItGoesUnderThe =>
+      'Ela entra nas fixadas, no topo da conversa, para todos aqui.';
+
+  @override
+  String get groupChatUnpin => 'Desafixar';
+
+  @override
+  String get groupChatPinIt => 'Fixar';
+
+  @override
+  String get groupChatNotNow => 'Agora não';
+
+  @override
+  String get groupChatSaved => 'Salvo';
+
+  @override
+  String get groupChatRemovedFromSaved => 'Removido dos salvos';
+
+  @override
+  String get groupChatForwardTo => 'Encaminhar para';
+
+  @override
+  String get groupChatNoContactsToForward => 'Nenhum contato para encaminhar';
+
+  @override
+  String get groupChatEditMessage => 'Editar mensagem';
+
+  @override
+  String get groupChatUnsendMessage => 'Desfazer envio';
+
+  @override
+  String get groupChatItDisappearsWithNo =>
+      'Ela some sem deixar rastro. Isso não pode ser desfeito.';
+
+  @override
+  String get groupChatUnsend => 'Desfazer envio';
+
+  @override
+  String groupChatThisRoomAndEverything(Object expiryWords) {
+    return 'Esta sala e tudo o que há nela somem em $expiryWords';
+  }
+
+  @override
+  String groupChatGhostModeOnBurns(Object fmtBurn) {
+    return 'Modo fantasma ativo · somem em $fmtBurn';
+  }
+
+  @override
+  String get groupChatGroupCreatedSayHi => 'Grupo criado. Dê um oi.';
+
+  @override
+  String get groupChatNoMessagesYet => 'Nenhuma mensagem ainda.';
+
+  @override
+  String get groupChatThisMessageCanT => 'Esta mensagem não pode ser exibida';
+
+  @override
+  String groupChatS(Object s) {
+    return '${s}s';
+  }
+
+  @override
+  String groupChatM(Object s) {
+    return '${s}min';
+  }
+
+  @override
+  String groupChatH(Object s) {
+    return '${s}h';
+  }
+
+  @override
+  String groupChatD(Object s) {
+    return '${s}d';
+  }
+
+  @override
+  String groupChatHere(int count, Object time) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$time · $countString aqui',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupChatMembers(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString membros',
+      one: '$countString membro',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupChatSearchThisChat => 'Buscar nesta conversa';
+
+  @override
+  String groupChatReplyingTo(Object name) {
+    return 'Respondendo a $name';
+  }
+
+  @override
+  String get groupChatReplyingToYou => 'Respondendo a você';
+
+  @override
+  String get groupChatTimedMessages => 'Mensagens temporárias';
+
+  @override
+  String get groupChatOpenTheCamera => 'Abrir a câmera';
+
+  @override
+  String get groupChatAttachAPhoto => 'Anexar uma foto';
+
+  @override
+  String get groupChatMessage => 'Mensagem';
+
+  @override
+  String get groupChatDisguiseVoice => 'Disfarçar a voz';
+
+  @override
+  String get groupChatSupporter => 'Apoiador';
+
+  @override
+  String get groupChatEdited => 'Editada';
+
+  @override
+  String get groupChatTapToRetry => '! toque para repetir';
+
+  @override
+  String get groupChat0s => '0s';
+
+  @override
+  String get groupChatReply => 'Responder';
+
+  @override
+  String get groupChatPin => 'Fixar';
+
+  @override
+  String get groupChatUnsave => 'Tirar dos salvos';
+
+  @override
+  String get groupChatForward => 'Encaminhar';
+
+  @override
+  String get groupInfoGroup => 'grupo';
+
+  @override
+  String get groupInfoRenameGroup => 'Renomear grupo';
+
+  @override
+  String get groupInfoRename => 'Renomear';
+
+  @override
+  String get groupInfoNoContactsToAdd => 'Ninguém para adicionar';
+
+  @override
+  String get groupInfoCouldNotAdd => 'Falha ao adicionar';
+
+  @override
+  String groupInfoRemove(Object haloId) {
+    return 'Remover $haloId?';
+  }
+
+  @override
+  String get groupInfoTheyWillStopReceiving =>
+      'A pessoa vai parar de receber mensagens deste grupo.';
+
+  @override
+  String get commonRemove => 'Remover';
+
+  @override
+  String get groupInfoClearThisConversation => 'Limpar esta conversa?';
+
+  @override
+  String get groupInfoEveryMessageHereIs =>
+      'Todas as mensagens daqui são apagadas deste celular. Isso só limpa a sua cópia, os outros membros ficam com as deles.';
+
+  @override
+  String get groupInfoClear => 'Limpar';
+
+  @override
+  String get groupInfoConversationCleared => 'Conversa limpa';
+
+  @override
+  String get groupInfoLeaveRoom => 'Sair da sala?';
+
+  @override
+  String get groupInfoLeaveGroup => 'Sair do grupo?';
+
+  @override
+  String get groupInfoEverythingInItIs =>
+      'Tudo o que está aqui é apagado deste celular agora, e a chave que você usou aqui some para sempre.';
+
+  @override
+  String get groupInfoYouWillStopReceiving =>
+      'Você vai parar de receber mensagens e os outros membros vão ver que você saiu.';
+
+  @override
+  String get groupInfoLeave => 'Sair';
+
+  @override
+  String get groupInfoGroupInfo => 'Sobre o grupo';
+
+  @override
+  String groupInfo1Member(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString membros',
+      one: '$countString membro',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupInfoAdmin => 'Admin';
+
+  @override
+  String get groupInfoMembers2 => 'Membros';
+
+  @override
+  String get groupInfoInvite => 'Convidar';
+
+  @override
+  String get commonAdd => 'Adicionar';
+
+  @override
+  String get groupInfoYou => 'Você';
+
+  @override
+  String get groupInfoRemoveFromGroup => 'Remover do grupo';
+
+  @override
+  String get groupInfoWallpaper => 'Papel de parede';
+
+  @override
+  String get groupInfoSharedMedia => 'Mídia compartilhada';
+
+  @override
+  String get groupInfoClearConversation => 'Limpar conversa';
+
+  @override
+  String get groupInfoLeaveRoom2 => 'Sair da sala';
+
+  @override
+  String get groupInfoLeaveGroup2 => 'Sair do grupo';
+
+  @override
+  String get groupInfoAddMembers => 'Adicionar membros';
+
+  @override
+  String groupInfoAdd(Object pickedLength) {
+    return 'Adicionar $pickedLength';
+  }
+
+  @override
+  String handleYouAre(Object h) {
+    return 'Você é @$h';
+  }
+
+  @override
+  String get handleHandleDeletedThePage =>
+      'Nome de usuário excluído · a página saiu do ar';
+
+  @override
+  String get handlePublicHandle => 'Nome de usuário público';
+
+  @override
+  String get handleOptionalYourThreeWords =>
+      'Opcional. Suas três palavras continuam funcionando de qualquer jeito.';
+
+  @override
+  String get handleWren => 'sabia';
+
+  @override
+  String get handleALineAboutYou => 'Uma linha sobre você · opcional';
+
+  @override
+  String get handleClaiming => 'Reservando…';
+
+  @override
+  String get handleClaimThisHandle => 'Reservar nome de usuário';
+
+  @override
+  String get handleAnyoneWithThisLink =>
+      'Qualquer pessoa com este link pode começar uma conversa privada com você. Ele leva o seu convite e mais nada.';
+
+  @override
+  String get handleLinkCopied => 'Link copiado';
+
+  @override
+  String get handleDeleteThisHandle => 'Excluir este nome de usuário';
+
+  @override
+  String get handleChecking => 'Verificando…';
+
+  @override
+  String get handleAvailable => '✓ disponível';
+
+  @override
+  String get handleAlreadyTaken => 'já está em uso';
+
+  @override
+  String get handleWhatAHandleDoes => 'O que é um nome de usuário';
+
+  @override
+  String get handleAnyoneWhoKnowsIt =>
+      'Qualquer pessoa que souber o nome pode pedir para falar com você, e é para isso que ele serve. A página guarda o seu convite e a linha que você escreveu, mais nada, e não registra quem a lê. Você pode excluí-lo quando quiser.';
+
+  @override
+  String handleIsNotYoursOn(Object handle) {
+    return '@$handle não é seu neste celular';
+  }
+
+  @override
+  String handleTheRegistryHoldsIt(Object handle) {
+    return 'O registro guarda esse nome com outra chave, provavelmente uma identidade que este celular tinha antes de uma restauração. Quem adiciona @$handle não está falando com você. Ele não pode ser liberado nem atualizado daqui. Escolha outro nome.';
+  }
+
+  @override
+  String get handleForgetItOnThis => 'Esquecer neste celular';
+
+  @override
+  String get homeAddAContact => 'Adicionar contato';
+
+  @override
+  String get commonSettings => 'Configurações';
+
+  @override
+  String get homeYourKryfo => 'Seu kryfo';
+
+  @override
+  String homeDateWeekday(Object weekday) {
+    return '$weekday,';
+  }
+
+  @override
+  String get homeAnHour => 'uma hora';
+
+  @override
+  String homeHours(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString horas',
+      one: '$countString hora',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeMinutes(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString minutos',
+      one: '$countString minuto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeKryfoIsOffline => 'O kryfo está offline';
+
+  @override
+  String homeTorHasNotBeen(Object howLong) {
+    return 'O tor não consegue se conectar há $howLong. Nada pode chegar nem sair até ele conseguir.';
+  }
+
+  @override
+  String get homeReconnecting => 'Reconectando';
+
+  @override
+  String get homeReconnect => 'Reconectar';
+
+  @override
+  String get homeWhatIsWrong => 'Qual é o problema';
+
+  @override
+  String get homeKryfoWillCheckIn =>
+      'O kryfo vai fazer uma consulta a cada 15 minutos';
+
+  @override
+  String get homeYourPhoneKeepsStopping => 'Seu celular fica parando o kryfo';
+
+  @override
+  String get homeItHasClosedKryfo =>
+      'Ele fechou o kryfo três vezes hoje, então as mensagens atrasaram ou ficaram esperando. As consultas resistem a isso: o kryfo acorda a cada 15 minutos em vez de ficar conectado.';
+
+  @override
+  String get homeSwitchToCheckIns => 'Mudar para consultas';
+
+  @override
+  String get homeNotNow => 'Agora não';
+
+  @override
+  String get homeNotificationsAreOff => 'As notificações estão desativadas';
+
+  @override
+  String get homeAndroidIsBlockingThem =>
+      'O Android está bloqueando as notificações, então nada chega até você enquanto o kryfo está fechado. As mensagens ainda chegam quando você abre o app.';
+
+  @override
+  String get homeCouldnTOpenIt =>
+      'Não deu para abrir. Procure o kryfo nas configurações do celular';
+
+  @override
+  String get homeTurnThemOn => 'Ativar';
+
+  @override
+  String get homeLeaveThemOff => 'Deixar desativadas';
+
+  @override
+  String get homeOurRelayIsQuiet => 'Retransmissor em silêncio';
+
+  @override
+  String get homeRelayModeUsesOnly =>
+      'O modo retransmissor usa só o nosso retransmissor, e ele não está respondendo agora. O modo rápido adiciona retransmissores públicos junto com ele, então as mensagens ainda chegam. Tudo continua lacrado de qualquer jeito.';
+
+  @override
+  String get homeSwitchedToFast => 'Mudou para rápido';
+
+  @override
+  String get homeUseFastMode => 'Usar o modo rápido';
+
+  @override
+  String get homeKeepWaiting => 'Esperar';
+
+  @override
+  String get homeNotConnecting => 'Não está conectando';
+
+  @override
+  String get homeBridgesAreOnAnd =>
+      'As pontes estão ativas e o tor ainda não passou. Pontes são mais lentas, e algumas param de funcionar sem aviso. Se a sua rede não bloqueia o tor, ir direto é mais rápido e mais confiável.';
+
+  @override
+  String get homeGoingDirectReconnecting => 'Indo direto · reconectando';
+
+  @override
+  String get homeTurnBridgesOff => 'Desativar pontes';
+
+  @override
+  String get homeStillTrying => 'Ainda tentando';
+
+  @override
+  String get homeTorIsNotGetting =>
+      'O tor não está conseguindo passar. Algumas redes bloqueiam o tor de propósito. Nosso retransmissor é uma conexão simples e costuma funcionar mesmo assim - ou as pontes, que demoram mais para configurar.';
+
+  @override
+  String get homeSwitchedToRelay => 'Mudou para retransmissor';
+
+  @override
+  String get homeUseOurRelay => 'Usar retransmissor';
+
+  @override
+  String get homeBridges => 'Pontes';
+
+  @override
+  String get homeOffline => 'Offline';
+
+  @override
+  String get homeWaiting => 'Esperando';
+
+  @override
+  String get homeNothingWaitingToSend => 'Nada esperando para enviar';
+
+  @override
+  String homeWaitingSendsWhenYou(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString esperando · sai quando você voltar',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeWaitingTorIsStill(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString esperando · o tor ainda está conectando',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeWaitingForThemTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString esperando · até a pessoa adicionar você de volta',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeWaitingForThemToAddYou(int count, int parked) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+    final intl.NumberFormat parkedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String parkedString = parkedNumberFormat.format(parked);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$countString esperando · $parkedString até adicionarem você de volta',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeWaitingSendingNow(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString esperando · enviando agora',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get commonRetry => 'Reenviar';
+
+  @override
+  String get homeNoKryfosYet => 'Nenhum kryfo ainda.';
+
+  @override
+  String get homeScanTheirCodeSend =>
+      'Escaneie o código da pessoa, envie um link ou digite o @nome de usuário que ela passou.';
+
+  @override
+  String get homeAddSomeone => 'Adicionar alguém';
+
+  @override
+  String get homeArchived => 'Arquivadas';
+
+  @override
+  String home1Chat(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString conversas',
+      one: '$countString conversa',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeGroups => 'Grupos';
+
+  @override
+  String get homeRoom => 'Sala';
+
+  @override
+  String get homeNew => 'Novo';
+
+  @override
+  String homeRoomExpired(Object expiredRoomName) {
+    return '$expiredRoomName · sala expirada';
+  }
+
+  @override
+  String get homeMentionedYou => 'Mencionou você';
+
+  @override
+  String homeMembers(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString membros',
+      one: '$countString membro',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeSupporter => 'Apoiador';
+
+  @override
+  String get homeArchivedChats => 'Conversas arquivadas';
+
+  @override
+  String get homeUnmute => 'Ativar som';
+
+  @override
+  String get homeMute => 'Silenciar';
+
+  @override
+  String get homeArchive => 'Arquivar';
+
+  @override
+  String get homeDeleteChat => 'Excluir conversa';
+
+  @override
+  String get homeMessagesAndContactGone =>
+      'Mensagens e contato somem deste celular';
+
+  @override
+  String get homeDeleteThisChat => 'Excluir esta conversa?';
+
+  @override
+  String homeEveryMessageWithGoes(Object c) {
+    return 'Todas as mensagens com $c somem, e a pessoa deixa de ser um contato. Isso só limpa este celular - a cópia dela continua com ela. Se ela mandar mensagem de novo, vai cair nos pedidos.';
+  }
+
+  @override
+  String get homeQueued => 'Na fila';
+
+  @override
+  String get homeBlocked => 'bloqueado';
+
+  @override
+  String get homeRoomInvite => 'Convite para sala';
+
+  @override
+  String get homeNow => 'agora';
+
+  @override
+  String homeM(Object inMinutes) {
+    return '${inMinutes}min';
+  }
+
+  @override
+  String homeH(Object inHours) {
+    return '${inHours}h';
+  }
+
+  @override
+  String get homeYesterday => 'ontem';
+
+  @override
+  String homeD(Object inDays) {
+    return '${inDays}d';
+  }
+
+  @override
+  String get homeNoteToSelf => 'Notas';
+
+  @override
+  String get homeOnlyOnThisPhone => 'Só neste celular';
+
+  @override
+  String get homeSaved => 'Salvos';
+
+  @override
+  String get homeKeptFromEveryChat => 'Guardadas de todas as conversas';
+
+  @override
+  String get homeRequests => 'Pedidos';
+
+  @override
+  String home1PersonWantsTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString pessoas querem falar com você',
+      one: '$countString pessoa quer falar com você',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String introduceGotItButCould(Object b, Object c) {
+    return '$b recebeu, mas não deu para falar com $c';
+  }
+
+  @override
+  String introduceGotItButCouldNotBe(Object c, Object b) {
+    return '$c recebeu, mas não deu para falar com $b';
+  }
+
+  @override
+  String get introduceCouldNotReachEither =>
+      'Não deu para falar com nenhum dos dois. Tente de novo mais tarde';
+
+  @override
+  String introduceIntroduceTo(Object peerName) {
+    return 'Apresentar $peerName a...';
+  }
+
+  @override
+  String get introduceBothOfThemGet =>
+      'Os dois recebem o cartão um do outro. Nenhum dos dois vê o nome que você dá ao outro.';
+
+  @override
+  String get introduceNoOneElseTo =>
+      'Ainda não tem mais ninguém para apresentar. Adicione outro contato primeiro.';
+
+  @override
+  String get introduceANoteLikeMy => 'Uma nota, como “meu primo” - opcional';
+
+  @override
+  String introduceOfIntroductionsLeftThis(int max, int left) {
+    final intl.NumberFormat maxNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String maxString = maxNumberFormat.format(max);
+    final intl.NumberFormat leftNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String leftString = leftNumberFormat.format(left);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      max,
+      locale: localeName,
+      other: '$leftString de $maxString apresentações disponíveis esta semana',
+      one: '$leftString de $maxString apresentação disponível esta semana',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String introduceNoIntroductionsLeftNext(Object refillPhrase) {
+    return 'Nenhuma apresentação disponível. A próxima fica livre $refillPhrase';
+  }
+
+  @override
+  String get introduceIntroduce => 'Apresentar';
+
+  @override
+  String get keyVerificationSafetyNumber => 'Número de segurança';
+
+  @override
+  String keyVerificationWith(Object peerName) {
+    return 'Com $peerName';
+  }
+
+  @override
+  String keyVerificationIfSeesTheSame(Object peerName) {
+    return 'Se $peerName vir o mesmo número, suas mensagens são privadas só entre vocês dois. Comparar pessoalmente ou numa ligação de confiança é o jeito mais seguro de ter certeza - mas é opcional, nunca obrigatório para conversar.';
+  }
+
+  @override
+  String get keyVerificationVerified => 'Verificado';
+
+  @override
+  String get keyVerificationMarkAsVerified => 'Marcar como verificado';
+
+  @override
+  String get lockFileThatPasswordDoesNot => 'Essa senha não abre o arquivo.';
+
+  @override
+  String get lockFileThisFileIsDamaged => 'Este arquivo está danificado.';
+
+  @override
+  String get lockFileThisFileWasLocked =>
+      'Este arquivo foi trancado com uma chave, não com uma senha.';
+
+  @override
+  String get lockFileThisIsNotA => 'Este não é um arquivo trancado.';
+
+  @override
+  String get lockFileNotEnoughFreeMemory =>
+      'Não há memória livre suficiente agora.';
+
+  @override
+  String get lockFileStopped => 'Parado.';
+
+  @override
+  String get lockFileItNeedsAPassword => 'Ele precisa de uma senha.';
+
+  @override
+  String get lockFileKryfoCouldNotRead =>
+      'O Kryfo não conseguiu ler ou gravar o arquivo.';
+
+  @override
+  String get lockFileCheckCapitalsAndSpaces =>
+      'Confira maiúsculas e espaços. Ninguém pode redefinir a senha, nem nós.';
+
+  @override
+  String get lockFileItMayHaveBeen =>
+      'Ele pode ter sido cortado no caminho. Peça para enviarem de novo. Nada foi salvo.';
+
+  @override
+  String get lockFileItOpensWithThe =>
+      'Ele abre com o arquivo de chave da pessoa para quem foi feito, na ferramenta age num computador. O Kryfo abre o tipo com senha.';
+
+  @override
+  String get lockFileKryfoOpensFilesLocked =>
+      'O Kryfo abre arquivos trancados com age. Eles geralmente terminam em .age.';
+
+  @override
+  String get lockFileCloseAFewApps =>
+      'Feche alguns apps e tente de novo. A verificação da senha precisa de algumas centenas de megabytes por um momento.';
+
+  @override
+  String get lockFileNothingWasSaved => 'Nada foi salvo.';
+
+  @override
+  String get lockFileTypeOneOrLet =>
+      'Digite uma, ou deixe o Kryfo sugerir quatro palavras.';
+
+  @override
+  String get lockFileTheAppThatHolds =>
+      'O app que guarda o arquivo pode ter pegado de volta. Escolha de novo.';
+
+  @override
+  String get lockFileHidePassword => 'Ocultar senha';
+
+  @override
+  String get lockFileShowPassword => 'Mostrar senha';
+
+  @override
+  String get lockFileChangeFile => 'Trocar arquivo';
+
+  @override
+  String get lockFileChange => 'Trocar';
+
+  @override
+  String lockFileOf(Object prettySize, Object prettySize2) {
+    return '$prettySize de $prettySize2';
+  }
+
+  @override
+  String get lockFileEverythingStaysOnThis => 'Tudo fica neste celular.';
+
+  @override
+  String get lockFileCouldNotMakeOne => 'Não deu para criar uma. Digite a sua.';
+
+  @override
+  String get lockFileWriteItDownBefore => 'Anote antes de trancar o arquivo';
+
+  @override
+  String get lockFileNoAppOnThis =>
+      'Nenhum app neste celular aceitou o arquivo.';
+
+  @override
+  String get lockFileSaved => 'Salvo';
+
+  @override
+  String get lockFileCouldNotSaveIt =>
+      'Não deu para salvar aí. Tente outra pasta.';
+
+  @override
+  String get lockFileLocked => 'Trancado';
+
+  @override
+  String get lockFileLockAFile => 'Trancar um arquivo';
+
+  @override
+  String get lockFileMixingThePassword => 'Misturando a senha';
+
+  @override
+  String get lockFileLocking => 'Trancando';
+
+  @override
+  String get lockFileSaveToFiles => 'Salvar em Arquivos';
+
+  @override
+  String get lockFileLockFile => 'Trancar arquivo';
+
+  @override
+  String get lockFileOnePassword => 'Uma senha.';
+
+  @override
+  String get lockFileNothingElseOpensIt => 'Nada mais abre o arquivo.';
+
+  @override
+  String get lockFileFile => 'Arquivo';
+
+  @override
+  String lockFileFromFiles(Object prettySize) {
+    return '$prettySize · de Arquivos';
+  }
+
+  @override
+  String get lockFileFromFiles2 => 'De Arquivos';
+
+  @override
+  String get lockFilePassword => 'Senha';
+
+  @override
+  String get lockFileSuggestFourWords => 'Sugerir quatro palavras';
+
+  @override
+  String get lockFileTypeItAgain => 'Digite de novo';
+
+  @override
+  String get lockFileTheTwoDoNot => 'As duas ainda não são iguais.';
+
+  @override
+  String get lockFileHideTheFileName => 'Ocultar o nome do arquivo';
+
+  @override
+  String lockFileItWillBeCalled(Object name) {
+    return 'Ele vai se chamar “$name”. Diga à pessoa que tipo de arquivo é.';
+  }
+
+  @override
+  String get lockFileTheNameAloneCan =>
+      'Só o nome já pode dizer o que tem dentro.';
+
+  @override
+  String get lockFileAnyoneWithThePassword =>
+      'Qualquer pessoa com a senha pode abrir o arquivo, no Kryfo ou em qualquer computador com a ferramenta gratuita age. Se você esquecer a senha, o arquivo se perde para sempre. Ninguém pode redefini-la, nem nós.';
+
+  @override
+  String get lockFileLocked2 => 'Trancado.';
+
+  @override
+  String get lockFileOnlyThePasswordOpens => 'Só a senha abre o arquivo.';
+
+  @override
+  String lockFileSafeToEmailOr(Object prettySize) {
+    return '$prettySize · seguro para mandar por e-mail ou pôr num pendrive';
+  }
+
+  @override
+  String get lockFileNoKryfoOnThe =>
+      'A outra pessoa não tem Kryfo? Num computador:';
+
+  @override
+  String get lockFileItAsksForThe =>
+      'Ele pede a senha. O age é gratuito em age-encryption.org';
+
+  @override
+  String lockTooManyTriesS(Object lockState) {
+    return 'Tentativas demais · ${lockState}s';
+  }
+
+  @override
+  String get lockNotIt => 'Não é esse';
+
+  @override
+  String get lockYourPin => 'Seu PIN';
+
+  @override
+  String get lockUseFingerprint => 'Usar digital';
+
+  @override
+  String get lockSetupThatIsYourWipe =>
+      'Esse é o seu PIN de apagamento. Escolha outro.';
+
+  @override
+  String get lockSetupUnlockWithFingerprint => 'Desbloquear com a digital?';
+
+  @override
+  String get lockSetupThePinStillWorks =>
+      'O PIN continua funcionando sempre que você quiser. Isso só é mais rápido.';
+
+  @override
+  String get lockSetupUseFingerprint => 'Usar digital';
+
+  @override
+  String get lockSetupPinOnly => 'Só o PIN';
+
+  @override
+  String get lockSetupOnceMore => 'Mais uma vez';
+
+  @override
+  String get lockSetupSetAPin => 'Novo PIN';
+
+  @override
+  String get lockSetupThoseWereDifferentFrom => 'Eram diferentes. Do começo.';
+
+  @override
+  String get lockSetupTheSameFourDigits => 'Os mesmos quatro dígitos';
+
+  @override
+  String get lockSetupFourDigitsAnythingYou =>
+      'Quatro dígitos, qualquer coisa que você vá lembrar';
+
+  @override
+  String get modesOnion => 'Onion';
+
+  @override
+  String get modesFullOnionRoutingThree =>
+      'Roteamento onion completo, três saltos. Uma mensagem leva de dois a cinco segundos. Ninguém vê com quem você fala.';
+
+  @override
+  String get modesSlower => 'mais lento';
+
+  @override
+  String get modesRelay => 'Retransmissor';
+
+  @override
+  String get modesOneSealedConnectionTo =>
+      'Uma conexão lacrada com o retransmissor do próprio kryfo, como uma VPN sem nada para registrar. Os envios chegam em cerca de um segundo, e funciona onde o tor está bloqueado.';
+
+  @override
+  String get modesQuick => 'ágil';
+
+  @override
+  String get modesRelayOnly => 'Só retransmissor';
+
+  @override
+  String get modesFast => 'Rápido';
+
+  @override
+  String get modesPlainConnectionsToEvery =>
+      'Conexões simples com cada retransmissor. Quase instantâneo, e o menos privado dos três.';
+
+  @override
+  String get modesInstant => 'instantâneo';
+
+  @override
+  String get modesEveryRelayYouUse =>
+      'Cada retransmissor que você usa sabe o endereço de onde você se conecta, não só o nosso. As mensagens continuam lacradas, mas o fato de você ter enviado uma, não. Desativado por padrão, e desativado de novo depois de reinstalar.';
+
+  @override
+  String get modesSpeed => 'Velocidade';
+
+  @override
+  String get modesPrivacy => 'e privacidade';
+
+  @override
+  String get modesChangeGloballyOrPer => 'Mude para tudo ou por conversa';
+
+  @override
+  String get modesSoon => 'Em breve';
+
+  @override
+  String get modesActive => 'Ativo';
+
+  @override
+  String get modesSpeed2 => 'VELOCIDADE';
+
+  @override
+  String get modesHops => 'SALTOS';
+
+  @override
+  String get modesIp => 'IP';
+
+  @override
+  String get modesVisible => 'Visível';
+
+  @override
+  String get modesHidden => 'oculto';
+
+  @override
+  String modesHeadsUp(Object warning) {
+    return '*Atenção:* $warning';
+  }
+
+  @override
+  String get modesOnionIsTheDefault =>
+      'Onion é o padrão e continua assim a não ser que você mude. A troca vale a partir da próxima mensagem.';
+
+  @override
+  String get modesFastMode => 'Modo rápido';
+
+  @override
+  String get modesPlainConnectionsToEveryRelayQuicker =>
+      'Conexões simples com cada retransmissor. Mais rápido, e os retransmissores podem ver seu endereço IP. As mensagens continuam criptografadas de ponta a ponta de qualquer jeito.';
+
+  @override
+  String get modesTurnOnFastMode => 'Ativar o modo rápido';
+
+  @override
+  String get modesKeepItOff => 'Deixar desativado';
+
+  @override
+  String get movedWipeThisPhone => 'Apagar este celular?';
+
+  @override
+  String get movedEverythingKryfoHoldsHere =>
+      'Tudo o que o kryfo guarda aqui vai embora: as mensagens, os contatos, as chaves. O outro aparelho fica com tudo isso. Isso não pode ser desfeito.';
+
+  @override
+  String get movedWipeIt => 'Apagar';
+
+  @override
+  String get movedNotMovingAfterAll => 'Afinal, não vai mudar?';
+
+  @override
+  String get movedOnlyDoThisIf =>
+      'Só faça isso se o backup nunca tiver sido importado em lugar nenhum. Se foi, agora dois aparelhos têm a mesma identidade, e as mensagens vão começar a se perder nos dois.';
+
+  @override
+  String get movedIMStayingHere => 'Vou ficar aqui';
+
+  @override
+  String get movedStayingHere => 'Ficando aqui';
+
+  @override
+  String movedKryfoWillCloseNow(Object myId) {
+    return 'O kryfo vai fechar agora. Toque no ícone para abrir de novo como $myId.';
+  }
+
+  @override
+  String get movedReopenKryfo => 'Reabrir o kryfo';
+
+  @override
+  String get movedThisKryfoHasMoved => 'Este kryfo se mudou';
+
+  @override
+  String movedIsNowOnAnother(Object myId) {
+    return '$myId agora está em outro aparelho. Este celular ainda pode mostrar o que havia aqui, mas nada novo vai chegar nele, e nada que você enviar daqui vai chegar a ninguém.';
+  }
+
+  @override
+  String get movedKeepItToRead => 'Manter para leitura';
+
+  @override
+  String get movedWipeThisPhone2 => 'Apagar este celular';
+
+  @override
+  String get movedIMNotMoving => 'Afinal, não vou mudar';
+
+  @override
+  String get myKryfoAHandleIs3 =>
+      'Um nome de usuário tem de 3 a 20 letras, números ou _';
+
+  @override
+  String get myKryfoInviteCopiedClearsIn => 'Convite copiado · some em 60s';
+
+  @override
+  String myKryfoAddMeOnKryfo(Object myId, Object uri) {
+    return 'me adicione no kryfo. meu id é $myId\n\ntoque para me adicionar:\n$uri\n\no kryfo é um mensageiro privado. sem número de telefone, sem e-mail.';
+  }
+
+  @override
+  String get myKryfoAddMeOnKryfo2 => 'Me adicione no kryfo';
+
+  @override
+  String get myKryfoAddSomeone => 'Adicionar alguém';
+
+  @override
+  String get myKryfoKryfoDoesnTScan =>
+      'o kryfo não lê seus contatos, e é essa a ideia.';
+
+  @override
+  String get myKryfoIfThisLinkEnds =>
+      'Se este link for parar onde você não queria, redefina nas configurações. Aí todo mundo que tem o link vai precisar de um novo.';
+
+  @override
+  String get myKryfoAlreadyShareAFriend =>
+      'Já têm alguém em comum no kryfo? Essa pessoa pode apresentar vocês pela conversa dela, e vocês pulam o pedido.';
+
+  @override
+  String get myKryfoHandleCopied => 'Nome de usuário copiado';
+
+  @override
+  String get myKryfoTheyReHereWith => 'a pessoa está aqui comigo';
+
+  @override
+  String get myKryfoPointYourPhonesAt =>
+      'Apontem os celulares um para o outro. Nada passa por um servidor.';
+
+  @override
+  String get myKryfoScanTheirsInstead => 'Escanear o da pessoa';
+
+  @override
+  String get myKryfoTheyReadYouA => 'A pessoa lê um código para você';
+
+  @override
+  String get myKryfoTheyReSomewhereElse => 'a pessoa está em outro lugar';
+
+  @override
+  String get myKryfoSendThemALink =>
+      'Mande um link. Ele abre direto na tela de adicionar.';
+
+  @override
+  String get myKryfoYourLinkAppearsOnce =>
+      'Seu link aparece depois que você se conectar';
+
+  @override
+  String get myKryfoTheLinkCarriesYour =>
+      'O link leva seu ID, seu endereço e as chaves para começar uma conversa. Ele funciona até você redefini-lo nas configurações.';
+
+  @override
+  String get myKryfoSendTheLink => 'Enviar o link';
+
+  @override
+  String get myKryfoAsACard => 'Como cartão';
+
+  @override
+  String get myKryfoAnImageWithThe => 'Uma imagem com o QR';
+
+  @override
+  String get myKryfoAsAFile => 'Como arquivo';
+
+  @override
+  String get myKryfoContactFile => 'Arquivo de contato';
+
+  @override
+  String get myKryfoIKnowTheirHandle => 'Sei o nome de usuário';
+
+  @override
+  String get myKryfoTypeTheNameThey =>
+      'Digite o @nome que a pessoa passou. Funciona se ela tiver reservado um.';
+
+  @override
+  String get myKryfoWren => 'Sabia';
+
+  @override
+  String get myKryfoTheLookupAsksFor =>
+      'A busca pede só esse nome e nada sobre você. A primeira mensagem que a pessoa receber de você ainda chega como pedido do lado dela.';
+
+  @override
+  String get myKryfoLooking => 'Procurando…';
+
+  @override
+  String get myKryfoFindThem => 'Encontrar';
+
+  @override
+  String get myKryfoYourAddressAppearsOnce =>
+      'Seu endereço aparece depois que você se conectar';
+
+  @override
+  String get myKryfoAPublicHandle => 'Nome de usuário público';
+
+  @override
+  String get myKryfoPutItInA =>
+      'Coloque numa bio. Qualquer pessoa que souber pode encontrar você.';
+
+  @override
+  String get myKryfoANamePeopleCan =>
+      'Um nome pelo qual as pessoas podem encontrar você. Desativado até você reservar um.';
+
+  @override
+  String get newGroupCouldNotCreate => 'Não deu para criar';
+
+  @override
+  String get newGroupNewGroup => 'Novo grupo';
+
+  @override
+  String get newGroupCreating => 'criando...';
+
+  @override
+  String get newGroupCreate => 'criar';
+
+  @override
+  String get newGroupGroupName => 'Nome do grupo';
+
+  @override
+  String get newGroupMembers => 'Membros';
+
+  @override
+  String get newGroupPickAtLeastOne => 'Escolha pelo menos um';
+
+  @override
+  String newGroupSelected(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString selecionados',
+      one: '$countString selecionado',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get newGroupAddAtLeastOne =>
+      'Adicione pelo menos um contato antes de criar um grupo.';
+
+  @override
+  String get notesToday => 'HOJE';
+
+  @override
+  String get notesYesterday => 'ONTEM';
+
+  @override
+  String get notesNoteToSelf => 'Notas';
+
+  @override
+  String get notesOnlyOnThisPhone => 'Só neste celular';
+
+  @override
+  String get notesAQuietPlace => 'Um lugar tranquilo';
+
+  @override
+  String get notesJotAnythingDownIt =>
+      'Anote o que quiser. Fica neste celular e nunca sai dele.';
+
+  @override
+  String get notesJotSomethingDown => 'Anote alguma coisa…';
+
+  @override
+  String get onboardingPrivateByDefault => 'PRIVADO POR PADRÃO';
+
+  @override
+  String get onboardingPrivateMessaging =>
+      'Mensagens privadas,\n*sem pegadinha*.';
+
+  @override
+  String get onboardingYourNameIsThree =>
+      '*Seu nome são três palavras.* Sem telefone, sem e-mail, sem agenda de contatos.';
+
+  @override
+  String get onboardingNobodyGetsInUnless =>
+      '*Ninguém entra se você não deixar.* Não existe busca. As pessoas são adicionadas à mão, pelos dois lados.';
+
+  @override
+  String get onboardingTheFirstConnectionTakes =>
+      '*A primeira conexão leva um minuto.* O kryfo monta uma rota privada antes de enviar. Depois fica rápido.';
+
+  @override
+  String get onboardingBegin => 'Começar';
+
+  @override
+  String get onboardingHaveABackupRestore => 'Tem um backup? Restaurar →';
+
+  @override
+  String get onboardingKryfoIsOpenSource => 'O kryfo tem código aberto';
+
+  @override
+  String get onboardingYourKryfoId => 'SEU ID DO KRYFO';
+
+  @override
+  String get onboardingGeneratedFromAKey =>
+      'Gerado a partir de uma chave que só existe neste celular. *Fácil de lembrar, único, só seu.* Ninguém mais tem um igual.';
+
+  @override
+  String get onboardingTryAnother => 'Tentar outro';
+
+  @override
+  String get onboardingUseThisName => 'Usar este nome →';
+
+  @override
+  String get onboardingThreeWords => 'Três palavras. *Só suas.*';
+
+  @override
+  String get onboardingPickA => 'Escolha um *rosto*.';
+
+  @override
+  String get onboardingDrawnOnThisPhone =>
+      'Desenhado neste celular a partir de um número, nunca enviado para lugar nenhum. Mude quando quiser.';
+
+  @override
+  String get onboardingThePeopleYouMessage =>
+      'As pessoas com quem você conversa também veem isso';
+
+  @override
+  String get onboardingKeepMyInitial => 'Manter minha inicial';
+
+  @override
+  String get onboardingThatOne => 'Esse →';
+
+  @override
+  String get onboardingContinue => 'Continuar →';
+
+  @override
+  String get onboardingHowYourMessages => 'Como suas mensagens *viajam*.';
+
+  @override
+  String get onboardingYouCanChangeThis =>
+      'Você pode mudar isso quando quiser nas configurações, para todos ou para uma conversa.';
+
+  @override
+  String get onboardingOnion => 'Onion';
+
+  @override
+  String get onboardingSlowerAMessageTakes =>
+      'Mais lento. Uma mensagem leva de dois a cinco segundos.';
+
+  @override
+  String get onboardingHidesYourAddressFrom =>
+      'Esconde seu endereço de todo mundo, inclusive do nosso retransmissor.';
+
+  @override
+  String get onboardingRelay => 'Retransmissor';
+
+  @override
+  String get onboardingOurRelaySeesYour =>
+      'Nosso retransmissor vê seu endereço. Mais ninguém vê.';
+
+  @override
+  String get onboardingAboutASecondWorks =>
+      'Cerca de um segundo. Funciona onde o tor está bloqueado.';
+
+  @override
+  String get onboardingFast => 'Rápido';
+
+  @override
+  String get onboardingEveryRelayYouUse =>
+      'Cada retransmissor que você usa vê seu endereço. O menos privado dos três.';
+
+  @override
+  String get onboardingNearInstant => 'Quase instantâneo.';
+
+  @override
+  String get onboardingKeepOnion => 'Manter onion →';
+
+  @override
+  String get onboardingUseThis => 'Usar este →';
+
+  @override
+  String get onboardingSkipOnionIsA => 'Pular · onion é um bom padrão';
+
+  @override
+  String get onboardingThreeThingsThen => 'Três coisas,\ne *você entra*.';
+
+  @override
+  String get onboardingEverythingElseTheApp =>
+      'Todo o resto o app conta quando for importante.';
+
+  @override
+  String get onboardingYourNameIsThreeWords => 'Seu nome são três palavras';
+
+  @override
+  String get onboardingThatIsTheWhole =>
+      'Essa é a identidade inteira. Nenhum número para vazar, nenhum e-mail para ser alvo de phishing, nada para pesquisar. As pessoas com quem você fala veem essas palavras e o rosto que você escolheu.';
+
+  @override
+  String get onboardingNobodyCanReachYou =>
+      'Ninguém consegue falar com você até você deixar';
+
+  @override
+  String get onboardingAStrangerWithYour =>
+      'Alguém que você não conhece e tem as suas palavras só pode bater na porta. A primeira mensagem dessa pessoa espera nos pedidos até você dizer sim, e você pode dizer não sem ela jamais ficar sabendo.';
+
+  @override
+  String get onboardingTheFirstConnectionTakesAMinute =>
+      'A primeira conexão leva um minuto';
+
+  @override
+  String get onboardingKryfoBuildsAPrivateRouteBefore =>
+      'O kryfo monta uma rota privada antes de enviar qualquer coisa. Enquanto você estiver offline, as mensagens esperam e chegam quando você voltar.';
+
+  @override
+  String get onboardingYourIdentityLivesOn =>
+      'Sua identidade mora neste celular. Faça um backup nas configurações quando quiser.';
+
+  @override
+  String get onboardingIUnderstand => 'Entendi →';
+
+  @override
+  String get onboardingOneQuiet => 'Uma *notificação* discreta.';
+
+  @override
+  String get onboardingAndroidNeedsAVisible =>
+      'O Android exige uma notificação visível enquanto um app escuta em segundo plano. É assim que as mensagens chegam quando o kryfo está fechado.';
+
+  @override
+  String get onboardingSilentAndAtThe =>
+      'Silenciosa, e lá embaixo nas notificações';
+
+  @override
+  String get onboardingItNeverBuzzesTurn =>
+      'Ela nunca vibra. Se você desativar, as mensagens esperam até você abrir o app de novo.';
+
+  @override
+  String get onboardingGotIt => 'Entendi →';
+
+  @override
+  String get onboardingNow => 'Agora, *adicione alguém*.';
+
+  @override
+  String get onboardingTheAppIsReady =>
+      'O app está pronto. Ninguém pode mandar mensagem para você até você adicionar a pessoa ou deixá-la entrar.';
+
+  @override
+  String get onboardingEveryWayToAdd => 'Todas as formas de adicionar';
+
+  @override
+  String get onboardingShowYourCodeSend =>
+      'Mostre seu código, envie um link ou digite o @nome de usuário que a pessoa passou.';
+
+  @override
+  String get onboardingScanTheirs => 'Escanear código';
+
+  @override
+  String get onboardingPointTheCameraAt =>
+      'Aponte a câmera para o código da pessoa';
+
+  @override
+  String get onboardingTheAppIsReadyWhenYou =>
+      'O app está pronto quando você estiver.';
+
+  @override
+  String get onboardingNotNowAddPeople =>
+      'Agora não · adicionar pessoas depois';
+
+  @override
+  String get openLockedOpened => 'Aberto';
+
+  @override
+  String get openLockedOpenALockedFile => 'Abrir um arquivo trancado';
+
+  @override
+  String get openLockedCheckingThePassword => 'Verificando a senha';
+
+  @override
+  String get openLockedOpening => 'Abrindo';
+
+  @override
+  String get openLockedFile => 'Arquivo';
+
+  @override
+  String get openLockedOpenFile => 'Abrir arquivo';
+
+  @override
+  String get openLockedTypeThePassword => 'Digite a senha.';
+
+  @override
+  String get openLockedItOpensOnThis => 'Ele abre neste celular.';
+
+  @override
+  String get openLockedLockedFile => 'Arquivo trancado';
+
+  @override
+  String openLockedFromFiles(Object prettySize) {
+    return '$prettySize · de Arquivos';
+  }
+
+  @override
+  String get openLockedFromFiles2 => 'De Arquivos';
+
+  @override
+  String get openLockedPassword => 'Senha';
+
+  @override
+  String get openLockedThePasswordIsChecked =>
+      'A senha é verificada primeiro. Só depois o Kryfo pergunta onde colocar o arquivo aberto, e ele vai direto para lá.';
+
+  @override
+  String get openLockedOpened2 => 'Aberto.';
+
+  @override
+  String get openLockedSavedWhereYouChose => 'Salvo onde você escolheu.';
+
+  @override
+  String get pairCodePairingCode => 'Código de pareamento';
+
+  @override
+  String get pairCodeShowACode => 'Mostrar um código';
+
+  @override
+  String get pairCodeEnterOne => 'Digitar um';
+
+  @override
+  String get pairCodeSixDigits => 'Seis dígitos';
+
+  @override
+  String get pairCodeLooking => 'Procurando…';
+
+  @override
+  String get pairCodeNothingThereYetTrying => 'Nada ainda · tentando de novo';
+
+  @override
+  String get pairCodeNothingAtThatCode =>
+      'Nada nesse código. Ele pode ter sumido, ou a pessoa ainda não compartilhou.';
+
+  @override
+  String get pairCodeTypeTheSixDigits =>
+      'Digite os seis dígitos que a pessoa leu.';
+
+  @override
+  String get pairCodeAddThem => 'Adicionar';
+
+  @override
+  String get panicSetupThoseWereDifferentFrom => 'Eram diferentes. Do começo.';
+
+  @override
+  String get panicSetupThatIsYourReal =>
+      'Esse é o seu PIN de verdade. Escolha outro.';
+
+  @override
+  String get panicSetupOnceMore => 'Mais uma vez';
+
+  @override
+  String get panicSetupSetAWipePin => 'Novo PIN de apagamento';
+
+  @override
+  String get panicSetupTheSameFourDigits => 'Os mesmos quatro dígitos';
+
+  @override
+  String get panicSetupTheSecondPinWipes => 'O segundo PIN apaga tudo.';
+
+  @override
+  String get photoKnowsEverythingInside => 'Tudo o que tem dentro';
+
+  @override
+  String get photoKnowsVideo => 'Vídeo';
+
+  @override
+  String get photoKnowsPhoto => 'Foto';
+
+  @override
+  String get photoKnowsWhatThisVideoKnows => 'O que este vídeo sabe';
+
+  @override
+  String get photoKnowsWhatThisPhotoKnows => 'O que esta foto sabe';
+
+  @override
+  String get photoKnowsRemoveAllOfIt => 'Remover tudo';
+
+  @override
+  String get photoKnowsKeepItAsIt => 'Deixar como está';
+
+  @override
+  String get photoKnowsReadOnThisPhone =>
+      'LIDO NESTE CELULAR · O VÍDEO NÃO FOI PARA LUGAR NENHUM';
+
+  @override
+  String get photoKnowsReadOnThisPhoneThePhoto =>
+      'LIDO NESTE CELULAR · A FOTO NÃO FOI PARA LUGAR NENHUM';
+
+  @override
+  String get photoKnowsReadingTheFile => 'Lendo o arquivo';
+
+  @override
+  String photoKnowsOf(Object prettySize, Object prettySize2) {
+    return '$prettySize de $prettySize2';
+  }
+
+  @override
+  String get photoKnowsEverythingStaysOnThis => 'Tudo fica neste celular.';
+
+  @override
+  String photoKnowsMapWithAPin(Object place) {
+    return 'Mapa com um marcador. $place';
+  }
+
+  @override
+  String get photoKnowsDrawnOffline => 'DESENHADO OFFLINE';
+
+  @override
+  String photoKnowsShowEverything(Object title) {
+    return '$title. Mostrar tudo';
+  }
+
+  @override
+  String get pinsAppLock => 'Bloqueio do app';
+
+  @override
+  String get pinsTwoPins => 'Dois PINs';
+
+  @override
+  String get pinsYourPin => 'Seu PIN';
+
+  @override
+  String get commonOn => 'Ativado';
+
+  @override
+  String get commonOff => 'Desativado';
+
+  @override
+  String get pinsOpensKryfoFourDigits =>
+      'Abre o kryfo. Quatro dígitos, pedidos quando o app volta para a tela.';
+
+  @override
+  String get pinsChangePin => 'Mudar PIN';
+
+  @override
+  String get pinsSetAPin => 'Novo PIN';
+
+  @override
+  String get pinsTurnOff => 'Desativar';
+
+  @override
+  String get pinsTurnOffTheApp => 'Desativar o bloqueio do app?';
+
+  @override
+  String get pinsThePinGoesAnd =>
+      'O PIN sai, e o PIN de apagamento junto. Qualquer pessoa com seu celular abre o kryfo como se fosse você.';
+
+  @override
+  String get pinsUnlockWithFingerprint => 'Desbloquear com a digital';
+
+  @override
+  String get pinsWipePin => 'PIN de apagamento';
+
+  @override
+  String get pinsNeedsAPinFirst => 'Precisa de um PIN';
+
+  @override
+  String get pinsSet => 'Definido';
+
+  @override
+  String get pinsTheSecondPinWipes => 'O segundo PIN apaga tudo.';
+
+  @override
+  String get pinsChangeWipePin => 'Mudar PIN de apagamento';
+
+  @override
+  String get pinsSetAWipePin => 'Novo PIN de apagamento';
+
+  @override
+  String get pinsRemove => 'remover';
+
+  @override
+  String get pinsRemoveTheWipePin => 'Remover o PIN de apagamento?';
+
+  @override
+  String get pinsTheLockScreenKeeps =>
+      'A tela de bloqueio mantém seu PIN. O PIN de apagamento deixa de funcionar.';
+
+  @override
+  String profileCopied(Object what) {
+    return '$what copiado';
+  }
+
+  @override
+  String get profileProfile => 'Perfil';
+
+  @override
+  String get profileChangeYourFace => 'Mudar seu rosto';
+
+  @override
+  String get profileKryfoId => 'id do kryfo';
+
+  @override
+  String get profileOnionAddress => 'endereço onion';
+
+  @override
+  String get profileSupporterBadge => 'Selo de apoiador';
+
+  @override
+  String profileYouAreAThank(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'Você é apoiador. obrigado.',
+      'patron': 'Você é mecenas. obrigado.',
+      'guardian': 'Você é guardião. obrigado.',
+      'other': 'Você é apoiador. obrigado.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get profileShowMyBadge => 'mostrar meu selo';
+
+  @override
+  String get profileOnMyOwnScreens => 'Nas minhas próprias telas';
+
+  @override
+  String get profileLetContactsSeeIt => 'Deixar os contatos verem';
+
+  @override
+  String get profileOffByDefault => 'desativado por padrão';
+
+  @override
+  String get profileShareConnect => 'compartilhar e conectar';
+
+  @override
+  String get profileMyKryfoCode => 'Meu código do kryfo';
+
+  @override
+  String get profileAddContact => 'Adicionar contato';
+
+  @override
+  String get profileGiveAgain => 'Doar de novo';
+
+  @override
+  String get profileSupportKryfo => 'Apoiar o kryfo';
+
+  @override
+  String get profileKryfoRunsOnWhat => 'O kryfo vive do que as pessoas doam';
+
+  @override
+  String get profileKeepKryfoIndependent => 'Mantenha o kryfo independente';
+
+  @override
+  String get qrLink => 'Link';
+
+  @override
+  String get qrYourLinkAsTyped =>
+      'SEU LINK COMO FOI DIGITADO · SEM REDIRECIONAMENTO DE RASTREIO';
+
+  @override
+  String get qrText => 'Texto';
+
+  @override
+  String get qrStaysInTheCode => 'FICA NO CÓDIGO · NENHUM SERVIDOR GUARDA';
+
+  @override
+  String get qrWiFi => 'Wi-Fi';
+
+  @override
+  String get qrMadeOnThisPhone =>
+      'FEITO NESTE CELULAR · NENHUM SITE VIU A SENHA';
+
+  @override
+  String get qrNetworkName => 'Nome da rede';
+
+  @override
+  String get qrPassword => 'Senha';
+
+  @override
+  String get qrContact => 'Contato';
+
+  @override
+  String get qrOnlyWhatYouType =>
+      'SÓ O QUE VOCÊ DIGITAR · NADA DOS SEUS CONTATOS';
+
+  @override
+  String get qrName => 'Nome';
+
+  @override
+  String get qrPhone => 'Telefone';
+
+  @override
+  String get qrEmail => 'E-mail';
+
+  @override
+  String get qrOpensTheirMailApp =>
+      'ABRE O APP DE E-MAIL DA PESSOA · NADA É ENVIADO DAQUI';
+
+  @override
+  String get qrTo => 'Para';
+
+  @override
+  String get qrSubject => 'Assunto';
+
+  @override
+  String get qrANumberNothingElse => 'UM NÚMERO · MAIS NADA';
+
+  @override
+  String get qrNumber => 'Número';
+
+  @override
+  String get qrSms => 'SMS';
+
+  @override
+  String get qrOpensTheirMessagesApp =>
+      'ABRE O APP DE MENSAGENS DA PESSOA · NADA É ENVIADO DAQUI';
+
+  @override
+  String get qrMessage => 'Mensagem';
+
+  @override
+  String get qrLocation => 'Localização';
+
+  @override
+  String get qrCoordinatesOnlyNoMap =>
+      'SÓ COORDENADAS · NENHUM SERVIÇO DE MAPA CONSULTADO';
+
+  @override
+  String get qrLatitude => 'Latitude';
+
+  @override
+  String get qrLongitude => 'Longitude';
+
+  @override
+  String get qrBitcoin => 'Bitcoin';
+
+  @override
+  String get qrAddressAndAmountNo =>
+      'ENDEREÇO E VALOR · NENHUM SITE DE PAGAMENTO NO MEIO';
+
+  @override
+  String get qrAddress => 'Endereço';
+
+  @override
+  String get qrAmountInBtc => 'Valor em BTC';
+
+  @override
+  String get qrInk => 'Tinta';
+
+  @override
+  String get qrAmber => 'Âmbar';
+
+  @override
+  String get qrViolet => 'Violeta';
+
+  @override
+  String get qrCouldNotDrawThe => 'Não foi possível desenhar a imagem.';
+
+  @override
+  String get qrSavedToYourGallery => 'Salvo na sua galeria';
+
+  @override
+  String get qrCouldNotSaveIt =>
+      'Não foi possível salvar. Veja se o celular tem espaço.';
+
+  @override
+  String get qrNoAppOnThis => 'Nenhum app neste celular aceitou a imagem.';
+
+  @override
+  String get qrTooMuchForOne => 'Demais para um código só. Encurte.';
+
+  @override
+  String get qrThisIsALot =>
+      'Isso é muito para um código só. Câmeras mais antigas podem não ler.';
+
+  @override
+  String get qrPrivateQrCode => 'Código QR privado';
+
+  @override
+  String get qrColour => 'Cor';
+
+  @override
+  String get qrCopiedItLeavesThe =>
+      'Copiado. Sai da área de transferência em um minuto';
+
+  @override
+  String get qrSecurity => 'Segurança';
+
+  @override
+  String get qrNone => 'Nenhuma';
+
+  @override
+  String get qrSaveImage => 'Salvar imagem';
+
+  @override
+  String qrColour2(Object name) {
+    return 'Cor $name';
+  }
+
+  @override
+  String get qrTypeBelowAndThe =>
+      'Digite abaixo e o\ncódigo se desenha sozinho';
+
+  @override
+  String get qrQrCode => 'Código QR';
+
+  @override
+  String get qrHidePassword => 'Ocultar senha';
+
+  @override
+  String get qrShowPassword => 'Mostrar senha';
+
+  @override
+  String get qrCopyPassword => 'Copiar senha';
+
+  @override
+  String get requestsSentAnAttachment => 'Enviou um anexo';
+
+  @override
+  String get requestsWantsToConnect => 'Quer se conectar';
+
+  @override
+  String get requestsAccepted => 'Aceito';
+
+  @override
+  String requestsBlock(Object id) {
+    return 'Bloquear $id?';
+  }
+
+  @override
+  String get requestsNothingMoreFromThem =>
+      'Nada mais dessa pessoa chega até você. O pedido e as mensagens dela são excluídos.';
+
+  @override
+  String get requestsBlocked => 'bloqueado';
+
+  @override
+  String get requestsDeleted => 'excluído';
+
+  @override
+  String get requestsRequests => 'Pedidos';
+
+  @override
+  String get requestsNoRequests => 'Nenhum pedido';
+
+  @override
+  String get requestsMessagesFromPeopleYou =>
+      'Mensagens de pessoas que você não adicionou aparecem aqui primeiro.';
+
+  @override
+  String get requestsLooksSafeNothingSuspicious =>
+      'Parece seguro · nada suspeito na primeira mensagem';
+
+  @override
+  String get commonAccept => 'Aceitar';
+
+  @override
+  String get requestsDecline => 'Recusar';
+
+  @override
+  String get restoreThatFileIsNot => 'Esse arquivo não é um backup do kryfo';
+
+  @override
+  String get restoreThisFileIsDamaged =>
+      'Este arquivo está danificado e não pode ser lido';
+
+  @override
+  String get restoreTypeThePassphraseThe =>
+      'Digite a frase-senha usada para criar o arquivo';
+
+  @override
+  String get restoreReplaceTheAccountOn => 'Substituir a conta deste celular?';
+
+  @override
+  String get restoreWhatIsHereNow =>
+      'O que está aqui agora, com a identidade, os contatos e as mensagens, vai embora. O arquivo toma o lugar. Isso não pode ser desfeito.';
+
+  @override
+  String get restoreReplaceIt => 'Substituir';
+
+  @override
+  String restoreCouldNotBeReleased(Object mine) {
+    return 'Não foi possível liberar @$mine';
+  }
+
+  @override
+  String restoreTheRegistryDidNot(Object mine) {
+    return 'O registro não respondeu. Se você continuar, @$mine vai continuar apontando para a identidade que este celular está prestes a perder. Quem adicionar esse nome vai escrever para ninguém, e o nome não pode ser reservado de novo. Melhor ficar online e tentar mais uma vez.';
+  }
+
+  @override
+  String get restoreRestoreAnyway => 'Restaurar mesmo assim';
+
+  @override
+  String get restoreNotYet => 'Ainda não';
+
+  @override
+  String get restoreRestored => 'Restaurado';
+
+  @override
+  String restoreKryfoWillCloseNow(Object haloId) {
+    return 'O kryfo vai fechar agora. Toque no ícone para abrir de novo como $haloId.';
+  }
+
+  @override
+  String get restoreReopenKryfo => 'Reabrir o kryfo';
+
+  @override
+  String get restoreTheRestoreDidNot =>
+      'A restauração não terminou. Nada foi alterado';
+
+  @override
+  String get restoreThisIdentity => 'esta identidade';
+
+  @override
+  String get restoreMoveYourKryfoHere => 'Traga seu kryfo para cá';
+
+  @override
+  String restoreThisBackupIsRestoring(Object name) {
+    return 'Este backup é $name. Restaurar move essa identidade para este aparelho.';
+  }
+
+  @override
+  String restoreThisBackupMadeOn(Object name, Object date, Object time) {
+    return 'Este backup é $name, feito em $date às $time. Restaurar move essa identidade para este aparelho.';
+  }
+
+  @override
+  String restoreItHoldsOfPhotos(Object mb) {
+    return 'Ele tem $mb de fotos, áudios e arquivos. Isso pode levar alguns minutos. Mantenha o app aberto.';
+  }
+
+  @override
+  String get restoreWhatFollows => 'O que vem junto';
+
+  @override
+  String get restoreYourNameYourCode =>
+      'Seu nome, seu código e todos os contatos.';
+
+  @override
+  String get restoreEveryConversationBackTo =>
+      'Todas as conversas, desde o começo.';
+
+  @override
+  String get restoreYourPhotosVoiceNotes => 'Suas fotos, áudios e arquivos.';
+
+  @override
+  String restoreYourPhotosVoiceNotesCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Suas fotos, áudios e arquivos · $countString.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get restoreYourOnionAddressSo =>
+      'Seu endereço onion, para que quem chega até você diretamente continue chegando.';
+
+  @override
+  String get restoreAnythingSentToYou =>
+      'Tudo o que foi enviado para você enquanto o celular antigo estava desligado, por até catorze dias depois do envio.';
+
+  @override
+  String get restoreYourSupporterBadgeIf =>
+      'Seu selo de apoiador, se você tiver um.';
+
+  @override
+  String get restoreWhatDoesnT => 'O que não vem';
+
+  @override
+  String get restoreTheOldPhoneStops =>
+      'O celular antigo para de receber no momento em que você envia qualquer coisa daqui. Não aos poucos. A primeira mensagem que você enviar deste aparelho é a última que o celular antigo consegue acompanhar, e o que chegar nele depois disso fica ilegível lá e também não fica esperando por você aqui.';
+
+  @override
+  String get restoreIfThePhoneThis =>
+      'Se o celular de onde veio este arquivo ainda estiver em uso, pare de usar o kryfo nele antes de continuar. Dois celulares com o mesmo kryfo perdem mensagens nos dois.';
+
+  @override
+  String get restoreNotificationsNeedSettingUp =>
+      'As notificações precisam ser configuradas de novo neste aparelho.';
+
+  @override
+  String get restoreMoveItHere => 'Trazer para cá';
+
+  @override
+  String get restoreNotNow => 'Agora não';
+
+  @override
+  String get restoreRestore => 'Restaurar';
+
+  @override
+  String get restoreFromABackupFile => 'De um arquivo de backup';
+
+  @override
+  String get restoreABackupBringsBack =>
+      'Um backup traz de volta sua identidade e seus contatos, e as mensagens que estavam no celular quando o arquivo foi criado. Nada do que foi dito depois está nele.';
+
+  @override
+  String get restoreTheFile => 'O arquivo';
+
+  @override
+  String get restorePickTheBackupFile => 'Escolha o arquivo de backup';
+
+  @override
+  String get restoreThePassphrase => 'A frase-senha';
+
+  @override
+  String get restoreTheOneTheFile => 'A que foi usada para criar o arquivo';
+
+  @override
+  String get restoreWhatComesBack => 'O que volta';
+
+  @override
+  String get restoreChecking => 'Verificando…';
+
+  @override
+  String get restoreCheckTheFile => 'Verificar o arquivo';
+
+  @override
+  String get restoreReleasingYourHandle => 'Liberando seu nome de usuário…';
+
+  @override
+  String restoreMoving(Object progress) {
+    return 'Mudando… $progress';
+  }
+
+  @override
+  String get restoreRestoring => 'Restaurando…';
+
+  @override
+  String get restoreNotThisOne => 'Não é este';
+
+  @override
+  String get restoreDateUnknown => 'Data desconhecida';
+
+  @override
+  String get restoreAnIdentity => 'Uma identidade';
+
+  @override
+  String get restoreMessagesSentOrReceived =>
+      'Mensagens enviadas ou recebidas depois dessa data não estão neste arquivo.';
+
+  @override
+  String restoreGb(Object bytes) {
+    return '$bytes GB';
+  }
+
+  @override
+  String restoreMb(Object bytes) {
+    return '$bytes MB';
+  }
+
+  @override
+  String get roomCreateCouldNotCreateThe => 'Não foi possível criar a sala';
+
+  @override
+  String get roomCreateBurnerRoom => 'Sala temporária';
+
+  @override
+  String get roomCreateARoomThatEnds =>
+      'Uma sala que acaba. Todo mundo entra com uma chave feita para ela, e quando ela acaba não sobra nada em nenhum celular.';
+
+  @override
+  String get roomCreateRoomName => 'Nome da sala';
+
+  @override
+  String get roomCreateEndsAfter => 'Acaba depois de';
+
+  @override
+  String get roomCreateMemberCap => 'Limite de membros';
+
+  @override
+  String roomCreateNoOnePastThe(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ninguém além de $countString pessoas',
+      one: 'Ninguém além de $countString pessoa',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get roomCreateOffAnyoneWithThe =>
+      'sem limite. Qualquer pessoa com o link';
+
+  @override
+  String roomCreateThisRoomAndEverything(Object expiryWords) {
+    return 'Esta sala e tudo o que há nela somem em $expiryWords';
+  }
+
+  @override
+  String get roomCreateCreating => 'criando...';
+
+  @override
+  String get roomCreateCreateRoom => 'Criar sala';
+
+  @override
+  String get roomLinkSendTheRoomTo => 'Enviar a sala para';
+
+  @override
+  String get roomLinkTheyWillKnowThis =>
+      'A pessoa vai saber que esta sala veio de você. Lá dentro, ela é uma chave como todo mundo.';
+
+  @override
+  String get roomLinkNoContactsYet => 'Nenhum contato ainda';
+
+  @override
+  String roomLinkEndsIn(Object time) {
+    return 'Acaba em $time';
+  }
+
+  @override
+  String get roomLinkAnyoneWithThisCan =>
+      'Qualquer pessoa com isto pode entrar até a sala acabar. Ela entra com uma chave feita para esta sala e não vê nada do que foi enviado antes de chegar.';
+
+  @override
+  String get roomLinkRoomLinkCopied => 'Link da sala copiado';
+
+  @override
+  String get roomLinkSendToAContact => 'Enviar para um contato';
+
+  @override
+  String get roomLinkCopyRoomLink => 'Copiar link da sala';
+
+  @override
+  String get savedVoiceNote => 'áudio';
+
+  @override
+  String get savedPhoto => 'foto';
+
+  @override
+  String get savedSaved => 'Salvos';
+
+  @override
+  String get savedNothingSavedYet => 'Nada salvo ainda';
+
+  @override
+  String get savedLongPressAnyMessage =>
+      'toque e segure qualquer mensagem e toque em salvar para guardá-la aqui.';
+
+  @override
+  String get savedViewInChat => 'Ver na conversa';
+
+  @override
+  String get savedPhoto2 => 'Foto';
+
+  @override
+  String get scanThatSNotA => 'isso não é um QR do kryfo · continue apontando';
+
+  @override
+  String get scanScanAKryfoQr => 'Escaneie um QR do kryfo';
+
+  @override
+  String get scanFlash => 'Lanterna';
+
+  @override
+  String get scanPointAtAKryfo =>
+      'Aponte para um QR do kryfo · nada sai do seu celular';
+
+  @override
+  String get seenWhatWeCanSee => 'O que conseguimos ver';
+
+  @override
+  String get seenEveryMessengerClaimsPrivacy =>
+      'Todo mensageiro diz que é privado. Esta é a lista específica, por rota, incluindo as partes que não nos favorecem. Toque numa linha para ver o porquê.';
+
+  @override
+  String get seenHonestAboutTheLast =>
+      'Sendo honestos sobre as últimas linhas: é para isso que servem o bloqueio do app, o PIN de apagamento e o armazenamento criptografado, e nenhuma ferramenta protege você de alguém segurando seu celular desbloqueado. O modelo de ameaças completo está em THREAT_MODEL.md no repositório, escrito com base no LINDDUN. O código é aberto, então nada disso precisa ser aceito na base da confiança.';
+
+  @override
+  String get seenHidden => 'oculto';
+
+  @override
+  String get seenNever => 'nunca';
+
+  @override
+  String get seenOnDevice => 'no aparelho';
+
+  @override
+  String get seenTiming => 'horários';
+
+  @override
+  String get seenYours => 'seu';
+
+  @override
+  String get seenUnaudited => 'sem auditoria';
+
+  @override
+  String get seenWhoYouTalkTo => 'Com quem você fala';
+
+  @override
+  String get seenEachConversationGetsIts =>
+      'Cada conversa ganha seu próprio endereço, derivado das duas chaves. Um retransmissor vê caixas de depósito sem relação entre si, não um par de pessoas.';
+
+  @override
+  String get seenWhatYouSay => 'o que você diz';
+
+  @override
+  String get seenEndToEndEncrypted =>
+      'Criptografado de ponta a ponta com o double ratchet do Signal, e depois lacrado de novo dentro de um embrulho (gift wrap). Não conseguiríamos ler nem se tentássemos.';
+
+  @override
+  String get seenYourIpAddress => 'Seu endereço IP';
+
+  @override
+  String get seenOurRelay => 'nosso retransm.';
+
+  @override
+  String get seenEveryRelay => 'todo retransm.';
+
+  @override
+  String get seenOnOnionEverythingLeaves =>
+      'No onion, tudo sai pelo tor e o retransmissor vê um nó de saída, nunca você. No modo retransmissor, a conexão vai direto para o nosso retransmissor: nada repassa seu endereço e nada fica registrado, mas essa conexão nós conseguimos ver. No rápido, todo retransmissor público fica sabendo que você se conectou, mas não com quem nem o que você disse.';
+
+  @override
+  String get seenYourContactGraph => 'Sua rede de contatos';
+
+  @override
+  String get seenKryfoDoesNotScan =>
+      'O kryfo não lê seus contatos. É essa a ideia. Aqui não existe número de telefone para vazar.';
+
+  @override
+  String get seenIntroducer => 'quem apresenta';
+
+  @override
+  String get seenWhenAContactIntroduces =>
+      'Quando um contato apresenta você a alguém, esse contato fica sabendo que vocês dois agora estão conectados. Mais ninguém fica. O retransmissor vê texto cifrado, e nenhum servidor jamais vê a rede de contatos.';
+
+  @override
+  String get seenTheScamShield => 'O escudo antigolpe';
+
+  @override
+  String get seenRunsOnYourPhone =>
+      'Roda no seu celular com regras que vêm no app. Sem rede, sem baixar listas. Ele só lê a primeira mensagem de alguém desconhecido e não consegue ver nada que um contato manda para você.';
+
+  @override
+  String get seenBurnerRooms => 'salas temporárias';
+
+  @override
+  String get seenRoomKeys => 'chaves de sala';
+
+  @override
+  String get seenYouJoinARoom =>
+      'Você entra numa sala com uma chave feita para ela, então as pessoas lá dentro não ficam sabendo de nada que sirva em outro lugar. Quem entra depois não recebe histórico. Quando a sala expira, as chaves, as mensagens e a mídia são destruídas.';
+
+  @override
+  String get seenLinkPreviews => 'prévias de link';
+
+  @override
+  String get seenOverTor => 'pelo tor';
+
+  @override
+  String get seenAPreviewIsFetched =>
+      'A prévia é buscada por quem envia, pelo tor, e viaja dentro da mensagem criptografada. O celular que recebe não faz nenhuma solicitação. O site fica sabendo que alguém usando tor pediu uma página, e mais nada. Nenhuma imagem é carregada, nunca, e o link de um desconhecido continua como texto simples.';
+
+  @override
+  String get seenThatADeviceFetched => 'Que um aparelho buscou mensagens';
+
+  @override
+  String get seenARelayCanTell =>
+      'Um retransmissor consegue saber que algum endereço foi consultado, e quando. Não consegue saber de quem, nem de onde.';
+
+  @override
+  String get seenASeizedUnlockedPhone => 'Um celular desbloqueado apreendido';
+
+  @override
+  String get seenIfSomeoneHoldsYour =>
+      'Se alguém está com seu celular aberto, essa pessoa lê suas mensagens. O bloqueio do app, o PIN de apagamento e o armazenamento criptografado ajudam antes disso, não depois.';
+
+  @override
+  String get seenTheCryptoItself => 'A criptografia em si';
+
+  @override
+  String get seenTheRatchetAndStorage =>
+      'As camadas do ratchet e do armazenamento são padrão. A camada que junta as duas é nossa, e ninguém independente a revisou. Trate isto como alfa, porque é.';
+
+  @override
+  String get seenOnion => 'Onion';
+
+  @override
+  String get seenRelay => 'Retransm.';
+
+  @override
+  String get seenFast => 'Rápido';
+
+  @override
+  String get settingsWipeKryfo => 'Apagar o kryfo?';
+
+  @override
+  String get settingsIdentityMessagesContactsAnd =>
+      'Identidade, mensagens, contatos e configurações deste celular. Somem para sempre, a não ser que você tenha um backup.';
+
+  @override
+  String get commonContinue => 'Continuar';
+
+  @override
+  String settingsTypeWipeToConfirm(Object word) {
+    return 'digite “$word” para confirmar';
+  }
+
+  @override
+  String get settingsTheLastStepNothing =>
+      'O último passo. Nada sobrevive a ele.';
+
+  @override
+  String get settingsWipeWord => 'apagar';
+
+  @override
+  String get settingsWipeKryfo2 => 'Apagar o kryfo';
+
+  @override
+  String get settingsYourProtections => 'Suas proteções';
+
+  @override
+  String get settingsTorRouting => 'Roteamento pelo tor';
+
+  @override
+  String get settingsConnecting => 'Conectando';
+
+  @override
+  String get settingsOffMode => 'Desligado · retransmissor';
+
+  @override
+  String get settingsOffFastMode => 'Desligado · modo rápido';
+
+  @override
+  String get settingsAppLock => 'Bloqueio do app';
+
+  @override
+  String get settingsBlockedByAndroid => 'Bloqueadas pelo Android';
+
+  @override
+  String get settingsSpeedPrivacy => 'Velocidade e privacidade';
+
+  @override
+  String get settingsFast => 'Rápido';
+
+  @override
+  String get settingsRelay1Hop => 'Retransmissor · 1 salto';
+
+  @override
+  String get settingsOnion3Hops => 'Onion · 3 saltos';
+
+  @override
+  String get settingsBridges => 'Pontes';
+
+  @override
+  String get settingsForNetworksThatBlock => 'Para redes que bloqueiam o tor';
+
+  @override
+  String get settingsGettingMessages => 'Receber mensagens';
+
+  @override
+  String settingsPreviewHidden(Object deliveryModeName) {
+    return '$deliveryModeName · prévia oculta';
+  }
+
+  @override
+  String settingsPreviewShown(Object deliveryModeName) {
+    return '$deliveryModeName · prévia visível';
+  }
+
+  @override
+  String get settingsRunInBackground => 'Rodar em segundo plano';
+
+  @override
+  String get settingsSoMessagesArrive => 'Para as mensagens chegarem';
+
+  @override
+  String get settingsTransport => 'Transporte';
+
+  @override
+  String get settingsWhatTheNetworkIs => 'O que a rede está fazendo';
+
+  @override
+  String get settingsBlocked => 'Bloqueados';
+
+  @override
+  String get settingsAcceptIntroductions => 'Aceitar apresentações';
+
+  @override
+  String get settingsFriendsCanIntroduceYou =>
+      'Amigos podem apresentar você aos amigos deles';
+
+  @override
+  String get settingsScamShield => 'Escudo antigolpe';
+
+  @override
+  String get settingsChecksStrangersOnYour =>
+      'Verifica desconhecidos no seu celular. Nada sai dele';
+
+  @override
+  String get settingsBlockScreenshots => 'Bloquear capturas de tela';
+
+  @override
+  String get settingsWholeAppHiddenFrom =>
+      'App inteiro oculto dos recentes e das capturas de tela · vale depois de reiniciar';
+
+  @override
+  String get settingsWholeAppHiddenFromRecentsAnd =>
+      'App inteiro oculto dos recentes e das capturas de tela';
+
+  @override
+  String get settingsOnNextStart => 'Ativado · ao reiniciar';
+
+  @override
+  String get settingsOffNextStart => 'Desativado · ao reiniciar';
+
+  @override
+  String get settingsLightTheme => 'Tema claro';
+
+  @override
+  String get settingsSameProtectionBrighter => 'Mesma proteção, mais claro';
+
+  @override
+  String get settingsAppLock2 => 'Bloqueio do app';
+
+  @override
+  String get settingsYourPinAndA => 'Seu PIN e um PIN de apagamento';
+
+  @override
+  String get settingsPinWipePin => 'PIN · PIN de apagamento';
+
+  @override
+  String get settingsBackUpIdentity => 'Backup da identidade';
+
+  @override
+  String get settingsEncryptedFile => 'Arquivo criptografado';
+
+  @override
+  String get settingsRestoreFromBackup => 'Restaurar de um backup';
+
+  @override
+  String get settingsReplaceCurrent => 'Substitui a atual';
+
+  @override
+  String get settingsDisguiseVoice => 'Disfarçar a voz';
+
+  @override
+  String get settingsShiftsYourPitchBefore =>
+      'Muda o tom da sua voz antes de um áudio sair';
+
+  @override
+  String get settingsWhyKryfo => 'Por que o kryfo';
+
+  @override
+  String get settingsHowItProtectsYou => 'Como ele protege você';
+
+  @override
+  String get settingsResetMyInviteLink => 'Redefinir meu link de convite';
+
+  @override
+  String get settingsOldLinksAndCodes =>
+      'Links e códigos antigos param de funcionar, para todos';
+
+  @override
+  String get settingsResetInviteLink => 'Redefinir o link de convite?';
+
+  @override
+  String get settingsAnyoneWithAnOld =>
+      'Quem tiver um código ou link antigo deixa de conseguir falar com você, por qualquer rota. Quem tem mas nunca usou vai precisar de um novo seu. Contatos, conversas e histórico continuam.';
+
+  @override
+  String get settingsReset => 'Redefinir';
+
+  @override
+  String get settingsInviteResetShareThe =>
+      'Convite redefinido · compartilhe o novo código';
+
+  @override
+  String get settingsWhatWeCanSee => 'O que conseguimos ver';
+
+  @override
+  String get settingsTheHonestList => 'A lista honesta';
+
+  @override
+  String get settingsVersion => 'Versão';
+
+  @override
+  String get settings030Alpha => '0.3.0 · alfa';
+
+  @override
+  String get settingsReportAnIssue => 'Relatar um problema';
+
+  @override
+  String get settingsBugOrSecurityFlaw => 'Bug ou falha de segurança';
+
+  @override
+  String get settingsOpenSource => 'Código aberto';
+
+  @override
+  String get settingsLinkCopied => 'Link copiado';
+
+  @override
+  String get settingsTheOfflineMapIn =>
+      'O mapa offline em Ferramentas é desenhado a partir do Natural Earth (domínio público). Os nomes das cidades vêm do GeoNames, geonames.org, sob CC BY 4.0.';
+
+  @override
+  String get settingsNotIndependentlyAuditedPre =>
+      'Sem auditoria independente. Pré-alfa - bom para testes, ainda não para uso de alto risco.';
+
+  @override
+  String get settingsDangerZone => 'Zona de perigo';
+
+  @override
+  String get settingsWipeKryfoFromThis => 'Apagar o kryfo deste celular';
+
+  @override
+  String get shieldCheckedOnThisPhone =>
+      'Verificado neste celular. Nada foi enviado para lugar nenhum.';
+
+  @override
+  String get toolsMoreTools => 'Mais ferramentas';
+
+  @override
+  String get toolsCleanAPhotoOr => 'Limpar uma foto ou vídeo';
+
+  @override
+  String get toolsOrShareOneTo => 'Ou compartilhe uma com o Kryfo pela galeria';
+
+  @override
+  String get toolsMakeAPrivateQr => 'Criar um código QR privado';
+
+  @override
+  String get toolsLinksWiFiContacts =>
+      'Links, Wi-Fi, contatos e mais. Feito offline';
+
+  @override
+  String get toolsLockAFile => 'Trancar um arquivo';
+
+  @override
+  String get toolsWithAPasswordOpens =>
+      'Com senha. Abre em qualquer lugar com age';
+
+  @override
+  String get toolsOpenALockedFile => 'Abrir um arquivo trancado';
+
+  @override
+  String get toolsAnyAgeFileSomeone =>
+      'Qualquer arquivo .age que alguém enviou para você';
+
+  @override
+  String get toolsWorksOfflineNoContacts =>
+      'Funciona offline · não precisa de contatos';
+
+  @override
+  String get toolsUsefulFrom => 'Útil desde';
+
+  @override
+  String get toolsTheFirstMinute => 'o primeiro minuto.';
+
+  @override
+  String get toolsEverythingHereHappensOn =>
+      'Tudo aqui acontece neste celular. Nada é enviado, e ninguém mais precisa estar no Kryfo.';
+
+  @override
+  String get toolsWhatDoesThisPhoto => 'O que esta foto sabe?';
+
+  @override
+  String get toolsPlacePhoneTime => 'Lugar · celular · hora';
+
+  @override
+  String get toolsPickAPhotoAnd =>
+      'Escolha uma foto e veja o que ela entrega. Depois guarde uma cópia limpa.';
+
+  @override
+  String get toolsPickAPhoto => 'Escolher uma foto';
+
+  @override
+  String get toolsVideo => 'Vídeo';
+
+  @override
+  String get transportTransport => 'Transporte';
+
+  @override
+  String get transportNothingHereLeavesThe =>
+      'Nada daqui sai do celular. É o mesmo estado que o motor usa para decidir o que fazer.';
+
+  @override
+  String get transportStayingAlive => 'mantendo vivo';
+
+  @override
+  String get transportCanSend => 'pode enviar';
+
+  @override
+  String get commonYes => 'Sim';
+
+  @override
+  String get transportNotYet => 'Ainda não';
+
+  @override
+  String get transportOnline => 'Online';
+
+  @override
+  String get transportOffline => 'Offline';
+
+  @override
+  String get transportQueuedToSend => 'na fila para enviar';
+
+  @override
+  String get transportOnionPublished => 'Onion publicado';
+
+  @override
+  String transportYes(Object uploads) {
+    return 'Sim ($uploads)';
+  }
+
+  @override
+  String transportTryingS(Object pubFor) {
+    return 'Tentando há ${pubFor}s';
+  }
+
+  @override
+  String transportBenchedS(Object r) {
+    return 'Em pausa ${r}s';
+  }
+
+  @override
+  String transportFails(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString falhas',
+      one: '$countString falha',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transportOk => 'ok';
+
+  @override
+  String get transportRelaySubscriptions => 'Inscrições em retransmissores';
+
+  @override
+  String get transportLastSent => 'último envio';
+
+  @override
+  String get transportNever => 'Nunca';
+
+  @override
+  String transportSAgo(Object sx) {
+    return 'há ${sx}s';
+  }
+
+  @override
+  String get transportLastReceived => 'último recebimento';
+
+  @override
+  String transportSAgo2(Object rx) {
+    return 'há ${rx}s';
+  }
+
+  @override
+  String get transportWithNoContactsThe =>
+      'Sem contatos, o app não se inscreve em nenhum endereço de retransmissor, então nenhuma mensagem consegue chegar até você. Escaneie alguém para resolver.';
+
+  @override
+  String get transportSendAnythingWaitingNow =>
+      'Enviar agora o que está esperando';
+
+  @override
+  String get transportOff => 'desligado';
+
+  @override
+  String get transportStarting => 'iniciando';
+
+  @override
+  String get transportBootstrapped => 'inicializado';
+
+  @override
+  String get transportPublishingAddress => 'Publicando endereço';
+
+  @override
+  String get transportReachable => 'acessível';
+
+  @override
+  String get transportOurRelayOnion => 'nosso retransmissor (onion)';
+
+  @override
+  String get transportNever2 => 'nunca';
+
+  @override
+  String get transportJustNow => 'Agora mesmo';
+
+  @override
+  String transportMAgo(Object inMinutes) {
+    return 'há ${inMinutes}min';
+  }
+
+  @override
+  String transportHAgo(Object inHours) {
+    return 'há ${inHours}h';
+  }
+
+  @override
+  String transportDAgo(Object inDays) {
+    return 'há ${inDays}d';
+  }
+
+  @override
+  String transportM(Object inMinutes) {
+    return '${inMinutes}min';
+  }
+
+  @override
+  String transportHM(Object inHours, Object d) {
+    return '${inHours}h ${d}min';
+  }
+
+  @override
+  String transportD(Object inDays) {
+    return '${inDays}d';
+  }
+
+  @override
+  String transportMb(Object b) {
+    return '$b mb';
+  }
+
+  @override
+  String get transportYesCheckedJustNow => 'Sim · verificado agora mesmo';
+
+  @override
+  String transportNoLast(Object ago) {
+    return 'Não · última vez $ago';
+  }
+
+  @override
+  String get transportLastMessageIn => 'Última mensagem recebida';
+
+  @override
+  String get transportBatteryExemption => 'Exceção de bateria';
+
+  @override
+  String get transportUnknown => 'desconhecido';
+
+  @override
+  String get transportExempt => 'com exceção';
+
+  @override
+  String get transportNotExemptTapTo => 'Sem exceção · toque para resolver';
+
+  @override
+  String get transportProcessUp => 'processo ativo';
+
+  @override
+  String get transportLastStop => 'última parada';
+
+  @override
+  String transportEngine(Object mb, Object mb2) {
+    return '$mb · motor $mb2';
+  }
+
+  @override
+  String get transportLastRelayArrival => 'Última pelo retransmissor';
+
+  @override
+  String get transportLastCheckIn => 'última consulta';
+
+  @override
+  String get transportNoneYet => 'Nenhuma ainda';
+
+  @override
+  String get transportLastTorReconnect => 'última reconexão do tor';
+
+  @override
+  String get transportCatchUpByRelay => 'recuperação via retransmissor';
+
+  @override
+  String get transportControlPort => 'porta de controle';
+
+  @override
+  String transportDialsTimeouts(int dials, int timeouts) {
+    final intl.NumberFormat dialsNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String dialsString = dialsNumberFormat.format(dials);
+    final intl.NumberFormat timeoutsNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String timeoutsString = timeoutsNumberFormat.format(timeouts);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      dials,
+      locale: localeName,
+      other: '$dialsString tentativas',
+      one: '$dialsString tentativa',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      timeouts,
+      locale: localeName,
+      other: '$timeoutsString tempos esgotados',
+      one: '$timeoutsString tempo esgotado',
+    );
+    return '$_temp0 · $_temp1';
+  }
+
+  @override
+  String get transportJobRuns => 'execuções';
+
+  @override
+  String transportLast(Object jobRuns, Object ago) {
+    return '$jobRuns · última $ago';
+  }
+
+  @override
+  String get transportQuietStretches => 'Períodos de silêncio';
+
+  @override
+  String get transportNone => 'Nenhum';
+
+  @override
+  String get transportClearThisRecord => 'Limpar este registro';
+
+  @override
+  String get transportNothingYetThisProcess => 'Nada ainda neste processo';
+
+  @override
+  String transportM2(Object mins) {
+    return '${mins}min';
+  }
+
+  @override
+  String transportHM2(Object mins, Object mins2) {
+    return '${mins}h ${mins2}min';
+  }
+
+  @override
+  String transportTo(Object t, Object t2) {
+    return '$t a $t2';
+  }
+
+  @override
+  String vouchersVouchedBy(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'recomendado por $countString',
+      one: 'recomendado por',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get wallpaperAtmosphere => 'Atmosfera';
+
+  @override
+  String get wallpaperJustForYouThey => 'Só para você. A pessoa vê o dela.';
+
+  @override
+  String get wallpaperYourPhoto => 'sua foto';
+
+  @override
+  String get wallpaperFromYourPhotos => 'Das suas fotos';
+
+  @override
+  String get wallpaperKeepIt => 'Manter';
+
+  @override
+  String get whyKryfoWhyKryfo => 'Por que o kryfo';
+
+  @override
+  String get whyKryfoKryfoKreeFoGreek =>
+      'Kryfo · KRÍ-fo · do grego, “escondido”.\nUm lugar tranquilo para conversar, feito para que ninguém esteja olhando.';
+
+  @override
+  String get whyKryfoRoutedThroughTor => 'Roteado pelo tor';
+
+  @override
+  String get whyKryfoByDefaultEveryMessage =>
+      'Por padrão, toda mensagem passa pelo tor - uma cadeia de retransmissores. Ninguém, nem nós nem a sua rede, consegue ver com quem você fala ou onde você está.';
+
+  @override
+  String get whyKryfoEndToEndEncrypted => 'criptografado de ponta a ponta';
+
+  @override
+  String get whyKryfoMessagesAreSealedWith =>
+      'As mensagens são lacradas com chaves que só você e a pessoa com quem você fala têm. Não conseguiríamos ler nem se tentássemos.';
+
+  @override
+  String get whyKryfoNoServersHoldingYour =>
+      'Nenhum servidor guardando a sua vida';
+
+  @override
+  String get whyKryfoNoAccountNoPhone =>
+      'Sem conta, sem número de telefone, sem servidor central guardando suas conversas. Elas ficam neste celular, criptografadas no armazenamento.';
+
+  @override
+  String get whyKryfoNothingLeaks => 'nada vaza';
+
+  @override
+  String get whyKryfoNoReadReceiptsOr =>
+      'Nenhuma confirmação de leitura ou aviso de digitação entregue a ninguém, nenhuma lista de contatos enviada. Metadados são o que a maioria dos apps vaza - o kryfo é feito para não vazar.';
+
+  @override
+  String get whyKryfoVerifyItIsReally => 'Confirme que é mesmo a pessoa';
+
+  @override
+  String get whyKryfoCompareASafetyNumber =>
+      'compare um número de segurança pessoalmente ou por um canal de confiança, para saber que ninguém está se passando pelo seu contato.';
+
+  @override
+  String get whyKryfoTheHonestPart => 'A parte honesta';
+
+  @override
+  String get whyKryfoKryfoIsPreAlpha =>
+      'O kryfo está em pré-alfa e não passou por auditoria. A criptografia é real, mas nenhum especialista de fora a verificou ainda, então trate como um trabalho em andamento, não como algo a que você já possa confiar a sua vida.';
+
+  @override
+  String get cleanerLocation => 'Localização';
+
+  @override
+  String get cleanerAlreadyBlankedByAndroid => 'já removida pelo Android';
+
+  @override
+  String get cleanerPhoneModel => 'Modelo do celular';
+
+  @override
+  String get cleanerTimeTaken => 'Hora da captura';
+
+  @override
+  String get cleanerSerialNumber => 'Número de série';
+
+  @override
+  String get cleanerOwnerName => 'Nome do dono';
+
+  @override
+  String get cleanerHiddenThumbnail => 'Miniatura oculta';
+
+  @override
+  String get cleanerContentCredentials => 'Credenciais de conteúdo';
+
+  @override
+  String get cleanerDataAfterThePicture => 'Dados depois da imagem';
+
+  @override
+  String cleaner1OtherField(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString outros campos',
+      one: '$countString outro campo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lockWordsFourRandomWordsBeat =>
+      'Quatro palavras aleatórias ganham de uma esperta.';
+
+  @override
+  String lockWordsTooShortAtLeast(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Curta demais. Pelo menos $countString caracteres.',
+      one: 'Curta demais. Pelo menos $countString caractere.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lockWordsWeakWhoeverGetsThe =>
+      'Fraca. Quem pegar o arquivo pode chutar tão rápido quanto quiser.';
+
+  @override
+  String get lockWordsFairLongerIsStronger =>
+      'Razoável. Mais longa é mais forte.';
+
+  @override
+  String get lockWordsStrongFourRandomWords =>
+      'Forte. Quatro palavras aleatórias ganham de uma esperta.';
+
+  @override
+  String photoStoryKm(Object m) {
+    return '$m km';
+  }
+
+  @override
+  String photoStory1Metre(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString metros',
+      one: '$countString metro',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get photoStoryFarFromAnyTown => 'Longe de qualquer cidade';
+
+  @override
+  String photoStoryNear(Object where) {
+    return 'Perto de $where';
+  }
+
+  @override
+  String photoStoryAboutKmFrom(Object near, Object where) {
+    return 'A cerca de $near km de $where';
+  }
+
+  @override
+  String photoStoryS(Object s) {
+    return '$s s';
+  }
+
+  @override
+  String photoStory1S(Object s) {
+    return '1/$s s';
+  }
+
+  @override
+  String get photoStoryNotAKindKryfo =>
+      'Não é um tipo que o Kryfo consegue ler.';
+
+  @override
+  String get photoStorySoItWillNot => 'Então ele não vai chutar.';
+
+  @override
+  String get photoStoryThisFileIsDamaged =>
+      'Este arquivo está danificado ou incompleto.';
+
+  @override
+  String get photoStoryKryfoCouldNotRead =>
+      'O Kryfo não conseguiu ler até o fim.';
+
+  @override
+  String get photoStoryWhereItWasRecorded => 'Onde foi gravado';
+
+  @override
+  String get photoStoryWhereItWasTaken => 'Onde foi tirada';
+
+  @override
+  String photoStoryLocation(Object coordsLine) {
+    return 'Localização: $coordsLine';
+  }
+
+  @override
+  String photoStoryHeightAboveTheSea(Object fix) {
+    return 'Altitude: $fix m';
+  }
+
+  @override
+  String get photoStoryLocationHiddenByAndroid =>
+      'Localização oculta pelo Android';
+
+  @override
+  String get photoStoryAndroidBlanksItWhen =>
+      'O Android remove a localização quando uma foto é escolhida desse jeito. Compartilhar com o Kryfo pela galeria costuma manter. A que está na sua galeria ainda pode ter.';
+
+  @override
+  String get photoStoryLocationBlankedByAndroid =>
+      'Localização: removida pelo Android antes de o Kryfo ver';
+
+  @override
+  String photoStoryF(Object r) {
+    return 'f/$r';
+  }
+
+  @override
+  String get photoStoryWhatTookIt => 'Com o que foi feita';
+
+  @override
+  String photoStoryPhoneOrCamera(Object phone) {
+    return 'Celular ou câmera: $phone';
+  }
+
+  @override
+  String get photoStoryWhenItWasRecorded => 'Quando foi gravado';
+
+  @override
+  String get photoStoryToTheSecondWith => 'Até o segundo, com o fuso horário';
+
+  @override
+  String get photoStoryToTheSecond => 'Até o segundo';
+
+  @override
+  String photoStoryTime(Object dateFormat) {
+    return 'Hora: $dateFormat';
+  }
+
+  @override
+  String get photoStoryLens => 'Lente';
+
+  @override
+  String photoStoryLens2(Object lens) {
+    return 'Lente: $lens';
+  }
+
+  @override
+  String get photoStorySoftware => 'Software';
+
+  @override
+  String photoStorySoftware2(Object software) {
+    return 'Software: $software';
+  }
+
+  @override
+  String get photoStorySerialNumber => 'Número de série';
+
+  @override
+  String photoStorySerialNumber2(Object serial) {
+    return 'Número de série: $serial';
+  }
+
+  @override
+  String get photoStoryOwnerName => 'Nome do dono';
+
+  @override
+  String photoStoryOwner(Object r) {
+    return 'Dono: $r';
+  }
+
+  @override
+  String get photoStoryHiddenThumbnail => 'Miniatura oculta';
+
+  @override
+  String get photoStoryASmallCopyOf =>
+      'Uma cópia pequena da imagem dentro do arquivo. Pode mostrar o que um corte removeu';
+
+  @override
+  String get photoStoryMakerNotes => 'Notas do fabricante';
+
+  @override
+  String get photoStoryMakerNotesABlock =>
+      'Notas do fabricante: um bloco que só o fabricante consegue ler';
+
+  @override
+  String get photoStoryEditingHistory => 'Histórico de edição';
+
+  @override
+  String get photoStoryXmpEditingHistoryAnd =>
+      'XMP: histórico de edição e tags';
+
+  @override
+  String get photoStoryCaptions => 'Legendas';
+
+  @override
+  String get photoStoryIptcCaptionsAndCredits => 'IPTC: legendas e créditos';
+
+  @override
+  String get photoStoryComment => 'Comentário';
+
+  @override
+  String get photoStoryAWrittenComment => 'Um comentário escrito';
+
+  @override
+  String get photoStoryContentCredentials => 'Credenciais de conteúdo';
+
+  @override
+  String get photoStorySecondPicture => 'Segunda imagem';
+
+  @override
+  String get photoStoryASecondPictureInside =>
+      'Uma segunda imagem dentro do arquivo';
+
+  @override
+  String get photoStoryMotionVideo => 'Vídeo de movimento';
+
+  @override
+  String get photoStoryAShortVideoInside => 'Um vídeo curto dentro do arquivo';
+
+  @override
+  String get photoStorySaveTime => 'Salvo em';
+
+  @override
+  String get photoStoryTheTimeItWas =>
+      'A hora em que foi salvo pela última vez';
+
+  @override
+  String get photoStoryTimeStamps => 'Carimbos de hora';
+
+  @override
+  String get photoStoryCreationTimeStamps => 'Carimbos de hora da criação';
+
+  @override
+  String get photoStoryDataAfterThePicture => 'Dados depois da imagem';
+
+  @override
+  String photoStoryDataAfterTheEnd(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Dados depois do fim da imagem: $countString bytes',
+      one: 'Dados depois do fim da imagem: $countString byte',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String photoStoryTextField(Object k) {
+    return 'Campo de texto: $k';
+  }
+
+  @override
+  String photoStoryVideoTag(Object k) {
+    return 'Tag de vídeo: $k';
+  }
+
+  @override
+  String photoStoryAlso(Object k) {
+    return 'Também: $k';
+  }
+
+  @override
+  String photoStoryCameraSettingsFlashFocus(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString ajustes da câmera (flash, foco, exposição)',
+      one: '$countString ajuste da câmera (flash, foco, exposição)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String photoStory1MoreField(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'mais $countString campos',
+      one: 'mais $countString campo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get photoStoryCameraSettings => 'Ajustes da câmera';
+
+  @override
+  String photoStoryAccurateToAbout(Object metres) {
+    return 'Precisão de cerca de $metres.';
+  }
+
+  @override
+  String get photoStoryEnoughToFindThe => 'O suficiente para achar a porta.';
+
+  @override
+  String get photoStoryEnoughToFindTheStreet =>
+      'O suficiente para achar a rua.';
+
+  @override
+  String get photoStoryEnoughToFindTheArea =>
+      'O suficiente para achar a região.';
+
+  @override
+  String get photoStoryItKnowsWhereYou => 'Sabe onde você estava.';
+
+  @override
+  String get photoStoryDownToTheBuilding => 'Até o prédio.';
+
+  @override
+  String get photoStoryAndroidHidTheLocation =>
+      'O Android escondeu a localização.';
+
+  @override
+  String get photoStoryTheOriginalMayStill =>
+      'O original ainda pode ter a localização.';
+
+  @override
+  String get photoStoryNoLocationInThis => 'Nenhuma localização neste arquivo.';
+
+  @override
+  String get photoStoryItStillSaysPlenty => 'Ainda diz bastante coisa.';
+
+  @override
+  String get photoStoryThisOneKnowsNothing => 'Este arquivo não sabe nada.';
+
+  @override
+  String get photoStoryNothingToRemove => 'Nada para remover.';
+
+  @override
+  String get qrPayloadOpensALink => 'ABRE UM LINK';
+
+  @override
+  String qrPayloadOpens(Object host) {
+    return 'ABRE $host';
+  }
+
+  @override
+  String get qrPayloadShowsANote => 'MOSTRA UMA NOTA';
+
+  @override
+  String get qrPayloadScanToJoin => 'ESCANEIE PARA ENTRAR';
+
+  @override
+  String qrPayloadScanToJoin2(Object oneLine) {
+    return 'ESCANEIE PARA ENTRAR · $oneLine';
+  }
+
+  @override
+  String get qrPayloadANetworkNameIs =>
+      'Um nome de rede tem no máximo 32 caracteres.';
+
+  @override
+  String get qrPayloadAWiFiPassword =>
+      'Uma senha de Wi-Fi tem pelo menos 8 caracteres.';
+
+  @override
+  String get qrPayloadSavesAContact => 'SALVA UM CONTATO';
+
+  @override
+  String get qrPayloadWritesAnEmail => 'ESCREVE UM E-MAIL';
+
+  @override
+  String get qrPayloadThatDoesNotLook =>
+      'Isso não parece um endereço de e-mail.';
+
+  @override
+  String get qrPayloadCallsANumber => 'LIGA PARA UM NÚMERO';
+
+  @override
+  String get qrPayloadWritesAText => 'ESCREVE UM SMS';
+
+  @override
+  String get qrPayloadOpensAMap => 'ABRE UM MAPA';
+
+  @override
+  String get qrPayloadLatitudeRunsFrom90 =>
+      'A latitude vai de -90 a 90, a longitude de -180 a 180.';
+
+  @override
+  String get qrPayloadPayThisAddress => 'PAGA PARA ESTE ENDEREÇO';
+
+  @override
+  String get qrPayloadABitcoinAddressIs =>
+      'Um endereço bitcoin só tem letras e números.';
+
+  @override
+  String get qrPayloadTheAmountIsIn =>
+      'O valor é em BTC, com até 8 casas decimais.';
+
+  @override
+  String vouchTextAnd(Object names, Object names2) {
+    return '$names e $names2';
+  }
+
+  @override
+  String vouchTextAndOtherYouKnow(Object names, Object names2, int rest) {
+    final intl.NumberFormat restNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String restString = restNumberFormat.format(rest);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      rest,
+      locale: localeName,
+      other: 'mais $restString pessoas',
+      one: 'mais $restString pessoa',
+    );
+    return '$names, $names2 e $_temp0 que você conhece';
+  }
+
+  @override
+  String vouchTextVouchedBy(Object vouchNames) {
+    return 'Recomendado por $vouchNames';
+  }
+
+  @override
+  String vouchTextIntroducedBy(Object vouchNames) {
+    return 'Apresentado por $vouchNames';
+  }
+
+  @override
+  String vouchTextThisSharesSAddress(Object a, Object b) {
+    return 'Isso compartilha o endereço de $a com $b';
+  }
+
+  @override
+  String get bootFailedKryfoCouldNotStart => 'O kryfo não conseguiu iniciar';
+
+  @override
+  String get bootFailedThisIsAFault =>
+      'Isto é uma falha neste aparelho, não na rede. O tor não tem nada a ver com isso.';
+
+  @override
+  String get kryfoLinkTextThatLinkIsNot =>
+      'Esse link não é um que o kryfo consegue ler';
+
+  @override
+  String kryfoLinkTextAdd(Object who) {
+    return 'Adicionar $who?';
+  }
+
+  @override
+  String kryfoLinkTextThisIsAnInvite(Object who) {
+    return 'Este é um convite para conversar com $who. Só adicione se você souber de onde o link veio.';
+  }
+
+  @override
+  String get kryfoLinkTextAddThem => 'Adicionar';
+
+  @override
+  String get kryfoLinkTextNotNow => 'Agora não';
+
+  @override
+  String kryfoLinkTextJoin(Object roomName) {
+    return 'Entrar em $roomName';
+  }
+
+  @override
+  String get kryfoLinkTextKryfoLink => 'link do kryfo';
+
+  @override
+  String kryfoLinkTextAdd2(Object who) {
+    return 'Adicionar $who';
+  }
+
+  @override
+  String get kryfoLinkTextBurnerRoom => 'SALA TEMPORÁRIA';
+
+  @override
+  String get kryfoLinkTextThisRoomHasClosed => 'Esta sala foi fechada';
+
+  @override
+  String kryfoLinkTextClosesIn(Object time) {
+    return 'Fecha em $time';
+  }
+
+  @override
+  String kryfoLinkTextClosesInUpTo(int cap, Object time) {
+    final intl.NumberFormat capNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String capString = capNumberFormat.format(cap);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      cap,
+      locale: localeName,
+      other: 'Fecha em $time · até $capString',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get kryfoLinkTextJoin2 => 'Entrar';
+
+  @override
+  String get kryfoLinkTextYouJoinUnderA =>
+      'Você entra com uma chave feita para esta sala. Ninguém nela vê o seu ID do kryfo.';
+
+  @override
+  String get linkStubFetchedOverTorBy => 'Buscado via tor · pelo seu aparelho';
+
+  @override
+  String get linkStubFetchedOverTorByTheirDevice =>
+      'Buscado via tor · pelo aparelho da pessoa';
+
+  @override
+  String mediaBubblesB(Object bytes) {
+    return '$bytes b';
+  }
+
+  @override
+  String mediaBubblesKb(Object bytes) {
+    return '$bytes kb';
+  }
+
+  @override
+  String mediaBubblesMb(Object bytes) {
+    return '$bytes mb';
+  }
+
+  @override
+  String get mediaBubblesFile => 'ARQUIVO';
+
+  @override
+  String get mediaBubblesAudioUnavailable => 'Áudio indisponível';
+
+  @override
+  String get mediaBubblesHidden => 'Oculto';
+
+  @override
+  String get mediaBubblesMicPermissionNeeded =>
+      'Precisa da permissão do microfone';
+
+  @override
+  String get mediaBubblesReleaseToCancel => 'Solte para cancelar';
+
+  @override
+  String get mediaBubblesVoiceHiddenSlideTo =>
+      'Voz oculta · deslize para cancelar';
+
+  @override
+  String get mediaBubblesSlideToCancel => 'Deslize para cancelar';
+
+  @override
+  String get mediaBubblesSendPhoto => 'Enviar foto';
+
+  @override
+  String get mediaBubblesAddACaption => 'Adicionar uma legenda…';
+
+  @override
+  String get motionStandby => 'EM ESPERA';
+
+  @override
+  String get motionConnecting => 'CONECTANDO';
+
+  @override
+  String get motionBuilding => 'MONTANDO';
+
+  @override
+  String get motionPublishing => 'PUBLICANDO';
+
+  @override
+  String get motionReady => 'PRONTO';
+
+  @override
+  String get motionPreparingToConnect => 'Preparando para conectar';
+
+  @override
+  String get motionFindingAPrivatePath => 'Procurando um caminho privado';
+
+  @override
+  String get motionCarvingThePath => 'Abrindo o caminho';
+
+  @override
+  String get motionAnnouncingYourArrival => 'Anunciando sua chegada';
+
+  @override
+  String get motionYouReAnonymous => 'você está no anonimato';
+
+  @override
+  String get motionTorIsStartingIn =>
+      'O tor está iniciando em segundo plano. Este gráfico se acende conforme a conexão se forma.';
+
+  @override
+  String get motionMakingAFreshRoute =>
+      'Criando uma rota nova por retransmissores anônimos.';
+
+  @override
+  String get motionBouncingThroughRelaysSo =>
+      'Passando por retransmissores para que ninguém consiga rastrear isto até você.';
+
+  @override
+  String get motionTellingTheNetworkYou =>
+      'avisando a rede que você está online — sem revelar onde.';
+
+  @override
+  String get motionYourIpIsHidden =>
+      'Seu IP está oculto. Só quem tem o seu kryfo consegue falar com você.';
+
+  @override
+  String get motionBuilding2 => 'montando';
+
+  @override
+  String get motionOpen => 'aberto';
+
+  @override
+  String get motionLive => 'ativo';
+
+  @override
+  String motionCircuit(Object circuit) {
+    return 'Circuito · *$circuit*';
+  }
+
+  @override
+  String get motionDelivered => 'entregue';
+
+  @override
+  String get motionSent => 'enviado';
+
+  @override
+  String get motion1Hop => '1 salto';
+
+  @override
+  String get motion3Hops => '3 saltos';
+
+  @override
+  String get movedStripThisKryfoHasMoved =>
+      'Este kryfo mudou para outro aparelho. Nada enviado daqui chega a ninguém.';
+
+  @override
+  String get navBarChats => 'Conversas';
+
+  @override
+  String get navBarTools => 'Ferramentas';
+
+  @override
+  String get navBarSupport => 'Apoiar';
+
+  @override
+  String get navBarMe => 'Eu';
+
+  @override
+  String get pairCodePanelPuttingYourInviteIn => 'Preparando seu convite';
+
+  @override
+  String get pairCodePanelYourInviteIsNot =>
+      'Seu convite ainda não está pronto';
+
+  @override
+  String get pairCodePanelReadSixDigitsOut =>
+      'Leia seis dígitos em voz alta e a pessoa pode adicionar você. Nada mais precisa trocar de mãos.';
+
+  @override
+  String get pairCodePanelWorking => 'Trabalhando';
+
+  @override
+  String get pairCodePanelOrMakeASix =>
+      'Ou crie um código de seis dígitos para ler em voz alta';
+
+  @override
+  String get pairCodePanelCodeCopied => 'Código copiado';
+
+  @override
+  String pairCodePanelBurnsIn(Object mm, Object ss) {
+    return 'Some em $mm:$ss';
+  }
+
+  @override
+  String get pairCodePanelTheyTapAddChoose =>
+      'A pessoa toca em adicionar, escolhe código e digita estes números.';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoTap =>
+      'A pessoa abre o kryfo, toca em adicionar, escolhe código de pareamento e digita estes seis dígitos. Crie um novo para a próxima pessoa.';
+
+  @override
+  String pinsPinnedMessages(Object count) {
+    return 'Mensagens fixadas · $count';
+  }
+
+  @override
+  String get pinsPinnedMessages2 => 'Mensagens fixadas';
+
+  @override
+  String get pinsPhoto => 'Foto';
+
+  @override
+  String get pinsVoiceMessage => 'Mensagem de voz';
+
+  @override
+  String get pinsMessage => 'Mensagem';
+
+  @override
+  String pinsToday(Object hm) {
+    return 'Hoje · $hm';
+  }
+
+  @override
+  String get pinsPinned => 'Fixada';
+
+  @override
+  String pinsOf(Object pinsLength, Object kMaxPins) {
+    return '$pinsLength de $kMaxPins';
+  }
+
+  @override
+  String get pinsNothingPinnedHereYet =>
+      'Nada fixado aqui ainda. Segure uma mensagem e escolha Fixar, e ela fica aqui esperando por todos na conversa.';
+
+  @override
+  String get pinsJump => 'Ir';
+
+  @override
+  String get pinsUnpin => 'Desafixar';
+
+  @override
+  String powNoteFirstMessageToSomeone(int secs) {
+    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String secsString = secsNumberFormat.format(secs);
+
+    return 'Primeira mensagem para alguém novo · provando que é real · ${secsString}s';
+  }
+
+  @override
+  String powNoteFirstMessageSlow(int secs) {
+    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String secsString = secsNumberFormat.format(secs);
+
+    return 'Primeira mensagem para alguém novo · provando que é real · ${secsString}s · até um minuto num celular lento';
+  }
+
+  @override
+  String previewStripFetchedOverTor(Object domainOf) {
+    return '$domainOf · buscado pelo tor';
+  }
+
+  @override
+  String get previewStripDropThePreview => 'Tirar a prévia';
+
+  @override
+  String get previewStripAddPreview => 'Adicionar prévia';
+
+  @override
+  String get previewStripFetchingOverTor => 'Buscando pelo tor…';
+
+  @override
+  String toolPartsB(Object bytes) {
+    return '$bytes B';
+  }
+
+  @override
+  String toolPartsKb(Object bytes) {
+    return '$bytes KB';
+  }
+
+  @override
+  String toolPartsMb(Object mb) {
+    return '$mb MB';
+  }
+
+  @override
+  String get torBootSplashNoShortcutsNoTraces => 'Sem atalhos, sem rastros';
+
+  @override
+  String get torBootSplashTheNetworkThatKeeps =>
+      'A rede que protege sua privacidade está esquentando';
+
+  @override
+  String get torBootSplashMadeOnThisPhone =>
+      'Feito neste celular. Nada é enviado para lugar nenhum.';
+
+  @override
+  String get torBootSplashFirstLaunchTakesA =>
+      'A primeira abertura leva um momento · só na inicialização';
+
+  @override
+  String get videoBubbleNothingHereOpensThat =>
+      'Nada aqui abre isso · compartilhando no lugar';
+
+  @override
+  String videoBubbleMb(Object b) {
+    return '$b MB';
+  }
+
+  @override
+  String videoBubbleKb(Object b) {
+    return '$b KB';
+  }
+
+  @override
+  String get videoBubbleVideo => 'Vídeo';
+
+  @override
+  String get notificationsChannelName => 'mensagens';
+
+  @override
+  String get cameraClose => 'fechar';
+
+  @override
+  String get cameraFlash => 'flash';
+
+  @override
+  String get cameraPhoto => 'foto';
+
+  @override
+  String get cameraVideo => 'vídeo';
+
+  @override
+  String get cameraRetake => 'refazer';
+
+  @override
+  String get seenIntroductions => 'apresentações';
+
+  @override
+  String get donateAddress => 'endereço';
+
+  @override
+  String get donateCopy => 'copiar';
+
+  @override
+  String get donateDone => 'pronto';
+
+  @override
+  String get donateTierSupporter => 'apoiador';
+
+  @override
+  String get donateTierPatron => 'mecenas';
+
+  @override
+  String get donateTierGuardian => 'guardião';
+
+  @override
+  String get chatBlock => 'bloquear';
+
+  @override
+  String get chatDecline => 'recusar';
+
+  @override
+  String get chatAccept => 'aceitar';
+
+  @override
+  String get bridgesConnecting => 'conectando';
+
+  @override
+  String get restoreMade => 'criado';
+
+  @override
+  String get restoreContacts => 'contatos';
+
+  @override
+  String get restoreMessages => 'mensagens';
+
+  @override
+  String get restoreAttachments => 'anexos';
+
+  @override
+  String get shieldBlock => 'bloquear';
+
+  @override
+  String get shieldDelete => 'excluir';
+
+  @override
+  String get shieldIgnore => 'ignorar';
+
+  @override
+  String get profileIdentity => 'identidade';
+
+  @override
+  String get avatarPickerShape => 'Forma';
+
+  @override
+  String get avatarPickerColour => 'Cor';
+
+  @override
+  String get avatarPickerTurn => 'Girar';
+
+  @override
+  String get transportStatus => 'status';
+
+  @override
+  String get transportBootstrap => 'inicialização';
+
+  @override
+  String get transportNetwork => 'rede';
+
+  @override
+  String get transportConnectivity => 'conectividade';
+
+  @override
+  String get transportRelays => 'retransmissores';
+
+  @override
+  String get transportTraffic => 'tráfego';
+
+  @override
+  String get transportContacts => 'contatos';
+
+  @override
+  String get transportKnown => 'conhecidos';
+
+  @override
+  String get transportListening => 'escutando';
+
+  @override
+  String get transportMemory => 'memória';
+
+  @override
+  String get settingsConnected => 'Conectado';
+
+  @override
+  String get settingsScreenshots => 'Capturas de tela';
+
+  @override
+  String get settingsBlocked2 => 'Bloqueadas';
+
+  @override
+  String get settingsAllowed => 'Permitidas';
+
+  @override
+  String get settingsOn => 'Ativado';
+
+  @override
+  String get settingsOff => 'Desativado';
+
+  @override
+  String get settingsNotifications => 'Notificações';
+
+  @override
+  String get settingsPrivacy => 'Privacidade';
+
+  @override
+  String get settingsSecurity => 'Segurança';
+
+  @override
+  String get settingsBackup => 'Backup';
+
+  @override
+  String get settingsVoice => 'Voz';
+
+  @override
+  String get settingsAbout => 'Sobre';
+
+  @override
+  String get wallpaperGradients => 'gradientes';
+
+  @override
+  String get wallpaperPatterns => 'padrões';
+
+  @override
+  String get confirmSheetKeep => 'manter';
+
+  @override
+  String get confirmSheetSave => 'salvar';
+
+  @override
+  String get confirmSheetCancel => 'cancelar';
+
+  @override
+  String bridgesSaved(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString pontes',
+      one: '$countString ponte',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bridgesSavedSomeBad(int good, int bad) {
+    final intl.NumberFormat goodNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String goodString = goodNumberFormat.format(good);
+    final intl.NumberFormat badNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String badString = badNumberFormat.format(bad);
+
+    return 'aceitas: $goodString, não entendidas: $badString';
+  }
+
+  @override
+  String get languageTitle => 'Idioma';
+
+  @override
+  String get languageMatchPhone => 'Igual ao celular';
+
+  @override
+  String languageMatchPhoneValue(Object language) {
+    return 'Igual ao celular ($language)';
+  }
+
+  @override
+  String get languageRedrawLine =>
+      'O kryfo se redesenha no novo idioma e abre nas suas conversas.';
+
+  @override
+  String languageButton(Object language) {
+    return 'Idioma: $language';
+  }
+
+  @override
+  String get androidServiceTitle => 'o kryfo está ativo';
+
+  @override
+  String get androidServiceText =>
+      'sua linha criptografada fica aberta para as mensagens chegarem';
+
+  @override
+  String get androidChannelName => 'mantendo a conexão';
+
+  @override
+  String get androidChannelDescription =>
+      'mantém o kryfo conectado para que mensagens criptografadas cheguem enquanto ele está fechado. desativar isto interrompe a entrega.';
+}
