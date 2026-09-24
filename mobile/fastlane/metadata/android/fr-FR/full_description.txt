@@ -1,0 +1,18 @@
+une messagerie privée. pas de numéro de téléphone, pas d’e-mail, pas de compte. vous êtes une paire de clés générée sur votre appareil. personne, nous compris, ne peut vous retrouver ni relier vos discussions à une identité réelle.
+
+tout passe par tor. le contenu est chiffré de bout en bout avec le protocole signal. quand un contact est hors ligne, les messages attendent sur des relais, scellés pour que le relais n’apprenne rien de qui parle ni de ce qui se dit. jamais d’envoi du carnet d’adresses.
+
+fonctionnalités :
+
+* pas de numéro de téléphone ni d’e-mail pour s’inscrire
+* chiffrement de bout en bout (protocole signal)
+* tout le trafic passe par un client tor intégré
+* distribution directe en onion, repli sur les relais quand un contact est hors ligne
+* groupes avec photos, fichiers, messages vocaux, réponses, réactions, messages épinglés
+* messages éphémères : ils disparaissent après un délai choisi
+* base de données locale chiffrée et sauvegardes chiffrées
+* verrouillage de l’appli par code PIN ou biométrie
+* effacement d’urgence qui supprime tout, y compris les médias sur le disque
+* aucune statistique d’usage, aucune télémétrie, aucune pub
+
+financement : pas de pub, pas d’investisseurs. kryfo vit de ce que donnent ceux qui le soutiennent. le soutien est facultatif et anonyme, et chaque fonctionnalité marche de la même façon dans les deux cas.

@@ -1,0 +1,5 @@
+Prima la sicurezza. Tor 0.4.9.12 e tre correzioni OpenSSL. Le foto inviate come file perdono luogo, ora e telefono. Via il push ntfy: passava fuori da Tor. Un PIN ora nasconde il testo nelle notifiche. La cancellazione d'emergenza è definitiva. Note vocali e video aperti non lasciano copie.
+
+Novità: scheda Strumenti e controlli ogni 15 minuti per risparmiare batteria.
+
+Risolti: messaggi fermi per minuti dopo un cambio rete, Tor che restava spento, video inviati due volte, note vocali interrotte.
