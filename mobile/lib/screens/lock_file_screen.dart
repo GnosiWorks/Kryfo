@@ -656,7 +656,7 @@ class _LockFileScreenState extends State<LockFileScreen> {
                         const SizedBox(height: 2),
                         Text(
                           _hideName
-                              ? l10n.lockFileItWillBeCalled
+                              ? l10n.lockFileItWillBeCalled(neutralLockedName)
                               : l10n.lockFileTheNameAloneCan,
                           style: HaloType.sans(
                             size: 12,

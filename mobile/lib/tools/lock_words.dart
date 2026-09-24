@@ -35,6 +35,10 @@ String gradeLine(PassGrade g) => switch (g) {
 
 const _neutral = 'locked file';
 
+// the name a locked file gets when its own name is hidden. a file name, so
+// it stays the same in every language
+const neutralLockedName = '$_neutral.age';
+
 String lockedName(String? original, {required bool hide}) {
   final base = (original ?? '')
       .replaceAll(RegExp(r'[\\/:*?"<>|\x00-\x1F]'), '_')

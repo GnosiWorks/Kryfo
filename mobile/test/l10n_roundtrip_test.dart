@@ -97,13 +97,6 @@ void main() {
     expect(l.introBudgetInHours(5), "in 5 hours");
     expect(l.introBudgetInAFewMinutes, "in a few minutes");
     expect(l.lockStateUnlockKryfo, "Unlock kryfo");
-    expect(l.appRoomPrivText, "room_priv TEXT");
-    expect(l.appRoomPubText, "room_pub TEXT");
-    expect(l.appExpiresAtInteger, "expires_at INTEGER");
-    expect(l.appCreatorPubText, "creator_pub TEXT");
-    expect(l.appFcPkText, "fc_pk TEXT");
-    expect(l.appMemberCapInteger, "member_cap INTEGER");
-    expect(l.appRoomSeenIntegerNot, "room_seen INTEGER NOT NULL DEFAULT 0");
     expect(l.appInvalidUri, "invalid uri");
     expect(l.appBundleError("<e>"), "Bundle error: <e>");
     expect(l.appAlreadySaved("<parsed>"), "Already saved: <parsed>");
@@ -588,10 +581,6 @@ void main() {
     expect(
       l.bridgesGotABridgeLine,
       "Got a bridge line from someone you trust, or from bridges.torproject.org? Paste it here. Obfs4 lines only, kryfo does not speak the others yet.",
-    );
-    expect(
-      l.bridgesObfs4123,
-      "obfs4 1.2.3.4:443 FINGERPRINT cert=… iat-mode=0",
     );
     expect(l.bridgesPasteFromClipboard, "Paste from clipboard");
     expect(l.bridgesUseBridges, "Use bridges");
@@ -1534,6 +1523,7 @@ void main() {
     expect(l.homeSupporter, "Supporter");
     expect(l.homeArchivedChats, "Archived chats");
     expect(l.homeUnmute, "Unmute");
+    expect(l.homeMute, "Mute");
     expect(l.homeArchive, "Archive");
     expect(l.homeDeleteChat, "Delete chat");
     expect(
@@ -1741,8 +1731,8 @@ void main() {
     expect(l.lockFileTheTwoDoNot, "The two do not match yet.");
     expect(l.lockFileHideTheFileName, "Hide the file name");
     expect(
-      l.lockFileItWillBeCalled,
-      "It will be called “locked file.age”. Tell them what kind of file it is.",
+      l.lockFileItWillBeCalled("<name>"),
+      "It will be called “<name>”. Tell them what kind of file it is.",
     );
     expect(l.lockFileTheNameAloneCan, "The name alone can say what is inside.");
     expect(
@@ -2252,7 +2242,6 @@ void main() {
     expect(l.qrAmber, "Amber");
     expect(l.qrViolet, "Violet");
     expect(l.qrCouldNotDrawThe, "Could not draw the image.");
-    expect(l.qrQrCodePng, "qr code.png");
     expect(l.qrSavedToYourGallery, "Saved to your gallery");
     expect(l.qrCouldNotSaveIt, "Could not save it. Check the phone has room.");
     expect(l.qrNoAppOnThis, "No app on this phone took the image.");

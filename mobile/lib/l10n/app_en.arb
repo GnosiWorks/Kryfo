@@ -284,34 +284,6 @@
   "@lockStateUnlockKryfo": {
     "description": "lock_state.dart"
   },
-  "appRoomPrivText": "room_priv TEXT",
-  "@appRoomPrivText": {
-    "description": "main.dart"
-  },
-  "appRoomPubText": "room_pub TEXT",
-  "@appRoomPubText": {
-    "description": "main.dart"
-  },
-  "appExpiresAtInteger": "expires_at INTEGER",
-  "@appExpiresAtInteger": {
-    "description": "main.dart"
-  },
-  "appCreatorPubText": "creator_pub TEXT",
-  "@appCreatorPubText": {
-    "description": "main.dart"
-  },
-  "appFcPkText": "fc_pk TEXT",
-  "@appFcPkText": {
-    "description": "main.dart"
-  },
-  "appMemberCapInteger": "member_cap INTEGER",
-  "@appMemberCapInteger": {
-    "description": "main.dart"
-  },
-  "appRoomSeenIntegerNot": "room_seen INTEGER NOT NULL DEFAULT 0",
-  "@appRoomSeenIntegerNot": {
-    "description": "main.dart"
-  },
   "appInvalidUri": "invalid uri",
   "@appInvalidUri": {
     "description": "main.dart"
@@ -1388,10 +1360,6 @@
   },
   "bridgesGotABridgeLine": "Got a bridge line from someone you trust, or from bridges.torproject.org? Paste it here. Obfs4 lines only, kryfo does not speak the others yet.",
   "@bridgesGotABridgeLine": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesObfs4123": "obfs4 1.2.3.4:443 FINGERPRINT cert=… iat-mode=0",
-  "@bridgesObfs4123": {
     "description": "screens/bridges_screen.dart"
   },
   "bridgesPasteFromClipboard": "Paste from clipboard",
@@ -3851,6 +3819,10 @@
   "@homeUnmute": {
     "description": "screens/home_screen.dart"
   },
+  "homeMute": "Mute",
+  "@homeMute": {
+    "description": "screens/home_screen.dart: in the long-press sheet of a chat row"
+  },
   "homeArchive": "Archive",
   "@homeArchive": {
     "description": "screens/home_screen.dart"
@@ -4244,9 +4216,14 @@
   "@lockFileHideTheFileName": {
     "description": "screens/lock_file_screen.dart"
   },
-  "lockFileItWillBeCalled": "It will be called “locked file.age”. Tell them what kind of file it is.",
+  "lockFileItWillBeCalled": "It will be called “{name}”. Tell them what kind of file it is.",
   "@lockFileItWillBeCalled": {
-    "description": "screens/lock_file_screen.dart"
+    "description": "screens/lock_file_screen.dart: name is the file name, which stays english: locked file.age",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
   },
   "lockFileTheNameAloneCan": "The name alone can say what is inside.",
   "@lockFileTheNameAloneCan": {
@@ -5450,10 +5427,6 @@
   },
   "qrCouldNotDrawThe": "Could not draw the image.",
   "@qrCouldNotDrawThe": {
-    "description": "screens/qr_screen.dart"
-  },
-  "qrQrCodePng": "qr code.png",
-  "@qrQrCodePng": {
     "description": "screens/qr_screen.dart"
   },
   "qrSavedToYourGallery": "Saved to your gallery",

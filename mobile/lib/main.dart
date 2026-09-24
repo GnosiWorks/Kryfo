@@ -1164,14 +1164,14 @@ class HaloDb {
           // burner rooms live in the groups table with their own key and a
           // clock. each ALTER on its own and wrapped: one throw here and
           // the app never opens again.
-          for (final col in [
-            l10n.appRoomPrivText,
-            l10n.appRoomPubText,
-            l10n.appExpiresAtInteger,
-            l10n.appCreatorPubText,
-            l10n.appFcPkText,
-            l10n.appMemberCapInteger,
-            l10n.appRoomSeenIntegerNot,
+          for (final col in const [
+            'room_priv TEXT',
+            'room_pub TEXT',
+            'expires_at INTEGER',
+            'creator_pub TEXT',
+            'fc_pk TEXT',
+            'member_cap INTEGER',
+            'room_seen INTEGER NOT NULL DEFAULT 0',
           ]) {
             try {
               await db.execute('ALTER TABLE groups ADD COLUMN $col');

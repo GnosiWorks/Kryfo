@@ -421,48 +421,6 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'room_priv TEXT'**
-  String get appRoomPrivText;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'room_pub TEXT'**
-  String get appRoomPubText;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'expires_at INTEGER'**
-  String get appExpiresAtInteger;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'creator_pub TEXT'**
-  String get appCreatorPubText;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'fc_pk TEXT'**
-  String get appFcPkText;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'member_cap INTEGER'**
-  String get appMemberCapInteger;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'room_seen INTEGER NOT NULL DEFAULT 0'**
-  String get appRoomSeenIntegerNot;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
   /// **'invalid uri'**
   String get appInvalidUri;
 
@@ -1707,12 +1665,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Got a bridge line from someone you trust, or from bridges.torproject.org? Paste it here. Obfs4 lines only, kryfo does not speak the others yet.'**
   String get bridgesGotABridgeLine;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'obfs4 1.2.3.4:443 FINGERPRINT cert=… iat-mode=0'**
-  String get bridgesObfs4123;
 
   /// screens/bridges_screen.dart
   ///
@@ -4804,6 +4756,12 @@ abstract class AppLocalizations {
   /// **'Unmute'**
   String get homeUnmute;
 
+  /// screens/home_screen.dart: in the long-press sheet of a chat row
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get homeMute;
+
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
@@ -5266,11 +5224,11 @@ abstract class AppLocalizations {
   /// **'Hide the file name'**
   String get lockFileHideTheFileName;
 
-  /// screens/lock_file_screen.dart
+  /// screens/lock_file_screen.dart: name is the file name, which stays english: locked file.age
   ///
   /// In en, this message translates to:
-  /// **'It will be called “locked file.age”. Tell them what kind of file it is.'**
-  String get lockFileItWillBeCalled;
+  /// **'It will be called “{name}”. Tell them what kind of file it is.'**
+  String lockFileItWillBeCalled(Object name);
 
   /// screens/lock_file_screen.dart
   ///
@@ -6969,12 +6927,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not draw the image.'**
   String get qrCouldNotDrawThe;
-
-  /// screens/qr_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'qr code.png'**
-  String get qrQrCodePng;
 
   /// screens/qr_screen.dart
   ///

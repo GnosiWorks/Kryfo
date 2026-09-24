@@ -265,7 +265,7 @@ class _QrScreenState extends State<QrScreen> {
       } else if (save) {
         final how = await ToolsBridge.instance.saveToGallery(
           path,
-          l10n.qrQrCodePng,
+          'qr code.png',
           'image/png',
         );
         said = switch (how) {

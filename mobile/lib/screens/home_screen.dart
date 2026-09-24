@@ -2049,7 +2049,7 @@ void _chatMenu(BuildContext context, ContactPreview c) {
               size: 22,
             ),
             title: Text(
-              c.muted ? l10n.homeUnmute : 'mute',
+              c.muted ? l10n.homeUnmute : l10n.homeMute,
               style: HaloType.sans(size: 15, color: HaloColors.text),
             ),
             onTap: () {

@@ -248,27 +248,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lockStateUnlockKryfo => 'Unlock kryfo';
 
   @override
-  String get appRoomPrivText => 'room_priv TEXT';
-
-  @override
-  String get appRoomPubText => 'room_pub TEXT';
-
-  @override
-  String get appExpiresAtInteger => 'expires_at INTEGER';
-
-  @override
-  String get appCreatorPubText => 'creator_pub TEXT';
-
-  @override
-  String get appFcPkText => 'fc_pk TEXT';
-
-  @override
-  String get appMemberCapInteger => 'member_cap INTEGER';
-
-  @override
-  String get appRoomSeenIntegerNot => 'room_seen INTEGER NOT NULL DEFAULT 0';
-
-  @override
   String get appInvalidUri => 'invalid uri';
 
   @override
@@ -1106,10 +1085,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bridgesGotABridgeLine =>
       'Got a bridge line from someone you trust, or from bridges.torproject.org? Paste it here. Obfs4 lines only, kryfo does not speak the others yet.';
-
-  @override
-  String get bridgesObfs4123 =>
-      'obfs4 1.2.3.4:443 FINGERPRINT cert=… iat-mode=0';
 
   @override
   String get bridgesPasteFromClipboard => 'Paste from clipboard';
@@ -3070,6 +3045,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeUnmute => 'Unmute';
 
   @override
+  String get homeMute => 'Mute';
+
+  @override
   String get homeArchive => 'Archive';
 
   @override
@@ -3369,8 +3347,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lockFileHideTheFileName => 'Hide the file name';
 
   @override
-  String get lockFileItWillBeCalled =>
-      'It will be called “locked file.age”. Tell them what kind of file it is.';
+  String lockFileItWillBeCalled(Object name) {
+    return 'It will be called “$name”. Tell them what kind of file it is.';
+  }
 
   @override
   String get lockFileTheNameAloneCan =>
@@ -4331,9 +4310,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get qrCouldNotDrawThe => 'Could not draw the image.';
-
-  @override
-  String get qrQrCodePng => 'qr code.png';
 
   @override
   String get qrSavedToYourGallery => 'Saved to your gallery';

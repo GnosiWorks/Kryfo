@@ -296,7 +296,8 @@ class _BridgesScreenState extends State<BridgesScreen> {
                     style: HaloType.mono(size: 11, color: HaloColors.text),
                     decoration: InputDecoration(
                       border: InputBorder.none,
-                      hintText: l10n.bridgesObfs4123,
+                      hintText:
+                          'obfs4 1.2.3.4:443 FINGERPRINT cert=… iat-mode=0',
                       hintStyle: HaloType.mono(
                         size: 10.5,
                         color: HaloColors.text3,
