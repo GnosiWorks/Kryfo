@@ -27,7 +27,6 @@ void main() {
     final hant = lookupAppLocalizations(localeOf('zh_Hant'));
     final hans = lookupAppLocalizations(localeOf('zh'));
     expect(hant.localeName, 'zh_Hant');
-    expect(hant.navBarSupport, isNot(hans.navBarSupport + '\u0000'));
     expect(
       hant.gettingMessagesGettingMessages,
       isNot(hans.gettingMessagesGettingMessages),
