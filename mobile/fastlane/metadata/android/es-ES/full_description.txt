@@ -1,0 +1,25 @@
+una app de mensajería privada. sin número de teléfono, sin correo, sin cuenta.
+eres un par de claves generado en tu dispositivo. nadie, ni siquiera nosotros,
+puede buscarte ni vincular tus chats a una identidad real.
+
+todo viaja por tor. el contenido va cifrado de extremo a extremo con el
+protocolo signal. cuando un contacto no tiene conexión, los mensajes esperan en
+repetidores, sellados para que el repetidor no sepa nada de quién habla ni de
+qué se dice. tu agenda no se sube nunca.
+
+funciones:
+
+* sin número de teléfono ni correo para registrarte
+* cifrado de extremo a extremo (protocolo signal)
+* todo el tráfico pasa por un cliente tor integrado
+* entrega directa por onion y, si el otro no tiene conexión, por repetidor
+* grupos con fotos, archivos, mensajes de voz, respuestas, reacciones y fijados
+* mensajes temporales: desaparecen pasado un tiempo fijado
+* base de datos local cifrada y copias de seguridad cifradas
+* bloqueo de la app con PIN o biometría
+* borrado de emergencia que lo elimina todo, incluidos los archivos multimedia
+* sin analíticas, sin telemetría, sin anuncios
+
+financiación: sin anuncios ni inversores. vive de lo que aportan quienes lo
+apoyan. apoyarlo es opcional y anónimo, y todas las funciones son iguales lo
+apoyes o no.

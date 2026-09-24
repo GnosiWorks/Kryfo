@@ -42,6 +42,11 @@ const _names = {
   'ip',
   'id',
   'b',
+  'h',
+  'm',
+  's',
+  'd',
+  'min',
   'kb',
   'mb',
   'gb',
@@ -59,7 +64,14 @@ const _names = {
   'geonames',
 };
 // read and kept: the word is the same in that language
-const _same = <String, Set<String>>{};
+// (test/l10n_same_as_english.json, key lists per language)
+final _same = {
+  for (final e
+      in (jsonDecode(File('test/l10n_same_as_english.json').readAsStringSync())
+              as Map<String, dynamic>)
+          .entries)
+    e.key: {...(e.value as List).cast<String>()},
+};
 
 Map<String, dynamic> _arb(String f) =>
     jsonDecode(File('lib/l10n/$f').readAsStringSync()) as Map<String, dynamic>;

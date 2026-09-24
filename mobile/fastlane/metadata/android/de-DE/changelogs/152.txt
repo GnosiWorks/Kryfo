@@ -1,0 +1,5 @@
+Sicherheit zuerst. Tor 0.4.9.12, drei OpenSSL-Fixes. Fotos als Datei verlieren Ort, Zeit und Handymodell. Ntfy-Push ist weg: Er lief an tor vorbei. Eine PIN verbirgt Nachrichtentext in Benachrichtigungen. Panik-Löschen bleibt gelöscht. Sprachnachrichten und geöffnete Videos hinterlassen keine Kopien.
+
+Neu: Werkzeuge-Tab und akkuschonende Check-ins alle 15 Minuten.
+
+Behoben: minutenlang hängende Nachrichten nach Netzwechsel, tor blieb aus, doppelt gesendete Videos, abbrechende Sprachnachrichten.
