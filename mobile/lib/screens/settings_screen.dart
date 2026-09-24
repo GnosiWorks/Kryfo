@@ -212,6 +212,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 24),
           HaloSection(l10n.settingsPrivacy),
           HaloGroup(
             children: [

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- written by tool/arb_android.py from lib/l10n/app_zh.arb -->
+<resources>
+    <string name="service_title">kryfo 已开启</string>
+    <string name="service_text">你的加密线路保持连接，好让消息送达</string>
+    <string name="channel_name">保持连接</string>
+    <string name="channel_description">让 kryfo 保持连接，这样它关闭时加密消息也能送达。关掉这个就会停止投递。</string>
+</resources>
