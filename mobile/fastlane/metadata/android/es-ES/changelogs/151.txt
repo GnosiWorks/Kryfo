@@ -1,5 +1,5 @@
 Seguridad primero. Tor 0.4.9.12 y tres parches de OpenSSL. Las fotos enviadas como archivo pierden lugar, hora y teléfono. Adiós al push de ntfy: iba fuera de Tor. Con PIN, las notificaciones ocultan el texto. Un borrado de emergencia es definitivo. Notas de voz y videos abiertos no dejan copias.
 
-Nuevo: pestaña Herramientas y consultas cada 15 min para ahorrar batería.
+Nuevo: Kryfo en 15 idiomas, pestaña Herramientas y consultas cada 15 min para ahorrar batería.
 
-Corregido: mensajes atascados minutos al cambiar de red, Tor sin arrancar, videos enviados dos veces, notas de voz cortadas.
+Corregido: mensajes atascados minutos al cambiar de red, Tor sin arrancar, videos enviados dos veces.

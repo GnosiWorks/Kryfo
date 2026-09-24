@@ -1,5 +1,5 @@
 Sécurité d’abord. Tor 0.4.9.12, trois correctifs OpenSSL. Photos en fichier : ni lieu, ni heure, ni téléphone. Fin du push ntfy, qui contournait Tor. Avec un code PIN, notifications sans texte. Ce qui est effacé en urgence le reste. Notes vocales, vidéos ouvertes : plus de copies.
 
-Nouveau : un onglet Outils, et des relevés toutes les 15 minutes pour la batterie.
+Nouveau : Kryfo en 15 langues, un onglet Outils, et des relevés toutes les 15 minutes pour la batterie.
 
-Corrigé : messages bloqués après un changement de réseau, Tor resté éteint, vidéos envoyées deux fois, notes vocales coupées.
+Corrigé : messages bloqués après un changement de réseau, Tor resté éteint, vidéos envoyées deux fois.

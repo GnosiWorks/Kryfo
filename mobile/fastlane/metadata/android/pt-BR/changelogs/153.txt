@@ -1,5 +1,5 @@
-Segurança primeiro. Tor 0.4.9.12 e três correções do OpenSSL. Fotos enviadas como arquivo perdem onde, quando e em qual celular. O push ntfy saiu: conectava fora do Tor. Um PIN agora oculta o texto nas notificações. Um apagamento de pânico continua apagado. Áudios e vídeos abertos não deixam cópias.
+Segurança primeiro. Tor 0.4.9.12 e três correções do OpenSSL. Fotos enviadas como arquivo perdem onde, quando e em qual celular. O push ntfy saiu: conectava fora do Tor. Um PIN agora oculta o texto nas notificações. Apagamento de pânico é definitivo. Áudios e vídeos abertos não deixam cópias.
 
-Novo: aba Ferramentas e consultas a cada 15 minutos para poupar bateria.
+Novo: Kryfo em 15 idiomas, aba Ferramentas e consultas a cada 15 minutos para poupar bateria.
 
-Corrigido: mensagens presas minutos após troca de rede, Tor travado desligado, vídeos enviados duas vezes, áudios parando.
+Corrigido: mensagens presas minutos após troca de rede, Tor travado desligado, vídeos enviados duas vezes.

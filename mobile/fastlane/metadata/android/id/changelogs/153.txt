@@ -1,5 +1,5 @@
 Keamanan dulu. Tor 0.4.9.12 dan tiga perbaikan OpenSSL. Foto terkirim sebagai file tak lagi membawa tempat, waktu, dan ponselnya. Push ntfy dihapus: tak lewat Tor. PIN kini menyembunyikan isi pesan di notifikasi. Hapus total darurat kini permanen. Pesan suara dan video yang dibuka tak menyisakan salinan.
 
-Baru: tab Alat, dan cek berkala tiap 15 menit agar hemat baterai.
+Baru: Kryfo dalam 15 bahasa, tab Alat, dan cek berkala tiap 15 menit agar hemat baterai.
 
-Diperbaiki: pesan macet bermenit-menit usai ganti jaringan, Tor macet mati, video terkirim dua kali, pesan suara berhenti.
+Diperbaiki: pesan macet bermenit-menit usai ganti jaringan, Tor macet mati, video terkirim dua kali.

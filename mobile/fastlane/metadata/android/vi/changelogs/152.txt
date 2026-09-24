@@ -1,5 +1,5 @@
 Bảo mật trước tiên. Tor 0.4.9.12 và ba bản sửa lỗi OpenSSL. Ảnh gửi dạng tệp không còn lộ nơi, lúc và máy chụp. Bỏ thông báo đẩy qua ntfy: nó kết nối ngoài Tor. Mã PIN giờ ẩn nội dung tin nhắn trong thông báo. Một lần xóa sạch khẩn cấp là xóa sạch luôn. Tin nhắn thoại và video đã mở không để lại bản sao.
 
-Mới: thẻ Công cụ, và kiểm tra định kỳ mỗi mười lăm phút để tiết kiệm pin.
+Mới: Kryfo có 15 ngôn ngữ, thẻ Công cụ, và kiểm tra định kỳ mỗi mười lăm phút để tiết kiệm pin.
 
-Đã sửa: tin nhắn kẹt hàng phút sau khi đổi mạng, Tor kẹt ở trạng thái tắt, video gửi hai lần, tin nhắn thoại tự dừng.
+Đã sửa: tin nhắn kẹt hàng phút sau khi đổi mạng, Tor kẹt ở trạng thái tắt, video gửi hai lần.

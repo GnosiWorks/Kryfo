@@ -2,7 +2,7 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [0.3.0] - 2026-09-22
+## [0.3.0] - 2026-09-24
 
 0.2.11 and 0.2.12 were never released, so this is everything since 0.2.10.
 
@@ -22,10 +22,11 @@ All notable user-facing changes to kryfo will land here. Format loosely follows 
 - reactions are now only accepted from people in that chat, same as pins.
 
 ### Added
+- kryfo in fifteen languages: english, german, french, spanish, portuguese (brazil), italian, russian, ukrainian, turkish, chinese (simplified and traditional), vietnamese, indonesian, persian and arabic, the last two laid out right to left. it follows the phone, or you choose in settings, or on the first screen when you set kryfo up. dates, numbers and plurals follow the language too. the translations are inside the app: nothing is fetched to show them.
 - a tools tab. four things, all of them on your phone and none of them touching the network: what a photo gives away (where it was taken, drawn on a map the app carries itself, and on what phone and when), a clean copy of a photo or video with all of that removed, a private qr code for links, wi-fi, contacts and more, and locking a file behind a password so it can be sent anywhere and opened with the free tool age. a photo shared to kryfo from the gallery lands straight in the cleaner.
 - a choice of how messages arrive, in settings. "always on" is what kryfo has always done. "check-ins" wakes every fifteen minutes, looks for messages and goes back to sleep, which is far easier on the battery and can make messages late. the screen says when the last check-in really happened, not when one was promised.
 - if your phone keeps stopping kryfo while it is meant to be staying connected, kryfo notices on its own and offers check-ins once. it reads nothing about your phone to work that out.
-- videos look like videos: the first frame, how long it runs, and a play button, in chats and groups. tap one and it opens in your phone's player. the frame is never written to the phone, so nothing of a video outlives a message that burns.
+- videos look like videos: the first frame, how long it runs, and a play button, in chats and groups, without a frame around them, like photos. tap one and it plays inside kryfo: it opens out of the message, pulls down to close, and can be scrubbed. screenshots, screen recordings and the recent apps view show nothing of it while it plays. a video your phone cannot play in kryfo still opens in another app. the first frame is never written to the phone, so nothing of a video outlives a message that burns.
 - tapping a file opens it, in whatever your phone has for that kind of file. it only ever offered to share it. share is under a long press now.
 - pins work the way you would expect from discord. the pin in the top bar is always there and opens the list: newest first, who wrote it, when, a picture if there is one, jump and unpin. a pin in a one to one chat shows for both of you, as it always has in groups. pinning asks first. fifty to a chat, up from three. the strip that sat under the top bar is gone.
 - a room link on its own in a message is an invitation with a join button, and the room opens once you are in. the room's link sheet can share the link or send it to a contact, after saying what that costs: they will know the room came from you.
@@ -51,6 +52,8 @@ All notable user-facing changes to kryfo will land here. Format loosely follows 
 - tapping a pin a second time scrolled past the message. a jump lands on the message now, however many times you ask and wherever you were.
 - a room link sent in a chat was a wall of text that could not be tapped, and pasted with anything around it the app called it invalid. opened from outside the app, nothing told you what had happened.
 - a phone whose account has moved still said it was building a private route and that what you sent would deliver itself.
+- a file you sent stayed on "sending" in an open chat after it had arrived. the tick shows up now without leaving the chat.
+- the photo tool showed a lone button when a photo had nothing to remove. it shows the photo and everything it looked for.
 
 ### Changed
 - the link preview setting is gone. it was a switch for whether you would be offered a button, and the button is already a choice you make per message. the button is offered whenever tor is up, and your phone still never fetches a link someone sent you.
