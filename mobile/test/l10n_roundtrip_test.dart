@@ -61,7 +61,6 @@ void main() {
     expect(l.deliveryMode1HourAgo(1), "1 hour ago");
     expect(l.deliveryMode1HourAgo(2), "2 hours ago");
     expect(l.deliveryMode1HourAgo(5), "5 hours ago");
-    expect(l.deliveryModeHoursAgo("<h>"), "<h> hours ago");
     expect(l.deliveryModeYesterday, "yesterday");
     expect(l.deliveryModeDaysAgo(0), "0 days ago");
     expect(l.deliveryModeDaysAgo(1), "1 day ago");
@@ -381,10 +380,6 @@ void main() {
       l.archivedChatRestingHereIt(5),
       "Chats resting here. They stay quiet until someone writes, then come back to the top.",
     );
-    expect(
-      l.archivedChatsRestingHereThey,
-      "Chats resting here. They stay quiet until someone writes, then come back to the top.",
-    );
     expect(l.archivedNothingArchived, "Nothing archived");
     expect(
       l.archivedArchivedChatsAreStill,
@@ -481,7 +476,6 @@ void main() {
     expect(l.bridges1LineSaved(1), "1 line saved");
     expect(l.bridges1LineSaved(2), "2 lines saved");
     expect(l.bridges1LineSaved(5), "5 lines saved");
-    expect(l.bridgesLinesSaved("<n>"), "<n> lines saved");
     expect(l.bridgesRestartingTor, "Restarting tor…");
     expect(
       l.bridgesFindingABridgeS("<elapsed>"),
@@ -547,18 +541,6 @@ void main() {
       l.chatStillConnectingToTor,
       "still connecting to tor · it'll go out on its own",
     );
-    expect(l.chatJan, "jan");
-    expect(l.chatFeb, "feb");
-    expect(l.chatMar, "mar");
-    expect(l.chatApr, "apr");
-    expect(l.chatMay, "may");
-    expect(l.chatJun, "jun");
-    expect(l.chatJul, "jul");
-    expect(l.chatAug, "aug");
-    expect(l.chatSep, "sep");
-    expect(l.chatOct, "oct");
-    expect(l.chatNov, "nov");
-    expect(l.chatDec, "dec");
     expect(l.chatS("<seconds>"), "<seconds>s");
     expect(l.chatM("<seconds>"), "<seconds>m");
     expect(l.chatH("<seconds>"), "<seconds>h");
@@ -1068,18 +1050,6 @@ void main() {
     );
     expect(l.groupChatToday, "today");
     expect(l.groupChatYesterday, "yesterday");
-    expect(l.groupChatJan, "jan");
-    expect(l.groupChatFeb, "feb");
-    expect(l.groupChatMar, "mar");
-    expect(l.groupChatApr, "apr");
-    expect(l.groupChatMay, "may");
-    expect(l.groupChatJun, "jun");
-    expect(l.groupChatJul, "jul");
-    expect(l.groupChatAug, "aug");
-    expect(l.groupChatSep, "sep");
-    expect(l.groupChatOct, "oct");
-    expect(l.groupChatNov, "nov");
-    expect(l.groupChatDec, "dec");
     expect(l.groupChatYou2, "You");
     expect(l.groupChatThisChatHasPins(0), "This chat has 0 pins already");
     expect(l.groupChatThisChatHasPins(1), "This chat has 1 pin already");
@@ -1178,7 +1148,6 @@ void main() {
     expect(l.groupInfo1Member(1), "1 member");
     expect(l.groupInfo1Member(2), "2 members");
     expect(l.groupInfo1Member(5), "5 members");
-    expect(l.groupInfoMembers("<membersLength>"), "<membersLength> members");
     expect(l.groupInfoAdmin, "Admin");
     expect(l.groupInfoMembers2, "Members");
     expect(l.groupInfoInvite, "Invite");
@@ -1226,28 +1195,10 @@ void main() {
       "The registry holds it under a different key, most likely an identity this phone had before a restore. People who add @<handle> are not reaching you. It cannot be released or updated from here. Pick another name.",
     );
     expect(l.handleForgetItOnThis, "Forget it on this phone");
-    expect(l.homeMonday, "Monday");
-    expect(l.homeTuesday, "Tuesday");
-    expect(l.homeWednesday, "Wednesday");
-    expect(l.homeThursday, "Thursday");
-    expect(l.homeFriday, "Friday");
-    expect(l.homeSaturday, "Saturday");
-    expect(l.homeSunday, "Sunday");
-    expect(l.homeJanuary, "January");
-    expect(l.homeFebruary, "February");
-    expect(l.homeMarch, "March");
-    expect(l.homeApril, "April");
-    expect(l.homeMay, "May");
-    expect(l.homeJune, "June");
-    expect(l.homeJuly, "July");
-    expect(l.homeAugust, "August");
-    expect(l.homeSeptember, "September");
-    expect(l.homeOctober, "October");
-    expect(l.homeNovember, "November");
-    expect(l.homeDecember, "December");
     expect(l.homeAddAContact, "Add a contact");
     expect(l.commonSettings, "Settings");
     expect(l.homeYourKryfo, "Your kryfo");
+    expect(l.homeDateWeekday("<weekday>"), "<weekday>,");
     expect(l.homeAnHour, "an hour");
     expect(l.homeHours(0), "0 hours");
     expect(l.homeHours(1), "1 hour");
@@ -1402,7 +1353,6 @@ void main() {
     expect(l.home1Chat(1), "1 chat");
     expect(l.home1Chat(2), "2 chats");
     expect(l.home1Chat(5), "5 chats");
-    expect(l.homeChats("<count>"), "<count> chats");
     expect(l.homeGroups, "Groups");
     expect(l.homeRoom, "Room");
     expect(l.homeNew, "New");
@@ -1437,17 +1387,6 @@ void main() {
     expect(l.homeH("<inHours>"), "<inHours>h");
     expect(l.homeYesterday, "yesterday");
     expect(l.homeD("<inDays>"), "<inDays>d");
-    expect(l.homeJan, "Jan");
-    expect(l.homeFeb, "Feb");
-    expect(l.homeMar, "Mar");
-    expect(l.homeApr, "Apr");
-    expect(l.homeJun, "Jun");
-    expect(l.homeJul, "Jul");
-    expect(l.homeAug, "Aug");
-    expect(l.homeSep, "Sep");
-    expect(l.homeOct, "Oct");
-    expect(l.homeNov, "Nov");
-    expect(l.homeDec, "Dec");
     expect(l.homeNoteToSelf, "Note to self");
     expect(l.homeOnlyOnThisPhone, "Only on this phone");
     expect(l.homeSaved, "Saved");
@@ -1457,10 +1396,6 @@ void main() {
     expect(l.home1PersonWantsTo(1), "1 person wants to reach you");
     expect(l.home1PersonWantsTo(2), "2 people want to reach you");
     expect(l.home1PersonWantsTo(5), "5 people want to reach you");
-    expect(
-      l.homePeopleWantToReach("<count>"),
-      "<count> people want to reach you",
-    );
     expect(
       l.introduceGotItButCould("<b>", "<c>"),
       "<b> got it, but <c> could not be reached",
@@ -1844,18 +1779,6 @@ void main() {
     );
     expect(l.notesToday, "TODAY");
     expect(l.notesYesterday, "YESTERDAY");
-    expect(l.notesJan, "jan");
-    expect(l.notesFeb, "feb");
-    expect(l.notesMar, "mar");
-    expect(l.notesApr, "apr");
-    expect(l.notesMay, "may");
-    expect(l.notesJun, "jun");
-    expect(l.notesJul, "jul");
-    expect(l.notesAug, "aug");
-    expect(l.notesSep, "sep");
-    expect(l.notesOct, "oct");
-    expect(l.notesNov, "nov");
-    expect(l.notesDec, "dec");
     expect(l.notesNoteToSelf, "Note to self");
     expect(l.notesOnlyOnThisPhone, "Only on this phone");
     expect(l.notesAQuietPlace, "A quiet place");
@@ -2254,10 +2177,7 @@ void main() {
       l.restoreTheRestoreDidNot,
       "The restore did not finish. Nothing was changed",
     );
-    expect(
-      l.restoreMadeOnAt("<day>", "<summaryCard>", "<when>", "<when2>"),
-      ", made on <day> <summaryCard> at <when>:<when2>",
-    );
+    expect(l.restoreMadeOnAt("<date>", "<time>"), ", made on <date> at <time>");
     expect(l.restoreThisIdentity, "this identity");
     expect(l.restoreMoveYourKryfoHere, "Move your kryfo here");
     expect(
@@ -2331,13 +2251,6 @@ void main() {
       l.restoreMessagesSentOrReceived,
       "Messages sent or received after that date are not in this file.",
     );
-    expect(l.restoreJun, "jun");
-    expect(l.restoreJul, "jul");
-    expect(l.restoreAug, "aug");
-    expect(l.restoreSep, "sep");
-    expect(l.restoreOct, "oct");
-    expect(l.restoreNov, "nov");
-    expect(l.restoreDec, "dec");
     expect(l.restoreGb("<bytes>"), "<bytes> GB");
     expect(l.restoreMb("<bytes>"), "<bytes> MB");
     expect(l.roomCreateCouldNotCreateThe, "Could not create the room");
@@ -2697,7 +2610,6 @@ void main() {
     expect(l.vouchersVouchedBy(1), "vouched by");
     expect(l.vouchersVouchedBy(2), "vouched by 2");
     expect(l.vouchersVouchedBy(5), "vouched by 5");
-    expect(l.vouchersVouchedBy2("<rowsLength>"), "vouched by <rowsLength>");
     expect(l.wallpaperAtmosphere, "Atmosphere");
     expect(l.wallpaperJustForYouThey, "Just for you. They see their own.");
     expect(l.wallpaperYourPhoto, "your photo");
@@ -2751,7 +2663,6 @@ void main() {
     expect(l.cleaner1OtherField(1), "1 other field");
     expect(l.cleaner1OtherField(2), "2 other fields");
     expect(l.cleaner1OtherField(5), "5 other fields");
-    expect(l.cleanerOtherFields("<other>"), "<other> other fields");
     expect(
       l.lockWordsFourRandomWordsBeat,
       "Four random words beat one clever one.",
@@ -2770,12 +2681,10 @@ void main() {
       "Strong. Four random words beat one clever one.",
     );
     expect(l.photoStoryKm("<m>"), "<m> km");
-    expect(l.photoStoryMetres("<m>"), "<m> metres");
     expect(l.photoStory1Metre(0), "0 metres");
     expect(l.photoStory1Metre(1), "1 metre");
     expect(l.photoStory1Metre(2), "2 metres");
     expect(l.photoStory1Metre(5), "5 metres");
-    expect(l.photoStoryMetres2("<r>"), "<r> metres");
     expect(l.photoStoryFarFromAnyTown, "Far from any town");
     expect(l.photoStoryNear("<where>"), "Near <where>");
     expect(
@@ -2890,7 +2799,6 @@ void main() {
     expect(l.photoStory1MoreField(1), "1 more field");
     expect(l.photoStory1MoreField(2), "2 more fields");
     expect(l.photoStory1MoreField(5), "5 more fields");
-    expect(l.photoStoryMoreFields("<more>"), "<more> more fields");
     expect(l.photoStoryCameraSettings, "Camera settings");
     expect(
       l.photoStoryAccurateToAbout("<metres>"),
@@ -3081,18 +2989,6 @@ void main() {
     expect(l.pinsPhoto, "Photo");
     expect(l.pinsVoiceMessage, "Voice message");
     expect(l.pinsMessage, "Message");
-    expect(l.pinsJan, "Jan");
-    expect(l.pinsFeb, "Feb");
-    expect(l.pinsMar, "Mar");
-    expect(l.pinsApr, "Apr");
-    expect(l.pinsMay, "May");
-    expect(l.pinsJun, "Jun");
-    expect(l.pinsJul, "Jul");
-    expect(l.pinsAug, "Aug");
-    expect(l.pinsSep, "Sep");
-    expect(l.pinsOct, "Oct");
-    expect(l.pinsNov, "Nov");
-    expect(l.pinsDec, "Dec");
     expect(l.pinsToday("<hm>"), "Today · <hm>");
     expect(l.pinsPinned, "Pinned");
     expect(

@@ -13,6 +13,7 @@ import '../theme.dart';
 import '../widgets/motion.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
+import '../l10n/dates.dart';
 
 class TransportScreen extends StatelessWidget {
   const TransportScreen({super.key});
@@ -488,9 +489,7 @@ class _AliveState extends State<_Alive> {
     final recv = (_mem['lastEvRecv'] as num?)?.toInt() ?? 0;
     if (recv <= 0) return l10n.transportNothingYetThisProcess;
     final when = DateTime.fromMillisecondsSinceEpoch(recv * 1000);
-    final hhmm =
-        '${when.hour.toString().padLeft(2, '0')}:${when.minute.toString().padLeft(2, '0')}';
-    return '$hhmm · ${_ago(recv * 1000)}';
+    return '${hourMinute(when)} · ${_ago(recv * 1000)}';
   }
 
   Widget _gapLine(String g) {
@@ -500,8 +499,7 @@ class _AliveState extends State<_Alive> {
       int.tryParse(parts[0]) ?? 0,
     );
     final to = DateTime.fromMillisecondsSinceEpoch(int.tryParse(parts[1]) ?? 0);
-    String t(DateTime d) =>
-        '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+    String t(DateTime d) => hourMinute(d);
     final mins = to.difference(from).inMinutes;
     final len = mins < 60
         ? l10n.transportM2(mins)

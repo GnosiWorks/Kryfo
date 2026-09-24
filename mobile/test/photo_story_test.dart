@@ -35,7 +35,7 @@ void main() {
     expect(deviceName(null, 'Redmi 14C'), 'Redmi 14C');
     expect(device.mono, 'f/2.0 · 1/120 s');
     final time = s.rows.firstWhere((r) => r.kind == StoryRowKind.time);
-    expect(time.title, 'Thursday 17 September 2026, 18:09');
+    expect(time.title, 'Thursday, 17 September 2026 18:09');
     expect(time.sub, 'To the second, with the time zone');
     expect(s.rows.last.kind, StoryRowKind.more);
     expect(s.canClean, true);

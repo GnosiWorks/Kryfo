@@ -24,6 +24,7 @@ import '../backup_stream.dart' show isBackupV2;
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../l10n/l10n.dart';
+import '../l10n/dates.dart';
 
 class RestoreScreen extends StatefulWidget {
   // when non-null, called after a successful restore instead of the
@@ -253,12 +254,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
     final when = s.when;
     final made = when == null
         ? ''
-        : l10n.restoreMadeOnAt(
-            when.day,
-            _SummaryCard._month(when.month),
-            when.hour.toString().padLeft(2, '0'),
-            when.minute.toString().padLeft(2, '0'),
-          );
+        : l10n.restoreMadeOnAt(dayMonth(when), hourMinute(when));
     final name = s.haloId.isEmpty ? l10n.restoreThisIdentity : s.haloId;
     final r = await showHaloSheet<bool>(
       context,
@@ -626,8 +622,7 @@ class _SummaryCard extends StatelessWidget {
     final w = summary.when;
     final date = w == null
         ? l10n.restoreDateUnknown
-        : '${w.day} ${_month(w.month)} ${w.year}, '
-              '${w.hour.toString().padLeft(2, '0')}:${w.minute.toString().padLeft(2, '0')}';
+        : '${dayMonthYear(w)}, ${hourMinute(w)}';
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       decoration: BoxDecoration(
@@ -684,21 +679,6 @@ class _SummaryCard extends StatelessWidget {
       ],
     ),
   );
-
-  static String _month(int m) => [
-    'jan',
-    'feb',
-    'mar',
-    'apr',
-    'may',
-    l10n.restoreJun,
-    l10n.restoreJul,
-    l10n.restoreAug,
-    l10n.restoreSep,
-    l10n.restoreOct,
-    l10n.restoreNov,
-    l10n.restoreDec,
-  ][m - 1];
 }
 
 class _Primary extends StatelessWidget {

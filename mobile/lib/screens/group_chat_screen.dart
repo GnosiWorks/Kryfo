@@ -70,6 +70,7 @@ import '../widgets/preview_strip.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/moved_strip.dart';
 import '../l10n/l10n.dart';
+import '../l10n/dates.dart';
 
 final Map<String, String> _draftPerGroup = {};
 
@@ -1812,23 +1813,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final diff = today.difference(d).inDays;
     if (diff == 0) return l10n.groupChatToday;
     if (diff == 1) return l10n.groupChatYesterday;
-    final months = [
-      l10n.groupChatJan,
-      l10n.groupChatFeb,
-      l10n.groupChatMar,
-      l10n.groupChatApr,
-      l10n.groupChatMay,
-      l10n.groupChatJun,
-      l10n.groupChatJul,
-      l10n.groupChatAug,
-      l10n.groupChatSep,
-      l10n.groupChatOct,
-      l10n.groupChatNov,
-      l10n.groupChatDec,
-    ];
-    var label = '${when.day} ${months[when.month - 1]}';
-    if (when.year != now.year) label = '$label ${when.year}';
-    return label;
+    return dayMonthMaybeYear(when, now: now);
   }
 
   Widget _dateDivider(DateTime when, String anchor) {
@@ -3991,11 +3976,7 @@ class _GroupBubble extends StatelessWidget {
     }).toList();
   }
 
-  String _fmtTime(DateTime t) {
-    final h = t.hour.toString().padLeft(2, '0');
-    final m = t.minute.toString().padLeft(2, '0');
-    return '$h:$m';
-  }
+  String _fmtTime(DateTime t) => hourMinute(t);
 
   String _remaining(int burnAt) {
     final ms = burnAt - DateTime.now().millisecondsSinceEpoch;

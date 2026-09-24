@@ -5,6 +5,7 @@ import '../widgets/breathing_ring.dart';
 import '../main.dart';
 import '../theme.dart';
 import '../l10n/l10n.dart';
+import '../l10n/dates.dart';
 
 const String kNotesPeerId = '_notes_self_';
 
@@ -68,21 +69,7 @@ class _NotesScreenState extends State<NotesScreen> {
     final diff = today.difference(that).inDays;
     if (diff == 0) return l10n.notesToday;
     if (diff == 1) return l10n.notesYesterday;
-    final months = [
-      l10n.notesJan,
-      l10n.notesFeb,
-      l10n.notesMar,
-      l10n.notesApr,
-      l10n.notesMay,
-      l10n.notesJun,
-      l10n.notesJul,
-      l10n.notesAug,
-      l10n.notesSep,
-      l10n.notesOct,
-      l10n.notesNov,
-      l10n.notesDec,
-    ];
-    return '${d.day} ${months[d.month - 1]}'.toUpperCase();
+    return dayMonth(d);
   }
 
   Widget _dayDivider(int ms) => Center(
@@ -295,10 +282,7 @@ class _NoteBubble extends StatelessWidget {
 
   String _time() {
     if (ts == 0) return '';
-    final d = DateTime.fromMillisecondsSinceEpoch(ts);
-    final h = d.hour.toString().padLeft(2, '0');
-    final m = d.minute.toString().padLeft(2, '0');
-    return '$h:$m';
+    return hourMinute(DateTime.fromMillisecondsSinceEpoch(ts));
   }
 
   @override

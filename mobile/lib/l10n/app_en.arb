@@ -147,15 +147,6 @@
       }
     }
   },
-  "deliveryModeHoursAgo": "{h} hours ago",
-  "@deliveryModeHoursAgo": {
-    "description": "delivery_mode.dart",
-    "placeholders": {
-      "h": {
-        "type": "Object"
-      }
-    }
-  },
   "deliveryModeYesterday": "yesterday",
   "@deliveryModeYesterday": {
     "description": "delivery_mode.dart"
@@ -1192,10 +1183,6 @@
       }
     }
   },
-  "archivedChatsRestingHereThey": "Chats resting here. They stay quiet until someone writes, then come back to the top.",
-  "@archivedChatsRestingHereThey": {
-    "description": "screens/archived_screen.dart"
-  },
   "archivedNothingArchived": "Nothing archived",
   "@archivedNothingArchived": {
     "description": "screens/archived_screen.dart"
@@ -1410,15 +1397,6 @@
       }
     }
   },
-  "bridgesLinesSaved": "{n} lines saved",
-  "@bridgesLinesSaved": {
-    "description": "screens/bridges_screen.dart",
-    "placeholders": {
-      "n": {
-        "type": "Object"
-      }
-    }
-  },
   "bridgesRestartingTor": "Restarting tor…",
   "@bridgesRestartingTor": {
     "description": "screens/bridges_screen.dart"
@@ -1626,54 +1604,6 @@
   },
   "chatStillConnectingToTor": "still connecting to tor · it'll go out on its own",
   "@chatStillConnectingToTor": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatJan": "jan",
-  "@chatJan": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatFeb": "feb",
-  "@chatFeb": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatMar": "mar",
-  "@chatMar": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatApr": "apr",
-  "@chatApr": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatMay": "may",
-  "@chatMay": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatJun": "jun",
-  "@chatJun": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatJul": "jul",
-  "@chatJul": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatAug": "aug",
-  "@chatAug": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatSep": "sep",
-  "@chatSep": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatOct": "oct",
-  "@chatOct": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatNov": "nov",
-  "@chatNov": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatDec": "dec",
-  "@chatDec": {
     "description": "screens/chat_screen.dart"
   },
   "chatS": "{seconds}s",
@@ -3130,54 +3060,6 @@
   "@groupChatYesterday": {
     "description": "screens/group_chat_screen.dart"
   },
-  "groupChatJan": "jan",
-  "@groupChatJan": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChatFeb": "feb",
-  "@groupChatFeb": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChatMar": "mar",
-  "@groupChatMar": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChatApr": "apr",
-  "@groupChatApr": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChatMay": "may",
-  "@groupChatMay": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChatJun": "jun",
-  "@groupChatJun": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChatJul": "jul",
-  "@groupChatJul": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChatAug": "aug",
-  "@groupChatAug": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChatSep": "sep",
-  "@groupChatSep": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChatOct": "oct",
-  "@groupChatOct": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChatNov": "nov",
-  "@groupChatNov": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChatDec": "dec",
-  "@groupChatDec": {
-    "description": "screens/group_chat_screen.dart"
-  },
   "groupChatYou2": "You",
   "@groupChatYou2": {
     "description": "screens/group_chat_screen.dart"
@@ -3486,15 +3368,6 @@
       }
     }
   },
-  "groupInfoMembers": "{membersLength} members",
-  "@groupInfoMembers": {
-    "description": "screens/group_info_screen.dart",
-    "placeholders": {
-      "membersLength": {
-        "type": "Object"
-      }
-    }
-  },
   "groupInfoAdmin": "Admin",
   "@groupInfoAdmin": {
     "description": "screens/group_info_screen.dart"
@@ -3643,82 +3516,6 @@
   "@handleForgetItOnThis": {
     "description": "screens/handle_screen.dart"
   },
-  "homeMonday": "Monday",
-  "@homeMonday": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeTuesday": "Tuesday",
-  "@homeTuesday": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeWednesday": "Wednesday",
-  "@homeWednesday": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeThursday": "Thursday",
-  "@homeThursday": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeFriday": "Friday",
-  "@homeFriday": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeSaturday": "Saturday",
-  "@homeSaturday": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeSunday": "Sunday",
-  "@homeSunday": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeJanuary": "January",
-  "@homeJanuary": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeFebruary": "February",
-  "@homeFebruary": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeMarch": "March",
-  "@homeMarch": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeApril": "April",
-  "@homeApril": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeMay": "May",
-  "@homeMay": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeJune": "June",
-  "@homeJune": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeJuly": "July",
-  "@homeJuly": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeAugust": "August",
-  "@homeAugust": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeSeptember": "September",
-  "@homeSeptember": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeOctober": "October",
-  "@homeOctober": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeNovember": "November",
-  "@homeNovember": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeDecember": "December",
-  "@homeDecember": {
-    "description": "screens/home_screen.dart"
-  },
   "homeAddAContact": "Add a contact",
   "@homeAddAContact": {
     "description": "screens/home_screen.dart"
@@ -3730,6 +3527,15 @@
   "homeYourKryfo": "Your kryfo",
   "@homeYourKryfo": {
     "description": "screens/home_screen.dart"
+  },
+  "homeDateWeekday": "{weekday},",
+  "@homeDateWeekday": {
+    "description": "screens/home_screen.dart: the first line of the date at the top of home, the weekday. the second line is the day and month.",
+    "placeholders": {
+      "weekday": {
+        "type": "Object"
+      }
+    }
   },
   "homeAnHour": "an hour",
   "@homeAnHour": {
@@ -3963,15 +3769,6 @@
       }
     }
   },
-  "homeChats": "{count} chats",
-  "@homeChats": {
-    "description": "screens/home_screen.dart",
-    "placeholders": {
-      "count": {
-        "type": "Object"
-      }
-    }
-  },
   "homeGroups": "Groups",
   "@homeGroups": {
     "description": "screens/home_screen.dart"
@@ -4090,50 +3887,6 @@
       }
     }
   },
-  "homeJan": "Jan",
-  "@homeJan": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeFeb": "Feb",
-  "@homeFeb": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeMar": "Mar",
-  "@homeMar": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeApr": "Apr",
-  "@homeApr": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeJun": "Jun",
-  "@homeJun": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeJul": "Jul",
-  "@homeJul": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeAug": "Aug",
-  "@homeAug": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeSep": "Sep",
-  "@homeSep": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeOct": "Oct",
-  "@homeOct": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeNov": "Nov",
-  "@homeNov": {
-    "description": "screens/home_screen.dart"
-  },
-  "homeDec": "Dec",
-  "@homeDec": {
-    "description": "screens/home_screen.dart"
-  },
   "homeNoteToSelf": "Note to self",
   "@homeNoteToSelf": {
     "description": "screens/home_screen.dart"
@@ -4160,15 +3913,6 @@
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
-  },
-  "homePeopleWantToReach": "{count} people want to reach you",
-  "@homePeopleWantToReach": {
-    "description": "screens/home_screen.dart",
-    "placeholders": {
-      "count": {
-        "type": "Object"
       }
     }
   },
@@ -4916,54 +4660,6 @@
   },
   "notesYesterday": "YESTERDAY",
   "@notesYesterday": {
-    "description": "screens/notes_screen.dart"
-  },
-  "notesJan": "jan",
-  "@notesJan": {
-    "description": "screens/notes_screen.dart"
-  },
-  "notesFeb": "feb",
-  "@notesFeb": {
-    "description": "screens/notes_screen.dart"
-  },
-  "notesMar": "mar",
-  "@notesMar": {
-    "description": "screens/notes_screen.dart"
-  },
-  "notesApr": "apr",
-  "@notesApr": {
-    "description": "screens/notes_screen.dart"
-  },
-  "notesMay": "may",
-  "@notesMay": {
-    "description": "screens/notes_screen.dart"
-  },
-  "notesJun": "jun",
-  "@notesJun": {
-    "description": "screens/notes_screen.dart"
-  },
-  "notesJul": "jul",
-  "@notesJul": {
-    "description": "screens/notes_screen.dart"
-  },
-  "notesAug": "aug",
-  "@notesAug": {
-    "description": "screens/notes_screen.dart"
-  },
-  "notesSep": "sep",
-  "@notesSep": {
-    "description": "screens/notes_screen.dart"
-  },
-  "notesOct": "oct",
-  "@notesOct": {
-    "description": "screens/notes_screen.dart"
-  },
-  "notesNov": "nov",
-  "@notesNov": {
-    "description": "screens/notes_screen.dart"
-  },
-  "notesDec": "dec",
-  "@notesDec": {
     "description": "screens/notes_screen.dart"
   },
   "notesNoteToSelf": "Note to self",
@@ -5956,20 +5652,14 @@
   "@restoreTheRestoreDidNot": {
     "description": "screens/restore_screen.dart"
   },
-  "restoreMadeOnAt": ", made on {day} {summaryCard} at {when}:{when2}",
+  "restoreMadeOnAt": ", made on {date} at {time}",
   "@restoreMadeOnAt": {
     "description": "screens/restore_screen.dart",
     "placeholders": {
-      "day": {
+      "date": {
         "type": "Object"
       },
-      "summaryCard": {
-        "type": "Object"
-      },
-      "when": {
-        "type": "Object"
-      },
-      "when2": {
+      "time": {
         "type": "Object"
       }
     }
@@ -6131,34 +5821,6 @@
   },
   "restoreMessagesSentOrReceived": "Messages sent or received after that date are not in this file.",
   "@restoreMessagesSentOrReceived": {
-    "description": "screens/restore_screen.dart"
-  },
-  "restoreJun": "jun",
-  "@restoreJun": {
-    "description": "screens/restore_screen.dart"
-  },
-  "restoreJul": "jul",
-  "@restoreJul": {
-    "description": "screens/restore_screen.dart"
-  },
-  "restoreAug": "aug",
-  "@restoreAug": {
-    "description": "screens/restore_screen.dart"
-  },
-  "restoreSep": "sep",
-  "@restoreSep": {
-    "description": "screens/restore_screen.dart"
-  },
-  "restoreOct": "oct",
-  "@restoreOct": {
-    "description": "screens/restore_screen.dart"
-  },
-  "restoreNov": "nov",
-  "@restoreNov": {
-    "description": "screens/restore_screen.dart"
-  },
-  "restoreDec": "dec",
-  "@restoreDec": {
     "description": "screens/restore_screen.dart"
   },
   "restoreGb": "{bytes} GB",
@@ -7203,15 +6865,6 @@
       }
     }
   },
-  "vouchersVouchedBy2": "vouched by {rowsLength}",
-  "@vouchersVouchedBy2": {
-    "description": "screens/vouchers_sheet.dart",
-    "placeholders": {
-      "rowsLength": {
-        "type": "Object"
-      }
-    }
-  },
   "wallpaperAtmosphere": "Atmosphere",
   "@wallpaperAtmosphere": {
     "description": "screens/wallpaper_sheet.dart"
@@ -7333,15 +6986,6 @@
       }
     }
   },
-  "cleanerOtherFields": "{other} other fields",
-  "@cleanerOtherFields": {
-    "description": "tools/cleaner.dart",
-    "placeholders": {
-      "other": {
-        "type": "Object"
-      }
-    }
-  },
   "lockWordsFourRandomWordsBeat": "Four random words beat one clever one.",
   "@lockWordsFourRandomWordsBeat": {
     "description": "tools/lock_words.dart"
@@ -7376,30 +7020,12 @@
       }
     }
   },
-  "photoStoryMetres": "{m} metres",
-  "@photoStoryMetres": {
-    "description": "tools/photo_story.dart",
-    "placeholders": {
-      "m": {
-        "type": "Object"
-      }
-    }
-  },
   "photoStory1Metre": "{count, plural, one{{count} metre} other{{count} metres}}",
   "@photoStory1Metre": {
     "description": "tools/photo_story.dart",
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
-  },
-  "photoStoryMetres2": "{r} metres",
-  "@photoStoryMetres2": {
-    "description": "tools/photo_story.dart",
-    "placeholders": {
-      "r": {
-        "type": "Object"
       }
     }
   },
@@ -7726,15 +7352,6 @@
     "placeholders": {
       "count": {
         "type": "int"
-      }
-    }
-  },
-  "photoStoryMoreFields": "{more} more fields",
-  "@photoStoryMoreFields": {
-    "description": "tools/photo_story.dart",
-    "placeholders": {
-      "more": {
-        "type": "Object"
       }
     }
   },
@@ -8268,54 +7885,6 @@
   },
   "pinsMessage": "Message",
   "@pinsMessage": {
-    "description": "widgets/pins.dart"
-  },
-  "pinsJan": "Jan",
-  "@pinsJan": {
-    "description": "widgets/pins.dart"
-  },
-  "pinsFeb": "Feb",
-  "@pinsFeb": {
-    "description": "widgets/pins.dart"
-  },
-  "pinsMar": "Mar",
-  "@pinsMar": {
-    "description": "widgets/pins.dart"
-  },
-  "pinsApr": "Apr",
-  "@pinsApr": {
-    "description": "widgets/pins.dart"
-  },
-  "pinsMay": "May",
-  "@pinsMay": {
-    "description": "widgets/pins.dart"
-  },
-  "pinsJun": "Jun",
-  "@pinsJun": {
-    "description": "widgets/pins.dart"
-  },
-  "pinsJul": "Jul",
-  "@pinsJul": {
-    "description": "widgets/pins.dart"
-  },
-  "pinsAug": "Aug",
-  "@pinsAug": {
-    "description": "widgets/pins.dart"
-  },
-  "pinsSep": "Sep",
-  "@pinsSep": {
-    "description": "widgets/pins.dart"
-  },
-  "pinsOct": "Oct",
-  "@pinsOct": {
-    "description": "widgets/pins.dart"
-  },
-  "pinsNov": "Nov",
-  "@pinsNov": {
-    "description": "widgets/pins.dart"
-  },
-  "pinsDec": "Dec",
-  "@pinsDec": {
     "description": "widgets/pins.dart"
   },
   "pinsToday": "Today · {hm}",

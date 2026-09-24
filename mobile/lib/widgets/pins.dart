@@ -12,6 +12,7 @@ import 'halo_sheet.dart';
 import 'kryfo_avatar.dart';
 import 'sheet_handle.dart';
 import '../l10n/l10n.dart';
+import '../l10n/dates.dart';
 
 /// how many pins one chat holds. the sender checks before pinning and the
 /// receiver checks before mirroring, so nobody can fill the list from afar.
@@ -115,28 +116,12 @@ class PinEntry {
 }
 
 String _pinDate(DateTime d) {
-  final months = [
-    l10n.pinsJan,
-    l10n.pinsFeb,
-    l10n.pinsMar,
-    l10n.pinsApr,
-    l10n.pinsMay,
-    l10n.pinsJun,
-    l10n.pinsJul,
-    l10n.pinsAug,
-    l10n.pinsSep,
-    l10n.pinsOct,
-    l10n.pinsNov,
-    l10n.pinsDec,
-  ];
-  final hm =
-      '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+  final hm = hourMinute(d);
   final now = DateTime.now();
   if (d.year == now.year && d.month == now.month && d.day == now.day) {
     return l10n.pinsToday(hm);
   }
-  final y = d.year == now.year ? '' : ' ${d.year}';
-  return '${d.day} ${months[d.month - 1]}$y · $hm';
+  return '${dayMonthMaybeYear(d, now: now)} · $hm';
 }
 
 /// the list of pins. [load] is asked again after every unpin so the sheet

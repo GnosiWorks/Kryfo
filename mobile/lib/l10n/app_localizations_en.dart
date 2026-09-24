@@ -129,11 +129,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String deliveryModeHoursAgo(Object h) {
-    return '$h hours ago';
-  }
-
-  @override
   String get deliveryModeYesterday => 'yesterday';
 
   @override
@@ -863,10 +858,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get archivedChatsRestingHereThey =>
-      'Chats resting here. They stay quiet until someone writes, then come back to the top.';
-
-  @override
   String get archivedNothingArchived => 'Nothing archived';
 
   @override
@@ -1044,11 +1035,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String bridgesLinesSaved(Object n) {
-    return '$n lines saved';
-  }
-
-  @override
   String get bridgesRestartingTor => 'Restarting tor…';
 
   @override
@@ -1198,42 +1184,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get chatStillConnectingToTor =>
       'still connecting to tor · it\'ll go out on its own';
-
-  @override
-  String get chatJan => 'jan';
-
-  @override
-  String get chatFeb => 'feb';
-
-  @override
-  String get chatMar => 'mar';
-
-  @override
-  String get chatApr => 'apr';
-
-  @override
-  String get chatMay => 'may';
-
-  @override
-  String get chatJun => 'jun';
-
-  @override
-  String get chatJul => 'jul';
-
-  @override
-  String get chatAug => 'aug';
-
-  @override
-  String get chatSep => 'sep';
-
-  @override
-  String get chatOct => 'oct';
-
-  @override
-  String get chatNov => 'nov';
-
-  @override
-  String get chatDec => 'dec';
 
   @override
   String chatS(Object seconds) {
@@ -2317,42 +2267,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupChatYesterday => 'yesterday';
 
   @override
-  String get groupChatJan => 'jan';
-
-  @override
-  String get groupChatFeb => 'feb';
-
-  @override
-  String get groupChatMar => 'mar';
-
-  @override
-  String get groupChatApr => 'apr';
-
-  @override
-  String get groupChatMay => 'may';
-
-  @override
-  String get groupChatJun => 'jun';
-
-  @override
-  String get groupChatJul => 'jul';
-
-  @override
-  String get groupChatAug => 'aug';
-
-  @override
-  String get groupChatSep => 'sep';
-
-  @override
-  String get groupChatOct => 'oct';
-
-  @override
-  String get groupChatNov => 'nov';
-
-  @override
-  String get groupChatDec => 'dec';
-
-  @override
   String get groupChatYou2 => 'You';
 
   @override
@@ -2588,11 +2502,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String groupInfoMembers(Object membersLength) {
-    return '$membersLength members';
-  }
-
-  @override
   String get groupInfoAdmin => 'Admin';
 
   @override
@@ -2700,63 +2609,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get handleForgetItOnThis => 'Forget it on this phone';
 
   @override
-  String get homeMonday => 'Monday';
-
-  @override
-  String get homeTuesday => 'Tuesday';
-
-  @override
-  String get homeWednesday => 'Wednesday';
-
-  @override
-  String get homeThursday => 'Thursday';
-
-  @override
-  String get homeFriday => 'Friday';
-
-  @override
-  String get homeSaturday => 'Saturday';
-
-  @override
-  String get homeSunday => 'Sunday';
-
-  @override
-  String get homeJanuary => 'January';
-
-  @override
-  String get homeFebruary => 'February';
-
-  @override
-  String get homeMarch => 'March';
-
-  @override
-  String get homeApril => 'April';
-
-  @override
-  String get homeMay => 'May';
-
-  @override
-  String get homeJune => 'June';
-
-  @override
-  String get homeJuly => 'July';
-
-  @override
-  String get homeAugust => 'August';
-
-  @override
-  String get homeSeptember => 'September';
-
-  @override
-  String get homeOctober => 'October';
-
-  @override
-  String get homeNovember => 'November';
-
-  @override
-  String get homeDecember => 'December';
-
-  @override
   String get homeAddAContact => 'Add a contact';
 
   @override
@@ -2764,6 +2616,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeYourKryfo => 'Your kryfo';
+
+  @override
+  String homeDateWeekday(Object weekday) {
+    return '$weekday,';
+  }
 
   @override
   String get homeAnHour => 'an hour';
@@ -2972,11 +2829,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String homeChats(Object count) {
-    return '$count chats';
-  }
-
-  @override
   String get homeGroups => 'Groups';
 
   @override
@@ -3062,39 +2914,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get homeJan => 'Jan';
-
-  @override
-  String get homeFeb => 'Feb';
-
-  @override
-  String get homeMar => 'Mar';
-
-  @override
-  String get homeApr => 'Apr';
-
-  @override
-  String get homeJun => 'Jun';
-
-  @override
-  String get homeJul => 'Jul';
-
-  @override
-  String get homeAug => 'Aug';
-
-  @override
-  String get homeSep => 'Sep';
-
-  @override
-  String get homeOct => 'Oct';
-
-  @override
-  String get homeNov => 'Nov';
-
-  @override
-  String get homeDec => 'Dec';
-
-  @override
   String get homeNoteToSelf => 'Note to self';
 
   @override
@@ -3118,11 +2937,6 @@ class AppLocalizationsEn extends AppLocalizations {
       one: '$count person wants to reach you',
     );
     return '$_temp0';
-  }
-
-  @override
-  String homePeopleWantToReach(Object count) {
-    return '$count people want to reach you';
   }
 
   @override
@@ -3700,42 +3514,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notesYesterday => 'YESTERDAY';
-
-  @override
-  String get notesJan => 'jan';
-
-  @override
-  String get notesFeb => 'feb';
-
-  @override
-  String get notesMar => 'mar';
-
-  @override
-  String get notesApr => 'apr';
-
-  @override
-  String get notesMay => 'may';
-
-  @override
-  String get notesJun => 'jun';
-
-  @override
-  String get notesJul => 'jul';
-
-  @override
-  String get notesAug => 'aug';
-
-  @override
-  String get notesSep => 'sep';
-
-  @override
-  String get notesOct => 'oct';
-
-  @override
-  String get notesNov => 'nov';
-
-  @override
-  String get notesDec => 'dec';
 
   @override
   String get notesNoteToSelf => 'Note to self';
@@ -4511,13 +4289,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'The restore did not finish. Nothing was changed';
 
   @override
-  String restoreMadeOnAt(
-    Object day,
-    Object summaryCard,
-    Object when,
-    Object when2,
-  ) {
-    return ', made on $day $summaryCard at $when:$when2';
+  String restoreMadeOnAt(Object date, Object time) {
+    return ', made on $date at $time';
   }
 
   @override
@@ -4639,27 +4412,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get restoreMessagesSentOrReceived =>
       'Messages sent or received after that date are not in this file.';
-
-  @override
-  String get restoreJun => 'jun';
-
-  @override
-  String get restoreJul => 'jul';
-
-  @override
-  String get restoreAug => 'aug';
-
-  @override
-  String get restoreSep => 'sep';
-
-  @override
-  String get restoreOct => 'oct';
-
-  @override
-  String get restoreNov => 'nov';
-
-  @override
-  String get restoreDec => 'dec';
 
   @override
   String restoreGb(Object bytes) {
@@ -5447,11 +5199,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String vouchersVouchedBy2(Object rowsLength) {
-    return 'vouched by $rowsLength';
-  }
-
-  @override
   String get wallpaperAtmosphere => 'Atmosphere';
 
   @override
@@ -5554,11 +5301,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String cleanerOtherFields(Object other) {
-    return '$other other fields';
-  }
-
-  @override
   String get lockWordsFourRandomWordsBeat =>
       'Four random words beat one clever one.';
 
@@ -5590,11 +5332,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String photoStoryMetres(Object m) {
-    return '$m metres';
-  }
-
-  @override
   String photoStory1Metre(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -5603,11 +5340,6 @@ class AppLocalizationsEn extends AppLocalizations {
       one: '$count metre',
     );
     return '$_temp0';
-  }
-
-  @override
-  String photoStoryMetres2(Object r) {
-    return '$r metres';
   }
 
   @override
@@ -5842,11 +5574,6 @@ class AppLocalizationsEn extends AppLocalizations {
       one: '$count more field',
     );
     return '$_temp0';
-  }
-
-  @override
-  String photoStoryMoreFields(Object more) {
-    return '$more more fields';
   }
 
   @override
@@ -6228,42 +5955,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pinsMessage => 'Message';
-
-  @override
-  String get pinsJan => 'Jan';
-
-  @override
-  String get pinsFeb => 'Feb';
-
-  @override
-  String get pinsMar => 'Mar';
-
-  @override
-  String get pinsApr => 'Apr';
-
-  @override
-  String get pinsMay => 'May';
-
-  @override
-  String get pinsJun => 'Jun';
-
-  @override
-  String get pinsJul => 'Jul';
-
-  @override
-  String get pinsAug => 'Aug';
-
-  @override
-  String get pinsSep => 'Sep';
-
-  @override
-  String get pinsOct => 'Oct';
-
-  @override
-  String get pinsNov => 'Nov';
-
-  @override
-  String get pinsDec => 'Dec';
 
   @override
   String pinsToday(Object hm) {

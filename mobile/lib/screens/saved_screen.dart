@@ -7,6 +7,7 @@ import 'chat_screen.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
+import '../l10n/dates.dart';
 
 // every saved message across all chats, newest first. tap a card to jump to
 // that message in its chat; tap the bookmark to unsave.
@@ -96,10 +97,7 @@ class _SavedScreenState extends State<SavedScreen> {
 
   String _time(int ms) {
     if (ms == 0) return '';
-    final d = DateTime.fromMillisecondsSinceEpoch(ms);
-    final h = d.hour.toString().padLeft(2, '0');
-    final m = d.minute.toString().padLeft(2, '0');
-    return '$h:$m';
+    return hourMinute(DateTime.fromMillisecondsSinceEpoch(ms));
   }
 
   @override

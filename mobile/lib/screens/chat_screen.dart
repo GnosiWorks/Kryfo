@@ -83,6 +83,7 @@ import '../atmosphere.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/moved_strip.dart';
 import '../l10n/l10n.dart';
+import '../l10n/dates.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
 // chunk indices already accepted by the peer, per media msg_uid. lets a
@@ -329,34 +330,10 @@ String _friendlyStatus(String raw) {
 }
 
 String _fmtFull(DateTime d) {
-  final months = [
-    l10n.chatJan,
-    l10n.chatFeb,
-    l10n.chatMar,
-    l10n.chatApr,
-    l10n.chatMay,
-    l10n.chatJun,
-    l10n.chatJul,
-    l10n.chatAug,
-    l10n.chatSep,
-    l10n.chatOct,
-    l10n.chatNov,
-    l10n.chatDec,
-  ];
-  final hh = d.hour.toString().padLeft(2, '0');
-  final mm = d.minute.toString().padLeft(2, '0');
-  final now = DateTime.now();
-  final date = d.year == now.year
-      ? '${d.day} ${months[d.month - 1]}'
-      : '${d.day} ${months[d.month - 1]} ${d.year}';
-  return '$date · $hh:$mm';
+  return '${dayMonthMaybeYear(d)} · ${hourMinute(d)}';
 }
 
-String _fmtTime(DateTime d) {
-  final h = d.hour.toString().padLeft(2, '0');
-  final m = d.minute.toString().padLeft(2, '0');
-  return '$h:$m';
-}
+String _fmtTime(DateTime d) => hourMinute(d);
 
 // remaining time on a burning message, formatted compactly:
 // 4m 23s / 38s / 1h 02m. clamps at 0.
@@ -4500,23 +4477,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final diff = today.difference(d).inDays;
     if (diff == 0) return l10n.chatToday;
     if (diff == 1) return l10n.chatYesterday;
-    final months = [
-      l10n.chatJan,
-      l10n.chatFeb,
-      l10n.chatMar,
-      l10n.chatApr,
-      l10n.chatMay,
-      l10n.chatJun,
-      l10n.chatJul,
-      l10n.chatAug,
-      l10n.chatSep,
-      l10n.chatOct,
-      l10n.chatNov,
-      l10n.chatDec,
-    ];
-    var label = '${when.day} ${months[when.month - 1]}';
-    if (when.year != now.year) label = '$label ${when.year}';
-    return label;
+    return dayMonthMaybeYear(when, now: now);
   }
 
   Widget _dateDivider(DateTime when, String anchor) {

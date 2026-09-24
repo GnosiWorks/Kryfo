@@ -295,12 +295,6 @@ abstract class AppLocalizations {
   /// delivery_mode.dart
   ///
   /// In en, this message translates to:
-  /// **'{h} hours ago'**
-  String deliveryModeHoursAgo(Object h);
-
-  /// delivery_mode.dart
-  ///
-  /// In en, this message translates to:
   /// **'yesterday'**
   String get deliveryModeYesterday;
 
@@ -1441,12 +1435,6 @@ abstract class AppLocalizations {
   /// screens/archived_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Chats resting here. They stay quiet until someone writes, then come back to the top.'**
-  String get archivedChatsRestingHereThey;
-
-  /// screens/archived_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Nothing archived'**
   String get archivedNothingArchived;
 
@@ -1753,12 +1741,6 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{n} lines saved'**
-  String bridgesLinesSaved(Object n);
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Restarting tor…'**
   String get bridgesRestartingTor;
 
@@ -2019,78 +2001,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'still connecting to tor · it\'ll go out on its own'**
   String get chatStillConnectingToTor;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'jan'**
-  String get chatJan;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'feb'**
-  String get chatFeb;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'mar'**
-  String get chatMar;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'apr'**
-  String get chatApr;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'may'**
-  String get chatMay;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'jun'**
-  String get chatJun;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'jul'**
-  String get chatJul;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'aug'**
-  String get chatAug;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'sep'**
-  String get chatSep;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'oct'**
-  String get chatOct;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'nov'**
-  String get chatNov;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'dec'**
-  String get chatDec;
 
   /// screens/chat_screen.dart
   ///
@@ -3979,78 +3889,6 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'jan'**
-  String get groupChatJan;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'feb'**
-  String get groupChatFeb;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'mar'**
-  String get groupChatMar;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'apr'**
-  String get groupChatApr;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'may'**
-  String get groupChatMay;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'jun'**
-  String get groupChatJun;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'jul'**
-  String get groupChatJul;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'aug'**
-  String get groupChatAug;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'sep'**
-  String get groupChatSep;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'oct'**
-  String get groupChatOct;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'nov'**
-  String get groupChatNov;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'dec'**
-  String get groupChatDec;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'You'**
   String get groupChatYou2;
 
@@ -4423,12 +4261,6 @@ abstract class AppLocalizations {
   /// screens/group_info_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{membersLength} members'**
-  String groupInfoMembers(Object membersLength);
-
-  /// screens/group_info_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Admin'**
   String get groupInfoAdmin;
 
@@ -4621,120 +4453,6 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Monday'**
-  String get homeMonday;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Tuesday'**
-  String get homeTuesday;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Wednesday'**
-  String get homeWednesday;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Thursday'**
-  String get homeThursday;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Friday'**
-  String get homeFriday;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Saturday'**
-  String get homeSaturday;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Sunday'**
-  String get homeSunday;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'January'**
-  String get homeJanuary;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'February'**
-  String get homeFebruary;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'March'**
-  String get homeMarch;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'April'**
-  String get homeApril;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'May'**
-  String get homeMay;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'June'**
-  String get homeJune;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'July'**
-  String get homeJuly;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'August'**
-  String get homeAugust;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'September'**
-  String get homeSeptember;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'October'**
-  String get homeOctober;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'November'**
-  String get homeNovember;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'December'**
-  String get homeDecember;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Add a contact'**
   String get homeAddAContact;
 
@@ -4749,6 +4467,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your kryfo'**
   String get homeYourKryfo;
+
+  /// screens/home_screen.dart: the first line of the date at the top of home, the weekday. the second line is the day and month.
+  ///
+  /// In en, this message translates to:
+  /// **'{weekday},'**
+  String homeDateWeekday(Object weekday);
 
   /// screens/home_screen.dart
   ///
@@ -5029,12 +4753,6 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{count} chats'**
-  String homeChats(Object count);
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Groups'**
   String get homeGroups;
 
@@ -5167,72 +4885,6 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Jan'**
-  String get homeJan;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Feb'**
-  String get homeFeb;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Mar'**
-  String get homeMar;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Apr'**
-  String get homeApr;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Jun'**
-  String get homeJun;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Jul'**
-  String get homeJul;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Aug'**
-  String get homeAug;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Sep'**
-  String get homeSep;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Oct'**
-  String get homeOct;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Nov'**
-  String get homeNov;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Dec'**
-  String get homeDec;
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Note to self'**
   String get homeNoteToSelf;
 
@@ -5265,12 +4917,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, one{{count} person wants to reach you} other{{count} people want to reach you}}'**
   String home1PersonWantsTo(int count);
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{count} people want to reach you'**
-  String homePeopleWantToReach(Object count);
 
   /// screens/introduce_sheet.dart
   ///
@@ -6255,78 +5901,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'YESTERDAY'**
   String get notesYesterday;
-
-  /// screens/notes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'jan'**
-  String get notesJan;
-
-  /// screens/notes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'feb'**
-  String get notesFeb;
-
-  /// screens/notes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'mar'**
-  String get notesMar;
-
-  /// screens/notes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'apr'**
-  String get notesApr;
-
-  /// screens/notes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'may'**
-  String get notesMay;
-
-  /// screens/notes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'jun'**
-  String get notesJun;
-
-  /// screens/notes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'jul'**
-  String get notesJul;
-
-  /// screens/notes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'aug'**
-  String get notesAug;
-
-  /// screens/notes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'sep'**
-  String get notesSep;
-
-  /// screens/notes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'oct'**
-  String get notesOct;
-
-  /// screens/notes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'nov'**
-  String get notesNov;
-
-  /// screens/notes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'dec'**
-  String get notesDec;
 
   /// screens/notes_screen.dart
   ///
@@ -7729,13 +7303,8 @@ abstract class AppLocalizations {
   /// screens/restore_screen.dart
   ///
   /// In en, this message translates to:
-  /// **', made on {day} {summaryCard} at {when}:{when2}'**
-  String restoreMadeOnAt(
-    Object day,
-    Object summaryCard,
-    Object when,
-    Object when2,
-  );
+  /// **', made on {date} at {time}'**
+  String restoreMadeOnAt(Object date, Object time);
 
   /// screens/restore_screen.dart
   ///
@@ -7940,48 +7509,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Messages sent or received after that date are not in this file.'**
   String get restoreMessagesSentOrReceived;
-
-  /// screens/restore_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'jun'**
-  String get restoreJun;
-
-  /// screens/restore_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'jul'**
-  String get restoreJul;
-
-  /// screens/restore_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'aug'**
-  String get restoreAug;
-
-  /// screens/restore_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'sep'**
-  String get restoreSep;
-
-  /// screens/restore_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'oct'**
-  String get restoreOct;
-
-  /// screens/restore_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'nov'**
-  String get restoreNov;
-
-  /// screens/restore_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'dec'**
-  String get restoreDec;
 
   /// screens/restore_screen.dart
   ///
@@ -9309,12 +8836,6 @@ abstract class AppLocalizations {
   /// **'{count, plural, one{vouched by} other{vouched by {count}}}'**
   String vouchersVouchedBy(int count);
 
-  /// screens/vouchers_sheet.dart
-  ///
-  /// In en, this message translates to:
-  /// **'vouched by {rowsLength}'**
-  String vouchersVouchedBy2(Object rowsLength);
-
   /// screens/wallpaper_sheet.dart
   ///
   /// In en, this message translates to:
@@ -9489,12 +9010,6 @@ abstract class AppLocalizations {
   /// **'{count, plural, one{{count} other field} other{{count} other fields}}'**
   String cleaner1OtherField(int count);
 
-  /// tools/cleaner.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{other} other fields'**
-  String cleanerOtherFields(Object other);
-
   /// tools/lock_words.dart
   ///
   /// In en, this message translates to:
@@ -9534,20 +9049,8 @@ abstract class AppLocalizations {
   /// tools/photo_story.dart
   ///
   /// In en, this message translates to:
-  /// **'{m} metres'**
-  String photoStoryMetres(Object m);
-
-  /// tools/photo_story.dart
-  ///
-  /// In en, this message translates to:
   /// **'{count, plural, one{{count} metre} other{{count} metres}}'**
   String photoStory1Metre(int count);
-
-  /// tools/photo_story.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{r} metres'**
-  String photoStoryMetres2(Object r);
 
   /// tools/photo_story.dart
   ///
@@ -9890,12 +9393,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, one{{count} more field} other{{count} more fields}}'**
   String photoStory1MoreField(int count);
-
-  /// tools/photo_story.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{more} more fields'**
-  String photoStoryMoreFields(Object more);
 
   /// tools/photo_story.dart
   ///
@@ -10532,78 +10029,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Message'**
   String get pinsMessage;
-
-  /// widgets/pins.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Jan'**
-  String get pinsJan;
-
-  /// widgets/pins.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Feb'**
-  String get pinsFeb;
-
-  /// widgets/pins.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Mar'**
-  String get pinsMar;
-
-  /// widgets/pins.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Apr'**
-  String get pinsApr;
-
-  /// widgets/pins.dart
-  ///
-  /// In en, this message translates to:
-  /// **'May'**
-  String get pinsMay;
-
-  /// widgets/pins.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Jun'**
-  String get pinsJun;
-
-  /// widgets/pins.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Jul'**
-  String get pinsJul;
-
-  /// widgets/pins.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Aug'**
-  String get pinsAug;
-
-  /// widgets/pins.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Sep'**
-  String get pinsSep;
-
-  /// widgets/pins.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Oct'**
-  String get pinsOct;
-
-  /// widgets/pins.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Nov'**
-  String get pinsNov;
-
-  /// widgets/pins.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Dec'**
-  String get pinsDec;
 
   /// widgets/pins.dart
   ///

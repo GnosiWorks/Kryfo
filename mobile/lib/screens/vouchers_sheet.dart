@@ -2,13 +2,13 @@
 // who vouched for this person: face, our name for them, the note they left,
 // when. only vouchers we hold as accepted contacts ever get here.
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../main.dart' show db;
 import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../l10n/l10n.dart';
+import '../l10n/dates.dart';
 
 Future<void> showVouchersSheet(BuildContext context, String haloId) async {
   final rows = await db.vouchesFor(haloId);
@@ -26,11 +26,9 @@ class _VouchersSheet extends StatelessWidget {
   String _when(int ms) {
     final d = DateTime.fromMillisecondsSinceEpoch(ms);
     final now = DateTime.now();
-    if (now.difference(d).inDays < 1) return DateFormat.Hm().format(d);
-    if (now.difference(d).inDays < 7) {
-      return DateFormat.E().format(d).toLowerCase();
-    }
-    return DateFormat.MMMd().format(d).toLowerCase();
+    if (now.difference(d).inDays < 1) return hourMinute(d);
+    if (now.difference(d).inDays < 7) return weekdayShort(d);
+    return dayMonth(d);
   }
 
   @override

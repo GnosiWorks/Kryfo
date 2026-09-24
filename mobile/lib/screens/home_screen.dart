@@ -39,6 +39,7 @@ import '../widgets/confirm_sheet.dart';
 import '../notif_permission.dart';
 import '../delivery_mode.dart';
 import '../l10n/l10n.dart';
+import '../l10n/dates.dart';
 
 bool _miuiPromptChecked = false;
 
@@ -483,29 +484,6 @@ class GroupSummary {
 
 // ───────── date header ─────────
 
-final _days = [
-  l10n.homeMonday,
-  l10n.homeTuesday,
-  l10n.homeWednesday,
-  l10n.homeThursday,
-  l10n.homeFriday,
-  l10n.homeSaturday,
-  l10n.homeSunday,
-];
-final _months = [
-  l10n.homeJanuary,
-  l10n.homeFebruary,
-  l10n.homeMarch,
-  l10n.homeApril,
-  l10n.homeMay,
-  l10n.homeJune,
-  l10n.homeJuly,
-  l10n.homeAugust,
-  l10n.homeSeptember,
-  l10n.homeOctober,
-  l10n.homeNovember,
-  l10n.homeDecember,
-];
 // the relay route's colour - cool enough never to read as tor's violet
 const kRelayCyan = Color(0xFF4BB8C9);
 
@@ -597,8 +575,6 @@ class _HomeHead extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
-    final day = _days[now.weekday - 1];
-    final month = _months[now.month - 1];
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
       child: Row(
@@ -609,7 +585,7 @@ class _HomeHead extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '$day,',
+                  l10n.homeDateWeekday(weekday(now)),
                   style: HaloType.serif(size: 26, weight: FontWeight.w400),
                   // display type, capped. at 200% this became one word per
                   // line and pushed the whole list off screen.
@@ -618,7 +594,7 @@ class _HomeHead extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '$month ${now.day}',
+                  dayMonthLong(now),
                   style: HaloType.serif(
                     size: 26,
                     weight: FontWeight.w300,
@@ -2308,21 +2284,7 @@ String _relTime(DateTime? t) {
   if (d.inDays == 1) return l10n.homeYesterday;
   if (d.inDays < 7) return l10n.homeD(d.inDays);
   // older than a week: a short date reads better than a big day count
-  final months = [
-    l10n.homeJan,
-    l10n.homeFeb,
-    l10n.homeMar,
-    l10n.homeApr,
-    l10n.homeMay,
-    l10n.homeJun,
-    l10n.homeJul,
-    l10n.homeAug,
-    l10n.homeSep,
-    l10n.homeOct,
-    l10n.homeNov,
-    l10n.homeDec,
-  ];
-  return '${t.day} ${months[t.month - 1]}';
+  return dayMonth(t);
 }
 
 // unknown-sender requests. amber, shows a count, only rendered when > 0.

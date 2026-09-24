@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import 'package:intl/intl.dart';
 
 import '../meta/meta_reader.dart';
 import 'geo.dart';
 import '../l10n/l10n.dart';
+import '../l10n/dates.dart';
 
 enum StoryRowKind { place, hidden, device, time, more }
 
@@ -155,7 +155,7 @@ PhotoStory storyOf(MetaReport r, {GeoWorld? world, GeoPlaces? places}) {
     rows.add(
       StoryRow(
         StoryRowKind.time,
-        DateFormat('EEEE d MMMM y, HH:mm').format(taken),
+        longDateTime(taken),
         sub: r.taken == null
             ? l10n.photoStoryWhenItWasRecorded
             : r.offset != null
@@ -163,7 +163,7 @@ PhotoStory storyOf(MetaReport r, {GeoWorld? world, GeoPlaces? places}) {
             : l10n.photoStoryToTheSecond,
       ),
     );
-    all.add(l10n.photoStoryTime(DateFormat('d MMM y, HH:mm:ss').format(taken)));
+    all.add(l10n.photoStoryTime(mediumDateTime(taken)));
   }
 
   final named = <String>[];

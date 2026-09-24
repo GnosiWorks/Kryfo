@@ -2,6 +2,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'app_localizations.dart';
+import 'dates.dart';
 
 export 'app_localizations.dart';
 
@@ -19,4 +20,7 @@ AppLocalizations get l10n => _current;
 
 void setL10nLocale(Locale locale) {
   _current = lookupAppLocalizations(locale);
+  setDateLocale(
+    intlLocaleFor(locale.languageCode, scriptCode: locale.scriptCode),
+  );
 }
