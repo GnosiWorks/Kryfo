@@ -8451,6 +8451,9 @@ class HaloApp extends StatelessWidget {
         scaffoldMessengerKey: haloMessengerKey,
         title: 'Kryfo',
         theme: buildHaloTheme(),
+        locale: l10nLocale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         // one place for the two accessibility settings everything else
         // should obey. clamped rather than uncapped - past 1.6 the chat
         // bubbles stop being readable, which helps nobody.
