@@ -886,16 +886,36 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // a delivery receipt flipped `delivered` in the db for a message already on
   // screen. _tryAppendNew won't catch it (no new row), so re-read the flag for
   // any out-message not yet marked delivered and update the bubble in place.
+  //
+  // the send state is re-read too. a file that took minutes to upload was
+  // finished by the screen that started it; leave the chat and come back
+  // and this screen's copy of the row still said sending, so the receipt
+  // landed on a bubble that hid its time and tick for as long as it lived.
+  // the database is the one that knows: sent or delivered there, it is not
+  // sending here.
   Future<void> _refreshDelivered() async {
     final pending = _messages
-        .where((m) => m.direction == 'out' && !m.delivered && m.msgUid != null)
+        .where(
+          (m) =>
+              m.direction == 'out' &&
+              m.msgUid != null &&
+              (!m.delivered || m.sending || m.parked || m.failed),
+        )
         .toList();
     if (pending.isEmpty) return;
     var changed = false;
     for (final m in pending) {
-      final ok = await db.isDelivered(m.msgUid!);
-      if (ok && !m.delivered) {
+      final s = await db.sendState(m.msgUid!);
+      if (s.delivered && !m.delivered) {
         m.delivered = true;
+        changed = true;
+      }
+      final done = s.delivered || (s.sent && !mediaInflight.contains(m.msgUid));
+      if (done && (m.sending || m.parked || m.failed)) {
+        m.sending = false;
+        m.parked = false;
+        m.failed = false;
+        if (m.msgUid != null) mediaProgressEnd(m.msgUid!);
         changed = true;
       }
     }
@@ -2967,7 +2987,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       await db.setMsgBurnAt(msg.msgUid!, ba);
       msg.burnAt = ba;
     }
-    if (!mounted) return;
+    if (!mounted) {
+      // left and reopened while it uploaded: tell the screen showing it now
+      appState.chatChanged(widget.peerHaloId);
+      return;
+    }
     // a reload since the send began left [msg] off screen and a new object
     // in its place; the verdict goes to the one being drawn as well
     final shown = _messages.where(

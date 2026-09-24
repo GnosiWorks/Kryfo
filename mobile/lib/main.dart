@@ -3244,17 +3244,25 @@ class HaloDb {
     await db.delete('media_wants', where: 'last_at < ?', whereArgs: [cutoff]);
   }
 
-  Future<bool> isDelivered(String msgUid) async {
+  Future<bool> isDelivered(String msgUid) async =>
+      (await sendState(msgUid)).delivered;
+
+  // what the database knows about one of our messages: handed over
+  // somewhere (sent), and acknowledged by the peer (delivered)
+  Future<({bool sent, bool delivered})> sendState(String msgUid) async {
     final db = await open();
     final r = await db.query(
       'messages',
-      columns: ['delivered'],
+      columns: ['sent', 'delivered'],
       where: 'msg_uid = ?',
       whereArgs: [msgUid],
       limit: 1,
     );
-    if (r.isEmpty) return false;
-    return (r.first['delivered'] as int? ?? 0) == 1;
+    if (r.isEmpty) return (sent: false, delivered: false);
+    return (
+      sent: (r.first['sent'] as int? ?? 0) == 1,
+      delivered: (r.first['delivered'] as int? ?? 0) == 1,
+    );
   }
 
   Future<void> markDelivered(String msgUid) async {
@@ -6076,6 +6084,13 @@ class AppState extends ChangeNotifier {
   int chatRevOf(String haloId) => _chatRev[haloId] ?? 0;
   void _bumpChatRev(String haloId) {
     _chatRev[haloId] = (_chatRev[haloId] ?? 0) + 1;
+  }
+
+  // a chat's rows changed from outside it: an upload that a screen since
+  // closed started, finishing. whichever screen shows the chat now re-reads.
+  void chatChanged(String haloId) {
+    _bumpChatRev(haloId);
+    notifyListeners();
   }
 
   bool _draining = false;
