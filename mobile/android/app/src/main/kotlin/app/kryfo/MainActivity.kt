@@ -46,6 +46,7 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterFragmentActivity() {
     private val REQ_SAVE_DOCUMENT = 7311
     private val tools = ToolsBridge(this)
+    private var videos: VideoPlayers? = null
     companion object {
         private const val NOTIF_PERM_REQUEST = 1001
         private const val PERM_PREFS = "halo_perm"
@@ -226,12 +227,23 @@ class MainActivity : FlutterFragmentActivity() {
         return null
     }
 
+    // a player belongs to the screen that showed it
+    override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        videos?.releaseAll()
+        videos = null
+        super.cleanUpFlutterEngine(flutterEngine)
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         // hold on to it so the next activity attaches to this same engine
         FlutterEngineCache.getInstance().put(ENGINE_ID, flutterEngine)
         tools.attach(MethodChannel(flutterEngine.dartExecutor.binaryMessenger, ToolsBridge.CHANNEL))
         tools.offer(intent)
+        videos = VideoPlayers(flutterEngine.renderer).also { v ->
+            MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "kryfo/video")
+                .setMethodCallHandler { call, result -> v.handle(call, result) }
+        }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "halo/platform")
             .setMethodCallHandler { call, result ->
                 when (call.method) {

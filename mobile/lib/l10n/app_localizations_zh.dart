@@ -6301,6 +6301,21 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get androidChannelDescription =>
       '让 kryfo 保持连接，这样它关闭时加密消息也能送达。关掉这个就会停止投递。';
+
+  @override
+  String get videoViewerPlay => '播放';
+
+  @override
+  String get videoViewerPause => '暂停';
+
+  @override
+  String get videoViewerPlayAgain => '重新播放';
+
+  @override
+  String get videoViewerCannotPlay => '这部手机无法在这里播放这个视频。';
+
+  @override
+  String get videoViewerOpenElsewhere => '用其他应用打开';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -12600,4 +12615,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get androidChannelDescription =>
       '讓 kryfo 保持連線，在它關閉時也能收到加密訊息。關閉這項設定會停止傳遞訊息。';
+
+  @override
+  String get videoViewerPlay => '播放';
+
+  @override
+  String get videoViewerPause => '暫停';
+
+  @override
+  String get videoViewerPlayAgain => '重新播放';
+
+  @override
+  String get videoViewerCannotPlay => '這支手機無法在這裡播放這部影片。';
+
+  @override
+  String get videoViewerOpenElsewhere => '用其他應用程式開啟';
 }

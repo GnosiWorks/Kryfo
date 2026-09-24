@@ -1732,5 +1732,10 @@
   "androidServiceTitle": "kryfo aktif",
   "androidServiceText": "jalur terenkripsimu tetap terbuka agar pesan bisa masuk",
   "androidChannelName": "tetap terhubung",
-  "androidChannelDescription": "menjaga kryfo tetap terhubung agar pesan terenkripsi masuk saat aplikasi ditutup. mematikan ini menghentikan pengiriman."
+  "androidChannelDescription": "menjaga kryfo tetap terhubung agar pesan terenkripsi masuk saat aplikasi ditutup. mematikan ini menghentikan pengiriman.",
+  "videoViewerPlay": "Putar",
+  "videoViewerPause": "Jeda",
+  "videoViewerPlayAgain": "Putar lagi",
+  "videoViewerCannotPlay": "Ponsel ini tidak bisa memutar video ini di sini.",
+  "videoViewerOpenElsewhere": "Buka di aplikasi lain"
 }

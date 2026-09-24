@@ -2878,6 +2878,11 @@ final _calls = <_Call>[
   ('androidServiceText', [], (l) => l.androidServiceText),
   ('androidChannelName', [], (l) => l.androidChannelName),
   ('androidChannelDescription', [], (l) => l.androidChannelDescription),
+  ('videoViewerPlay', [], (l) => l.videoViewerPlay),
+  ('videoViewerPause', [], (l) => l.videoViewerPause),
+  ('videoViewerPlayAgain', [], (l) => l.videoViewerPlayAgain),
+  ('videoViewerCannotPlay', [], (l) => l.videoViewerCannotPlay),
+  ('videoViewerOpenElsewhere', [], (l) => l.videoViewerOpenElsewhere),
 ];
 
 void main() {

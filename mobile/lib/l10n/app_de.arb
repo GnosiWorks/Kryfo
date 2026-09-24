@@ -1732,5 +1732,10 @@
   "androidServiceTitle": "kryfo ist an",
   "androidServiceText": "deine verschlüsselte Leitung bleibt offen, damit Nachrichten ankommen",
   "androidChannelName": "verbunden bleiben",
-  "androidChannelDescription": "hält kryfo verbunden, damit verschlüsselte Nachrichten ankommen, während es geschlossen ist. wenn du das ausschaltest, stoppt die Zustellung."
+  "androidChannelDescription": "hält kryfo verbunden, damit verschlüsselte Nachrichten ankommen, während es geschlossen ist. wenn du das ausschaltest, stoppt die Zustellung.",
+  "videoViewerPlay": "Abspielen",
+  "videoViewerPause": "Pause",
+  "videoViewerPlayAgain": "Nochmal abspielen",
+  "videoViewerCannotPlay": "Dieses Handy kann das Video hier nicht abspielen.",
+  "videoViewerOpenElsewhere": "In anderer App öffnen"
 }

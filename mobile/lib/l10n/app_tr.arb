@@ -1732,5 +1732,10 @@
   "androidServiceTitle": "kryfo açık",
   "androidServiceText": "mesajlar gelsin diye şifreli hattın açık kalıyor",
   "androidChannelName": "bağlı kalma",
-  "androidChannelDescription": "kryfo kapalıyken şifreli mesajlar gelsin diye onu bağlı tutar. bunu kapatmak teslimatı durdurur."
+  "androidChannelDescription": "kryfo kapalıyken şifreli mesajlar gelsin diye onu bağlı tutar. bunu kapatmak teslimatı durdurur.",
+  "videoViewerPlay": "Oynat",
+  "videoViewerPause": "Duraklat",
+  "videoViewerPlayAgain": "Tekrar oynat",
+  "videoViewerCannotPlay": "Bu telefon bu videoyu burada oynatamıyor.",
+  "videoViewerOpenElsewhere": "Başka uygulamada aç"
 }

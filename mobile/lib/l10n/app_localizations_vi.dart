@@ -6537,4 +6537,20 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get androidChannelDescription =>
       'giữ kryfo kết nối để tin nhắn được mã hóa vẫn đến khi ứng dụng đang đóng. tắt mục này sẽ dừng việc nhận tin.';
+
+  @override
+  String get videoViewerPlay => 'Phát';
+
+  @override
+  String get videoViewerPause => 'Tạm dừng';
+
+  @override
+  String get videoViewerPlayAgain => 'Phát lại';
+
+  @override
+  String get videoViewerCannotPlay =>
+      'Điện thoại này không phát được video này ở đây.';
+
+  @override
+  String get videoViewerOpenElsewhere => 'Mở bằng ứng dụng khác';
 }

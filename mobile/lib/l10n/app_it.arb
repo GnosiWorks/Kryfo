@@ -1732,5 +1732,10 @@
   "androidServiceTitle": "kryfo è attivo",
   "androidServiceText": "la tua linea cifrata resta aperta perché arrivino i messaggi",
   "androidChannelName": "connessione attiva",
-  "androidChannelDescription": "tiene kryfo connesso perché i messaggi cifrati arrivino mentre è chiuso. se lo disattivi, la consegna si ferma."
+  "androidChannelDescription": "tiene kryfo connesso perché i messaggi cifrati arrivino mentre è chiuso. se lo disattivi, la consegna si ferma.",
+  "videoViewerPlay": "Riproduci",
+  "videoViewerPause": "Pausa",
+  "videoViewerPlayAgain": "Riproduci di nuovo",
+  "videoViewerCannotPlay": "Questo telefono non riesce a riprodurre il video qui.",
+  "videoViewerOpenElsewhere": "Apri in un’altra app"
 }

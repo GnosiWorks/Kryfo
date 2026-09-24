@@ -6550,4 +6550,20 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get androidChannelDescription =>
       'menjaga kryfo tetap terhubung agar pesan terenkripsi masuk saat aplikasi ditutup. mematikan ini menghentikan pengiriman.';
+
+  @override
+  String get videoViewerPlay => 'Putar';
+
+  @override
+  String get videoViewerPause => 'Jeda';
+
+  @override
+  String get videoViewerPlayAgain => 'Putar lagi';
+
+  @override
+  String get videoViewerCannotPlay =>
+      'Ponsel ini tidak bisa memutar video ini di sini.';
+
+  @override
+  String get videoViewerOpenElsewhere => 'Buka di aplikasi lain';
 }

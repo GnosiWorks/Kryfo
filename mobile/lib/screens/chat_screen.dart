@@ -86,6 +86,7 @@ import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
+import '../widgets/video_viewer.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
 // chunk indices already accepted by the peer, per media msg_uid. lets a
@@ -307,6 +308,58 @@ void _openFullImage(BuildContext context, String path, {bool secure = false}) {
         FocusManager.instance.primaryFocus?.unfocus();
       });
 }
+
+// the time and tick on a photo or a video with no caption: a small dark pill
+// in the corner, since there is no bubble under it to carry them
+Widget _mediaStamp(_Msg msg, bool pending, bool failedShown, bool ackOk) =>
+    Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            _fmtTime(msg.when),
+            style: const TextStyle(
+              fontFamily: 'JetBrains Mono',
+              fontFamilyFallback: HaloType.monoFallback,
+              fontSize: 9,
+              color: Colors.white,
+              letterSpacing: 0.4,
+            ),
+          ),
+          const SizedBox(width: 3),
+          if (!pending && !failedShown && ackOk) ...[
+            Text(
+              '✓',
+              style: const TextStyle(
+                fontSize: 10,
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                height: 1,
+              ),
+            ),
+            if (msg.delivered) ...[
+              const SizedBox(width: 4),
+              Text(
+                l10n.chatDelivered,
+                style: TextStyle(
+                  fontFamily: 'JetBrains Mono',
+                  fontFamilyFallback: HaloType.monoFallback,
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
 
 // the phone cannot send at all: no network, or onion mode without a route
 bool _cannotSend() => !appState.online || !appState.torReady;
@@ -5853,6 +5906,14 @@ class _Bubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final isOut = msg.direction == 'out';
     final isImage = msg.mediaPath != null;
+    // a video with no caption sits on the chat like a photo: no bubble
+    // around it, its time and tick in its corner
+    final isVideo =
+        msg.filePath != null &&
+        msg.text.isEmpty &&
+        msg.fileName != 'voice.wav' &&
+        nameSaysVideo(msg.fileName);
+    final frameless = isImage || isVideo;
     final failedShown = _sendLooksFailed(msg);
     final parked = msg.parked && !msg.sending && !msg.failed;
     final pending = msg.sending || (msg.failed && !failedShown);
@@ -5868,7 +5929,7 @@ class _Bubble extends StatelessWidget {
     final ackOk = !isMedia || msg.delivered;
     final showMeta = isOut && !pending && !failedShown && !parked && ackOk;
     final showPill = isOut && pending;
-    final metaColor = (isOut && !isImage)
+    final metaColor = (isOut && !frameless)
         ? HaloColors.onAmber.withValues(alpha: 0.55)
         : HaloColors.text3;
     final remainingMs = msg.burnAt != null
@@ -5936,13 +5997,13 @@ class _Bubble extends StatelessWidget {
                         constraints: BoxConstraints(
                           maxWidth: MediaQuery.of(context).size.width * 0.78,
                         ),
-                        padding: msg.mediaPath != null
+                        padding: frameless
                             ? EdgeInsets.zero
                             : const EdgeInsets.fromLTRB(14, 10, 14, 8),
                         decoration: BoxDecoration(
                           color: (isImage && msg.text.isNotEmpty)
                               ? HaloColors.surface2
-                              : isImage
+                              : frameless
                               ? null
                               : isOut
                               ? HaloColors.amber
@@ -5974,9 +6035,7 @@ class _Bubble extends StatelessWidget {
                                 ]
                               : null,
                         ),
-                        clipBehavior: msg.mediaPath != null
-                            ? Clip.antiAlias
-                            : Clip.none,
+                        clipBehavior: frameless ? Clip.antiAlias : Clip.none,
                         child: IntrinsicWidth(
                           child: Column(
                             crossAxisAlignment: isOut
@@ -6086,24 +6145,26 @@ class _Bubble extends StatelessWidget {
                                 )
                               else if (msg.filePath != null &&
                                   nameSaysVideo(msg.fileName))
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 2,
-                                  ),
-                                  child: VideoBubble(
-                                    key: ValueKey('vid_${msg.filePath}'),
+                                VideoBubble(
+                                  key: ValueKey('vid_${msg.filePath}'),
+                                  path: msg.filePath!,
+                                  fileName: msg.fileName!,
+                                  width:
+                                      (MediaQuery.of(context).size.width * 0.66)
+                                          .clamp(180.0, 300.0),
+                                  onOpen: () => openVideo(
+                                    context,
                                     path: msg.filePath!,
-                                    fileName: msg.fileName!,
-                                    width:
-                                        (MediaQuery.of(context).size.width *
-                                                0.66)
-                                            .clamp(180.0, 300.0),
-                                    onOpen: () => openReceivedFile(
-                                      context,
-                                      msg.filePath!,
-                                      msg.fileName,
-                                    ),
+                                    fileName: msg.fileName,
                                   ),
+                                  stamp: showMeta
+                                      ? _mediaStamp(
+                                          msg,
+                                          pending,
+                                          failedShown,
+                                          ackOk,
+                                        )
+                                      : null,
                                 )
                               else if (msg.fileName != null)
                                 GestureDetector(
@@ -6192,69 +6253,11 @@ class _Bubble extends StatelessWidget {
                                           PositionedDirectional(
                                             end: 8,
                                             bottom: 8,
-                                            child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 7,
-                                                    vertical: 3,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color: Colors.black.withValues(
-                                                  alpha: 0.45,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Text(
-                                                    _fmtTime(msg.when),
-                                                    style: const TextStyle(
-                                                      fontFamily:
-                                                          'JetBrains Mono',
-                                                      fontFamilyFallback:
-                                                          HaloType.monoFallback,
-                                                      fontSize: 9,
-                                                      color: Colors.white,
-                                                      letterSpacing: 0.4,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 3),
-                                                  if (!pending &&
-                                                      !failedShown &&
-                                                      ackOk) ...[
-                                                    Text(
-                                                      '✓',
-                                                      style: const TextStyle(
-                                                        fontSize: 10,
-                                                        color: Colors.white,
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                        height: 1,
-                                                      ),
-                                                    ),
-                                                    if (msg.delivered) ...[
-                                                      const SizedBox(width: 4),
-                                                      Text(
-                                                        l10n.chatDelivered,
-                                                        style: TextStyle(
-                                                          fontFamily:
-                                                              'JetBrains Mono',
-                                                          fontFamilyFallback:
-                                                              HaloType
-                                                                  .monoFallback,
-                                                          fontSize: 8.5,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          color: Colors.white,
-                                                          letterSpacing: 0.3,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ],
-                                                ],
-                                              ),
+                                            child: _mediaStamp(
+                                              msg,
+                                              pending,
+                                              failedShown,
+                                              ackOk,
                                             ),
                                           ),
                                       ],
@@ -6297,7 +6300,7 @@ class _Bubble extends StatelessWidget {
                                         bySender: linkBySender,
                                       ),
                                     ],
-                                    if (showMeta && msg.mediaPath == null) ...[
+                                    if (showMeta && !frameless) ...[
                                       const SizedBox(height: 4),
                                       Row(
                                         mainAxisSize: MainAxisSize.min,

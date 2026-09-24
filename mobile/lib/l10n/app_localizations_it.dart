@@ -6614,4 +6614,20 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get androidChannelDescription =>
       'tiene kryfo connesso perché i messaggi cifrati arrivino mentre è chiuso. se lo disattivi, la consegna si ferma.';
+
+  @override
+  String get videoViewerPlay => 'Riproduci';
+
+  @override
+  String get videoViewerPause => 'Pausa';
+
+  @override
+  String get videoViewerPlayAgain => 'Riproduci di nuovo';
+
+  @override
+  String get videoViewerCannotPlay =>
+      'Questo telefono non riesce a riprodurre il video qui.';
+
+  @override
+  String get videoViewerOpenElsewhere => 'Apri in un’altra app';
 }

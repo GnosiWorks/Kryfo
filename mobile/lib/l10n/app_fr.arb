@@ -1732,5 +1732,10 @@
   "androidServiceTitle": "kryfo est actif",
   "androidServiceText": "votre ligne chiffrée reste ouverte pour que les messages arrivent",
   "androidChannelName": "connexion maintenue",
-  "androidChannelDescription": "garde kryfo connecté pour que les messages chiffrés arrivent quand il est fermé. le désactiver coupe la distribution."
+  "androidChannelDescription": "garde kryfo connecté pour que les messages chiffrés arrivent quand il est fermé. le désactiver coupe la distribution.",
+  "videoViewerPlay": "Lire",
+  "videoViewerPause": "Pause",
+  "videoViewerPlayAgain": "Relire",
+  "videoViewerCannotPlay": "Ce téléphone ne peut pas lire cette vidéo ici.",
+  "videoViewerOpenElsewhere": "Ouvrir dans une autre appli"
 }

@@ -6601,4 +6601,20 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get androidChannelDescription =>
       'mantiene kryfo conectado para que los mensajes cifrados lleguen mientras está cerrado. desactivarlo detiene la entrega.';
+
+  @override
+  String get videoViewerPlay => 'Reproducir';
+
+  @override
+  String get videoViewerPause => 'Pausa';
+
+  @override
+  String get videoViewerPlayAgain => 'Volver a reproducir';
+
+  @override
+  String get videoViewerCannotPlay =>
+      'Este teléfono no puede reproducir este video aquí.';
+
+  @override
+  String get videoViewerOpenElsewhere => 'Abrir en otra app';
 }

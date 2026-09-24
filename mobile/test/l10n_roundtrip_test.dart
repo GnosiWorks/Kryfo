@@ -3328,5 +3328,10 @@ void main() {
       l.androidChannelDescription,
       "keeps kryfo connected so encrypted messages arrive while it is closed. turning this off stops delivery.",
     );
+    expect(l.videoViewerPlay, "Play");
+    expect(l.videoViewerPause, "Pause");
+    expect(l.videoViewerPlayAgain, "Play again");
+    expect(l.videoViewerCannotPlay, "This phone can't play this video here.");
+    expect(l.videoViewerOpenElsewhere, "Open in another app");
   });
 }

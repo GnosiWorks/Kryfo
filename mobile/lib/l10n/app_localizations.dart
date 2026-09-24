@@ -10516,6 +10516,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'keeps kryfo connected so encrypted messages arrive while it is closed. turning this off stops delivery.'**
   String get androidChannelDescription;
+
+  /// widgets/video_viewer.dart: the play button on a video, and what a screen reader says for it
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get videoViewerPlay;
+
+  /// widgets/video_viewer.dart: the pause button on a playing video (screen reader)
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get videoViewerPause;
+
+  /// widgets/video_viewer.dart: the button once a video has played to the end (screen reader)
+  ///
+  /// In en, this message translates to:
+  /// **'Play again'**
+  String get videoViewerPlayAgain;
+
+  /// widgets/video_viewer.dart: the phone's own player has no codec for this video
+  ///
+  /// In en, this message translates to:
+  /// **'This phone can\'t play this video here.'**
+  String get videoViewerCannotPlay;
+
+  /// widgets/video_viewer.dart: hands the video to another app when kryfo cannot play it
+  ///
+  /// In en, this message translates to:
+  /// **'Open in another app'**
+  String get videoViewerOpenElsewhere;
 }
 
 class _AppLocalizationsDelegate

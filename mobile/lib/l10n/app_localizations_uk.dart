@@ -6658,4 +6658,20 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get androidChannelDescription =>
       'тримає kryfo на зв’язку, щоб зашифровані повідомлення надходили, навіть коли він закритий. якщо це вимкнути, доставка зупиниться.';
+
+  @override
+  String get videoViewerPlay => 'Відтворити';
+
+  @override
+  String get videoViewerPause => 'Пауза';
+
+  @override
+  String get videoViewerPlayAgain => 'Переглянути ще раз';
+
+  @override
+  String get videoViewerCannotPlay =>
+      'Цей телефон не може відтворити це відео тут.';
+
+  @override
+  String get videoViewerOpenElsewhere => 'Відкрити в іншому застосунку';
 }

@@ -1732,5 +1732,10 @@
   "androidServiceTitle": "kryfo включён",
   "androidServiceText": "твоё зашифрованное соединение остаётся открытым, чтобы сообщения доходили",
   "androidChannelName": "постоянная связь",
-  "androidChannelDescription": "держит kryfo на связи, чтобы зашифрованные сообщения приходили, пока он закрыт. если выключить, доставка прекратится."
+  "androidChannelDescription": "держит kryfo на связи, чтобы зашифрованные сообщения приходили, пока он закрыт. если выключить, доставка прекратится.",
+  "videoViewerPlay": "Воспроизвести",
+  "videoViewerPause": "Пауза",
+  "videoViewerPlayAgain": "Смотреть снова",
+  "videoViewerCannotPlay": "Этот телефон не может воспроизвести это видео здесь.",
+  "videoViewerOpenElsewhere": "Открыть в другом приложении"
 }

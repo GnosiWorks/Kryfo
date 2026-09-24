@@ -54,7 +54,8 @@
   "transportTransport",
   "videoBubbleKb",
   "videoBubbleMb",
-  "videoBubbleVideo"
+  "videoBubbleVideo",
+  "videoViewerPause"
  ],
  "es": [
   "appDev",
@@ -203,7 +204,8 @@
   "settingsVersion",
   "transportContacts",
   "transportOk",
-  "transportTransport"
+  "transportTransport",
+  "videoViewerPause"
  ],
  "id": [
   "appOffline",

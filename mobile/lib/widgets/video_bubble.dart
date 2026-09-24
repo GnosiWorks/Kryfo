@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a video in a chat, drawn as a video: its first frame, how long it runs,
-// and a play mark. it was a file card with a film icon, and a tap offered
-// to share it. playing is the phone's own player's job; the app carries no
-// player of its own.
+// and a play mark, with no bubble around it, as a photo has none. a tap
+// opens it in the app's own player (video_viewer.dart), out of this frame.
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -15,6 +14,7 @@ import '../theme.dart';
 import 'remembered_height.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
+import 'video_viewer.dart';
 
 /// a tap on a file or a video: open it in whatever the phone has for it.
 /// when nothing does, the share sheet, which is all a tap used to offer.
@@ -39,12 +39,15 @@ class VideoBubble extends StatefulWidget {
   final String fileName;
   final double width;
   final VoidCallback onOpen;
+  // the time and tick, drawn in the corner as on a photo
+  final Widget? stamp;
   const VideoBubble({
     super.key,
     required this.path,
     required this.fileName,
     required this.width,
     required this.onOpen,
+    this.stamp,
   });
   @override
   State<VideoBubble> createState() => _VideoBubbleState();
@@ -99,73 +102,84 @@ class _VideoBubbleState extends State<VideoBubble> {
     final aspect = (info?.aspect ?? 16 / 9).clamp(0.62, 2.4);
     final h = (widget.width / aspect).clamp(90.0, 280.0);
     final jpeg = info?.jpeg;
+    final length = info != null && info.length > Duration.zero
+        ? videoLength(info.length)
+        : (_asked ? l10n.videoBubbleVideo : '…');
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: widget.onOpen,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: RememberedHeight(
-          id: 'v:${widget.path}',
-          child: SizedBox(
-            width: widget.width,
-            height: h,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                if (jpeg != null)
-                  Image.memory(jpeg, fit: BoxFit.cover, gaplessPlayback: true)
-                else
-                  ColoredBox(color: HaloColors.surface3),
-                // a wash under the marks so they read on a bright frame
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.black.withValues(alpha: 0),
-                        Colors.black.withValues(alpha: 0.4),
-                      ],
-                      stops: const [0.55, 1.0],
-                    ),
-                  ),
+      child: RememberedHeight(
+        id: 'v:${widget.path}',
+        child: SizedBox(
+          width: widget.width,
+          height: h,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Hero(
+                tag: videoHeroTag(widget.path),
+                flightShuttleBuilder: (c, a, dir, from, to) =>
+                    videoFlight(c, a, dir, from, to, widget.path),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: jpeg != null
+                      ? Image.memory(
+                          jpeg,
+                          fit: BoxFit.cover,
+                          gaplessPlayback: true,
+                        )
+                      : ColoredBox(color: HaloColors.surface3),
                 ),
-                Center(
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.black.withValues(alpha: 0.5),
-                      border: Border.all(
-                        color: HaloColors.amber.withValues(alpha: 0.9),
-                        width: 1.2,
+              ),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // a wash under the marks so they read on a bright frame
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.25),
+                            Colors.black.withValues(alpha: 0),
+                            Colors.black.withValues(alpha: 0),
+                            Colors.black.withValues(alpha: 0.3),
+                          ],
+                          stops: const [0, 0.3, 0.7, 1.0],
+                        ),
                       ),
                     ),
-                    child: Icon(
-                      Icons.play_arrow_rounded,
-                      size: 30,
-                      color: HaloColors.amber,
+                    Center(
+                      child: Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.black.withValues(alpha: 0.45),
+                        ),
+                        child: Icon(
+                          Icons.play_arrow_rounded,
+                          size: 32,
+                          color: HaloColors.amber,
+                        ),
+                      ),
                     ),
-                  ),
+                    PositionedDirectional(
+                      start: 8,
+                      top: 8,
+                      child: _Tag(
+                        _bytes == null ? length : '$length · ${_size(_bytes!)}',
+                      ),
+                    ),
+                    if (widget.stamp case final s?)
+                      PositionedDirectional(end: 8, bottom: 8, child: s),
+                  ],
                 ),
-                PositionedDirectional(
-                  start: 8,
-                  bottom: 7,
-                  child: _Tag(
-                    info != null && info.length > Duration.zero
-                        ? videoLength(info.length)
-                        : (_asked ? l10n.videoBubbleVideo : '…'),
-                  ),
-                ),
-                if (_bytes != null)
-                  PositionedDirectional(
-                    end: 8,
-                    bottom: 7,
-                    child: _Tag(_size(_bytes!)),
-                  ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

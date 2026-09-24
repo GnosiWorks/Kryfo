@@ -6578,4 +6578,20 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get androidChannelDescription =>
       'kryfo kapalıyken şifreli mesajlar gelsin diye onu bağlı tutar. bunu kapatmak teslimatı durdurur.';
+
+  @override
+  String get videoViewerPlay => 'Oynat';
+
+  @override
+  String get videoViewerPause => 'Duraklat';
+
+  @override
+  String get videoViewerPlayAgain => 'Tekrar oynat';
+
+  @override
+  String get videoViewerCannotPlay =>
+      'Bu telefon bu videoyu burada oynatamıyor.';
+
+  @override
+  String get videoViewerOpenElsewhere => 'Başka uygulamada aç';
 }

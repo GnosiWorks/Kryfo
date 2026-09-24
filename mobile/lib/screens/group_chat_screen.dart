@@ -73,6 +73,7 @@ import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
+import '../widgets/video_viewer.dart';
 
 final Map<String, String> _draftPerGroup = {};
 
@@ -2648,6 +2649,26 @@ String _fmtBurn(int s) {
 // the phone cannot send at all: no network, or onion mode without a route
 bool _cannotSend() => !appState.online || !appState.torReady;
 
+// the time on a photo or a video with no caption: a small dark pill in the
+// corner, since there is no bubble under it to carry it
+Widget _groupStamp(_GMsg m) => Container(
+  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+  decoration: BoxDecoration(
+    color: Colors.black.withValues(alpha: 0.45),
+    borderRadius: BorderRadius.circular(10),
+  ),
+  child: Text(
+    hourMinute(m.when),
+    style: const TextStyle(
+      fontFamily: 'JetBrains Mono',
+      fontFamilyFallback: HaloType.monoFallback,
+      fontSize: 9,
+      color: Colors.white,
+      letterSpacing: 0.4,
+    ),
+  ),
+);
+
 class _GMsg {
   final String sender;
   final String senderName;
@@ -3300,6 +3321,14 @@ class _GroupBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isOut = m.direction == 'out';
+    // a video with no caption sits on the chat like a photo: no bubble around
+    // it, its time in its corner
+    final isVideo =
+        m.filePath != null &&
+        m.text.isEmpty &&
+        m.fileName != 'voice.wav' &&
+        nameSaysVideo(m.fileName);
+    final frameless = m.mediaPath != null || isVideo;
     return BurnFade(
       active: m.removing,
       child: Padding(
@@ -3422,13 +3451,13 @@ class _GroupBubble extends StatelessWidget {
                                 ? null
                                 : () => onLongPress!(ctx),
                             child: Container(
-                              padding: m.mediaPath != null
+                              padding: frameless
                                   ? EdgeInsets.zero
                                   : const EdgeInsets.fromLTRB(12, 8, 12, 9),
                               decoration: BoxDecoration(
                                 // any photo goes edge-to-edge, no bubble fill,
                                 // so there's no amber/grey frame (1:1 look).
-                                color: m.mediaPath != null
+                                color: frameless
                                     ? Colors.transparent
                                     : (isOut
                                           ? HaloColors.amber
@@ -3443,7 +3472,7 @@ class _GroupBubble extends StatelessWidget {
                                   bottomEnd: Radius.circular(isOut ? 4 : 14),
                                 ),
                               ),
-                              clipBehavior: m.mediaPath != null
+                              clipBehavior: frameless
                                   ? Clip.antiAlias
                                   : Clip.none,
                               child: IntrinsicWidth(
@@ -3545,21 +3574,17 @@ class _GroupBubble extends StatelessWidget {
                                       )
                                     else if (m.filePath != null &&
                                         nameSaysVideo(m.fileName))
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 2,
-                                        ),
-                                        child: VideoBubble(
-                                          key: ValueKey('vid_${m.filePath}'),
+                                      VideoBubble(
+                                        key: ValueKey('vid_${m.filePath}'),
+                                        path: m.filePath!,
+                                        fileName: m.fileName!,
+                                        width: 240,
+                                        onOpen: () => openVideo(
+                                          context,
                                           path: m.filePath!,
-                                          fileName: m.fileName!,
-                                          width: 240,
-                                          onOpen: () => openReceivedFile(
-                                            context,
-                                            m.filePath!,
-                                            m.fileName,
-                                          ),
+                                          fileName: m.fileName,
                                         ),
+                                        stamp: m.failed ? null : _groupStamp(m),
                                       )
                                     else if (m.fileName != null)
                                       GestureDetector(
@@ -3637,36 +3662,7 @@ class _GroupBubble extends StatelessWidget {
                                                     end: isOut ? null : 8,
                                                     start: isOut ? 8 : null,
                                                     bottom: 8,
-                                                    child: Container(
-                                                      padding:
-                                                          const EdgeInsets.symmetric(
-                                                            horizontal: 7,
-                                                            vertical: 3,
-                                                          ),
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.black
-                                                            .withValues(
-                                                              alpha: 0.45,
-                                                            ),
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              10,
-                                                            ),
-                                                      ),
-                                                      child: Text(
-                                                        _fmtTime(m.when),
-                                                        style: const TextStyle(
-                                                          fontFamily:
-                                                              'JetBrains Mono',
-                                                          fontFamilyFallback:
-                                                              HaloType
-                                                                  .monoFallback,
-                                                          fontSize: 9,
-                                                          color: Colors.white,
-                                                          letterSpacing: 0.4,
-                                                        ),
-                                                      ),
-                                                    ),
+                                                    child: _groupStamp(m),
                                                   ),
                                               ],
                                             ),
@@ -3800,7 +3796,7 @@ class _GroupBubble extends StatelessWidget {
                                         // caption-less photo shows its time on the
                                         // image overlay, so skip it here to avoid
                                         // a doubled timestamp.
-                                        if (!(m.mediaPath != null &&
+                                        if (!(frameless &&
                                             m.text.isEmpty &&
                                             !m.looksFailed))
                                           Text(
@@ -3809,8 +3805,7 @@ class _GroupBubble extends StatelessWidget {
                                               size: 9.5,
                                               // out photo bubble is transparent:
                                               // onAmber (dark) vanished there.
-                                              color:
-                                                  (isOut && m.mediaPath == null)
+                                              color: (isOut && !frameless)
                                                   ? HaloColors.onAmber
                                                         .withValues(alpha: 0.7)
                                                   : isOut
@@ -3826,8 +3821,7 @@ class _GroupBubble extends StatelessWidget {
                                         if (isOut &&
                                             !m.pending &&
                                             !m.looksFailed &&
-                                            !(m.mediaPath != null &&
-                                                m.text.isEmpty)) ...[
+                                            !(frameless && m.text.isEmpty)) ...[
                                           const SizedBox(width: 3),
                                           Text(
                                             '✓',

@@ -1732,5 +1732,10 @@
   "androidServiceTitle": "kryfo 已开启",
   "androidServiceText": "你的加密线路保持连接，好让消息送达",
   "androidChannelName": "保持连接",
-  "androidChannelDescription": "让 kryfo 保持连接，这样它关闭时加密消息也能送达。关掉这个就会停止投递。"
+  "androidChannelDescription": "让 kryfo 保持连接，这样它关闭时加密消息也能送达。关掉这个就会停止投递。",
+  "videoViewerPlay": "播放",
+  "videoViewerPause": "暂停",
+  "videoViewerPlayAgain": "重新播放",
+  "videoViewerCannotPlay": "这部手机无法在这里播放这个视频。",
+  "videoViewerOpenElsewhere": "用其他应用打开"
 }

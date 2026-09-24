@@ -8344,5 +8344,25 @@
   "androidChannelDescription": "keeps kryfo connected so encrypted messages arrive while it is closed. turning this off stops delivery.",
   "@androidChannelDescription": {
     "description": "android: the channel's description in the phone's settings"
+  },
+  "videoViewerPlay": "Play",
+  "@videoViewerPlay": {
+    "description": "widgets/video_viewer.dart: the play button on a video, and what a screen reader says for it"
+  },
+  "videoViewerPause": "Pause",
+  "@videoViewerPause": {
+    "description": "widgets/video_viewer.dart: the pause button on a playing video (screen reader)"
+  },
+  "videoViewerPlayAgain": "Play again",
+  "@videoViewerPlayAgain": {
+    "description": "widgets/video_viewer.dart: the button once a video has played to the end (screen reader)"
+  },
+  "videoViewerCannotPlay": "This phone can't play this video here.",
+  "@videoViewerCannotPlay": {
+    "description": "widgets/video_viewer.dart: the phone's own player has no codec for this video"
+  },
+  "videoViewerOpenElsewhere": "Open in another app",
+  "@videoViewerOpenElsewhere": {
+    "description": "widgets/video_viewer.dart: hands the video to another app when kryfo cannot play it"
   }
 }
