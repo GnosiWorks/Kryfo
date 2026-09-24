@@ -166,14 +166,9 @@ class RoomInviteCard extends StatelessWidget {
             // said once, in the bubble's own colour: the ticking countdown
             // picks its tone from the theme and vanishes on an amber bubble
             Text(
-              l10n.kryfoLinkTextClosesIn(
-                countdownLabel(
-                  DateTime.fromMillisecondsSinceEpoch(
-                    room.expiresAt,
-                  ).difference(DateTime.now()),
-                ),
-                room.cap != null ? ' · up to ${room.cap}' : '',
-              ),
+              room.cap != null
+                  ? l10n.kryfoLinkTextClosesInUpTo(room.cap!, _left(room))
+                  : l10n.kryfoLinkTextClosesIn(_left(room)),
               style: HaloType.mono(size: 10, color: sub),
             ),
           if (!closed) ...[
@@ -210,3 +205,9 @@ class RoomInviteCard extends StatelessWidget {
     );
   }
 }
+
+String _left(RoomLink room) => countdownLabel(
+  DateTime.fromMillisecondsSinceEpoch(
+    room.expiresAt,
+  ).difference(DateTime.now()),
+);

@@ -11,6 +11,8 @@
 // the key is read by the android side too (as flutter.delivery_mode), which
 // has to know whether to bring the foreground service back.
 
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'l10n/l10n.dart';
 
@@ -177,4 +179,73 @@ RestartVerdict judgeRestart({
         mode == DeliveryMode.always &&
         recent.length >= kKillsForNudge,
   );
+}
+
+// the last check-in, stored as {how, secs, why} and worded here. a line
+// saved by an older build is english text; it is shown as it is until the
+// next check-in replaces it.
+Map<String, dynamic>? _json(String stored) {
+  if (!stored.startsWith('{') && !stored.startsWith('[')) return null;
+  try {
+    final v = jsonDecode(stored);
+    return v is Map<String, dynamic> ? v : {'list': v};
+  } catch (_) {
+    return null;
+  }
+}
+
+String checkInLine(String stored) {
+  final m = _json(stored);
+  if (m == null) return stored;
+  final how = switch (m['how']) {
+    'nowake' => l10n.appTorWouldNotWake,
+    'notready' => l10n.appTorNotReadyIn,
+    'ok' => l10n.appOk,
+    'ok_norelay' => l10n.appOkNoRelayBegan,
+    'ok_capped' => l10n.appOkCapped,
+    _ => l10n.appCheckStarted,
+  };
+  return l10n.appSBy(how, m['secs'] as int? ?? 0, '${m['why']}');
+}
+
+bool checkInOk(String stored) {
+  final m = _json(stored);
+  if (m == null) return stored.startsWith('ok');
+  return '${m['how']}'.startsWith('ok');
+}
+
+// the per-relay catch-up line: host and seconds, and for a slow or dropped
+// relay its slowest subscription - how many of the relay's subscriptions
+// were held up, how long its connect took, and how far back it walked
+String catchupLine(String stored) {
+  final m = _json(stored);
+  if (m == null) return stored;
+  final parts = <String>[];
+  for (final r in (m['list'] as List? ?? const [])) {
+    final ms = r['ms'] as int? ?? 0;
+    final dropped = r['dropped'] == true;
+    final secs = (ms / 1000).toStringAsFixed(1);
+    var line = dropped
+        ? l10n.appSDropped(r['host'], secs)
+        : l10n.appS(r['host'], secs);
+    if (r['long'] == true) line = l10n.appLongWindow(line);
+    if (dropped || ms > 5000) {
+      final c = ((r['connect_ms'] as int? ?? 0) / 1000).toStringAsFixed(1);
+      final p = r['pages'] as int? ?? 0;
+      final e = r['events'] as int? ?? 0;
+      final subs = r['subs'] as int? ?? 0;
+      final held = r['held'] as int? ?? 0;
+      line = subs > 1
+          ? l10n.appOf(line, dropped ? held : 1, subs, c, p, e)
+          : l10n.appConnectSPagesEvents(line, c, p, e);
+    }
+    parts.add(line);
+  }
+  return parts.join(' · ');
+}
+
+bool catchupDropped(String stored) {
+  final m = _json(stored);
+  if (m == null) return stored.contains('dropped');
+  return (m['list'] as List? ?? const []).any((r) => r['dropped'] == true);
 }

@@ -4895,11 +4895,12 @@ class AppState extends ChangeNotifier {
 
   // who took how long on the last catch-up. relay host and seconds, nothing
   // else - no counts, no content. this is what identifies a slow relay
-  // without a debug build.
-  String _relayCatchupLine() {
+  // without a debug build. kept as data and worded when shown
+  // (catchupLine), so it reads in whatever language the app is in by then.
+  String _relayCatchupData() {
     try {
       final rs = (engine.transportState()['relays'] as List?) ?? const [];
-      final parts = <String>[];
+      final out = <Map<String, Object>>[];
       for (final r in rs) {
         final m = r as Map;
         if (m['catchup_seen'] != true) continue;
@@ -4907,30 +4908,19 @@ class AppState extends ChangeNotifier {
             .replaceFirst(RegExp(r'^wss?://'), '')
             .split('/')
             .first;
-        final ms = m['catchup_ms'] as int? ?? 0;
-        final secs = (ms / 1000).toStringAsFixed(1);
-        final long = m['catchup_long'] == true ? l10n.appLongWindow : '';
-        final dropped = m['catchup_dropped'] == true;
-        // the relay's slowest subscription - it has one per contact. a slow
-        // one says how many of them were held up, how long its connect
-        // took, and how far back it walked
-        var why = '';
-        if (dropped || ms > 5000) {
-          final c = ((m['connect_ms'] as int? ?? 0) / 1000).toStringAsFixed(1);
-          final p = m['catchup_pages'] as int? ?? 0;
-          final e = m['catchup_events'] as int? ?? 0;
-          final subs = m['catchup_subs'] as int? ?? 0;
-          final held = m['catchup_subs_dropped'] as int? ?? 0;
-          final of = subs > 1 ? l10n.appOf(dropped ? held : 1, subs) : '';
-          why = l10n.appConnectSPagesEvents(of, c, p, e);
-        }
-        parts.add(
-          dropped
-              ? l10n.appSDropped(host, secs, long, why)
-              : l10n.appS(host, secs, long, why),
-        );
+        out.add({
+          'host': host,
+          'ms': m['catchup_ms'] as int? ?? 0,
+          'long': m['catchup_long'] == true,
+          'dropped': m['catchup_dropped'] == true,
+          'connect_ms': m['connect_ms'] as int? ?? 0,
+          'pages': m['catchup_pages'] as int? ?? 0,
+          'events': m['catchup_events'] as int? ?? 0,
+          'subs': m['catchup_subs'] as int? ?? 0,
+          'held': m['catchup_subs_dropped'] as int? ?? 0,
+        });
       }
-      return parts.join(' · ');
+      return out.isEmpty ? '' : jsonEncode(out);
     } catch (_) {
       return '';
     }
@@ -5027,7 +5017,7 @@ class AppState extends ChangeNotifier {
     var how = 'started';
     try {
       if (!await _torWake()) {
-        how = l10n.appTorWouldNotWake;
+        how = 'nowake';
         return 0;
       }
       // ready means the engine has a route a relay can be reached over
@@ -5035,7 +5025,7 @@ class AppState extends ChangeNotifier {
         await Future.delayed(const Duration(seconds: 1));
       }
       if (!torReady) {
-        how = l10n.appTorNotReadyIn;
+        how = 'notready';
         dlog('checkin($why): tor never became ready');
         return 0;
       }
@@ -5069,19 +5059,19 @@ class AppState extends ChangeNotifier {
           quiet = 0;
         }
         if (!began && secs >= 45) {
-          tail = l10n.appNoRelayBegan;
+          tail = '_norelay';
           break;
         }
         // relays are capped at 30s each, so this should never bite. if it
         // ever does, something is holding catchupActive up and the line on
         // the transport screen will say which relay.
         if (secs >= 90) {
-          tail = l10n.appCapped;
+          tail = '_capped';
           break;
         }
         await Future.delayed(const Duration(seconds: 1));
       }
-      lastCheckRelays = _relayCatchupLine();
+      lastCheckRelays = _relayCatchupData();
       // what came in is drained by the one-second poll. let it finish, and
       // let receipts and slice requests that answer it get out.
       await Future.delayed(const Duration(seconds: 3));
@@ -5089,7 +5079,7 @@ class AppState extends ChangeNotifier {
       for (var i = 0; i < 10 && _queued > 0; i++) {
         await Future.delayed(const Duration(seconds: 1));
       }
-      how = l10n.appOk(tail);
+      how = 'ok$tail';
       lastCheckAt = DateTime.now().millisecondsSinceEpoch;
       if (why == 'push') lastWakeAt = lastCheckAt;
       try {
@@ -5103,11 +5093,11 @@ class AppState extends ChangeNotifier {
       return lastDrainAt != drainBefore ? 1 : 0;
     } finally {
       _checking = false;
-      lastCheckHow = l10n.appSBy(
-        how,
-        DateTime.now().difference(started).inSeconds,
-        why,
-      );
+      lastCheckHow = jsonEncode({
+        'how': how,
+        'secs': DateTime.now().difference(started).inSeconds,
+        'why': why,
+      });
       lastCheckTriedAt = DateTime.now().millisecondsSinceEpoch;
       try {
         final prefs = await SharedPreferences.getInstance();

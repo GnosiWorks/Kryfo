@@ -490,41 +490,47 @@ abstract class AppLocalizations {
   /// **'Peer imported (v1): {parsed}'**
   String appPeerImportedV1(Object parsed);
 
-  /// main.dart
+  /// main.dart: after a relay's catch-up time, when it was asked for a longer stretch than usual
   ///
   /// In en, this message translates to:
-  /// **' long window'**
-  String get appLongWindow;
+  /// **'{line} long window'**
+  String appLongWindow(Object line);
 
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'{dropped} of {subs}, '**
-  String appOf(Object dropped, Object subs);
+  /// **'{line} ({held} of {subs}, connect {c}s, {p, plural, one{{p} page} other{{p} pages}}, {e, plural, one{{e} event} other{{e} events}})'**
+  String appOf(Object line, int held, int subs, Object c, int p, int e);
 
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **' ({of}connect {c}s, {p} pages, {e} events)'**
-  String appConnectSPagesEvents(Object of, Object c, Object p, Object e);
+  /// **'{line} (connect {c}s, {p, plural, one{{p} page} other{{p} pages}}, {e, plural, one{{e} event} other{{e} events}})'**
+  String appConnectSPagesEvents(Object line, Object c, int p, int e);
 
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'{host} {secs}s dropped{long}{why}'**
-  String appSDropped(Object host, Object secs, Object long, Object why);
+  /// **'{host} {secs}s dropped'**
+  String appSDropped(Object host, Object secs);
 
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'{host} {secs}s{long}{why}'**
-  String appS(Object host, Object secs, Object long, Object why);
+  /// **'{host} {secs}s'**
+  String appS(Object host, Object secs);
 
   /// main.dart
   ///
   /// In en, this message translates to:
   /// **'tor would not wake'**
   String get appTorWouldNotWake;
+
+  /// main.dart: a check-in that ended before it got anywhere. shown on the transport screen as the first part of the last check-in line
+  ///
+  /// In en, this message translates to:
+  /// **'started'**
+  String get appCheckStarted;
 
   /// main.dart
   ///
@@ -535,26 +541,26 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **', no relay began'**
-  String get appNoRelayBegan;
+  /// **'ok'**
+  String get appOk;
 
-  /// main.dart
+  /// main.dart: a check-in that brought tor up but no relay started answering in 45s
   ///
   /// In en, this message translates to:
-  /// **', capped'**
-  String get appCapped;
+  /// **'ok, no relay began'**
+  String get appOkNoRelayBegan;
 
-  /// main.dart
+  /// main.dart: a check-in that was cut off at 90s
   ///
   /// In en, this message translates to:
-  /// **'ok{tail}'**
-  String appOk(Object tail);
+  /// **'ok, capped'**
+  String get appOkCapped;
 
-  /// main.dart
+  /// main.dart: the last check-in on the transport screen. push: a unifiedpush helper woke kryfo. job: the fifteen-minute background job.
   ///
   /// In en, this message translates to:
-  /// **'{how}, {dateTime}s, by {why}'**
-  String appSBy(Object how, Object dateTime, Object why);
+  /// **'{why, select, push{{how}, {secs}s, by push} other{{how}, {secs}s, by job}}'**
+  String appSBy(Object how, int secs, String why);
 
   /// main.dart
   ///
@@ -2773,8 +2779,14 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Replying to {target}'**
-  String chatReplyingTo(Object target);
+  /// **'Replying to them'**
+  String get chatReplyingTo;
+
+  /// screens/chat_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Replying to yourself'**
+  String get chatReplyingToYourself;
 
   /// screens/chat_screen.dart
   ///
@@ -4051,8 +4063,14 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Replying to {target}'**
-  String groupChatReplyingTo(Object target);
+  /// **'Replying to {name}'**
+  String groupChatReplyingTo(Object name);
+
+  /// screens/group_chat_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Replying to you'**
+  String get groupChatReplyingToYou;
 
   /// screens/group_chat_screen.dart
   ///
@@ -7279,8 +7297,14 @@ abstract class AppLocalizations {
   /// screens/restore_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Your photos, voice notes and files{s}.'**
-  String restoreYourPhotosVoiceNotes(Object s);
+  /// **'Your photos, voice notes and files.'**
+  String get restoreYourPhotosVoiceNotes;
+
+  /// screens/restore_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{Your photos, voice notes and files · {count}.}}'**
+  String restoreYourPhotosVoiceNotesCount(int count);
 
   /// screens/restore_screen.dart
   ///
@@ -7921,8 +7945,14 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'off · {appState} mode'**
-  String settingsOffMode(Object appState);
+  /// **'off · relay mode'**
+  String get settingsOffMode;
+
+  /// screens/settings_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'off · fast mode'**
+  String get settingsOffFastMode;
 
   /// screens/settings_screen.dart
   ///
@@ -9607,8 +9637,14 @@ abstract class AppLocalizations {
   /// widgets/kryfo_link_text.dart
   ///
   /// In en, this message translates to:
-  /// **'Closes in {countdownLabel}{room}'**
-  String kryfoLinkTextClosesIn(Object countdownLabel, Object room);
+  /// **'Closes in {time}'**
+  String kryfoLinkTextClosesIn(Object time);
+
+  /// widgets/kryfo_link_text.dart: a burner room link; cap is how many people can join
+  ///
+  /// In en, this message translates to:
+  /// **'{cap, plural, other{Closes in {time} · up to {cap}}}'**
+  String kryfoLinkTextClosesInUpTo(int cap, Object time);
 
   /// widgets/kryfo_link_text.dart
   ///
@@ -9997,8 +10033,14 @@ abstract class AppLocalizations {
   /// widgets/pow_note.dart
   ///
   /// In en, this message translates to:
-  /// **'First message to someone new · proving it is real · {s}s{s2}'**
-  String powNoteFirstMessageToSomeone(Object s, Object s2);
+  /// **'First message to someone new · proving it is real · {secs}s'**
+  String powNoteFirstMessageToSomeone(int secs);
+
+  /// widgets/pow_note.dart: shown from 20 seconds on
+  ///
+  /// In en, this message translates to:
+  /// **'First message to someone new · proving it is real · {secs}s · up to a minute on a slow phone'**
+  String powNoteFirstMessageSlow(int secs);
 
   /// widgets/preview_strip.dart
   ///
@@ -10419,6 +10461,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'cancel'**
   String get confirmSheetCancel;
+
+  /// screens/bridges_screen.dart: after saving, how many bridge lines kryfo took
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} bridge} other{{count} bridges}}'**
+  String bridgesSaved(int count);
+
+  /// screens/bridges_screen.dart: after saving, some lines were not bridge lines
+  ///
+  /// In en, this message translates to:
+  /// **'{good} accepted, {bad} not understood'**
+  String bridgesSavedSomeBad(int good, int bad);
 }
 
 class _AppLocalizationsDelegate

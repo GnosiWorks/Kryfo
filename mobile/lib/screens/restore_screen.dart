@@ -297,9 +297,9 @@ class _RestoreScreenState extends State<RestoreScreen> {
                 _item(l10n.restoreYourNameYourCode),
                 _item(l10n.restoreEveryConversationBackTo),
                 _item(
-                  l10n.restoreYourPhotosVoiceNotes(
-                    s.files > 0 ? ' · ${s.files}' : '',
-                  ),
+                  s.files > 0
+                      ? l10n.restoreYourPhotosVoiceNotesCount(s.files)
+                      : l10n.restoreYourPhotosVoiceNotes,
                 ),
                 _item(l10n.restoreYourOnionAddressSo),
                 _item(l10n.restoreAnythingSentToYou),

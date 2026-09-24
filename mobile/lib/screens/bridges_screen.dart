@@ -452,9 +452,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
           if (_result != null) ...[
             const SizedBox(height: 10),
             Text(
-              _result!.startsWith('ok')
-                  ? _result!.replaceFirst('ok: ', '')
-                  : _result!.replaceFirst('error: ', ''),
+              _resultLine(_result!),
               style: HaloType.mono(
                 size: 11,
                 color: _result!.startsWith('ok')
@@ -855,4 +853,19 @@ class _Note extends StatelessWidget {
       ],
     ),
   );
+}
+
+String _resultLine(String r) {
+  final some = RegExp(
+    r'^ok: (\d+) accepted, (\d+) not understood',
+  ).firstMatch(r);
+  if (some != null) {
+    return l10n.bridgesSavedSomeBad(
+      int.parse(some.group(1)!),
+      int.parse(some.group(2)!),
+    );
+  }
+  final all = RegExp(r'^ok: (\d+) bridges').firstMatch(r);
+  if (all != null) return l10n.bridgesSaved(int.parse(all.group(1)!));
+  return r.replaceFirst('error: ', '');
 }

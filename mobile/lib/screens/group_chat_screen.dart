@@ -2844,9 +2844,9 @@ class _ReplyQuoteBar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  l10n.groupChatReplyingTo(
-                    target.direction == "out" ? "you" : target.senderName,
-                  ),
+                  target.direction == 'out'
+                      ? l10n.groupChatReplyingToYou
+                      : l10n.groupChatReplyingTo(target.senderName),
                   style: HaloType.mono(
                     size: 9.5,
                     color: HaloColors.amber,

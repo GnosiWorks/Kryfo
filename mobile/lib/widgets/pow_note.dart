@@ -52,10 +52,9 @@ class _PowNoteState extends State<PowNote> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Text(
-        l10n.powNoteFirstMessageToSomeone(
-          s,
-          s >= 20 ? " \u00b7 up to a minute on a slow phone" : "",
-        ),
+        s >= 20
+            ? l10n.powNoteFirstMessageSlow(s)
+            : l10n.powNoteFirstMessageToSomeone(s),
         style: HaloType.mono(size: 10, color: HaloColors.amber),
         maxLines: 2,
       ),

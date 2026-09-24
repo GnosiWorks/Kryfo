@@ -272,48 +272,79 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get appLongWindow => ' long window';
-
-  @override
-  String appOf(Object dropped, Object subs) {
-    return '$dropped of $subs, ';
+  String appLongWindow(Object line) {
+    return '$line long window';
   }
 
   @override
-  String appConnectSPagesEvents(Object of, Object c, Object p, Object e) {
-    return ' (${of}connect ${c}s, $p pages, $e events)';
+  String appOf(Object line, int held, int subs, Object c, int p, int e) {
+    String _temp0 = intl.Intl.pluralLogic(
+      p,
+      locale: localeName,
+      other: '$p pages',
+      one: '$p page',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      e,
+      locale: localeName,
+      other: '$e events',
+      one: '$e event',
+    );
+    return '$line ($held of $subs, connect ${c}s, $_temp0, $_temp1)';
   }
 
   @override
-  String appSDropped(Object host, Object secs, Object long, Object why) {
-    return '$host ${secs}s dropped$long$why';
+  String appConnectSPagesEvents(Object line, Object c, int p, int e) {
+    String _temp0 = intl.Intl.pluralLogic(
+      p,
+      locale: localeName,
+      other: '$p pages',
+      one: '$p page',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      e,
+      locale: localeName,
+      other: '$e events',
+      one: '$e event',
+    );
+    return '$line (connect ${c}s, $_temp0, $_temp1)';
   }
 
   @override
-  String appS(Object host, Object secs, Object long, Object why) {
-    return '$host ${secs}s$long$why';
+  String appSDropped(Object host, Object secs) {
+    return '$host ${secs}s dropped';
+  }
+
+  @override
+  String appS(Object host, Object secs) {
+    return '$host ${secs}s';
   }
 
   @override
   String get appTorWouldNotWake => 'tor would not wake';
 
   @override
+  String get appCheckStarted => 'started';
+
+  @override
   String get appTorNotReadyIn => 'tor not ready in 75s';
 
   @override
-  String get appNoRelayBegan => ', no relay began';
+  String get appOk => 'ok';
 
   @override
-  String get appCapped => ', capped';
+  String get appOkNoRelayBegan => 'ok, no relay began';
 
   @override
-  String appOk(Object tail) {
-    return 'ok$tail';
-  }
+  String get appOkCapped => 'ok, capped';
 
   @override
-  String appSBy(Object how, Object dateTime, Object why) {
-    return '$how, ${dateTime}s, by $why';
+  String appSBy(Object how, int secs, String why) {
+    String _temp0 = intl.Intl.selectLogic(why, {
+      'push': '$how, ${secs}s, by push',
+      'other': '$how, ${secs}s, by job',
+    });
+    return '$_temp0';
   }
 
   @override
@@ -1643,9 +1674,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatFailedTapToRetry => 'Failed · tap to retry';
 
   @override
-  String chatReplyingTo(Object target) {
-    return 'Replying to $target';
-  }
+  String get chatReplyingTo => 'Replying to them';
+
+  @override
+  String get chatReplyingToYourself => 'Replying to yourself';
 
   @override
   String get chatReply => 'Reply';
@@ -2392,9 +2424,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupChatSearchThisChat => 'Search this chat';
 
   @override
-  String groupChatReplyingTo(Object target) {
-    return 'Replying to $target';
+  String groupChatReplyingTo(Object name) {
+    return 'Replying to $name';
   }
+
+  @override
+  String get groupChatReplyingToYou => 'Replying to you';
 
   @override
   String get groupChatTimedMessages => 'Timed messages';
@@ -4297,8 +4332,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Every conversation, back to the start.';
 
   @override
-  String restoreYourPhotosVoiceNotes(Object s) {
-    return 'Your photos, voice notes and files$s.';
+  String get restoreYourPhotosVoiceNotes =>
+      'Your photos, voice notes and files.';
+
+  @override
+  String restoreYourPhotosVoiceNotesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Your photos, voice notes and files · $count.',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -4665,9 +4709,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsConnecting => 'connecting';
 
   @override
-  String settingsOffMode(Object appState) {
-    return 'off · $appState mode';
-  }
+  String get settingsOffMode => 'off · relay mode';
+
+  @override
+  String get settingsOffFastMode => 'off · fast mode';
 
   @override
   String get settingsAppLock => 'app lock';
@@ -5735,8 +5780,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kryfoLinkTextThisRoomHasClosed => 'This room has closed';
 
   @override
-  String kryfoLinkTextClosesIn(Object countdownLabel, Object room) {
-    return 'Closes in $countdownLabel$room';
+  String kryfoLinkTextClosesIn(Object time) {
+    return 'Closes in $time';
+  }
+
+  @override
+  String kryfoLinkTextClosesInUpTo(int cap, Object time) {
+    String _temp0 = intl.Intl.pluralLogic(
+      cap,
+      locale: localeName,
+      other: 'Closes in $time · up to $cap',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -5960,8 +6015,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinsUnpin => 'Unpin';
 
   @override
-  String powNoteFirstMessageToSomeone(Object s, Object s2) {
-    return 'First message to someone new · proving it is real · ${s}s$s2';
+  String powNoteFirstMessageToSomeone(int secs) {
+    return 'First message to someone new · proving it is real · ${secs}s';
+  }
+
+  @override
+  String powNoteFirstMessageSlow(int secs) {
+    return 'First message to someone new · proving it is real · ${secs}s · up to a minute on a slow phone';
   }
 
   @override
@@ -6189,4 +6249,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get confirmSheetCancel => 'cancel';
+
+  @override
+  String bridgesSaved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bridges',
+      one: '$count bridge',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bridgesSavedSomeBad(int good, int bad) {
+    return '$good accepted, $bad not understood';
+  }
 }

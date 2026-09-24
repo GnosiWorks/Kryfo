@@ -171,9 +171,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       l10n.settingsConnected,
                       onTor
                           ? l10n.settingsConnecting
-                          : l10n.settingsOffMode(
-                              appState.sendMode == 'fast' ? 'fast' : 'relay',
-                            ),
+                          : appState.sendMode == 'fast'
+                          ? l10n.settingsOffFastMode
+                          : l10n.settingsOffMode,
                     ),
                     _postureLine(
                       l10n.settingsScreenshots,

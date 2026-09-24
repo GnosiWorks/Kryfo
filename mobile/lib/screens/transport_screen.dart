@@ -14,6 +14,7 @@ import '../widgets/motion.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
+import '../delivery_mode.dart';
 
 class TransportScreen extends StatelessWidget {
   const TransportScreen({super.key});
@@ -406,8 +407,8 @@ class _AliveState extends State<_Alive> {
           l10n.transportLastCheckIn,
           appState.lastCheckHow.isEmpty
               ? l10n.transportNoneYet
-              : '${appState.lastCheckHow} · ${_ago(appState.lastCheckTriedAt > 0 ? appState.lastCheckTriedAt : appState.lastCheckAt)}',
-          appState.lastCheckHow.startsWith('ok')
+              : '${checkInLine(appState.lastCheckHow)} · ${_ago(appState.lastCheckTriedAt > 0 ? appState.lastCheckTriedAt : appState.lastCheckAt)}',
+          checkInOk(appState.lastCheckHow)
               ? HaloColors.green
               : appState.lastCheckHow.isEmpty
               ? HaloColors.warm
@@ -431,8 +432,8 @@ class _AliveState extends State<_Alive> {
           l10n.transportCatchUpByRelay,
           appState.lastCheckRelays.isEmpty
               ? l10n.transportNoneYet
-              : appState.lastCheckRelays,
-          appState.lastCheckRelays.contains('dropped')
+              : catchupLine(appState.lastCheckRelays),
+          catchupDropped(appState.lastCheckRelays)
               ? HaloColors.rose
               : appState.lastCheckRelays.isEmpty
               ? HaloColors.warm
