@@ -108,7 +108,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
     return Stack(
       children: [
         _welcome(),
-        const PositionedDirectional(top: 14, end: 20, child: LanguageChip()),
+        const PositionedDirectional(top: 5, end: 11, child: LanguageChip()),
       ],
     );
   }
@@ -376,8 +376,13 @@ class _IdentityScreenState extends State<_IdentityScreen>
             const SizedBox(height: 26),
             _fadeAt(
               2100,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              // side by side while they fit; when they don't, the main
+              // one goes on top
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                verticalDirection: VerticalDirection.up,
+                spacing: 10,
+                runSpacing: 10,
                 children: [
                   GestureDetector(
                     onTap: _regenerate,
@@ -392,11 +397,11 @@ class _IdentityScreenState extends State<_IdentityScreen>
                       ),
                       child: Text(
                         l10n.onboardingTryAnother,
+                        textAlign: TextAlign.center,
                         style: HaloType.sans(size: 12, color: HaloColors.text2),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
                   GestureDetector(
                     onTap: widget.onContinue,
                     child: Container(
@@ -410,6 +415,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
                       ),
                       child: Text(
                         l10n.onboardingUseThisName,
+                        textAlign: TextAlign.center,
                         style: HaloType.sans(
                           size: 12,
                           color: HaloColors.onAmber,
@@ -563,10 +569,11 @@ class _IdentityScreenState extends State<_IdentityScreen>
               ),
               child: Text(
                 word,
-                style: HaloType.mono(
-                  size: 14,
-                  color: HaloColors.amber,
-                ).copyWith(letterSpacing: track(0.4), fontWeight: FontWeight.w500),
+                style: HaloType.mono(size: 14, color: HaloColors.amber)
+                    .copyWith(
+                      letterSpacing: track(0.4),
+                      fontWeight: FontWeight.w500,
+                    ),
               ),
             ),
           ),
@@ -1102,11 +1109,13 @@ class _AddSomeoneScreen extends StatelessWidget {
         Center(
           child: Text(
             l10n.onboardingTheAppIsReadyWhenYou,
+            textAlign: TextAlign.center,
             style: HaloType.serif(
               size: 16,
               weight: FontWeight.w300,
               italic: true,
               color: HaloColors.text2,
+              height: 1.3,
             ),
           ),
         ),
@@ -1119,6 +1128,7 @@ class _AddSomeoneScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
               child: Text(
                 l10n.onboardingNotNowAddPeople,
+                textAlign: TextAlign.center,
                 style: HaloType.sans(size: 12.5, color: HaloColors.text2),
               ),
             ),
@@ -1192,10 +1202,11 @@ class _Card extends StatelessWidget {
             child: num != null
                 ? Text(
                     num!,
-                    style: HaloType.mono(
-                      size: 10,
-                      color: HaloColors.amber,
-                    ).copyWith(letterSpacing: track(2), fontWeight: FontWeight.w500),
+                    style: HaloType.mono(size: 10, color: HaloColors.amber)
+                        .copyWith(
+                          letterSpacing: track(2),
+                          fontWeight: FontWeight.w500,
+                        ),
                   )
                 : Icon(icon, size: 16, color: HaloColors.amber),
           ),

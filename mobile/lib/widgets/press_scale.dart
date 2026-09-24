@@ -62,6 +62,13 @@ class _PressScaleState extends State<PressScale> {
       ),
     );
     if (widget.label == null) return w;
-    return Semantics(label: widget.label, button: true, child: w);
+    // its own node: left to merge, a button laid over a page took the
+    // page's whole rect and a tap on its centre landed on the page
+    return Semantics(
+      container: true,
+      label: widget.label,
+      button: true,
+      child: w,
+    );
   }
 }

@@ -49,56 +49,60 @@ class KryfoAvatar extends StatelessWidget {
     // legible. small ones get a clean drop-cap look.
     final showFrame = size >= 40;
 
-    return ClipOval(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [palette.start, palette.end],
-          ),
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // serif initial, slightly above center to leave room for the tag
-            Positioned(
-              top: showFrame ? size * 0.14 : null,
-              child: Text(
-                letter,
-                style: HaloType.serif(
-                  size: size * (showFrame ? 0.52 : 0.46),
-                  weight: FontWeight.w500,
-                  italic: true,
-                  color: palette.ink,
-                  height: 1.0,
-                ),
-              ),
+    // the letters are part of the drawing, sized to the circle: the phone's
+    // font size would push the initial into the tag
+    return MediaQuery.withNoTextScaling(
+      child: ClipOval(
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [palette.start, palette.end],
             ),
-            if (showFrame) ...[
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // serif initial, slightly above center to leave room for the tag
               Positioned(
-                bottom: size * 0.27,
-                child: Container(
-                  width: size * 0.30,
-                  height: 0.7,
-                  color: palette.mark.withValues(alpha: 0.7),
-                ),
-              ),
-              Positioned(
-                bottom: size * 0.12,
+                top: showFrame ? size * 0.14 : null,
                 child: Text(
-                  tag,
-                  style: HaloType.mono(
-                    size: size * 0.105,
-                    color: palette.mark,
-                    letter: size * 0.025,
+                  letter,
+                  style: HaloType.serif(
+                    size: size * (showFrame ? 0.52 : 0.46),
+                    weight: FontWeight.w500,
+                    italic: true,
+                    color: palette.ink,
+                    height: 1.0,
                   ),
                 ),
               ),
+              if (showFrame) ...[
+                Positioned(
+                  bottom: size * 0.27,
+                  child: Container(
+                    width: size * 0.30,
+                    height: 0.7,
+                    color: palette.mark.withValues(alpha: 0.7),
+                  ),
+                ),
+                Positioned(
+                  bottom: size * 0.12,
+                  child: Text(
+                    tag,
+                    style: HaloType.mono(
+                      size: size * 0.105,
+                      color: palette.mark,
+                      letter: size * 0.025,
+                    ),
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
