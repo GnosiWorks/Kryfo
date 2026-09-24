@@ -38,7 +38,12 @@ class PreviewStrip extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
               child: p != null
                   ? Container(
-                      padding: const EdgeInsets.fromLTRB(12, 8, 6, 8),
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                        12,
+                        8,
+                        6,
+                        8,
+                      ),
                       decoration: BoxDecoration(
                         color: HaloColors.surface2,
                         borderRadius: BorderRadius.circular(12),
@@ -92,7 +97,7 @@ class PreviewStrip extends StatelessWidget {
                       ),
                     )
                   : Align(
-                      alignment: Alignment.centerLeft,
+                      alignment: AlignmentDirectional.centerStart,
                       child: PressScale(
                         label: l10n.previewStripAddPreview,
                         onTap: busy ? null : onAdd,

@@ -6,20 +6,30 @@ class StrokeIcon extends StatelessWidget {
   final double size;
   final Color color;
   final double stroke;
+  // an arrow or a chevron: drawn the other way round in a right-to-left
+  // language, as material's own arrows are
+  final bool pointing;
   const StrokeIcon(
     this.paths, {
     super.key,
     this.size = 21,
     required this.color,
     this.stroke = 1.6,
+    this.pointing = false,
   });
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    width: size,
-    height: size,
-    child: CustomPaint(painter: _StrokePainter(paths, color, stroke)),
-  );
+  Widget build(BuildContext context) {
+    final icon = SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(painter: _StrokePainter(paths, color, stroke)),
+    );
+    if (!pointing || Directionality.of(context) != TextDirection.rtl) {
+      return icon;
+    }
+    return Transform.flip(flipX: true, child: icon);
+  }
 }
 
 class _StrokePainter extends CustomPainter {

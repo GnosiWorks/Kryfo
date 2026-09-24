@@ -618,7 +618,7 @@ class _HomeHead extends StatelessWidget {
                 const SizedBox(height: 3),
                 FittedBox(
                   fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
+                  alignment: AlignmentDirectional.centerStart,
                   child: Text(
                     haloId,
                     maxLines: 1,
@@ -1660,7 +1660,7 @@ class _ContactList extends StatelessWidget {
                 onTap: onNewRoom,
                 behavior: HitTestBehavior.opaque,
                 child: Padding(
-                  padding: const EdgeInsets.only(right: 14),
+                  padding: const EdgeInsetsDirectional.only(end: 14),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -1823,8 +1823,8 @@ class _GroupRow extends StatelessWidget {
         decoration: g.unread > 0
             ? BoxDecoration(
                 color: HaloColors.amber.withValues(alpha: 0.06),
-                border: Border(
-                  left: BorderSide(color: HaloColors.amber, width: 2),
+                border: BorderDirectional(
+                  start: BorderSide(color: HaloColors.amber, width: 2),
                 ),
               )
             : null,
@@ -1991,8 +1991,8 @@ class _SwipeRow extends StatelessWidget {
       key: ValueKey('swipe_${c.haloId}'),
       background: Container(
         color: HaloColors.surface2,
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.only(left: 24),
+        alignment: AlignmentDirectional.centerStart,
+        padding: const EdgeInsetsDirectional.only(start: 24),
         child: Icon(
           c.muted
               ? Icons.notifications_active_outlined
@@ -2003,8 +2003,8 @@ class _SwipeRow extends StatelessWidget {
       ),
       secondaryBackground: Container(
         color: HaloColors.surface2,
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 24),
+        alignment: AlignmentDirectional.centerEnd,
+        padding: const EdgeInsetsDirectional.only(end: 24),
         child: Semantics(
           label: l10n.homeArchivedChats,
           button: true,
@@ -2128,8 +2128,8 @@ class _Row extends StatelessWidget {
         decoration: c.unread > 0
             ? BoxDecoration(
                 color: HaloColors.amber.withValues(alpha: 0.06),
-                border: Border(
-                  left: BorderSide(color: HaloColors.amber, width: 2),
+                border: BorderDirectional(
+                  start: BorderSide(color: HaloColors.amber, width: 2),
                 ),
               )
             : null,
@@ -2150,8 +2150,8 @@ class _Row extends StatelessWidget {
                     ),
                   ),
                   if (c.verified)
-                    Positioned(
-                      right: -1,
+                    PositionedDirectional(
+                      end: -1,
                       bottom: -1,
                       child: _verifiedTick(onAmber: false),
                     ),
@@ -2343,7 +2343,7 @@ class _QuickTile extends StatelessWidget {
       onTap: onTap,
       scale: 0.97,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(12, 11, 10, 11),
+        padding: const EdgeInsetsDirectional.fromSTEB(12, 11, 10, 11),
         decoration: BoxDecoration(
           color: HaloColors.surface2,
           borderRadius: BorderRadius.circular(12),

@@ -262,10 +262,10 @@ class _RowTile extends StatelessWidget {
             AnimatedSize(
               duration: const Duration(milliseconds: 220),
               curve: Curves.easeOutCubic,
-              alignment: Alignment.topLeft,
+              alignment: AlignmentDirectional.topStart,
               child: open
                   ? Padding(
-                      padding: const EdgeInsets.only(top: 8, right: 8),
+                      padding: const EdgeInsetsDirectional.only(top: 8, end: 8),
                       child: Text(
                         row.why,
                         style: HaloType.sans(

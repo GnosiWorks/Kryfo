@@ -28,7 +28,7 @@ class ToolBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(8, 8, 16, 6),
+      padding: const EdgeInsetsDirectional.fromSTEB(8, 8, 16, 6),
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: HaloColors.line, width: 0.5)),
       ),
@@ -41,7 +41,12 @@ class ToolBar extends StatelessWidget {
               width: 44,
               height: 44,
               child: Center(
-                child: StrokeIcon(_back, size: 22, color: HaloColors.warm),
+                child: StrokeIcon(
+                  _back,
+                  size: 22,
+                  color: HaloColors.warm,
+                  pointing: true,
+                ),
               ),
             ),
           ),

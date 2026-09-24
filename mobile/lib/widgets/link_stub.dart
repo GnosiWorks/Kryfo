@@ -71,7 +71,7 @@ class LinkStub extends StatelessWidget {
           AnimatedSize(
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
-            alignment: Alignment.topLeft,
+            alignment: AlignmentDirectional.topStart,
             child: t != null
                 ? Padding(
                     padding: const EdgeInsets.only(top: 4),

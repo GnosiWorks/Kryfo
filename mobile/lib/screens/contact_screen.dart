@@ -635,7 +635,7 @@ class _MediaRow extends StatelessWidget {
                   children: [
                     for (final p in paths.take(6))
                       Padding(
-                        padding: const EdgeInsets.only(right: 6),
+                        padding: const EdgeInsetsDirectional.only(end: 6),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.file(

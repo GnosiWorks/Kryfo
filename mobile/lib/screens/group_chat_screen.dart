@@ -311,9 +311,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     ),
                   ),
                   if (unread > 0)
-                    Positioned(
+                    PositionedDirectional(
                       top: -3,
-                      right: -3,
+                      end: -3,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 5,
@@ -1698,8 +1698,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 child: const MenuBackdrop(),
               ),
             ),
-            Positioned(
-              left: rowPos.dx,
+            PositionedDirectional(
+              start: rowPos.dx,
               top: rowPos.dy,
               width: rowW,
               child: IgnorePointer(
@@ -1720,16 +1720,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                   builder: (_, t, child) => Transform.scale(
                     scale: 1.0 + 0.04 * t,
                     alignment: isOut
-                        ? Alignment.centerRight
-                        : Alignment.centerLeft,
+                        ? AlignmentDirectional.centerEnd
+                        : AlignmentDirectional.centerStart,
                     child: child,
                   ),
                 ),
               ),
             ),
-            Positioned(
-              left: isOut ? null : 12,
-              right: isOut ? 12 : null,
+            PositionedDirectional(
+              start: isOut ? null : 12,
+              end: isOut ? 12 : null,
               top: showAbove ? null : belowTop.clamp(80.0, screenH - 240),
               bottom: showAbove ? (screenH - pos.dy + 8) : null,
               child: Material(
@@ -2725,7 +2725,7 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 6, 8, 6),
+      padding: const EdgeInsetsDirectional.fromSTEB(4, 6, 8, 6),
       child: Row(
         children: [
           IconButton(
@@ -2830,7 +2830,7 @@ class _ReplyQuoteBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+      padding: const EdgeInsetsDirectional.fromSTEB(12, 8, 8, 8),
       decoration: BoxDecoration(
         color: HaloColors.surface2,
         border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),
@@ -2912,7 +2912,7 @@ class _Composer extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),
       ),
-      padding: const EdgeInsets.fromLTRB(8, 8, 12, 12),
+      padding: const EdgeInsetsDirectional.fromSTEB(8, 8, 12, 12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2946,7 +2946,7 @@ class _Composer extends StatelessWidget {
                   onTap: onCamera,
                   behavior: HitTestBehavior.opaque,
                   child: Padding(
-                    padding: const EdgeInsets.only(right: 10),
+                    padding: const EdgeInsetsDirectional.only(end: 10),
                     child: Icon(
                       Icons.photo_camera_outlined,
                       size: 22,
@@ -2962,7 +2962,7 @@ class _Composer extends StatelessWidget {
                   onTap: onAttach,
                   behavior: HitTestBehavior.opaque,
                   child: Padding(
-                    padding: const EdgeInsets.only(right: 10),
+                    padding: const EdgeInsetsDirectional.only(end: 10),
                     child: Icon(
                       Icons.add_photo_alternate_outlined,
                       size: 22,
@@ -3022,7 +3022,9 @@ class _Composer extends StatelessWidget {
                             onTap: onToggleDisguise,
                             behavior: HitTestBehavior.opaque,
                             child: Padding(
-                              padding: const EdgeInsets.only(right: 12),
+                              padding: const EdgeInsetsDirectional.only(
+                                end: 12,
+                              ),
                               child: Icon(
                                 disguise
                                     ? Icons.record_voice_over
@@ -3152,7 +3154,7 @@ Widget _groupBubbleEntrance({
         offset: Offset((1 - t) * -14, (1 - t) * 6),
         child: Transform.scale(
           scale: 0.96 + 0.04 * t,
-          alignment: Alignment.centerLeft,
+          alignment: AlignmentDirectional.centerStart,
           child: c,
         ),
       ),
@@ -3190,7 +3192,7 @@ class _MentionPicker extends StatelessWidget {
           child: hits.isEmpty
               ? const SizedBox(width: double.infinity)
               : Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 0, 0, 8),
+                  padding: const EdgeInsetsDirectional.fromSTEB(4, 0, 0, 8),
                   child: Container(
                     decoration: BoxDecoration(
                       color: HaloColors.surface2,
@@ -3310,7 +3312,7 @@ class _GroupBubble extends StatelessWidget {
           children: [
             if (!isOut && showSender)
               Padding(
-                padding: const EdgeInsets.only(right: 6, bottom: 2),
+                padding: const EdgeInsetsDirectional.only(end: 6, bottom: 2),
                 child: KryfoAvatar(seed: m.sender, size: 26),
               ),
             if (!isOut && !showSender) const SizedBox(width: 32),
@@ -3322,7 +3324,10 @@ class _GroupBubble extends StatelessWidget {
                 children: [
                   if (!isOut && showSender)
                     Padding(
-                      padding: const EdgeInsets.only(left: 2, bottom: 3),
+                      padding: const EdgeInsetsDirectional.only(
+                        start: 2,
+                        bottom: 3,
+                      ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -3431,11 +3436,11 @@ class _GroupBubble extends StatelessWidget {
                                               context,
                                               HaloColors.surface2,
                                             )),
-                                borderRadius: BorderRadius.only(
-                                  topLeft: const Radius.circular(14),
-                                  topRight: const Radius.circular(14),
-                                  bottomLeft: Radius.circular(isOut ? 14 : 4),
-                                  bottomRight: Radius.circular(isOut ? 4 : 14),
+                                borderRadius: BorderRadiusDirectional.only(
+                                  topStart: const Radius.circular(14),
+                                  topEnd: const Radius.circular(14),
+                                  bottomStart: Radius.circular(isOut ? 14 : 4),
+                                  bottomEnd: Radius.circular(isOut ? 4 : 14),
                                 ),
                               ),
                               clipBehavior: m.mediaPath != null
@@ -3472,8 +3477,8 @@ class _GroupBubble extends StatelessWidget {
                                             borderRadius: BorderRadius.circular(
                                               8,
                                             ),
-                                            border: Border(
-                                              left: BorderSide(
+                                            border: BorderDirectional(
+                                              start: BorderSide(
                                                 color: isOut
                                                     ? HaloColors.onAmber
                                                           .withValues(
@@ -3625,12 +3630,12 @@ class _GroupBubble extends StatelessWidget {
                                                 // same as 1:1. captioned photos
                                                 // keep the time in the row below.
                                                 if (m.text.isEmpty && !m.failed)
-                                                  Positioned(
+                                                  PositionedDirectional(
                                                     // chip hangs right on out,
                                                     // left on in - time takes
                                                     // the free corner.
-                                                    right: isOut ? null : 8,
-                                                    left: isOut ? 8 : null,
+                                                    end: isOut ? null : 8,
+                                                    start: isOut ? 8 : null,
                                                     bottom: 8,
                                                     child: Container(
                                                       padding:
@@ -3862,12 +3867,12 @@ class _GroupBubble extends StatelessWidget {
                         },
                       ),
                       if (m.reactions.isNotEmpty)
-                        Positioned(
+                        PositionedDirectional(
                           // ig-style: hangs at the bubble's bottom edge on the
                           // sender's side, same as 1:1. keys off direction.
                           bottom: -13,
-                          right: isOut ? 10 : null,
-                          left: isOut ? null : 10,
+                          end: isOut ? 10 : null,
+                          start: isOut ? null : 10,
                           child: Wrap(
                             spacing: 3,
                             children: _buildReactionChips(m),
@@ -3886,16 +3891,17 @@ class _GroupBubble extends StatelessWidget {
                                   scale: 1 + t * 0.16,
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: const Radius.circular(14),
-                                        topRight: const Radius.circular(14),
-                                        bottomLeft: Radius.circular(
-                                          isOut ? 14 : 4,
-                                        ),
-                                        bottomRight: Radius.circular(
-                                          isOut ? 4 : 14,
-                                        ),
-                                      ),
+                                      borderRadius:
+                                          BorderRadiusDirectional.only(
+                                            topStart: const Radius.circular(14),
+                                            topEnd: const Radius.circular(14),
+                                            bottomStart: Radius.circular(
+                                              isOut ? 14 : 4,
+                                            ),
+                                            bottomEnd: Radius.circular(
+                                              isOut ? 4 : 14,
+                                            ),
+                                          ),
                                       border: Border.all(
                                         color: HaloColors.amber,
                                         width: 2,
@@ -3913,7 +3919,7 @@ class _GroupBubble extends StatelessWidget {
                   if (isOut && m.pending) ...[
                     const SizedBox(height: 4),
                     Padding(
-                      padding: const EdgeInsets.only(right: 4),
+                      padding: const EdgeInsetsDirectional.only(end: 4),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -4060,8 +4066,8 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
         child: Transform.scale(
           scale: scale.value,
           alignment: widget.isOut
-              ? Alignment.bottomRight
-              : Alignment.bottomLeft,
+              ? AlignmentDirectional.bottomEnd
+              : AlignmentDirectional.bottomStart,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: widget.isOut

@@ -118,7 +118,7 @@ class _ScanScreenState extends State<ScanScreen>
             right: 0,
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(4, 6, 12, 6),
+                padding: const EdgeInsetsDirectional.fromSTEB(4, 6, 12, 6),
                 child: Row(
                   children: [
                     IconButton(
@@ -260,10 +260,26 @@ class _Viewfinder extends StatelessWidget {
       child: Stack(
         children: [
           // corner brackets - 4 L-shapes
-          Positioned(left: 0, top: 0, child: _corner(accent, true, true)),
-          Positioned(right: 0, top: 0, child: _corner(accent, false, true)),
-          Positioned(left: 0, bottom: 0, child: _corner(accent, true, false)),
-          Positioned(right: 0, bottom: 0, child: _corner(accent, false, false)),
+          PositionedDirectional(
+            start: 0,
+            top: 0,
+            child: _corner(accent, true, true),
+          ),
+          PositionedDirectional(
+            end: 0,
+            top: 0,
+            child: _corner(accent, false, true),
+          ),
+          PositionedDirectional(
+            start: 0,
+            bottom: 0,
+            child: _corner(accent, true, false),
+          ),
+          PositionedDirectional(
+            end: 0,
+            bottom: 0,
+            child: _corner(accent, false, false),
+          ),
           // scan line (hidden once success)
           if (!success)
             AnimatedBuilder(

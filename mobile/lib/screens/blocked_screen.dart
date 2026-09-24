@@ -48,7 +48,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(4, 4, 8, 8),
+              padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 8, 8),
               child: Row(
                 children: [
                   IconButton(

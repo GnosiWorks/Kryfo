@@ -331,7 +331,7 @@ class _WayCard extends StatelessWidget {
             onTap: onToggle,
             borderRadius: BorderRadius.circular(16),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(18, 16, 14, 16),
+              padding: const EdgeInsetsDirectional.fromSTEB(18, 16, 14, 16),
               child: Row(
                 children: [
                   Icon(icon, size: 20, color: HaloColors.amber),
@@ -701,7 +701,7 @@ class _HandleRow extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(18, 16, 14, 16),
+        padding: const EdgeInsetsDirectional.fromSTEB(18, 16, 14, 16),
         decoration: BoxDecoration(
           color: HaloColors.surface2,
           borderRadius: BorderRadius.circular(16),

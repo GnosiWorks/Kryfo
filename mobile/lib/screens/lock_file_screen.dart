@@ -87,7 +87,7 @@ class SecretField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 6),
+          padding: const EdgeInsetsDirectional.only(start: 4, bottom: 6),
           child: ExcludeSemantics(
             child: Text(
               label,
@@ -177,7 +177,7 @@ class FileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = tint ?? HaloColors.violet;
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
+      padding: const EdgeInsetsDirectional.fromSTEB(12, 12, 8, 12),
       decoration: BoxDecoration(
         color: HaloColors.surface2,
         borderRadius: BorderRadius.circular(16),
@@ -641,7 +641,7 @@ class _LockFileScreenState extends State<LockFileScreen> {
               children: [
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.only(left: 4),
+                    padding: const EdgeInsetsDirectional.only(start: 4),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -701,7 +701,7 @@ class _Note extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
+      padding: const EdgeInsetsDirectional.fromSTEB(12, 12, 14, 12),
       decoration: BoxDecoration(
         color: tint.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),

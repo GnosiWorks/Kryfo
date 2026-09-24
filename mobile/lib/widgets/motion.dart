@@ -941,11 +941,11 @@ class _TypingDotsState extends State<TypingDots>
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: const BoxDecoration(
         color: kSurface3,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(14),
-          topRight: Radius.circular(14),
-          bottomRight: Radius.circular(14),
-          bottomLeft: Radius.circular(4),
+        borderRadius: BorderRadiusDirectional.only(
+          topStart: Radius.circular(14),
+          topEnd: Radius.circular(14),
+          bottomEnd: Radius.circular(14),
+          bottomStart: Radius.circular(4),
         ),
       ),
       child: AnimatedBuilder(

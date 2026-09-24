@@ -478,7 +478,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(4, 10, 12, 0),
+            padding: const EdgeInsetsDirectional.fromSTEB(4, 10, 12, 0),
             child: Text(
               l10n.settingsTheOfflineMapIn,
               style: HaloType.sans(
@@ -489,7 +489,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(4, 10, 12, 0),
+            padding: const EdgeInsetsDirectional.fromSTEB(4, 10, 12, 0),
             child: Text(
               l10n.settingsNotIndependentlyAuditedPre,
               style: HaloType.sans(

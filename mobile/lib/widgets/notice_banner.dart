@@ -60,7 +60,7 @@ class _NoticeBannerState extends State<NoticeBanner>
     );
     final body = Container(
       margin: widget.margin,
-      padding: const EdgeInsets.fromLTRB(11, 9, 12, 9),
+      padding: const EdgeInsetsDirectional.fromSTEB(11, 9, 12, 9),
       decoration: BoxDecoration(
         color: widget.color.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(10),

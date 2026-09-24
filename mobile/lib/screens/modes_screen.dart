@@ -122,7 +122,7 @@ class _BackBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 4, 0, 0),
+      padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 0, 0),
       child: Row(
         children: [
           IconButton(

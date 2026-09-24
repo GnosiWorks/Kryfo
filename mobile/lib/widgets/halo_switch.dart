@@ -43,7 +43,9 @@ class HaloSwitch extends StatelessWidget {
           child: AnimatedAlign(
             duration: const Duration(milliseconds: 240),
             curve: Curves.easeOutBack,
-            alignment: on ? Alignment.centerRight : Alignment.centerLeft,
+            alignment: on
+                ? AlignmentDirectional.centerEnd
+                : AlignmentDirectional.centerStart,
             child: Container(
               width: 20,
               height: 20,

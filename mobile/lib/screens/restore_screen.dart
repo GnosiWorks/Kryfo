@@ -350,7 +350,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 7, right: 10),
+          padding: const EdgeInsetsDirectional.only(top: 7, end: 10),
           child: Container(
             width: 4,
             height: 4,

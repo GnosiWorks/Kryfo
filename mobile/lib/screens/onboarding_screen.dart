@@ -230,7 +230,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
         width: 12,
         height: 0.5,
         color: HaloColors.amber,
-        margin: const EdgeInsets.only(top: 10, right: 12),
+        margin: const EdgeInsetsDirectional.only(top: 10, end: 12),
       ),
       Expanded(
         child: RichText(

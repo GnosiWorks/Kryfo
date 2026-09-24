@@ -502,6 +502,7 @@ class _ToolRow extends StatelessWidget {
                   size: 14,
                   color: HaloColors.text,
                   stroke: 1.9,
+                  pointing: true,
                 ),
               ),
             ],

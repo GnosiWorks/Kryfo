@@ -9,7 +9,7 @@ class HaloSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(6, 4, 4, 8),
+      padding: const EdgeInsetsDirectional.fromSTEB(6, 4, 4, 8),
       child: Text(
         label,
         style: HaloType.mono(size: 10.5, color: HaloColors.text3, letter: 0.06),
@@ -43,7 +43,7 @@ class HaloGroup extends StatelessWidget {
           for (var i = 0; i < children.length; i++) ...[
             if (i > 0)
               Padding(
-                padding: const EdgeInsets.only(left: 58),
+                padding: const EdgeInsetsDirectional.only(start: 58),
                 child: Container(height: 0.5, color: line),
               ),
             children[i],
@@ -113,7 +113,10 @@ class HaloRow extends StatelessWidget {
                   Text(label, style: HaloType.sans(size: 14, color: fg)),
                   if (hint != null)
                     Padding(
-                      padding: const EdgeInsets.only(top: 3, right: 10),
+                      padding: const EdgeInsetsDirectional.only(
+                        top: 3,
+                        end: 10,
+                      ),
                       child: Text(
                         hint!,
                         style: HaloType.mono(
@@ -124,7 +127,10 @@ class HaloRow extends StatelessWidget {
                     ),
                   if (v.isNotEmpty && stacked)
                     Padding(
-                      padding: const EdgeInsets.only(top: 4, right: 10),
+                      padding: const EdgeInsetsDirectional.only(
+                        top: 4,
+                        end: 10,
+                      ),
                       child: Text(
                         v,
                         style: HaloType.sans(size: 13, color: HaloColors.text2),

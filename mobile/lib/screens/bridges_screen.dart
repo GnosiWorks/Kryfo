@@ -830,8 +830,8 @@ class _Note extends StatelessWidget {
     decoration: BoxDecoration(
       color: HaloColors.surface2.withValues(alpha: 0.5),
       borderRadius: BorderRadius.circular(14),
-      border: Border(
-        left: BorderSide(
+      border: BorderDirectional(
+        start: BorderSide(
           color: HaloColors.amber.withValues(alpha: 0.5),
           width: 2,
         ),

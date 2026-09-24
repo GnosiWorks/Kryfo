@@ -421,7 +421,9 @@ class _QrScreenState extends State<QrScreen> {
                                     (WifiLock.none, l10n.qrNone),
                                   ])
                                     Padding(
-                                      padding: const EdgeInsets.only(right: 8),
+                                      padding: const EdgeInsetsDirectional.only(
+                                        end: 8,
+                                      ),
                                       child: _Pill(
                                         label: name,
                                         on: _lock == l,
@@ -784,7 +786,7 @@ class _Input extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 6),
+          padding: const EdgeInsetsDirectional.only(start: 4, bottom: 6),
           child: ExcludeSemantics(
             child: Text(
               field.label,

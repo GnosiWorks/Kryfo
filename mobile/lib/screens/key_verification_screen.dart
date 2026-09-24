@@ -86,7 +86,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(4, 4, 8, 4),
+              padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 8, 4),
               child: Row(
                 children: [
                   IconButton(

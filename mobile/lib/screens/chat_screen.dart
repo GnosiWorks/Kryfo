@@ -1164,8 +1164,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 child: const MenuBackdrop(),
               ),
             ),
-            Positioned(
-              left: offset.dx,
+            PositionedDirectional(
+              start: offset.dx,
               top: offset.dy,
               width: bubbleSize.width,
               child: IgnorePointer(
@@ -1183,10 +1183,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
             ),
 
-            Positioned(
+            PositionedDirectional(
               top: reactTop,
-              left: alignRight ? null : 12,
-              right: alignRight ? 12 : null,
+              start: alignRight ? null : 12,
+              end: alignRight ? 12 : null,
               child: MenuPop(
                 fromRight: alignRight,
                 child: _EmojiPickerBubble(
@@ -1213,11 +1213,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 ),
               ),
             ),
-            Positioned(
+            PositionedDirectional(
               top: menuTop,
               bottom: menuBottom,
-              left: alignRight ? null : 12,
-              right: alignRight ? 12 : null,
+              start: alignRight ? null : 12,
+              end: alignRight ? 12 : null,
               child: MenuPop(
                 fromRight: alignRight,
                 child: Column(
@@ -4018,7 +4018,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             ),
             const SizedBox(height: 18),
             Align(
-              alignment: Alignment.centerRight,
+              alignment: AlignmentDirectional.centerEnd,
               child: GestureDetector(
                 onTap: () async {
                   await db.setNote(widget.peerHaloId, ctrl.text.trim());
@@ -4689,9 +4689,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                     ),
                                   ),
                                   if (_messages.length - _seenCount > 0)
-                                    Positioned(
+                                    PositionedDirectional(
                                       top: -3,
-                                      right: -3,
+                                      end: -3,
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 5,
@@ -5253,7 +5253,7 @@ class _BlockedBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
+      padding: const EdgeInsetsDirectional.fromSTEB(20, 16, 12, 16),
       decoration: BoxDecoration(
         border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),
       ),
@@ -5323,7 +5323,7 @@ class _ChatHead extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(4, 4, 8, 12),
+      padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 8, 12),
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: HaloColors.line, width: 0.5)),
       ),
@@ -5548,7 +5548,7 @@ class _SearchHeadState extends State<SearchHead> {
         ),
       ),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(8, 6, 12, 11),
+        padding: const EdgeInsetsDirectional.fromSTEB(8, 6, 12, 11),
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(color: HaloColors.line, width: 0.5),
@@ -5924,13 +5924,13 @@ class _Bubble extends StatelessWidget {
                               ? HaloColors.amber
                               : atmoBubbleIn(context),
                           gradient: null,
-                          borderRadius: BorderRadius.only(
-                            topLeft: const Radius.circular(14),
-                            topRight: const Radius.circular(14),
-                            bottomLeft: Radius.circular(
+                          borderRadius: BorderRadiusDirectional.only(
+                            topStart: const Radius.circular(14),
+                            topEnd: const Radius.circular(14),
+                            bottomStart: Radius.circular(
                               isOut ? 14 : (lastInGroup ? 4 : 14),
                             ),
-                            bottomRight: Radius.circular(
+                            bottomEnd: Radius.circular(
                               isOut ? (lastInGroup ? 4 : 14) : 14,
                             ),
                           ),
@@ -5995,7 +5995,7 @@ class _Bubble extends StatelessWidget {
                                           Flexible(
                                             child: Padding(
                                               padding:
-                                                  const EdgeInsets.fromLTRB(
+                                                  const EdgeInsetsDirectional.fromSTEB(
                                                     0,
                                                     6,
                                                     10,
@@ -6165,8 +6165,8 @@ class _Bubble extends StatelessWidget {
                                           ),
                                         ),
                                         if (showMeta)
-                                          Positioned(
-                                            right: 8,
+                                          PositionedDirectional(
+                                            end: 8,
                                             bottom: 8,
                                             child: Container(
                                               padding:
@@ -6447,14 +6447,14 @@ class _Bubble extends StatelessWidget {
                       ),
                     ),
                     if (msg.reactions.isNotEmpty)
-                      Positioned(
+                      PositionedDirectional(
                         // ig-style: hangs below the bubble, on the sender's
                         // side. your own reactions tuck bottom-right, everyone
                         // else's bottom-left. works the same in groups since
                         // it keys off direction, not a two-person assumption.
                         bottom: -13,
-                        right: isOut ? 10 : null,
-                        left: isOut ? null : 10,
+                        end: isOut ? 10 : null,
+                        start: isOut ? null : 10,
                         child: Wrap(
                           spacing: 3,
                           children: _buildReactionChips(msg),
@@ -6473,13 +6473,13 @@ class _Bubble extends StatelessWidget {
                                 scale: 1 + t * 0.16,
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.only(
-                                      topLeft: const Radius.circular(14),
-                                      topRight: const Radius.circular(14),
-                                      bottomLeft: Radius.circular(
+                                    borderRadius: BorderRadiusDirectional.only(
+                                      topStart: const Radius.circular(14),
+                                      topEnd: const Radius.circular(14),
+                                      bottomStart: Radius.circular(
                                         isOut ? 14 : (lastInGroup ? 4 : 14),
                                       ),
-                                      bottomRight: Radius.circular(
+                                      bottomEnd: Radius.circular(
                                         isOut ? (lastInGroup ? 4 : 14) : 14,
                                       ),
                                     ),
@@ -6518,7 +6518,7 @@ class _Bubble extends StatelessWidget {
               if (showPill) ...[
                 const SizedBox(height: 4),
                 Padding(
-                  padding: const EdgeInsets.only(right: 4),
+                  padding: const EdgeInsetsDirectional.only(end: 4),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -6715,7 +6715,7 @@ class _ReplyQuoteBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
+      padding: const EdgeInsetsDirectional.fromSTEB(14, 8, 8, 8),
       decoration: BoxDecoration(
         color: HaloColors.surface2,
         border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),
@@ -6726,7 +6726,7 @@ class _ReplyQuoteBar extends StatelessWidget {
           Container(
             width: 2.5,
             height: 32,
-            margin: const EdgeInsets.only(right: 10),
+            margin: const EdgeInsetsDirectional.only(end: 10),
             decoration: BoxDecoration(
               color: HaloColors.amber,
               borderRadius: BorderRadius.circular(2),
@@ -7309,7 +7309,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
                     behavior: HitTestBehavior.opaque,
                     onTap: _abort,
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 8),
+                      padding: const EdgeInsetsDirectional.only(start: 8),
                       child: Icon(
                         Icons.close_rounded,
                         size: 20,
@@ -7567,7 +7567,9 @@ class _Composer extends StatelessWidget {
                                   onTap: onToggleDisguise,
                                   behavior: HitTestBehavior.opaque,
                                   child: Padding(
-                                    padding: const EdgeInsets.only(right: 12),
+                                    padding: const EdgeInsetsDirectional.only(
+                                      end: 12,
+                                    ),
                                     child: Icon(
                                       disguise
                                           ? Icons.record_voice_over
@@ -7767,7 +7769,7 @@ class _ImageCaptionScreenState extends State<_ImageCaptionScreen> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(4, 4, 16, 4),
+              padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 16, 4),
               child: Row(
                 children: [
                   IconButton(
@@ -7917,7 +7919,7 @@ Widget _arriveEntrance({required bool active, required Widget child}) {
         offset: Offset((1 - t) * -14, (1 - t) * 6),
         child: Transform.scale(
           scale: 0.96 + 0.04 * t,
-          alignment: Alignment.centerLeft,
+          alignment: AlignmentDirectional.centerStart,
           child: c,
         ),
       ),

@@ -108,7 +108,7 @@ class SendProgressLabel extends StatelessWidget {
         final v = mediaSendProgress[msgUid];
         if (v == null) return const SizedBox.shrink();
         return Padding(
-          padding: const EdgeInsets.only(right: 6),
+          padding: const EdgeInsetsDirectional.only(end: 6),
           child: Text(
             percent(v),
             style: HaloType.mono(

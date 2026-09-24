@@ -445,9 +445,9 @@ class _Body extends StatelessWidget {
                       label: l10n.photoKnowsMapWithAPin(place ?? ''),
                     ),
                   ),
-                  Positioned(
+                  PositionedDirectional(
                     top: 12,
-                    right: 12,
+                    end: 12,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 9,
@@ -475,8 +475,8 @@ class _Body extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Positioned(
-                    left: 12,
+                  PositionedDirectional(
+                    start: 12,
                     bottom: 12,
                     child: AnimatedBuilder(
                       animation: reveal,
@@ -655,7 +655,12 @@ class _StoryRowView extends StatelessWidget {
           ),
           if (onTap != null) ...[
             const SizedBox(width: 8),
-            StrokeIcon(_chevron, size: 16, color: HaloColors.warm),
+            StrokeIcon(
+              _chevron,
+              size: 16,
+              color: HaloColors.warm,
+              pointing: true,
+            ),
           ],
         ],
       ),

@@ -149,8 +149,8 @@ class _VideoBubbleState extends State<VideoBubble> {
                     ),
                   ),
                 ),
-                Positioned(
-                  left: 8,
+                PositionedDirectional(
+                  start: 8,
                   bottom: 7,
                   child: _Tag(
                     info != null && info.length > Duration.zero
@@ -159,7 +159,11 @@ class _VideoBubbleState extends State<VideoBubble> {
                   ),
                 ),
                 if (_bytes != null)
-                  Positioned(right: 8, bottom: 7, child: _Tag(_size(_bytes!))),
+                  PositionedDirectional(
+                    end: 8,
+                    bottom: 7,
+                    child: _Tag(_size(_bytes!)),
+                  ),
               ],
             ),
           ),

@@ -41,7 +41,7 @@ class PinHeaderButton extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             Align(
-              alignment: Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
               child: Transform.rotate(
                 angle: 0.5,
                 child: Icon(
@@ -53,8 +53,8 @@ class PinHeaderButton extends StatelessWidget {
             ),
             // the count is in the tooltip; read out on its own it was "1"
             if (on)
-              Positioned(
-                right: -2,
+              PositionedDirectional(
+                end: -2,
                 top: -1,
                 child: Container(
                   constraints: const BoxConstraints(minWidth: 14),
@@ -378,7 +378,7 @@ class _PinAction extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         // a full-height target around a small word
-        padding: const EdgeInsets.fromLTRB(0, 8, 14, 6),
+        padding: const EdgeInsetsDirectional.fromSTEB(0, 8, 14, 6),
         child: Text(
           label,
           style: HaloType.sans(

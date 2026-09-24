@@ -62,7 +62,7 @@ class LanguageChip extends StatelessWidget {
       label: l10n.languageButton(name),
       onTap: () => pickLanguage(context, fromSettings: false),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(10, 7, 12, 7),
+        padding: const EdgeInsetsDirectional.fromSTEB(10, 7, 12, 7),
         decoration: BoxDecoration(
           color: HaloColors.surface2,
           borderRadius: BorderRadius.circular(20),

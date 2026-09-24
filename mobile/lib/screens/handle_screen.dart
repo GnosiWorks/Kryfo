@@ -370,7 +370,7 @@ class _Field extends StatelessWidget {
         children: [
           if (prefix != null)
             Padding(
-              padding: const EdgeInsets.only(top: 14, right: 2),
+              padding: const EdgeInsetsDirectional.only(top: 14, end: 2),
               child: Text(
                 prefix!,
                 style: HaloType.mono(size: 14, color: HaloColors.text3),

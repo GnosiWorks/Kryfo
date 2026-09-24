@@ -148,7 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               if (mounted) setState(() {});
                             },
                             child: Stack(
-                              alignment: Alignment.bottomRight,
+                              alignment: AlignmentDirectional.bottomEnd,
                               children: [
                                 KryfoAvatar(
                                   seed: id.isEmpty ? 'kryfo' : id,
@@ -576,7 +576,7 @@ class _Section extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(2, 0, 0, 10),
+      padding: const EdgeInsetsDirectional.fromSTEB(2, 0, 0, 10),
       child: Text(
         label,
         style: HaloType.mono(size: 10, color: HaloColors.text3),

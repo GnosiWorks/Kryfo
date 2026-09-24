@@ -63,9 +63,11 @@ class _IntroducedByState extends State<IntroducedBy>
       opacity: fade,
       child: ScaleTransition(
         scale: scale,
-        alignment: Alignment.centerLeft,
+        alignment: AlignmentDirectional.centerStart.resolve(
+          Directionality.of(context),
+        ),
         child: Container(
-          padding: EdgeInsets.fromLTRB(3, 3, widget.size * 0.8, 3),
+          padding: EdgeInsetsDirectional.fromSTEB(3, 3, widget.size * 0.8, 3),
           decoration: BoxDecoration(
             color: HaloColors.amberSoft,
             borderRadius: BorderRadius.circular(20),

@@ -53,11 +53,14 @@ class _SwipeToReplyState extends State<SwipeToReply>
   @override
   Widget build(BuildContext context) {
     final progress = (_dx / _trigger).clamp(0.0, 1.0);
+    // the reply arrow sits at the start edge: a swipe away from it, to the
+    // right, or to the left in a right-to-left language
+    final way = Directionality.of(context) == TextDirection.rtl ? -1.0 : 1.0;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onHorizontalDragUpdate: (d) {
         if (_spring.isAnimating) return;
-        var nx = _dx + d.delta.dx;
+        var nx = _dx + way * d.delta.dx;
         if (nx < 0) nx = 0;
         if (nx > _trigger) nx = _trigger + (nx - _trigger) * 0.35;
         if (nx > _max) nx = _max;
@@ -73,8 +76,8 @@ class _SwipeToReplyState extends State<SwipeToReply>
       },
       child: Stack(
         children: [
-          Positioned(
-            left: 14,
+          PositionedDirectional(
+            start: 14,
             top: 0,
             bottom: 0,
             child: Center(
@@ -91,7 +94,10 @@ class _SwipeToReplyState extends State<SwipeToReply>
               ),
             ),
           ),
-          Transform.translate(offset: Offset(_dx, 0), child: widget.child),
+          Transform.translate(
+            offset: Offset(way * _dx, 0),
+            child: widget.child,
+          ),
         ],
       ),
     );

@@ -79,8 +79,8 @@ class _MenuPopState extends State<MenuPop> with SingleTickerProviderStateMixin {
           child: Transform.scale(
             scale: 0.8 + 0.2 * t,
             alignment: widget.fromRight
-                ? Alignment.bottomRight
-                : Alignment.bottomLeft,
+                ? AlignmentDirectional.bottomEnd
+                : AlignmentDirectional.bottomStart,
             child: child,
           ),
         );

@@ -66,7 +66,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(4, 6, 12, 6),
+              padding: const EdgeInsetsDirectional.fromSTEB(4, 6, 12, 6),
               child: Row(
                 children: [
                   IconButton(

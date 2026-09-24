@@ -186,7 +186,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
           children: [
             // header
             Padding(
-              padding: const EdgeInsets.fromLTRB(4, 6, 12, 6),
+              padding: const EdgeInsetsDirectional.fromSTEB(4, 6, 12, 6),
               child: Row(
                 children: [
                   IconButton(

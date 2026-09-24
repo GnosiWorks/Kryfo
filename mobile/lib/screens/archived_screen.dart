@@ -45,7 +45,7 @@ class ArchivedScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 6, 8, 2),
+                  padding: const EdgeInsetsDirectional.fromSTEB(4, 6, 8, 2),
                   child: Row(
                     children: [
                       IconButton(
@@ -66,7 +66,12 @@ class ArchivedScreen extends StatelessWidget {
                 ),
                 if (archived.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(22, 2, 26, 14),
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                      22,
+                      2,
+                      26,
+                      14,
+                    ),
                     child: RichText(
                       text: TextSpan(
                         children: [

@@ -185,7 +185,7 @@ class _SavedScreenState extends State<SavedScreen> {
       onTap: () => _open(peer, uid),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.fromLTRB(14, 12, 13, 12),
+        padding: const EdgeInsetsDirectional.fromSTEB(14, 12, 13, 12),
         decoration: BoxDecoration(
           color: HaloColors.surface3,
           borderRadius: BorderRadius.circular(14),

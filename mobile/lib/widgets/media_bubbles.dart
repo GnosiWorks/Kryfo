@@ -668,7 +668,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
                     behavior: HitTestBehavior.opaque,
                     onTap: _abort,
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 8),
+                      padding: const EdgeInsetsDirectional.only(start: 8),
                       child: Icon(
                         Icons.close_rounded,
                         size: 20,
@@ -734,7 +734,7 @@ class ImageCaptionScreenState extends State<ImageCaptionScreen> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(4, 4, 16, 4),
+              padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 16, 4),
               child: Row(
                 children: [
                   IconButton(

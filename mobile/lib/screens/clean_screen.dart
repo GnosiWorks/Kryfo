@@ -525,7 +525,7 @@ class _RemovedRow extends StatelessWidget {
           children: [
             Expanded(
               child: Align(
-                alignment: Alignment.centerLeft,
+                alignment: AlignmentDirectional.centerStart,
                 child: Stack(
                   children: [
                     Text(
@@ -545,7 +545,7 @@ class _RemovedRow extends StatelessWidget {
                     ),
                     Positioned.fill(
                       child: Align(
-                        alignment: Alignment.centerLeft,
+                        alignment: AlignmentDirectional.centerStart,
                         child: FractionallySizedBox(
                           widthFactor: struck,
                           child: Container(
@@ -821,9 +821,9 @@ class _Tile extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           child,
-          Positioned(
+          PositionedDirectional(
             top: 6,
-            right: 6,
+            end: 6,
             child: Container(
               width: 24,
               height: 24,

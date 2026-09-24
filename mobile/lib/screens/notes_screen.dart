@@ -212,7 +212,7 @@ class _NotesScreenState extends State<NotesScreen> {
         color: HaloColors.surface,
         border: Border(top: BorderSide(color: HaloColors.line, width: 0.5)),
       ),
-      padding: const EdgeInsets.fromLTRB(14, 10, 10, 12),
+      padding: const EdgeInsetsDirectional.fromSTEB(14, 10, 10, 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
