@@ -28,6 +28,15 @@ android {
 
     namespace = "app.kryfo"
 
+    // the language is chosen inside the app, so a bundle has to carry every
+    // language's resources; a split would leave the chosen one out. apks
+    // (what ships) have them all anyway
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
+
     packaging {
         jniLibs {
             keepDebugSymbols += "**/libhalo.so"

@@ -21,6 +21,10 @@ def qualifier(loc):
     parts = loc.split('_')
     if parts == ['en']:
         return ''
+    # android still matches indonesian by java's old code: a values-id
+    # folder is never read, and the notification stayed english
+    if parts == ['id']:
+        return 'in'
     if len(parts) == 2 and len(parts[1]) == 4:
         return 'b+' + '+'.join(parts)
     if len(parts) == 2:
