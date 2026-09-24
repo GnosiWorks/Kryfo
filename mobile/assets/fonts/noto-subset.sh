@@ -2,7 +2,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # the noto fallbacks behind kryfo's own fonts, cut down to the scripts they
 # are there for. fraunces, instrument sans and jetbrains mono draw latin; these
-# only ever draw what those lack: cyrillic, and arabic with persian.
+# only ever draw what those lack: cyrillic, and arabic with persian. and one
+# that stands in for instrument sans in vietnamese, which stacks accents
+# instrument sans does not have.
 #
 # sources: google/fonts at the commit below, checked by sha256. tools:
 # fonttools 4.66.0. same inputs, same commands, same bytes out.
@@ -32,6 +34,9 @@ CYR=U+0400-052F,U+2116
 # zero-width non-joiner persian writes words with. not the zero-width joiner:
 # emoji sequences use it, and a fallback that claims it could split them.
 ARAB=U+0600-06FF,U+FDFC,U+200C
+# latin with every vietnamese letter (precomposed, and the combining marks),
+# general punctuation, the dong and euro signs
+VIET=U+0020-007E,U+00A0-017F,U+01A0-01A1,U+01AF-01B0,U+0300-0303,U+0306,U+0309,U+0323,U+1EA0-1EF9,U+2000-206F,U+20AB-20AC
 
 cut() { # in out unicodes axis-limits...
   local in=$1 out=$2 uni=$3; shift 3
@@ -49,3 +54,4 @@ cut "$SRC/NotoSerif-Italic[wdth,wght].ttf" NotoSerif-Cyrillic-Italic.ttf "$CYR" 
 cut "$SRC/NotoSans[wdth,wght].ttf"         NotoSans-Cyrillic.ttf         "$CYR"  wdth=100 wght=400:700
 cut "$SRC/NotoNaskhArabic[wght].ttf"       NotoNaskhArabic-Kryfo.ttf     "$ARAB" wght=400:700
 cut "$SRC/NotoSansArabic[wdth,wght].ttf"   NotoSansArabic-Kryfo.ttf      "$ARAB" wdth=100 wght=400:700
+cut "$SRC/NotoSans[wdth,wght].ttf"         NotoSans-Vietnamese.ttf       "$VIET" wdth=100 wght=400:700

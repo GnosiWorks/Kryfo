@@ -6,6 +6,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'l10n/l10n.dart';
 
 class _Palette {
   final Color ink, surface, surface2, surface3, line, line2;
@@ -123,6 +124,14 @@ class HaloType {
   static const sansFallback = ['Noto Sans Cyrillic', 'Noto Sans Arabic'];
   static const monoFallback = ['Noto Sans Arabic'];
 
+  // instrument sans has no vietnamese letters with stacked or hooked accents
+  // (ế, ự, ỹ...). drawn from the phone's font a letter at a time they sat in
+  // the middle of words in another typeface, so in vietnamese the whole sans
+  // is noto sans, which has them all. fraunces and jetbrains mono have them.
+  static String get sansFamily => l10nLocale.languageCode == 'vi'
+      ? 'Noto Sans Vietnamese'
+      : 'Instrument Sans';
+
   static TextStyle serif({
     double size = 26,
     FontWeight weight = FontWeight.w400,
@@ -148,7 +157,7 @@ class HaloType {
     double height = 1.5,
     double letter = 0,
   }) => TextStyle(
-    fontFamily: 'Instrument Sans',
+    fontFamily: sansFamily,
     fontFamilyFallback: sansFallback,
     fontSize: size,
     fontWeight: weight,
@@ -194,7 +203,7 @@ ThemeData buildHaloTheme() {
     canvasColor: HaloColors.surface,
     colorScheme: scheme,
     textTheme: base.textTheme.apply(
-      fontFamily: 'Instrument Sans',
+      fontFamily: HaloType.sansFamily,
       fontFamilyFallback: HaloType.sansFallback,
       bodyColor: HaloColors.text,
       displayColor: HaloColors.text,

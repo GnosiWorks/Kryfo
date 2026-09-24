@@ -356,8 +356,8 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
             child: Text(
               _help,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontFamily: 'Instrument Sans',
+              style: TextStyle(
+                fontFamily: HaloType.sansFamily,
                 fontFamilyFallback: HaloType.sansFallback,
                 fontSize: 11.5,
                 color: kText3,
