@@ -197,6 +197,7 @@ class _JoinSideState extends State<_JoinSide> {
         ),
         const SizedBox(height: 20),
         TextField(
+          textDirection: TextDirection.ltr,
           controller: _ctrl,
           keyboardType: TextInputType.number,
           maxLength: 7,

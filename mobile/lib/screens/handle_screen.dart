@@ -222,7 +222,7 @@ class _ClaimedCard extends StatelessWidget {
               Icon(Icons.verified_outlined, size: 16, color: HaloColors.green),
               const SizedBox(width: 8),
               Text(
-                '@$handle',
+                ltr('@$handle'),
                 style: HaloType.serif(size: 20, color: HaloColors.text),
               ),
             ],
@@ -378,6 +378,7 @@ class _Field extends StatelessWidget {
             ),
           Expanded(
             child: TextField(
+              textDirection: TextDirection.ltr,
               controller: ctrl,
               onChanged: onChanged,
               maxLength: max,

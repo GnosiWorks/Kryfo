@@ -19,6 +19,11 @@ Locale _locale = const Locale('en');
 
 AppLocalizations get l10n => _current;
 
+/// a handle, an id or a link shown on its own: laid out left to right even
+/// in a right-to-left language, where "@wren" would otherwise read "wren@".
+/// the isolate marks are invisible.
+String ltr(String s) => '\u2066$s\u2069';
+
 /// the language the app is in now. MaterialApp is given it too, so
 /// material's own words (copy, paste, select all) and the text direction
 /// follow.

@@ -177,7 +177,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
                   if (handle != null) ...[
                     const SizedBox(height: 6),
                     Text(
-                      '@$handle',
+                      ltr('@$handle'),
                       style: HaloType.sans(size: 14, color: HaloColors.text2),
                     ),
                   ],
@@ -583,6 +583,7 @@ class _Way3Card extends StatelessWidget {
                 const SizedBox(width: 2),
                 Expanded(
                   child: TextField(
+                    textDirection: TextDirection.ltr,
                     controller: ctrl,
                     maxLength: 20,
                     autocorrect: false,
@@ -716,7 +717,7 @@ class _HandleRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    claimed ? '@$handle' : l10n.myKryfoAPublicHandle,
+                    claimed ? ltr('@$handle') : l10n.myKryfoAPublicHandle,
                     style: claimed
                         ? HaloType.mono(size: 16, color: HaloColors.text)
                         : HaloType.serif(

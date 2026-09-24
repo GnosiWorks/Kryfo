@@ -287,6 +287,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                     vertical: 4,
                   ),
                   child: TextField(
+                    textDirection: TextDirection.ltr,
                     controller: _ctrl,
                     maxLines: 5,
                     minLines: 3,
@@ -725,6 +726,7 @@ class _RequestBlock extends StatelessWidget {
                       border: Border.all(color: HaloColors.line),
                     ),
                     child: TextField(
+                      textDirection: TextDirection.ltr,
                       controller: answer,
                       autocorrect: false,
                       enableSuggestions: false,

@@ -32,4 +32,8 @@ void main() {
     expect(aroundSlot(l10n.roomLinkEndsIn), ('Ends in ', ''));
     expect(aroundSlot((t) => l10n.groupChatHere(3, t)), ('', ' · 3 here'));
   });
+
+  test('a handle keeps its @ in front in a right-to-left line', () {
+    expect(ltr('@wren'), '\u2066@wren\u2069');
+  });
 }

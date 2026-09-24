@@ -8683,6 +8683,7 @@ Future<void> showAddContact(BuildContext context) async {
               border: Border.all(color: HaloColors.line, width: 0.5),
             ),
             child: TextField(
+              textDirection: TextDirection.ltr,
               controller: ctrl,
               minLines: 1,
               maxLines: 3,
@@ -9061,6 +9062,7 @@ class _DevScreenState extends State<DevScreen> {
             ),
             const SizedBox(height: 10),
             TextField(
+              textDirection: TextDirection.ltr,
               controller: ctrl,
               maxLines: 4,
               style: HaloType.mono(size: 11, color: HaloColors.text),
