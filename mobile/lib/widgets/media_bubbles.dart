@@ -340,7 +340,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
 
   String _fmt(Duration d) {
     final s = d.inSeconds;
-    return '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
+    return '${whole(s ~/ 60)}:${twoDigits(s % 60)}';
   }
 
   @override
@@ -548,8 +548,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
   String get _time {
     final s = _ms ~/ 1000;
     final m = s ~/ 60;
-    final ss = (s % 60).toString().padLeft(2, '0');
-    return '$m:$ss';
+    return '${whole(m)}:${twoDigits(s % 60)}';
   }
 
   Widget _bar() {

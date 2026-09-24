@@ -53,8 +53,7 @@ String countdownLabel(Duration left) {
         : l10n.roomsHM(whole(left.inHours), whole(m));
   }
   if (left.inMinutes >= 5) return l10n.roomsM(whole(left.inMinutes));
-  final s = (left.inSeconds % 60).toString().padLeft(2, '0');
-  return '${left.inMinutes}:$s';
+  return '${whole(left.inMinutes)}:${twoDigits(left.inSeconds % 60)}';
 }
 
 enum CountdownTone { calm, amber, rose }

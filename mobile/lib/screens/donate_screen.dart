@@ -790,7 +790,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
   String _fmtLeft() {
     final m = _secsLeft ~/ 60;
     final sec = _secsLeft % 60;
-    return '$m:${sec.toString().padLeft(2, '0')}';
+    return '${whole(m)}:${twoDigits(sec)}';
   }
 
   Widget _loadingView() {

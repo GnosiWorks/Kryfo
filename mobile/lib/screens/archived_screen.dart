@@ -5,6 +5,7 @@ import '../widgets/kryfo_avatar.dart';
 import '../main.dart' show appState;
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
+import '../l10n/numbers.dart';
 
 // chats you have archived. hidden from the main list but still receive
 // normally. they read dimmer here on purpose - resting, not gone. a row
@@ -184,7 +185,7 @@ class _ArchivedRowState extends State<_ArchivedRow> {
             SizedBox(
               width: 16,
               child: Text(
-                widget.number.toString().padLeft(2, '0'),
+                twoDigits(widget.number),
                 style: HaloType.mono(
                   size: 10,
                   color: _awake ? HaloColors.text3 : HaloColors.line2,

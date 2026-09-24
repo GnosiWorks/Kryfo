@@ -2,6 +2,7 @@
 // opening a received file with another app, and what a video bubble needs
 // to draw itself. both are the phone's own machinery behind one channel.
 import 'package:flutter/services.dart';
+import 'l10n/numbers.dart';
 
 const _channel = MethodChannel('halo/platform');
 
@@ -77,7 +78,8 @@ String videoLength(Duration d) {
   final s = d.inSeconds;
   final m = s ~/ 60;
   final h = m ~/ 60;
-  final ss = (s % 60).toString().padLeft(2, '0');
-  if (h > 0) return '$h:${(m % 60).toString().padLeft(2, '0')}:$ss';
-  return '$m:$ss';
+  // the language's digits: ۰:۰۵ in persian
+  final ss = twoDigits(s % 60);
+  if (h > 0) return '${whole(h)}:${twoDigits(m % 60)}:$ss';
+  return '${whole(m)}:$ss';
 }

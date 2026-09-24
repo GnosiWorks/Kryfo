@@ -7219,8 +7219,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
   String get _time {
     final s = _ms ~/ 1000;
     final m = s ~/ 60;
-    final ss = (s % 60).toString().padLeft(2, '0');
-    return '$m:$ss';
+    return '${whole(m)}:${twoDigits(s % 60)}';
   }
 
   Widget _bar() {
