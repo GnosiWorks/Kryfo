@@ -4948,8 +4948,12 @@ class AppState extends ChangeNotifier {
   }
 
   // the language changed: the notification channel's name and the service's
-  // own notification are android's, and are told again
+  // own notification are android's, and are told again. the chat list's
+  // previews ("you: ...") were worded when the list was read, so it is read
+  // again.
   Future<void> languageChanged() async {
+    unawaited(refreshContacts());
+    unawaited(refreshGroups());
     try {
       await nameNotificationChannel();
       if (!kIsWeb && Platform.isAndroid) {
