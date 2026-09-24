@@ -3,6 +3,15 @@
 what a release actually is, from the three we have cut. follow it top to
 bottom. each step exists because skipping it has bitten us once.
 
+## 0. what a feature has to be before it ships
+
+every new feature ships finished, from its first version: telegram-level
+animation, ui and ux. transitions are smooth (springs, under 300 ms), haptics
+where they help, nothing that looks like default flutter, kryfo's own design
+language (its tokens, fonts and sheets), and the phone's reduced-motion
+setting respected. "we'll polish it later" is not a plan; a feature that is
+not there yet does not go into a release.
+
 ## 1. before anything
 
 - `cd mobile && flutter analyze` shows nothing but the known deprecation
