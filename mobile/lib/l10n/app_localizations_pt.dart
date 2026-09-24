@@ -997,7 +997,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get backupOneEncryptedFileYour =>
-      'Um arquivo criptografado: sua identidade, seus contatos, todas as mensagens e todas as fotos, áudios e arquivos. Importe no outro aparelho com a frase-senha. Até você fazer isso, ainda dá para ficar com este celular.';
+      'Um arquivo criptografado: sua identidade, seus contatos, todas as mensagens e todas as fotos, áudios e arquivos. Importe no outro aparelho com a frase-senha. Até lá, você ainda pode mudar de ideia e continuar neste celular.';
 
   @override
   String get backupOneEncryptedFileYourIdentityYour =>
@@ -1401,7 +1401,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chat24Hours => '24 horas';
 
   @override
-  String get chatGhostTimer => 'Timer fantasma';
+  String get chatGhostTimer => 'Mensagens temporárias';
 
   @override
   String get chatHowLongBeforeSent =>
@@ -1779,11 +1779,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chatSlideToCancel => 'Deslize para cancelar';
 
   @override
-  String get chatGhostMode => 'Modo fantasma';
+  String get chatGhostMode => 'Mensagens temporárias';
 
   @override
   String chatMessagesBurnAfter(Object humanBurn) {
-    return 'As mensagens somem após $humanBurn';
+    return 'somem após $humanBurn';
   }
 
   @override
@@ -2060,18 +2060,36 @@ class AppLocalizationsPt extends AppLocalizations {
   String get contactToday => 'hoje';
 
   @override
-  String contactD(Object inDays) {
-    return '${inDays}d';
+  String contactD(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dias',
+      one: '$count dia',
+    );
+    return '$_temp0';
   }
 
   @override
-  String contactMo(Object d) {
-    return '$d mes.';
+  String contactMo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count meses',
+      one: '$count mês',
+    );
+    return '$_temp0';
   }
 
   @override
-  String contactY(Object d) {
-    return '$d a.';
+  String contactY(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count anos',
+      one: '$count ano',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2395,7 +2413,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get groupChat24Hours => '24 horas';
 
   @override
-  String get groupChatBurnTimer => 'Tempo para sumir';
+  String get groupChatBurnTimer => 'Mensagens temporárias';
 
   @override
   String get groupChatNewMessagesDisappearAfter =>
@@ -2480,7 +2498,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String groupChatGhostModeOnBurns(Object fmtBurn) {
-    return 'Modo fantasma ativo · somem em $fmtBurn';
+    return 'Mensagens temporárias · somem após $fmtBurn';
   }
 
   @override
@@ -3544,7 +3562,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get modesKeepItOff => 'Deixar desativado';
 
   @override
-  String get movedWipeThisPhone => 'Apagar este celular?';
+  String get movedWipeThisPhone => 'Apagar o Kryfo deste celular?';
 
   @override
   String get movedEverythingKryfoHoldsHere =>
@@ -3586,7 +3604,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get movedKeepItToRead => 'Manter para leitura';
 
   @override
-  String get movedWipeThisPhone2 => 'Apagar este celular';
+  String get movedWipeThisPhone2 => 'Apagar o Kryfo deste celular';
 
   @override
   String get movedIMNotMoving => 'Afinal, não vou mudar';
@@ -3679,7 +3697,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get myKryfoTheLookupAsksFor =>
-      'A busca pede só esse nome e nada sobre você. A primeira mensagem que a pessoa receber de você ainda chega como pedido do lado dela.';
+      'A busca envia só esse nome e nada sobre você. Sua primeira mensagem ainda chega para a pessoa como pedido.';
 
   @override
   String get myKryfoLooking => 'Procurando…';

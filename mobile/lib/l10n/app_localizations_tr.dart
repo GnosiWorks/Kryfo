@@ -995,7 +995,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get backupOneEncryptedFileYour =>
-      'Tek bir şifreli dosya: kimliğin, kişilerin, her mesaj ve her fotoğraf, sesli not ve dosya. Diğer cihazda parola ifadesiyle içe aktar. Bunu yapana kadar bu telefonu elinde tutabilirsin.';
+      'Tek bir şifreli dosya: kimliğin, kişilerin, her mesaj ve her fotoğraf, sesli not ve dosya. Diğer cihazda parola ifadesiyle içe aktar. O zamana kadar fikrini değiştirip bu telefonda kalabilirsin.';
 
   @override
   String get backupOneEncryptedFileYourIdentityYour =>
@@ -1397,7 +1397,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chat24Hours => '24 saat';
 
   @override
-  String get chatGhostTimer => 'Hayalet sayacı';
+  String get chatGhostTimer => 'Süreli mesajlar';
 
   @override
   String get chatHowLongBeforeSent =>
@@ -1775,11 +1775,11 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatSlideToCancel => 'İptal için kaydır';
 
   @override
-  String get chatGhostMode => 'Hayalet modu';
+  String get chatGhostMode => 'Süreli mesajlar';
 
   @override
   String chatMessagesBurnAfter(Object humanBurn) {
-    return 'Mesajlar $humanBurn sonra silinir';
+    return '$humanBurn sonra silinir';
   }
 
   @override
@@ -2051,18 +2051,33 @@ class AppLocalizationsTr extends AppLocalizations {
   String get contactToday => 'bugün';
 
   @override
-  String contactD(Object inDays) {
-    return '$inDays g';
+  String contactD(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count gün',
+    );
+    return '$_temp0';
   }
 
   @override
-  String contactMo(Object d) {
-    return '$d ay';
+  String contactMo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ay',
+    );
+    return '$_temp0';
   }
 
   @override
-  String contactY(Object d) {
-    return '$d yıl';
+  String contactY(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count yıl',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2380,7 +2395,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get groupChat24Hours => '24 saat';
 
   @override
-  String get groupChatBurnTimer => 'Silinme sayacı';
+  String get groupChatBurnTimer => 'Süreli mesajlar';
 
   @override
   String get groupChatNewMessagesDisappearAfter =>
@@ -2465,7 +2480,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String groupChatGhostModeOnBurns(Object fmtBurn) {
-    return 'Hayalet modu açık · $fmtBurn sonra silinir';
+    return 'Süreli mesajlar · $fmtBurn sonra silinir';
   }
 
   @override
@@ -3539,7 +3554,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get modesKeepItOff => 'Kapalı kalsın';
 
   @override
-  String get movedWipeThisPhone => 'Bu telefon silinsin mi?';
+  String get movedWipeThisPhone => 'Kryfo bu telefondan silinsin mi?';
 
   @override
   String get movedEverythingKryfoHoldsHere =>
@@ -3581,7 +3596,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get movedKeepItToRead => 'Okumak için tut';
 
   @override
-  String get movedWipeThisPhone2 => 'Bu telefonu sil';
+  String get movedWipeThisPhone2 => 'Kryfo’yu bu telefondan sil';
 
   @override
   String get movedIMNotMoving => 'Taşınmaktan vazgeçtim';
@@ -3675,7 +3690,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get myKryfoTheLookupAsksFor =>
-      'Arama yalnızca o adı sorar, senin hakkında hiçbir şey sormaz. Ona ilk mesajın yine de onun tarafında istek olarak düşer.';
+      'Arama yalnızca o adı gönderir, senin hakkında hiçbir şey göndermez. İlk mesajın yine de ona istek olarak ulaşır.';
 
   @override
   String get myKryfoLooking => 'Aranıyor…';
@@ -4858,7 +4873,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get seenIfSomeoneHoldsYour =>
-      'Biri telefonunu açık haldeyken elinde tutarsa mesajlarını okur. Uygulama kilidi, panik PIN’i ve şifreli depolama o noktadan önce işe yarar, sonra değil.';
+      'Biri telefonunu açık haldeyken elinde tutarsa mesajlarını okur. Uygulama kilidi, silme PIN’i ve şifreli depolama o noktadan önce işe yarar, sonra değil.';
 
   @override
   String get seenTheCryptoItself => 'Kriptografinin kendisi';

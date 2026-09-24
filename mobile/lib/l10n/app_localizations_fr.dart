@@ -996,7 +996,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get backupOneEncryptedFileYour =>
-      'Un seul fichier chiffré : votre identité, vos contacts, chaque message, et chaque photo, note vocale et fichier. Importez-le sur l’autre appareil avec la phrase secrète. Tant que ce n’est pas fait, vous pouvez encore garder ce téléphone.';
+      'Un seul fichier chiffré : votre identité, vos contacts, chaque message, et chaque photo, note vocale et fichier. Importez-le sur l’autre appareil avec la phrase secrète. D’ici là, vous pouvez encore changer d’avis et rester sur ce téléphone.';
 
   @override
   String get backupOneEncryptedFileYourIdentityYour =>
@@ -1402,7 +1402,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chat24Hours => '24 heures';
 
   @override
-  String get chatGhostTimer => 'Minuteur fantôme';
+  String get chatGhostTimer => 'Messages éphémères';
 
   @override
   String get chatHowLongBeforeSent =>
@@ -1782,11 +1782,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chatSlideToCancel => 'Glissez pour annuler';
 
   @override
-  String get chatGhostMode => 'Mode fantôme';
+  String get chatGhostMode => 'Messages éphémères';
 
   @override
   String chatMessagesBurnAfter(Object humanBurn) {
-    return 'Les messages disparaissent après $humanBurn';
+    return 'disparaissent après $humanBurn';
   }
 
   @override
@@ -2062,18 +2062,35 @@ class AppLocalizationsFr extends AppLocalizations {
   String get contactToday => 'auj.';
 
   @override
-  String contactD(Object inDays) {
-    return '$inDays j';
+  String contactD(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count jours',
+      one: '$count jour',
+    );
+    return '$_temp0';
   }
 
   @override
-  String contactMo(Object d) {
-    return '$d mois';
+  String contactMo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count mois',
+    );
+    return '$_temp0';
   }
 
   @override
-  String contactY(Object d) {
-    return '$d a';
+  String contactY(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ans',
+      one: '$count an',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2397,7 +2414,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get groupChat24Hours => '24 heures';
 
   @override
-  String get groupChatBurnTimer => 'Minuteur éphémère';
+  String get groupChatBurnTimer => 'Messages éphémères';
 
   @override
   String get groupChatNewMessagesDisappearAfter =>
@@ -2482,7 +2499,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String groupChatGhostModeOnBurns(Object fmtBurn) {
-    return 'Mode fantôme activé · disparition après $fmtBurn';
+    return 'Messages éphémères · disparaissent après $fmtBurn';
   }
 
   @override
@@ -3552,7 +3569,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get modesKeepItOff => 'Laisser désactivé';
 
   @override
-  String get movedWipeThisPhone => 'Effacer ce téléphone ?';
+  String get movedWipeThisPhone => 'Effacer Kryfo de ce téléphone ?';
 
   @override
   String get movedEverythingKryfoHoldsHere =>
@@ -3594,7 +3611,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get movedKeepItToRead => 'Le garder pour lire';
 
   @override
-  String get movedWipeThisPhone2 => 'Effacer ce téléphone';
+  String get movedWipeThisPhone2 => 'Effacer Kryfo de ce téléphone';
 
   @override
   String get movedIMNotMoving => 'Finalement, je ne pars pas';
@@ -3688,7 +3705,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get myKryfoTheLookupAsksFor =>
-      'La recherche demande ce seul nom et rien sur vous. Votre premier message arrive quand même chez la personne comme une demande.';
+      'La recherche n’envoie que ce nom, et rien sur vous. Votre premier message arrive quand même comme une demande.';
 
   @override
   String get myKryfoLooking => 'Recherche…';

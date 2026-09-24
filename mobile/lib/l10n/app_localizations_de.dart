@@ -995,7 +995,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get backupOneEncryptedFileYour =>
-      'Eine verschlüsselte Datei: deine Identität, deine Kontakte, jede Nachricht und jedes Foto, jede Sprachnachricht und jede Datei. Importiere sie mit der Passphrase auf dem anderen Gerät. Bis du das tust, kannst du dieses Handy noch behalten.';
+      'Eine verschlüsselte Datei: deine Identität, deine Kontakte, jede Nachricht und jedes Foto, jede Sprachnachricht und jede Datei. Importiere sie mit der Passphrase auf dem anderen Gerät. Bis dahin kannst du es dir noch anders überlegen und auf diesem Handy bleiben.';
 
   @override
   String get backupOneEncryptedFileYourIdentityYour =>
@@ -1400,7 +1400,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chat24Hours => '24 Stunden';
 
   @override
-  String get chatGhostTimer => 'Geister-Timer';
+  String get chatGhostTimer => 'Befristete Nachrichten';
 
   @override
   String get chatHowLongBeforeSent =>
@@ -1780,11 +1780,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatSlideToCancel => 'Zum Abbrechen wischen';
 
   @override
-  String get chatGhostMode => 'Geistermodus';
+  String get chatGhostMode => 'Befristete Nachrichten';
 
   @override
   String chatMessagesBurnAfter(Object humanBurn) {
-    return 'Nachrichten verschwinden nach $humanBurn';
+    return 'verschwinden nach $humanBurn';
   }
 
   @override
@@ -2062,18 +2062,36 @@ class AppLocalizationsDe extends AppLocalizations {
   String get contactToday => 'heute';
 
   @override
-  String contactD(Object inDays) {
-    return '$inDays T';
+  String contactD(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Tage',
+      one: '$count Tag',
+    );
+    return '$_temp0';
   }
 
   @override
-  String contactMo(Object d) {
-    return '$d Mon.';
+  String contactMo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Monate',
+      one: '$count Monat',
+    );
+    return '$_temp0';
   }
 
   @override
-  String contactY(Object d) {
-    return '$d J.';
+  String contactY(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Jahre',
+      one: '$count Jahr',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2398,7 +2416,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get groupChat24Hours => '24 Stunden';
 
   @override
-  String get groupChatBurnTimer => 'Ablauf-Timer';
+  String get groupChatBurnTimer => 'Befristete Nachrichten';
 
   @override
   String get groupChatNewMessagesDisappearAfter =>
@@ -2483,7 +2501,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String groupChatGhostModeOnBurns(Object fmtBurn) {
-    return 'Geistermodus an · verschwindet in $fmtBurn';
+    return 'Befristete Nachrichten · verschwinden nach $fmtBurn';
   }
 
   @override
@@ -3559,7 +3577,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get modesKeepItOff => 'Aus lassen';
 
   @override
-  String get movedWipeThisPhone => 'Dieses Handy löschen?';
+  String get movedWipeThisPhone => 'Kryfo von diesem Handy löschen?';
 
   @override
   String get movedEverythingKryfoHoldsHere =>
@@ -3601,7 +3619,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get movedKeepItToRead => 'Zum Lesen behalten';
 
   @override
-  String get movedWipeThisPhone2 => 'Dieses Handy löschen';
+  String get movedWipeThisPhone2 => 'Kryfo von diesem Handy löschen';
 
   @override
   String get movedIMNotMoving => 'Ich ziehe doch nicht um';
@@ -3695,7 +3713,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get myKryfoTheLookupAsksFor =>
-      'Die Suche fragt nur nach diesem einen Namen und nichts über dich. Deine erste Nachricht landet bei der Person trotzdem als Anfrage.';
+      'Die Suche schickt nur diesen einen Namen und nichts über dich. Deine erste Nachricht kommt bei der Person trotzdem als Anfrage an.';
 
   @override
   String get myKryfoLooking => 'Suche…';

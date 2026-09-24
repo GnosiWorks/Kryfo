@@ -530,7 +530,7 @@ void main() {
     );
     expect(
       l.backupOneEncryptedFileYour,
-      "One encrypted file: your identity, your contacts, every message, and every photo, voice note and file. Import it on the other device with the passphrase. Until you do, this phone can still be kept.",
+      "One encrypted file: your identity, your contacts, every message, and every photo, voice note and file. Import it on the other device with the passphrase. Until you do, you can still change your mind and stay on this phone.",
     );
     expect(
       l.backupOneEncryptedFileYourIdentityYour,
@@ -693,7 +693,7 @@ void main() {
     expect(l.chat5Minutes, "5 minutes");
     expect(l.chat1Hour, "1 hour");
     expect(l.chat24Hours, "24 hours");
-    expect(l.chatGhostTimer, "Ghost timer");
+    expect(l.chatGhostTimer, "Timed messages");
     expect(l.chatHowLongBeforeSent, "How long before sent messages burn?");
     expect(l.chatCamera, "Camera");
     expect(l.chatNoExifNeverSaved, "No exif, never saved to your photos");
@@ -860,11 +860,8 @@ void main() {
     expect(l.chatReleaseToCancel, "Release to cancel");
     expect(l.chatVoiceHiddenSlideTo, "Voice hidden · slide to cancel");
     expect(l.chatSlideToCancel, "Slide to cancel");
-    expect(l.chatGhostMode, "Ghost mode");
-    expect(
-      l.chatMessagesBurnAfter("<humanBurn>"),
-      "Messages burn after <humanBurn>",
-    );
+    expect(l.chatGhostMode, "Timed messages");
+    expect(l.chatMessagesBurnAfter("<humanBurn>"), "burn after <humanBurn>");
     expect(l.chatTimedMessages, "Timed messages");
     expect(l.chatOpenTheCamera, "Open the camera");
     expect(l.chatAttachAPhoto, "Attach a photo");
@@ -1005,9 +1002,18 @@ void main() {
     expect(l.commonDelete, "Delete");
     expect(l.contactDeleted, "Deleted");
     expect(l.contactToday, "today");
-    expect(l.contactD("<inDays>"), "<inDays>d");
-    expect(l.contactMo("<d>"), "<d>mo");
-    expect(l.contactY("<d>"), "<d>y");
+    expect(l.contactD(0), "0d");
+    expect(l.contactD(1), "1d");
+    expect(l.contactD(2), "2d");
+    expect(l.contactD(5), "5d");
+    expect(l.contactMo(0), "0mo");
+    expect(l.contactMo(1), "1mo");
+    expect(l.contactMo(2), "2mo");
+    expect(l.contactMo(5), "5mo");
+    expect(l.contactY(0), "0y");
+    expect(l.contactY(1), "1y");
+    expect(l.contactY(2), "2y");
+    expect(l.contactY(5), "5y");
     expect(l.contactVerified, "Verified");
     expect(l.contactChatting, "Chatting");
     expect(l.contactNothingSharedYet, "nothing shared yet");
@@ -1188,7 +1194,7 @@ void main() {
     expect(l.groupChat5Minutes, "5 minutes");
     expect(l.groupChat1Hour, "1 hour");
     expect(l.groupChat24Hours, "24 hours");
-    expect(l.groupChatBurnTimer, "Burn timer");
+    expect(l.groupChatBurnTimer, "Timed messages");
     expect(
       l.groupChatNewMessagesDisappearAfter,
       "New messages disappear after this",
@@ -1230,7 +1236,7 @@ void main() {
     );
     expect(
       l.groupChatGhostModeOnBurns("<fmtBurn>"),
-      "Ghost mode on · burns in <fmtBurn>",
+      "Timed messages · burn after <fmtBurn>",
     );
     expect(l.groupChatGroupCreatedSayHi, "Group created. Say hi.");
     expect(l.groupChatNoMessagesYet, "No messages yet.");
@@ -1815,7 +1821,7 @@ void main() {
     );
     expect(l.modesTurnOnFastMode, "Turn on fast mode");
     expect(l.modesKeepItOff, "Keep it off");
-    expect(l.movedWipeThisPhone, "Wipe this phone?");
+    expect(l.movedWipeThisPhone, "Wipe Kryfo from this phone?");
     expect(
       l.movedEverythingKryfoHoldsHere,
       "Everything kryfo holds here goes: the messages, the contacts, the keys. The other device keeps all of it. This cannot be undone.",
@@ -1839,7 +1845,7 @@ void main() {
       "<myId> is now on another device. This phone can still show what was here, but nothing new will arrive on it, and anything you send from here won't reach anyone.",
     );
     expect(l.movedKeepItToRead, "Keep it to read");
-    expect(l.movedWipeThisPhone2, "Wipe this phone");
+    expect(l.movedWipeThisPhone2, "Wipe Kryfo from this phone");
     expect(l.movedIMNotMoving, "I'm not moving after all");
     expect(l.myKryfoAHandleIs3, "A handle is 3 to 20 letters, digits or _");
     expect(l.myKryfoInviteCopiedClearsIn, "Invite copied · clears in 60s");
@@ -1895,7 +1901,7 @@ void main() {
     expect(l.myKryfoWren, "Wren");
     expect(
       l.myKryfoTheLookupAsksFor,
-      "The lookup asks for that one name and nothing about you. Their first message from you still lands as a request on their side.",
+      "The lookup sends that one name and nothing about you. Your first message to them still arrives as a request.",
     );
     expect(l.myKryfoLooking, "Looking…");
     expect(l.myKryfoFindThem, "Find them");
@@ -2529,7 +2535,7 @@ void main() {
     expect(l.seenASeizedUnlockedPhone, "A seized unlocked phone");
     expect(
       l.seenIfSomeoneHoldsYour,
-      "If someone holds your phone open, they read your messages. The app lock, panic pin and encrypted storage help before that point, not after it.",
+      "If someone holds your phone open, they read your messages. The app lock, wipe pin and encrypted storage help before that point, not after it.",
     );
     expect(l.seenTheCryptoItself, "The crypto itself");
     expect(

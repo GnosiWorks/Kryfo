@@ -995,7 +995,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get backupOneEncryptedFileYour =>
-      'Un solo file cifrato: la tua identità, i tuoi contatti, ogni messaggio e ogni foto, nota vocale e file. Importalo sull\'altro dispositivo con la passphrase. Finché non lo fai, puoi ancora tenere questo telefono.';
+      'Un solo file cifrato: la tua identità, i tuoi contatti, ogni messaggio e ogni foto, nota vocale e file. Importalo sull\'altro dispositivo con la passphrase. Fino ad allora puoi ancora cambiare idea e restare su questo telefono.';
 
   @override
   String get backupOneEncryptedFileYourIdentityYour =>
@@ -1400,7 +1400,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get chat24Hours => '24 ore';
 
   @override
-  String get chatGhostTimer => 'Timer fantasma';
+  String get chatGhostTimer => 'Messaggi a tempo';
 
   @override
   String get chatHowLongBeforeSent =>
@@ -1781,11 +1781,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get chatSlideToCancel => 'Scorri per annullare';
 
   @override
-  String get chatGhostMode => 'Modalità fantasma';
+  String get chatGhostMode => 'Messaggi a tempo';
 
   @override
   String chatMessagesBurnAfter(Object humanBurn) {
-    return 'I messaggi spariscono dopo $humanBurn';
+    return 'spariscono dopo $humanBurn';
   }
 
   @override
@@ -2063,18 +2063,36 @@ class AppLocalizationsIt extends AppLocalizations {
   String get contactToday => 'oggi';
 
   @override
-  String contactD(Object inDays) {
-    return '$inDays g';
+  String contactD(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count giorni',
+      one: '$count giorno',
+    );
+    return '$_temp0';
   }
 
   @override
-  String contactMo(Object d) {
-    return '$d m';
+  String contactMo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count mesi',
+      one: '$count mese',
+    );
+    return '$_temp0';
   }
 
   @override
-  String contactY(Object d) {
-    return '$d a';
+  String contactY(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count anni',
+      one: '$count anno',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2398,7 +2416,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get groupChat24Hours => '24 ore';
 
   @override
-  String get groupChatBurnTimer => 'Timer di scomparsa';
+  String get groupChatBurnTimer => 'Messaggi a tempo';
 
   @override
   String get groupChatNewMessagesDisappearAfter =>
@@ -2483,7 +2501,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String groupChatGhostModeOnBurns(Object fmtBurn) {
-    return 'Modalità fantasma attiva · sparisce dopo $fmtBurn';
+    return 'Messaggi a tempo · spariscono dopo $fmtBurn';
   }
 
   @override
@@ -3554,7 +3572,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get modesKeepItOff => 'Lasciala spenta';
 
   @override
-  String get movedWipeThisPhone => 'Cancellare questo telefono?';
+  String get movedWipeThisPhone => 'Cancellare Kryfo da questo telefono?';
 
   @override
   String get movedEverythingKryfoHoldsHere =>
@@ -3596,7 +3614,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get movedKeepItToRead => 'Tienilo per leggere';
 
   @override
-  String get movedWipeThisPhone2 => 'Cancella questo telefono';
+  String get movedWipeThisPhone2 => 'Cancella Kryfo da questo telefono';
 
   @override
   String get movedIMNotMoving => 'Alla fine non mi trasferisco';
@@ -3689,7 +3707,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get myKryfoTheLookupAsksFor =>
-      'La ricerca chiede solo quel nome e niente su di te. Il tuo primo messaggio arriva comunque come richiesta dalla sua parte.';
+      'La ricerca invia solo quel nome e niente su di te. Il tuo primo messaggio arriva comunque come richiesta.';
 
   @override
   String get myKryfoLooking => 'Ricerca…';

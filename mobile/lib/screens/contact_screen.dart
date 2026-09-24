@@ -458,9 +458,9 @@ class _Stats extends StatelessWidget {
       DateTime.fromMillisecondsSinceEpoch(ms),
     );
     if (d.inDays < 1) return l10n.contactToday;
-    if (d.inDays < 30) return l10n.contactD(whole(d.inDays));
-    if (d.inDays < 365) return l10n.contactMo(whole(d.inDays ~/ 30));
-    return l10n.contactY(whole(d.inDays ~/ 365));
+    if (d.inDays < 30) return l10n.contactD(d.inDays);
+    if (d.inDays < 365) return l10n.contactMo(d.inDays ~/ 30);
+    return l10n.contactY(d.inDays ~/ 365);
   }
 
   @override
@@ -521,7 +521,17 @@ class _StatCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            SizedBox(height: 30, child: Center(child: child)),
+            // a value a language writes longer ("3 meses") shrinks to fit
+            // its card rather than spilling out of it
+            SizedBox(
+              height: 30,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Center(
+                  child: FittedBox(fit: BoxFit.scaleDown, child: child),
+                ),
+              ),
+            ),
             const SizedBox(height: 4),
             Text(
               label,

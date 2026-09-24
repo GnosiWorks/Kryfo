@@ -954,7 +954,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get backupOneEncryptedFileYour =>
-      '一个加密文件：你的身份、你的联系人、每一条消息，以及每一张照片、每一条语音和每一个文件。在另一台设备上用密码短语导入它。在你导入之前，这部手机仍然可以留用。';
+      '一个加密文件：你的身份、你的联系人、每一条消息，以及每一张照片、每一条语音和每一个文件。在另一台设备上用密码短语导入它。在那之前，你仍然可以改变主意，继续留在这部手机上。';
 
   @override
   String get backupOneEncryptedFileYourIdentityYour =>
@@ -1344,7 +1344,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat24Hours => '24 小时';
 
   @override
-  String get chatGhostTimer => '焚毁计时';
+  String get chatGhostTimer => '限时消息';
 
   @override
   String get chatHowLongBeforeSent => '发出的消息多久后焚毁？';
@@ -1709,11 +1709,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatSlideToCancel => '滑动取消';
 
   @override
-  String get chatGhostMode => '焚毁模式';
+  String get chatGhostMode => '限时消息';
 
   @override
   String chatMessagesBurnAfter(Object humanBurn) {
-    return '消息将在 $humanBurn后焚毁';
+    return '$humanBurn后焚毁';
   }
 
   @override
@@ -1971,18 +1971,33 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contactToday => '今天';
 
   @override
-  String contactD(Object inDays) {
-    return '$inDays 天';
+  String contactD(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 天',
+    );
+    return '$_temp0';
   }
 
   @override
-  String contactMo(Object d) {
-    return '$d 个月';
+  String contactMo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 个月',
+    );
+    return '$_temp0';
   }
 
   @override
-  String contactY(Object d) {
-    return '$d 年';
+  String contactY(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 年',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2283,7 +2298,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupChat24Hours => '24 小时';
 
   @override
-  String get groupChatBurnTimer => '焚毁计时';
+  String get groupChatBurnTimer => '限时消息';
 
   @override
   String get groupChatNewMessagesDisappearAfter => '新消息会在这段时间后消失';
@@ -2363,7 +2378,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String groupChatGhostModeOnBurns(Object fmtBurn) {
-    return '焚毁模式已开启 · $fmtBurn后焚毁';
+    return '限时消息 · $fmtBurn后焚毁';
   }
 
   @override
@@ -3388,7 +3403,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get modesKeepItOff => '保持关闭';
 
   @override
-  String get movedWipeThisPhone => '抹掉这部手机？';
+  String get movedWipeThisPhone => '要从这部手机上抹掉 Kryfo 吗？';
 
   @override
   String get movedEverythingKryfoHoldsHere =>
@@ -3430,7 +3445,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get movedKeepItToRead => '留着查看';
 
   @override
-  String get movedWipeThisPhone2 => '抹掉这部手机';
+  String get movedWipeThisPhone2 => '从这部手机上抹掉 Kryfo';
 
   @override
   String get movedIMNotMoving => '我不迁移了';
@@ -3517,7 +3532,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get myKryfoTheLookupAsksFor =>
-      '查找只询问这一个名字，不涉及你的任何信息。你发给对方的第一条消息，在对方那边仍会作为请求出现。';
+      '查找只发送这一个名字，不带任何关于你的信息。你发给对方的第一条消息仍会作为请求送达。';
 
   @override
   String get myKryfoLooking => '正在查找…';
@@ -7274,7 +7289,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get backupOneEncryptedFileYour =>
-      '一個加密檔案：你的身分、聯絡人、每則訊息，以及每張照片、每段語音和每個檔案。在另一台裝置上用密碼短語匯入。在你匯入之前，這支手機都還可以留著。';
+      '一個加密檔案：你的身分、聯絡人、每則訊息，以及每張照片、每段語音和每個檔案。在另一台裝置上用密碼短語匯入。在那之前，你仍然可以改變主意，繼續留在這支手機上。';
 
   @override
   String get backupOneEncryptedFileYourIdentityYour =>
@@ -7664,7 +7679,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chat24Hours => '24 小時';
 
   @override
-  String get chatGhostTimer => '幽靈計時';
+  String get chatGhostTimer => '限時訊息';
 
   @override
   String get chatHowLongBeforeSent => '已傳送的訊息要多久後焚毀？';
@@ -8028,11 +8043,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatSlideToCancel => '滑動以取消';
 
   @override
-  String get chatGhostMode => '幽靈模式';
+  String get chatGhostMode => '限時訊息';
 
   @override
   String chatMessagesBurnAfter(Object humanBurn) {
-    return '訊息會在 $humanBurn後焚毀';
+    return '$humanBurn後焚毀';
   }
 
   @override
@@ -8290,18 +8305,33 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get contactToday => '今天';
 
   @override
-  String contactD(Object inDays) {
-    return '$inDays 天';
+  String contactD(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 天',
+    );
+    return '$_temp0';
   }
 
   @override
-  String contactMo(Object d) {
-    return '$d 個月';
+  String contactMo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 個月',
+    );
+    return '$_temp0';
   }
 
   @override
-  String contactY(Object d) {
-    return '$d 年';
+  String contactY(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 年',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -8603,7 +8633,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupChat24Hours => '24 小時';
 
   @override
-  String get groupChatBurnTimer => '焚毀計時';
+  String get groupChatBurnTimer => '限時訊息';
 
   @override
   String get groupChatNewMessagesDisappearAfter => '新訊息會在這段時間後消失';
@@ -8683,7 +8713,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String groupChatGhostModeOnBurns(Object fmtBurn) {
-    return '幽靈模式已開啟 · $fmtBurn後焚毀';
+    return '限時訊息 · $fmtBurn後焚毀';
   }
 
   @override
@@ -9709,7 +9739,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get modesKeepItOff => '保持關閉';
 
   @override
-  String get movedWipeThisPhone => '要清除這支手機嗎？';
+  String get movedWipeThisPhone => '要從這支手機清除 Kryfo 嗎？';
 
   @override
   String get movedEverythingKryfoHoldsHere =>
@@ -9751,7 +9781,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get movedKeepItToRead => '留著閱讀';
 
   @override
-  String get movedWipeThisPhone2 => '清除這支手機';
+  String get movedWipeThisPhone2 => '從這支手機清除 Kryfo';
 
   @override
   String get movedIMNotMoving => '我最後決定不搬了';
@@ -9838,7 +9868,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get myKryfoTheLookupAsksFor =>
-      '查詢只會詢問那一個名稱，不含任何關於你的資訊。你傳給對方的第一則訊息，在對方那邊仍會以請求的形式出現。';
+      '查詢只會送出那一個名稱，不含任何關於你的資訊。你傳給對方的第一則訊息仍會以請求的形式送達。';
 
   @override
   String get myKryfoLooking => '尋找中…';

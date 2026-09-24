@@ -979,7 +979,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get backupOneEncryptedFileYour =>
-      'Một tệp được mã hóa: danh tính, các liên hệ, mọi tin nhắn, cùng mọi ảnh, tin nhắn thoại và tệp của bạn. Hãy nhập nó trên thiết bị kia bằng cụm mật khẩu. Cho đến khi bạn làm vậy, vẫn có thể giữ lại điện thoại này.';
+      'Một tệp được mã hóa: danh tính, các liên hệ, mọi tin nhắn, cùng mọi ảnh, tin nhắn thoại và tệp của bạn. Hãy nhập nó trên thiết bị kia bằng cụm mật khẩu. Trước khi làm vậy, bạn vẫn có thể đổi ý và ở lại trên điện thoại này.';
 
   @override
   String get backupOneEncryptedFileYourIdentityYour =>
@@ -1380,7 +1380,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chat24Hours => '24 giờ';
 
   @override
-  String get chatGhostTimer => 'Hẹn giờ tự hủy';
+  String get chatGhostTimer => 'Tin nhắn tự hủy';
 
   @override
   String get chatHowLongBeforeSent => 'Tin nhắn đã gửi sẽ tự hủy sau bao lâu?';
@@ -1757,11 +1757,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatSlideToCancel => 'Trượt để hủy';
 
   @override
-  String get chatGhostMode => 'Chế độ tự hủy';
+  String get chatGhostMode => 'Tin nhắn tự hủy';
 
   @override
   String chatMessagesBurnAfter(Object humanBurn) {
-    return 'Tin nhắn tự hủy sau $humanBurn';
+    return 'tự hủy sau $humanBurn';
   }
 
   @override
@@ -2034,18 +2034,33 @@ class AppLocalizationsVi extends AppLocalizations {
   String get contactToday => 'hôm nay';
 
   @override
-  String contactD(Object inDays) {
-    return '$inDays ngày';
+  String contactD(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ngày',
+    );
+    return '$_temp0';
   }
 
   @override
-  String contactMo(Object d) {
-    return '$d tháng';
+  String contactMo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tháng',
+    );
+    return '$_temp0';
   }
 
   @override
-  String contactY(Object d) {
-    return '$d năm';
+  String contactY(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count năm',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2369,7 +2384,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get groupChat24Hours => '24 giờ';
 
   @override
-  String get groupChatBurnTimer => 'Hẹn giờ tự hủy';
+  String get groupChatBurnTimer => 'Tin nhắn tự hủy';
 
   @override
   String get groupChatNewMessagesDisappearAfter =>
@@ -2454,7 +2469,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String groupChatGhostModeOnBurns(Object fmtBurn) {
-    return 'Đã bật chế độ tự hủy · tự hủy sau $fmtBurn';
+    return 'Tin nhắn tự hủy · tự hủy sau $fmtBurn';
   }
 
   @override
@@ -3509,7 +3524,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get modesKeepItOff => 'Cứ để tắt';
 
   @override
-  String get movedWipeThisPhone => 'Xóa sạch điện thoại này?';
+  String get movedWipeThisPhone => 'Xóa sạch Kryfo khỏi điện thoại này?';
 
   @override
   String get movedEverythingKryfoHoldsHere =>
@@ -3551,7 +3566,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get movedKeepItToRead => 'Giữ để đọc';
 
   @override
-  String get movedWipeThisPhone2 => 'Xóa sạch điện thoại này';
+  String get movedWipeThisPhone2 => 'Xóa sạch Kryfo khỏi điện thoại này';
 
   @override
   String get movedIMNotMoving => 'Rốt cuộc tôi không chuyển nữa';
@@ -3645,7 +3660,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get myKryfoTheLookupAsksFor =>
-      'Việc tra cứu chỉ hỏi đúng tên đó và không hỏi gì về bạn. Tin nhắn đầu tiên bạn gửi vẫn đến phía họ dưới dạng yêu cầu.';
+      'Việc tra cứu chỉ gửi đúng tên đó và không gì về bạn. Tin nhắn đầu tiên của bạn vẫn đến họ dưới dạng yêu cầu.';
 
   @override
   String get myKryfoLooking => 'Đang tìm…';

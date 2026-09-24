@@ -1536,7 +1536,7 @@ abstract class AppLocalizations {
   /// screens/backup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'One encrypted file: your identity, your contacts, every message, and every photo, voice note and file. Import it on the other device with the passphrase. Until you do, this phone can still be kept.'**
+  /// **'One encrypted file: your identity, your contacts, every message, and every photo, voice note and file. Import it on the other device with the passphrase. Until you do, you can still change your mind and stay on this phone.'**
   String get backupOneEncryptedFileYour;
 
   /// screens/backup_screen.dart
@@ -2202,7 +2202,7 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Ghost timer'**
+  /// **'Timed messages'**
   String get chatGhostTimer;
 
   /// screens/chat_screen.dart
@@ -2823,16 +2823,16 @@ abstract class AppLocalizations {
   /// **'Slide to cancel'**
   String get chatSlideToCancel;
 
-  /// screens/chat_screen.dart
+  /// screens/chat_screen.dart: the banner above the composer while timed messages are on; chatMessagesBurnAfter follows it on the same line ("Timed messages  burn after 5m")
   ///
   /// In en, this message translates to:
-  /// **'Ghost mode'**
+  /// **'Timed messages'**
   String get chatGhostMode;
 
-  /// screens/chat_screen.dart
+  /// screens/chat_screen.dart: follows chatGhostMode on the banner, so it continues that phrase
   ///
   /// In en, this message translates to:
-  /// **'Messages burn after {humanBurn}'**
+  /// **'burn after {humanBurn}'**
   String chatMessagesBurnAfter(Object humanBurn);
 
   /// screens/chat_screen.dart
@@ -3315,23 +3315,23 @@ abstract class AppLocalizations {
   /// **'today'**
   String get contactToday;
 
-  /// screens/contact_screen.dart
+  /// screens/contact_screen.dart: how long you have been chatting, in days, in a small stat card (keep it short)
   ///
   /// In en, this message translates to:
-  /// **'{inDays}d'**
-  String contactD(Object inDays);
+  /// **'{count, plural, other{{count}d}}'**
+  String contactD(int count);
 
-  /// screens/contact_screen.dart
+  /// screens/contact_screen.dart: the same in months
   ///
   /// In en, this message translates to:
-  /// **'{d}mo'**
-  String contactMo(Object d);
+  /// **'{count, plural, other{{count}mo}}'**
+  String contactMo(int count);
 
-  /// screens/contact_screen.dart
+  /// screens/contact_screen.dart: the same in years
   ///
   /// In en, this message translates to:
-  /// **'{d}y'**
-  String contactY(Object d);
+  /// **'{count, plural, other{{count}y}}'**
+  String contactY(int count);
 
   /// screens/contact_screen.dart
   ///
@@ -3858,7 +3858,7 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Burn timer'**
+  /// **'Timed messages'**
   String get groupChatBurnTimer;
 
   /// screens/group_chat_screen.dart
@@ -3990,7 +3990,7 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Ghost mode on · burns in {fmtBurn}'**
+  /// **'Timed messages · burn after {fmtBurn}'**
   String groupChatGhostModeOnBurns(Object fmtBurn);
 
   /// screens/group_chat_screen.dart
@@ -5568,7 +5568,7 @@ abstract class AppLocalizations {
   /// screens/moved_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Wipe this phone?'**
+  /// **'Wipe Kryfo from this phone?'**
   String get movedWipeThisPhone;
 
   /// screens/moved_screen.dart
@@ -5640,7 +5640,7 @@ abstract class AppLocalizations {
   /// screens/moved_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Wipe this phone'**
+  /// **'Wipe Kryfo from this phone'**
   String get movedWipeThisPhone2;
 
   /// screens/moved_screen.dart
@@ -5802,7 +5802,7 @@ abstract class AppLocalizations {
   /// screens/my_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The lookup asks for that one name and nothing about you. Their first message from you still lands as a request on their side.'**
+  /// **'The lookup sends that one name and nothing about you. Your first message to them still arrives as a request.'**
   String get myKryfoTheLookupAsksFor;
 
   /// screens/my_kryfo_screen.dart
@@ -7842,7 +7842,7 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'If someone holds your phone open, they read your messages. The app lock, panic pin and encrypted storage help before that point, not after it.'**
+  /// **'If someone holds your phone open, they read your messages. The app lock, wipe pin and encrypted storage help before that point, not after it.'**
   String get seenIfSomeoneHoldsYour;
 
   /// screens/seen_screen.dart

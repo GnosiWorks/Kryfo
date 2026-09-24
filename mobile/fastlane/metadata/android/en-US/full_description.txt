@@ -14,7 +14,7 @@ features:
 * all traffic through an embedded tor client
 * direct onion delivery, relay fallback when a peer is offline
 * groups with photos, files, voice messages, replies, reactions, pins
-* ghost mode: messages that burn after a set time
+* timed messages that burn after a set time
 * encrypted local database and encrypted backups
 * app lock with pin or biometrics
 * panic wipe that removes everything, including media on disk

@@ -1244,7 +1244,7 @@
   "@backupTheFileTakesThis": {
     "description": "screens/backup_screen.dart"
   },
-  "backupOneEncryptedFileYour": "One encrypted file: your identity, your contacts, every message, and every photo, voice note and file. Import it on the other device with the passphrase. Until you do, this phone can still be kept.",
+  "backupOneEncryptedFileYour": "One encrypted file: your identity, your contacts, every message, and every photo, voice note and file. Import it on the other device with the passphrase. Until you do, you can still change your mind and stay on this phone.",
   "@backupOneEncryptedFileYour": {
     "description": "screens/backup_screen.dart"
   },
@@ -1779,7 +1779,7 @@
   "@chat24Hours": {
     "description": "screens/chat_screen.dart"
   },
-  "chatGhostTimer": "Ghost timer",
+  "chatGhostTimer": "Timed messages",
   "@chatGhostTimer": {
     "description": "screens/chat_screen.dart"
   },
@@ -2253,13 +2253,13 @@
   "@chatSlideToCancel": {
     "description": "screens/chat_screen.dart"
   },
-  "chatGhostMode": "Ghost mode",
+  "chatGhostMode": "Timed messages",
   "@chatGhostMode": {
-    "description": "screens/chat_screen.dart"
+    "description": "screens/chat_screen.dart: the banner above the composer while timed messages are on; chatMessagesBurnAfter follows it on the same line (\"Timed messages  burn after 5m\")"
   },
-  "chatMessagesBurnAfter": "Messages burn after {humanBurn}",
+  "chatMessagesBurnAfter": "burn after {humanBurn}",
   "@chatMessagesBurnAfter": {
-    "description": "screens/chat_screen.dart",
+    "description": "screens/chat_screen.dart: follows chatGhostMode on the banner, so it continues that phrase",
     "placeholders": {
       "humanBurn": {
         "type": "Object"
@@ -2619,30 +2619,30 @@
   "@contactToday": {
     "description": "screens/contact_screen.dart"
   },
-  "contactD": "{inDays}d",
+  "contactD": "{count, plural, other{{count}d}}",
   "@contactD": {
-    "description": "screens/contact_screen.dart",
+    "description": "screens/contact_screen.dart: how long you have been chatting, in days, in a small stat card (keep it short)",
     "placeholders": {
-      "inDays": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
-  "contactMo": "{d}mo",
+  "contactMo": "{count, plural, other{{count}mo}}",
   "@contactMo": {
-    "description": "screens/contact_screen.dart",
+    "description": "screens/contact_screen.dart: the same in months",
     "placeholders": {
-      "d": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
-  "contactY": "{d}y",
+  "contactY": "{count, plural, other{{count}y}}",
   "@contactY": {
-    "description": "screens/contact_screen.dart",
+    "description": "screens/contact_screen.dart: the same in years",
     "placeholders": {
-      "d": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -3029,7 +3029,7 @@
   "@groupChat24Hours": {
     "description": "screens/group_chat_screen.dart"
   },
-  "groupChatBurnTimer": "Burn timer",
+  "groupChatBurnTimer": "Timed messages",
   "@groupChatBurnTimer": {
     "description": "screens/group_chat_screen.dart"
   },
@@ -3128,7 +3128,7 @@
       }
     }
   },
-  "groupChatGhostModeOnBurns": "Ghost mode on · burns in {fmtBurn}",
+  "groupChatGhostModeOnBurns": "Timed messages · burn after {fmtBurn}",
   "@groupChatGhostModeOnBurns": {
     "description": "screens/group_chat_screen.dart",
     "placeholders": {
@@ -4434,7 +4434,7 @@
   "@modesKeepItOff": {
     "description": "screens/modes_screen.dart"
   },
-  "movedWipeThisPhone": "Wipe this phone?",
+  "movedWipeThisPhone": "Wipe Kryfo from this phone?",
   "@movedWipeThisPhone": {
     "description": "screens/moved_screen.dart"
   },
@@ -4492,7 +4492,7 @@
   "@movedKeepItToRead": {
     "description": "screens/moved_screen.dart"
   },
-  "movedWipeThisPhone2": "Wipe this phone",
+  "movedWipeThisPhone2": "Wipe Kryfo from this phone",
   "@movedWipeThisPhone2": {
     "description": "screens/moved_screen.dart"
   },
@@ -4608,7 +4608,7 @@
   "@myKryfoWren": {
     "description": "screens/my_kryfo_screen.dart"
   },
-  "myKryfoTheLookupAsksFor": "The lookup asks for that one name and nothing about you. Their first message from you still lands as a request on their side.",
+  "myKryfoTheLookupAsksFor": "The lookup sends that one name and nothing about you. Your first message to them still arrives as a request.",
   "@myKryfoTheLookupAsksFor": {
     "description": "screens/my_kryfo_screen.dart"
   },
@@ -6090,7 +6090,7 @@
   "@seenASeizedUnlockedPhone": {
     "description": "screens/seen_screen.dart"
   },
-  "seenIfSomeoneHoldsYour": "If someone holds your phone open, they read your messages. The app lock, panic pin and encrypted storage help before that point, not after it.",
+  "seenIfSomeoneHoldsYour": "If someone holds your phone open, they read your messages. The app lock, wipe pin and encrypted storage help before that point, not after it.",
   "@seenIfSomeoneHoldsYour": {
     "description": "screens/seen_screen.dart"
   },

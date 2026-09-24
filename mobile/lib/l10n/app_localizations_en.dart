@@ -991,7 +991,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupOneEncryptedFileYour =>
-      'One encrypted file: your identity, your contacts, every message, and every photo, voice note and file. Import it on the other device with the passphrase. Until you do, this phone can still be kept.';
+      'One encrypted file: your identity, your contacts, every message, and every photo, voice note and file. Import it on the other device with the passphrase. Until you do, you can still change your mind and stay on this phone.';
 
   @override
   String get backupOneEncryptedFileYourIdentityYour =>
@@ -1391,7 +1391,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chat24Hours => '24 hours';
 
   @override
-  String get chatGhostTimer => 'Ghost timer';
+  String get chatGhostTimer => 'Timed messages';
 
   @override
   String get chatHowLongBeforeSent => 'How long before sent messages burn?';
@@ -1765,11 +1765,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatSlideToCancel => 'Slide to cancel';
 
   @override
-  String get chatGhostMode => 'Ghost mode';
+  String get chatGhostMode => 'Timed messages';
 
   @override
   String chatMessagesBurnAfter(Object humanBurn) {
-    return 'Messages burn after $humanBurn';
+    return 'burn after $humanBurn';
   }
 
   @override
@@ -2042,18 +2042,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactToday => 'today';
 
   @override
-  String contactD(Object inDays) {
-    return '${inDays}d';
+  String contactD(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '${count}d',
+    );
+    return '$_temp0';
   }
 
   @override
-  String contactMo(Object d) {
-    return '${d}mo';
+  String contactMo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '${count}mo',
+    );
+    return '$_temp0';
   }
 
   @override
-  String contactY(Object d) {
-    return '${d}y';
+  String contactY(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '${count}y',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2369,7 +2384,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupChat24Hours => '24 hours';
 
   @override
-  String get groupChatBurnTimer => 'Burn timer';
+  String get groupChatBurnTimer => 'Timed messages';
 
   @override
   String get groupChatNewMessagesDisappearAfter =>
@@ -2454,7 +2469,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String groupChatGhostModeOnBurns(Object fmtBurn) {
-    return 'Ghost mode on · burns in $fmtBurn';
+    return 'Timed messages · burn after $fmtBurn';
   }
 
   @override
@@ -3514,7 +3529,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get modesKeepItOff => 'Keep it off';
 
   @override
-  String get movedWipeThisPhone => 'Wipe this phone?';
+  String get movedWipeThisPhone => 'Wipe Kryfo from this phone?';
 
   @override
   String get movedEverythingKryfoHoldsHere =>
@@ -3556,7 +3571,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get movedKeepItToRead => 'Keep it to read';
 
   @override
-  String get movedWipeThisPhone2 => 'Wipe this phone';
+  String get movedWipeThisPhone2 => 'Wipe Kryfo from this phone';
 
   @override
   String get movedIMNotMoving => 'I\'m not moving after all';
@@ -3648,7 +3663,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get myKryfoTheLookupAsksFor =>
-      'The lookup asks for that one name and nothing about you. Their first message from you still lands as a request on their side.';
+      'The lookup sends that one name and nothing about you. Your first message to them still arrives as a request.';
 
   @override
   String get myKryfoLooking => 'Looking…';
@@ -4828,7 +4843,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seenIfSomeoneHoldsYour =>
-      'If someone holds your phone open, they read your messages. The app lock, panic pin and encrypted storage help before that point, not after it.';
+      'If someone holds your phone open, they read your messages. The app lock, wipe pin and encrypted storage help before that point, not after it.';
 
   @override
   String get seenTheCryptoItself => 'The crypto itself';
