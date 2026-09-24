@@ -211,8 +211,8 @@ class _PollCardState extends State<PollCard> {
               StrokeIcon(
                 pollGlyph,
                 size: 13,
-                color: closed ? HaloColors.text2 : HaloColors.amber,
-                stroke: 1.8,
+                color: closed ? HaloColors.text : HaloColors.amber,
+                stroke: 2.2,
               ),
               const SizedBox(width: 6),
               Flexible(
@@ -224,8 +224,9 @@ class _PollCardState extends State<PollCard> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: HaloType.mono(
-                      size: 9.5,
-                      color: closed ? HaloColors.text2 : HaloColors.amber,
+                      size: 10,
+                      weight: FontWeight.w700,
+                      color: closed ? HaloColors.text : HaloColors.amber,
                       letter: 0.6,
                     ),
                   ),

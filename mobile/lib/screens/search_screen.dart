@@ -107,6 +107,30 @@ class _SearchScreenState extends State<SearchScreen> {
     _focus.addListener(() => setState(() {}));
   }
 
+  bool _focusAsked = false;
+
+  // the keyboard comes up once the field has landed, not during the flight
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_focusAsked) return;
+    _focusAsked = true;
+    final a = ModalRoute.of(context)?.animation;
+    if (a == null || a.isCompleted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _focus.requestFocus();
+      });
+      return;
+    }
+    void go(AnimationStatus st) {
+      if (st != AnimationStatus.completed) return;
+      a.removeStatusListener(go);
+      if (mounted) _focus.requestFocus();
+    }
+
+    a.addStatusListener(go);
+  }
+
   @override
   void dispose() {
     _wait?.cancel();
@@ -205,16 +229,20 @@ class _SearchScreenState extends State<SearchScreen> {
             : _Chat(peer: peer, name: _nameOfPeer(peer), avatar: _faceOf(peer)),
       );
       final fileName = r['file_name'] as String?;
+      final poll = PollSpec.parse(r['poll']);
+      final plain = (r['plaintext'] as String?) ?? '';
       chat.hits.add(
         _Hit(
           uid: r['msg_uid'] as String? ?? '',
-          text: (r['plaintext'] as String?) ?? '',
+          // a poll can be found by an answer: the answers are shown too,
+          // so the word that matched is there to be lit
+          text: poll == null ? plain : '$plain  ·  ${poll.options.join(' · ')}',
           out: out,
           sender: out ? l10n.groupChatYou : _nameOfPeer(peer),
           when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
           mediaPath: r['media_path'] as String?,
           fileName: fileName == 'voice.wav' ? null : fileName,
-          poll: PollSpec.parse(r['poll']) != null,
+          poll: poll != null,
           video:
               fileName != null &&
               videoExts.any((e) => fileName.toLowerCase().endsWith('.$e')),
@@ -300,13 +328,15 @@ class _SearchScreenState extends State<SearchScreen> {
                   Expanded(
                     child: Hero(
                       tag: kSearchHero,
+                      // a still copy flies: a live field built in the flight
+                      // took the focus with it and left the keyboard deaf
+                      flightShuttleBuilder: (_, _, _, _, _) => const Material(
+                        type: MaterialType.transparency,
+                        child: _Field(),
+                      ),
                       child: Material(
                         type: MaterialType.transparency,
-                        child: _Field(
-                          ctrl: _ctrl,
-                          focus: _focus,
-                          autofocus: true,
-                        ),
+                        child: _Field(ctrl: _ctrl, focus: _focus),
                       ),
                     ),
                   ),
@@ -364,8 +394,7 @@ class SearchField extends StatelessWidget {
 class _Field extends StatelessWidget {
   final TextEditingController? ctrl;
   final FocusNode? focus;
-  final bool autofocus;
-  const _Field({this.ctrl, this.focus, this.autofocus = false});
+  const _Field({this.ctrl, this.focus});
   @override
   Widget build(BuildContext context) {
     final on = focus?.hasFocus ?? false;
@@ -402,7 +431,6 @@ class _Field extends StatelessWidget {
                 : TextField(
                     controller: ctrl,
                     focusNode: focus,
-                    autofocus: autofocus,
                     textInputAction: TextInputAction.search,
                     style: HaloType.sans(size: 15, color: HaloColors.text),
                     cursorColor: HaloColors.amber,
