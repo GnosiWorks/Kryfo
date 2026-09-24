@@ -8,7 +8,7 @@ set -e
 cd "$(dirname "$0")"
 mkdir -p dl
 
-GO_TGZ=dl/go1.25.0.linux-amd64.tar.gz
+GO_TGZ=dl/go1.25.14.linux-amd64.tar.gz
 NDK_ZIP=dl/android-ndk-r28b-linux.zip
 NDK_TGZ=dl/android-ndk-r28b.tgz
 NDK_SHA1_GOOGLE=f574d3165405bd59ffc5edaadac02689075a729f
@@ -22,11 +22,11 @@ fetch() {
 
 # 1. go toolchain
 if [ ! -f "$GO_TGZ.ok" ]; then
-  echo "go 1.25.0 (~57mb)..."
-  fetch "https://dl.google.com/go/go1.25.0.linux-amd64.tar.gz" "$GO_TGZ"
+  echo "go 1.25.14 (~57mb)..."
+  fetch "https://dl.google.com/go/go1.25.14.linux-amd64.tar.gz" "$GO_TGZ"
   # cross-check against go.dev's json index if the net allows (tiny request)
   WANT=$(curl -fsSL --max-time 20 "https://go.dev/dl/?mode=json&include=all" 2>/dev/null \
-    | grep -A40 '"version": "go1.25.0"' | grep -A3 'linux-amd64.tar.gz' \
+    | grep -A40 '"version": "go1.25.14"' | grep -A3 'linux-amd64.tar.gz' \
     | grep '"sha256"' | head -1 | sed 's/.*"sha256": "\([a-f0-9]*\)".*/\1/')
   GOT=$(sha256sum "$GO_TGZ" | cut -d' ' -f1)
   if [ -n "$WANT" ] && [ "$WANT" != "$GOT" ]; then

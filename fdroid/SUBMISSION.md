@@ -54,6 +54,20 @@
    on the 0.3.0 commit that comes back MATCH + SAME on all three abis, and
    only once f-droid has merged.
 
+   **go is 1.25.14 from 0.3.0 on** (`engine/go.mod`, `repro/Dockerfile`).
+   the recipe copy in `fdroiddata/app.kryfo.yml` pins `go@go1.25.0` and
+   `git -C $$go$$ checkout -f go1.25.0`, which is right for the v0.2.10
+   builds it describes and must stay so for them. but `AutoUpdateMode`
+   copies the last build block to make the next one, so a v0.3.0 entry would
+   inherit go 1.25.0 - and with `go 1.25.14` in go.mod, go 1.25.0 tries to
+   download the newer toolchain, which fails on the offline buildserver.
+   that failure is the good outcome: the alternative would be an engine built
+   with a different go, and no MATCH. so the v0.3.0 build block needs
+   `go@go1.25.14` and `checkout -f go1.25.14` in both places, in the merge
+   request that adds it (or a follow-up to fdroiddata before the tag). the
+   same goes for every later go bump: go.mod, both dockerfiles,
+   prep-offline.sh and the recipe move together.
+
 ## what can go wrong
 
 - the flutter srclib may not carry 3.41.7 yet. reproducible builds need the

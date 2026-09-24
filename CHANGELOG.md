@@ -7,6 +7,7 @@ All notable user-facing changes to kryfo will land here. Format loosely follows 
 0.2.11 and 0.2.12 were never released, so this is everything since 0.2.10.
 
 ### Security
+- the engine is built with go 1.25.14 instead of 1.25.0, which brings in the fixes go has released since, several of them for security.
 - tor is updated from 0.4.9.5 to 0.4.9.12, which carries fixes for two use-after-free bugs in the part of tor that splits traffic over several paths, and for a crash a malformed name lookup could cause.
 - three fixes from openssl 3.6.3 are carried into the copy of openssl inside kryfo: an oversized piece of text in a certificate could overflow a buffer, a certificate field over two gigabytes long could be read past its end, and a peer could choose part of the numbers used to agree a key instead of having it checked. tor reads certificates from the network, so these are the ones that reach kryfo. the rest of that openssl release is in parts kryfo does not use.
 - a video opened with another app was left behind as a decrypted copy until the next file was opened, so one from a timed message could outlast the message by any length of time. it is removed as soon as you come back to kryfo, and on every start.

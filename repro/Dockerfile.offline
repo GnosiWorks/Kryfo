@@ -3,10 +3,10 @@
 # and fill the hashes below. this checks libhalo.so only; the whole-apk
 # check is Dockerfile + verify.sh, which needs the network for gradle and
 # pub. the pins here must equal the ones in Dockerfile, or the two images
-# build different engines: go 1.25.0 is what the shipped engine says.
+# build different engines: go 1.25.14 is what the shipped engine says.
 FROM debian:bookworm-20250630-slim
 
-ENV GO_VERSION=1.25.0
+ENV GO_VERSION=1.25.14
 ENV GO_SHA256=2852af0cb20a13139b3448992e69b868e50ed0f8a1e5940ee1de9e19a123b613
 ENV NDK_VERSION=r28b
 ENV NDK_TGZ_SHA256=58c7fdf41a4b9177e0fcbe3fbb2f5ab1bb0d85ba26f35028c5a86fabbe2785f6

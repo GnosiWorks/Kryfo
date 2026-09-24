@@ -90,7 +90,7 @@ step.
 |---|---|---|
 | debian | bookworm, snapshot 2025-06-30 | f-droid's buildserver is bookworm |
 | jdk | debian's openjdk 17 | what f-droid's buildserver ships. build releases with 17 too, or classes.dex can differ |
-| go | 1.25.0 | `engine/go.mod` and the f-droid recipe |
+| go | 1.25.14 | `engine/go.mod` and the f-droid recipe |
 | flutter | 3.41.7, commit cc0734ac | the f-droid srclib; the commit is checked, a moved tag fails |
 | android ndk | 28.2.13676358 | `ndkVersion` in `mobile/android/app/build.gradle.kts` |
 | platforms | android-34, 35, 36 | flutter 3.41 compiles against 36; plugins such as just_audio still against 34 and 35 |
@@ -167,6 +167,6 @@ must stay equal to the ones above.
 
 ## go toolchain auto-switch
 
-`engine/go.mod` says `go 1.25.0`. the images ship exactly that, so go never
+`engine/go.mod` says `go 1.25.14`. the images ship exactly that, so go never
 tries to fetch another toolchain. bump the directive, bump `GO_VERSION` in
 both dockerfiles, or the build stops.
