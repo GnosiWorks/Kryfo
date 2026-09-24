@@ -14,6 +14,7 @@ import '../open_file.dart';
 import '../theme.dart';
 import 'remembered_height.dart';
 import '../l10n/l10n.dart';
+import '../l10n/numbers.dart';
 
 /// a tap on a file or a video: open it in whatever the phone has for it.
 /// when nothing does, the share sheet, which is all a tap used to offer.
@@ -85,9 +86,9 @@ class _VideoBubbleState extends State<VideoBubble> {
 
   String _size(int b) {
     if (b >= 1024 * 1024) {
-      return l10n.videoBubbleMb((b / (1024 * 1024)).toStringAsFixed(1));
+      return l10n.videoBubbleMb(decimal((b / (1024 * 1024)), 1));
     }
-    return l10n.videoBubbleKb((b / 1024).ceil());
+    return l10n.videoBubbleKb(whole((b / 1024).ceil()));
   }
 
   @override

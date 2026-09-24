@@ -40,6 +40,7 @@ import '../notif_permission.dart';
 import '../delivery_mode.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
+import '../l10n/numbers.dart';
 
 bool _miuiPromptChecked = false;
 
@@ -2279,10 +2280,10 @@ String _relTime(DateTime? t) {
   if (t == null) return '';
   final d = DateTime.now().difference(t);
   if (d.inMinutes < 1) return l10n.homeNow;
-  if (d.inMinutes < 60) return l10n.homeM(d.inMinutes);
-  if (d.inHours < 24) return l10n.homeH(d.inHours);
+  if (d.inMinutes < 60) return l10n.homeM(whole(d.inMinutes));
+  if (d.inHours < 24) return l10n.homeH(whole(d.inHours));
   if (d.inDays == 1) return l10n.homeYesterday;
-  if (d.inDays < 7) return l10n.homeD(d.inDays);
+  if (d.inDays < 7) return l10n.homeD(whole(d.inDays));
   // older than a week: a short date reads better than a big day count
   return dayMonth(t);
 }

@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 
 import 'theme.dart';
 import 'l10n/l10n.dart';
+import 'l10n/numbers.dart';
 
 /// outgoing: msgUid -> 0..1
 final Map<String, double> mediaSendProgress = {};
@@ -109,7 +110,7 @@ class SendProgressLabel extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.only(right: 6),
           child: Text(
-            '${(v * 100).round()}%',
+            percent(v),
             style: HaloType.mono(
               size: 10.5,
               weight: FontWeight.w700,
@@ -186,13 +187,13 @@ class IncomingMediaBanner extends StatelessWidget {
                 Flexible(
                   child: Text(
                     sending
-                        ? l10n.mediaProgressSendingKeepTheApp((v * 100).round())
+                        ? l10n.mediaProgressSendingKeepTheApp(percent(v))
                         : stalled && count != null
                         ? l10n.mediaProgressPausedOfWaitingFor(
                             count.$1,
                             count.$2,
                           )
-                        : l10n.mediaProgressReceivingMedia((v * 100).round()),
+                        : l10n.mediaProgressReceivingMedia(percent(v)),
                     style: HaloType.mono(
                       size: 10.5,
                       color: stalled ? HaloColors.text2 : HaloColors.amber,

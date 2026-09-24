@@ -17,13 +17,14 @@ import '../main.dart' show shredFile;
 import '../theme.dart';
 import 'decode_px.dart';
 import '../l10n/l10n.dart';
+import '../l10n/numbers.dart';
 
 String _humanSize(int bytes) {
-  if (bytes < 1024) return l10n.mediaBubblesB(bytes);
+  if (bytes < 1024) return l10n.mediaBubblesB(whole(bytes));
   if (bytes < 1024 * 1024) {
-    return l10n.mediaBubblesKb((bytes / 1024).toStringAsFixed(0));
+    return l10n.mediaBubblesKb(whole(((bytes / 1024)).round()));
   }
-  return l10n.mediaBubblesMb((bytes / (1024 * 1024)).toStringAsFixed(1));
+  return l10n.mediaBubblesMb(decimal((bytes / (1024 * 1024)), 1));
 }
 
 IconData _fileGlyph(String name) {

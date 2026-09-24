@@ -70,6 +70,7 @@ import 'handle_lookup.dart';
 import 'widgets/sheet_handle.dart';
 import 'widgets/halo_sheet.dart';
 import 'l10n/l10n.dart';
+import 'l10n/numbers.dart';
 
 typedef IntArgFn = Void Function(Int32);
 typedef IntArgFnDart = void Function(int);
@@ -9561,7 +9562,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
               ? l10n.appReadyToSendPublishing
               : s == TorStatus.bootstrapped
               ? l10n.appReadyToSendFinishing
-              : l10n.appConnecting(pct);
+              : l10n.appConnecting(percent(pct / 100));
           return Padding(
             padding: const EdgeInsets.fromLTRB(22, 0, 22, 16),
             child: Column(

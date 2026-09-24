@@ -1,4 +1,5 @@
 import 'l10n/l10n.dart';
+import 'l10n/numbers.dart';
 // SPDX-License-Identifier: GPL-3.0-or-later
 // burner room helpers with no io in them: the link, the short tag a room
 // key is shown as, the countdown wording and its colour thresholds.
@@ -14,9 +15,9 @@ const roomDefaultCap = 10;
 
 String expiryLabel(Duration d) {
   if (d.inDays >= 1 && d.inHours % 24 == 0) {
-    return d.inDays == 1 ? l10n.rooms24h : l10n.roomsD(d.inDays);
+    return d.inDays == 1 ? l10n.rooms24h : l10n.roomsD(whole(d.inDays));
   }
-  return l10n.roomsH(d.inHours);
+  return l10n.roomsH(whole(d.inHours));
 }
 
 // "disappears in 24 hours" for the banner. plain words, not a timer. a
@@ -41,13 +42,17 @@ String countdownLabel(Duration left) {
   if (left.isNegative) return l10n.roomsExpired;
   if (left.inDays >= 1) {
     final h = left.inHours % 24;
-    return h == 0 ? l10n.roomsD(left.inDays) : l10n.roomsDH(left.inDays, h);
+    return h == 0
+        ? l10n.roomsD(whole(left.inDays))
+        : l10n.roomsDH(whole(left.inDays), whole(h));
   }
   if (left.inHours >= 1) {
     final m = left.inMinutes % 60;
-    return m == 0 ? l10n.roomsH(left.inHours) : l10n.roomsHM(left.inHours, m);
+    return m == 0
+        ? l10n.roomsH(whole(left.inHours))
+        : l10n.roomsHM(whole(left.inHours), whole(m));
   }
-  if (left.inMinutes >= 5) return l10n.roomsM(left.inMinutes);
+  if (left.inMinutes >= 5) return l10n.roomsM(whole(left.inMinutes));
   final s = (left.inSeconds % 60).toString().padLeft(2, '0');
   return '${left.inMinutes}:$s';
 }

@@ -72,6 +72,7 @@ import '../widgets/moved_strip.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../l10n/marked.dart';
+import '../l10n/numbers.dart';
 
 final Map<String, String> _draftPerGroup = {};
 
@@ -2638,10 +2639,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 }
 
 String _fmtBurn(int s) {
-  if (s < 60) return l10n.groupChatS(s);
-  if (s < 3600) return l10n.groupChatM(s ~/ 60);
-  if (s < 86400) return l10n.groupChatH(s ~/ 3600);
-  return l10n.groupChatD(s ~/ 86400);
+  if (s < 60) return l10n.groupChatS(whole(s));
+  if (s < 3600) return l10n.groupChatM(whole(s ~/ 60));
+  if (s < 86400) return l10n.groupChatH(whole(s ~/ 3600));
+  return l10n.groupChatD(whole(s ~/ 86400));
 }
 
 // the phone cannot send at all: no network, or onion mode without a route
@@ -3982,10 +3983,10 @@ class _GroupBubble extends StatelessWidget {
     final ms = burnAt - DateTime.now().millisecondsSinceEpoch;
     if (ms <= 0) return l10n.groupChat0s;
     final s = ms ~/ 1000;
-    if (s < 60) return l10n.groupChatS(s);
-    if (s < 3600) return l10n.groupChatM(s ~/ 60);
-    if (s < 86400) return l10n.groupChatH(s ~/ 3600);
-    return l10n.groupChatD(s ~/ 86400);
+    if (s < 60) return l10n.groupChatS(whole(s));
+    if (s < 3600) return l10n.groupChatM(whole(s ~/ 60));
+    if (s < 86400) return l10n.groupChatH(whole(s ~/ 3600));
+    return l10n.groupChatD(whole(s ~/ 86400));
   }
 }
 

@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import '../l10n/l10n.dart';
 import '../theme.dart' show HaloType;
 import '../l10n/marked.dart';
+import '../l10n/numbers.dart';
 
 const kInk = Color(0xFF0D0B09);
 const kSurface = Color(0xFF161310);
@@ -386,7 +387,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
                   ),
                 ),
                 Text(
-                  '${_displayPct()}%',
+                  percent(_displayPct() / 100),
                   style: TextStyle(
                     fontFamily: 'JetBrains Mono',
                     fontFamilyFallback: HaloType.monoFallback,

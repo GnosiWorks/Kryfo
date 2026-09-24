@@ -134,7 +134,8 @@
     "description": "delivery_mode.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -143,7 +144,8 @@
     "description": "delivery_mode.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -156,7 +158,8 @@
     "description": "delivery_mode.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -254,7 +257,8 @@
     "description": "intro_budget.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -267,7 +271,8 @@
     "description": "intro_budget.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -364,19 +369,23 @@
         "type": "Object"
       },
       "held": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "subs": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "c": {
         "type": "Object"
       },
       "p": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "e": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -391,10 +400,12 @@
         "type": "Object"
       },
       "p": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "e": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -454,7 +465,8 @@
         "type": "Object"
       },
       "secs": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "why": {
         "type": "String"
@@ -746,9 +758,9 @@
   "@appReadyToSendFinishing": {
     "description": "main.dart"
   },
-  "appConnecting": "Connecting · {pct}%",
+  "appConnecting": "Connecting · {pct}",
   "@appConnecting": {
-    "description": "main.dart",
+    "description": "main.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)",
     "placeholders": {
       "pct": {
         "type": "Object"
@@ -795,9 +807,9 @@
   "@appConnecting2": {
     "description": "main.dart"
   },
-  "mediaProgressSendingKeepTheApp": "Sending · {v}% · keep the app open",
+  "mediaProgressSendingKeepTheApp": "Sending · {v} · keep the app open",
   "@mediaProgressSendingKeepTheApp": {
-    "description": "media_progress.dart",
+    "description": "media_progress.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)",
     "placeholders": {
       "v": {
         "type": "Object"
@@ -816,9 +828,9 @@
       }
     }
   },
-  "mediaProgressReceivingMedia": "Receiving media · {v}%",
+  "mediaProgressReceivingMedia": "Receiving media · {v}",
   "@mediaProgressReceivingMedia": {
-    "description": "media_progress.dart",
+    "description": "media_progress.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)",
     "placeholders": {
       "v": {
         "type": "Object"
@@ -980,7 +992,8 @@
     "description": "rooms.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -997,7 +1010,8 @@
     "description": "rooms.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -1006,7 +1020,8 @@
     "description": "rooms.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -1015,7 +1030,8 @@
     "description": "rooms.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -1273,9 +1289,9 @@
   "@backupConfirmPassphrase": {
     "description": "screens/backup_screen.dart"
   },
-  "backupWriting": "writing… {progress}%",
+  "backupWriting": "writing… {progress}",
   "@backupWriting": {
-    "description": "screens/backup_screen.dart",
+    "description": "screens/backup_screen.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)",
     "placeholders": {
       "progress": {
         "type": "Object"
@@ -1395,7 +1411,8 @@
     "description": "screens/bridges_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -1742,7 +1759,8 @@
     "description": "screens/chat_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -1839,7 +1857,8 @@
     "description": "screens/chat_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -1972,7 +1991,8 @@
     "description": "screens/chat_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "title": {
         "type": "Object"
@@ -2190,10 +2210,12 @@
     "description": "screens/chat_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "pos": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -3062,7 +3084,8 @@
     "description": "screens/group_chat_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -3197,7 +3220,8 @@
     "description": "screens/group_chat_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "time": {
         "type": "Object"
@@ -3209,7 +3233,8 @@
     "description": "screens/group_chat_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -3364,7 +3389,8 @@
     "description": "screens/group_info_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -3546,7 +3572,8 @@
     "description": "screens/home_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -3555,7 +3582,8 @@
     "description": "screens/home_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -3697,7 +3725,8 @@
     "description": "screens/home_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -3706,7 +3735,8 @@
     "description": "screens/home_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -3715,7 +3745,8 @@
     "description": "screens/home_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -3724,10 +3755,12 @@
     "description": "screens/home_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "parked": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -3736,7 +3769,8 @@
     "description": "screens/home_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -3765,7 +3799,8 @@
     "description": "screens/home_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -3799,7 +3834,8 @@
     "description": "screens/home_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -3912,7 +3948,8 @@
     "description": "screens/home_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -3970,10 +4007,12 @@
     "description": "screens/introduce_sheet.dart",
     "placeholders": {
       "max": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "left": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -4651,7 +4690,8 @@
     "description": "screens/new_group_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -5679,7 +5719,8 @@
     "description": "screens/restore_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -5763,9 +5804,9 @@
   "@restoreReleasingYourHandle": {
     "description": "screens/restore_screen.dart"
   },
-  "restoreMoving": "Moving… {progress}%",
+  "restoreMoving": "Moving… {progress}",
   "@restoreMoving": {
-    "description": "screens/restore_screen.dart",
+    "description": "screens/restore_screen.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)",
     "placeholders": {
       "progress": {
         "type": "Object"
@@ -5839,7 +5880,8 @@
     "description": "screens/room_create_sheet.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6532,7 +6574,8 @@
     "description": "screens/transport_screen.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6762,10 +6805,12 @@
     "description": "screens/transport_screen.dart",
     "placeholders": {
       "dials": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "timeouts": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6839,7 +6884,8 @@
     "description": "screens/vouchers_sheet.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6960,7 +7006,8 @@
     "description": "tools/cleaner.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6973,7 +7020,8 @@
     "description": "tools/lock_words.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -7003,7 +7051,8 @@
     "description": "tools/photo_story.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -7284,7 +7333,8 @@
     "description": "tools/photo_story.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -7320,7 +7370,8 @@
     "description": "tools/photo_story.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -7329,7 +7380,8 @@
     "description": "tools/photo_story.dart",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -7491,7 +7543,8 @@
         "type": "Object"
       },
       "rest": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -7607,7 +7660,8 @@
     "description": "widgets/kryfo_link_text.dart: a burner room link; cap is how many people can join",
     "placeholders": {
       "cap": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "time": {
         "type": "Object"
@@ -7921,7 +7975,8 @@
     "description": "widgets/pow_note.dart",
     "placeholders": {
       "secs": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -7930,7 +7985,8 @@
     "description": "widgets/pow_note.dart: shown from 20 seconds on",
     "placeholders": {
       "secs": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -8249,7 +8305,8 @@
     "description": "screens/bridges_screen.dart: after saving, how many bridge lines kryfo took",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -8258,10 +8315,12 @@
     "description": "screens/bridges_screen.dart: after saving, some lines were not bridge lines",
     "placeholders": {
       "good": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "bad": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   }

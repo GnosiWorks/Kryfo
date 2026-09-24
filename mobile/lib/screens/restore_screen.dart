@@ -25,6 +25,7 @@ import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
+import '../l10n/numbers.dart';
 
 class RestoreScreen extends StatefulWidget {
   // when non-null, called after a successful restore instead of the
@@ -544,7 +545,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                     ? l10n.restoreReleasingYourHandle
                     : _busy
                     ? (_path != null && _progress > 0
-                          ? l10n.restoreMoving((_progress * 100).round())
+                          ? l10n.restoreMoving(percent(_progress))
                           : l10n.restoreRestoring)
                     : l10n.restoreRestore,
                 onTap: _busy ? null : _restore,
@@ -648,7 +649,7 @@ class _SummaryCard extends StatelessWidget {
           if (summary.files > 0)
             _line(
               l10n.restoreAttachments,
-              '${summary.files} · ${_mb(summary.bytes)}',
+              '${whole(summary.files)} · ${_mb(summary.bytes)}',
             ),
           const SizedBox(height: 8),
           Text(
@@ -713,7 +714,7 @@ class _Primary extends StatelessWidget {
 
 String _mb(int bytes) {
   if (bytes >= 1024 * 1024 * 1024) {
-    return l10n.restoreGb((bytes / (1024 * 1024 * 1024)).toStringAsFixed(1));
+    return l10n.restoreGb(decimal((bytes / (1024 * 1024 * 1024)), 1));
   }
-  return l10n.restoreMb((bytes / (1024 * 1024)).round());
+  return l10n.restoreMb(whole((bytes / (1024 * 1024)).round()));
 }

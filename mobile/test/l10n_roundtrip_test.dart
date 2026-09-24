@@ -346,7 +346,7 @@ void main() {
       "Ready to send · publishing your address",
     );
     expect(l.appReadyToSendFinishing, "Ready to send · finishing setup");
-    expect(l.appConnecting("<pct>"), "Connecting · <pct>%");
+    expect(l.appConnecting("<pct>"), "Connecting · <pct>");
     expect(l.appTor, "Tor");
     expect(l.appTorIsOffTurn, "Tor is off. Turn it on to connect privately.");
     expect(
@@ -365,13 +365,13 @@ void main() {
     expect(l.appConnecting2, "connecting");
     expect(
       l.mediaProgressSendingKeepTheApp("<v>"),
-      "Sending · <v>% · keep the app open",
+      "Sending · <v> · keep the app open",
     );
     expect(
       l.mediaProgressPausedOfWaitingFor("<count>", "<count2>"),
       "Paused · <count> of <count2> · waiting for the rest",
     );
-    expect(l.mediaProgressReceivingMedia("<v>"), "Receiving media · <v>%");
+    expect(l.mediaProgressReceivingMedia("<v>"), "Receiving media · <v>");
     expect(l.mediaProgressCancelSending, "Cancel sending");
     expect(l.metaReaderEndsBeforeItShould, "ends before it should");
     expect(l.metaReaderCouldNotBeRead, "could not be read");
@@ -553,7 +553,7 @@ void main() {
     );
     expect(l.backupPassphrase, "Passphrase");
     expect(l.backupConfirmPassphrase, "Confirm passphrase");
-    expect(l.backupWriting("<progress>"), "writing… <progress>%");
+    expect(l.backupWriting("<progress>"), "writing… <progress>");
     expect(l.backupCreating, "creating…");
     expect(l.backupMakeTheFileAnd, "Make the file and move");
     expect(l.backupCreateBackup, "Create backup");
@@ -2417,7 +2417,7 @@ void main() {
     expect(l.restoreChecking, "Checking…");
     expect(l.restoreCheckTheFile, "Check the file");
     expect(l.restoreReleasingYourHandle, "Releasing your handle…");
-    expect(l.restoreMoving("<progress>"), "Moving… <progress>%");
+    expect(l.restoreMoving("<progress>"), "Moving… <progress>");
     expect(l.restoreRestoring, "Restoring…");
     expect(l.restoreNotThisOne, "Not this one");
     expect(l.restoreDateUnknown, "Date unknown");

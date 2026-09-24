@@ -7,15 +7,16 @@ import '../theme.dart';
 import 'press_scale.dart';
 import 'stroke_icon.dart';
 import '../l10n/l10n.dart';
+import '../l10n/numbers.dart';
 
 const _back = ['M15 5l-7 7 7 7'];
 final _film = [svgRect(4, 5, 16, 14, 2.5), 'M10 9.5v5l4.5-2.5z'];
 
 String prettySize(int bytes) {
-  if (bytes < 1024) return l10n.toolPartsB(bytes);
-  if (bytes < 1 << 20) return l10n.toolPartsKb((bytes / 1024).round());
+  if (bytes < 1024) return l10n.toolPartsB(whole(bytes));
+  if (bytes < 1 << 20) return l10n.toolPartsKb(whole((bytes / 1024).round()));
   final mb = bytes / (1 << 20);
-  return l10n.toolPartsMb(mb.toStringAsFixed(mb < 100 ? 1 : 0));
+  return l10n.toolPartsMb(decimal(mb, mb < 100 ? 1 : 0));
 }
 
 class ToolBar extends StatelessWidget {

@@ -19,6 +19,7 @@ import '../theme.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/decode_px.dart';
 import '../l10n/l10n.dart';
+import '../l10n/numbers.dart';
 
 class CaptureResult {
   final Uint8List? photo; // stripped jpeg bytes
@@ -500,7 +501,7 @@ class _CameraScreenState extends State<CameraScreen>
         cacheWidth: screenPx(context),
       );
     }
-    final mb = (_clipBytes / (1024 * 1024)).toStringAsFixed(1);
+    final mb = decimal(_clipBytes / (1024 * 1024), 1);
     final secs = _recStart == null
         ? 0
         : DateTime.now().difference(_recStart!).inSeconds;
@@ -512,7 +513,7 @@ class _CameraScreenState extends State<CameraScreen>
           Icon(Icons.movie_outlined, size: 44, color: HaloColors.amber),
           const SizedBox(height: 12),
           Text(
-            l10n.cameraClipSMb(secs, mb),
+            l10n.cameraClipSMb(whole(secs), mb),
             style: HaloType.mono(size: 12, color: HaloColors.text2),
           ),
           if (_clipBytes > 8 * 1024 * 1024) ...[

@@ -952,10 +952,10 @@ abstract class AppLocalizations {
   /// **'Ready to send · finishing setup'**
   String get appReadyToSendFinishing;
 
-  /// main.dart
+  /// main.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)
   ///
   /// In en, this message translates to:
-  /// **'Connecting · {pct}%'**
+  /// **'Connecting · {pct}'**
   String appConnecting(Object pct);
 
   /// main.dart
@@ -1018,10 +1018,10 @@ abstract class AppLocalizations {
   /// **'connecting'**
   String get appConnecting2;
 
-  /// media_progress.dart
+  /// media_progress.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)
   ///
   /// In en, this message translates to:
-  /// **'Sending · {v}% · keep the app open'**
+  /// **'Sending · {v} · keep the app open'**
   String mediaProgressSendingKeepTheApp(Object v);
 
   /// media_progress.dart
@@ -1030,10 +1030,10 @@ abstract class AppLocalizations {
   /// **'Paused · {count} of {count2} · waiting for the rest'**
   String mediaProgressPausedOfWaitingFor(Object count, Object count2);
 
-  /// media_progress.dart
+  /// media_progress.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)
   ///
   /// In en, this message translates to:
-  /// **'Receiving media · {v}%'**
+  /// **'Receiving media · {v}'**
   String mediaProgressReceivingMedia(Object v);
 
   /// media_progress.dart
@@ -1564,10 +1564,10 @@ abstract class AppLocalizations {
   /// **'Confirm passphrase'**
   String get backupConfirmPassphrase;
 
-  /// screens/backup_screen.dart
+  /// screens/backup_screen.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)
   ///
   /// In en, this message translates to:
-  /// **'writing… {progress}%'**
+  /// **'writing… {progress}'**
   String backupWriting(Object progress);
 
   /// screens/backup_screen.dart
@@ -7420,10 +7420,10 @@ abstract class AppLocalizations {
   /// **'Releasing your handle…'**
   String get restoreReleasingYourHandle;
 
-  /// screens/restore_screen.dart
+  /// screens/restore_screen.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)
   ///
   /// In en, this message translates to:
-  /// **'Moving… {progress}%'**
+  /// **'Moving… {progress}'**
   String restoreMoving(Object progress);
 
   /// screens/restore_screen.dart

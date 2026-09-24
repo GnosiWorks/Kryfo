@@ -19,6 +19,7 @@ import 'modes_screen.dart';
 import 'package:flutter/services.dart';
 import '../l10n/l10n.dart';
 import '../l10n/marked.dart';
+import '../l10n/numbers.dart';
 
 class DonateScreen extends StatefulWidget {
   const DonateScreen({super.key});
@@ -295,7 +296,7 @@ class _DonateScreenState extends State<DonateScreen> {
                 ),
                 const SizedBox(height: 7),
                 Text(
-                  '\$$amt',
+                  dollars(amt),
                   style: HaloType.serif(
                     size: 17,
                     color: sel ? HaloColors.amber : HaloColors.text,

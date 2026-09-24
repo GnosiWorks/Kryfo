@@ -19,6 +19,7 @@ import '../widgets/sheet_handle.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/confirm_sheet.dart';
 import '../l10n/l10n.dart';
+import '../l10n/numbers.dart';
 
 class GroupInfoScreen extends StatefulWidget {
   final String groupId;
@@ -559,7 +560,7 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                     ? null
                     : () => Navigator.pop(context, _picked),
                 child: Text(
-                  l10n.groupInfoAdd(_picked.length),
+                  l10n.groupInfoAdd(whole(_picked.length)),
                   style: HaloType.sans(
                     size: 13,
                     color: _picked.isEmpty

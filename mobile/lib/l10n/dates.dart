@@ -23,8 +23,9 @@ String get _locale {
   return _chosen;
 }
 
-/// the intl locale dates are formatted in. set with the app's language.
-String get dateLocale => _locale;
+/// the intl locale dates and numbers are formatted in. set with the app's
+/// language.
+String get intlLocale => _locale;
 
 void setDateLocale(String intlLocale) => _chosen = intlLocale;
 

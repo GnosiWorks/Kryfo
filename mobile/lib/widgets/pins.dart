@@ -13,6 +13,7 @@ import 'kryfo_avatar.dart';
 import 'sheet_handle.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
+import '../l10n/numbers.dart';
 
 /// how many pins one chat holds. the sender checks before pinning and the
 /// receiver checks before mirroring, so nobody can fill the list from afar.
@@ -29,7 +30,9 @@ class PinHeaderButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final on = count > 0;
     return IconButton(
-      tooltip: on ? l10n.pinsPinnedMessages(count) : l10n.pinsPinnedMessages2,
+      tooltip: on
+          ? l10n.pinsPinnedMessages(whole(count))
+          : l10n.pinsPinnedMessages2,
       onPressed: onTap,
       icon: SizedBox(
         width: 26,
@@ -191,7 +194,7 @@ class _PinsSheetState extends State<_PinsSheet> {
                   const Spacer(),
                   if (pins != null && pins.isNotEmpty)
                     Text(
-                      l10n.pinsOf(pins.length, kMaxPins),
+                      l10n.pinsOf(whole(pins.length), whole(kMaxPins)),
                       style: HaloType.mono(size: 10, color: HaloColors.text3),
                     ),
                 ],

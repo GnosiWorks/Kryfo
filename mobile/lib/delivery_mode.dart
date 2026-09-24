@@ -15,6 +15,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'l10n/l10n.dart';
+import 'l10n/numbers.dart';
 
 enum DeliveryMode { always, checkins, helper }
 
@@ -224,13 +225,13 @@ String catchupLine(String stored) {
   for (final r in (m['list'] as List? ?? const [])) {
     final ms = r['ms'] as int? ?? 0;
     final dropped = r['dropped'] == true;
-    final secs = (ms / 1000).toStringAsFixed(1);
+    final secs = decimal(ms / 1000, 1);
     var line = dropped
         ? l10n.appSDropped(r['host'], secs)
         : l10n.appS(r['host'], secs);
     if (r['long'] == true) line = l10n.appLongWindow(line);
     if (dropped || ms > 5000) {
-      final c = ((r['connect_ms'] as int? ?? 0) / 1000).toStringAsFixed(1);
+      final c = decimal((r['connect_ms'] as int? ?? 0) / 1000, 1);
       final p = r['pages'] as int? ?? 0;
       final e = r['events'] as int? ?? 0;
       final subs = r['subs'] as int? ?? 0;

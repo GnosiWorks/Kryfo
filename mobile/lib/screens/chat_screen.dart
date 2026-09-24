@@ -85,6 +85,7 @@ import '../widgets/moved_strip.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../l10n/marked.dart';
+import '../l10n/numbers.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
 // chunk indices already accepted by the peer, per media msg_uid. lets a
@@ -177,11 +178,11 @@ class _Msg {
 }
 
 String _humanSize(int bytes) {
-  if (bytes < 1024) return l10n.chatB(bytes);
+  if (bytes < 1024) return l10n.chatB(whole(bytes));
   if (bytes < 1024 * 1024) {
-    return l10n.chatKb((bytes / 1024).toStringAsFixed(0));
+    return l10n.chatKb(whole(((bytes / 1024)).round()));
   }
-  return l10n.chatMb((bytes / (1024 * 1024)).toStringAsFixed(1));
+  return l10n.chatMb(decimal((bytes / (1024 * 1024)), 1));
 }
 
 IconData _fileGlyph(String name) {
@@ -341,9 +342,9 @@ String _fmtTime(DateTime d) => hourMinute(d);
 // human-friendly label for a burn duration in seconds.
 String _humanBurn(int seconds) {
   if (seconds < 60) return l10n.chatS(seconds);
-  if (seconds < 3600) return l10n.chatM(seconds ~/ 60);
-  if (seconds < 86400) return l10n.chatH(seconds ~/ 3600);
-  return l10n.chatD(seconds ~/ 86400);
+  if (seconds < 3600) return l10n.chatM(whole(seconds ~/ 60));
+  if (seconds < 86400) return l10n.chatH(whole(seconds ~/ 3600));
+  return l10n.chatD(whole(seconds ~/ 86400));
 }
 
 String _fmtBurn(int burnAtMs) {
@@ -354,9 +355,9 @@ String _fmtBurn(int burnAtMs) {
   s -= h * 3600;
   final m = s ~/ 60;
   s -= m * 60;
-  if (h > 0) return l10n.chatHM(h, m.toString().padLeft(2, '0'));
-  if (m > 0) return l10n.chatMS(m, s.toString().padLeft(2, '0'));
-  return l10n.chatS2(s);
+  if (h > 0) return l10n.chatHM(whole(h), twoDigits(m));
+  if (m > 0) return l10n.chatMS(whole(m), twoDigits(s));
+  return l10n.chatS2(whole(s));
 }
 
 // last-used ghost settings, remembered for the session
@@ -2681,9 +2682,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   String _humanBytes(int b) {
-    if (b < 1024) return l10n.chatB2(b);
-    if (b < 1024 * 1024) return l10n.chatKb2((b / 1024).round());
-    return l10n.chatMb2((b / (1024 * 1024)).toStringAsFixed(1));
+    if (b < 1024) return l10n.chatB2(whole(b));
+    if (b < 1024 * 1024) return l10n.chatKb2(whole((b / 1024).round()));
+    return l10n.chatMb2(decimal((b / (1024 * 1024)), 1));
   }
 
   // anything big enough to be a wait gets a confirm first. small stuff goes

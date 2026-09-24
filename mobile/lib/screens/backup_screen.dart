@@ -15,6 +15,7 @@ import '../theme.dart';
 import '../widgets/fit_column.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
+import '../l10n/numbers.dart';
 
 class BackupScreen extends StatefulWidget {
   const BackupScreen({super.key});
@@ -211,7 +212,7 @@ class _BackupScreenState extends State<BackupScreen> {
                 child: Text(
                   _busy
                       ? (_progress > 0
-                            ? l10n.backupWriting((_progress * 100).round())
+                            ? l10n.backupWriting(percent(_progress))
                             : l10n.backupCreating)
                       : (_move
                             ? l10n.backupMakeTheFileAnd

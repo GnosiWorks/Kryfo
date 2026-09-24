@@ -4,6 +4,7 @@ import '../meta/meta_reader.dart';
 import 'geo.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
+import '../l10n/numbers.dart';
 
 enum StoryRowKind { place, hidden, device, time, more }
 
@@ -31,7 +32,7 @@ class PhotoStory {
 }
 
 String _metres(double m) {
-  if (m >= 1000) return l10n.photoStoryKm((m / 1000).round());
+  if (m >= 1000) return l10n.photoStoryKm(whole((m / 1000).round()));
   if (m >= 10) return l10n.photoStory1Metre((m / 5).round() * 5);
   final r = m.round();
   return l10n.photoStory1Metre(r <= 1 ? 1 : r);
@@ -47,7 +48,7 @@ String placeLine(GpsFix fix, GeoWorld? world, GeoPlaces? places) {
       ? near.place.name
       : '${near.place.name}, $country';
   if (near.km <= 25) return l10n.photoStoryNear(where);
-  return l10n.photoStoryAboutKmFrom((near.km / 5).round() * 5, where);
+  return l10n.photoStoryAboutKmFrom(whole((near.km / 5).round() * 5), where);
 }
 
 String deviceName(String? make, String? model) {
@@ -79,9 +80,9 @@ DateTime? _taken(String? raw) {
 
 String _shutter(double s) {
   if (s >= 1) {
-    return l10n.photoStoryS(s.toStringAsFixed(s == s.roundToDouble() ? 0 : 1));
+    return l10n.photoStoryS(decimal(s, s == s.roundToDouble() ? 0 : 1));
   }
-  return l10n.photoStory1S((1 / s).round());
+  return l10n.photoStory1S(whole((1 / s).round()));
 }
 
 PhotoStory storyOf(MetaReport r, {GeoWorld? world, GeoPlaces? places}) {
@@ -120,7 +121,7 @@ PhotoStory storyOf(MetaReport r, {GeoWorld? world, GeoPlaces? places}) {
     );
     all.add(l10n.photoStoryLocation(coordsLine(fix.lat, fix.lon)));
     if (fix.altitude != null) {
-      all.add(l10n.photoStoryHeightAboveTheSea(fix.altitude!.round()));
+      all.add(l10n.photoStoryHeightAboveTheSea(whole(fix.altitude!.round())));
     }
   } else if (r.gpsBlank) {
     rows.add(
@@ -135,7 +136,7 @@ PhotoStory storyOf(MetaReport r, {GeoWorld? world, GeoPlaces? places}) {
 
   final phone = deviceName(r.make, r.model);
   final optics = [
-    if (r.fNumber != null) l10n.photoStoryF(r.fNumber!.toStringAsFixed(1)),
+    if (r.fNumber != null) l10n.photoStoryF(decimal(r.fNumber!, 1)),
     if (r.exposure != null) _shutter(r.exposure!),
   ].join(' · ');
   if (phone.isNotEmpty) {

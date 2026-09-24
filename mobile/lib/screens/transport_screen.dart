@@ -15,6 +15,7 @@ import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../delivery_mode.dart';
+import '../l10n/numbers.dart';
 
 class TransportScreen extends StatelessWidget {
   const TransportScreen({super.key});
@@ -324,20 +325,22 @@ class _AliveState extends State<_Alive> {
       DateTime.fromMillisecondsSinceEpoch(ms),
     );
     if (d.inSeconds < 90) return l10n.transportJustNow;
-    if (d.inMinutes < 60) return l10n.transportMAgo(d.inMinutes);
-    if (d.inHours < 48) return l10n.transportHAgo(d.inHours);
-    return l10n.transportDAgo(d.inDays);
+    if (d.inMinutes < 60) return l10n.transportMAgo(whole(d.inMinutes));
+    if (d.inHours < 48) return l10n.transportHAgo(whole(d.inHours));
+    return l10n.transportDAgo(whole(d.inDays));
   }
 
   static String _span(int ms) {
     final d = Duration(milliseconds: ms);
-    if (d.inMinutes < 60) return l10n.transportM(d.inMinutes);
-    if (d.inHours < 48) return l10n.transportHM(d.inHours, d.inMinutes % 60);
-    return l10n.transportD(d.inDays);
+    if (d.inMinutes < 60) return l10n.transportM(whole(d.inMinutes));
+    if (d.inHours < 48) {
+      return l10n.transportHM(whole(d.inHours), whole(d.inMinutes % 60));
+    }
+    return l10n.transportD(whole(d.inDays));
   }
 
   static String _mb(num? b) =>
-      b == null ? '?' : l10n.transportMb((b / 1048576).round());
+      b == null ? '?' : l10n.transportMb(whole((b / 1048576).round()));
 
   @override
   Widget build(BuildContext context) {
@@ -507,8 +510,8 @@ class _AliveState extends State<_Alive> {
     String t(DateTime d) => hourMinute(d);
     final mins = to.difference(from).inMinutes;
     final len = mins < 60
-        ? l10n.transportM2(mins)
-        : l10n.transportHM2(mins ~/ 60, mins % 60);
+        ? l10n.transportM2(whole(mins))
+        : l10n.transportHM2(whole(mins ~/ 60), whole(mins % 60));
     return _Line(
       l10n.transportTo(t(from), t(to)),
       len,
