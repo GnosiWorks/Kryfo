@@ -925,15 +925,6 @@
   "@metaReaderAdobe": {
     "description": "meta/meta_reader.dart"
   },
-  "metaReaderApp": "app{m}",
-  "@metaReaderApp": {
-    "description": "meta/meta_reader.dart",
-    "placeholders": {
-      "m": {
-        "type": "Object"
-      }
-    }
-  },
   "metaReaderSamsungTrailer": "samsung trailer",
   "@metaReaderSamsungTrailer": {
     "description": "meta/meta_reader.dart"
@@ -1270,15 +1261,6 @@
   "backupPassphrasesDonTMatch": "passphrases don't match",
   "@backupPassphrasesDonTMatch": {
     "description": "screens/backup_screen.dart"
-  },
-  "backupKryfoBackupKryfo": "kryfo-backup-{ts}.kryfo",
-  "@backupKryfoBackupKryfo": {
-    "description": "screens/backup_screen.dart",
-    "placeholders": {
-      "ts": {
-        "type": "Object"
-      }
-    }
   },
   "backupBackupSavedKeepThe": "Backup saved · keep the passphrase safe",
   "@backupBackupSavedKeepThe": {
@@ -2244,15 +2226,6 @@
   "@chatYouBlockedThisContact": {
     "description": "screens/chat_screen.dart"
   },
-  "chatFace": "face-{avatarSeed}",
-  "@chatFace": {
-    "description": "screens/chat_screen.dart",
-    "placeholders": {
-      "avatarSeed": {
-        "type": "Object"
-      }
-    }
-  },
   "chatSupporter": "Supporter",
   "@chatSupporter": {
     "description": "screens/chat_screen.dart"
@@ -2496,15 +2469,6 @@
   "@cleanTheAppThatShared": {
     "description": "screens/clean_screen.dart"
   },
-  "cleanToolsOut": "{path}/tools_out",
-  "@cleanToolsOut": {
-    "description": "screens/clean_screen.dart",
-    "placeholders": {
-      "path": {
-        "type": "Object"
-      }
-    }
-  },
   "cleanNoAppOnThis": "No app on this phone took the file.",
   "@cleanNoAppOnThis": {
     "description": "screens/clean_screen.dart"
@@ -2675,15 +2639,6 @@
   "contactVerifyKeys": "Verify keys",
   "@contactVerifyKeys": {
     "description": "screens/contact_screen.dart"
-  },
-  "contactFace": "face-{avatarSeed}",
-  "@contactFace": {
-    "description": "screens/contact_screen.dart",
-    "placeholders": {
-      "avatarSeed": {
-        "type": "Object"
-      }
-    }
   },
   "contactVouches": "Vouches",
   "@contactVouches": {
@@ -3383,15 +3338,6 @@
       }
     }
   },
-  "groupChatGroup2": "group-{groupId}",
-  "@groupChatGroup2": {
-    "description": "screens/group_chat_screen.dart",
-    "placeholders": {
-      "groupId": {
-        "type": "Object"
-      }
-    }
-  },
   "groupChatHere": " · {memberCount} here",
   "@groupChatHere": {
     "description": "screens/group_chat_screen.dart",
@@ -4058,15 +4004,6 @@
       }
     }
   },
-  "homeGroup": "group-{groupId}",
-  "@homeGroup": {
-    "description": "screens/home_screen.dart",
-    "placeholders": {
-      "groupId": {
-        "type": "Object"
-      }
-    }
-  },
   "homeMentionedYou": "Mentioned you",
   "@homeMentionedYou": {
     "description": "screens/home_screen.dart"
@@ -4113,15 +4050,6 @@
     "description": "screens/home_screen.dart",
     "placeholders": {
       "c": {
-        "type": "Object"
-      }
-    }
-  },
-  "homeFace": "face-{avatarSeed}",
-  "@homeFace": {
-    "description": "screens/home_screen.dart",
-    "placeholders": {
-      "avatarSeed": {
         "type": "Object"
       }
     }
@@ -4571,18 +4499,6 @@
   "lockFileNoKryfoOnThe": "No Kryfo on the other side? On a computer:",
   "@lockFileNoKryfoOnThe": {
     "description": "screens/lock_file_screen.dart"
-  },
-  "lockFileAgeD": "$ age -d \"{name}\" > \"{plain}\"",
-  "@lockFileAgeD": {
-    "description": "screens/lock_file_screen.dart",
-    "placeholders": {
-      "name": {
-        "type": "Object"
-      },
-      "plain": {
-        "type": "Object"
-      }
-    }
   },
   "lockFileItAsksForThe": "It asks for the password. age is free at age-encryption.org",
   "@lockFileItAsksForThe": {
@@ -5841,15 +5757,6 @@
   "@qrViolet": {
     "description": "screens/qr_screen.dart"
   },
-  "qrToolsOut": "{path}/tools_out",
-  "@qrToolsOut": {
-    "description": "screens/qr_screen.dart",
-    "placeholders": {
-      "path": {
-        "type": "Object"
-      }
-    }
-  },
   "qrCouldNotDrawThe": "Could not draw the image.",
   "@qrCouldNotDrawThe": {
     "description": "screens/qr_screen.dart"
@@ -5975,15 +5882,6 @@
   "requestsMessagesFromPeopleYou": "Messages from people you have not added show up here first.",
   "@requestsMessagesFromPeopleYou": {
     "description": "screens/requests_screen.dart"
-  },
-  "requestsFace": "face-{haloId}",
-  "@requestsFace": {
-    "description": "screens/requests_screen.dart",
-    "placeholders": {
-      "haloId": {
-        "type": "Object"
-      }
-    }
   },
   "requestsLooksSafeNothingSuspicious": "Looks safe · nothing suspicious in their first message",
   "@requestsLooksSafeNothingSuspicious": {

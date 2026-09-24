@@ -1859,7 +1859,7 @@ class _GroupRow extends StatelessWidget {
               // of the group name in italic serif. distinct from contact
               // avatars (circular) so groups feel different at a glance.
               Hero(
-                tag: l10n.homeGroup(g.groupId),
+                tag: 'group-${g.groupId}',
                 child: Container(
                   width: 36,
                   height: 36,
@@ -2165,7 +2165,7 @@ class _Row extends StatelessWidget {
                 clipBehavior: Clip.none,
                 children: [
                   Hero(
-                    tag: l10n.homeFace(c.avatarSeed),
+                    tag: 'face-${c.avatarSeed}',
                     child: KryfoAvatar(
                       seed: c.avatarSeed,
                       size: 44,

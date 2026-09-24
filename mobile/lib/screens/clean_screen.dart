@@ -111,7 +111,7 @@ class _CleanScreenState extends State<CleanScreen>
       final cache = await getTemporaryDirectory();
       final r = await cleanFile(
         inPath,
-        l10n.cleanToolsOut(cache.path),
+        '${cache.path}/tools_out',
         originalName: widget.file.name,
       );
       if (_gone) return;

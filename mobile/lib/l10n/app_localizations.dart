@@ -1189,12 +1189,6 @@ abstract class AppLocalizations {
   /// meta/meta_reader.dart
   ///
   /// In en, this message translates to:
-  /// **'app{m}'**
-  String metaReaderApp(Object m);
-
-  /// meta/meta_reader.dart
-  ///
-  /// In en, this message translates to:
   /// **'samsung trailer'**
   String get metaReaderSamsungTrailer;
 
@@ -1563,12 +1557,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'passphrases don\'t match'**
   String get backupPassphrasesDonTMatch;
-
-  /// screens/backup_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'kryfo-backup-{ts}.kryfo'**
-  String backupKryfoBackupKryfo(Object ts);
 
   /// screens/backup_screen.dart
   ///
@@ -2821,12 +2809,6 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'face-{avatarSeed}'**
-  String chatFace(Object avatarSeed);
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Supporter'**
   String get chatSupporter;
 
@@ -3157,12 +3139,6 @@ abstract class AppLocalizations {
   /// screens/clean_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{path}/tools_out'**
-  String cleanToolsOut(Object path);
-
-  /// screens/clean_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'No app on this phone took the file.'**
   String get cleanNoAppOnThis;
 
@@ -3381,12 +3357,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Verify keys'**
   String get contactVerifyKeys;
-
-  /// screens/contact_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'face-{avatarSeed}'**
-  String contactFace(Object avatarSeed);
 
   /// screens/contact_screen.dart
   ///
@@ -4304,12 +4274,6 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'group-{groupId}'**
-  String groupChatGroup2(Object groupId);
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **' · {memberCount} here'**
   String groupChatHere(Object memberCount);
 
@@ -5162,12 +5126,6 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'group-{groupId}'**
-  String homeGroup(Object groupId);
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Mentioned you'**
   String get homeMentionedYou;
 
@@ -5224,12 +5182,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Every message with {c} goes, and they stop being a contact. It only clears this phone - their copy stays with them. If they message again it lands in requests.'**
   String homeEveryMessageWithGoes(Object c);
-
-  /// screens/home_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'face-{avatarSeed}'**
-  String homeFace(Object avatarSeed);
 
   /// screens/home_screen.dart
   ///
@@ -5776,12 +5728,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No Kryfo on the other side? On a computer:'**
   String get lockFileNoKryfoOnThe;
-
-  /// screens/lock_file_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'\$ age -d \"{name}\" > \"{plain}\"'**
-  String lockFileAgeD(Object name, Object plain);
 
   /// screens/lock_file_screen.dart
   ///
@@ -7580,12 +7526,6 @@ abstract class AppLocalizations {
   /// screens/qr_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{path}/tools_out'**
-  String qrToolsOut(Object path);
-
-  /// screens/qr_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Could not draw the image.'**
   String get qrCouldNotDrawThe;
 
@@ -7756,12 +7696,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Messages from people you have not added show up here first.'**
   String get requestsMessagesFromPeopleYou;
-
-  /// screens/requests_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'face-{haloId}'**
-  String requestsFace(Object haloId);
 
   /// screens/requests_screen.dart
   ///

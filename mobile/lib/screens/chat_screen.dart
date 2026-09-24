@@ -5376,7 +5376,7 @@ class _ChatHead extends StatelessWidget {
             behavior: HitTestBehavior.opaque,
             // the same face flies in from the list row
             child: Hero(
-              tag: l10n.chatFace(avatarSeed),
+              tag: 'face-$avatarSeed',
               child: KryfoAvatar(seed: avatarSeed, size: 36, choice: face),
             ),
           ),

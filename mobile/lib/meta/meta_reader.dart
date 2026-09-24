@@ -356,7 +356,7 @@ void _jpegSegment(int m, Uint8List body, MetaReport r) {
   } else if (m == 0xE0) {
     return;
   } else if (m >= 0xE3 && m <= 0xEF) {
-    r.extra.add(l10n.metaReaderApp(m - 0xE0));
+    r.extra.add('app${m - 0xE0}');
   } else if (m == 0xFE) {
     r.comment = true;
   }

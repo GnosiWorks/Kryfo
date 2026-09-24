@@ -816,7 +816,7 @@ class _LockedView extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 SelectableText(
-                  l10n.lockFileAgeD(name, plain),
+                  '\$ age -d "$name" > "$plain"',
                   style: HaloType.mono(size: 11.5, color: HaloColors.text),
                 ),
                 const SizedBox(height: 8),

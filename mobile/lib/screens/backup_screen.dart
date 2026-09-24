@@ -56,7 +56,7 @@ class _BackupScreenState extends State<BackupScreen> {
     try {
       final tempDir = await getTemporaryDirectory();
       final ts = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      final name = l10n.backupKryfoBackupKryfo(ts);
+      final name = 'kryfo-backup-$ts.kryfo';
       final path = p.join(tempDir.path, name);
       await createBackupFile(
         pw,

@@ -631,11 +631,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get metaReaderAdobe => 'Adobe';
 
   @override
-  String metaReaderApp(Object m) {
-    return 'app$m';
-  }
-
-  @override
   String get metaReaderSamsungTrailer => 'samsung trailer';
 
   @override
@@ -867,11 +862,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupPassphrasesDonTMatch => 'passphrases don\'t match';
-
-  @override
-  String backupKryfoBackupKryfo(Object ts) {
-    return 'kryfo-backup-$ts.kryfo';
-  }
 
   @override
   String get backupBackupSavedKeepThe =>
@@ -1577,11 +1567,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatYouBlockedThisContact => 'You blocked this contact';
 
   @override
-  String chatFace(Object avatarSeed) {
-    return 'face-$avatarSeed';
-  }
-
-  @override
   String get chatSupporter => 'Supporter';
 
   @override
@@ -1764,11 +1749,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'The app that shared it may have taken it back. Try sharing it again.';
 
   @override
-  String cleanToolsOut(Object path) {
-    return '$path/tools_out';
-  }
-
-  @override
   String get cleanNoAppOnThis => 'No app on this phone took the file.';
 
   @override
@@ -1892,11 +1872,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactVerifyKeys => 'Verify keys';
-
-  @override
-  String contactFace(Object avatarSeed) {
-    return 'face-$avatarSeed';
-  }
 
   @override
   String get contactVouches => 'Vouches';
@@ -2420,11 +2395,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String groupChatGroup2(Object groupId) {
-    return 'group-$groupId';
-  }
-
-  @override
   String groupChatHere(Object memberCount) {
     return ' · $memberCount here';
   }
@@ -2903,11 +2873,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String homeGroup(Object groupId) {
-    return 'group-$groupId';
-  }
-
-  @override
   String get homeMentionedYou => 'Mentioned you';
 
   @override
@@ -2940,11 +2905,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String homeEveryMessageWithGoes(Object c) {
     return 'Every message with $c goes, and they stop being a contact. It only clears this phone - their copy stays with them. If they message again it lands in requests.';
-  }
-
-  @override
-  String homeFace(Object avatarSeed) {
-    return 'face-$avatarSeed';
   }
 
   @override
@@ -3265,11 +3225,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get lockFileNoKryfoOnThe =>
       'No Kryfo on the other side? On a computer:';
-
-  @override
-  String lockFileAgeD(Object name, Object plain) {
-    return '\$ age -d \"$name\" > \"$plain\"';
-  }
 
   @override
   String get lockFileItAsksForThe =>
@@ -4259,11 +4214,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get qrViolet => 'Violet';
 
   @override
-  String qrToolsOut(Object path) {
-    return '$path/tools_out';
-  }
-
-  @override
   String get qrCouldNotDrawThe => 'Could not draw the image.';
 
   @override
@@ -4357,11 +4307,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get requestsMessagesFromPeopleYou =>
       'Messages from people you have not added show up here first.';
-
-  @override
-  String requestsFace(Object haloId) {
-    return 'face-$haloId';
-  }
 
   @override
   String get requestsLooksSafeNothingSuspicious =>

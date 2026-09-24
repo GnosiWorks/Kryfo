@@ -254,7 +254,7 @@ class _ContactScreenState extends State<ContactScreen> {
                   builder: (_, v, child) =>
                       Transform.scale(scale: v, child: child),
                   child: Hero(
-                    tag: l10n.contactFace(widget.avatarSeed),
+                    tag: 'face-${widget.avatarSeed}',
                     child: KryfoAvatar(
                       seed: widget.avatarSeed,
                       size: 96,

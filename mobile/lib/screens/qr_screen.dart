@@ -250,7 +250,7 @@ class _QrScreenState extends State<QrScreen> {
     final png = await renderQrPng(g, _inks[_ink].$2, HaloColors.qrPaper);
     if (png == null) return null;
     final cache = await getTemporaryDirectory();
-    return writeQrPng(png, l10n.qrToolsOut(cache.path));
+    return writeQrPng(png, '${cache.path}/tools_out');
   }
 
   Future<void> _out(QrGrid g, {required bool save}) async {

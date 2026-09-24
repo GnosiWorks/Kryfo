@@ -345,7 +345,7 @@ class _RequestCardState extends State<_RequestCard>
               child: Row(
                 children: [
                   Hero(
-                    tag: l10n.requestsFace(widget.haloId),
+                    tag: 'face-${widget.haloId}',
                     child: KryfoAvatar(
                       seed: widget.haloId,
                       size: 44,

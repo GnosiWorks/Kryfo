@@ -2755,7 +2755,7 @@ class _Header extends StatelessWidget {
                 child: Row(
                   children: [
                     Hero(
-                      tag: l10n.groupChatGroup2(groupId),
+                      tag: 'group-$groupId',
                       child: Container(
                         width: 36,
                         height: 36,
