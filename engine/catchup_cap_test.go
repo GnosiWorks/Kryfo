@@ -7,6 +7,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/halo/engine/catchup"
 )
 
 // the same shape as the settle/cap pair in the relay runner: whichever fires
@@ -195,5 +197,52 @@ func TestFinishingClearsTheDropCount(t *testing.T) {
 	}
 	if d, long := catchupCapFor(u); long || d != catchupCap {
 		t.Fatalf("want the normal window after a success, got %s long=%v", d, long)
+	}
+}
+
+// a relay carries one subscription per contact, and each catches up on its
+// own. keyed by relay alone they shared one start time, one drop count and
+// one place in the backlog: a cap firing for one found the other's start
+// already cleared and recorded a drop after "0.0s", and one contact's walk
+// could step over part of another contact's backlog as if it were done.
+func TestTwoContactsOnOneRelayKeepTheirOwnCatchup(t *testing.T) {
+	u := "wss://shared.example"
+	a, b := catchupKey(u, "aaaa"), catchupKey(u, "bbbb")
+
+	noteCatchupStart(a)
+	noteCatchupStart(b)
+	time.Sleep(40 * time.Millisecond)
+	noteCatchupDone(a, false) // quick
+	time.Sleep(120 * time.Millisecond)
+	noteCatchupDone(b, true) // held up until the cap
+
+	ms, dropped, _, seen := catchupOf(u)
+	if !seen || !dropped {
+		t.Fatalf("the relay should show its slowest subscription, the dropped one: seen=%v dropped=%v", seen, dropped)
+	}
+	if ms < 140 {
+		t.Fatalf("the drop was recorded after %dms; it ran for about 160", ms)
+	}
+	if _, _, _, subs, drops := catchupDetailOf(u); subs != 2 || drops != 1 {
+		t.Fatalf("want 2 subscriptions with 1 dropped, got %d and %d", subs, drops)
+	}
+
+	// each keeps its own place in the backlog
+	setCatchupMark(a, catchup.Mark{Top: 100, Cursor: 50})
+	if catchupMarkOf(b).Started() {
+		t.Fatal("one contact's backlog mark leaked into another's")
+	}
+	setCatchupMark(a, catchup.Mark{})
+
+	// and its own drop count: b's drops buy b a long turn, not a
+	for i := 0; i < catchupDropsBeforeLong; i++ {
+		noteCatchupStart(b)
+		noteCatchupDone(b, true)
+	}
+	if _, long := catchupCapFor(a); long {
+		t.Fatal("a got the long turn for b's drops")
+	}
+	if _, long := catchupCapFor(b); !long {
+		t.Fatal("b did not get its long turn")
 	}
 }

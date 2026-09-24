@@ -173,8 +173,8 @@ const catchupCap = 30 * time.Second
 const catchupLongCap = 90 * time.Second
 const catchupDropsBeforeLong = 3
 
-// what one relay's last catch-up cost. seconds and a flag, no content and no
-// counts - enough to see who holds a check-in up without a debug build.
+// what one subscription's last catch-up cost. seconds and a flag, no content
+// and no counts - enough to see who holds a check-in up without a debug build.
 type catchupRun struct {
 	Ms      int  `json:"ms"`
 	Dropped bool `json:"dropped"`
@@ -186,6 +186,25 @@ type catchupRun struct {
 	Pages     int `json:"pages"`
 	Events    int `json:"events"`
 	ConnectMs int `json:"connect_ms"`
+	// when it ended. the transport line only weighs the latest round, so a
+	// contact deleted weeks ago does not go on being the slowest.
+	At time.Time `json:"-"`
+}
+
+// catch-up is recorded per subscription, never per relay: a relay carries one
+// subscription per contact, six on a phone with six contacts, each walking
+// its own backlog. keyed by relay alone they shared a start time, a drop
+// count and a place in the backlog - a cap firing for one found another's
+// start already gone and recorded "dropped after 0.0s", and one contact's
+// walk could step over part of another's backlog as if it had been fetched.
+// the key is the relay url and the subscription's address.
+func catchupKey(u, rcvPk string) string { return u + " " + rcvPk }
+
+func relayOfKey(k string) string {
+	if i := strings.IndexByte(k, ' '); i >= 0 {
+		return k[:i]
+	}
+	return k
 }
 
 var (
@@ -205,9 +224,9 @@ var (
 	dialAt      = map[string]time.Time{}
 )
 
-func noteRelayConnect(u string, ms int) {
+func noteRelayConnect(u, key string, ms int) {
 	catchupMu.Lock()
-	connectLast[u] = ms
+	connectLast[key] = ms
 	connectAt[u] = time.Now()
 	catchupMu.Unlock()
 }
@@ -233,74 +252,107 @@ func relayConnectedAt(u string) time.Time {
 	return connectAt[u]
 }
 
-func noteCatchupPages(u string, pages, events int) {
+func noteCatchupPages(key string, pages, events int) {
 	catchupMu.Lock()
-	catchupPend[u] = catchupRun{Pages: pages, Events: events}
+	catchupPend[key] = catchupRun{Pages: pages, Events: events}
 	catchupMu.Unlock()
 }
 
-// what the last catch-up covered: connect ms, pages, events.
-func catchupDetailOf(u string) (int, int, int) {
-	catchupMu.Lock()
-	defer catchupMu.Unlock()
-	r := catchupLast[u]
-	return r.ConnectMs, r.Pages, r.Events
+// a round of catch-ups: everything that ended within this of the newest one
+// on the same relay. a check-in's subscriptions all catch up inside its
+// window; anything older is from a round before.
+const catchupRound = 5 * time.Minute
+
+// the slowest subscription on a relay in its latest round - a dropped one
+// ranks above any that finished - and how many there were, and how many of
+// them were dropped. this is what the transport line shows for the relay.
+// catchupMu must be held.
+func slowestCatchupLocked(u string) (slow catchupRun, ok bool, subs, dropped int) {
+	var newest time.Time
+	for k, r := range catchupLast {
+		if relayOfKey(k) == u && r.At.After(newest) {
+			newest = r.At
+		}
+	}
+	for k, r := range catchupLast {
+		if relayOfKey(k) != u || newest.Sub(r.At) > catchupRound {
+			continue
+		}
+		subs++
+		if r.Dropped {
+			dropped++
+		}
+		if !ok || (r.Dropped && !slow.Dropped) || (r.Dropped == slow.Dropped && r.Ms > slow.Ms) {
+			slow, ok = r, true
+		}
+	}
+	return
 }
 
-func catchupMarkOf(u string) catchup.Mark {
+// what the slowest catch-up on a relay covered: connect ms, pages, events,
+// and how many subscriptions there were and how many were dropped.
+func catchupDetailOf(u string) (connectMs, pages, events, subs, dropped int) {
 	catchupMu.Lock()
 	defer catchupMu.Unlock()
-	return catchupMarks[u]
+	r, _, n, d := slowestCatchupLocked(u)
+	return r.ConnectMs, r.Pages, r.Events, n, d
 }
 
-func setCatchupMark(u string, m catchup.Mark) {
+func catchupMarkOf(key string) catchup.Mark {
+	catchupMu.Lock()
+	defer catchupMu.Unlock()
+	return catchupMarks[key]
+}
+
+func setCatchupMark(key string, m catchup.Mark) {
 	catchupMu.Lock()
 	defer catchupMu.Unlock()
 	if m.Started() {
-		catchupMarks[u] = m
+		catchupMarks[key] = m
 	} else {
-		delete(catchupMarks, u)
+		delete(catchupMarks, key)
 	}
 }
 
-// how long this relay gets this time round.
-func catchupCapFor(u string) (time.Duration, bool) {
+// how long this subscription gets this time round.
+func catchupCapFor(key string) (time.Duration, bool) {
 	catchupMu.Lock()
 	defer catchupMu.Unlock()
-	if catchupDrops[u] >= catchupDropsBeforeLong {
+	if catchupDrops[key] >= catchupDropsBeforeLong {
 		// one longer turn, then back to the usual
-		catchupDrops[u] = 0
-		catchupLong[u] = true
+		catchupDrops[key] = 0
+		catchupLong[key] = true
 		return catchupLongCap, true
 	}
-	catchupLong[u] = false
+	catchupLong[key] = false
 	return catchupCap, false
 }
 
-func noteCatchupStart(u string) {
+func noteCatchupStart(key string) {
 	catchupMu.Lock()
-	catchupFrom[u] = time.Now()
+	catchupFrom[key] = time.Now()
 	catchupMu.Unlock()
 }
 
-func noteCatchupDone(u string, dropped bool) {
+func noteCatchupDone(key string, dropped bool) {
+	u := relayOfKey(key)
 	catchupMu.Lock()
 	ms := 0
-	if t, ok := catchupFrom[u]; ok {
+	if t, ok := catchupFrom[key]; ok {
 		ms = int(time.Since(t).Milliseconds())
-		delete(catchupFrom, u)
+		delete(catchupFrom, key)
 	}
-	long := catchupLong[u]
+	long := catchupLong[key]
 	if dropped {
-		catchupDrops[u]++
+		catchupDrops[key]++
 	} else {
-		catchupDrops[u] = 0
+		catchupDrops[key] = 0
 	}
-	drops := catchupDrops[u]
-	pend := catchupPend[u]
-	delete(catchupPend, u)
-	catchupLast[u] = catchupRun{Ms: ms, Dropped: dropped, Long: long,
-		Pages: pend.Pages, Events: pend.Events, ConnectMs: connectLast[u]}
+	drops := catchupDrops[key]
+	pend := catchupPend[key]
+	delete(catchupPend, key)
+	catchupLast[key] = catchupRun{Ms: ms, Dropped: dropped, Long: long,
+		Pages: pend.Pages, Events: pend.Events, ConnectMs: connectLast[key], At: time.Now()}
 	catchupMu.Unlock()
 	if dropped {
 		log.Printf("nostr: %s still catching up after %dms - dropped for this check-in (%d in a row)",
@@ -313,7 +365,7 @@ func noteCatchupDone(u string, dropped bool) {
 func catchupOf(u string) (int, bool, bool, bool) {
 	catchupMu.Lock()
 	defer catchupMu.Unlock()
-	r, ok := catchupLast[u]
+	r, ok, _, _ := slowestCatchupLocked(u)
 	return r.Ms, r.Dropped, r.Long, ok
 }
 
@@ -796,6 +848,9 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 		// first relay is our own - it carries the traffic, heal it hard
 		own := i == 0
 		go func(u string) {
+			// this subscription's catch-up record, apart from every other
+			// contact's on the same relay
+			ck := catchupKey(u, rcvPk)
 			last := nostr.Timestamp(lastSaved)
 			retry := 10 * time.Second
 			rejoin := 5 * time.Second
@@ -859,7 +914,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 					sleepOrKick(relayRetryAfter(u, retry, own))
 					continue
 				}
-				noteRelayConnect(u, int(time.Since(dialAt).Milliseconds()))
+				noteRelayConnect(u, ck, int(time.Since(dialAt).Milliseconds()))
 				// a relay answered. this is the one fact the watchdog trusts.
 				noteRelayConnected()
 				// the anchor is what was saved, by this runner or another. it
@@ -925,7 +980,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 				// missed, so a check-in knows when it may stop tor again
 				atomic.AddInt32(&catchupActive, 1)
 				atomic.AddInt64(&catchupStarted, 1)
-				noteCatchupStart(u)
+				noteCatchupStart(ck)
 				var settleOnce sync.Once
 				var capT *time.Timer
 				settled := func() {
@@ -934,13 +989,13 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 							capT.Stop()
 						}
 						atomic.AddInt32(&catchupActive, -1)
-						noteCatchupDone(u, false)
+						noteCatchupDone(ck, false)
 					})
 				}
 				// nobody waits on one relay for longer than this. whichever
 				// of the two fires first wins the Once, so a relay is either
 				// finished or dropped, never both.
-				thisCap, longTurn := catchupCapFor(u)
+				thisCap, longTurn := catchupCapFor(ck)
 				if longTurn {
 					log.Printf("nostr: %s dropped %d check-ins running, giving it %s this time",
 						u, catchupDropsBeforeLong, catchupLongCap)
@@ -948,7 +1003,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 				capT = time.AfterFunc(thisCap, func() {
 					settleOnce.Do(func() {
 						atomic.AddInt32(&catchupActive, -1)
-						noteCatchupDone(u, true)
+						noteCatchupDone(ck, true)
 						ccancel()
 					})
 				})
@@ -996,7 +1051,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 						if stored < limit || oldest == 0 {
 							atomic.StoreInt32(&caughtUp, 1)
 							saveLast(atomic.LoadInt64(&pending))
-							noteCatchupPages(u, 0, stored)
+							noteCatchupPages(ck, 0, stored)
 							settled()
 							continue
 						}
@@ -1009,9 +1064,9 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 							// never finished.
 							res, mark := catchup.Continue(cctx, func(pc context.Context, s, t nostr.Timestamp, n int) ([]nostr.Event, error) {
 								return relayPage(pc, r, rcvPk, s, t, n)
-							}, since, from, catchupPage, catchupMaxPages, dispatch, catchupMarkOf(u))
-							setCatchupMark(u, mark)
-							noteCatchupPages(u, res.Pages, res.Fetched)
+							}, since, from, catchupPage, catchupMaxPages, dispatch, catchupMarkOf(ck))
+							setCatchupMark(ck, mark)
+							noteCatchupPages(ck, res.Pages, res.Fetched)
 							log.Printf("nostr: %s paged back %d pages, %d events, %d new, complete=%v, resume=%d",
 								u, res.Pages, res.Fetched, res.Fresh, res.Complete, res.Until)
 							if !res.Complete {

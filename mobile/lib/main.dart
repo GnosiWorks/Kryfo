@@ -4906,14 +4906,18 @@ class AppState extends ChangeNotifier {
         final secs = (ms / 1000).toStringAsFixed(1);
         final long = m['catchup_long'] == true ? ' long window' : '';
         final dropped = m['catchup_dropped'] == true;
-        // a slow one says what it was doing: how long the connect took
-        // before it, and how far back it walked
+        // the relay's slowest subscription - it has one per contact. a slow
+        // one says how many of them were held up, how long its connect
+        // took, and how far back it walked
         var why = '';
         if (dropped || ms > 5000) {
           final c = ((m['connect_ms'] as int? ?? 0) / 1000).toStringAsFixed(1);
           final p = m['catchup_pages'] as int? ?? 0;
           final e = m['catchup_events'] as int? ?? 0;
-          why = ' (connect ${c}s, $p pages, $e events)';
+          final subs = m['catchup_subs'] as int? ?? 0;
+          final held = m['catchup_subs_dropped'] as int? ?? 0;
+          final of = subs > 1 ? '${dropped ? held : 1} of $subs, ' : '';
+          why = ' (${of}connect ${c}s, $p pages, $e events)';
         }
         parts.add(
           dropped
