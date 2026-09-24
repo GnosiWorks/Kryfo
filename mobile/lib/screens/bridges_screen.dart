@@ -360,9 +360,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                         Text(
                           n == 0
                               ? l10n.bridgesNoLinesYet
-                              : n == 1
-                              ? l10n.bridges1LineSaved
-                              : l10n.bridgesLinesSaved(n),
+                              : l10n.bridges1LineSaved(n),
                           style: HaloType.mono(
                             size: 10.5,
                             color: n > 0 ? HaloColors.violet : HaloColors.text3,

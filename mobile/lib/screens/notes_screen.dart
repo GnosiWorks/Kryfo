@@ -6,7 +6,7 @@ import '../main.dart';
 import '../theme.dart';
 import '../l10n/l10n.dart';
 
-final String kNotesPeerId = l10n.notesNotesSelf;
+const String kNotesPeerId = '_notes_self_';
 
 // note to self. a private place that never leaves the phone - stored as
 // messages against the reserved kNotesPeerId.

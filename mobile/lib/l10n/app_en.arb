@@ -129,18 +129,23 @@
   "@deliveryModeJustNow": {
     "description": "delivery_mode.dart"
   },
-  "deliveryModeMinAgo": "{min} min ago",
+  "deliveryModeMinAgo": "{count, plural, other{{count} min ago}}",
   "@deliveryModeMinAgo": {
     "description": "delivery_mode.dart",
     "placeholders": {
-      "min": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
-  "deliveryMode1HourAgo": "1 hour ago",
+  "deliveryMode1HourAgo": "{count, plural, one{{count} hour ago} other{{count} hours ago}}",
   "@deliveryMode1HourAgo": {
-    "description": "delivery_mode.dart"
+    "description": "delivery_mode.dart",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "deliveryModeHoursAgo": "{h} hours ago",
   "@deliveryModeHoursAgo": {
@@ -155,12 +160,12 @@
   "@deliveryModeYesterday": {
     "description": "delivery_mode.dart"
   },
-  "deliveryModeDaysAgo": "{days} days ago",
+  "deliveryModeDaysAgo": "{count, plural, one{{count} day ago} other{{count} days ago}}",
   "@deliveryModeDaysAgo": {
     "description": "delivery_mode.dart",
     "placeholders": {
-      "days": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -253,12 +258,12 @@
   "@introBudgetTomorrow": {
     "description": "intro_budget.dart"
   },
-  "introBudgetInDays": "in {d} days",
+  "introBudgetInDays": "{count, plural, one{in {count} day} other{in {count} days}}",
   "@introBudgetInDays": {
     "description": "intro_budget.dart",
     "placeholders": {
-      "d": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -266,12 +271,12 @@
   "@introBudgetInAnHour": {
     "description": "intro_budget.dart"
   },
-  "introBudgetInHours": "in {h} hours",
+  "introBudgetInHours": "{count, plural, one{in {count} hour} other{in {count} hours}}",
   "@introBudgetInHours": {
     "description": "intro_budget.dart",
     "placeholders": {
-      "h": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -282,58 +287,6 @@
   "lockStateUnlockKryfo": "Unlock kryfo",
   "@lockStateUnlockKryfo": {
     "description": "lock_state.dart"
-  },
-  "appHalostartlistener": "HaloStartListener",
-  "@appHalostartlistener": {
-    "description": "main.dart"
-  },
-  "appHalohandlecheck": "HaloHandleCheck",
-  "@appHalohandlecheck": {
-    "description": "main.dart"
-  },
-  "appHalohandleclaim": "HaloHandleClaim",
-  "@appHalohandleclaim": {
-    "description": "main.dart"
-  },
-  "appHalohandlerelease": "HaloHandleRelease",
-  "@appHalohandlerelease": {
-    "description": "main.dart"
-  },
-  "appHalotorpost": "HaloTorPost",
-  "@appHalotorpost": {
-    "description": "main.dart"
-  },
-  "appHalotorgetjson": "HaloTorGetJSON",
-  "@appHalotorgetjson": {
-    "description": "main.dart"
-  },
-  "appHaloroomsend": "HaloRoomSend",
-  "@appHaloroomsend": {
-    "description": "main.dart"
-  },
-  "appHaloroomsendfirstcontact": "HaloRoomSendFirstContact",
-  "@appHaloroomsendfirstcontact": {
-    "description": "main.dart"
-  },
-  "appHaloroomsubscribe": "HaloRoomSubscribe",
-  "@appHaloroomsubscribe": {
-    "description": "main.dart"
-  },
-  "appHaloroomsubscribefirstcontact": "HaloRoomSubscribeFirstContact",
-  "@appHaloroomsubscribefirstcontact": {
-    "description": "main.dart"
-  },
-  "appHaloroomunsubscribe": "HaloRoomUnsubscribe",
-  "@appHaloroomunsubscribe": {
-    "description": "main.dart"
-  },
-  "appHalonostrsend": "HaloNostrSend",
-  "@appHalonostrsend": {
-    "description": "main.dart"
-  },
-  "appHalosendto": "HaloSendTo",
-  "@appHalosendto": {
-    "description": "main.dart"
   },
   "appRoomPrivText": "room_priv TEXT",
   "@appRoomPrivText": {
@@ -473,14 +426,6 @@
       }
     }
   },
-  "appHalotorstop": "HaloTorStop",
-  "@appHalotorstop": {
-    "description": "main.dart"
-  },
-  "appHalotorresume": "HaloTorResume",
-  "@appHalotorresume": {
-    "description": "main.dart"
-  },
   "appTorWouldNotWake": "tor would not wake",
   "@appTorWouldNotWake": {
     "description": "main.dart"
@@ -573,14 +518,6 @@
         "type": "Object"
       }
     }
-  },
-  "appFirstcontact": "Firstcontact",
-  "@appFirstcontact": {
-    "description": "main.dart"
-  },
-  "appHalo1": "halo/1:",
-  "@appHalo1": {
-    "description": "main.dart"
   },
   "appThisRoomHasAlready": "This room has already expired",
   "@appThisRoomHasAlready": {
@@ -909,20 +846,8 @@
   "@metaReaderExifThatCannotBe": {
     "description": "meta/meta_reader.dart"
   },
-  "metaReaderS": "S",
-  "@metaReaderS": {
-    "description": "meta/meta_reader.dart"
-  },
-  "metaReaderW": "W",
-  "@metaReaderW": {
-    "description": "meta/meta_reader.dart"
-  },
   "metaReaderPhotoshop30": "Photoshop 3.0",
   "@metaReaderPhotoshop30": {
-    "description": "meta/meta_reader.dart"
-  },
-  "metaReaderAdobe": "Adobe",
-  "@metaReaderAdobe": {
     "description": "meta/meta_reader.dart"
   },
   "metaReaderSamsungTrailer": "samsung trailer",
@@ -1059,12 +984,12 @@
   "@rooms24Hours": {
     "description": "rooms.dart"
   },
-  "roomsDays": "{inDays} days",
+  "roomsDays": "{count, plural, one{{count} day} other{{count} days}}",
   "@roomsDays": {
     "description": "rooms.dart",
     "placeholders": {
-      "inDays": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -1076,30 +1001,30 @@
   "@roomsAboutAnHour": {
     "description": "rooms.dart"
   },
-  "roomsHours": "{inHours} hours",
+  "roomsHours": "{count, plural, one{{count} hour} other{{count} hours}}",
   "@roomsHours": {
     "description": "rooms.dart",
     "placeholders": {
-      "inHours": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
-  "roomsAboutHours": "about {inHours} hours",
+  "roomsAboutHours": "{count, plural, one{about {count} hour} other{about {count} hours}}",
   "@roomsAboutHours": {
     "description": "rooms.dart",
     "placeholders": {
-      "inHours": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
-  "roomsMinutes": "{inMinutes} minutes",
+  "roomsMinutes": "{count, plural, one{{count} minute} other{{count} minutes}}",
   "@roomsMinutes": {
     "description": "rooms.dart",
     "placeholders": {
-      "inMinutes": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -1214,9 +1139,58 @@
   "@archivedArchived": {
     "description": "screens/archived_screen.dart"
   },
-  "archivedChatRestingHereIt": "Chat resting here. It stays quiet until they write, then comes back to the top.",
+  "archivedCount0": "no",
+  "@archivedCount0": {
+    "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
+  },
+  "archivedCount1": "one",
+  "@archivedCount1": {
+    "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
+  },
+  "archivedCount2": "two",
+  "@archivedCount2": {
+    "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
+  },
+  "archivedCount3": "three",
+  "@archivedCount3": {
+    "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
+  },
+  "archivedCount4": "four",
+  "@archivedCount4": {
+    "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
+  },
+  "archivedCount5": "five",
+  "@archivedCount5": {
+    "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
+  },
+  "archivedCount6": "six",
+  "@archivedCount6": {
+    "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
+  },
+  "archivedCount7": "seven",
+  "@archivedCount7": {
+    "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
+  },
+  "archivedCount8": "eight",
+  "@archivedCount8": {
+    "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
+  },
+  "archivedCount9": "nine",
+  "@archivedCount9": {
+    "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
+  },
+  "archivedCount10": "ten",
+  "@archivedCount10": {
+    "description": "screens/archived_screen.dart: the number of archived chats, spelled out"
+  },
+  "archivedChatRestingHereIt": "{count, plural, one{Chat resting here. It stays quiet until they write, then comes back to the top.} other{Chats resting here. They stay quiet until someone writes, then come back to the top.}}",
   "@archivedChatRestingHereIt": {
-    "description": "screens/archived_screen.dart"
+    "description": "screens/archived_screen.dart",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "archivedChatsRestingHereThey": "Chats resting here. They stay quiet until someone writes, then come back to the top.",
   "@archivedChatsRestingHereThey": {
@@ -1427,9 +1401,14 @@
   "@bridgesNoLinesYet": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridges1LineSaved": "1 line saved",
+  "bridges1LineSaved": "{count, plural, one{{count} line saved} other{{count} lines saved}}",
   "@bridges1LineSaved": {
-    "description": "screens/bridges_screen.dart"
+    "description": "screens/bridges_screen.dart",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "bridgesLinesSaved": "{n} lines saved",
   "@bridgesLinesSaved": {
@@ -1826,12 +1805,12 @@
   "@chatItDisappearsWithNo": {
     "description": "screens/chat_screen.dart"
   },
-  "chatThisChatHasPins": "This chat has {kMaxPins} pins already",
+  "chatThisChatHasPins": "{count, plural, one{This chat has {count} pin already} other{This chat has {count} pins already}}",
   "@chatThisChatHasPins": {
     "description": "screens/chat_screen.dart",
     "placeholders": {
-      "kMaxPins": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -1923,12 +1902,12 @@
   "@chatUnderAMinute": {
     "description": "screens/chat_screen.dart"
   },
-  "chatRoughlyMin": "Roughly {mins} min",
+  "chatRoughlyMin": "{count, plural, other{Roughly {count} min}}",
   "@chatRoughlyMin": {
     "description": "screens/chat_screen.dart",
     "placeholders": {
-      "mins": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -2055,6 +2034,18 @@
   "chatSharedPhotos": "Shared photos",
   "@chatSharedPhotos": {
     "description": "screens/chat_screen.dart"
+  },
+  "chatSharedPhotoCount": "{count, plural, one{{count} photo} other{{count} photos}} · {title}",
+  "@chatSharedPhotoCount": {
+    "description": "screens/chat_screen.dart",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "title": {
+        "type": "Object"
+      }
+    }
   },
   "chatUnmuteNotifications": "Unmute notifications",
   "@chatUnmuteNotifications": {
@@ -2789,18 +2780,6 @@
   "@donateText2": {
     "description": "screens/donate_screen.dart"
   },
-  "donate4apyzs72zycg3z8rtwwx6jgdjsdacphhsfrxikrl5ylnyyz8fvxqaywmyw79axfo": "4ApyZS72ZYCG3z8rtwwX6JgdjSdAcphHSFRxiKrL5yLnYYz8fvXQayWMyw79AxFoQ7BXLfzEExk5f7Z2xPdEPWyRBXtVwiD",
-  "@donate4apyzs72zycg3z8rtwwx6jgdjsdacphhsfrxikrl5ylnyyz8fvxqaywmyw79axfo": {
-    "description": "screens/donate_screen.dart"
-  },
-  "donateDrxaqpm8wd63eerdgn9grazgvnxwicb9pc6ryr3v2x4a": "DrxaQPM8wD63EErdGN9GrazGVnxwiCB9Pc6RYR3v2x4a",
-  "@donateDrxaqpm8wd63eerdgn9grazgvnxwicb9pc6ryr3v2x4a": {
-    "description": "screens/donate_screen.dart"
-  },
-  "donate0x55014af792d54e4350b7f4bfc7be7d62ebbcfe43": "0x55014AF792d54E4350b7f4bfc7be7D62EbbCfE43",
-  "@donate0x55014af792d54e4350b7f4bfc7be7d62ebbcfe43": {
-    "description": "screens/donate_screen.dart"
-  },
   "donateYourEarlierBitcoinPayment": "Your earlier bitcoin payment was seen · {tierName} badge unlocked",
   "@donateYourEarlierBitcoinPayment": {
     "description": "screens/donate_screen.dart",
@@ -3203,12 +3182,12 @@
   "@groupChatYou2": {
     "description": "screens/group_chat_screen.dart"
   },
-  "groupChatThisChatHasPins": "This chat has {kMaxPins} pins already",
+  "groupChatThisChatHasPins": "{count, plural, one{This chat has {count} pin already} other{This chat has {count} pins already}}",
   "@groupChatThisChatHasPins": {
     "description": "screens/group_chat_screen.dart",
     "placeholders": {
-      "kMaxPins": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -3347,12 +3326,12 @@
       }
     }
   },
-  "groupChatMembers": "{memberCount} members",
+  "groupChatMembers": "{count, plural, one{{count} member} other{{count} members}}",
   "@groupChatMembers": {
     "description": "screens/group_chat_screen.dart",
     "placeholders": {
-      "memberCount": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -3498,9 +3477,14 @@
   "@groupInfoGroupInfo": {
     "description": "screens/group_info_screen.dart"
   },
-  "groupInfo1Member": "1 member",
+  "groupInfo1Member": "{count, plural, one{{count} member} other{{count} members}}",
   "@groupInfo1Member": {
-    "description": "screens/group_info_screen.dart"
+    "description": "screens/group_info_screen.dart",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "groupInfoMembers": "{membersLength} members",
   "@groupInfoMembers": {
@@ -3751,21 +3735,21 @@
   "@homeAnHour": {
     "description": "screens/home_screen.dart"
   },
-  "homeHours": "{h} hours",
+  "homeHours": "{count, plural, one{{count} hour} other{{count} hours}}",
   "@homeHours": {
     "description": "screens/home_screen.dart",
     "placeholders": {
-      "h": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
-  "homeMinutes": "{inMinutes} minutes",
+  "homeMinutes": "{count, plural, one{{count} minute} other{{count} minutes}}",
   "@homeMinutes": {
     "description": "screens/home_screen.dart",
     "placeholders": {
-      "inMinutes": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -3902,51 +3886,51 @@
   "@homeNothingWaitingToSend": {
     "description": "screens/home_screen.dart"
   },
-  "homeWaitingSendsWhenYou": "{n} waiting · sends when you're back",
+  "homeWaitingSendsWhenYou": "{count, plural, other{{count} waiting · sends when you're back}}",
   "@homeWaitingSendsWhenYou": {
     "description": "screens/home_screen.dart",
     "placeholders": {
-      "n": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
-  "homeWaitingTorIsStill": "{n} waiting · tor is still connecting",
+  "homeWaitingTorIsStill": "{count, plural, other{{count} waiting · tor is still connecting}}",
   "@homeWaitingTorIsStill": {
     "description": "screens/home_screen.dart",
     "placeholders": {
-      "n": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
-  "homeWaitingForThemTo": "{n} waiting · for them to add you back",
+  "homeWaitingForThemTo": "{count, plural, other{{count} waiting · for them to add you back}}",
   "@homeWaitingForThemTo": {
     "description": "screens/home_screen.dart",
     "placeholders": {
-      "n": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
-  "homeWaitingForThemToAddYou": "{n} waiting · {p} for them to add you back",
+  "homeWaitingForThemToAddYou": "{count, plural, other{{count} waiting · {parked} for them to add you back}}",
   "@homeWaitingForThemToAddYou": {
     "description": "screens/home_screen.dart",
     "placeholders": {
-      "n": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       },
-      "p": {
-        "type": "Object"
+      "parked": {
+        "type": "int"
       }
     }
   },
-  "homeWaitingSendingNow": "{n} waiting · sending now",
+  "homeWaitingSendingNow": "{count, plural, other{{count} waiting · sending now}}",
   "@homeWaitingSendingNow": {
     "description": "screens/home_screen.dart",
     "placeholders": {
-      "n": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -3970,9 +3954,14 @@
   "@homeArchived": {
     "description": "screens/home_screen.dart"
   },
-  "home1Chat": "1 chat",
+  "home1Chat": "{count, plural, one{{count} chat} other{{count} chats}}",
   "@home1Chat": {
-    "description": "screens/home_screen.dart"
+    "description": "screens/home_screen.dart",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "homeChats": "{count} chats",
   "@homeChats": {
@@ -4008,12 +3997,12 @@
   "@homeMentionedYou": {
     "description": "screens/home_screen.dart"
   },
-  "homeMembers": "{memberCount} members",
+  "homeMembers": "{count, plural, one{{count} member} other{{count} members}}",
   "@homeMembers": {
     "description": "screens/home_screen.dart",
     "placeholders": {
-      "memberCount": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -4165,9 +4154,14 @@
   "@homeRequests": {
     "description": "screens/home_screen.dart"
   },
-  "home1PersonWantsTo": "1 person wants to reach you",
+  "home1PersonWantsTo": "{count, plural, one{{count} person wants to reach you} other{{count} people want to reach you}}",
   "@home1PersonWantsTo": {
-    "description": "screens/home_screen.dart"
+    "description": "screens/home_screen.dart",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "homePeopleWantToReach": "{count} people want to reach you",
   "@homePeopleWantToReach": {
@@ -4227,15 +4221,15 @@
   "@introduceANoteLikeMy": {
     "description": "screens/introduce_sheet.dart"
   },
-  "introduceOfIntroductionsLeftThis": "{left} of {introBudgetMax} introductions left this week",
+  "introduceOfIntroductionsLeftThis": "{max, plural, one{{left} of {max} introduction left this week} other{{left} of {max} introductions left this week}}",
   "@introduceOfIntroductionsLeftThis": {
     "description": "screens/introduce_sheet.dart",
     "placeholders": {
-      "left": {
-        "type": "Object"
+      "max": {
+        "type": "int"
       },
-      "introBudgetMax": {
-        "type": "Object"
+      "left": {
+        "type": "int"
       }
     }
   },
@@ -4903,22 +4897,18 @@
   "@newGroupPickAtLeastOne": {
     "description": "screens/new_group_screen.dart"
   },
-  "newGroupSelected": "{selectedLength} selected",
+  "newGroupSelected": "{count, plural, other{{count} selected}}",
   "@newGroupSelected": {
     "description": "screens/new_group_screen.dart",
     "placeholders": {
-      "selectedLength": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
   "newGroupAddAtLeastOne": "Add at least one contact first before creating a group.",
   "@newGroupAddAtLeastOne": {
     "description": "screens/new_group_screen.dart"
-  },
-  "notesNotesSelf": "_notes_self_",
-  "@notesNotesSelf": {
-    "description": "screens/notes_screen.dart"
   },
   "notesToday": "TODAY",
   "@notesToday": {
@@ -6213,12 +6203,12 @@
   "@roomCreateMemberCap": {
     "description": "screens/room_create_sheet.dart"
   },
-  "roomCreateNoOnePastThe": "No one past the first {cap}",
+  "roomCreateNoOnePastThe": "{count, plural, other{No one past the first {count}}}",
   "@roomCreateNoOnePastThe": {
     "description": "screens/room_create_sheet.dart",
     "placeholders": {
-      "cap": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -6897,12 +6887,12 @@
       }
     }
   },
-  "transportFails": "{r} fails",
+  "transportFails": "{count, plural, one{{count} fail} other{{count} fails}}",
   "@transportFails": {
     "description": "screens/transport_screen.dart",
     "placeholders": {
-      "r": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -7127,15 +7117,15 @@
   "@transportControlPort": {
     "description": "screens/transport_screen.dart"
   },
-  "transportDialsTimeouts": "{ctrl} dials · {ctrl2} timeouts",
+  "transportDialsTimeouts": "{dials, plural, one{{dials} dial} other{{dials} dials}} · {timeouts, plural, one{{timeouts} timeout} other{{timeouts} timeouts}}",
   "@transportDialsTimeouts": {
     "description": "screens/transport_screen.dart",
     "placeholders": {
-      "ctrl": {
-        "type": "Object"
+      "dials": {
+        "type": "int"
       },
-      "ctrl2": {
-        "type": "Object"
+      "timeouts": {
+        "type": "int"
       }
     }
   },
@@ -7204,9 +7194,14 @@
       }
     }
   },
-  "vouchersVouchedBy": "vouched by",
+  "vouchersVouchedBy": "{count, plural, one{vouched by} other{vouched by {count}}}",
   "@vouchersVouchedBy": {
-    "description": "screens/vouchers_sheet.dart"
+    "description": "screens/vouchers_sheet.dart",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "vouchersVouchedBy2": "vouched by {rowsLength}",
   "@vouchersVouchedBy2": {
@@ -7329,9 +7324,14 @@
   "@cleanerDataAfterThePicture": {
     "description": "tools/cleaner.dart"
   },
-  "cleaner1OtherField": "1 other field",
+  "cleaner1OtherField": "{count, plural, one{{count} other field} other{{count} other fields}}",
   "@cleaner1OtherField": {
-    "description": "tools/cleaner.dart"
+    "description": "tools/cleaner.dart",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "cleanerOtherFields": "{other} other fields",
   "@cleanerOtherFields": {
@@ -7346,12 +7346,12 @@
   "@lockWordsFourRandomWordsBeat": {
     "description": "tools/lock_words.dart"
   },
-  "lockWordsTooShortAtLeast": "Too short. At least {kMinPassLength} characters.",
+  "lockWordsTooShortAtLeast": "{count, plural, one{Too short. At least {count} character.} other{Too short. At least {count} characters.}}",
   "@lockWordsTooShortAtLeast": {
     "description": "tools/lock_words.dart",
     "placeholders": {
-      "kMinPassLength": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -7385,9 +7385,14 @@
       }
     }
   },
-  "photoStory1Metre": "1 metre",
+  "photoStory1Metre": "{count, plural, one{{count} metre} other{{count} metres}}",
   "@photoStory1Metre": {
-    "description": "tools/photo_story.dart"
+    "description": "tools/photo_story.dart",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "photoStoryMetres2": "{r} metres",
   "@photoStoryMetres2": {
@@ -7670,12 +7675,12 @@
   "@photoStoryDataAfterThePicture": {
     "description": "tools/photo_story.dart"
   },
-  "photoStoryDataAfterTheEnd": "Data after the end of the picture: {trailingBytes} bytes",
+  "photoStoryDataAfterTheEnd": "{count, plural, one{Data after the end of the picture: {count} byte} other{Data after the end of the picture: {count} bytes}}",
   "@photoStoryDataAfterTheEnd": {
     "description": "tools/photo_story.dart",
     "placeholders": {
-      "trailingBytes": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -7706,18 +7711,23 @@
       }
     }
   },
-  "photoStoryCameraSettingsFlashFocus": "{otherExifTags} camera settings (flash, focus, exposure)",
+  "photoStoryCameraSettingsFlashFocus": "{count, plural, one{{count} camera setting (flash, focus, exposure)} other{{count} camera settings (flash, focus, exposure)}}",
   "@photoStoryCameraSettingsFlashFocus": {
     "description": "tools/photo_story.dart",
     "placeholders": {
-      "otherExifTags": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       }
     }
   },
-  "photoStory1MoreField": "1 more field",
+  "photoStory1MoreField": "{count, plural, one{{count} more field} other{{count} more fields}}",
   "@photoStory1MoreField": {
-    "description": "tools/photo_story.dart"
+    "description": "tools/photo_story.dart",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "photoStoryMoreFields": "{more} more fields",
   "@photoStoryMoreFields": {
@@ -7875,7 +7885,7 @@
       }
     }
   },
-  "vouchTextAndOtherYouKnow": "{names}, {names2} and {rest} other{rest2} you know",
+  "vouchTextAndOtherYouKnow": "{names}, {names2} and {rest, plural, one{{rest} other} other{{rest} others}} you know",
   "@vouchTextAndOtherYouKnow": {
     "description": "vouch_text.dart",
     "placeholders": {
@@ -7886,10 +7896,7 @@
         "type": "Object"
       },
       "rest": {
-        "type": "Object"
-      },
-      "rest2": {
-        "type": "Object"
+        "type": "int"
       }
     }
   },

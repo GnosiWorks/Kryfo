@@ -103,7 +103,7 @@ class TransportScreen extends StatelessWidget {
                   r['benched'] == true
                       ? l10n.transportBenchedS(r['bench_for_s'])
                       : (r['fails'] as int? ?? 0) > 0
-                      ? l10n.transportFails(r['fails'])
+                      ? l10n.transportFails(r['fails'] as int)
                       : l10n.transportOk,
 
                   r['benched'] == true
@@ -439,8 +439,8 @@ class _AliveState extends State<_Alive> {
         _Line(
           l10n.transportControlPort,
           l10n.transportDialsTimeouts(
-            ctrl['ctrl_dials'] ?? 0,
-            ctrl['ctrl_timeouts'] ?? 0,
+            (ctrl['ctrl_dials'] as int?) ?? 0,
+            (ctrl['ctrl_timeouts'] as int?) ?? 0,
           ),
           ((ctrl['ctrl_timeouts'] as int?) ?? 0) > 0
               ? HaloColors.rose

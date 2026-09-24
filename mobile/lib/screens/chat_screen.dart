@@ -7728,7 +7728,7 @@ class MediaGalleryScreen extends StatelessWidget {
               style: HaloType.serif(size: 17, color: HaloColors.text),
             ),
             Text(
-              '${paths.length} ${paths.length == 1 ? 'photo' : 'photos'} · $title',
+              l10n.chatSharedPhotoCount(paths.length, title),
               style: HaloType.mono(size: 10, color: HaloColors.text3),
             ),
           ],

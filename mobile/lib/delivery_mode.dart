@@ -59,7 +59,7 @@ String agoLine(int thenMs, int nowMs) {
   if (min < 60) return l10n.deliveryModeMinAgo(min);
   final h = min ~/ 60;
   if (h < 24) {
-    return h == 1 ? l10n.deliveryMode1HourAgo : l10n.deliveryModeHoursAgo(h);
+    return l10n.deliveryMode1HourAgo(h);
   }
   final days = h ~/ 24;
   return days == 1

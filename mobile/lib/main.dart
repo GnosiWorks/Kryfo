@@ -157,7 +157,7 @@ class HaloEngine {
         .lookupFunction<
           Pointer<Utf8> Function(Pointer<Utf8>),
           Pointer<Utf8> Function(Pointer<Utf8>)
-        >(l10n.appHalostartlistener);
+        >('HaloStartListener');
     _drainInbox = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloDrainInbox');
     _getStatus = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloGetStatus');
     _nostrKick = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloNostrKick');
@@ -366,14 +366,13 @@ class HaloEngine {
 
   // the registry is a request over tor: off the ui thread, or claiming a
   // handle froze the screen until it answered and android called it an anr
-  Future<String> handleCheck(String h) =>
-      _ffiOnIsolate(l10n.appHalohandlecheck, [h]);
+  Future<String> handleCheck(String h) => _ffiOnIsolate('HaloHandleCheck', [h]);
 
   Future<String> handleClaim(String h, String invite, String bio) =>
-      _ffiOnIsolate(l10n.appHalohandleclaim, [h, invite, bio]);
+      _ffiOnIsolate('HaloHandleClaim', [h, invite, bio]);
 
   Future<String> handleRelease(String h) =>
-      _ffiOnIsolate(l10n.appHalohandlerelease, [h]);
+      _ffiOnIsolate('HaloHandleRelease', [h]);
 
   // tell the engine whether to route through tor. it decides the route; the
   // relay list for each mode is chosen below.
@@ -456,7 +455,7 @@ class HaloEngine {
   // is a rendezvous and a round trip, and run inline it held every frame
   // and android's own main thread for as long as that took.
   Future<String> torPost(String url, String body) => _ffiOnIsolate(
-    l10n.appHalotorpost,
+    'HaloTorPost',
     [url, body],
     wait: const Duration(seconds: 80),
     what: 'tor',
@@ -465,7 +464,7 @@ class HaloEngine {
   // GET over tor that accepts any 2xx - the badge service replies 202 while
   // a donation is still unconfirmed. off the ui thread, as above.
   Future<String> torGetJson(String url) => _ffiOnIsolate(
-    l10n.appHalotorgetjson,
+    'HaloTorGetJSON',
     [url],
     wait: const Duration(seconds: 80),
     what: 'tor',
@@ -563,7 +562,7 @@ class HaloEngine {
   }
 
   Future<String> roomSend(String priv, String peerPub, String msg) =>
-      _roomFfiOnIsolate(l10n.appHaloroomsend, [priv, peerPub, msg]).timeout(
+      _roomFfiOnIsolate('HaloRoomSend', [priv, peerPub, msg]).timeout(
         const Duration(seconds: 60),
         onTimeout: () => 'error: relay timeout',
       );
@@ -573,23 +572,18 @@ class HaloEngine {
     String peerPub,
     String fcPk,
     String msg,
-  ) =>
-      _roomFfiOnIsolate(l10n.appHaloroomsendfirstcontact, [
-        priv,
-        peerPub,
-        fcPk,
-        msg,
-      ]).timeout(
+  ) => _roomFfiOnIsolate('HaloRoomSendFirstContact', [priv, peerPub, fcPk, msg])
+      .timeout(
         const Duration(seconds: 60),
         onTimeout: () => 'error: relay timeout',
       );
 
   void roomSubscribeBg(String priv, String peerPub) =>
-      _roomFfiOnIsolate(l10n.appHaloroomsubscribe, [priv, peerPub]).ignore();
+      _roomFfiOnIsolate('HaloRoomSubscribe', [priv, peerPub]).ignore();
   void roomSubscribeFcBg(String priv) =>
-      _roomFfiOnIsolate(l10n.appHaloroomsubscribefirstcontact, [priv]).ignore();
+      _roomFfiOnIsolate('HaloRoomSubscribeFirstContact', [priv]).ignore();
   void roomUnsubscribeBg(String pub) =>
-      _roomFfiOnIsolate(l10n.appHaloroomunsubscribe, [pub]).ignore();
+      _roomFfiOnIsolate('HaloRoomUnsubscribe', [pub]).ignore();
 }
 
 // one to four string args in, a string out, on its own isolate like every
@@ -773,7 +767,7 @@ Future<String> _startListenerOnIsolate(String dataDir) {
         .lookupFunction<
           Pointer<Utf8> Function(Pointer<Utf8>),
           Pointer<Utf8> Function(Pointer<Utf8>)
-        >(l10n.appHalostartlistener);
+        >('HaloStartListener');
     final p = dataDir.toNativeUtf8();
     try {
       return fn(p).toDartString();
@@ -829,7 +823,7 @@ Future<String> _sendOnIsolate(({bool nostr, String a, String b}) args) {
         ? DynamicLibrary.open('libhalo.so')
         : DynamicLibrary.process();
     final fn = lib.lookupFunction<TwoArgFn, TwoArgFnDart>(
-      args.nostr ? l10n.appHalonostrsend : l10n.appHalosendto,
+      args.nostr ? 'HaloNostrSend' : 'HaloSendTo',
     );
     final p1 = args.a.toNativeUtf8();
     final p2 = args.b.toNativeUtf8();
@@ -4995,7 +4989,7 @@ class AppState extends ChangeNotifier {
   Future<void> _torSleep() async {
     if (_torHeld || haloWiping) return;
     _torHeld = true;
-    final r = await _torCtlOnIsolate(l10n.appHalotorstop);
+    final r = await _torCtlOnIsolate('HaloTorStop');
     dlog('delivery: tor stopped ($r)');
     notifyListeners();
   }
@@ -5005,7 +4999,7 @@ class AppState extends ChangeNotifier {
     // 'ok': tor was asleep and is waking. 'start': there is no tor in this
     // process yet. either way the start call below does the right thing -
     // it hands back the address of the tor that is up, or makes one.
-    final r = await _torCtlOnIsolate(l10n.appHalotorresume);
+    final r = await _torCtlOnIsolate('HaloTorResume');
     if (r.startsWith('error')) {
       dlog('delivery: tor would not wake: $r');
       return false;
@@ -6555,7 +6549,7 @@ class AppState extends ChangeNotifier {
     // good, which is always-on without the service that keeps it alive.
     if (_deliveryMode != DeliveryMode.always && !_inFront) {
       _torHeld = true;
-      await _torCtlOnIsolate(l10n.appHalotorstop);
+      await _torCtlOnIsolate('HaloTorStop');
       _docsPath = docsDir.path;
     } else {
       _docsPath = docsDir.path;
@@ -7450,7 +7444,7 @@ class AppState extends ChangeNotifier {
           engine
               .sendFirstContact(xpub, fc, cipher)
               .then((r) => settle('firstcontact', r))
-              .catchError((_) => settle(l10n.appFirstcontact, 'err')),
+              .catchError((_) => settle('Firstcontact', 'err')),
         );
       }
       return done.future;
@@ -7561,7 +7555,7 @@ class AppState extends ChangeNotifier {
   // it used to hand that frame back unchanged on an unexpected prefix or a
   // parse that threw, and the caller sent it.
   String? _roomify(String wrapped, String pub) {
-    final prefix = l10n.appHalo1;
+    final prefix = 'halo/1:';
     if (!wrapped.startsWith(prefix)) {
       dlog('room: frame is not halo/1, not sending it');
       return null;

@@ -265,9 +265,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _members.length == 1
-                        ? l10n.groupInfo1Member
-                        : l10n.groupInfoMembers(_members.length),
+                    l10n.groupInfo1Member(_members.length),
                     style: HaloType.mono(
                       size: 11,
                       color: HaloColors.text3,

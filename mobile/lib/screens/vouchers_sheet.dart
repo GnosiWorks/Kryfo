@@ -44,9 +44,7 @@ class _VouchersSheet extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
             child: Text(
-              rows.length == 1
-                  ? l10n.vouchersVouchedBy
-                  : l10n.vouchersVouchedBy2(rows.length),
+              l10n.vouchersVouchedBy(rows.length),
               style: HaloType.serif(size: 20, color: HaloColors.text),
             ),
           ),

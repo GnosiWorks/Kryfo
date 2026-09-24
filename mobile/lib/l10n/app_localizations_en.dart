@@ -108,12 +108,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deliveryModeJustNow => 'just now';
 
   @override
-  String deliveryModeMinAgo(Object min) {
-    return '$min min ago';
+  String deliveryModeMinAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count min ago',
+    );
+    return '$_temp0';
   }
 
   @override
-  String get deliveryMode1HourAgo => '1 hour ago';
+  String deliveryMode1HourAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hours ago',
+      one: '$count hour ago',
+    );
+    return '$_temp0';
+  }
 
   @override
   String deliveryModeHoursAgo(Object h) {
@@ -124,8 +137,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deliveryModeYesterday => 'yesterday';
 
   @override
-  String deliveryModeDaysAgo(Object days) {
-    return '$days days ago';
+  String deliveryModeDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days ago',
+      one: '$count day ago',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -183,16 +202,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get introBudgetTomorrow => 'tomorrow';
 
   @override
-  String introBudgetInDays(Object d) {
-    return 'in $d days';
+  String introBudgetInDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'in $count days',
+      one: 'in $count day',
+    );
+    return '$_temp0';
   }
 
   @override
   String get introBudgetInAnHour => 'in an hour';
 
   @override
-  String introBudgetInHours(Object h) {
-    return 'in $h hours';
+  String introBudgetInHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'in $count hours',
+      one: 'in $count hour',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -200,46 +231,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lockStateUnlockKryfo => 'Unlock kryfo';
-
-  @override
-  String get appHalostartlistener => 'HaloStartListener';
-
-  @override
-  String get appHalohandlecheck => 'HaloHandleCheck';
-
-  @override
-  String get appHalohandleclaim => 'HaloHandleClaim';
-
-  @override
-  String get appHalohandlerelease => 'HaloHandleRelease';
-
-  @override
-  String get appHalotorpost => 'HaloTorPost';
-
-  @override
-  String get appHalotorgetjson => 'HaloTorGetJSON';
-
-  @override
-  String get appHaloroomsend => 'HaloRoomSend';
-
-  @override
-  String get appHaloroomsendfirstcontact => 'HaloRoomSendFirstContact';
-
-  @override
-  String get appHaloroomsubscribe => 'HaloRoomSubscribe';
-
-  @override
-  String get appHaloroomsubscribefirstcontact =>
-      'HaloRoomSubscribeFirstContact';
-
-  @override
-  String get appHaloroomunsubscribe => 'HaloRoomUnsubscribe';
-
-  @override
-  String get appHalonostrsend => 'HaloNostrSend';
-
-  @override
-  String get appHalosendto => 'HaloSendTo';
 
   @override
   String get appRoomPrivText => 'room_priv TEXT';
@@ -309,12 +300,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get appHalotorstop => 'HaloTorStop';
-
-  @override
-  String get appHalotorresume => 'HaloTorResume';
-
-  @override
   String get appTorWouldNotWake => 'tor would not wake';
 
   @override
@@ -375,12 +360,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String appYou(Object body) {
     return 'you: $body';
   }
-
-  @override
-  String get appFirstcontact => 'Firstcontact';
-
-  @override
-  String get appHalo1 => 'halo/1:';
 
   @override
   String get appThisRoomHasAlready => 'This room has already expired';
@@ -619,16 +598,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get metaReaderExifThatCannotBe => 'exif that cannot be read';
 
   @override
-  String get metaReaderS => 'S';
-
-  @override
-  String get metaReaderW => 'W';
-
-  @override
   String get metaReaderPhotoshop30 => 'Photoshop 3.0';
-
-  @override
-  String get metaReaderAdobe => 'Adobe';
 
   @override
   String get metaReaderSamsungTrailer => 'samsung trailer';
@@ -727,8 +697,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rooms24Hours => '24 hours';
 
   @override
-  String roomsDays(Object inDays) {
-    return '$inDays days';
+  String roomsDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '$count day',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -738,18 +714,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roomsAboutAnHour => 'about an hour';
 
   @override
-  String roomsHours(Object inHours) {
-    return '$inHours hours';
+  String roomsHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hours',
+      one: '$count hour',
+    );
+    return '$_temp0';
   }
 
   @override
-  String roomsAboutHours(Object inHours) {
-    return 'about $inHours hours';
+  String roomsAboutHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'about $count hours',
+      one: 'about $count hour',
+    );
+    return '$_temp0';
   }
 
   @override
-  String roomsMinutes(Object inMinutes) {
-    return '$inMinutes minutes';
+  String roomsMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes',
+      one: '$count minute',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -823,8 +817,50 @@ class AppLocalizationsEn extends AppLocalizations {
   String get archivedArchived => 'Archived';
 
   @override
-  String get archivedChatRestingHereIt =>
-      'Chat resting here. It stays quiet until they write, then comes back to the top.';
+  String get archivedCount0 => 'no';
+
+  @override
+  String get archivedCount1 => 'one';
+
+  @override
+  String get archivedCount2 => 'two';
+
+  @override
+  String get archivedCount3 => 'three';
+
+  @override
+  String get archivedCount4 => 'four';
+
+  @override
+  String get archivedCount5 => 'five';
+
+  @override
+  String get archivedCount6 => 'six';
+
+  @override
+  String get archivedCount7 => 'seven';
+
+  @override
+  String get archivedCount8 => 'eight';
+
+  @override
+  String get archivedCount9 => 'nine';
+
+  @override
+  String get archivedCount10 => 'ten';
+
+  @override
+  String archivedChatRestingHereIt(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Chats resting here. They stay quiet until someone writes, then come back to the top.',
+      one:
+          'Chat resting here. It stays quiet until they write, then comes back to the top.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get archivedChatsRestingHereThey =>
@@ -997,7 +1033,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bridgesNoLinesYet => 'No lines yet';
 
   @override
-  String get bridges1LineSaved => '1 line saved';
+  String bridges1LineSaved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lines saved',
+      one: '$count line saved',
+    );
+    return '$_temp0';
+  }
 
   @override
   String bridgesLinesSaved(Object n) {
@@ -1273,8 +1317,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'It disappears with no trace. This can\'t be undone.';
 
   @override
-  String chatThisChatHasPins(Object kMaxPins) {
-    return 'This chat has $kMaxPins pins already';
+  String chatThisChatHasPins(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'This chat has $count pins already',
+      one: 'This chat has $count pin already',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1346,8 +1396,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatUnderAMinute => 'Under a minute';
 
   @override
-  String chatRoughlyMin(Object mins) {
-    return 'Roughly $mins min';
+  String chatRoughlyMin(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Roughly $count min',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1433,6 +1488,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatSharedPhotos => 'Shared photos';
+
+  @override
+  String chatSharedPhotoCount(int count, Object title) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count photos',
+      one: '$count photo',
+    );
+    return '$_temp0 · $title';
+  }
 
   @override
   String get chatUnmuteNotifications => 'Unmute notifications';
@@ -1980,19 +2046,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get donateText2 => 'Ξ';
 
   @override
-  String
-  get donate4apyzs72zycg3z8rtwwx6jgdjsdacphhsfrxikrl5ylnyyz8fvxqaywmyw79axfo =>
-      '4ApyZS72ZYCG3z8rtwwX6JgdjSdAcphHSFRxiKrL5yLnYYz8fvXQayWMyw79AxFoQ7BXLfzEExk5f7Z2xPdEPWyRBXtVwiD';
-
-  @override
-  String get donateDrxaqpm8wd63eerdgn9grazgvnxwicb9pc6ryr3v2x4a =>
-      'DrxaQPM8wD63EErdGN9GrazGVnxwiCB9Pc6RYR3v2x4a';
-
-  @override
-  String get donate0x55014af792d54e4350b7f4bfc7be7d62ebbcfe43 =>
-      '0x55014AF792d54E4350b7f4bfc7be7D62EbbCfE43';
-
-  @override
   String donateYourEarlierBitcoinPayment(Object tierName) {
     return 'Your earlier bitcoin payment was seen · $tierName badge unlocked';
   }
@@ -2303,8 +2356,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupChatYou2 => 'You';
 
   @override
-  String groupChatThisChatHasPins(Object kMaxPins) {
-    return 'This chat has $kMaxPins pins already';
+  String groupChatThisChatHasPins(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'This chat has $count pins already',
+      one: 'This chat has $count pin already',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2400,8 +2459,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String groupChatMembers(Object memberCount) {
-    return '$memberCount members';
+  String groupChatMembers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count members',
+      one: '$count member',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2512,7 +2577,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupInfoGroupInfo => 'Group info';
 
   @override
-  String get groupInfo1Member => '1 member';
+  String groupInfo1Member(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count members',
+      one: '$count member',
+    );
+    return '$_temp0';
+  }
 
   @override
   String groupInfoMembers(Object membersLength) {
@@ -2696,13 +2769,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeAnHour => 'an hour';
 
   @override
-  String homeHours(Object h) {
-    return '$h hours';
+  String homeHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hours',
+      one: '$count hour',
+    );
+    return '$_temp0';
   }
 
   @override
-  String homeMinutes(Object inMinutes) {
-    return '$inMinutes minutes';
+  String homeMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes',
+      one: '$count minute',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2810,28 +2895,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeNothingWaitingToSend => 'Nothing waiting to send';
 
   @override
-  String homeWaitingSendsWhenYou(Object n) {
-    return '$n waiting · sends when you\'re back';
+  String homeWaitingSendsWhenYou(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count waiting · sends when you\'re back',
+    );
+    return '$_temp0';
   }
 
   @override
-  String homeWaitingTorIsStill(Object n) {
-    return '$n waiting · tor is still connecting';
+  String homeWaitingTorIsStill(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count waiting · tor is still connecting',
+    );
+    return '$_temp0';
   }
 
   @override
-  String homeWaitingForThemTo(Object n) {
-    return '$n waiting · for them to add you back';
+  String homeWaitingForThemTo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count waiting · for them to add you back',
+    );
+    return '$_temp0';
   }
 
   @override
-  String homeWaitingForThemToAddYou(Object n, Object p) {
-    return '$n waiting · $p for them to add you back';
+  String homeWaitingForThemToAddYou(int count, int parked) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count waiting · $parked for them to add you back',
+    );
+    return '$_temp0';
   }
 
   @override
-  String homeWaitingSendingNow(Object n) {
-    return '$n waiting · sending now';
+  String homeWaitingSendingNow(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count waiting · sending now',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2851,7 +2961,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeArchived => 'Archived';
 
   @override
-  String get home1Chat => '1 chat';
+  String home1Chat(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count chats',
+      one: '$count chat',
+    );
+    return '$_temp0';
+  }
 
   @override
   String homeChats(Object count) {
@@ -2876,8 +2994,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeMentionedYou => 'Mentioned you';
 
   @override
-  String homeMembers(Object memberCount) {
-    return '$memberCount members';
+  String homeMembers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count members',
+      one: '$count member',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2986,7 +3110,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeRequests => 'Requests';
 
   @override
-  String get home1PersonWantsTo => '1 person wants to reach you';
+  String home1PersonWantsTo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count people want to reach you',
+      one: '$count person wants to reach you',
+    );
+    return '$_temp0';
+  }
 
   @override
   String homePeopleWantToReach(Object count) {
@@ -3024,8 +3156,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get introduceANoteLikeMy => 'A note, like \"my cousin\" - optional';
 
   @override
-  String introduceOfIntroductionsLeftThis(Object left, Object introBudgetMax) {
-    return '$left of $introBudgetMax introductions left this week';
+  String introduceOfIntroductionsLeftThis(int max, int left) {
+    String _temp0 = intl.Intl.pluralLogic(
+      max,
+      locale: localeName,
+      other: '$left of $max introductions left this week',
+      one: '$left of $max introduction left this week',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -3544,16 +3682,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newGroupPickAtLeastOne => 'Pick at least one';
 
   @override
-  String newGroupSelected(Object selectedLength) {
-    return '$selectedLength selected';
+  String newGroupSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count selected',
+    );
+    return '$_temp0';
   }
 
   @override
   String get newGroupAddAtLeastOne =>
       'Add at least one contact first before creating a group.';
-
-  @override
-  String get notesNotesSelf => '_notes_self_';
 
   @override
   String get notesToday => 'TODAY';
@@ -4551,8 +4691,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roomCreateMemberCap => 'Member cap';
 
   @override
-  String roomCreateNoOnePastThe(Object cap) {
-    return 'No one past the first $cap';
+  String roomCreateNoOnePastThe(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'No one past the first $count',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -5085,8 +5230,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String transportFails(Object r) {
-    return '$r fails';
+  String transportFails(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count fails',
+      one: '$count fail',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -5233,8 +5384,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transportControlPort => 'control port';
 
   @override
-  String transportDialsTimeouts(Object ctrl, Object ctrl2) {
-    return '$ctrl dials · $ctrl2 timeouts';
+  String transportDialsTimeouts(int dials, int timeouts) {
+    String _temp0 = intl.Intl.pluralLogic(
+      dials,
+      locale: localeName,
+      other: '$dials dials',
+      one: '$dials dial',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      timeouts,
+      locale: localeName,
+      other: '$timeouts timeouts',
+      one: '$timeouts timeout',
+    );
+    return '$_temp0 · $_temp1';
   }
 
   @override
@@ -5273,7 +5436,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get vouchersVouchedBy => 'vouched by';
+  String vouchersVouchedBy(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'vouched by $count',
+      one: 'vouched by',
+    );
+    return '$_temp0';
+  }
 
   @override
   String vouchersVouchedBy2(Object rowsLength) {
@@ -5372,7 +5543,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cleanerDataAfterThePicture => 'Data after the picture';
 
   @override
-  String get cleaner1OtherField => '1 other field';
+  String cleaner1OtherField(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count other fields',
+      one: '$count other field',
+    );
+    return '$_temp0';
+  }
 
   @override
   String cleanerOtherFields(Object other) {
@@ -5384,8 +5563,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Four random words beat one clever one.';
 
   @override
-  String lockWordsTooShortAtLeast(Object kMinPassLength) {
-    return 'Too short. At least $kMinPassLength characters.';
+  String lockWordsTooShortAtLeast(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Too short. At least $count characters.',
+      one: 'Too short. At least $count character.',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -5410,7 +5595,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get photoStory1Metre => '1 metre';
+  String photoStory1Metre(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count metres',
+      one: '$count metre',
+    );
+    return '$_temp0';
+  }
 
   @override
   String photoStoryMetres2(Object r) {
@@ -5604,8 +5797,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photoStoryDataAfterThePicture => 'Data after the picture';
 
   @override
-  String photoStoryDataAfterTheEnd(Object trailingBytes) {
-    return 'Data after the end of the picture: $trailingBytes bytes';
+  String photoStoryDataAfterTheEnd(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Data after the end of the picture: $count bytes',
+      one: 'Data after the end of the picture: $count byte',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -5624,12 +5823,26 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String photoStoryCameraSettingsFlashFocus(Object otherExifTags) {
-    return '$otherExifTags camera settings (flash, focus, exposure)';
+  String photoStoryCameraSettingsFlashFocus(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count camera settings (flash, focus, exposure)',
+      one: '$count camera setting (flash, focus, exposure)',
+    );
+    return '$_temp0';
   }
 
   @override
-  String get photoStory1MoreField => '1 more field';
+  String photoStory1MoreField(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more fields',
+      one: '$count more field',
+    );
+    return '$_temp0';
+  }
 
   @override
   String photoStoryMoreFields(Object more) {
@@ -5745,13 +5958,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String vouchTextAndOtherYouKnow(
-    Object names,
-    Object names2,
-    Object rest,
-    Object rest2,
-  ) {
-    return '$names, $names2 and $rest other$rest2 you know';
+  String vouchTextAndOtherYouKnow(Object names, Object names2, int rest) {
+    String _temp0 = intl.Intl.pluralLogic(
+      rest,
+      locale: localeName,
+      other: '$rest others',
+      one: '$rest other',
+    );
+    return '$names, $names2 and $_temp0 you know';
   }
 
   @override

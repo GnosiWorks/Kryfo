@@ -14,18 +14,18 @@ class ArchivedScreen extends StatelessWidget {
 
   // spell out the count small, editorial. keeps the top of the screen calm.
   String _countWord(int n) {
-    const words = [
-      'no',
-      'one',
-      'two',
-      'three',
-      'four',
-      'five',
-      'six',
-      'seven',
-      'eight',
-      'nine',
-      'ten',
+    final words = [
+      l10n.archivedCount0,
+      l10n.archivedCount1,
+      l10n.archivedCount2,
+      l10n.archivedCount3,
+      l10n.archivedCount4,
+      l10n.archivedCount5,
+      l10n.archivedCount6,
+      l10n.archivedCount7,
+      l10n.archivedCount8,
+      l10n.archivedCount9,
+      l10n.archivedCount10,
     ];
     return n <= 10 ? words[n] : '$n';
   }
@@ -79,9 +79,9 @@ class ArchivedScreen extends StatelessWidget {
                             ),
                           ),
                           TextSpan(
-                            text: archived.length == 1
-                                ? l10n.archivedChatRestingHereIt
-                                : l10n.archivedChatsRestingHereThey,
+                            text: l10n.archivedChatRestingHereIt(
+                              archived.length,
+                            ),
                             style: HaloType.sans(
                               size: 12.5,
                               color: HaloColors.text3,

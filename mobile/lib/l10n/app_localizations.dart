@@ -283,14 +283,14 @@ abstract class AppLocalizations {
   /// delivery_mode.dart
   ///
   /// In en, this message translates to:
-  /// **'{min} min ago'**
-  String deliveryModeMinAgo(Object min);
+  /// **'{count, plural, other{{count} min ago}}'**
+  String deliveryModeMinAgo(int count);
 
   /// delivery_mode.dart
   ///
   /// In en, this message translates to:
-  /// **'1 hour ago'**
-  String get deliveryMode1HourAgo;
+  /// **'{count, plural, one{{count} hour ago} other{{count} hours ago}}'**
+  String deliveryMode1HourAgo(int count);
 
   /// delivery_mode.dart
   ///
@@ -307,8 +307,8 @@ abstract class AppLocalizations {
   /// delivery_mode.dart
   ///
   /// In en, this message translates to:
-  /// **'{days} days ago'**
-  String deliveryModeDaysAgo(Object days);
+  /// **'{count, plural, one{{count} day ago} other{{count} days ago}}'**
+  String deliveryModeDaysAgo(int count);
 
   /// delivery_mode.dart
   ///
@@ -397,8 +397,8 @@ abstract class AppLocalizations {
   /// intro_budget.dart
   ///
   /// In en, this message translates to:
-  /// **'in {d} days'**
-  String introBudgetInDays(Object d);
+  /// **'{count, plural, one{in {count} day} other{in {count} days}}'**
+  String introBudgetInDays(int count);
 
   /// intro_budget.dart
   ///
@@ -409,8 +409,8 @@ abstract class AppLocalizations {
   /// intro_budget.dart
   ///
   /// In en, this message translates to:
-  /// **'in {h} hours'**
-  String introBudgetInHours(Object h);
+  /// **'{count, plural, one{in {count} hour} other{in {count} hours}}'**
+  String introBudgetInHours(int count);
 
   /// intro_budget.dart
   ///
@@ -423,84 +423,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unlock kryfo'**
   String get lockStateUnlockKryfo;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'HaloStartListener'**
-  String get appHalostartlistener;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'HaloHandleCheck'**
-  String get appHalohandlecheck;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'HaloHandleClaim'**
-  String get appHalohandleclaim;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'HaloHandleRelease'**
-  String get appHalohandlerelease;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'HaloTorPost'**
-  String get appHalotorpost;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'HaloTorGetJSON'**
-  String get appHalotorgetjson;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'HaloRoomSend'**
-  String get appHaloroomsend;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'HaloRoomSendFirstContact'**
-  String get appHaloroomsendfirstcontact;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'HaloRoomSubscribe'**
-  String get appHaloroomsubscribe;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'HaloRoomSubscribeFirstContact'**
-  String get appHaloroomsubscribefirstcontact;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'HaloRoomUnsubscribe'**
-  String get appHaloroomunsubscribe;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'HaloNostrSend'**
-  String get appHalonostrsend;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'HaloSendTo'**
-  String get appHalosendto;
 
   /// main.dart
   ///
@@ -603,18 +525,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{host} {secs}s{long}{why}'**
   String appS(Object host, Object secs, Object long, Object why);
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'HaloTorStop'**
-  String get appHalotorstop;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'HaloTorResume'**
-  String get appHalotorresume;
 
   /// main.dart
   ///
@@ -723,18 +633,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'you: {body}'**
   String appYou(Object body);
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Firstcontact'**
-  String get appFirstcontact;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'halo/1:'**
-  String get appHalo1;
 
   /// main.dart
   ///
@@ -1165,26 +1063,8 @@ abstract class AppLocalizations {
   /// meta/meta_reader.dart
   ///
   /// In en, this message translates to:
-  /// **'S'**
-  String get metaReaderS;
-
-  /// meta/meta_reader.dart
-  ///
-  /// In en, this message translates to:
-  /// **'W'**
-  String get metaReaderW;
-
-  /// meta/meta_reader.dart
-  ///
-  /// In en, this message translates to:
   /// **'Photoshop 3.0'**
   String get metaReaderPhotoshop30;
-
-  /// meta/meta_reader.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Adobe'**
-  String get metaReaderAdobe;
 
   /// meta/meta_reader.dart
   ///
@@ -1345,8 +1225,8 @@ abstract class AppLocalizations {
   /// rooms.dart
   ///
   /// In en, this message translates to:
-  /// **'{inDays} days'**
-  String roomsDays(Object inDays);
+  /// **'{count, plural, one{{count} day} other{{count} days}}'**
+  String roomsDays(int count);
 
   /// rooms.dart
   ///
@@ -1363,20 +1243,20 @@ abstract class AppLocalizations {
   /// rooms.dart
   ///
   /// In en, this message translates to:
-  /// **'{inHours} hours'**
-  String roomsHours(Object inHours);
+  /// **'{count, plural, one{{count} hour} other{{count} hours}}'**
+  String roomsHours(int count);
 
   /// rooms.dart
   ///
   /// In en, this message translates to:
-  /// **'about {inHours} hours'**
-  String roomsAboutHours(Object inHours);
+  /// **'{count, plural, one{about {count} hour} other{about {count} hours}}'**
+  String roomsAboutHours(int count);
 
   /// rooms.dart
   ///
   /// In en, this message translates to:
-  /// **'{inMinutes} minutes'**
-  String roomsMinutes(Object inMinutes);
+  /// **'{count, plural, one{{count} minute} other{{count} minutes}}'**
+  String roomsMinutes(int count);
 
   /// rooms.dart
   ///
@@ -1486,11 +1366,77 @@ abstract class AppLocalizations {
   /// **'Archived'**
   String get archivedArchived;
 
+  /// screens/archived_screen.dart: the number of archived chats, spelled out
+  ///
+  /// In en, this message translates to:
+  /// **'no'**
+  String get archivedCount0;
+
+  /// screens/archived_screen.dart: the number of archived chats, spelled out
+  ///
+  /// In en, this message translates to:
+  /// **'one'**
+  String get archivedCount1;
+
+  /// screens/archived_screen.dart: the number of archived chats, spelled out
+  ///
+  /// In en, this message translates to:
+  /// **'two'**
+  String get archivedCount2;
+
+  /// screens/archived_screen.dart: the number of archived chats, spelled out
+  ///
+  /// In en, this message translates to:
+  /// **'three'**
+  String get archivedCount3;
+
+  /// screens/archived_screen.dart: the number of archived chats, spelled out
+  ///
+  /// In en, this message translates to:
+  /// **'four'**
+  String get archivedCount4;
+
+  /// screens/archived_screen.dart: the number of archived chats, spelled out
+  ///
+  /// In en, this message translates to:
+  /// **'five'**
+  String get archivedCount5;
+
+  /// screens/archived_screen.dart: the number of archived chats, spelled out
+  ///
+  /// In en, this message translates to:
+  /// **'six'**
+  String get archivedCount6;
+
+  /// screens/archived_screen.dart: the number of archived chats, spelled out
+  ///
+  /// In en, this message translates to:
+  /// **'seven'**
+  String get archivedCount7;
+
+  /// screens/archived_screen.dart: the number of archived chats, spelled out
+  ///
+  /// In en, this message translates to:
+  /// **'eight'**
+  String get archivedCount8;
+
+  /// screens/archived_screen.dart: the number of archived chats, spelled out
+  ///
+  /// In en, this message translates to:
+  /// **'nine'**
+  String get archivedCount9;
+
+  /// screens/archived_screen.dart: the number of archived chats, spelled out
+  ///
+  /// In en, this message translates to:
+  /// **'ten'**
+  String get archivedCount10;
+
   /// screens/archived_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Chat resting here. It stays quiet until they write, then comes back to the top.'**
-  String get archivedChatRestingHereIt;
+  /// **'{count, plural, one{Chat resting here. It stays quiet until they write, then comes back to the top.} other{Chats resting here. They stay quiet until someone writes, then come back to the top.}}'**
+  String archivedChatRestingHereIt(int count);
 
   /// screens/archived_screen.dart
   ///
@@ -1801,8 +1747,8 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'1 line saved'**
-  String get bridges1LineSaved;
+  /// **'{count, plural, one{{count} line saved} other{{count} lines saved}}'**
+  String bridges1LineSaved(int count);
 
   /// screens/bridges_screen.dart
   ///
@@ -2281,8 +2227,8 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'This chat has {kMaxPins} pins already'**
-  String chatThisChatHasPins(Object kMaxPins);
+  /// **'{count, plural, one{This chat has {count} pin already} other{This chat has {count} pins already}}'**
+  String chatThisChatHasPins(int count);
 
   /// screens/chat_screen.dart
   ///
@@ -2419,8 +2365,8 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Roughly {mins} min'**
-  String chatRoughlyMin(Object mins);
+  /// **'{count, plural, other{Roughly {count} min}}'**
+  String chatRoughlyMin(int count);
 
   /// screens/chat_screen.dart
   ///
@@ -2565,6 +2511,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Shared photos'**
   String get chatSharedPhotos;
+
+  /// screens/chat_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} photo} other{{count} photos}} · {title}'**
+  String chatSharedPhotoCount(int count, Object title);
 
   /// screens/chat_screen.dart
   ///
@@ -3547,25 +3499,6 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'4ApyZS72ZYCG3z8rtwwX6JgdjSdAcphHSFRxiKrL5yLnYYz8fvXQayWMyw79AxFoQ7BXLfzEExk5f7Z2xPdEPWyRBXtVwiD'**
-  String
-  get donate4apyzs72zycg3z8rtwwx6jgdjsdacphhsfrxikrl5ylnyyz8fvxqaywmyw79axfo;
-
-  /// screens/donate_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'DrxaQPM8wD63EErdGN9GrazGVnxwiCB9Pc6RYR3v2x4a'**
-  String get donateDrxaqpm8wd63eerdgn9grazgvnxwicb9pc6ryr3v2x4a;
-
-  /// screens/donate_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'0x55014AF792d54E4350b7f4bfc7be7D62EbbCfE43'**
-  String get donate0x55014af792d54e4350b7f4bfc7be7d62ebbcfe43;
-
-  /// screens/donate_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Your earlier bitcoin payment was seen · {tierName} badge unlocked'**
   String donateYourEarlierBitcoinPayment(Object tierName);
 
@@ -4124,8 +4057,8 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'This chat has {kMaxPins} pins already'**
-  String groupChatThisChatHasPins(Object kMaxPins);
+  /// **'{count, plural, one{This chat has {count} pin already} other{This chat has {count} pins already}}'**
+  String groupChatThisChatHasPins(int count);
 
   /// screens/group_chat_screen.dart
   ///
@@ -4280,8 +4213,8 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{memberCount} members'**
-  String groupChatMembers(Object memberCount);
+  /// **'{count, plural, one{{count} member} other{{count} members}}'**
+  String groupChatMembers(int count);
 
   /// screens/group_chat_screen.dart
   ///
@@ -4484,8 +4417,8 @@ abstract class AppLocalizations {
   /// screens/group_info_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'1 member'**
-  String get groupInfo1Member;
+  /// **'{count, plural, one{{count} member} other{{count} members}}'**
+  String groupInfo1Member(int count);
 
   /// screens/group_info_screen.dart
   ///
@@ -4826,14 +4759,14 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{h} hours'**
-  String homeHours(Object h);
+  /// **'{count, plural, one{{count} hour} other{{count} hours}}'**
+  String homeHours(int count);
 
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{inMinutes} minutes'**
-  String homeMinutes(Object inMinutes);
+  /// **'{count, plural, one{{count} minute} other{{count} minutes}}'**
+  String homeMinutes(int count);
 
   /// screens/home_screen.dart
   ///
@@ -5030,32 +4963,32 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{n} waiting · sends when you\'re back'**
-  String homeWaitingSendsWhenYou(Object n);
+  /// **'{count, plural, other{{count} waiting · sends when you\'re back}}'**
+  String homeWaitingSendsWhenYou(int count);
 
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{n} waiting · tor is still connecting'**
-  String homeWaitingTorIsStill(Object n);
+  /// **'{count, plural, other{{count} waiting · tor is still connecting}}'**
+  String homeWaitingTorIsStill(int count);
 
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{n} waiting · for them to add you back'**
-  String homeWaitingForThemTo(Object n);
+  /// **'{count, plural, other{{count} waiting · for them to add you back}}'**
+  String homeWaitingForThemTo(int count);
 
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{n} waiting · {p} for them to add you back'**
-  String homeWaitingForThemToAddYou(Object n, Object p);
+  /// **'{count, plural, other{{count} waiting · {parked} for them to add you back}}'**
+  String homeWaitingForThemToAddYou(int count, int parked);
 
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{n} waiting · sending now'**
-  String homeWaitingSendingNow(Object n);
+  /// **'{count, plural, other{{count} waiting · sending now}}'**
+  String homeWaitingSendingNow(int count);
 
   /// screens/home_screen.dart
   ///
@@ -5090,8 +5023,8 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'1 chat'**
-  String get home1Chat;
+  /// **'{count, plural, one{{count} chat} other{{count} chats}}'**
+  String home1Chat(int count);
 
   /// screens/home_screen.dart
   ///
@@ -5132,8 +5065,8 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{memberCount} members'**
-  String homeMembers(Object memberCount);
+  /// **'{count, plural, one{{count} member} other{{count} members}}'**
+  String homeMembers(int count);
 
   /// screens/home_screen.dart
   ///
@@ -5330,8 +5263,8 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'1 person wants to reach you'**
-  String get home1PersonWantsTo;
+  /// **'{count, plural, one{{count} person wants to reach you} other{{count} people want to reach you}}'**
+  String home1PersonWantsTo(int count);
 
   /// screens/home_screen.dart
   ///
@@ -5384,8 +5317,8 @@ abstract class AppLocalizations {
   /// screens/introduce_sheet.dart
   ///
   /// In en, this message translates to:
-  /// **'{left} of {introBudgetMax} introductions left this week'**
-  String introduceOfIntroductionsLeftThis(Object left, Object introBudgetMax);
+  /// **'{max, plural, one{{left} of {max} introduction left this week} other{{left} of {max} introductions left this week}}'**
+  String introduceOfIntroductionsLeftThis(int max, int left);
 
   /// screens/introduce_sheet.dart
   ///
@@ -6302,20 +6235,14 @@ abstract class AppLocalizations {
   /// screens/new_group_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{selectedLength} selected'**
-  String newGroupSelected(Object selectedLength);
+  /// **'{count, plural, other{{count} selected}}'**
+  String newGroupSelected(int count);
 
   /// screens/new_group_screen.dart
   ///
   /// In en, this message translates to:
   /// **'Add at least one contact first before creating a group.'**
   String get newGroupAddAtLeastOne;
-
-  /// screens/notes_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'_notes_self_'**
-  String get notesNotesSelf;
 
   /// screens/notes_screen.dart
   ///
@@ -8107,8 +8034,8 @@ abstract class AppLocalizations {
   /// screens/room_create_sheet.dart
   ///
   /// In en, this message translates to:
-  /// **'No one past the first {cap}'**
-  String roomCreateNoOnePastThe(Object cap);
+  /// **'{count, plural, other{No one past the first {count}}}'**
+  String roomCreateNoOnePastThe(int count);
 
   /// screens/room_create_sheet.dart
   ///
@@ -9073,8 +9000,8 @@ abstract class AppLocalizations {
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{r} fails'**
-  String transportFails(Object r);
+  /// **'{count, plural, one{{count} fail} other{{count} fails}}'**
+  String transportFails(int count);
 
   /// screens/transport_screen.dart
   ///
@@ -9319,8 +9246,8 @@ abstract class AppLocalizations {
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{ctrl} dials · {ctrl2} timeouts'**
-  String transportDialsTimeouts(Object ctrl, Object ctrl2);
+  /// **'{dials, plural, one{{dials} dial} other{{dials} dials}} · {timeouts, plural, one{{timeouts} timeout} other{{timeouts} timeouts}}'**
+  String transportDialsTimeouts(int dials, int timeouts);
 
   /// screens/transport_screen.dart
   ///
@@ -9379,8 +9306,8 @@ abstract class AppLocalizations {
   /// screens/vouchers_sheet.dart
   ///
   /// In en, this message translates to:
-  /// **'vouched by'**
-  String get vouchersVouchedBy;
+  /// **'{count, plural, one{vouched by} other{vouched by {count}}}'**
+  String vouchersVouchedBy(int count);
 
   /// screens/vouchers_sheet.dart
   ///
@@ -9559,8 +9486,8 @@ abstract class AppLocalizations {
   /// tools/cleaner.dart
   ///
   /// In en, this message translates to:
-  /// **'1 other field'**
-  String get cleaner1OtherField;
+  /// **'{count, plural, one{{count} other field} other{{count} other fields}}'**
+  String cleaner1OtherField(int count);
 
   /// tools/cleaner.dart
   ///
@@ -9577,8 +9504,8 @@ abstract class AppLocalizations {
   /// tools/lock_words.dart
   ///
   /// In en, this message translates to:
-  /// **'Too short. At least {kMinPassLength} characters.'**
-  String lockWordsTooShortAtLeast(Object kMinPassLength);
+  /// **'{count, plural, one{Too short. At least {count} character.} other{Too short. At least {count} characters.}}'**
+  String lockWordsTooShortAtLeast(int count);
 
   /// tools/lock_words.dart
   ///
@@ -9613,8 +9540,8 @@ abstract class AppLocalizations {
   /// tools/photo_story.dart
   ///
   /// In en, this message translates to:
-  /// **'1 metre'**
-  String get photoStory1Metre;
+  /// **'{count, plural, one{{count} metre} other{{count} metres}}'**
+  String photoStory1Metre(int count);
 
   /// tools/photo_story.dart
   ///
@@ -9931,8 +9858,8 @@ abstract class AppLocalizations {
   /// tools/photo_story.dart
   ///
   /// In en, this message translates to:
-  /// **'Data after the end of the picture: {trailingBytes} bytes'**
-  String photoStoryDataAfterTheEnd(Object trailingBytes);
+  /// **'{count, plural, one{Data after the end of the picture: {count} byte} other{Data after the end of the picture: {count} bytes}}'**
+  String photoStoryDataAfterTheEnd(int count);
 
   /// tools/photo_story.dart
   ///
@@ -9955,14 +9882,14 @@ abstract class AppLocalizations {
   /// tools/photo_story.dart
   ///
   /// In en, this message translates to:
-  /// **'{otherExifTags} camera settings (flash, focus, exposure)'**
-  String photoStoryCameraSettingsFlashFocus(Object otherExifTags);
+  /// **'{count, plural, one{{count} camera setting (flash, focus, exposure)} other{{count} camera settings (flash, focus, exposure)}}'**
+  String photoStoryCameraSettingsFlashFocus(int count);
 
   /// tools/photo_story.dart
   ///
   /// In en, this message translates to:
-  /// **'1 more field'**
-  String get photoStory1MoreField;
+  /// **'{count, plural, one{{count} more field} other{{count} more fields}}'**
+  String photoStory1MoreField(int count);
 
   /// tools/photo_story.dart
   ///
@@ -10159,13 +10086,8 @@ abstract class AppLocalizations {
   /// vouch_text.dart
   ///
   /// In en, this message translates to:
-  /// **'{names}, {names2} and {rest} other{rest2} you know'**
-  String vouchTextAndOtherYouKnow(
-    Object names,
-    Object names2,
-    Object rest,
-    Object rest2,
-  );
+  /// **'{names}, {names2} and {rest, plural, one{{rest} other} other{{rest} others}} you know'**
+  String vouchTextAndOtherYouKnow(Object names, Object names2, int rest);
 
   /// vouch_text.dart
   ///

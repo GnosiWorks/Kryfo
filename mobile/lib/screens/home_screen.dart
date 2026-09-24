@@ -1625,7 +1625,7 @@ class _ArchivedPin extends StatelessWidget {
                       ),
                       const SizedBox(height: 1),
                       Text(
-                        count == 1 ? l10n.home1Chat : l10n.homeChats(count),
+                        l10n.home1Chat(count),
                         style: HaloType.mono(size: 10, color: HaloColors.text3),
                       ),
                     ],
@@ -2482,9 +2482,7 @@ class _RequestsPin extends StatelessWidget {
                   ),
                   const SizedBox(height: 1),
                   Text(
-                    count == 1
-                        ? l10n.home1PersonWantsTo
-                        : l10n.homePeopleWantToReach(count),
+                    l10n.home1PersonWantsTo(count),
                     style: HaloType.sans(size: 11, color: HaloColors.text3),
                   ),
                 ],

@@ -9,12 +9,7 @@ String vouchNames(List<String> names) {
   if (names.length == 1) return names[0];
   if (names.length == 2) return l10n.vouchTextAnd(names[0], names[1]);
   final rest = names.length - 2;
-  return l10n.vouchTextAndOtherYouKnow(
-    names[0],
-    names[1],
-    rest,
-    rest == 1 ? '' : 's',
-  );
+  return l10n.vouchTextAndOtherYouKnow(names[0], names[1], rest);
 }
 
 String vouchedByLine(List<String> names) =>

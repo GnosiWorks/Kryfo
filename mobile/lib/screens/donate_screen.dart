@@ -66,12 +66,12 @@ final _coins = [
 ];
 
 // real backing wallets. verified against wallet screenshots.
-final _addrs = {
+const _addrs = {
   'btc': 'bc1qdewmhrwkh8elts8ldehfq5qaj68ymexfnzkk7j',
-  'xmr': l10n
-      .donate4apyzs72zycg3z8rtwwx6jgdjsdacphhsfrxikrl5ylnyyz8fvxqaywmyw79axfo,
-  'sol': l10n.donateDrxaqpm8wd63eerdgn9grazgvnxwicb9pc6ryr3v2x4a,
-  'eth': l10n.donate0x55014af792d54e4350b7f4bfc7be7d62ebbcfe43,
+  'xmr':
+      '4ApyZS72ZYCG3z8rtwwX6JgdjSdAcphHSFRxiKrL5yLnYYz8fvXQayWMyw79AxFoQ7BXLfzEExk5f7Z2xPdEPWyRBXtVwiD',
+  'sol': 'DrxaQPM8wD63EErdGN9GrazGVnxwiCB9Pc6RYR3v2x4a',
+  'eth': '0x55014AF792d54E4350b7f4bfc7be7D62EbbCfE43',
 };
 
 class _DonateScreenState extends State<DonateScreen> {

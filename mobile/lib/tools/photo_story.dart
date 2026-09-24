@@ -32,9 +32,9 @@ class PhotoStory {
 
 String _metres(double m) {
   if (m >= 1000) return l10n.photoStoryKm((m / 1000).round());
-  if (m >= 10) return l10n.photoStoryMetres((m / 5).round() * 5);
+  if (m >= 10) return l10n.photoStory1Metre((m / 5).round() * 5);
   final r = m.round();
-  return r <= 1 ? l10n.photoStory1Metre : l10n.photoStoryMetres2(r);
+  return l10n.photoStory1Metre(r <= 1 ? 1 : r);
 }
 
 String placeLine(GpsFix fix, GeoWorld? world, GeoPlaces? places) {
@@ -250,7 +250,7 @@ PhotoStory storyOf(MetaReport r, {GeoWorld? world, GeoPlaces? places}) {
     rows.add(
       StoryRow(
         StoryRowKind.more,
-        more == 1 ? l10n.photoStory1MoreField : l10n.photoStoryMoreFields(more),
+        l10n.photoStory1MoreField(more),
         sub: named.isEmpty
             ? l10n.photoStoryCameraSettings
             : named.take(4).join(', '),

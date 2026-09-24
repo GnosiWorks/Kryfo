@@ -218,11 +218,7 @@ List<RemovedLine> removedLines(MetaReport r) {
     if (b) other++;
   }
   if (other > 0) {
-    out.add(
-      RemovedLine(
-        other == 1 ? l10n.cleaner1OtherField : l10n.cleanerOtherFields(other),
-      ),
-    );
+    out.add(RemovedLine(l10n.cleaner1OtherField(other)));
   }
   return out;
 }
