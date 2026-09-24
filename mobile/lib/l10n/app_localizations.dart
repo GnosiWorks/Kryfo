@@ -559,18 +559,6 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'pair: v{parsed} invite, no first-contact addr'**
-  String appPairVInviteNo(Object parsed);
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'pair: v{parsed} invite carries first-contact addr'**
-  String appPairVInviteCarries(Object parsed);
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
   /// **'Already saved: {parsed}'**
   String appAlreadySaved(Object parsed);
 
@@ -667,12 +655,6 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'group:{groupId}'**
-  String appGroup(Object groupId);
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
   /// **'An attachment could not be saved on this phone'**
   String get appAnAttachmentCouldNot;
 
@@ -709,12 +691,6 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'_pending_back_pair_'**
-  String get appPendingBackPair;
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
   /// **'Setting up your keys'**
   String get appSettingUpYourKeys;
 
@@ -747,18 +723,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'you: {body}'**
   String appYou(Object body);
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'send: no first-contact addr for {memberId} (v2 invite?)'**
-  String appSendNoFirstContact(Object memberId);
-
-  /// main.dart
-  ///
-  /// In en, this message translates to:
-  /// **'send: racing onion + relay + first-contact for {memberId}'**
-  String appSendRacingOnionRelay(Object memberId);
 
   /// main.dart
   ///
@@ -2011,18 +1975,6 @@ abstract class AppLocalizations {
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'kryfo_{ts}.jpg'**
-  String cameraKryfoJpg(Object ts);
-
-  /// screens/camera_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'kryfo_{ts}.mp4'**
-  String cameraKryfoMp4(Object ts);
-
-  /// screens/camera_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'A copy is in your photos'**
   String get cameraACopyIsIn;
 
@@ -2593,12 +2545,6 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'r{rowid}'**
-  String chatR(Object rowid);
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Message unavailable'**
   String get chatMessageUnavailable;
 
@@ -3009,12 +2955,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mic permission needed'**
   String get chatMicPermissionNeeded;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{path}/vn_{dateTime}.wav'**
-  String chatVnWav(Object path, Object dateTime);
 
   /// screens/chat_screen.dart
   ///
@@ -3962,12 +3902,6 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'group:{groupId}'**
-  String groupChatGroup(Object groupId);
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Jump to the newest'**
   String get groupChatJumpToTheNewest;
 
@@ -3994,12 +3928,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Message unavailable'**
   String get groupChatMessageUnavailable;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'r{rowid}'**
-  String groupChatR(Object rowid);
 
   /// screens/group_chat_screen.dart
   ///
@@ -8383,12 +8311,6 @@ abstract class AppLocalizations {
   /// screens/scan_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'default'**
-  String get scanDefault;
-
-  /// screens/scan_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Point at a kryfo qr · nothing leaves your phone'**
   String get scanPointAtAKryfo;
 
@@ -9646,24 +9568,6 @@ abstract class AppLocalizations {
   /// **'Kryfo is pre-alpha and has not been audited. The crypto is real but no outside expert has checked it yet, so treat it as a work in progress, not something to trust with your life yet.'**
   String get whyKryfoKryfoIsPreAlpha;
 
-  /// supporter.dart
-  ///
-  /// In en, this message translates to:
-  /// **'supporter'**
-  String get supporterSupporter;
-
-  /// supporter.dart
-  ///
-  /// In en, this message translates to:
-  /// **'patron'**
-  String get supporterPatron;
-
-  /// supporter.dart
-  ///
-  /// In en, this message translates to:
-  /// **'guardian'**
-  String get supporterGuardian;
-
   /// tools/cleaner.dart
   ///
   /// In en, this message translates to:
@@ -9759,18 +9663,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Strong. Four random words beat one clever one.'**
   String get lockWordsStrongFourRandomWords;
-
-  /// tools/lock_words.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{neutral}.age'**
-  String lockWordsAge(Object neutral);
-
-  /// tools/lock_words.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{cut}.age'**
-  String lockWordsAge2(Object cut);
 
   /// tools/photo_story.dart
   ///
@@ -10267,56 +10159,8 @@ abstract class AppLocalizations {
   /// tools/qr_payload.dart
   ///
   /// In en, this message translates to:
-  /// **'P:{escapeWifi};'**
-  String qrPayloadP(Object escapeWifi);
-
-  /// tools/qr_payload.dart
-  ///
-  /// In en, this message translates to:
-  /// **'WIFI:T:{type};S:{escapeWifi};{p};'**
-  String qrPayloadWifiTS(Object type, Object escapeWifi, Object p);
-
-  /// tools/qr_payload.dart
-  ///
-  /// In en, this message translates to:
   /// **'SAVES A CONTACT'**
   String get qrPayloadSavesAContact;
-
-  /// tools/qr_payload.dart
-  ///
-  /// In en, this message translates to:
-  /// **'VERSION:3.0'**
-  String get qrPayloadVersion30;
-
-  /// tools/qr_payload.dart
-  ///
-  /// In en, this message translates to:
-  /// **'N:{escapeVcard};;;;'**
-  String qrPayloadN(Object escapeVcard);
-
-  /// tools/qr_payload.dart
-  ///
-  /// In en, this message translates to:
-  /// **'FN:{escapeVcard}'**
-  String qrPayloadFn(Object escapeVcard);
-
-  /// tools/qr_payload.dart
-  ///
-  /// In en, this message translates to:
-  /// **'TEL;TYPE=CELL:{tel}'**
-  String qrPayloadTelTypeCell(Object tel);
-
-  /// tools/qr_payload.dart
-  ///
-  /// In en, this message translates to:
-  /// **'EMAIL:{escapeVcard}'**
-  String qrPayloadEmail(Object escapeVcard);
-
-  /// tools/qr_payload.dart
-  ///
-  /// In en, this message translates to:
-  /// **'END:VCARD'**
-  String get qrPayloadEndVcard;
 
   /// tools/qr_payload.dart
   ///
@@ -10333,12 +10177,6 @@ abstract class AppLocalizations {
   /// tools/qr_payload.dart
   ///
   /// In en, this message translates to:
-  /// **'?subject={uri}'**
-  String qrPayloadSubject(Object uri);
-
-  /// tools/qr_payload.dart
-  ///
-  /// In en, this message translates to:
   /// **'CALLS A NUMBER'**
   String get qrPayloadCallsANumber;
 
@@ -10347,18 +10185,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'WRITES A TEXT'**
   String get qrPayloadWritesAText;
-
-  /// tools/qr_payload.dart
-  ///
-  /// In en, this message translates to:
-  /// **'SMSTO:{n}'**
-  String qrPayloadSmsto(Object n);
-
-  /// tools/qr_payload.dart
-  ///
-  /// In en, this message translates to:
-  /// **'SMSTO:{n}:{body}'**
-  String qrPayloadSmsto2(Object n, Object body);
 
   /// tools/qr_payload.dart
   ///
@@ -10375,12 +10201,6 @@ abstract class AppLocalizations {
   /// tools/qr_payload.dart
   ///
   /// In en, this message translates to:
-  /// **'geo:{trim},{trim2}'**
-  String qrPayloadGeo(Object trim, Object trim2);
-
-  /// tools/qr_payload.dart
-  ///
-  /// In en, this message translates to:
   /// **'PAY THIS ADDRESS'**
   String get qrPayloadPayThisAddress;
 
@@ -10393,20 +10213,8 @@ abstract class AppLocalizations {
   /// tools/qr_payload.dart
   ///
   /// In en, this message translates to:
-  /// **'bitcoin:{addr}'**
-  String qrPayloadBitcoin(Object addr);
-
-  /// tools/qr_payload.dart
-  ///
-  /// In en, this message translates to:
   /// **'The amount is in BTC, with up to 8 decimals.'**
   String get qrPayloadTheAmountIsIn;
-
-  /// tools/qr_payload.dart
-  ///
-  /// In en, this message translates to:
-  /// **'bitcoin:{addr}?amount={raw}'**
-  String qrPayloadBitcoinAmount(Object addr, Object raw);
 
   /// vouch_text.dart
   ///
@@ -10586,12 +10394,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mic permission needed'**
   String get mediaBubblesMicPermissionNeeded;
-
-  /// widgets/media_bubbles.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{path}/vn_{dateTime}.wav'**
-  String mediaBubblesVnWav(Object path, Object dateTime);
 
   /// widgets/media_bubbles.dart
   ///
@@ -11072,12 +10874,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{b} KB'**
   String videoBubbleKb(Object b);
-
-  /// widgets/video_bubble.dart
-  ///
-  /// In en, this message translates to:
-  /// **'v:{path}'**
-  String videoBubbleV(Object path);
 
   /// widgets/video_bubble.dart
   ///

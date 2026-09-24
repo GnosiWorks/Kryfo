@@ -271,16 +271,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String appPairVInviteNo(Object parsed) {
-    return 'pair: v$parsed invite, no first-contact addr';
-  }
-
-  @override
-  String appPairVInviteCarries(Object parsed) {
-    return 'pair: v$parsed invite carries first-contact addr';
-  }
-
-  @override
   String appAlreadySaved(Object parsed) {
     return 'Already saved: $parsed';
   }
@@ -347,11 +337,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String appGroup(Object groupId) {
-    return 'group:$groupId';
-  }
-
-  @override
   String get appAnAttachmentCouldNot =>
       'An attachment could not be saved on this phone';
 
@@ -369,9 +354,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appSomeoneYouHaveNot => 'Someone you have not added wrote to you';
-
-  @override
-  String get appPendingBackPair => '_pending_back_pair_';
 
   @override
   String get appSettingUpYourKeys => 'Setting up your keys';
@@ -392,16 +374,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String appYou(Object body) {
     return 'you: $body';
-  }
-
-  @override
-  String appSendNoFirstContact(Object memberId) {
-    return 'send: no first-contact addr for $memberId (v2 invite?)';
-  }
-
-  @override
-  String appSendRacingOnionRelay(Object memberId) {
-    return 'send: racing onion + relay + first-contact for $memberId';
   }
 
   @override
@@ -1127,16 +1099,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cameraTheRecordingWasLost => 'The recording was lost';
 
   @override
-  String cameraKryfoJpg(Object ts) {
-    return 'kryfo_$ts.jpg';
-  }
-
-  @override
-  String cameraKryfoMp4(Object ts) {
-    return 'kryfo_$ts.mp4';
-  }
-
-  @override
   String get cameraACopyIsIn => 'A copy is in your photos';
 
   @override
@@ -1465,11 +1427,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatNoSignalSessionRe => 'No signal session - re-pair';
 
   @override
-  String chatR(Object rowid) {
-    return 'r$rowid';
-  }
-
-  @override
   String get chatMessageUnavailable => 'Message unavailable';
 
   @override
@@ -1694,11 +1651,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatMicPermissionNeeded => 'Mic permission needed';
-
-  @override
-  String chatVnWav(Object path, Object dateTime) {
-    return '$path/vn_$dateTime.wav';
-  }
 
   @override
   String get chatTheMicWouldNot => 'The mic would not start. Try again';
@@ -2248,11 +2200,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'When the phone sits still, Android spaces check-ins further apart. The line above shows the real last one. While Kryfo is open it stays connected.';
 
   @override
-  String groupChatGroup(Object groupId) {
-    return 'group:$groupId';
-  }
-
-  @override
   String get groupChatJumpToTheNewest => 'Jump to the newest';
 
   @override
@@ -2266,11 +2213,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupChatMessageUnavailable => 'Message unavailable';
-
-  @override
-  String groupChatR(Object rowid) {
-    return 'r$rowid';
-  }
 
   @override
   String get groupChatTorIsNotUp => 'Tor is not up yet · sending without';
@@ -4740,9 +4682,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanFlash => 'Flash';
 
   @override
-  String get scanDefault => 'default';
-
-  @override
   String get scanPointAtAKryfo =>
       'Point at a kryfo qr · nothing leaves your phone';
 
@@ -5461,15 +5400,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Kryfo is pre-alpha and has not been audited. The crypto is real but no outside expert has checked it yet, so treat it as a work in progress, not something to trust with your life yet.';
 
   @override
-  String get supporterSupporter => 'supporter';
-
-  @override
-  String get supporterPatron => 'patron';
-
-  @override
-  String get supporterGuardian => 'guardian';
-
-  @override
   String get cleanerLocation => 'Location';
 
   @override
@@ -5523,16 +5453,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get lockWordsStrongFourRandomWords =>
       'Strong. Four random words beat one clever one.';
-
-  @override
-  String lockWordsAge(Object neutral) {
-    return '$neutral.age';
-  }
-
-  @override
-  String lockWordsAge2(Object cut) {
-    return '$cut.age';
-  }
 
   @override
   String photoStoryKm(Object m) {
@@ -5841,43 +5761,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'A Wi-Fi password has at least 8 characters.';
 
   @override
-  String qrPayloadP(Object escapeWifi) {
-    return 'P:$escapeWifi;';
-  }
-
-  @override
-  String qrPayloadWifiTS(Object type, Object escapeWifi, Object p) {
-    return 'WIFI:T:$type;S:$escapeWifi;$p;';
-  }
-
-  @override
   String get qrPayloadSavesAContact => 'SAVES A CONTACT';
-
-  @override
-  String get qrPayloadVersion30 => 'VERSION:3.0';
-
-  @override
-  String qrPayloadN(Object escapeVcard) {
-    return 'N:$escapeVcard;;;;';
-  }
-
-  @override
-  String qrPayloadFn(Object escapeVcard) {
-    return 'FN:$escapeVcard';
-  }
-
-  @override
-  String qrPayloadTelTypeCell(Object tel) {
-    return 'TEL;TYPE=CELL:$tel';
-  }
-
-  @override
-  String qrPayloadEmail(Object escapeVcard) {
-    return 'EMAIL:$escapeVcard';
-  }
-
-  @override
-  String get qrPayloadEndVcard => 'END:VCARD';
 
   @override
   String get qrPayloadWritesAnEmail => 'WRITES AN EMAIL';
@@ -5887,25 +5771,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'That does not look like an email address.';
 
   @override
-  String qrPayloadSubject(Object uri) {
-    return '?subject=$uri';
-  }
-
-  @override
   String get qrPayloadCallsANumber => 'CALLS A NUMBER';
 
   @override
   String get qrPayloadWritesAText => 'WRITES A TEXT';
-
-  @override
-  String qrPayloadSmsto(Object n) {
-    return 'SMSTO:$n';
-  }
-
-  @override
-  String qrPayloadSmsto2(Object n, Object body) {
-    return 'SMSTO:$n:$body';
-  }
 
   @override
   String get qrPayloadOpensAMap => 'OPENS A MAP';
@@ -5915,11 +5784,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Latitude runs from -90 to 90, longitude from -180 to 180.';
 
   @override
-  String qrPayloadGeo(Object trim, Object trim2) {
-    return 'geo:$trim,$trim2';
-  }
-
-  @override
   String get qrPayloadPayThisAddress => 'PAY THIS ADDRESS';
 
   @override
@@ -5927,18 +5791,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'A bitcoin address is letters and digits only.';
 
   @override
-  String qrPayloadBitcoin(Object addr) {
-    return 'bitcoin:$addr';
-  }
-
-  @override
   String get qrPayloadTheAmountIsIn =>
       'The amount is in BTC, with up to 8 decimals.';
-
-  @override
-  String qrPayloadBitcoinAmount(Object addr, Object raw) {
-    return 'bitcoin:$addr?amount=$raw';
-  }
 
   @override
   String vouchTextAnd(Object names, Object names2) {
@@ -6061,11 +5915,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mediaBubblesMicPermissionNeeded => 'Mic permission needed';
-
-  @override
-  String mediaBubblesVnWav(Object path, Object dateTime) {
-    return '$path/vn_$dateTime.wav';
-  }
 
   @override
   String get mediaBubblesReleaseToCancel => 'Release to cancel';
@@ -6341,11 +6190,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String videoBubbleKb(Object b) {
     return '$b KB';
-  }
-
-  @override
-  String videoBubbleV(Object path) {
-    return 'v:$path';
   }
 
   @override
