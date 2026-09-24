@@ -23,6 +23,17 @@ void main() {
     }
   });
 
+  test('traditional chinese is its own file, not simplified', () {
+    final hant = lookupAppLocalizations(localeOf('zh_Hant'));
+    final hans = lookupAppLocalizations(localeOf('zh'));
+    expect(hant.localeName, 'zh_Hant');
+    expect(hant.navBarSupport, isNot(hans.navBarSupport + '\u0000'));
+    expect(
+      hant.gettingMessagesGettingMessages,
+      isNot(hans.gettingMessagesGettingMessages),
+    );
+  });
+
   test('nothing saved is match phone', () async {
     await loadAppLocale();
     expect(appLocalePref, 'system');

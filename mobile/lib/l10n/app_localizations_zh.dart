@@ -6302,3 +6302,6302 @@ class AppLocalizationsZh extends AppLocalizations {
   String get androidChannelDescription =>
       '让 kryfo 保持连接，这样它关闭时加密消息也能送达。关掉这个就会停止投递。';
 }
+
+/// The translations for Chinese, using the Han script (`zh_Hant`).
+class AppLocalizationsZhHant extends AppLocalizationsZh {
+  AppLocalizationsZhHant() : super('zh_Hant');
+
+  @override
+  String get atmosphereNone => '無';
+
+  @override
+  String get atmosphereEmber => '餘燼';
+
+  @override
+  String get atmosphereDusk => '黃昏';
+
+  @override
+  String get atmosphereMoss => '苔蘚';
+
+  @override
+  String get atmosphereRose => '玫瑰';
+
+  @override
+  String get atmosphereDots => '圓點';
+
+  @override
+  String get atmosphereGrid => '格線';
+
+  @override
+  String get atmosphereWaves => '波浪';
+
+  @override
+  String get atmosphereRain => '雨';
+
+  @override
+  String get atmosphereLateNight => '深夜';
+
+  @override
+  String get atmosphereWarmAfternoon => '溫暖午後';
+
+  @override
+  String get atmosphereSnow => '雪';
+
+  @override
+  String get atmosphereDesert => '沙漠';
+
+  @override
+  String get atmospherePaper => '紙張';
+
+  @override
+  String get backupThatPassphraseDoesNot => '這組密碼短語打不開這個檔案';
+
+  @override
+  String get backupThatFileIsNot => '這個檔案不是 kryfo 備份';
+
+  @override
+  String get backupThisBackupIsFrom => '這份備份來自較新版的 kryfo。請先更新應用程式，再試一次';
+
+  @override
+  String get backupThisFileIsDamaged => '這個檔案已損毀，無法讀取';
+
+  @override
+  String get backupCouldNotMakeThe => '無法建立金鑰';
+
+  @override
+  String get contactCardMessageMeOn => '傳訊息給我，請用';
+
+  @override
+  String get contactCardScanItOrType =>
+      '掃描它，或在 kryfo 裡輸入這三個詞。\n除此之外，這張卡片對你一無所知。';
+
+  @override
+  String contactCardMessageMeOnKryfo(Object haloId) {
+    return '在 kryfo 傳訊息給我 · $haloId';
+  }
+
+  @override
+  String get contactStatusBlocked => '已封鎖';
+
+  @override
+  String get contactStatusKeysVerifiedInPerson => '已當面驗證金鑰';
+
+  @override
+  String get contactStatusWaitingInRequests => '在請求中等待';
+
+  @override
+  String get contactStatusAddedByHand => '手動新增';
+
+  @override
+  String get deliveryModeAlwaysOn => '始終在線';
+
+  @override
+  String get deliveryModeCheckIns => '定時查收';
+
+  @override
+  String get deliveryModeThroughAHelperApp => '透過輔助應用程式';
+
+  @override
+  String get deliveryModeNotYet => '尚未';
+
+  @override
+  String get deliveryModeJustNow => '剛剛';
+
+  @override
+  String deliveryModeMinAgo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 分鐘前',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String deliveryMode1HourAgo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 小時前',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deliveryModeYesterday => '昨天';
+
+  @override
+  String deliveryModeDaysAgo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 天前',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deliveryModeConnected => '已連線';
+
+  @override
+  String get deliveryModeConnecting => '連線中';
+
+  @override
+  String get deliveryModeNotConnected => '未連線';
+
+  @override
+  String get deliveryModeCheckingNow => '正在查收';
+
+  @override
+  String deliveryModeLastCheckIn(Object agoLine) {
+    return '上次查收：$agoLine';
+  }
+
+  @override
+  String get deliveryModeNoCheckInYet => '尚未查收';
+
+  @override
+  String deliveryModeConnectedNow(Object last) {
+    return '目前已連線 · $last';
+  }
+
+  @override
+  String deliveryModeConnecting2(Object last) {
+    return '連線中 · $last';
+  }
+
+  @override
+  String get deliveryModeNoCheckInYet2 => '尚未查收';
+
+  @override
+  String deliveryModeLastChecked(Object agoLine) {
+    return '上次查收：$agoLine';
+  }
+
+  @override
+  String get deliveryModeAHelperApp => '輔助應用程式';
+
+  @override
+  String deliveryModeWokenByNoWake(Object who) {
+    return '由 $who 喚醒 · 尚未喚醒過';
+  }
+
+  @override
+  String deliveryModeWokenByLastWake(Object who, Object agoLine) {
+    return '由 $who 喚醒 · 上次喚醒：$agoLine';
+  }
+
+  @override
+  String get introBudgetTomorrow => '明天';
+
+  @override
+  String introBudgetInDays(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 天後',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get introBudgetInAnHour => '一小時後';
+
+  @override
+  String introBudgetInHours(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 小時後',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get introBudgetInAFewMinutes => '幾分鐘後';
+
+  @override
+  String get lockStateUnlockKryfo => '解鎖 kryfo';
+
+  @override
+  String get appInvalidUri => '無效的 uri';
+
+  @override
+  String appBundleError(Object e) {
+    return '資料包錯誤：$e';
+  }
+
+  @override
+  String appAlreadySaved(Object parsed) {
+    return '已儲存過：$parsed';
+  }
+
+  @override
+  String appAddedYouCanMessage(Object parsed) {
+    return '已新增 $parsed · 現在可以傳訊息給對方了';
+  }
+
+  @override
+  String appPeerImportedV1(Object parsed) {
+    return '已匯入對等端（v1）：$parsed';
+  }
+
+  @override
+  String appLongWindow(Object line) {
+    return '$line 長時段';
+  }
+
+  @override
+  String appOf(Object line, int held, int subs, Object c, int p, int e) {
+    final intl.NumberFormat heldNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String heldString = heldNumberFormat.format(held);
+    final intl.NumberFormat subsNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String subsString = subsNumberFormat.format(subs);
+    final intl.NumberFormat pNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String pString = pNumberFormat.format(p);
+    final intl.NumberFormat eNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String eString = eNumberFormat.format(e);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      p,
+      locale: localeName,
+      other: '$pString 頁',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      e,
+      locale: localeName,
+      other: '$eString 個事件',
+    );
+    return '$line（$heldString/$subsString，連線 $c 秒，$_temp0，$_temp1）';
+  }
+
+  @override
+  String appConnectSPagesEvents(Object line, Object c, int p, int e) {
+    final intl.NumberFormat pNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String pString = pNumberFormat.format(p);
+    final intl.NumberFormat eNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String eString = eNumberFormat.format(e);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      p,
+      locale: localeName,
+      other: '$pString 頁',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      e,
+      locale: localeName,
+      other: '$eString 個事件',
+    );
+    return '$line（連線 $c 秒，$_temp0，$_temp1）';
+  }
+
+  @override
+  String appSDropped(Object host, Object secs) {
+    return '$host $secs 秒，已中斷';
+  }
+
+  @override
+  String appS(Object host, Object secs) {
+    return '$host $secs 秒';
+  }
+
+  @override
+  String get appTorWouldNotWake => 'tor 無法喚醒';
+
+  @override
+  String get appCheckStarted => '已開始';
+
+  @override
+  String get appTorNotReadyIn => 'tor 75 秒內未就緒';
+
+  @override
+  String get appOk => '正常';
+
+  @override
+  String get appOkNoRelayBegan => '正常，沒有中繼開始回應';
+
+  @override
+  String get appOkCapped => '正常，已達時限';
+
+  @override
+  String appSBy(Object how, int secs, String why) {
+    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String secsString = secsNumberFormat.format(secs);
+
+    String _temp0 = intl.Intl.selectLogic(why, {
+      'push': '$how，$secsString 秒，推播觸發',
+      'other': '$how，$secsString 秒，排程觸發',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get appAnAttachmentCouldNot => '有個附件無法儲存到這支手機';
+
+  @override
+  String get appGroup2 => '群組';
+
+  @override
+  String get appVoiceMessage => '語音訊息';
+
+  @override
+  String get appPhoto => '照片';
+
+  @override
+  String get appNewRequest => '新請求';
+
+  @override
+  String get appSomeoneYouHaveNot => '有個你還沒新增的人傳訊息給你';
+
+  @override
+  String get appSettingUpYourKeys => '正在設定你的金鑰';
+
+  @override
+  String get appOpeningYourChats => '正在開啟你的聊天';
+
+  @override
+  String get appStartingTor => '正在啟動 Tor';
+
+  @override
+  String get appTimedMessagesAreNot => '限時訊息沒有被清除。請重新啟動 kryfo';
+
+  @override
+  String get appVoiceMessage2 => '語音訊息';
+
+  @override
+  String appYou(Object body) {
+    return '你：$body';
+  }
+
+  @override
+  String get appThisRoomHasAlready => '這個聊天室已經過期';
+
+  @override
+  String get appYouAreAlreadyIn => '你已經在這個聊天室裡了';
+
+  @override
+  String get appCouldNotMakeA => '無法建立聊天室金鑰';
+
+  @override
+  String appJoinedButYourHello(Object linkName) {
+    return '已加入 $linkName，但你的招呼尚未送出';
+  }
+
+  @override
+  String appJoined(Object linkName) {
+    return '已加入 $linkName';
+  }
+
+  @override
+  String appJoinedButTheCreator(Object linkName) {
+    return '已加入 $linkName，但暫時還聯絡不到建立者';
+  }
+
+  @override
+  String get appBooting => '啟動中…';
+
+  @override
+  String get appSettingUpYourIdentity => '正在設定你的身分…';
+
+  @override
+  String get appAddSomeone => '新增聯絡人';
+
+  @override
+  String get appScanTheirCodeOr => '掃描對方的 QR 碼，或貼上對方給你的內容：連結、@使用者名稱或聊天室連結。';
+
+  @override
+  String get appScanTheirCode => '掃描對方的 QR 碼';
+
+  @override
+  String get appAKryfoLinkA => 'Kryfo 連結、聊天室連結或 @wren';
+
+  @override
+  String get appAddThem => '新增對方';
+
+  @override
+  String get appEveryWayToAdd => '所有新增聯絡人的方式';
+
+  @override
+  String get appShowYourCodeSend => '出示你的 QR 碼、傳送連結、認領使用者名稱';
+
+  @override
+  String get appHelloFromTheOther => '來自另一端的問候';
+
+  @override
+  String get appIdentityRestored => '已還原身分';
+
+  @override
+  String get appIdentityCreated => '已建立身分';
+
+  @override
+  String get appStartingTor30s => '正在啟動 tor（約 30 秒）…';
+
+  @override
+  String get appScanOrImportA => '請先掃描或匯入對等端';
+
+  @override
+  String get appEncryptingSending30s => '正在加密並傳送（約 30 秒）…';
+
+  @override
+  String get appTapStartListeningFirst => '請先點「開始監聽」';
+
+  @override
+  String get appYourKryfo => '你的 kryfo';
+
+  @override
+  String get appUriCopied => '已複製 uri';
+
+  @override
+  String get appCopyUri => '複製 uri';
+
+  @override
+  String get appAddAKryfo => '新增 kryfo';
+
+  @override
+  String get appScanQr => '掃描 QR 碼';
+
+  @override
+  String get appPairingCode => '配對碼';
+
+  @override
+  String get appOrPaste => '- 或貼上 -';
+
+  @override
+  String get commonCancel => '取消';
+
+  @override
+  String get appImport => '匯入';
+
+  @override
+  String get appDev => '開發';
+
+  @override
+  String get appYourKryfo2 => '你的 kryfo：';
+
+  @override
+  String get appRestoredFromDisk => '已從儲存空間還原';
+
+  @override
+  String get appStartListening => '開始監聽';
+
+  @override
+  String get appListening => '監聽中';
+
+  @override
+  String get appShowMyQr => '顯示我的 QR 碼';
+
+  @override
+  String get appImportPeer => '匯入對等端';
+
+  @override
+  String get appPeer => '對等端：';
+
+  @override
+  String get appMessageWillBeEncrypted => '訊息（將會加密）';
+
+  @override
+  String get appEncryptSend => '加密並傳送';
+
+  @override
+  String appStatus(Object status) {
+    return '狀態：$status';
+  }
+
+  @override
+  String get appSpeedPrivacy => '速度與隱私 →';
+
+  @override
+  String get appGettingMessages => '接收訊息 →';
+
+  @override
+  String get appDisableAppLock => '要停用應用程式鎖嗎？';
+
+  @override
+  String get appThePinWillBe => 'PIN 碼將被移除。任何拿到你手機的人，一打開 kryfo 就能看到裡面的內容。';
+
+  @override
+  String get appDisable => '停用';
+
+  @override
+  String get appAppLockOn => '應用程式鎖 · 開啟 →';
+
+  @override
+  String get appAppLockOff => '應用程式鎖 · 關閉 →';
+
+  @override
+  String get appTorIsOff => 'Tor 已關閉';
+
+  @override
+  String get appConnectedRoutedThrough3 => '已連線 · 經由 3 個中繼轉送';
+
+  @override
+  String get appReadyToSendPublishing => '可以傳送 · 正在發布你的位址';
+
+  @override
+  String get appReadyToSendFinishing => '可以傳送 · 正在完成設定';
+
+  @override
+  String appConnecting(Object pct) {
+    return '連線中 · $pct';
+  }
+
+  @override
+  String get appTor => 'Tor';
+
+  @override
+  String get appTorIsOffTurn => 'Tor 已關閉。開啟它才能私密連線。';
+
+  @override
+  String get appTheFirstConnectionTakes =>
+      '第一次連線需要一、兩分鐘，讓 tor 建立一條私密路線。之後路線會被快取，下次開啟 kryfo 就快多了。';
+
+  @override
+  String get appRelayAndFastModes =>
+      '中繼和快速模式會略過 tor，速度更快。它們在設定的「速度與隱私」裡，每種模式都會說明代價。';
+
+  @override
+  String get appViaRelay => '經由中繼';
+
+  @override
+  String get appOffline => '離線';
+
+  @override
+  String get appFast => '快速';
+
+  @override
+  String get appTorOff => 'Tor 關閉';
+
+  @override
+  String get appTorReady => 'Tor 就緒';
+
+  @override
+  String get appConnecting2 => '連線中';
+
+  @override
+  String mediaProgressSendingKeepTheApp(Object v) {
+    return '傳送中 · $v · 請保持應用程式開啟';
+  }
+
+  @override
+  String mediaProgressPausedOfWaitingFor(Object count, Object count2) {
+    return '已暫停 · $count/$count2 · 等待其餘部分';
+  }
+
+  @override
+  String mediaProgressReceivingMedia(Object v) {
+    return '正在接收媒體 · $v';
+  }
+
+  @override
+  String get mediaProgressCancelSending => '取消傳送';
+
+  @override
+  String get metaReaderEndsBeforeItShould => '提前結束';
+
+  @override
+  String get metaReaderCouldNotBeRead => '無法讀取';
+
+  @override
+  String get metaReaderExifThatCannotBe => '無法讀取的 EXIF';
+
+  @override
+  String get metaReaderSamsungTrailer => '三星尾端資料';
+
+  @override
+  String metaReaderChunk(Object type) {
+    return '區塊 $type';
+  }
+
+  @override
+  String get metaReaderExifFlagSet => '已設 EXIF 旗標';
+
+  @override
+  String get metaReaderXmpFlagSet => '已設 XMP 旗標';
+
+  @override
+  String metaReaderAppBlock(Object id) {
+    return '應用程式區塊 $id';
+  }
+
+  @override
+  String get metaReaderUuidBox => 'uuid 容器';
+
+  @override
+  String metaReaderBox(Object printable) {
+    return '$printable 容器';
+  }
+
+  @override
+  String get metaReaderAttachedData => '附加資料';
+
+  @override
+  String metaReaderItem(Object printable) {
+    return '$printable 項目';
+  }
+
+  @override
+  String get miuiAutostartAlreadyAllowedToRun => '已允許在背景執行';
+
+  @override
+  String get miuiAutostartLetKryfoRunIn => '讓 kryfo 在背景執行';
+
+  @override
+  String get miuiAutostartYourPhonePausesApps =>
+      '你的手機會暫停應用程式來省電。如果不設為例外，kryfo 關閉時就無法接收訊息。';
+
+  @override
+  String get commonAllow => '允許';
+
+  @override
+  String get commonSkip => '略過';
+
+  @override
+  String get miuiAutostartXiaomiTurnsOffBackground =>
+      '小米預設會關閉背景應用程式。沒有開啟自動啟動，kryfo 在應用程式關閉時就無法傳遞訊息。請在下一個畫面的清單中找到 kryfo，然後打開開關。';
+
+  @override
+  String get miuiAutostartOpenSettings => '開啟設定';
+
+  @override
+  String get miuiAutostartCouldnTOpenIt => '無法開啟。請在手機設定中尋找「自動啟動」';
+
+  @override
+  String get notificationsNewEncryptedMessagesFrom => '來自聯絡人的加密新訊息';
+
+  @override
+  String get notificationsNewMessage => '新訊息';
+
+  @override
+  String get notificationsNewEncryptedMessagesFromYourContacts => '來自聯絡人的加密新訊息';
+
+  @override
+  String get notificationsNewMessage2 => '新訊息';
+
+  @override
+  String get notificationsEncrypted => '已加密';
+
+  @override
+  String get rooms24h => '24 小時';
+
+  @override
+  String roomsD(Object inDays) {
+    return '$inDays 天';
+  }
+
+  @override
+  String roomsH(Object inHours) {
+    return '$inHours 小時';
+  }
+
+  @override
+  String get rooms24Hours => '24 小時';
+
+  @override
+  String roomsDays(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 天',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get roomsAnHour => '1 小時';
+
+  @override
+  String get roomsAboutAnHour => '約 1 小時';
+
+  @override
+  String roomsHours(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 小時',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String roomsAboutHours(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '約 $countString 小時',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String roomsMinutes(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 分鐘',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get roomsAMinute => '1 分鐘';
+
+  @override
+  String get roomsExpired => '已過期';
+
+  @override
+  String roomsDH(Object inDays, Object h) {
+    return '$inDays 天 $h 小時';
+  }
+
+  @override
+  String roomsHM(Object inHours, Object m) {
+    return '$inHours 小時 $m 分';
+  }
+
+  @override
+  String roomsM(Object inMinutes) {
+    return '$inMinutes 分鐘';
+  }
+
+  @override
+  String get scamShieldLooksLikeAScam => '看起來像詐騙';
+
+  @override
+  String scamShieldThisNameMatches(Object shown) {
+    return '這個名字和 $shown 相同';
+  }
+
+  @override
+  String scamShieldNameMatchesYourContact(Object shown) {
+    return '名字和你的聯絡人 $shown 相同';
+  }
+
+  @override
+  String scamShieldSameFaceAsYour(Object shown) {
+    return '臉和你的聯絡人 $shown 相同';
+  }
+
+  @override
+  String get scamShieldContainsACryptoAddress => '含有加密貨幣地址';
+
+  @override
+  String get scamShieldMentionsMoneyAndUrgency => '同時提到錢和急迫';
+
+  @override
+  String get scamShieldAsksYouToMove => '要你改用別的應用程式';
+
+  @override
+  String get scamShieldLinksToALookalike => '附上仿冒知名網站的連結';
+
+  @override
+  String get scamShieldALongOpenerFrom => '沒有往來紀錄的人傳來長篇開場白';
+
+  @override
+  String get scamShieldAsksForACode => '要你提供代碼、助記詞或復原檔案';
+
+  @override
+  String scamShieldAlso(Object shown) {
+    return '另外：名字和你的聯絡人 $shown 相同';
+  }
+
+  @override
+  String get commonBack => '返回';
+
+  @override
+  String get archivedArchived => '已封存';
+
+  @override
+  String get archivedCount0 => '沒有';
+
+  @override
+  String get archivedCount1 => '一';
+
+  @override
+  String get archivedCount2 => '兩';
+
+  @override
+  String get archivedCount3 => '三';
+
+  @override
+  String get archivedCount4 => '四';
+
+  @override
+  String get archivedCount5 => '五';
+
+  @override
+  String get archivedCount6 => '六';
+
+  @override
+  String get archivedCount7 => '七';
+
+  @override
+  String get archivedCount8 => '八';
+
+  @override
+  String get archivedCount9 => '九';
+
+  @override
+  String get archivedCount10 => '十';
+
+  @override
+  String get archivedChatRestingHereIt => '這個聊天在這裡休息。對方傳訊息之前它都會保持安靜，之後會回到最上方。';
+
+  @override
+  String get archivedChatsRestingHere => '這些聊天在這裡休息。有人傳訊息之前都會保持安靜，之後會回到最上方。';
+
+  @override
+  String get archivedNothingArchived => '沒有封存的聊天';
+
+  @override
+  String get archivedArchivedChatsAreStill => '封存的聊天仍然是端對端加密';
+
+  @override
+  String get archivedUnarchive => '取消封存';
+
+  @override
+  String get avatarPickerThePeopleYouMessage => '跟你傳訊息的人也會看到這個';
+
+  @override
+  String get avatarPickerBackToYourInitial => '改回名字首字';
+
+  @override
+  String get avatarPickerThatOneIsYours => '這個是你的';
+
+  @override
+  String get avatarPickerPickAFace => '選一張臉';
+
+  @override
+  String get commonSave => '儲存';
+
+  @override
+  String get backupPassphraseMustBeAt => '密碼短語至少要 6 個字元';
+
+  @override
+  String get backupPassphrasesDonTMatch => '密碼短語不一致';
+
+  @override
+  String get backupBackupSavedKeepThe => '備份已儲存 · 請妥善保管密碼短語';
+
+  @override
+  String get backupKryfoBackup => 'Kryfo 備份';
+
+  @override
+  String get backupYourEncryptedKryfoBackup =>
+      '你的 kryfo 加密備份。這個檔案和密碼短語都要妥善保管，兩個都有才能還原。';
+
+  @override
+  String get backupBackUpKryfo => '備份 kryfo';
+
+  @override
+  String get backupBackUp => '備份';
+
+  @override
+  String get backupACopyToKeep => '留一份副本。這支手機照常使用。';
+
+  @override
+  String get backupMoveToAnotherDevice => '移到另一台裝置';
+
+  @override
+  String get backupTheFileTakesThis =>
+      '這個檔案會帶走這個身分。檔案一建立，這支手機就會停止：這裡不會再收到任何新內容，從這裡傳出的東西也不會送達任何人。';
+
+  @override
+  String get backupOneEncryptedFileYour =>
+      '一個加密檔案：你的身分、聯絡人、每則訊息，以及每張照片、每段語音和每個檔案。在另一台裝置上用密碼短語匯入。在你匯入之前，這支手機都還可以留著。';
+
+  @override
+  String get backupOneEncryptedFileYourIdentityYour =>
+      '一個加密檔案：你的身分、聯絡人、每則訊息，以及此刻這支手機上的每張照片、每段語音和每個檔案。今天之後說的話都不在裡面，所以重要的時候請再做一份。還原時需要檔案和密碼短語，兩者缺一不可。';
+
+  @override
+  String get backupPassphrase => '密碼短語';
+
+  @override
+  String get backupConfirmPassphrase => '確認密碼短語';
+
+  @override
+  String backupWriting(Object progress) {
+    return '寫入中… $progress';
+  }
+
+  @override
+  String get backupCreating => '建立中…';
+
+  @override
+  String get backupMakeTheFileAnd => '建立檔案並搬移';
+
+  @override
+  String get backupCreateBackup => '建立備份';
+
+  @override
+  String get blockedBlocked => '已封鎖';
+
+  @override
+  String get blockedNoOneIsBlocked => '沒有封鎖任何人';
+
+  @override
+  String get commonUnblock => '解除封鎖';
+
+  @override
+  String get bridgesThatWasNotIt => '答案不對。換一題給你。';
+
+  @override
+  String get bridgesGotBridgesSaveTo => '已取得橋接 · 儲存後即可使用';
+
+  @override
+  String get bridgesConnected => '已連線';
+
+  @override
+  String get bridgesNotThroughYetTor => '還沒連通。Tor 會繼續嘗試';
+
+  @override
+  String get bridgesBridges => '橋接';
+
+  @override
+  String get bridgesTorIsBlockedWhere => '你所在的地方封鎖了 Tor？';
+
+  @override
+  String get bridgesBridgesDisguiseYourConnection =>
+      '橋接會掩飾你的連線，讓它連得出去。選一種連入方式並儲存，tor 就會透過它重新連線。';
+
+  @override
+  String get bridgesBridgesOnlyChangeHow =>
+      '橋接只會改變 tor 的連線方式，而你現在沒有使用 Onion 模式。這裡的設定會保存下來，只是在你切換回去之前不會有作用。';
+
+  @override
+  String get bridgesFromTheTorProject => '來自 tor 專案';
+
+  @override
+  String get bridgesNoise => '雜訊';
+
+  @override
+  String get bridgesGood => '良好';
+
+  @override
+  String get bridgesMakesTorTrafficLook =>
+      '讓 tor 流量看起來不像任何特定的東西。對大多數被封鎖的網路來說，這是最好的預設選擇。先回答一個驗證碼，就會拿到幾行設定。';
+
+  @override
+  String get bridgesPrivateBridge => '私人橋接';
+
+  @override
+  String get bridgesALineFromA => '朋友給的一行設定';
+
+  @override
+  String get bridgesWhateverTheLineSays => '依設定內容而定';
+
+  @override
+  String get bridgesDepends => '看情況';
+
+  @override
+  String get bridgesGotABridgeLine =>
+      '從你信任的人或 bridges.torproject.org 拿到了橋接設定？貼在這裡。目前只支援 obfs4，kryfo 還不支援其他類型。';
+
+  @override
+  String get bridgesPasteFromClipboard => '從剪貼簿貼上';
+
+  @override
+  String get bridgesUseBridges => '使用橋接';
+
+  @override
+  String get bridgesNoLinesYet => '還沒有任何設定';
+
+  @override
+  String bridges1LineSaved(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已儲存 $countString 行',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bridgesRestartingTor => '正在重新啟動 tor…';
+
+  @override
+  String bridgesFindingABridgeS(Object elapsed) {
+    return '正在尋找橋接… $elapsed 秒';
+  }
+
+  @override
+  String bridgesStillTryingS(Object elapsed) {
+    return '仍在嘗試… $elapsed 秒';
+  }
+
+  @override
+  String get bridgesApplying => '套用中…';
+
+  @override
+  String get bridgesSaveAndReconnect => '儲存並重新連線';
+
+  @override
+  String get bridgesWhatABridgeIs => '什麼是橋接';
+
+  @override
+  String get bridgesATorEntryPoint =>
+      '一個沒有人公開過的 tor 入口，透過一層包裝連上，讓連線看起來不像 tor。其餘路線還是一般的 3 跳。';
+
+  @override
+  String get bridgesLooksLike => '看起來像';
+
+  @override
+  String get bridgesSpeed => '速度';
+
+  @override
+  String get bridgesGetBridges => '取得橋接';
+
+  @override
+  String get bridgesAskTheTorProject => '直接向 tor 專案索取。你需要解一道謎題，這樣機器人才無法把橋接拿光。';
+
+  @override
+  String get bridgesTypeWhatYouSee => '輸入你看到的內容。小寫也可以。';
+
+  @override
+  String get bridgesThisOneRequestDoes =>
+      '只有這一個請求不經過 tor，也不可能經過，因為無法運作的正是 tor。管理你所在網路的人會看到你在聯絡 tor 專案。如果光是這樣在你那裡就會出問題，請從別的地方取得橋接，再貼到下方。';
+
+  @override
+  String get bridgesCouldNotDrawThe => '無法顯示謎題';
+
+  @override
+  String get bridgesAnswer => '答案';
+
+  @override
+  String get bridgesAsking => '索取中…';
+
+  @override
+  String get bridgesRequestBridges => '索取橋接';
+
+  @override
+  String get bridgesDifferentPuzzle => '換一道謎題';
+
+  @override
+  String get cameraNoCameraOnThis => '這支手機沒有相機';
+
+  @override
+  String get cameraCameraNotAvailable => '無法使用相機';
+
+  @override
+  String get cameraCameraPermissionIsOff => '相機權限已關閉 · 點一下再試一次';
+
+  @override
+  String get cameraCouldNotStripThat => '無法清除那張照片的中繼資料，已捨棄';
+
+  @override
+  String get cameraNoPhotoCameOut => '沒有拍出照片';
+
+  @override
+  String get cameraCouldNotStartRecording => '無法開始錄影';
+
+  @override
+  String get cameraTheRecordingWasLost => '錄影遺失了';
+
+  @override
+  String get cameraACopyIsIn => '你的相簿裡有一份副本';
+
+  @override
+  String get cameraCouldNotSaveA => '無法在這支手機上儲存副本';
+
+  @override
+  String get cameraTooLongForA => '太長了，無法用訊息傳送 · 上限 8 mb';
+
+  @override
+  String get cameraNeverSavedToYour => '不會存到你的相簿';
+
+  @override
+  String get cameraNoExifNeverSaved => '沒有 EXIF，不會存到你的相簿';
+
+  @override
+  String get cameraRec => '錄影';
+
+  @override
+  String get cameraSwitchCamera => '切換相機';
+
+  @override
+  String cameraClipSMb(Object secs, Object mb) {
+    return '片段 · $secs 秒 · $mb mb';
+  }
+
+  @override
+  String get cameraStopRecording => '停止錄影';
+
+  @override
+  String get cameraStartRecording => '開始錄影';
+
+  @override
+  String get cameraTakeAPhoto => '拍照';
+
+  @override
+  String get cameraKeepACopy => '保留副本';
+
+  @override
+  String get cameraUseThis => '使用這個';
+
+  @override
+  String chatB(Object bytes) {
+    return '$bytes b';
+  }
+
+  @override
+  String chatKb(Object bytes) {
+    return '$bytes kb';
+  }
+
+  @override
+  String chatMb(Object bytes) {
+    return '$bytes mb';
+  }
+
+  @override
+  String get chatFile => '檔案';
+
+  @override
+  String get chatYouAreOfflineThis => '你目前離線 · 重新連線後會自動傳送';
+
+  @override
+  String get chatStillConnectingToTor => '仍在連線到 tor · 之後會自動送出';
+
+  @override
+  String chatS(Object seconds) {
+    return '$seconds 秒';
+  }
+
+  @override
+  String chatM(Object seconds) {
+    return '$seconds 分鐘';
+  }
+
+  @override
+  String chatH(Object seconds) {
+    return '$seconds 小時';
+  }
+
+  @override
+  String chatD(Object seconds) {
+    return '$seconds 天';
+  }
+
+  @override
+  String get chat0s => '0 秒';
+
+  @override
+  String chatHM(Object h, Object m) {
+    return '$h 小時 $m 分';
+  }
+
+  @override
+  String chatMS(Object m, Object s) {
+    return '$m 分 $s 秒';
+  }
+
+  @override
+  String chatS2(Object s) {
+    return '$s 秒';
+  }
+
+  @override
+  String get chatNewMessages => '新訊息';
+
+  @override
+  String get chatUnsave => '取消收藏';
+
+  @override
+  String get chatForward => '轉傳';
+
+  @override
+  String get commonShare => '分享';
+
+  @override
+  String get commonCopied => '已複製';
+
+  @override
+  String get commonCopy => '複製';
+
+  @override
+  String get chatUnpin => '取消置頂';
+
+  @override
+  String get chatPin => '置頂';
+
+  @override
+  String get chatStopSending => '停止傳送';
+
+  @override
+  String get chatUnsend => '收回';
+
+  @override
+  String get commonEdit => '編輯';
+
+  @override
+  String get chatYou => '你';
+
+  @override
+  String get chatUnsendMessage => '收回訊息';
+
+  @override
+  String get chatItDisappearsWithNo => '訊息會消失，不留任何痕跡。這個動作無法復原。';
+
+  @override
+  String chatThisChatHasPins(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '這個聊天已經有 $countString 則置頂訊息',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get chatUnpinThisMessage => '要取消置頂這則訊息嗎？';
+
+  @override
+  String get chatPinThisMessage => '要置頂這則訊息嗎？';
+
+  @override
+  String get chatItLeavesThePinned => '它會從你們雙方的置頂清單中移除。';
+
+  @override
+  String get chatItGoesUnderThe => '它會放在聊天頂端的置頂區，你們雙方都看得到。';
+
+  @override
+  String get chatPinIt => '置頂';
+
+  @override
+  String get chatNotNow => '以後再說';
+
+  @override
+  String get chatEditMessage => '編輯訊息';
+
+  @override
+  String get chat30Seconds => '30 秒';
+
+  @override
+  String get chat1Minute => '1 分鐘';
+
+  @override
+  String get chat5Minutes => '5 分鐘';
+
+  @override
+  String get chat1Hour => '1 小時';
+
+  @override
+  String get chat24Hours => '24 小時';
+
+  @override
+  String get chatGhostTimer => '幽靈計時';
+
+  @override
+  String get chatHowLongBeforeSent => '已傳送的訊息要多久後焚毀？';
+
+  @override
+  String get chatCamera => '相機';
+
+  @override
+  String get chatNoExifNeverSaved => '沒有 EXIF，不會存到你的相簿';
+
+  @override
+  String get chatGallery => '相簿';
+
+  @override
+  String get chatVideo => '影片';
+
+  @override
+  String get chatGifFromPhone => '手機裡的 GIF';
+
+  @override
+  String get chatFile2 => '檔案';
+
+  @override
+  String get chatAFewSeconds => '幾秒鐘';
+
+  @override
+  String get chatUnderAMinute => '不到一分鐘';
+
+  @override
+  String chatRoughlyMin(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '大約 $countString 分鐘',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String chatB2(Object b) {
+    return '$b b';
+  }
+
+  @override
+  String chatKb2(Object b) {
+    return '$b kb';
+  }
+
+  @override
+  String chatMb2(Object b) {
+    return '$b mb';
+  }
+
+  @override
+  String get chatSendThis => '要傳送這個檔案嗎？';
+
+  @override
+  String chatOverTor(Object humanBytes, Object wireEstimate) {
+    return '$humanBytes · 經 tor 需 $wireEstimate';
+  }
+
+  @override
+  String get chatBigFilesGoOut => '大檔案會切成加密的小片段送出，所以需要一點時間。保持應用程式開啟，就會持續傳送。';
+
+  @override
+  String get chatSendIt => '傳送';
+
+  @override
+  String get chatCouldNotReadThat => '無法讀取那個檔案';
+
+  @override
+  String get chatFileTooBig8 => '檔案太大 · 上限 8 mb';
+
+  @override
+  String get chatCouldNotCleanThat => '無法清理那段影片';
+
+  @override
+  String get chatCouldNotCleanThatPictureSend => '無法清理那張圖片 · 請改用照片傳送';
+
+  @override
+  String get chatGifTooBig8 => 'GIF 太大 · 上限 8 mb';
+
+  @override
+  String get chatCouldNotCleanThatGif => '無法清理那個 GIF';
+
+  @override
+  String get chatTorIsNotUp => 'Tor 尚未啟動 · 不附預覽直接傳送';
+
+  @override
+  String get chatCouldnTReachIt => '連不上 · 不附預覽直接傳送';
+
+  @override
+  String get chatNoTitleCameBack => '沒有取得標題 · 不附預覽直接傳送';
+
+  @override
+  String get chatCouldnTFetchIt => '無法擷取 · 不附預覽直接傳送';
+
+  @override
+  String get chatNoSignalSessionRe => '沒有 Signal 工作階段，請重新配對';
+
+  @override
+  String get chatMessageUnavailable => '訊息無法顯示';
+
+  @override
+  String get chatYou2 => '你';
+
+  @override
+  String get chatThem => '對方';
+
+  @override
+  String get chatVoiceMessage => '語音訊息';
+
+  @override
+  String get chatQuotedPhoto => '照片';
+
+  @override
+  String get chatViewContact => '查看聯絡人';
+
+  @override
+  String get chatSharedPhotos => '分享的照片';
+
+  @override
+  String chatSharedPhotoCount(int count, Object title) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 張照片',
+    );
+    return '$_temp0 · $title';
+  }
+
+  @override
+  String get chatUnmuteNotifications => '取消通知靜音';
+
+  @override
+  String get chatMuteNotifications => '將通知靜音';
+
+  @override
+  String get chatArchiveChat => '封存聊天';
+
+  @override
+  String get chatWallpaper => '桌布';
+
+  @override
+  String get chatClearConversation => '清空對話';
+
+  @override
+  String get chatNoteOnThisContact => '這位聯絡人的備註';
+
+  @override
+  String get chatPinToTop => '置頂';
+
+  @override
+  String get chatBlockContact => '封鎖聯絡人';
+
+  @override
+  String get chatUnpinned => '已取消置頂';
+
+  @override
+  String get chatPinnedToTop => '已置頂';
+
+  @override
+  String get chatJustForYouNever => '只有你看得到。不會傳送，也不會離開這支手機。';
+
+  @override
+  String get chatAQuietReminder => '給自己的小提醒…';
+
+  @override
+  String get chatNoteSaved => '備註已儲存';
+
+  @override
+  String get chatClearThisConversation => '要清空這段對話嗎？';
+
+  @override
+  String get chatEveryMessageHereIs => '這裡的每則訊息都會從這支手機上抹除。這只會清空你的副本，不會動到對方的裝置。';
+
+  @override
+  String get chatClear => '清空';
+
+  @override
+  String get chatBlockThisContact => '要封鎖這位聯絡人嗎？';
+
+  @override
+  String get chatTheirMessagesStopArriving =>
+      '對方的訊息將不再送達，對方也會從你的聊天清單中消失。對方不會收到任何通知。你隨時可以在設定中解除封鎖。';
+
+  @override
+  String get commonBlock => '封鎖';
+
+  @override
+  String get chatSaved => '已收藏';
+
+  @override
+  String get chatRemovedFromSaved => '已從收藏移除';
+
+  @override
+  String get chatForwardTo => '轉傳給';
+
+  @override
+  String get chatNoContactsToForward => '沒有可轉傳的聯絡人';
+
+  @override
+  String get chatToday => '今天';
+
+  @override
+  String get chatYesterday => '昨天';
+
+  @override
+  String get chatThisMessageCanT => '這則訊息無法顯示';
+
+  @override
+  String get chatJumpToTheNewest => '跳到最新';
+
+  @override
+  String get chatBuildingAPrivateRoute =>
+      '正在建立私密路線 · 第一次連線比較慢，之後就快了。現在傳送的任何內容都會先排隊，之後自動送達。';
+
+  @override
+  String get chatLooksSafeNothingSuspicious => '看起來安全 · 對方的第一則訊息沒有可疑之處';
+
+  @override
+  String get chatTheNextPhotoYou => '你傳送的下一張照片會以保護模式開啟 · 對方無法截圖';
+
+  @override
+  String get chatPhotoProtectionOff => '照片保護已關閉';
+
+  @override
+  String get chatAcceptToReplyThey => '接受後才能回覆。在你接受之前，對方只能再傳一則訊息。';
+
+  @override
+  String chatIntroducedYouAcceptTo(Object introducer) {
+    return '$introducer 介紹你們認識。接受後就能回覆。';
+  }
+
+  @override
+  String chatIntroducedYouSayHello(Object vouchNames) {
+    return '$vouchNames 介紹你們認識。打個招呼吧，對方也收到了你的名片。';
+  }
+
+  @override
+  String get chatIntroduceTo => '介紹給…';
+
+  @override
+  String get chatAcceptThemFirst => '請先接受對方';
+
+  @override
+  String get chatMessageRequest => '訊息請求';
+
+  @override
+  String get chatTheyNeedToAccept => '對方需要先接受，你們才能繼續聊天。';
+
+  @override
+  String get chatWaitingForThemTo => '正在等對方接受你的請求';
+
+  @override
+  String get chatYouBlockedThisContact => '你已封鎖這位聯絡人';
+
+  @override
+  String get chatSupporter => '支持者';
+
+  @override
+  String get chatEncryptedViaRelay => '已加密 · 經由中繼';
+
+  @override
+  String get chatEncryptedDirect => '已加密 · 直連';
+
+  @override
+  String get chatEncryptedOverTor => '已加密 · 經由 tor';
+
+  @override
+  String get chatSearchThisChat => '搜尋這個聊天';
+
+  @override
+  String get chatContactOptions => '聯絡人選項';
+
+  @override
+  String get commonClose => '關閉';
+
+  @override
+  String get chatFindInConversation => '在對話中尋找';
+
+  @override
+  String get chatNoMatches => '沒有符合的結果';
+
+  @override
+  String chatOf(int count, int pos) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+    final intl.NumberFormat posNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String posString = posNumberFormat.format(pos);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '第 *$posString* 筆，共 $countString 筆',
+      one: '第 *$posString* 筆，共 $countString 筆',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get chatPreviousMatch => '上一筆';
+
+  @override
+  String get chatNextMatch => '下一筆';
+
+  @override
+  String get chatPhotoUnavailable => '照片無法顯示';
+
+  @override
+  String get chatDelivered => '已送達';
+
+  @override
+  String get chatEdited => '已編輯';
+
+  @override
+  String get chatWaitingForThemToComeOnline => '正在等對方上線，或把你加回來';
+
+  @override
+  String get chatFailedTapToRetry => '失敗 · 點一下重試';
+
+  @override
+  String get chatReplyingTo => '回覆對方';
+
+  @override
+  String get chatReplyingToYourself => '回覆自己';
+
+  @override
+  String get chatReply => '回覆';
+
+  @override
+  String get chatSayHi => '打聲招呼吧。';
+
+  @override
+  String get chatJustTheTwoOf => '只有你們兩個，端對端加密。';
+
+  @override
+  String get chatMicPermissionNeeded => '需要麥克風權限';
+
+  @override
+  String get chatTheMicWouldNot => '麥克風無法啟動。請再試一次';
+
+  @override
+  String get chatReleaseToCancel => '放開即可取消';
+
+  @override
+  String get chatVoiceHiddenSlideTo => '聲音已隱藏 · 滑動以取消';
+
+  @override
+  String get chatSlideToCancel => '滑動以取消';
+
+  @override
+  String get chatGhostMode => '幽靈模式';
+
+  @override
+  String chatMessagesBurnAfter(Object humanBurn) {
+    return '訊息會在 $humanBurn後焚毀';
+  }
+
+  @override
+  String get chatTimedMessages => '限時訊息';
+
+  @override
+  String get chatOpenTheCamera => '開啟相機';
+
+  @override
+  String get chatAttachAPhoto => '附加照片';
+
+  @override
+  String get chatMessage => '訊息';
+
+  @override
+  String get chatDisguiseVoice => '變聲';
+
+  @override
+  String get commonSend => '傳送';
+
+  @override
+  String get chatNoPhotosInThis => '這個聊天裡還沒有照片';
+
+  @override
+  String get chatSendPhoto => '傳送照片';
+
+  @override
+  String get chatAddACaption => '加上說明…';
+
+  @override
+  String get chatSecurityCodeChanged => '安全碼已變更';
+
+  @override
+  String chatMayHaveReinstalledOr(Object peerName) {
+    return '$peerName 可能重新安裝了應用程式，也可能有人在冒充對方。請比對安全碼來確認。';
+  }
+
+  @override
+  String get chatOk => '好';
+
+  @override
+  String get chatVerify => '驗證';
+
+  @override
+  String get cleanKryfoCanTClean => 'Kryfo 目前還無法清理這類檔案。';
+
+  @override
+  String get cleanThisIsAMotion => '這是一張動態照片。';
+
+  @override
+  String get cleanThisPictureIsToo => '這張圖片太大，無法在這裡清理。';
+
+  @override
+  String get cleanThisFileIsDamaged => '這個檔案已損毀或不完整。';
+
+  @override
+  String get cleanKryfoCouldNotMake => 'Kryfo 無法把這個檔案清理乾淨。';
+
+  @override
+  String get cleanNotEnoughRoomOn => '手機空間不足。';
+
+  @override
+  String get cleanKryfoCouldNotOpen => 'Kryfo 無法開啟那個檔案。';
+
+  @override
+  String get cleanItCleansJpegPng =>
+      '它可以清理 JPEG、PNG、WebP、HEIC、AVIF、GIF、MP4 和 MOV。沒有做任何變更。';
+
+  @override
+  String get cleanItHoldsAShort =>
+      '它在圖片旁附帶一段短影片，而 Kryfo 目前還無法清理那個部分。請在相機中關閉動態照片，或改傳它的截圖。';
+
+  @override
+  String get cleanPicturesOver64Mb => '超過 64 MB 的圖片不會在手機上清理。沒有做任何變更。';
+
+  @override
+  String get cleanKryfoCouldNotRead => 'Kryfo 無法完整讀到結尾，所以不會說它已清理乾淨。沒有產生任何副本。';
+
+  @override
+  String get cleanSomethingInsideIsOf => '裡面有它不知道如何移除的內容，所以沒有產生副本。';
+
+  @override
+  String get cleanFreeSomeSpaceAnd => '請釋出一些空間後再試一次。沒有做任何變更。';
+
+  @override
+  String get cleanTheAppThatShared => '分享它的應用程式可能已經把它收回。請再分享一次。';
+
+  @override
+  String get cleanNoAppOnThis => '這支手機上沒有任何應用程式接收這個檔案。';
+
+  @override
+  String get cleanCouldNotSaveIt => '無法儲存。請確認手機還有空間。';
+
+  @override
+  String get cleanTheOriginalIsGone => '原始檔案已刪除。乾淨的副本會保留。';
+
+  @override
+  String get cleanAndroidWouldNotDelete => 'Android 不肯刪除它。請手動從相簿中移除。';
+
+  @override
+  String get cleanCleanCopy => '乾淨副本';
+
+  @override
+  String get cleanShareCleanCopy => '分享乾淨副本';
+
+  @override
+  String get cleanSaveToGallery => '儲存到相簿';
+
+  @override
+  String get commonStop => '停止';
+
+  @override
+  String get cleanReadingTheFile => '正在讀取檔案';
+
+  @override
+  String get cleanCleaning => '清理中';
+
+  @override
+  String cleanOf(Object prettySize, Object prettySize2) {
+    return '$prettySize/$prettySize2';
+  }
+
+  @override
+  String get cleanEverythingStaysOnThis => '一切都留在這支手機上。';
+
+  @override
+  String get cleanAlreadyClean => '已經是乾淨的。';
+
+  @override
+  String get cleanClean => '乾淨了。';
+
+  @override
+  String get cleanThereWasNothingTo => '本來就沒有東西可找。';
+
+  @override
+  String get cleanNothingLeftToFind => '已經找不到任何東西。';
+
+  @override
+  String get cleanSameVideoSameQuality => '同樣的影片，同樣的畫質';
+
+  @override
+  String get cleanSamePictureSameQuality => '同樣的圖片，同樣的畫質';
+
+  @override
+  String cleanRemoved(Object label) {
+    return '$label，已移除';
+  }
+
+  @override
+  String get cleanRemoved2 => '已移除';
+
+  @override
+  String get cleanWithTheLocationInside => '裡面還帶著位置。任何拿到它的人，都能知道你在哪條街。';
+
+  @override
+  String get cleanWithEverythingItKnew => '它知道的一切都還在裡面。';
+
+  @override
+  String get cleanOriginal => '原始';
+
+  @override
+  String get cleanClean2 => '乾淨';
+
+  @override
+  String get cleanSavedToYourGallery => '已儲存到你的相簿。';
+
+  @override
+  String cleanTheOriginalIsStill(Object what) {
+    return '原始檔案也還在，$what';
+  }
+
+  @override
+  String cleanTheOriginalIsStillWhereIt(Object what) {
+    return '原始檔案仍在原處，${what}Kryfo 無法從這裡移除它，請到它原本所在的應用程式中刪除。';
+  }
+
+  @override
+  String get cleanDeleteTheOriginal => '刪除原始檔案';
+
+  @override
+  String get cleanKeepBoth => '兩個都保留';
+
+  @override
+  String get commonDone => '完成';
+
+  @override
+  String get cleanAndroidWillAskYou => 'ANDROID 會要求你確認';
+
+  @override
+  String get contactYourNameForThem => '你給對方的暱稱';
+
+  @override
+  String get contactStaysOnThisPhone => '只存在這支手機上。對方永遠看不到。';
+
+  @override
+  String get contactClear => '清空';
+
+  @override
+  String get contactMessage => '傳訊息';
+
+  @override
+  String get contactKeysVerified => '金鑰已驗證';
+
+  @override
+  String get contactVerifyKeys => '驗證金鑰';
+
+  @override
+  String get contactVouches => '擔保';
+
+  @override
+  String get contactUnmute => '取消靜音';
+
+  @override
+  String get contactMute => '靜音';
+
+  @override
+  String get contactUnpin => '取消置頂';
+
+  @override
+  String get contactPinToTop => '置頂';
+
+  @override
+  String get contactArchive => '封存';
+
+  @override
+  String get contactOutOfTheList => '在對方再次傳訊息之前，不會出現在清單中';
+
+  @override
+  String contactBlock(Object name) {
+    return '要封鎖 $name 嗎？';
+  }
+
+  @override
+  String get contactTheirMessagesStopArriving => '對方的訊息將不再送達。對方不會收到通知。';
+
+  @override
+  String get contactDeleteChat => '刪除聊天';
+
+  @override
+  String get contactMessagesAndContactGone => '訊息和聯絡人都會從這支手機上消失';
+
+  @override
+  String get contactDeleteThisChat => '要刪除這個聊天嗎？';
+
+  @override
+  String get contactEveryMessageAndThe => '每則訊息和這位聯絡人都會從這支手機上消失。不會傳送任何東西給對方。';
+
+  @override
+  String get commonDelete => '刪除';
+
+  @override
+  String get contactDeleted => '已刪除';
+
+  @override
+  String get contactToday => '今天';
+
+  @override
+  String contactD(Object inDays) {
+    return '$inDays 天';
+  }
+
+  @override
+  String contactMo(Object d) {
+    return '$d 個月';
+  }
+
+  @override
+  String contactY(Object d) {
+    return '$d 年';
+  }
+
+  @override
+  String get contactVerified => '已驗證';
+
+  @override
+  String get contactChatting => '往來';
+
+  @override
+  String get contactNothingSharedYet => '還沒有分享任何東西';
+
+  @override
+  String contactSharedMedia(Object count) {
+    return '分享的媒體 · $count';
+  }
+
+  @override
+  String get donateBitcoin => 'Bitcoin';
+
+  @override
+  String get donateText => '₿';
+
+  @override
+  String get donateBadgeUnlocks => '可解鎖徽章';
+
+  @override
+  String get donateMonero => 'Monero';
+
+  @override
+  String get donateManualNoBadge => '手動 · 無徽章';
+
+  @override
+  String get donateSolana => 'Solana';
+
+  @override
+  String get donateEthereum => 'Ethereum';
+
+  @override
+  String get donateText2 => 'Ξ';
+
+  @override
+  String donateYourEarlierBitcoinPayment(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '已偵測到你先前的 bitcoin 付款 · 支持者徽章已解鎖',
+      'patron': '已偵測到你先前的 bitcoin 付款 · 贊助人徽章已解鎖',
+      'guardian': '已偵測到你先前的 bitcoin 付款 · 守護者徽章已解鎖',
+      'other': '已偵測到你先前的 bitcoin 付款 · 支持者徽章已解鎖',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get donateSupport => '支持';
+
+  @override
+  String get donateKeepKryfo => '讓 kryfo 保持*獨立*';
+
+  @override
+  String get donateNoAdsNoInvestors => '沒有廣告，沒有投資人，也沒有要賣的東西。全靠支持者的捐助運作。';
+
+  @override
+  String get donateBackItAnonymouslyBadge => '匿名支持。徽章自由選擇。\n*隱私永遠不設付費門檻。*';
+
+  @override
+  String donateAddressCheckItAgainst(Object coinName) {
+    return '$coinName 地址 · 請和你的錢包核對';
+  }
+
+  @override
+  String get donateAddressCopiedClearsIn => '已複製地址 · 60 秒後清空';
+
+  @override
+  String get donateCopyAddress => '複製地址';
+
+  @override
+  String get donateBitcoinIsVerifiedBy =>
+      'Bitcoin 付款由我們自己的節點驗證，所以款項一到帳，你的徽章就會自動解鎖。';
+
+  @override
+  String get donateWeCanTVerify =>
+      '要驗證這條鏈，就得向外部服務查詢關於你的資訊，所以我們不這麼做。想捐還是可以捐。這不會解鎖徽章。';
+
+  @override
+  String get donateBitcoinBadgesNeedOnion => 'Bitcoin 徽章需要 Onion 模式';
+
+  @override
+  String get donateSwitchToOnion => '切換到 Onion';
+
+  @override
+  String get donatePayWithBitcoin => '用 bitcoin 付款  →';
+
+  @override
+  String get donateBadgesStartAt20 => '徽章從 \$20 起';
+
+  @override
+  String get donateReachingThePaymentService => '正在經由 tor 連線到付款服務…';
+
+  @override
+  String get donateThisCanTakeUp => '最多可能需要一分鐘';
+
+  @override
+  String donateSThisCanTake(Object waited) {
+    return '$waited 秒 · 最多可能需要一分鐘';
+  }
+
+  @override
+  String get donateUseTheAddressInstead => '改用地址';
+
+  @override
+  String get donateThePaymentServiceIs =>
+      '付款服務是 onion 服務，只有 Onion 模式才能連上。沒有傳送任何東西。';
+
+  @override
+  String get donateTorWasSlowTo =>
+      'Tor 連到付款服務太慢了。你可以捐款到下方的地址，只是徽章不會自動解鎖。想要徽章的話，請稍後再試。';
+
+  @override
+  String get donateThePaymentServiceIsHavingTrouble =>
+      '付款服務目前出了點問題。你還是可以捐款到下方的地址，只是徽章不會自動解鎖。想要徽章的話，請稍後再試。';
+
+  @override
+  String get commonTryAgain => '再試一次';
+
+  @override
+  String donateBtc(Object btc) {
+    return '$btc BTC';
+  }
+
+  @override
+  String donateSendExactlyThisAmount(Object fmtLeft) {
+    return '請傳送剛好這個金額 · $fmtLeft 後到期';
+  }
+
+  @override
+  String get donateOpenWallet => '開啟錢包';
+
+  @override
+  String get donateThisScreenUpdatesItself =>
+      '一偵測到你的付款，這個畫面就會自動更新。\n請保持開啟。不會儲存任何東西，也沒有任何東西能識別你。';
+
+  @override
+  String get donateWatchingTheChainFor => '正在區塊鏈上等候你的付款';
+
+  @override
+  String get donateThisInvoiceExpired => '這張付款單已過期';
+
+  @override
+  String get donateInvoicesTimeOutIf =>
+      '付款單會逾時。如果你已經付款，請保持這個畫面開啟：我們會在一段時間內每分鐘再向服務查詢一次，下次你開啟「支持」時也會再查。你隨時可以開一張新的。';
+
+  @override
+  String get donateNewInvoice => '新付款單';
+
+  @override
+  String get donateIPaidCheckAgain => '我付了，再檢查一次';
+
+  @override
+  String get donatePaymentConfirmed => '付款已確認';
+
+  @override
+  String get donateThankYouForKeeping => '謝謝你讓 kryfo 保持獨立。';
+
+  @override
+  String donateVerifiedOnChainYou(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '已在鏈上驗證：你現在是支持者了。沒有人能把這拿走。',
+      'patron': '已在鏈上驗證：你現在是贊助人了。沒有人能把這拿走。',
+      'guardian': '已在鏈上驗證：你現在是守護者了。沒有人能把這拿走。',
+      'other': '已在鏈上驗證：你現在是支持者了。沒有人能把這拿走。',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get donateWearMyBadge => '佩戴我的徽章';
+
+  @override
+  String get donateJustGladToHelp => '能幫上忙就好';
+
+  @override
+  String get gettingMessagesGettingMessages => '接收訊息';
+
+  @override
+  String get gettingMessagesHowNewMessagesReach => '新訊息如何送到這支手機。你隨時都可以更改。';
+
+  @override
+  String get gettingMessagesAlwaysOn => '始終在線';
+
+  @override
+  String get gettingMessagesMostPrivate => '最私密';
+
+  @override
+  String get gettingMessagesMessagesArriveInstantlyNothing =>
+      '訊息即時送達。任何東西都不會離開 Tor。最耗電。';
+
+  @override
+  String get gettingMessagesCheckIns => '定時查收';
+
+  @override
+  String get gettingMessagesLightest => '最省電';
+
+  @override
+  String get gettingMessagesKryfoLooksForMessages =>
+      'Kryfo 每 15 分鐘查收一次訊息。省電，但訊息可能會晚到。';
+
+  @override
+  String get gettingMessagesOnTheLockScreen => '在鎖定畫面上';
+
+  @override
+  String get gettingMessagesHideMessagePreview => '隱藏訊息預覽';
+
+  @override
+  String get gettingMessagesAGenericAlertWith => '只顯示一般提醒，不顯示傳送者和訊息內容';
+
+  @override
+  String get gettingMessagesShowsMessageTextIn =>
+      '在通知中顯示訊息內容，即使 Kryfo 已鎖定也會顯示。';
+
+  @override
+  String get gettingMessagesWhenThePhoneSits =>
+      '手機靜置不動時，Android 會拉長查收的間隔。上面那一行顯示的是實際的上次查收。Kryfo 開著的時候會保持連線。';
+
+  @override
+  String get groupChatJumpToTheNewest => '跳到最新';
+
+  @override
+  String get groupChatBlockedEverywhere => '已全面封鎖';
+
+  @override
+  String get groupChatYou => '你';
+
+  @override
+  String get groupChatVoiceMessage => '語音訊息';
+
+  @override
+  String get groupChatQuotedPhoto => '照片';
+
+  @override
+  String get groupChatMessageUnavailable => '訊息無法顯示';
+
+  @override
+  String get groupChatTorIsNotUp => 'Tor 尚未啟動 · 不附預覽直接傳送';
+
+  @override
+  String get groupChatCouldnTReachIt => '連不上 · 不附預覽直接傳送';
+
+  @override
+  String get groupChatNoTitleCameBack => '沒有取得標題 · 不附預覽直接傳送';
+
+  @override
+  String get groupChatCouldnTFetchIt => '無法擷取 · 不附預覽直接傳送';
+
+  @override
+  String get groupChatCamera => '相機';
+
+  @override
+  String get groupChatGallery => '相簿';
+
+  @override
+  String get groupChatVideo => '影片';
+
+  @override
+  String get groupChatGifFromPhone => '手機裡的 GIF';
+
+  @override
+  String get groupChatFile => '檔案';
+
+  @override
+  String get groupChatCouldNotReadThat => '無法讀取那個檔案';
+
+  @override
+  String get groupChatGifTooBig8 => 'GIF 太大 · 上限 8 mb';
+
+  @override
+  String get groupChatCouldNotCleanThat => '無法清理那個 GIF';
+
+  @override
+  String get groupChatFileTooBig8 => '檔案太大 · 上限 8 mb';
+
+  @override
+  String get groupChatCouldNotCleanThatVideo => '無法清理那段影片';
+
+  @override
+  String get groupChatCouldNotCleanThatPictureSend => '無法清理那張圖片 · 請改用照片傳送';
+
+  @override
+  String get groupChat30Seconds => '30 秒';
+
+  @override
+  String get groupChat1Minute => '1 分鐘';
+
+  @override
+  String get groupChat5Minutes => '5 分鐘';
+
+  @override
+  String get groupChat1Hour => '1 小時';
+
+  @override
+  String get groupChat24Hours => '24 小時';
+
+  @override
+  String get groupChatBurnTimer => '焚毀計時';
+
+  @override
+  String get groupChatNewMessagesDisappearAfter => '新訊息會在這段時間後消失';
+
+  @override
+  String get groupChatToday => '今天';
+
+  @override
+  String get groupChatYesterday => '昨天';
+
+  @override
+  String get groupChatYou2 => '你';
+
+  @override
+  String groupChatThisChatHasPins(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '這個聊天已經有 $countString 則置頂訊息',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupChatUnpinThisMessage => '要取消置頂這則訊息嗎？';
+
+  @override
+  String get groupChatPinThisMessage => '要置頂這則訊息嗎？';
+
+  @override
+  String get groupChatItLeavesThePinned => '它會從這裡所有人的置頂清單中移除。';
+
+  @override
+  String get groupChatItGoesUnderThe => '它會放在聊天頂端的置頂區，這裡的所有人都看得到。';
+
+  @override
+  String get groupChatUnpin => '取消置頂';
+
+  @override
+  String get groupChatPinIt => '置頂';
+
+  @override
+  String get groupChatNotNow => '以後再說';
+
+  @override
+  String get groupChatSaved => '已收藏';
+
+  @override
+  String get groupChatRemovedFromSaved => '已從收藏移除';
+
+  @override
+  String get groupChatForwardTo => '轉傳給';
+
+  @override
+  String get groupChatNoContactsToForward => '沒有可轉傳的聯絡人';
+
+  @override
+  String get groupChatEditMessage => '編輯訊息';
+
+  @override
+  String get groupChatUnsendMessage => '收回訊息';
+
+  @override
+  String get groupChatItDisappearsWithNo => '訊息會消失，不留任何痕跡。這個動作無法復原。';
+
+  @override
+  String get groupChatUnsend => '收回';
+
+  @override
+  String groupChatThisRoomAndEverything(Object expiryWords) {
+    return '這個聊天室和裡面的一切都會在 $expiryWords後消失';
+  }
+
+  @override
+  String groupChatGhostModeOnBurns(Object fmtBurn) {
+    return '幽靈模式已開啟 · $fmtBurn後焚毀';
+  }
+
+  @override
+  String get groupChatGroupCreatedSayHi => '群組已建立。打聲招呼吧。';
+
+  @override
+  String get groupChatNoMessagesYet => '還沒有訊息。';
+
+  @override
+  String get groupChatThisMessageCanT => '這則訊息無法顯示';
+
+  @override
+  String groupChatS(Object s) {
+    return '$s 秒';
+  }
+
+  @override
+  String groupChatM(Object s) {
+    return '$s 分鐘';
+  }
+
+  @override
+  String groupChatH(Object s) {
+    return '$s 小時';
+  }
+
+  @override
+  String groupChatD(Object s) {
+    return '$s 天';
+  }
+
+  @override
+  String groupChatHere(int count, Object time) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$time · $countString 人在這裡',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupChatMembers(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 位成員',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupChatSearchThisChat => '搜尋這個聊天';
+
+  @override
+  String groupChatReplyingTo(Object name) {
+    return '回覆 $name';
+  }
+
+  @override
+  String get groupChatReplyingToYou => '回覆你';
+
+  @override
+  String get groupChatTimedMessages => '限時訊息';
+
+  @override
+  String get groupChatOpenTheCamera => '開啟相機';
+
+  @override
+  String get groupChatAttachAPhoto => '附加照片';
+
+  @override
+  String get groupChatMessage => '訊息';
+
+  @override
+  String get groupChatDisguiseVoice => '變聲';
+
+  @override
+  String get groupChatSupporter => '支持者';
+
+  @override
+  String get groupChatEdited => '已編輯';
+
+  @override
+  String get groupChatTapToRetry => '! 點一下重試';
+
+  @override
+  String get groupChat0s => '0 秒';
+
+  @override
+  String get groupChatReply => '回覆';
+
+  @override
+  String get groupChatPin => '置頂';
+
+  @override
+  String get groupChatUnsave => '取消收藏';
+
+  @override
+  String get groupChatForward => '轉傳';
+
+  @override
+  String get groupInfoGroup => '群組';
+
+  @override
+  String get groupInfoRenameGroup => '重新命名群組';
+
+  @override
+  String get groupInfoRename => '重新命名';
+
+  @override
+  String get groupInfoNoContactsToAdd => '沒有可新增的聯絡人';
+
+  @override
+  String get groupInfoCouldNotAdd => '無法新增';
+
+  @override
+  String groupInfoRemove(Object haloId) {
+    return '要移除 $haloId 嗎？';
+  }
+
+  @override
+  String get groupInfoTheyWillStopReceiving => '對方將不再收到這個群組的訊息。';
+
+  @override
+  String get commonRemove => '移除';
+
+  @override
+  String get groupInfoClearThisConversation => '要清空這段對話嗎？';
+
+  @override
+  String get groupInfoEveryMessageHereIs =>
+      '這裡的每則訊息都會從這支手機上抹除。這只會清空你的副本，其他成員的副本會保留。';
+
+  @override
+  String get groupInfoClear => '清空';
+
+  @override
+  String get groupInfoConversationCleared => '對話已清空';
+
+  @override
+  String get groupInfoLeaveRoom => '要離開聊天室嗎？';
+
+  @override
+  String get groupInfoLeaveGroup => '要離開群組嗎？';
+
+  @override
+  String get groupInfoEverythingInItIs => '裡面的一切會立即從這支手機上清除，你在這裡使用的金鑰也會永久消失。';
+
+  @override
+  String get groupInfoYouWillStopReceiving => '你將不再收到訊息，其他成員會看到你離開。';
+
+  @override
+  String get groupInfoLeave => '離開';
+
+  @override
+  String get groupInfoGroupInfo => '群組資訊';
+
+  @override
+  String groupInfo1Member(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 位成員',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupInfoAdmin => '管理員';
+
+  @override
+  String get groupInfoMembers2 => '成員';
+
+  @override
+  String get groupInfoInvite => '邀請';
+
+  @override
+  String get commonAdd => '新增';
+
+  @override
+  String get groupInfoYou => '你';
+
+  @override
+  String get groupInfoRemoveFromGroup => '從群組移除';
+
+  @override
+  String get groupInfoWallpaper => '桌布';
+
+  @override
+  String get groupInfoSharedMedia => '分享的媒體';
+
+  @override
+  String get groupInfoClearConversation => '清空對話';
+
+  @override
+  String get groupInfoLeaveRoom2 => '離開聊天室';
+
+  @override
+  String get groupInfoLeaveGroup2 => '離開群組';
+
+  @override
+  String get groupInfoAddMembers => '新增成員';
+
+  @override
+  String groupInfoAdd(Object pickedLength) {
+    return '新增 $pickedLength 位';
+  }
+
+  @override
+  String handleYouAre(Object h) {
+    return '你是 @$h';
+  }
+
+  @override
+  String get handleHandleDeletedThePage => '使用者名稱已刪除 · 頁面已移除';
+
+  @override
+  String get handlePublicHandle => '公開使用者名稱';
+
+  @override
+  String get handleOptionalYourThreeWords => '非必填。無論如何，你的三個詞都能繼續使用。';
+
+  @override
+  String get handleWren => 'wren';
+
+  @override
+  String get handleALineAboutYou => '一句關於你的介紹 · 非必填';
+
+  @override
+  String get handleClaiming => '認領中…';
+
+  @override
+  String get handleClaimThisHandle => '認領這個使用者名稱';
+
+  @override
+  String get handleAnyoneWithThisLink =>
+      '任何拿到這個連結的人都能和你開始私密聊天。它只帶有你的邀請，沒有其他任何東西。';
+
+  @override
+  String get handleLinkCopied => '已複製連結';
+
+  @override
+  String get handleDeleteThisHandle => '刪除這個使用者名稱';
+
+  @override
+  String get handleChecking => '檢查中…';
+
+  @override
+  String get handleAvailable => '✓ 可以使用';
+
+  @override
+  String get handleAlreadyTaken => '已被使用';
+
+  @override
+  String get handleWhatAHandleDoes => '使用者名稱的用途';
+
+  @override
+  String get handleAnyoneWhoKnowsIt =>
+      '任何知道它的人都能要求傳訊息給你，這正是擁有使用者名稱的意義。這個頁面只存放你的邀請和你寫的那一句話，沒有其他東西，也不會記錄誰讀過它。你隨時都可以刪除它。';
+
+  @override
+  String handleIsNotYoursOn(Object handle) {
+    return '在這支手機上，@$handle 不屬於你';
+  }
+
+  @override
+  String handleTheRegistryHoldsIt(Object handle) {
+    return '註冊處記錄它屬於另一把金鑰，很可能是這支手機還原之前的身分。新增 @$handle 的人聯絡不到你。它無法在這裡釋出或更新。請換一個名字。';
+  }
+
+  @override
+  String get handleForgetItOnThis => '在這支手機上忘記它';
+
+  @override
+  String get homeAddAContact => '新增聯絡人';
+
+  @override
+  String get commonSettings => '設定';
+
+  @override
+  String get homeYourKryfo => '你的 kryfo';
+
+  @override
+  String homeDateWeekday(Object weekday) {
+    return '$weekday';
+  }
+
+  @override
+  String get homeAnHour => '1 小時';
+
+  @override
+  String homeHours(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 小時',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeMinutes(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 分鐘',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeKryfoIsOffline => 'Kryfo 目前離線';
+
+  @override
+  String homeTorHasNotBeen(Object howLong) {
+    return 'Tor 已經 $howLong無法連線。連上之前，任何東西都收不到，也送不出去。';
+  }
+
+  @override
+  String get homeReconnecting => '正在重新連線';
+
+  @override
+  String get homeReconnect => '重新連線';
+
+  @override
+  String get homeWhatIsWrong => '出了什麼問題';
+
+  @override
+  String get homeKryfoWillCheckIn => 'Kryfo 會每 15 分鐘查收一次';
+
+  @override
+  String get homeYourPhoneKeepsStopping => '你的手機一直在停止 kryfo';
+
+  @override
+  String get homeItHasClosedKryfo =>
+      '它今天已經關掉 kryfo 三次，所以訊息延遲了或卡住了。定時查收不受影響：kryfo 會每 15 分鐘醒來一次，而不是一直保持連線。';
+
+  @override
+  String get homeSwitchToCheckIns => '改用定時查收';
+
+  @override
+  String get homeNotNow => '以後再說';
+
+  @override
+  String get homeNotificationsAreOff => '通知已關閉';
+
+  @override
+  String get homeAndroidIsBlockingThem =>
+      'Android 正在阻擋通知，所以 kryfo 關閉時，你什麼都不會收到。打開 kryfo 時訊息還是會送達。';
+
+  @override
+  String get homeCouldnTOpenIt => '無法開啟。請在手機設定中尋找 kryfo';
+
+  @override
+  String get homeTurnThemOn => '開啟通知';
+
+  @override
+  String get homeLeaveThemOff => '保持關閉';
+
+  @override
+  String get homeOurRelayIsQuiet => '我們的中繼沒有回應';
+
+  @override
+  String get homeRelayModeUsesOnly =>
+      '中繼模式只使用我們自己的中繼，而它現在沒有回應。快速模式會同時加入公共中繼，讓訊息仍能送達。無論哪種模式，一切都保持密封。';
+
+  @override
+  String get homeSwitchedToFast => '已切換到快速';
+
+  @override
+  String get homeUseFastMode => '使用快速模式';
+
+  @override
+  String get homeKeepWaiting => '繼續等待';
+
+  @override
+  String get homeNotConnecting => '無法連線';
+
+  @override
+  String get homeBridgesAreOnAnd =>
+      '橋接已開啟，但 tor 仍然連不上。橋接比較慢，有些還會無預警失效。如果你的網路沒有封鎖 tor，直接連線更快也更穩定。';
+
+  @override
+  String get homeGoingDirectReconnecting => '改為直接連線 · 正在重新連線';
+
+  @override
+  String get homeTurnBridgesOff => '關閉橋接';
+
+  @override
+  String get homeStillTrying => '仍在嘗試';
+
+  @override
+  String get homeTorIsNotGetting =>
+      'Tor 連不出去。有些網路會刻意封鎖它。我們自己的中繼只是一條普通連線，通常還是能用；或者改用橋接，不過設定比較費時。';
+
+  @override
+  String get homeSwitchedToRelay => '已切換到中繼';
+
+  @override
+  String get homeUseOurRelay => '使用我們的中繼';
+
+  @override
+  String get homeBridges => '橋接';
+
+  @override
+  String get homeOffline => '離線';
+
+  @override
+  String get homeWaiting => '等待中';
+
+  @override
+  String get homeNothingWaitingToSend => '沒有待傳送的內容';
+
+  @override
+  String homeWaitingSendsWhenYou(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 則等待中 · 你恢復連線後傳送',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeWaitingTorIsStill(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 則等待中 · tor 仍在連線',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeWaitingForThemTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 則等待中 · 等對方把你加回來',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeWaitingForThemToAddYou(int count, int parked) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+    final intl.NumberFormat parkedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String parkedString = parkedNumberFormat.format(parked);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 則等待中 · $parkedString 則在等對方把你加回來',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeWaitingSendingNow(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 則等待中 · 正在傳送',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get commonRetry => '重試';
+
+  @override
+  String get homeNoKryfosYet => '還沒有 kryfo 聯絡人。';
+
+  @override
+  String get homeScanTheirCodeSend => '掃描對方的 QR 碼、傳連結給對方，或輸入對方給你的 @使用者名稱。';
+
+  @override
+  String get homeAddSomeone => '新增聯絡人';
+
+  @override
+  String get homeArchived => '已封存';
+
+  @override
+  String home1Chat(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 個聊天',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeGroups => '群組';
+
+  @override
+  String get homeRoom => '聊天室';
+
+  @override
+  String get homeNew => '新增';
+
+  @override
+  String homeRoomExpired(Object expiredRoomName) {
+    return '$expiredRoomName · 聊天室已過期';
+  }
+
+  @override
+  String get homeMentionedYou => '提到了你';
+
+  @override
+  String homeMembers(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 位成員',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeSupporter => '支持者';
+
+  @override
+  String get homeArchivedChats => '封存的聊天';
+
+  @override
+  String get homeUnmute => '取消靜音';
+
+  @override
+  String get homeMute => '靜音';
+
+  @override
+  String get homeArchive => '封存';
+
+  @override
+  String get homeDeleteChat => '刪除聊天';
+
+  @override
+  String get homeMessagesAndContactGone => '訊息和聯絡人都會從這支手機上消失';
+
+  @override
+  String get homeDeleteThisChat => '要刪除這個聊天嗎？';
+
+  @override
+  String homeEveryMessageWithGoes(Object c) {
+    return '和 $c 的每則訊息都會刪除，對方也不再是你的聯絡人。這只會清空這支手機，對方的副本仍留在對方那裡。如果對方再傳訊息，會出現在請求中。';
+  }
+
+  @override
+  String get homeQueued => '排隊中';
+
+  @override
+  String get homeBlocked => '已封鎖';
+
+  @override
+  String get homeRoomInvite => '聊天室邀請';
+
+  @override
+  String get homeNow => '剛剛';
+
+  @override
+  String homeM(Object inMinutes) {
+    return '$inMinutes 分鐘';
+  }
+
+  @override
+  String homeH(Object inHours) {
+    return '$inHours 小時';
+  }
+
+  @override
+  String get homeYesterday => '昨天';
+
+  @override
+  String homeD(Object inDays) {
+    return '$inDays 天';
+  }
+
+  @override
+  String get homeNoteToSelf => '給自己的筆記';
+
+  @override
+  String get homeOnlyOnThisPhone => '只在這支手機上';
+
+  @override
+  String get homeSaved => '收藏';
+
+  @override
+  String get homeKeptFromEveryChat => '收藏自每個聊天';
+
+  @override
+  String get homeRequests => '請求';
+
+  @override
+  String home1PersonWantsTo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 個人想聯絡你',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String introduceGotItButCould(Object b, Object c) {
+    return '$b 已收到，但聯絡不到 $c';
+  }
+
+  @override
+  String introduceGotItButCouldNotBe(Object c, Object b) {
+    return '$c 已收到，但聯絡不到 $b';
+  }
+
+  @override
+  String get introduceCouldNotReachEither => '兩個人都聯絡不到。請稍後再試';
+
+  @override
+  String introduceIntroduceTo(Object peerName) {
+    return '把 $peerName 介紹給…';
+  }
+
+  @override
+  String get introduceBothOfThemGet => '他們都會收到對方的名片。雙方都看不到你給對方取的暱稱。';
+
+  @override
+  String get introduceNoOneElseTo => '目前沒有其他人可以介紹。請先新增另一位聯絡人。';
+
+  @override
+  String get introduceANoteLikeMy => '附註，例如「我表哥」，非必填';
+
+  @override
+  String introduceOfIntroductionsLeftThis(int max, int left) {
+    final intl.NumberFormat maxNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String maxString = maxNumberFormat.format(max);
+    final intl.NumberFormat leftNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String leftString = leftNumberFormat.format(left);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      max,
+      locale: localeName,
+      other: '本週還剩 $leftString 次介紹（共 $maxString 次）',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String introduceNoIntroductionsLeftNext(Object refillPhrase) {
+    return '介紹次數已用完。下次名額：$refillPhrase';
+  }
+
+  @override
+  String get introduceIntroduce => '介紹';
+
+  @override
+  String get keyVerificationSafetyNumber => '安全碼';
+
+  @override
+  String keyVerificationWith(Object peerName) {
+    return '與 $peerName';
+  }
+
+  @override
+  String keyVerificationIfSeesTheSame(Object peerName) {
+    return '如果 $peerName 看到的是同一組號碼，你們的訊息就只有你們兩個人看得到。當面比對，或透過你信任的通話比對，是最可靠的確認方式，但這是選擇性的，聊天從來不需要它。';
+  }
+
+  @override
+  String get keyVerificationVerified => '已驗證';
+
+  @override
+  String get keyVerificationMarkAsVerified => '標記為已驗證';
+
+  @override
+  String get lockFileThatPasswordDoesNot => '這個密碼打不開它。';
+
+  @override
+  String get lockFileThisFileIsDamaged => '這個檔案已損毀。';
+
+  @override
+  String get lockFileThisFileWasLocked => '這個檔案是用金鑰鎖定的，不是用密碼。';
+
+  @override
+  String get lockFileThisIsNotA => '這不是鎖定的檔案。';
+
+  @override
+  String get lockFileNotEnoughFreeMemory => '目前可用記憶體不足。';
+
+  @override
+  String get lockFileStopped => '已停止。';
+
+  @override
+  String get lockFileItNeedsAPassword => '需要密碼。';
+
+  @override
+  String get lockFileKryfoCouldNotRead => 'Kryfo 無法讀取或寫入這個檔案。';
+
+  @override
+  String get lockFileCheckCapitalsAndSpaces => '請檢查大小寫和空格。沒有人能重設它，包括我們。';
+
+  @override
+  String get lockFileItMayHaveBeen => '它可能在傳送途中被截斷了。請對方再傳一次。沒有儲存任何東西。';
+
+  @override
+  String get lockFileItOpensWithThe =>
+      '它要用收件人的金鑰檔案，在電腦上的 age 工具中開啟。Kryfo 能開啟的是用密碼鎖定的那種。';
+
+  @override
+  String get lockFileKryfoOpensFilesLocked =>
+      'Kryfo 可以開啟用 age 鎖定的檔案。這類檔名通常以 .age 結尾。';
+
+  @override
+  String get lockFileCloseAFewApps => '請關閉幾個應用程式後再試一次。檢查密碼時，會短暫需要幾百 MB 的記憶體。';
+
+  @override
+  String get lockFileNothingWasSaved => '沒有儲存任何東西。';
+
+  @override
+  String get lockFileTypeOneOrLet => '自己輸入一組，或讓 Kryfo 建議四個詞。';
+
+  @override
+  String get lockFileTheAppThatHolds => '存放它的應用程式可能已經把它收回。請再選一次。';
+
+  @override
+  String get lockFileHidePassword => '隱藏密碼';
+
+  @override
+  String get lockFileShowPassword => '顯示密碼';
+
+  @override
+  String get lockFileChangeFile => '更換檔案';
+
+  @override
+  String get lockFileChange => '更換';
+
+  @override
+  String lockFileOf(Object prettySize, Object prettySize2) {
+    return '$prettySize/$prettySize2';
+  }
+
+  @override
+  String get lockFileEverythingStaysOnThis => '一切都留在這支手機上。';
+
+  @override
+  String get lockFileCouldNotMakeOne => '無法產生。請自己輸入。';
+
+  @override
+  String get lockFileWriteItDownBefore => '鎖定檔案前，請先把密碼寫下來';
+
+  @override
+  String get lockFileNoAppOnThis => '這支手機上沒有任何應用程式接收這個檔案。';
+
+  @override
+  String get lockFileSaved => '已儲存';
+
+  @override
+  String get lockFileCouldNotSaveIt => '無法儲存到那裡。請換一個資料夾。';
+
+  @override
+  String get lockFileLocked => '已鎖定';
+
+  @override
+  String get lockFileLockAFile => '鎖定檔案';
+
+  @override
+  String get lockFileMixingThePassword => '正在混合密碼';
+
+  @override
+  String get lockFileLocking => '鎖定中';
+
+  @override
+  String get lockFileSaveToFiles => '儲存到檔案';
+
+  @override
+  String get lockFileLockFile => '鎖定檔案';
+
+  @override
+  String get lockFileOnePassword => '一組密碼。';
+
+  @override
+  String get lockFileNothingElseOpensIt => '除此之外，什麼都打不開。';
+
+  @override
+  String get lockFileFile => '檔案';
+
+  @override
+  String lockFileFromFiles(Object prettySize) {
+    return '$prettySize · 來自檔案';
+  }
+
+  @override
+  String get lockFileFromFiles2 => '從檔案選取';
+
+  @override
+  String get lockFilePassword => '密碼';
+
+  @override
+  String get lockFileSuggestFourWords => '建議四個詞';
+
+  @override
+  String get lockFileTypeItAgain => '再輸入一次';
+
+  @override
+  String get lockFileTheTwoDoNot => '兩次輸入還不一致。';
+
+  @override
+  String get lockFileHideTheFileName => '隱藏檔名';
+
+  @override
+  String lockFileItWillBeCalled(Object name) {
+    return '它會被命名為「$name」。記得告訴對方這是什麼檔案。';
+  }
+
+  @override
+  String get lockFileTheNameAloneCan => '光是檔名就可能透露裡面的內容。';
+
+  @override
+  String get lockFileAnyoneWithThePassword =>
+      '任何知道密碼的人都能開啟它，無論是在 Kryfo 裡，還是在任何裝有免費工具 age 的電腦上。忘了密碼，檔案就永遠拿不回來了。沒有人能重設它，包括我們。';
+
+  @override
+  String get lockFileLocked2 => '已鎖定。';
+
+  @override
+  String get lockFileOnlyThePasswordOpens => '只有密碼能開啟它。';
+
+  @override
+  String lockFileSafeToEmailOr(Object prettySize) {
+    return '$prettySize · 可以放心用電子郵件寄出，或存到 USB 隨身碟';
+  }
+
+  @override
+  String get lockFileNoKryfoOnThe => '對方沒有 Kryfo？在電腦上：';
+
+  @override
+  String get lockFileItAsksForThe => '它會要求輸入密碼。age 可在 age-encryption.org 免費取得';
+
+  @override
+  String lockTooManyTriesS(Object lockState) {
+    return '嘗試次數過多 · $lockState 秒';
+  }
+
+  @override
+  String get lockNotIt => '不對';
+
+  @override
+  String get lockYourPin => '你的 PIN 碼';
+
+  @override
+  String get lockUseFingerprint => '使用指紋';
+
+  @override
+  String get lockSetupThatIsYourWipe => '這是你的清除 PIN。請換一個。';
+
+  @override
+  String get lockSetupUnlockWithFingerprint => '要用指紋解鎖嗎？';
+
+  @override
+  String get lockSetupThePinStillWorks => '你隨時都還是可以用 PIN 碼解鎖。這只是比較快。';
+
+  @override
+  String get lockSetupUseFingerprint => '使用指紋';
+
+  @override
+  String get lockSetupPinOnly => '只用 PIN 碼';
+
+  @override
+  String get lockSetupOnceMore => '再一次';
+
+  @override
+  String get lockSetupSetAPin => '設定 PIN 碼';
+
+  @override
+  String get lockSetupThoseWereDifferentFrom => '兩次不一樣。從頭再來。';
+
+  @override
+  String get lockSetupTheSameFourDigits => '同樣的四位數字';
+
+  @override
+  String get lockSetupFourDigitsAnythingYou => '四位數字，選一組你記得住的';
+
+  @override
+  String get modesOnion => 'Onion';
+
+  @override
+  String get modesFullOnionRoutingThree =>
+      '完整的 onion 路由，3 跳。一則訊息需要兩到五秒。沒有人看得到你在和誰聊天。';
+
+  @override
+  String get modesSlower => '較慢';
+
+  @override
+  String get modesRelay => '中繼';
+
+  @override
+  String get modesOneSealedConnectionTo =>
+      '一條密封連線，直通 kryfo 自己的中繼，就像一個沒有東西可記錄的 VPN。訊息大約一秒送達，在 tor 被封鎖的地方也能用。';
+
+  @override
+  String get modesQuick => '較快';
+
+  @override
+  String get modesRelayOnly => '只用中繼';
+
+  @override
+  String get modesFast => '快速';
+
+  @override
+  String get modesPlainConnectionsToEvery => '以普通連線直接連到每個中繼。幾乎即時，也是三種模式中最不私密的。';
+
+  @override
+  String get modesInstant => '即時';
+
+  @override
+  String get modesEveryRelayYouUse =>
+      '你使用的每個中繼都會知道你連線的來源位址，不只是我們的中繼。訊息仍然是密封的，但「你傳了訊息」這件事不是。預設關閉，重新安裝後也會再次關閉。';
+
+  @override
+  String get modesSpeed => '速度';
+
+  @override
+  String get modesPrivacy => '與隱私';
+
+  @override
+  String get modesChangeGloballyOrPer => '可全域變更，或依聊天個別設定';
+
+  @override
+  String get modesSoon => '即將推出';
+
+  @override
+  String get modesActive => '使用中';
+
+  @override
+  String get modesSpeed2 => '速度';
+
+  @override
+  String get modesHops => '跳數';
+
+  @override
+  String get modesIp => 'IP';
+
+  @override
+  String get modesVisible => '可見';
+
+  @override
+  String get modesHidden => '隱藏';
+
+  @override
+  String modesHeadsUp(Object warning) {
+    return '*注意：*$warning';
+  }
+
+  @override
+  String get modesOnionIsTheDefault =>
+      'Onion 是預設模式，除非你更改，否則會一直維持。切換會從下一則訊息開始生效。';
+
+  @override
+  String get modesFastMode => '快速模式';
+
+  @override
+  String get modesPlainConnectionsToEveryRelayQuicker =>
+      '以普通連線直接連到每個中繼。比較快，而且中繼看得到你的 IP 位址。無論如何，訊息都保持端對端加密。';
+
+  @override
+  String get modesTurnOnFastMode => '開啟快速模式';
+
+  @override
+  String get modesKeepItOff => '保持關閉';
+
+  @override
+  String get movedWipeThisPhone => '要清除這支手機嗎？';
+
+  @override
+  String get movedEverythingKryfoHoldsHere =>
+      'Kryfo 在這裡保存的一切都會消失：訊息、聯絡人、金鑰。另一台裝置會保有這一切。這個動作無法復原。';
+
+  @override
+  String get movedWipeIt => '清除';
+
+  @override
+  String get movedNotMovingAfterAll => '最後決定不搬了？';
+
+  @override
+  String get movedOnlyDoThisIf =>
+      '只有在備份從未匯入任何地方時才這麼做。如果已經匯入過，現在就有兩台裝置持有同一個身分，兩邊的訊息都會開始遺失。';
+
+  @override
+  String get movedIMStayingHere => '我要留在這裡';
+
+  @override
+  String get movedStayingHere => '留在這裡';
+
+  @override
+  String movedKryfoWillCloseNow(Object myId) {
+    return 'Kryfo 現在會關閉。點一下圖示，以 $myId 重新開啟。';
+  }
+
+  @override
+  String get movedReopenKryfo => '重新開啟 kryfo';
+
+  @override
+  String get movedThisKryfoHasMoved => '這個 kryfo 已經搬走了';
+
+  @override
+  String movedIsNowOnAnother(Object myId) {
+    return '$myId 現在在另一台裝置上。這支手機仍可顯示原本的內容，但不會再收到任何新東西，從這裡傳送的任何內容也不會送達任何人。';
+  }
+
+  @override
+  String get movedKeepItToRead => '留著閱讀';
+
+  @override
+  String get movedWipeThisPhone2 => '清除這支手機';
+
+  @override
+  String get movedIMNotMoving => '我最後決定不搬了';
+
+  @override
+  String get myKryfoAHandleIs3 => '使用者名稱為 3 到 20 個字母、數字或 _';
+
+  @override
+  String get myKryfoInviteCopiedClearsIn => '已複製邀請 · 60 秒後清空';
+
+  @override
+  String myKryfoAddMeOnKryfo(Object myId, Object uri) {
+    return '在 kryfo 上加我。我的 ID 是 $myId\n\n點這裡加我：\n$uri\n\nkryfo 是一款私密通訊軟體。不需要手機號碼，也不需要電子郵件。';
+  }
+
+  @override
+  String get myKryfoAddMeOnKryfo2 => '在 kryfo 上加我';
+
+  @override
+  String get myKryfoAddSomeone => '新增聯絡人';
+
+  @override
+  String get myKryfoKryfoDoesnTScan => 'kryfo 不會掃描你的通訊錄，這正是重點。';
+
+  @override
+  String get myKryfoIfThisLinkEnds =>
+      '如果這個連結流傳到你不希望的地方，請到設定中重設。之後所有持有它的人都需要新的連結。';
+
+  @override
+  String get myKryfoAlreadyShareAFriend =>
+      '你們在 kryfo 上有共同的朋友嗎？對方可以在聊天中介紹你們認識，你們就不用送出請求。';
+
+  @override
+  String get myKryfoHandleCopied => '已複製使用者名稱';
+
+  @override
+  String get myKryfoTheyReHereWith => '對方就在我身邊';
+
+  @override
+  String get myKryfoPointYourPhonesAt => '把你們的手機對準彼此。不會經過任何伺服器。';
+
+  @override
+  String get myKryfoScanTheirsInstead => '改掃描對方的';
+
+  @override
+  String get myKryfoTheyReadYouA => '對方唸一組碼給你';
+
+  @override
+  String get myKryfoTheyReSomewhereElse => '對方在別的地方';
+
+  @override
+  String get myKryfoSendThemALink => '傳連結給對方。點開就會直接進入新增畫面。';
+
+  @override
+  String get myKryfoYourLinkAppearsOnce => '連線後就會顯示你的連結';
+
+  @override
+  String get myKryfoTheLinkCarriesYour =>
+      '這個連結帶有你的 ID、你的位址，以及開始聊天所需的金鑰。在你到設定中重設之前，它都有效。';
+
+  @override
+  String get myKryfoSendTheLink => '傳送連結';
+
+  @override
+  String get myKryfoAsACard => '做成名片';
+
+  @override
+  String get myKryfoAnImageWithThe => '附 QR 碼的圖片';
+
+  @override
+  String get myKryfoAsAFile => '做成檔案';
+
+  @override
+  String get myKryfoContactFile => '聯絡人檔案';
+
+  @override
+  String get myKryfoIKnowTheirHandle => '我知道對方的使用者名稱';
+
+  @override
+  String get myKryfoTypeTheNameThey => '輸入對方給你的 @名稱。對方有認領名稱才有效。';
+
+  @override
+  String get myKryfoWren => 'Wren';
+
+  @override
+  String get myKryfoTheLookupAsksFor =>
+      '查詢只會詢問那一個名稱，不含任何關於你的資訊。你傳給對方的第一則訊息，在對方那邊仍會以請求的形式出現。';
+
+  @override
+  String get myKryfoLooking => '尋找中…';
+
+  @override
+  String get myKryfoFindThem => '尋找對方';
+
+  @override
+  String get myKryfoYourAddressAppearsOnce => '連線後就會顯示你的位址';
+
+  @override
+  String get myKryfoAPublicHandle => '公開的使用者名稱';
+
+  @override
+  String get myKryfoPutItInA => '放進個人簡介裡。任何知道它的人都能找到你。';
+
+  @override
+  String get myKryfoANamePeopleCan => '一個讓別人能找到你的名稱。在你認領之前都是關閉的。';
+
+  @override
+  String get newGroupCouldNotCreate => '無法建立';
+
+  @override
+  String get newGroupNewGroup => '新群組';
+
+  @override
+  String get newGroupCreating => '建立中…';
+
+  @override
+  String get newGroupCreate => '建立';
+
+  @override
+  String get newGroupGroupName => '群組名稱';
+
+  @override
+  String get newGroupMembers => '成員';
+
+  @override
+  String get newGroupPickAtLeastOne => '至少選一位';
+
+  @override
+  String newGroupSelected(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已選 $countString 位',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get newGroupAddAtLeastOne => '建立群組前，請先新增至少一位聯絡人。';
+
+  @override
+  String get notesToday => '今天';
+
+  @override
+  String get notesYesterday => '昨天';
+
+  @override
+  String get notesNoteToSelf => '給自己的筆記';
+
+  @override
+  String get notesOnlyOnThisPhone => '只在這支手機上';
+
+  @override
+  String get notesAQuietPlace => '一個安靜的角落';
+
+  @override
+  String get notesJotAnythingDownIt => '隨手記下任何事。它只留在這支手機上，永遠不會離開。';
+
+  @override
+  String get notesJotSomethingDown => '記點什麼…';
+
+  @override
+  String get onboardingPrivateByDefault => '預設就是私密';
+
+  @override
+  String get onboardingPrivateMessaging => '私密通訊，\n*沒有隱藏代價*。';
+
+  @override
+  String get onboardingYourNameIsThree => '*你的名字就是三個詞。*不用手機號碼，不用電子郵件，不用通訊錄。';
+
+  @override
+  String get onboardingNobodyGetsInUnless =>
+      '*除非你允許，沒有人能進來。*沒有搜尋功能。聯絡人都由雙方親手新增。';
+
+  @override
+  String get onboardingTheFirstConnectionTakes =>
+      '*第一次連線需要一分鐘。*Kryfo 會先建立私密路線再傳送。之後就快了。';
+
+  @override
+  String get onboardingBegin => '開始';
+
+  @override
+  String get onboardingHaveABackupRestore => '有備份嗎？還原 →';
+
+  @override
+  String get onboardingKryfoIsOpenSource => 'Kryfo 開放原始碼';
+
+  @override
+  String get onboardingYourKryfoId => '你的 KRYFO ID';
+
+  @override
+  String get onboardingGeneratedFromAKey =>
+      '由只存在這支手機上的金鑰產生。*好記、獨一無二、只屬於你。*沒有其他人有這組詞。';
+
+  @override
+  String get onboardingTryAnother => '換一個';
+
+  @override
+  String get onboardingUseThisName => '使用這個名字 →';
+
+  @override
+  String get onboardingThreeWords => '三個詞。*只屬於你。*';
+
+  @override
+  String get onboardingPickA => '選一張*臉*。';
+
+  @override
+  String get onboardingDrawnOnThisPhone => '在這支手機上根據一個數字畫出來，從不上傳。隨時都可以更換。';
+
+  @override
+  String get onboardingThePeopleYouMessage => '跟你傳訊息的人也會看到這個';
+
+  @override
+  String get onboardingKeepMyInitial => '保留名字首字';
+
+  @override
+  String get onboardingThatOne => '就這張 →';
+
+  @override
+  String get onboardingContinue => '繼續 →';
+
+  @override
+  String get onboardingHowYourMessages => '你的訊息如何*傳遞*。';
+
+  @override
+  String get onboardingYouCanChangeThis => '你隨時可以在設定中更改，套用到所有人或單一聊天。';
+
+  @override
+  String get onboardingOnion => 'Onion';
+
+  @override
+  String get onboardingSlowerAMessageTakes => '較慢。一則訊息需要兩到五秒。';
+
+  @override
+  String get onboardingHidesYourAddressFrom => '對所有人隱藏你的位址，包括我們的中繼。';
+
+  @override
+  String get onboardingRelay => '中繼';
+
+  @override
+  String get onboardingOurRelaySeesYour => '我們的中繼看得到你的位址。其他人都看不到。';
+
+  @override
+  String get onboardingAboutASecondWorks => '大約一秒。在 tor 被封鎖的地方也能用。';
+
+  @override
+  String get onboardingFast => '快速';
+
+  @override
+  String get onboardingEveryRelayYouUse => '你使用的每個中繼都看得到你的位址。三種之中最不私密。';
+
+  @override
+  String get onboardingNearInstant => '幾乎即時。';
+
+  @override
+  String get onboardingKeepOnion => '保持 Onion →';
+
+  @override
+  String get onboardingUseThis => '使用這個 →';
+
+  @override
+  String get onboardingSkipOnionIsA => '略過 · Onion 是不錯的預設';
+
+  @override
+  String get onboardingThreeThingsThen => '三件事，\n之後*就可以開始了*。';
+
+  @override
+  String get onboardingEverythingElseTheApp => '其他的事，應用程式會在需要時告訴你。';
+
+  @override
+  String get onboardingYourNameIsThreeWords => '你的名字就是三個詞';
+
+  @override
+  String get onboardingThatIsTheWhole =>
+      '這就是你的全部身分。沒有號碼會外洩，沒有電子郵件能被拿來釣魚，也沒有任何東西可以查。和你聊天的人會看到這些詞和你選的臉。';
+
+  @override
+  String get onboardingNobodyCanReachYou => '除非你讓對方進來，否則沒有人能聯絡到你';
+
+  @override
+  String get onboardingAStrangerWithYour =>
+      '知道你這三個詞的陌生人只能敲門。對方的第一則訊息會在請求中等待，直到你答應；你也可以拒絕，對方永遠不會知道。';
+
+  @override
+  String get onboardingTheFirstConnectionTakesAMinute => '第一次連線需要一分鐘';
+
+  @override
+  String get onboardingKryfoBuildsAPrivateRouteBefore =>
+      'Kryfo 在傳送任何東西之前，會先建立一條私密路線。你離線時，訊息會先等著，等你回來再送達。';
+
+  @override
+  String get onboardingYourIdentityLivesOn => '你的身分存在這支手機上。準備好時，可以從設定中備份。';
+
+  @override
+  String get onboardingIUnderstand => '我了解了 →';
+
+  @override
+  String get onboardingOneQuiet => '一則安靜的*通知*。';
+
+  @override
+  String get onboardingAndroidNeedsAVisible =>
+      '應用程式在背景監聽時，Android 需要顯示一則通知。Kryfo 關閉時，訊息就是這樣送到你手上的。';
+
+  @override
+  String get onboardingSilentAndAtThe => '無聲，而且放在通知欄最底下';
+
+  @override
+  String get onboardingItNeverBuzzesTurn => '它從不震動。把它關掉的話，訊息會等到你再次開啟應用程式。';
+
+  @override
+  String get onboardingGotIt => '知道了 →';
+
+  @override
+  String get onboardingNow => '現在，*新增聯絡人*。';
+
+  @override
+  String get onboardingTheAppIsReady => '應用程式準備好了。除非你新增對方或讓對方進來，否則沒有人能傳訊息給你。';
+
+  @override
+  String get onboardingEveryWayToAdd => '所有新增聯絡人的方式';
+
+  @override
+  String get onboardingShowYourCodeSend => '出示你的 QR 碼、傳連結給對方，或輸入對方給你的 @使用者名稱。';
+
+  @override
+  String get onboardingScanTheirs => '掃描對方的';
+
+  @override
+  String get onboardingPointTheCameraAt => '用相機對準對方的 QR 碼';
+
+  @override
+  String get onboardingTheAppIsReadyWhenYou => '你準備好了，應用程式就準備好了。';
+
+  @override
+  String get onboardingNotNowAddPeople => '以後再說 · 稍後再新增聯絡人';
+
+  @override
+  String get openLockedOpened => '已開啟';
+
+  @override
+  String get openLockedOpenALockedFile => '開啟鎖定的檔案';
+
+  @override
+  String get openLockedCheckingThePassword => '正在檢查密碼';
+
+  @override
+  String get openLockedOpening => '開啟中';
+
+  @override
+  String get openLockedFile => '檔案';
+
+  @override
+  String get openLockedOpenFile => '開啟檔案';
+
+  @override
+  String get openLockedTypeThePassword => '輸入密碼。';
+
+  @override
+  String get openLockedItOpensOnThis => '它會在這支手機上開啟。';
+
+  @override
+  String get openLockedLockedFile => '鎖定的檔案';
+
+  @override
+  String openLockedFromFiles(Object prettySize) {
+    return '$prettySize · 來自檔案';
+  }
+
+  @override
+  String get openLockedFromFiles2 => '從檔案選取';
+
+  @override
+  String get openLockedPassword => '密碼';
+
+  @override
+  String get openLockedThePasswordIsChecked =>
+      '會先檢查密碼。確認之後，Kryfo 才會詢問要把開啟的檔案放在哪裡，然後直接存到那裡。';
+
+  @override
+  String get openLockedOpened2 => '已開啟。';
+
+  @override
+  String get openLockedSavedWhereYouChose => '已儲存到你選擇的位置。';
+
+  @override
+  String get pairCodePairingCode => '配對碼';
+
+  @override
+  String get pairCodeShowACode => '顯示配對碼';
+
+  @override
+  String get pairCodeEnterOne => '輸入配對碼';
+
+  @override
+  String get pairCodeSixDigits => '六位數字';
+
+  @override
+  String get pairCodeLooking => '尋找中…';
+
+  @override
+  String get pairCodeNothingThereYetTrying => '那裡還沒有東西 · 正在重試';
+
+  @override
+  String get pairCodeNothingAtThatCode => '這組碼沒有對應任何東西。它可能已經焚毀，或對方還沒分享。';
+
+  @override
+  String get pairCodeTypeTheSixDigits => '輸入對方唸出的六位數字。';
+
+  @override
+  String get pairCodeAddThem => '新增對方';
+
+  @override
+  String get panicSetupThoseWereDifferentFrom => '兩次不一樣。從頭再來。';
+
+  @override
+  String get panicSetupThatIsYourReal => '這是你真正的 PIN 碼。請換一個。';
+
+  @override
+  String get panicSetupOnceMore => '再一次';
+
+  @override
+  String get panicSetupSetAWipePin => '設定清除 PIN';
+
+  @override
+  String get panicSetupTheSameFourDigits => '同樣的四位數字';
+
+  @override
+  String get panicSetupTheSecondPinWipes => '第二組 PIN 碼會清除一切。';
+
+  @override
+  String get photoKnowsEverythingInside => '裡面的一切';
+
+  @override
+  String get photoKnowsVideo => '影片';
+
+  @override
+  String get photoKnowsPhoto => '照片';
+
+  @override
+  String get photoKnowsWhatThisVideoKnows => '這段影片知道什麼';
+
+  @override
+  String get photoKnowsWhatThisPhotoKnows => '這張照片知道什麼';
+
+  @override
+  String get photoKnowsRemoveAllOfIt => '全部移除';
+
+  @override
+  String get photoKnowsKeepItAsIt => '保持原樣';
+
+  @override
+  String get photoKnowsReadOnThisPhone => '在這支手機上讀取 · 影片沒有傳到任何地方';
+
+  @override
+  String get photoKnowsReadOnThisPhoneThePhoto => '在這支手機上讀取 · 照片沒有傳到任何地方';
+
+  @override
+  String get photoKnowsReadingTheFile => '正在讀取檔案';
+
+  @override
+  String photoKnowsOf(Object prettySize, Object prettySize2) {
+    return '$prettySize/$prettySize2';
+  }
+
+  @override
+  String get photoKnowsEverythingStaysOnThis => '一切都留在這支手機上。';
+
+  @override
+  String photoKnowsMapWithAPin(Object place) {
+    return '有標記的地圖。$place';
+  }
+
+  @override
+  String get photoKnowsDrawnOffline => '離線繪製';
+
+  @override
+  String photoKnowsShowEverything(Object title) {
+    return '$title。顯示全部';
+  }
+
+  @override
+  String get pinsAppLock => '應用程式鎖';
+
+  @override
+  String get pinsTwoPins => '兩組 PIN 碼';
+
+  @override
+  String get pinsYourPin => '你的 PIN 碼';
+
+  @override
+  String get commonOn => '開啟';
+
+  @override
+  String get commonOff => '關閉';
+
+  @override
+  String get pinsOpensKryfoFourDigits => '用來開啟 kryfo。四位數字，每次 kryfo 回到前景時都會詢問。';
+
+  @override
+  String get pinsChangePin => '變更 PIN 碼';
+
+  @override
+  String get pinsSetAPin => '設定 PIN 碼';
+
+  @override
+  String get pinsTurnOff => '關閉';
+
+  @override
+  String get pinsTurnOffTheApp => '要關閉應用程式鎖嗎？';
+
+  @override
+  String get pinsThePinGoesAnd =>
+      'PIN 碼會被移除，清除 PIN 也會一起移除。任何拿著你手機的人，都能以你的身分開啟 kryfo。';
+
+  @override
+  String get pinsUnlockWithFingerprint => '用指紋解鎖';
+
+  @override
+  String get pinsWipePin => '清除 PIN';
+
+  @override
+  String get pinsNeedsAPinFirst => '需要先設定 PIN 碼';
+
+  @override
+  String get pinsSet => '已設定';
+
+  @override
+  String get pinsTheSecondPinWipes => '第二組 PIN 碼會清除一切。';
+
+  @override
+  String get pinsChangeWipePin => '變更清除 PIN';
+
+  @override
+  String get pinsSetAWipePin => '設定清除 PIN';
+
+  @override
+  String get pinsRemove => '移除';
+
+  @override
+  String get pinsRemoveTheWipePin => '要移除清除 PIN 嗎？';
+
+  @override
+  String get pinsTheLockScreenKeeps => '鎖定畫面會保留你的 PIN 碼。清除 PIN 將不再有任何作用。';
+
+  @override
+  String profileCopied(Object what) {
+    return '已複製 $what';
+  }
+
+  @override
+  String get profileProfile => '個人檔案';
+
+  @override
+  String get profileChangeYourFace => '更換你的臉';
+
+  @override
+  String get profileKryfoId => 'kryfo ID';
+
+  @override
+  String get profileOnionAddress => 'onion 位址';
+
+  @override
+  String get profileSupporterBadge => '支持者徽章';
+
+  @override
+  String profileYouAreAThank(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '你是支持者。謝謝你。',
+      'patron': '你是贊助人。謝謝你。',
+      'guardian': '你是守護者。謝謝你。',
+      'other': '你是支持者。謝謝你。',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get profileShowMyBadge => '顯示我的徽章';
+
+  @override
+  String get profileOnMyOwnScreens => '在我自己的畫面上';
+
+  @override
+  String get profileLetContactsSeeIt => '讓聯絡人看到';
+
+  @override
+  String get profileOffByDefault => '預設關閉';
+
+  @override
+  String get profileShareConnect => '分享與聯繫';
+
+  @override
+  String get profileMyKryfoCode => '我的 kryfo QR 碼';
+
+  @override
+  String get profileAddContact => '新增聯絡人';
+
+  @override
+  String get profileGiveAgain => '再捐一次';
+
+  @override
+  String get profileSupportKryfo => '支持 kryfo';
+
+  @override
+  String get profileKryfoRunsOnWhat => 'Kryfo 靠大家的捐助運作';
+
+  @override
+  String get profileKeepKryfoIndependent => '讓 kryfo 保持獨立';
+
+  @override
+  String get qrLink => '連結';
+
+  @override
+  String get qrYourLinkAsTyped => '就是你輸入的連結 · 沒有追蹤轉址';
+
+  @override
+  String get qrText => '文字';
+
+  @override
+  String get qrStaysInTheCode => '內容只在 QR 碼裡 · 沒有伺服器保存它';
+
+  @override
+  String get qrWiFi => 'Wi-Fi';
+
+  @override
+  String get qrMadeOnThisPhone => '在這支手機上產生 · 沒有任何網站看過密碼';
+
+  @override
+  String get qrNetworkName => '網路名稱';
+
+  @override
+  String get qrPassword => '密碼';
+
+  @override
+  String get qrContact => '聯絡人';
+
+  @override
+  String get qrOnlyWhatYouType => '只有你輸入的內容 · 不含通訊錄中的任何資料';
+
+  @override
+  String get qrName => '姓名';
+
+  @override
+  String get qrPhone => '電話';
+
+  @override
+  String get qrEmail => '電子郵件';
+
+  @override
+  String get qrOpensTheirMailApp => '開啟對方的郵件應用程式 · 不會從這裡寄出任何東西';
+
+  @override
+  String get qrTo => '收件人';
+
+  @override
+  String get qrSubject => '主旨';
+
+  @override
+  String get qrANumberNothingElse => '只有號碼 · 沒有其他東西';
+
+  @override
+  String get qrNumber => '號碼';
+
+  @override
+  String get qrSms => 'SMS';
+
+  @override
+  String get qrOpensTheirMessagesApp => '開啟對方的簡訊應用程式 · 不會從這裡傳送任何東西';
+
+  @override
+  String get qrMessage => '訊息';
+
+  @override
+  String get qrLocation => '位置';
+
+  @override
+  String get qrCoordinatesOnlyNoMap => '只有座標 · 沒有詢問任何地圖服務';
+
+  @override
+  String get qrLatitude => '緯度';
+
+  @override
+  String get qrLongitude => '經度';
+
+  @override
+  String get qrBitcoin => 'Bitcoin';
+
+  @override
+  String get qrAddressAndAmountNo => '地址和金額 · 中間沒有任何付款網站';
+
+  @override
+  String get qrAddress => '地址';
+
+  @override
+  String get qrAmountInBtc => '金額（BTC）';
+
+  @override
+  String get qrInk => '墨色';
+
+  @override
+  String get qrAmber => '琥珀';
+
+  @override
+  String get qrViolet => '紫羅蘭';
+
+  @override
+  String get qrCouldNotDrawThe => '無法繪製圖片。';
+
+  @override
+  String get qrSavedToYourGallery => '已儲存到你的相簿';
+
+  @override
+  String get qrCouldNotSaveIt => '無法儲存。請確認手機還有空間。';
+
+  @override
+  String get qrNoAppOnThis => '這支手機上沒有任何應用程式接收這張圖片。';
+
+  @override
+  String get qrTooMuchForOne => '內容太多，一個 QR 碼放不下。請縮短一點。';
+
+  @override
+  String get qrThisIsALot => '對一個 QR 碼來說，這內容很多。較舊的相機可能讀不出來。';
+
+  @override
+  String get qrPrivateQrCode => '私密 QR 碼';
+
+  @override
+  String get qrColour => '顏色';
+
+  @override
+  String get qrCopiedItLeavesThe => '已複製。一分鐘後會從剪貼簿移除';
+
+  @override
+  String get qrSecurity => '安全性';
+
+  @override
+  String get qrNone => '無';
+
+  @override
+  String get qrSaveImage => '儲存圖片';
+
+  @override
+  String qrColour2(Object name) {
+    return '顏色：$name';
+  }
+
+  @override
+  String get qrTypeBelowAndThe => '在下方輸入，\nQR 碼就會自動產生';
+
+  @override
+  String get qrQrCode => 'QR 碼';
+
+  @override
+  String get qrHidePassword => '隱藏密碼';
+
+  @override
+  String get qrShowPassword => '顯示密碼';
+
+  @override
+  String get qrCopyPassword => '複製密碼';
+
+  @override
+  String get requestsSentAnAttachment => '傳送了一個附件';
+
+  @override
+  String get requestsWantsToConnect => '想和你聯繫';
+
+  @override
+  String get requestsAccepted => '已接受';
+
+  @override
+  String requestsBlock(Object id) {
+    return '要封鎖 $id 嗎？';
+  }
+
+  @override
+  String get requestsNothingMoreFromThem => '對方的任何東西都不會再送到你這裡。對方的請求和其中的訊息都會刪除。';
+
+  @override
+  String get requestsBlocked => '已封鎖';
+
+  @override
+  String get requestsDeleted => '已刪除';
+
+  @override
+  String get requestsRequests => '請求';
+
+  @override
+  String get requestsNoRequests => '沒有請求';
+
+  @override
+  String get requestsMessagesFromPeopleYou => '你還沒新增的人傳來的訊息，會先出現在這裡。';
+
+  @override
+  String get requestsLooksSafeNothingSuspicious => '看起來安全 · 對方的第一則訊息沒有可疑之處';
+
+  @override
+  String get commonAccept => '接受';
+
+  @override
+  String get requestsDecline => '拒絕';
+
+  @override
+  String get restoreThatFileIsNot => '這個檔案不是 kryfo 備份';
+
+  @override
+  String get restoreThisFileIsDamaged => '這個檔案已損毀，無法讀取';
+
+  @override
+  String get restoreTypeThePassphraseThe => '輸入建立這個檔案時使用的密碼短語';
+
+  @override
+  String get restoreReplaceTheAccountOn => '要取代這支手機上的帳號嗎？';
+
+  @override
+  String get restoreWhatIsHereNow =>
+      '這裡現有的一切，包括身分、聯絡人和訊息，都會消失。檔案內容會取而代之。這個動作無法復原。';
+
+  @override
+  String get restoreReplaceIt => '取代';
+
+  @override
+  String restoreCouldNotBeReleased(Object mine) {
+    return '無法釋出 @$mine';
+  }
+
+  @override
+  String restoreTheRegistryDidNot(Object mine) {
+    return '註冊處沒有回應。如果你繼續，@$mine 會一直指向這支手機即將失去的身分。任何新增它的人，訊息都會傳給一個不存在的人，而且這個名稱無法再被認領。最好先連上網路，再試一次。';
+  }
+
+  @override
+  String get restoreRestoreAnyway => '仍要還原';
+
+  @override
+  String get restoreNotYet => '先不要';
+
+  @override
+  String get restoreRestored => '已還原';
+
+  @override
+  String restoreKryfoWillCloseNow(Object haloId) {
+    return 'Kryfo 現在會關閉。點一下圖示，以 $haloId 重新開啟。';
+  }
+
+  @override
+  String get restoreReopenKryfo => '重新開啟 kryfo';
+
+  @override
+  String get restoreTheRestoreDidNot => '還原沒有完成。沒有做任何變更';
+
+  @override
+  String get restoreThisIdentity => '這個身分';
+
+  @override
+  String get restoreMoveYourKryfoHere => '把你的 kryfo 搬到這裡';
+
+  @override
+  String restoreThisBackupIsRestoring(Object name) {
+    return '這份備份是 $name。還原後，那個身分會搬到這台裝置上。';
+  }
+
+  @override
+  String restoreThisBackupMadeOn(Object name, Object date, Object time) {
+    return '這份備份是 $name，建立於 $date $time。還原後，那個身分會搬到這台裝置上。';
+  }
+
+  @override
+  String restoreItHoldsOfPhotos(Object mb) {
+    return '其中包含 $mb 的照片、語音和檔案。這可能需要幾分鐘。請保持應用程式開啟。';
+  }
+
+  @override
+  String get restoreWhatFollows => '會帶過來的';
+
+  @override
+  String get restoreYourNameYourCode => '你的名字、你的 QR 碼，以及每位聯絡人。';
+
+  @override
+  String get restoreEveryConversationBackTo => '每段對話，從最開始到現在。';
+
+  @override
+  String get restoreYourPhotosVoiceNotes => '你的照片、語音和檔案。';
+
+  @override
+  String restoreYourPhotosVoiceNotesCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '你的照片、語音和檔案 · $countString。',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get restoreYourOnionAddressSo => '你的 onion 位址，讓直接聯絡你的人仍然聯絡得到你。';
+
+  @override
+  String get restoreAnythingSentToYou => '舊手機關機時傳給你的任何內容（傳送後十四天內）。';
+
+  @override
+  String get restoreYourSupporterBadgeIf => '你的支持者徽章（如果有的話）。';
+
+  @override
+  String get restoreWhatDoesnT => '不會帶過來的';
+
+  @override
+  String get restoreTheOldPhoneStops =>
+      '你一從這裡傳送任何東西，舊手機就會停止接收。不是慢慢停止。你從這台裝置傳出的第一則訊息，就是舊手機最後能跟上的一則；之後送到舊手機的任何內容，在那裡都無法讀取，也不會在這裡等你。';
+
+  @override
+  String get restoreIfThePhoneThis =>
+      '如果這個檔案原本所在的手機還在使用，請先在那支手機上停止使用 kryfo，再繼續。兩支手機共用一個 kryfo，兩邊都會遺失訊息。';
+
+  @override
+  String get restoreNotificationsNeedSettingUp => '需要在這台裝置上重新設定通知。';
+
+  @override
+  String get restoreMoveItHere => '搬到這裡';
+
+  @override
+  String get restoreNotNow => '以後再說';
+
+  @override
+  String get restoreRestore => '還原';
+
+  @override
+  String get restoreFromABackupFile => '從備份檔案';
+
+  @override
+  String get restoreABackupBringsBack =>
+      '備份會找回你的身分和聯絡人，以及建立檔案時手機上的訊息。之後說的任何話都不在裡面。';
+
+  @override
+  String get restoreTheFile => '檔案';
+
+  @override
+  String get restorePickTheBackupFile => '選擇備份檔案';
+
+  @override
+  String get restoreThePassphrase => '密碼短語';
+
+  @override
+  String get restoreTheOneTheFile => '建立檔案時使用的那一組';
+
+  @override
+  String get restoreWhatComesBack => '會找回的內容';
+
+  @override
+  String get restoreChecking => '檢查中…';
+
+  @override
+  String get restoreCheckTheFile => '檢查檔案';
+
+  @override
+  String get restoreReleasingYourHandle => '正在釋出你的使用者名稱…';
+
+  @override
+  String restoreMoving(Object progress) {
+    return '搬移中… $progress';
+  }
+
+  @override
+  String get restoreRestoring => '還原中…';
+
+  @override
+  String get restoreNotThisOne => '不是這個';
+
+  @override
+  String get restoreDateUnknown => '日期不明';
+
+  @override
+  String get restoreAnIdentity => '一個身分';
+
+  @override
+  String get restoreMessagesSentOrReceived => '在那個日期之後傳送或收到的訊息，不在這個檔案裡。';
+
+  @override
+  String restoreGb(Object bytes) {
+    return '$bytes GB';
+  }
+
+  @override
+  String restoreMb(Object bytes) {
+    return '$bytes MB';
+  }
+
+  @override
+  String get roomCreateCouldNotCreateThe => '無法建立聊天室';
+
+  @override
+  String get roomCreateBurnerRoom => '臨時聊天室';
+
+  @override
+  String get roomCreateARoomThatEnds =>
+      '一個會結束的聊天室。每個人都用專為它產生的金鑰加入，結束時，任何手機上都不會留下任何東西。';
+
+  @override
+  String get roomCreateRoomName => '聊天室名稱';
+
+  @override
+  String get roomCreateEndsAfter => '多久後結束';
+
+  @override
+  String get roomCreateMemberCap => '人數上限';
+
+  @override
+  String roomCreateNoOnePastThe(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '只限前 $countString 位',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get roomCreateOffAnyoneWithThe => '關閉。任何有連結的人都能加入';
+
+  @override
+  String roomCreateThisRoomAndEverything(Object expiryWords) {
+    return '這個聊天室和裡面的一切都會在 $expiryWords後消失';
+  }
+
+  @override
+  String get roomCreateCreating => '建立中…';
+
+  @override
+  String get roomCreateCreateRoom => '建立聊天室';
+
+  @override
+  String get roomLinkSendTheRoomTo => '把聊天室傳給';
+
+  @override
+  String get roomLinkTheyWillKnowThis =>
+      '對方會知道這個聊天室是你傳的。在聊天室裡，對方和其他人一樣，只是一把金鑰。';
+
+  @override
+  String get roomLinkNoContactsYet => '還沒有聯絡人';
+
+  @override
+  String roomLinkEndsIn(Object time) {
+    return '$time後結束';
+  }
+
+  @override
+  String get roomLinkAnyoneWithThisCan =>
+      '在聊天室結束之前，任何持有這個連結的人都能加入。他們會用專為這個聊天室產生的金鑰進入，也看不到他們加入之前傳送的任何內容。';
+
+  @override
+  String get roomLinkRoomLinkCopied => '已複製聊天室連結';
+
+  @override
+  String get roomLinkSendToAContact => '傳給聯絡人';
+
+  @override
+  String get roomLinkCopyRoomLink => '複製聊天室連結';
+
+  @override
+  String get savedVoiceNote => '語音';
+
+  @override
+  String get savedPhoto => '照片';
+
+  @override
+  String get savedSaved => '收藏';
+
+  @override
+  String get savedNothingSavedYet => '還沒有收藏任何東西';
+
+  @override
+  String get savedLongPressAnyMessage => '長按任何訊息，再點「儲存」，就能收藏在這裡。';
+
+  @override
+  String get savedViewInChat => '在聊天中查看';
+
+  @override
+  String get savedPhoto2 => '照片';
+
+  @override
+  String get scanThatSNotA => '這不是 kryfo QR 碼 · 請繼續對準';
+
+  @override
+  String get scanScanAKryfoQr => '掃描 kryfo QR 碼';
+
+  @override
+  String get scanFlash => '閃光燈';
+
+  @override
+  String get scanPointAtAKryfo => '對準 kryfo QR 碼 · 不會有任何東西離開你的手機';
+
+  @override
+  String get seenWhatWeCanSee => '我們看得到什麼';
+
+  @override
+  String get seenEveryMessengerClaimsPrivacy =>
+      '每個通訊軟體都說自己重視隱私。這是按照傳送路線列出的具體清單，包括對我們不利的部分。點一列就能看到原因。';
+
+  @override
+  String get seenHonestAboutTheLast =>
+      '老實說最後幾列：應用程式鎖、清除 PIN 和加密儲存正是為此而設；如果有人拿著你已解鎖的手機，沒有任何工具救得了你。完整的威脅模型在程式碼庫的 THREAT_MODEL.md 裡，依據 LINDDUN 撰寫。程式碼是公開的，所以這些都不必靠信任。';
+
+  @override
+  String get seenHidden => '隱藏';
+
+  @override
+  String get seenNever => '從不';
+
+  @override
+  String get seenOnDevice => '在裝置上';
+
+  @override
+  String get seenTiming => '時間點';
+
+  @override
+  String get seenYours => '你的';
+
+  @override
+  String get seenUnaudited => '未經稽核';
+
+  @override
+  String get seenWhoYouTalkTo => '你在跟誰聊天';
+
+  @override
+  String get seenEachConversationGetsIts =>
+      '每段對話都有自己的位址，由雙方的金鑰推導而來。中繼看到的是一個個互不相關的投遞點，而不是一對人。';
+
+  @override
+  String get seenWhatYouSay => '你說了什麼';
+
+  @override
+  String get seenEndToEndEncrypted =>
+      '使用 Signal 雙棘輪演算法端對端加密，再以 gift wrap 包裝密封一次。就算我們想讀，也讀不到。';
+
+  @override
+  String get seenYourIpAddress => '你的 IP 位址';
+
+  @override
+  String get seenOurRelay => '我們的中繼';
+
+  @override
+  String get seenEveryRelay => '每個中繼';
+
+  @override
+  String get seenOnOnionEverythingLeaves =>
+      '在 Onion 模式下，一切都經由 tor 送出，中繼看到的是出口節點，永遠不會是你。在中繼模式下，連線會直接連到我們自己的中繼：沒有任何東西會轉送你的位址，也不會留下任何紀錄，但這條連線我們看得到。在快速模式下，每個公共中繼都會知道你連線了，但不知道你和誰聯絡，也不知道你說了什麼。';
+
+  @override
+  String get seenYourContactGraph => '你的聯絡人關係圖';
+
+  @override
+  String get seenKryfoDoesNotScan => 'Kryfo 不會掃描你的通訊錄。這正是重點。這裡根本沒有手機號碼可以外洩。';
+
+  @override
+  String get seenIntroducer => '介紹人';
+
+  @override
+  String get seenWhenAContactIntroduces =>
+      '當聯絡人介紹你認識某人時，那位聯絡人會知道你們兩個現在有聯繫。其他人都不會知道。中繼看到的是密文，也沒有任何伺服器看得到關係圖。';
+
+  @override
+  String get seenTheScamShield => '防詐盾';
+
+  @override
+  String get seenRunsOnYourPhone =>
+      '在你的手機上執行，使用應用程式內建的規則。不連網路，也不下載任何清單。它只會讀取陌生人的第一則訊息，看不到聯絡人傳給你的任何內容。';
+
+  @override
+  String get seenBurnerRooms => '臨時聊天室';
+
+  @override
+  String get seenRoomKeys => '聊天室金鑰';
+
+  @override
+  String get seenYouJoinARoom =>
+      '你用專為聊天室產生的金鑰加入，所以裡面的人得不到任何能在別處使用的資訊。晚加入的人看不到之前的紀錄。到期時，金鑰、訊息和媒體都會被銷毀。';
+
+  @override
+  String get seenLinkPreviews => '連結預覽';
+
+  @override
+  String get seenOverTor => '經由 tor';
+
+  @override
+  String get seenAPreviewIsFetched =>
+      '預覽由傳送者經由 tor 擷取，並包在加密訊息中傳送。接收的手機不會發出任何請求。網站只會知道有個使用 tor 的人要求了一個頁面，除此之外一無所知。永遠不會載入任何圖片，陌生人傳來的連結也只會顯示為純文字。';
+
+  @override
+  String get seenThatADeviceFetched => '有某台裝置收過信';
+
+  @override
+  String get seenARelayCanTell => '中繼能知道某個位址被查看過，以及在什麼時候。它無法知道是誰的，也無法知道從哪裡。';
+
+  @override
+  String get seenASeizedUnlockedPhone => '被扣押的已解鎖手機';
+
+  @override
+  String get seenIfSomeoneHoldsYour =>
+      '如果有人拿著你已解鎖的手機，他們就能讀你的訊息。應用程式鎖、清除 PIN 和加密儲存能在那之前幫上忙，在那之後就不行了。';
+
+  @override
+  String get seenTheCryptoItself => '加密技術本身';
+
+  @override
+  String get seenTheRatchetAndStorage =>
+      '棘輪和儲存層都是標準做法。連接兩者的那一層是我們自己寫的，還沒有任何獨立的第三方審查過。請把它當作 alpha 版本，因為它確實是。';
+
+  @override
+  String get seenOnion => 'Onion';
+
+  @override
+  String get seenRelay => '中繼';
+
+  @override
+  String get seenFast => '快速';
+
+  @override
+  String get settingsWipeKryfo => '要清除 kryfo 嗎？';
+
+  @override
+  String get settingsIdentityMessagesContactsAnd =>
+      '這支手機上的身分、訊息、聯絡人和設定。除非你有備份，否則會永久消失。';
+
+  @override
+  String get commonContinue => '繼續';
+
+  @override
+  String settingsTypeWipeToConfirm(Object word) {
+    return '輸入「$word」以確認';
+  }
+
+  @override
+  String get settingsTheLastStepNothing => '最後一步。什麼都不會留下。';
+
+  @override
+  String get settingsWipeWord => '清除';
+
+  @override
+  String get settingsWipeKryfo2 => '清除 kryfo';
+
+  @override
+  String get settingsYourProtections => '你的防護';
+
+  @override
+  String get settingsTorRouting => 'Tor 路由';
+
+  @override
+  String get settingsConnecting => '連線中';
+
+  @override
+  String get settingsOffMode => '關閉 · 中繼模式';
+
+  @override
+  String get settingsOffFastMode => '關閉 · 快速模式';
+
+  @override
+  String get settingsAppLock => '應用程式鎖';
+
+  @override
+  String get settingsBlockedByAndroid => '被 Android 阻擋';
+
+  @override
+  String get settingsSpeedPrivacy => '速度與隱私';
+
+  @override
+  String get settingsFast => '快速';
+
+  @override
+  String get settingsRelay1Hop => '中繼 · 1 跳';
+
+  @override
+  String get settingsOnion3Hops => 'Onion · 3 跳';
+
+  @override
+  String get settingsBridges => '橋接';
+
+  @override
+  String get settingsForNetworksThatBlock => '適用於封鎖 tor 的網路';
+
+  @override
+  String get settingsGettingMessages => '接收訊息';
+
+  @override
+  String settingsPreviewHidden(Object deliveryModeName) {
+    return '$deliveryModeName · 隱藏預覽';
+  }
+
+  @override
+  String settingsPreviewShown(Object deliveryModeName) {
+    return '$deliveryModeName · 顯示預覽';
+  }
+
+  @override
+  String get settingsRunInBackground => '在背景執行';
+
+  @override
+  String get settingsSoMessagesArrive => '讓訊息能送達';
+
+  @override
+  String get settingsTransport => '傳輸';
+
+  @override
+  String get settingsWhatTheNetworkIs => '網路目前的狀況';
+
+  @override
+  String get settingsBlocked => '已封鎖';
+
+  @override
+  String get settingsAcceptIntroductions => '接受介紹';
+
+  @override
+  String get settingsFriendsCanIntroduceYou => '朋友可以把你介紹給他們的朋友';
+
+  @override
+  String get settingsScamShield => '防詐盾';
+
+  @override
+  String get settingsChecksStrangersOnYour => '在你的手機上檢查陌生人。不會有任何東西離開手機';
+
+  @override
+  String get settingsBlockScreenshots => '禁止截圖';
+
+  @override
+  String get settingsWholeAppHiddenFrom => '在最近使用畫面和截圖中隱藏整個應用程式 · 下次啟動後生效';
+
+  @override
+  String get settingsWholeAppHiddenFromRecentsAnd => '在最近使用畫面和截圖中隱藏整個應用程式';
+
+  @override
+  String get settingsOnNextStart => '開啟 · 下次啟動';
+
+  @override
+  String get settingsOffNextStart => '關閉 · 下次啟動';
+
+  @override
+  String get settingsLightTheme => '淺色主題';
+
+  @override
+  String get settingsSameProtectionBrighter => '同樣的防護，更明亮';
+
+  @override
+  String get settingsAppLock2 => '應用程式鎖';
+
+  @override
+  String get settingsYourPinAndA => '你的 PIN 碼，加上清除 PIN';
+
+  @override
+  String get settingsPinWipePin => 'PIN 碼 · 清除 PIN';
+
+  @override
+  String get settingsBackUpIdentity => '備份身分';
+
+  @override
+  String get settingsEncryptedFile => '加密檔案';
+
+  @override
+  String get settingsRestoreFromBackup => '從備份還原';
+
+  @override
+  String get settingsReplaceCurrent => '取代目前的';
+
+  @override
+  String get settingsDisguiseVoice => '變聲';
+
+  @override
+  String get settingsShiftsYourPitchBefore => '在語音送出前改變你的音調';
+
+  @override
+  String get settingsWhyKryfo => '為什麼選 kryfo';
+
+  @override
+  String get settingsHowItProtectsYou => '它如何保護你';
+
+  @override
+  String get settingsResetMyInviteLink => '重設我的邀請連結';
+
+  @override
+  String get settingsOldLinksAndCodes => '舊的連結和 QR 碼會對所有人失效';
+
+  @override
+  String get settingsResetInviteLink => '要重設邀請連結嗎？';
+
+  @override
+  String get settingsAnyoneWithAnOld =>
+      '持有舊 QR 碼或連結的人，無論透過哪種路線，都將無法再聯絡你。拿到了但從沒用過的人，需要你再給一個新的。聯絡人、聊天和紀錄都會保留。';
+
+  @override
+  String get settingsReset => '重設';
+
+  @override
+  String get settingsInviteResetShareThe => '邀請已重設 · 分享新的 QR 碼';
+
+  @override
+  String get settingsWhatWeCanSee => '我們看得到什麼';
+
+  @override
+  String get settingsTheHonestList => '誠實清單';
+
+  @override
+  String get settingsVersion => '版本';
+
+  @override
+  String get settings030Alpha => '0.3.0 · alpha 版';
+
+  @override
+  String get settingsReportAnIssue => '回報問題';
+
+  @override
+  String get settingsBugOrSecurityFlaw => '錯誤或安全漏洞';
+
+  @override
+  String get settingsOpenSource => '開放原始碼';
+
+  @override
+  String get settingsLinkCopied => '已複製連結';
+
+  @override
+  String get settingsTheOfflineMapIn =>
+      '「工具」中的離線地圖以 Natural Earth（公有領域）繪製。城鎮名稱來自 GeoNames（geonames.org），採用 CC BY 4.0 授權。';
+
+  @override
+  String get settingsNotIndependentlyAuditedPre =>
+      '尚未經過獨立稽核。目前是 pre-alpha 版：適合測試，還不適合高風險用途。';
+
+  @override
+  String get settingsDangerZone => '危險區域';
+
+  @override
+  String get settingsWipeKryfoFromThis => '從這支手機清除 kryfo';
+
+  @override
+  String get shieldCheckedOnThisPhone => '在這支手機上檢查。沒有傳送任何東西到任何地方。';
+
+  @override
+  String get toolsMoreTools => '更多工具';
+
+  @override
+  String get toolsCleanAPhotoOr => '清理照片或影片';
+
+  @override
+  String get toolsOrShareOneTo => '或從相簿分享到 Kryfo';
+
+  @override
+  String get toolsMakeAPrivateQr => '製作私密 QR 碼';
+
+  @override
+  String get toolsLinksWiFiContacts => '連結、Wi-Fi、聯絡人等等。離線製作';
+
+  @override
+  String get toolsLockAFile => '鎖定檔案';
+
+  @override
+  String get toolsWithAPasswordOpens => '用密碼鎖定。任何有 age 的地方都能開啟';
+
+  @override
+  String get toolsOpenALockedFile => '開啟鎖定的檔案';
+
+  @override
+  String get toolsAnyAgeFileSomeone => '別人傳給你的任何 .age 檔案';
+
+  @override
+  String get toolsWorksOfflineNoContacts => '離線可用 · 不需要聯絡人';
+
+  @override
+  String get toolsUsefulFrom => '打開就能用，';
+
+  @override
+  String get toolsTheFirstMinute => '從第一分鐘開始。';
+
+  @override
+  String get toolsEverythingHereHappensOn =>
+      '這裡的一切都在這支手機上進行。不會上傳任何東西，其他人也不必使用 Kryfo。';
+
+  @override
+  String get toolsWhatDoesThisPhoto => '這張照片知道些什麼？';
+
+  @override
+  String get toolsPlacePhoneTime => '地點 · 手機 · 時間';
+
+  @override
+  String get toolsPickAPhotoAnd => '選一張照片，看看它洩漏了什麼。然後保留一份乾淨的副本。';
+
+  @override
+  String get toolsPickAPhoto => '選擇照片';
+
+  @override
+  String get toolsVideo => '影片';
+
+  @override
+  String get transportTransport => '傳輸';
+
+  @override
+  String get transportNothingHereLeavesThe =>
+      '這裡的任何內容都不會離開手機。這就是引擎用來決定下一步的同一份狀態。';
+
+  @override
+  String get transportStayingAlive => '保持運作';
+
+  @override
+  String get transportCanSend => '可以傳送';
+
+  @override
+  String get commonYes => '是';
+
+  @override
+  String get transportNotYet => '還沒';
+
+  @override
+  String get transportOnline => '在線';
+
+  @override
+  String get transportOffline => '離線';
+
+  @override
+  String get transportQueuedToSend => '待傳送';
+
+  @override
+  String get transportOnionPublished => 'Onion 已發布';
+
+  @override
+  String transportYes(Object uploads) {
+    return '是（$uploads）';
+  }
+
+  @override
+  String transportTryingS(Object pubFor) {
+    return '已嘗試 $pubFor 秒';
+  }
+
+  @override
+  String transportBenchedS(Object r) {
+    return '暫停使用 $r 秒';
+  }
+
+  @override
+  String transportFails(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 次失敗',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transportOk => '正常';
+
+  @override
+  String get transportRelaySubscriptions => '中繼訂閱';
+
+  @override
+  String get transportLastSent => '上次傳送';
+
+  @override
+  String get transportNever => '從未';
+
+  @override
+  String transportSAgo(Object sx) {
+    return '$sx 秒前';
+  }
+
+  @override
+  String get transportLastReceived => '上次接收';
+
+  @override
+  String transportSAgo2(Object rx) {
+    return '$rx 秒前';
+  }
+
+  @override
+  String get transportWithNoContactsThe =>
+      '沒有聯絡人時，應用程式不會訂閱任何中繼位址，所以任何訊息都無法送達你。掃描某人的 QR 碼就能解決。';
+
+  @override
+  String get transportSendAnythingWaitingNow => '立即傳送所有等待中的內容';
+
+  @override
+  String get transportOff => '關閉';
+
+  @override
+  String get transportStarting => '啟動中';
+
+  @override
+  String get transportBootstrapped => '已完成啟動';
+
+  @override
+  String get transportPublishingAddress => '正在發布位址';
+
+  @override
+  String get transportReachable => '可連線';
+
+  @override
+  String get transportOurRelayOnion => '我們的中繼（onion）';
+
+  @override
+  String get transportNever2 => '從未';
+
+  @override
+  String get transportJustNow => '剛剛';
+
+  @override
+  String transportMAgo(Object inMinutes) {
+    return '$inMinutes 分鐘前';
+  }
+
+  @override
+  String transportHAgo(Object inHours) {
+    return '$inHours 小時前';
+  }
+
+  @override
+  String transportDAgo(Object inDays) {
+    return '$inDays 天前';
+  }
+
+  @override
+  String transportM(Object inMinutes) {
+    return '$inMinutes 分鐘';
+  }
+
+  @override
+  String transportHM(Object inHours, Object d) {
+    return '$inHours 小時 $d 分';
+  }
+
+  @override
+  String transportD(Object inDays) {
+    return '$inDays 天';
+  }
+
+  @override
+  String transportMb(Object b) {
+    return '$b mb';
+  }
+
+  @override
+  String get transportYesCheckedJustNow => '是 · 剛剛檢查過';
+
+  @override
+  String transportNoLast(Object ago) {
+    return '否 · 上次：$ago';
+  }
+
+  @override
+  String get transportLastMessageIn => '上次收到訊息';
+
+  @override
+  String get transportBatteryExemption => '電池最佳化豁免';
+
+  @override
+  String get transportUnknown => '不明';
+
+  @override
+  String get transportExempt => '已豁免';
+
+  @override
+  String get transportNotExemptTapTo => '未豁免 · 點一下修正';
+
+  @override
+  String get transportProcessUp => '程序運作';
+
+  @override
+  String get transportLastStop => '上次停止';
+
+  @override
+  String transportEngine(Object mb, Object mb2) {
+    return '$mb · 引擎 $mb2';
+  }
+
+  @override
+  String get transportLastRelayArrival => '上次從中繼收到';
+
+  @override
+  String get transportLastCheckIn => '上次查收';
+
+  @override
+  String get transportNoneYet => '還沒有';
+
+  @override
+  String get transportLastTorReconnect => '上次 tor 重新連線';
+
+  @override
+  String get transportCatchUpByRelay => '各中繼補收';
+
+  @override
+  String get transportControlPort => '控制埠';
+
+  @override
+  String transportDialsTimeouts(int dials, int timeouts) {
+    final intl.NumberFormat dialsNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String dialsString = dialsNumberFormat.format(dials);
+    final intl.NumberFormat timeoutsNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String timeoutsString = timeoutsNumberFormat.format(timeouts);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      dials,
+      locale: localeName,
+      other: '$dialsString 次連線',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      timeouts,
+      locale: localeName,
+      other: '$timeoutsString 次逾時',
+    );
+    return '$_temp0 · $_temp1';
+  }
+
+  @override
+  String get transportJobRuns => '排程執行次數';
+
+  @override
+  String transportLast(Object jobRuns, Object ago) {
+    return '$jobRuns · 上次：$ago';
+  }
+
+  @override
+  String get transportQuietStretches => '靜默時段';
+
+  @override
+  String get transportNone => '無';
+
+  @override
+  String get transportClearThisRecord => '清空這份紀錄';
+
+  @override
+  String get transportNothingYetThisProcess => '這次執行還沒有紀錄';
+
+  @override
+  String transportM2(Object mins) {
+    return '$mins 分鐘';
+  }
+
+  @override
+  String transportHM2(Object mins, Object mins2) {
+    return '$mins 小時 $mins2 分';
+  }
+
+  @override
+  String transportTo(Object t, Object t2) {
+    return '$t 到 $t2';
+  }
+
+  @override
+  String vouchersVouchedBy(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 位擔保人',
+      one: '擔保人',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get wallpaperAtmosphere => '氛圍';
+
+  @override
+  String get wallpaperJustForYouThey => '只有你看得到。對方看到的是自己的。';
+
+  @override
+  String get wallpaperYourPhoto => '你的照片';
+
+  @override
+  String get wallpaperFromYourPhotos => '從你的相簿';
+
+  @override
+  String get wallpaperKeepIt => '保留';
+
+  @override
+  String get whyKryfoWhyKryfo => '為什麼選 kryfo';
+
+  @override
+  String get whyKryfoKryfoKreeFoGreek =>
+      'Kryfo · KREE-fo · 希臘文「隱藏」的意思。\n一個安靜的聊天空間，打造成沒有任何人在監看。';
+
+  @override
+  String get whyKryfoRoutedThroughTor => '經由 tor 路由';
+
+  @override
+  String get whyKryfoByDefaultEveryMessage =>
+      '預設情況下，每則訊息都經由 tor（一連串的中繼）傳送。沒有人，不論是我們還是你的網路，能看到你在跟誰聊天，或你在哪裡。';
+
+  @override
+  String get whyKryfoEndToEndEncrypted => '端對端加密';
+
+  @override
+  String get whyKryfoMessagesAreSealedWith => '訊息用只有你和對方持有的金鑰密封。就算我們想讀，也讀不到。';
+
+  @override
+  String get whyKryfoNoServersHoldingYour => '沒有伺服器掌握你的生活';
+
+  @override
+  String get whyKryfoNoAccountNoPhone =>
+      '沒有帳號，沒有手機號碼，也沒有儲存你聊天內容的中央伺服器。聊天內容存在這支手機上，並以加密方式存放。';
+
+  @override
+  String get whyKryfoNothingLeaks => '什麼都不外洩';
+
+  @override
+  String get whyKryfoNoReadReceiptsOr =>
+      '不會把已讀回條或正在輸入的提示交給任何人，也不會上傳聯絡人清單。中繼資料是大多數應用程式會外洩的東西，而 kryfo 的設計就是不外洩。';
+
+  @override
+  String get whyKryfoVerifyItIsReally => '確認真的是對方';
+
+  @override
+  String get whyKryfoCompareASafetyNumber =>
+      '當面或透過你信任的管道比對安全碼，就能確定沒有人在冒充你的聯絡人。';
+
+  @override
+  String get whyKryfoTheHonestPart => '老實說';
+
+  @override
+  String get whyKryfoKryfoIsPreAlpha =>
+      'Kryfo 還在 pre-alpha 階段，也還沒經過稽核。加密技術是真的，但還沒有外部專家檢查過，所以請把它當作開發中的作品，暫時還不能把性命託付給它。';
+
+  @override
+  String get cleanerLocation => '位置';
+
+  @override
+  String get cleanerAlreadyBlankedByAndroid => '已被 Android 清空';
+
+  @override
+  String get cleanerPhoneModel => '手機型號';
+
+  @override
+  String get cleanerTimeTaken => '拍攝時間';
+
+  @override
+  String get cleanerSerialNumber => '序號';
+
+  @override
+  String get cleanerOwnerName => '擁有者名稱';
+
+  @override
+  String get cleanerHiddenThumbnail => '隱藏的縮圖';
+
+  @override
+  String get cleanerContentCredentials => '內容憑證';
+
+  @override
+  String get cleanerDataAfterThePicture => '圖片之後的資料';
+
+  @override
+  String cleaner1OtherField(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '其他 $countString 個欄位',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lockWordsFourRandomWordsBeat => '四個隨機的詞，勝過一個聰明的詞。';
+
+  @override
+  String lockWordsTooShortAtLeast(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '太短了。至少要 $countString 個字元。',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lockWordsWeakWhoeverGetsThe => '弱。拿到檔案的人想猜多快就能猜多快。';
+
+  @override
+  String get lockWordsFairLongerIsStronger => '普通。越長越強。';
+
+  @override
+  String get lockWordsStrongFourRandomWords => '強。四個隨機的詞，勝過一個聰明的詞。';
+
+  @override
+  String photoStoryKm(Object m) {
+    return '$m 公里';
+  }
+
+  @override
+  String photoStory1Metre(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 公尺',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get photoStoryFarFromAnyTown => '遠離任何城鎮';
+
+  @override
+  String photoStoryNear(Object where) {
+    return '$where 附近';
+  }
+
+  @override
+  String photoStoryAboutKmFrom(Object near, Object where) {
+    return '距離 $where 約 $near 公里';
+  }
+
+  @override
+  String photoStoryS(Object s) {
+    return '$s 秒';
+  }
+
+  @override
+  String photoStory1S(Object s) {
+    return '1/$s 秒';
+  }
+
+  @override
+  String get photoStoryNotAKindKryfo => '這不是 Kryfo 能讀取的格式。';
+
+  @override
+  String get photoStorySoItWillNot => '所以它不會亂猜。';
+
+  @override
+  String get photoStoryThisFileIsDamaged => '這個檔案已損毀或不完整。';
+
+  @override
+  String get photoStoryKryfoCouldNotRead => 'Kryfo 無法完整讀到結尾。';
+
+  @override
+  String get photoStoryWhereItWasRecorded => '錄製地點';
+
+  @override
+  String get photoStoryWhereItWasTaken => '拍攝地點';
+
+  @override
+  String photoStoryLocation(Object coordsLine) {
+    return '位置：$coordsLine';
+  }
+
+  @override
+  String photoStoryHeightAboveTheSea(Object fix) {
+    return '海拔高度：$fix 公尺';
+  }
+
+  @override
+  String get photoStoryLocationHiddenByAndroid => '位置已被 Android 隱藏';
+
+  @override
+  String get photoStoryAndroidBlanksItWhen =>
+      '用這種方式選照片時，Android 會把它清空。從相簿分享到 Kryfo 通常能保留它。相簿裡的那張可能還帶有位置。';
+
+  @override
+  String get photoStoryLocationBlankedByAndroid =>
+      '位置：在 Kryfo 看到之前已被 Android 清空';
+
+  @override
+  String photoStoryF(Object r) {
+    return 'f/$r';
+  }
+
+  @override
+  String get photoStoryWhatTookIt => '拍攝裝置';
+
+  @override
+  String photoStoryPhoneOrCamera(Object phone) {
+    return '手機或相機：$phone';
+  }
+
+  @override
+  String get photoStoryWhenItWasRecorded => '錄製時間';
+
+  @override
+  String get photoStoryToTheSecondWith => '精確到秒，包含時區';
+
+  @override
+  String get photoStoryToTheSecond => '精確到秒';
+
+  @override
+  String photoStoryTime(Object dateFormat) {
+    return '時間：$dateFormat';
+  }
+
+  @override
+  String get photoStoryLens => '鏡頭';
+
+  @override
+  String photoStoryLens2(Object lens) {
+    return '鏡頭：$lens';
+  }
+
+  @override
+  String get photoStorySoftware => '軟體';
+
+  @override
+  String photoStorySoftware2(Object software) {
+    return '軟體：$software';
+  }
+
+  @override
+  String get photoStorySerialNumber => '序號';
+
+  @override
+  String photoStorySerialNumber2(Object serial) {
+    return '序號：$serial';
+  }
+
+  @override
+  String get photoStoryOwnerName => '擁有者名稱';
+
+  @override
+  String photoStoryOwner(Object r) {
+    return '擁有者：$r';
+  }
+
+  @override
+  String get photoStoryHiddenThumbnail => '隱藏的縮圖';
+
+  @override
+  String get photoStoryASmallCopyOf => '檔案裡藏著一份圖片的小副本。它可能會露出被裁掉的部分';
+
+  @override
+  String get photoStoryMakerNotes => '製造商註記';
+
+  @override
+  String get photoStoryMakerNotesABlock => '製造商註記：只有製造商能讀取的區塊';
+
+  @override
+  String get photoStoryEditingHistory => '編輯紀錄';
+
+  @override
+  String get photoStoryXmpEditingHistoryAnd => 'XMP：編輯紀錄和標籤';
+
+  @override
+  String get photoStoryCaptions => '說明文字';
+
+  @override
+  String get photoStoryIptcCaptionsAndCredits => 'IPTC：說明文字和署名';
+
+  @override
+  String get photoStoryComment => '註解';
+
+  @override
+  String get photoStoryAWrittenComment => '一段文字註解';
+
+  @override
+  String get photoStoryContentCredentials => '內容憑證';
+
+  @override
+  String get photoStorySecondPicture => '第二張圖片';
+
+  @override
+  String get photoStoryASecondPictureInside => '檔案裡的第二張圖片';
+
+  @override
+  String get photoStoryMotionVideo => '動態影片';
+
+  @override
+  String get photoStoryAShortVideoInside => '檔案裡的一段短影片';
+
+  @override
+  String get photoStorySaveTime => '儲存時間';
+
+  @override
+  String get photoStoryTheTimeItWas => '最後一次儲存的時間';
+
+  @override
+  String get photoStoryTimeStamps => '時間戳記';
+
+  @override
+  String get photoStoryCreationTimeStamps => '建立時間戳記';
+
+  @override
+  String get photoStoryDataAfterThePicture => '圖片之後的資料';
+
+  @override
+  String photoStoryDataAfterTheEnd(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '圖片結尾之後的資料：$countString 位元組',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String photoStoryTextField(Object k) {
+    return '文字欄位：$k';
+  }
+
+  @override
+  String photoStoryVideoTag(Object k) {
+    return '影片標籤：$k';
+  }
+
+  @override
+  String photoStoryAlso(Object k) {
+    return '另外：$k';
+  }
+
+  @override
+  String photoStoryCameraSettingsFlashFocus(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 項相機設定（閃光燈、對焦、曝光）',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String photoStory1MoreField(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '還有 $countString 個欄位',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get photoStoryCameraSettings => '相機設定';
+
+  @override
+  String photoStoryAccurateToAbout(Object metres) {
+    return '精確到約 $metres。';
+  }
+
+  @override
+  String get photoStoryEnoughToFindThe => '足以找到門口。';
+
+  @override
+  String get photoStoryEnoughToFindTheStreet => '足以找到那條街。';
+
+  @override
+  String get photoStoryEnoughToFindTheArea => '足以找到那一帶。';
+
+  @override
+  String get photoStoryItKnowsWhereYou => '它知道你當時在哪裡。';
+
+  @override
+  String get photoStoryDownToTheBuilding => '精確到那棟建築。';
+
+  @override
+  String get photoStoryAndroidHidTheLocation => 'Android 隱藏了位置。';
+
+  @override
+  String get photoStoryTheOriginalMayStill => '原始檔案可能還帶有位置。';
+
+  @override
+  String get photoStoryNoLocationInThis => '這張沒有位置資訊。';
+
+  @override
+  String get photoStoryItStillSaysPlenty => '它還是透露了不少。';
+
+  @override
+  String get photoStoryThisOneKnowsNothing => '這張什麼都不知道。';
+
+  @override
+  String get photoStoryNothingToRemove => '沒有可移除的東西。';
+
+  @override
+  String get qrPayloadOpensALink => '開啟連結';
+
+  @override
+  String qrPayloadOpens(Object host) {
+    return '開啟 $host';
+  }
+
+  @override
+  String get qrPayloadShowsANote => '顯示一段文字';
+
+  @override
+  String get qrPayloadScanToJoin => '掃描即可加入';
+
+  @override
+  String qrPayloadScanToJoin2(Object oneLine) {
+    return '掃描即可加入 · $oneLine';
+  }
+
+  @override
+  String get qrPayloadANetworkNameIs => '網路名稱最多 32 個字元。';
+
+  @override
+  String get qrPayloadAWiFiPassword => 'Wi-Fi 密碼至少要 8 個字元。';
+
+  @override
+  String get qrPayloadSavesAContact => '儲存聯絡人';
+
+  @override
+  String get qrPayloadWritesAnEmail => '撰寫電子郵件';
+
+  @override
+  String get qrPayloadThatDoesNotLook => '這看起來不像電子郵件地址。';
+
+  @override
+  String get qrPayloadCallsANumber => '撥打電話';
+
+  @override
+  String get qrPayloadWritesAText => '撰寫簡訊';
+
+  @override
+  String get qrPayloadOpensAMap => '開啟地圖';
+
+  @override
+  String get qrPayloadLatitudeRunsFrom90 => '緯度範圍是 -90 到 90，經度是 -180 到 180。';
+
+  @override
+  String get qrPayloadPayThisAddress => '付款到這個地址';
+
+  @override
+  String get qrPayloadABitcoinAddressIs => 'Bitcoin 地址只包含字母和數字。';
+
+  @override
+  String get qrPayloadTheAmountIsIn => '金額以 BTC 為單位，最多 8 位小數。';
+
+  @override
+  String vouchTextAnd(Object names, Object names2) {
+    return '$names 和 $names2';
+  }
+
+  @override
+  String vouchTextAndOtherYouKnow(Object names, Object names2, int rest) {
+    final intl.NumberFormat restNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String restString = restNumberFormat.format(rest);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      rest,
+      locale: localeName,
+      other: '$restString 人',
+    );
+    return '$names、$names2，以及你認識的另外 $_temp0';
+  }
+
+  @override
+  String vouchTextVouchedBy(Object vouchNames) {
+    return '由 $vouchNames 擔保';
+  }
+
+  @override
+  String vouchTextIntroducedBy(Object vouchNames) {
+    return '由 $vouchNames 介紹';
+  }
+
+  @override
+  String vouchTextThisSharesSAddress(Object a, Object b) {
+    return '這會把 $a 的位址分享給 $b';
+  }
+
+  @override
+  String get bootFailedKryfoCouldNotStart => 'Kryfo 無法啟動';
+
+  @override
+  String get bootFailedThisIsAFault => '這是這台裝置上的故障，不是網路問題。和 Tor 無關。';
+
+  @override
+  String get kryfoLinkTextThatLinkIsNot => '這個連結不是 kryfo 能讀取的';
+
+  @override
+  String kryfoLinkTextAdd(Object who) {
+    return '要新增 $who 嗎？';
+  }
+
+  @override
+  String kryfoLinkTextThisIsAnInvite(Object who) {
+    return '這是和 $who 聊天的邀請。只有在你知道連結從哪裡來時，才新增對方。';
+  }
+
+  @override
+  String get kryfoLinkTextAddThem => '新增對方';
+
+  @override
+  String get kryfoLinkTextNotNow => '以後再說';
+
+  @override
+  String kryfoLinkTextJoin(Object roomName) {
+    return '加入 $roomName';
+  }
+
+  @override
+  String get kryfoLinkTextKryfoLink => 'kryfo 連結';
+
+  @override
+  String kryfoLinkTextAdd2(Object who) {
+    return '新增 $who';
+  }
+
+  @override
+  String get kryfoLinkTextBurnerRoom => '臨時聊天室';
+
+  @override
+  String get kryfoLinkTextThisRoomHasClosed => '這個聊天室已關閉';
+
+  @override
+  String kryfoLinkTextClosesIn(Object time) {
+    return '$time後關閉';
+  }
+
+  @override
+  String kryfoLinkTextClosesInUpTo(int cap, Object time) {
+    final intl.NumberFormat capNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String capString = capNumberFormat.format(cap);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      cap,
+      locale: localeName,
+      other: '$time後關閉 · 最多 $capString 人',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get kryfoLinkTextJoin2 => '加入';
+
+  @override
+  String get kryfoLinkTextYouJoinUnderA =>
+      '你會用專為這個聊天室產生的金鑰加入。裡面沒有人看得到你的 kryfo ID。';
+
+  @override
+  String get linkStubFetchedOverTorBy => '經由 tor 擷取 · 由你的裝置';
+
+  @override
+  String get linkStubFetchedOverTorByTheirDevice => '經由 tor 擷取 · 由對方的裝置';
+
+  @override
+  String mediaBubblesB(Object bytes) {
+    return '$bytes b';
+  }
+
+  @override
+  String mediaBubblesKb(Object bytes) {
+    return '$bytes kb';
+  }
+
+  @override
+  String mediaBubblesMb(Object bytes) {
+    return '$bytes mb';
+  }
+
+  @override
+  String get mediaBubblesFile => '檔案';
+
+  @override
+  String get mediaBubblesAudioUnavailable => '音訊無法播放';
+
+  @override
+  String get mediaBubblesHidden => '已隱藏';
+
+  @override
+  String get mediaBubblesMicPermissionNeeded => '需要麥克風權限';
+
+  @override
+  String get mediaBubblesReleaseToCancel => '放開即可取消';
+
+  @override
+  String get mediaBubblesVoiceHiddenSlideTo => '聲音已隱藏 · 滑動以取消';
+
+  @override
+  String get mediaBubblesSlideToCancel => '滑動以取消';
+
+  @override
+  String get mediaBubblesSendPhoto => '傳送照片';
+
+  @override
+  String get mediaBubblesAddACaption => '加上說明…';
+
+  @override
+  String get motionStandby => '待命';
+
+  @override
+  String get motionConnecting => '連線中';
+
+  @override
+  String get motionBuilding => '建立中';
+
+  @override
+  String get motionPublishing => '發布中';
+
+  @override
+  String get motionReady => '就緒';
+
+  @override
+  String get motionPreparingToConnect => '準備連線';
+
+  @override
+  String get motionFindingAPrivatePath => '尋找私密路徑';
+
+  @override
+  String get motionCarvingThePath => '開闢路徑';
+
+  @override
+  String get motionAnnouncingYourArrival => '宣告你的到來';
+
+  @override
+  String get motionYouReAnonymous => '你已匿名';
+
+  @override
+  String get motionTorIsStartingIn => 'Tor 正在背景啟動。連線建立時，這張圖會逐漸亮起來。';
+
+  @override
+  String get motionMakingAFreshRoute => '正在透過匿名中繼建立一條新路線。';
+
+  @override
+  String get motionBouncingThroughRelaysSo => '在中繼之間跳轉，讓任何人都無法追溯到你。';
+
+  @override
+  String get motionTellingTheNetworkYou => '告訴網路你上線了，但不透露你在哪裡。';
+
+  @override
+  String get motionYourIpIsHidden => '你的 IP 已隱藏。只有拿到你 kryfo 的人才能聯絡你。';
+
+  @override
+  String get motionBuilding2 => '建立中';
+
+  @override
+  String get motionOpen => '已開通';
+
+  @override
+  String get motionLive => '運作中';
+
+  @override
+  String motionCircuit(Object circuit) {
+    return '線路 · *$circuit*';
+  }
+
+  @override
+  String get motionDelivered => '已送達';
+
+  @override
+  String get motionSent => '已傳送';
+
+  @override
+  String get motion1Hop => '1 跳';
+
+  @override
+  String get motion3Hops => '3 跳';
+
+  @override
+  String get movedStripThisKryfoHasMoved =>
+      '這個 kryfo 已經搬到另一台裝置。從這裡傳送的任何內容都不會送達任何人。';
+
+  @override
+  String get navBarChats => '聊天';
+
+  @override
+  String get navBarTools => '工具';
+
+  @override
+  String get navBarSupport => '支持';
+
+  @override
+  String get navBarMe => '我';
+
+  @override
+  String get pairCodePanelPuttingYourInviteIn => '正在準備你的邀請';
+
+  @override
+  String get pairCodePanelYourInviteIsNot => '你的邀請還沒準備好';
+
+  @override
+  String get pairCodePanelReadSixDigitsOut => '大聲唸出六位數字，對方就能新增你。不需要交換其他任何東西。';
+
+  @override
+  String get pairCodePanelWorking => '處理中';
+
+  @override
+  String get pairCodePanelOrMakeASix => '或產生一組六位數的配對碼唸給對方';
+
+  @override
+  String get pairCodePanelCodeCopied => '已複製配對碼';
+
+  @override
+  String pairCodePanelBurnsIn(Object mm, Object ss) {
+    return '$mm:$ss 後焚毀';
+  }
+
+  @override
+  String get pairCodePanelTheyTapAddChoose => '對方點「新增」，選擇「配對碼」，然後輸入這些數字。';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoTap =>
+      '對方開啟 kryfo，點「新增」，選擇「配對碼」，再輸入這六位數字。下一個人請再產生一組新的。';
+
+  @override
+  String pinsPinnedMessages(Object count) {
+    return '置頂訊息 · $count';
+  }
+
+  @override
+  String get pinsPinnedMessages2 => '置頂訊息';
+
+  @override
+  String get pinsPhoto => '照片';
+
+  @override
+  String get pinsVoiceMessage => '語音訊息';
+
+  @override
+  String get pinsMessage => '訊息';
+
+  @override
+  String pinsToday(Object hm) {
+    return '今天 · $hm';
+  }
+
+  @override
+  String get pinsPinned => '已置頂';
+
+  @override
+  String pinsOf(Object pinsLength, Object kMaxPins) {
+    return '$pinsLength/$kMaxPins';
+  }
+
+  @override
+  String get pinsNothingPinnedHereYet =>
+      '這裡還沒有置頂的訊息。按住一則訊息並選擇「置頂」，它就會在這裡等著聊天中的每個人。';
+
+  @override
+  String get pinsJump => '跳至';
+
+  @override
+  String get pinsUnpin => '取消置頂';
+
+  @override
+  String powNoteFirstMessageToSomeone(int secs) {
+    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String secsString = secsNumberFormat.format(secs);
+
+    return '傳給新對象的第一則訊息 · 正在證明它是真的 · $secsString 秒';
+  }
+
+  @override
+  String powNoteFirstMessageSlow(int secs) {
+    final intl.NumberFormat secsNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String secsString = secsNumberFormat.format(secs);
+
+    return '傳給新對象的第一則訊息 · 正在證明它是真的 · $secsString 秒 · 在較慢的手機上最多需要一分鐘';
+  }
+
+  @override
+  String previewStripFetchedOverTor(Object domainOf) {
+    return '$domainOf · 經由 tor 擷取';
+  }
+
+  @override
+  String get previewStripDropThePreview => '移除預覽';
+
+  @override
+  String get previewStripAddPreview => '加上預覽';
+
+  @override
+  String get previewStripFetchingOverTor => '正在經由 tor 擷取…';
+
+  @override
+  String toolPartsB(Object bytes) {
+    return '$bytes B';
+  }
+
+  @override
+  String toolPartsKb(Object bytes) {
+    return '$bytes KB';
+  }
+
+  @override
+  String toolPartsMb(Object mb) {
+    return '$mb MB';
+  }
+
+  @override
+  String get torBootSplashNoShortcutsNoTraces => '不走捷徑，不留痕跡';
+
+  @override
+  String get torBootSplashTheNetworkThatKeeps => '保護你隱私的網路正在暖機';
+
+  @override
+  String get torBootSplashMadeOnThisPhone => '在這支手機上產生。不會傳送任何東西到任何地方。';
+
+  @override
+  String get torBootSplashFirstLaunchTakesA => '首次啟動需要一點時間 · 只在開啟時';
+
+  @override
+  String get videoBubbleNothingHereOpensThat => '這裡打不開它 · 改用分享';
+
+  @override
+  String videoBubbleMb(Object b) {
+    return '$b MB';
+  }
+
+  @override
+  String videoBubbleKb(Object b) {
+    return '$b KB';
+  }
+
+  @override
+  String get videoBubbleVideo => '影片';
+
+  @override
+  String get notificationsChannelName => '訊息';
+
+  @override
+  String get cameraClose => '關閉';
+
+  @override
+  String get cameraFlash => '閃光燈';
+
+  @override
+  String get cameraPhoto => '照片';
+
+  @override
+  String get cameraVideo => '影片';
+
+  @override
+  String get cameraRetake => '重拍';
+
+  @override
+  String get seenIntroductions => '介紹';
+
+  @override
+  String get donateAddress => '地址';
+
+  @override
+  String get donateCopy => '複製';
+
+  @override
+  String get donateDone => '完成';
+
+  @override
+  String get donateTierSupporter => '支持者';
+
+  @override
+  String get donateTierPatron => '贊助人';
+
+  @override
+  String get donateTierGuardian => '守護者';
+
+  @override
+  String get chatBlock => '封鎖';
+
+  @override
+  String get chatDecline => '拒絕';
+
+  @override
+  String get chatAccept => '接受';
+
+  @override
+  String get bridgesConnecting => '連線中';
+
+  @override
+  String get restoreMade => '建立於';
+
+  @override
+  String get restoreContacts => '聯絡人';
+
+  @override
+  String get restoreMessages => '訊息';
+
+  @override
+  String get restoreAttachments => '附件';
+
+  @override
+  String get shieldBlock => '封鎖';
+
+  @override
+  String get shieldDelete => '刪除';
+
+  @override
+  String get shieldIgnore => '忽略';
+
+  @override
+  String get profileIdentity => '身分';
+
+  @override
+  String get avatarPickerShape => '形狀';
+
+  @override
+  String get avatarPickerColour => '顏色';
+
+  @override
+  String get avatarPickerTurn => '旋轉';
+
+  @override
+  String get transportStatus => '狀態';
+
+  @override
+  String get transportBootstrap => '啟動';
+
+  @override
+  String get transportNetwork => '網路';
+
+  @override
+  String get transportConnectivity => '連線狀態';
+
+  @override
+  String get transportRelays => '中繼';
+
+  @override
+  String get transportTraffic => '流量';
+
+  @override
+  String get transportContacts => '聯絡人';
+
+  @override
+  String get transportKnown => '已知';
+
+  @override
+  String get transportListening => '監聽中';
+
+  @override
+  String get transportMemory => '記憶體';
+
+  @override
+  String get settingsConnected => '已連線';
+
+  @override
+  String get settingsScreenshots => '截圖';
+
+  @override
+  String get settingsBlocked2 => '已禁止';
+
+  @override
+  String get settingsAllowed => '已允許';
+
+  @override
+  String get settingsOn => '開啟';
+
+  @override
+  String get settingsOff => '關閉';
+
+  @override
+  String get settingsNotifications => '通知';
+
+  @override
+  String get settingsPrivacy => '隱私';
+
+  @override
+  String get settingsSecurity => '安全性';
+
+  @override
+  String get settingsBackup => '備份';
+
+  @override
+  String get settingsVoice => '語音';
+
+  @override
+  String get settingsAbout => '關於';
+
+  @override
+  String get wallpaperGradients => '漸層';
+
+  @override
+  String get wallpaperPatterns => '圖案';
+
+  @override
+  String get confirmSheetKeep => '保留';
+
+  @override
+  String get confirmSheetSave => '儲存';
+
+  @override
+  String get confirmSheetCancel => '取消';
+
+  @override
+  String bridgesSaved(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 個橋接',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bridgesSavedSomeBad(int good, int bad) {
+    final intl.NumberFormat goodNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String goodString = goodNumberFormat.format(good);
+    final intl.NumberFormat badNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String badString = badNumberFormat.format(bad);
+
+    return '已接受 $goodString 個，$badString 個無法辨識';
+  }
+
+  @override
+  String get languageTitle => '語言';
+
+  @override
+  String get languageMatchPhone => '跟隨手機';
+
+  @override
+  String languageMatchPhoneValue(Object language) {
+    return '跟隨手機（$language）';
+  }
+
+  @override
+  String get languageRedrawLine => 'Kryfo 會以新語言重新顯示，並開啟你的聊天。';
+
+  @override
+  String languageButton(Object language) {
+    return '語言：$language';
+  }
+
+  @override
+  String get androidServiceTitle => 'kryfo 運作中';
+
+  @override
+  String get androidServiceText => '你的加密線路保持開啟，讓訊息能送達';
+
+  @override
+  String get androidChannelName => '保持連線';
+
+  @override
+  String get androidChannelDescription =>
+      '讓 kryfo 保持連線，在它關閉時也能收到加密訊息。關閉這項設定會停止傳遞訊息。';
+}
