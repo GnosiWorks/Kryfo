@@ -1782,5 +1782,22 @@
   "pollYou": "Ты",
   "pollOptionA11y": "{option}, {share}",
   "pollPickOne": "Выбери один",
-  "pollPickSeveral": "Выбери один или несколько"
+  "pollPickSeveral": "Выбери один или несколько",
+  "searchOpen": "Поиск",
+  "searchHint": "Искать в чатах и сообщениях",
+  "searchFilterAll": "Всё",
+  "searchFilterPhotos": "Фото",
+  "searchFilterVideos": "Видео",
+  "searchFilterFiles": "Файлы",
+  "searchFilterLinks": "Ссылки",
+  "searchChats": "Чаты",
+  "searchMessages": "Сообщения",
+  "searchIntroTitle": "Ищи по своим чатам",
+  "searchIntroLine": "Имена, слова, фото, файлы и ссылки. Поиск идёт на этом телефоне и ничего никуда не отправляет.",
+  "searchNothing": "Ничего не найдено",
+  "searchNothingLine": "Попробуй другое слово или другой фильтр.",
+  "searchMatches": "{count, plural, one{{count} совпадение} few{{count} совпадения} many{{count} совпадений} other{{count} совпадения}}",
+  "searchMore": "{count, plural, one{ещё {count}} few{ещё {count}} many{ещё {count}} other{ещё {count}}}",
+  "searchFilling": "Добавляю старые сообщения · {share}",
+  "searchClear": "Очистить"
 }

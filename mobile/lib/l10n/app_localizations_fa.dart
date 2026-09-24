@@ -6747,4 +6747,74 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get pollPickSeveral => 'یک یا چند گزینه را انتخاب کنید';
+
+  @override
+  String get searchOpen => 'جست‌وجو';
+
+  @override
+  String get searchHint => 'جست‌وجو در گفت‌وگوها و پیام‌ها';
+
+  @override
+  String get searchFilterAll => 'همه';
+
+  @override
+  String get searchFilterPhotos => 'عکس‌ها';
+
+  @override
+  String get searchFilterVideos => 'ویدیوها';
+
+  @override
+  String get searchFilterFiles => 'فایل‌ها';
+
+  @override
+  String get searchFilterLinks => 'پیوندها';
+
+  @override
+  String get searchChats => 'گفت‌وگوها';
+
+  @override
+  String get searchMessages => 'پیام‌ها';
+
+  @override
+  String get searchIntroTitle => 'در گفت‌وگوهایتان جست‌وجو کنید';
+
+  @override
+  String get searchIntroLine =>
+      'نام‌ها، واژه‌ها، عکس‌ها، فایل‌ها و پیوندها. جست‌وجو روی همین گوشی انجام می‌شود و چیزی به جایی نمی‌فرستد.';
+
+  @override
+  String get searchNothing => 'چیزی پیدا نشد';
+
+  @override
+  String get searchNothingLine => 'واژه یا فیلتر دیگری را امتحان کنید.';
+
+  @override
+  String searchMatches(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$count⁩ نتیجه',
+      one: '⁨$count⁩ نتیجه',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$count⁩ مورد دیگر',
+      one: '⁨$count⁩ مورد دیگر',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchFilling(Object share) {
+    return 'در حال افزودن پیام‌های قدیمی‌تر · ⁨$share⁩';
+  }
+
+  @override
+  String get searchClear => 'پاک کردن';
 }

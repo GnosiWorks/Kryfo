@@ -8567,5 +8567,88 @@
   "pollPickSeveral": "Pick one or more",
   "@pollPickSeveral": {
     "description": "hint on a poll before voting: one or more answers"
+  },
+  "searchOpen": "Search",
+  "@searchOpen": {
+    "description": "the search button on home, and its name for a screen reader"
+  },
+  "searchHint": "Search chats and messages",
+  "@searchHint": {
+    "description": "hint in the search field on home and in search"
+  },
+  "searchFilterAll": "All",
+  "@searchFilterAll": {
+    "description": "filter chip: everything"
+  },
+  "searchFilterPhotos": "Photos",
+  "@searchFilterPhotos": {
+    "description": "filter chip: photos only"
+  },
+  "searchFilterVideos": "Videos",
+  "@searchFilterVideos": {
+    "description": "filter chip: videos only"
+  },
+  "searchFilterFiles": "Files",
+  "@searchFilterFiles": {
+    "description": "filter chip: files only"
+  },
+  "searchFilterLinks": "Links",
+  "@searchFilterLinks": {
+    "description": "filter chip: links only"
+  },
+  "searchChats": "Chats",
+  "@searchChats": {
+    "description": "section of search results: chats and contacts found by name"
+  },
+  "searchMessages": "Messages",
+  "@searchMessages": {
+    "description": "section of search results: messages found by their words"
+  },
+  "searchIntroTitle": "Search your chats",
+  "@searchIntroTitle": {
+    "description": "title shown in search before anything is typed"
+  },
+  "searchIntroLine": "Names, words, photos, files and links. The search runs on this phone and sends nothing anywhere.",
+  "@searchIntroLine": {
+    "description": "its line: what can be found, and that the search stays on the phone"
+  },
+  "searchNothing": "Nothing found",
+  "@searchNothing": {
+    "description": "shown when a search finds nothing"
+  },
+  "searchNothingLine": "Try another word, or another filter.",
+  "@searchNothingLine": {
+    "description": "its line"
+  },
+  "searchMatches": "{count, plural, one{{count} match} other{{count} matches}}",
+  "@searchMatches": {
+    "description": "how many messages in one chat matched",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchMore": "{count, plural, one{{count} more} other{{count} more}}",
+  "@searchMore": {
+    "description": "a link under a chat in the results that shows the rest of its matches",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchFilling": "Adding older messages · {share}",
+  "@searchFilling": {
+    "description": "while the index of an older history is still being built; {share} is how far, e.g. 40%",
+    "placeholders": {
+      "share": {
+        "type": "Object"
+      }
+    }
+  },
+  "searchClear": "Clear",
+  "@searchClear": {
+    "description": "button that empties the search field"
   }
 }

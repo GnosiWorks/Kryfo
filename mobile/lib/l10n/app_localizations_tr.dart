@@ -6761,4 +6761,75 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pollPickSeveral => 'Bir veya daha fazlasını seç';
+
+  @override
+  String get searchOpen => 'Ara';
+
+  @override
+  String get searchHint => 'Sohbetlerde ve mesajlarda ara';
+
+  @override
+  String get searchFilterAll => 'Tümü';
+
+  @override
+  String get searchFilterPhotos => 'Fotoğraflar';
+
+  @override
+  String get searchFilterVideos => 'Videolar';
+
+  @override
+  String get searchFilterFiles => 'Dosyalar';
+
+  @override
+  String get searchFilterLinks => 'Bağlantılar';
+
+  @override
+  String get searchChats => 'Sohbetler';
+
+  @override
+  String get searchMessages => 'Mesajlar';
+
+  @override
+  String get searchIntroTitle => 'Sohbetlerinde ara';
+
+  @override
+  String get searchIntroLine =>
+      'İsimler, kelimeler, fotoğraflar, dosyalar ve bağlantılar. Arama bu telefonda yapılır ve hiçbir yere bir şey göndermez.';
+
+  @override
+  String get searchNothing => 'Hiçbir şey bulunamadı';
+
+  @override
+  String get searchNothingLine =>
+      'Başka bir kelime ya da başka bir filtre dene.';
+
+  @override
+  String searchMatches(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count eşleşme',
+      one: '$count eşleşme',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tane daha',
+      one: '$count tane daha',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchFilling(Object share) {
+    return 'Eski mesajlar ekleniyor · $share';
+  }
+
+  @override
+  String get searchClear => 'Temizle';
 }

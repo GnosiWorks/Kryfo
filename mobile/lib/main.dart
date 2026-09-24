@@ -57,6 +57,8 @@ import 'outbox.dart';
 import 'supporter.dart';
 import 'message_envelope.dart';
 import 'polls.dart';
+import 'search.dart';
+import 'search_bench.dart';
 import 'widgets/motion.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:app_links/app_links.dart';
@@ -962,7 +964,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 50,
+      version: 51,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1096,8 +1098,14 @@ class HaloDb {
         await _heldTable(db);
         await _signalTables(db);
         await _pollTables(db);
+        await searchTables(db, fresh: true);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 51) {
+          // search: the index starts empty and fills from the oldest
+          // message up, in the background, a batch at a time
+          await searchTables(db);
+        }
         if (oldV < 50) {
           // polls: the options on the row, the votes beside it
           try {
@@ -2234,7 +2242,7 @@ class HaloDb {
     String? poll,
   }) async {
     final db = await open();
-    await db.insert('messages', {
+    final id = await db.insert('messages', {
       'peer_id': peerId,
       'direction': direction,
       'plaintext': plaintext,
@@ -2254,6 +2262,17 @@ class HaloDb {
       'secure': secure ? 1 : 0,
       'poll': ?poll,
     });
+    try {
+      await indexSearchRow(db, id, {
+        'plaintext': plaintext,
+        'poll': poll,
+        'file_name': fileName,
+        'preview': preview,
+      });
+    } catch (e) {
+      // a message is never lost to its index; the fill catches it up
+      dlog('search: not indexed now: $e');
+    }
     // any inbound message proves the peer knows us, so flip back_paired.
     // subsequent sends to them can use nostr safely.
     if (direction == 'in') {
@@ -3162,7 +3181,59 @@ class HaloDb {
       where: 'msg_uid = ?',
       whereArgs: [msgUid],
     );
+    // the old words must not find it any more
+    final rows = await db.query(
+      'messages',
+      columns: ['id', 'plaintext', 'poll', 'file_name', 'preview'],
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+    );
+    for (final r in rows) {
+      await indexSearchRow(db, r['id'] as int, r);
+    }
   }
+
+  // ---- search ----
+
+  /// one batch of the first fill, oldest first. how far it got, of how
+  /// many; done when [at] reaches [to].
+  Future<({int at, int to})> fillSearchIndex({int batch = 300}) async {
+    final db = await open();
+    int meta(List<Map<String, Object?>> r) =>
+        r.isEmpty ? 0 : (r.first['v'] as num).toInt();
+    final to = meta(
+      await db.query('search_meta', where: "k = 'fill_to'", limit: 1),
+    );
+    var at = meta(
+      await db.query('search_meta', where: "k = 'fill_at'", limit: 1),
+    );
+    if (at >= to) return (at: at, to: to);
+    final rows = await db.query(
+      'messages',
+      columns: ['id', 'plaintext', 'poll', 'file_name', 'preview'],
+      where: 'id > ? AND id <= ?',
+      whereArgs: [at, to],
+      orderBy: 'id ASC',
+      limit: batch,
+    );
+    at = rows.isEmpty ? to : rows.last['id'] as int;
+    final b = db.batch();
+    for (final r in rows) {
+      indexSearchRowIn(b, r['id'] as int, r);
+    }
+    b.update('search_meta', {'v': at}, where: "k = 'fill_at'");
+    await b.commit(noResult: true);
+    return (at: at, to: to);
+  }
+
+  /// messages that match [match] (a full-text match, or null for every
+  /// message) and [kind], newest first. never a blocked contact's, never a
+  /// stranger's who has not been accepted.
+  Future<List<Map<String, Object?>>> searchMessages(
+    String? match,
+    SearchKind kind, {
+    int limit = 300,
+  }) async => runSearchQuery(await open(), match, kind, limit: limit);
 
   Future<bool> messageExists(String msgUid) async {
     final db = await open();
@@ -3577,6 +3648,121 @@ class HaloDb {
     );
     return rows.isEmpty ? null : rows.first;
   }
+}
+
+// search: the words of every message in a full-text index, in this
+// encrypted database and nowhere else. a message's words leave with the
+// message, whichever way it goes - a burn, an unsend, a cleared chat -
+// because the trigger removes them, not each delete. a wipe takes the whole
+// file. search_meta says how far the first fill of an older history got.
+Future<void> searchTables(Database db, {bool fresh = false}) async {
+  await db.execute(
+    'CREATE VIRTUAL TABLE IF NOT EXISTS msg_fts USING fts5('
+    "body, tokenize = 'unicode61 remove_diacritics 2')",
+  );
+  await db.execute(
+    'CREATE TRIGGER IF NOT EXISTS msg_fts_follow AFTER DELETE ON messages '
+    'BEGIN DELETE FROM msg_fts WHERE rowid = old.id; END',
+  );
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS search_meta (
+      k TEXT PRIMARY KEY,
+      v INTEGER NOT NULL
+    )
+  ''');
+  // what the first fill has to cover: every message there is now. a fresh
+  // install has none; later ones are indexed as they are saved
+  final top = fresh
+      ? 0
+      : Sqflite.firstIntValue(
+              await db.rawQuery('SELECT MAX(id) FROM messages'),
+            ) ??
+            0;
+  await db.insert('search_meta', {
+    'k': 'fill_to',
+    'v': top,
+  }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  await db.insert('search_meta', {
+    'k': 'fill_at',
+    'v': 0,
+  }, conflictAlgorithm: ConflictAlgorithm.ignore);
+}
+
+/// the search query itself, on any database with the schema: the app's,
+/// or the debug benchmark's scratch one
+Future<List<Map<String, Object?>>> runSearchQuery(
+  DatabaseExecutor db,
+  String? match,
+  SearchKind kind, {
+  int limit = 300,
+}) async {
+  final where = <String>[
+    'm.peer_id NOT IN (SELECT halo_id FROM contacts WHERE blocked = 1)',
+    "(m.group_id IS NOT NULL OR m.direction = 'out' OR m.peer_id IN "
+        '(SELECT halo_id FROM contacts WHERE accepted = 1))',
+  ];
+  final args = <Object?>[];
+  final kw = kindWhere(kind);
+  if (kw.isNotEmpty) where.add(kw);
+  // newest first by row id, which is the order messages arrived in: the
+  // index walks its ids backwards and stops at the limit, where sorting by
+  // time had to sort every match of a common word first
+  final String from;
+  final String order;
+  if (match != null) {
+    from = 'msg_fts JOIN messages m ON m.id = msg_fts.rowid';
+    where.insert(0, 'msg_fts MATCH ?');
+    args.add(match);
+    order = 'msg_fts.rowid DESC';
+  } else {
+    if (kind == SearchKind.all) return const [];
+    from = 'messages m';
+    order = 'm.id DESC';
+  }
+  args.add(limit);
+  return db.rawQuery(
+    'SELECT m.id, m.msg_uid, m.peer_id, m.group_id, m.direction, '
+    'm.plaintext, m.sent_at, m.media_path, m.file_path, m.file_name, '
+    'm.poll, m.preview FROM $from WHERE ${where.join(' AND ')} '
+    'ORDER BY $order LIMIT ?',
+    args,
+  );
+}
+
+// the words a row is found by: its text, a poll's answers, a file's name, the
+// title of the link it carries
+String _searchBody(Map<String, Object?> r) {
+  final parts = <String>[(r['plaintext'] as String?) ?? ''];
+  final poll = PollSpec.parse(r['poll']);
+  if (poll != null) parts.addAll(poll.options);
+  final name = r['file_name'] as String?;
+  if (name != null && name != 'voice.wav') parts.add(name);
+  final pv = r['preview'];
+  if (pv is String && pv.contains('"title"')) {
+    try {
+      final t = (jsonDecode(pv) as Map)['title'];
+      if (t is String) parts.add(t);
+    } catch (_) {}
+  }
+  return indexText(parts.where((x) => x.trim().isNotEmpty).join('\n'));
+}
+
+/// the same, queued on a batch: one trip for many rows
+void indexSearchRowIn(Batch b, int id, Map<String, Object?> r) {
+  b.delete('msg_fts', where: 'rowid = ?', whereArgs: [id]);
+  final body = _searchBody(r);
+  if (body.trim().isNotEmpty) b.insert('msg_fts', {'rowid': id, 'body': body});
+}
+
+Future<void> indexSearchRow(
+  DatabaseExecutor db,
+  int id,
+  Map<String, Object?> r,
+) async {
+  await db.delete('msg_fts', where: 'rowid = ?', whereArgs: [id]);
+  final body = _searchBody(r);
+  if (body.trim().isEmpty) return;
+  await db.insert('msg_fts', {'rowid': id, 'body': body});
 }
 
 // a poll's votes: one row per voter, the highest seq they sent. a vote can
@@ -4254,6 +4440,10 @@ class GroupPreview {
     this.expiresAt,
   });
 }
+
+/// how far the first fill of the search index has got, for the search
+/// screen's line while older messages are still being added
+final searchFill = ValueNotifier<({int at, int to})>((at: 0, to: 0));
 
 class AppState extends ChangeNotifier {
   // signalDecrypt lives outside this class but has to repaint the banners
@@ -5614,6 +5804,21 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // the first fill of the search index for a history from before it: a
+  // batch, a breath, the next, so the app never waits on it
+  Future<void> _fillSearch() async {
+    try {
+      while (!haloWiping) {
+        final p = await db.fillSearchIndex();
+        searchFill.value = p;
+        if (p.at >= p.to) break;
+        await Future.delayed(const Duration(milliseconds: 60));
+      }
+    } catch (e) {
+      dlog('search fill stopped: $e');
+    }
+  }
+
   String? _arrivingPoll(Object? raw) {
     final p = PollSpec.parse(raw);
     return p == null
@@ -6907,6 +7112,8 @@ class AppState extends ChangeNotifier {
     // periodic sweep: delete messages whose burn_at has passed. a sweep
     // that keeps failing means burned messages are staying, which the
     // user was promised would not happen, so after a minute of it say so
+    unawaited(_fillSearch());
+    if (kDebugMode) unawaited(maybeRunSearchBench());
     var sweepFails = 0;
     var sweeps = 0;
     Timer.periodic(const Duration(seconds: 5), (_) async {

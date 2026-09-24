@@ -9,7 +9,9 @@ import 'package:kryfo/search.dart';
 void main() {
   test('latin text is folded: case and accents go', () {
     expect(indexText('Café CRÈME à Hà Nội'), 'cafe creme a ha noi');
-    expect(indexText('Straße'), 'straße');
+    // the sharp s and the russian yo as people type them
+    expect(indexText('Straße'), 'strasse');
+    expect(indexText('идём'), 'идем');
     // a keyboard that does not compose: e plus a combining acute
     expect(indexText('café'), 'cafe');
     expect(indexText('İstanbul'), 'istanbul');

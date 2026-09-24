@@ -6798,4 +6798,74 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pollPickSeveral => 'Choisissez-en une ou plusieurs';
+
+  @override
+  String get searchOpen => 'Rechercher';
+
+  @override
+  String get searchHint => 'Rechercher dans les discussions et les messages';
+
+  @override
+  String get searchFilterAll => 'Tout';
+
+  @override
+  String get searchFilterPhotos => 'Photos';
+
+  @override
+  String get searchFilterVideos => 'Vidéos';
+
+  @override
+  String get searchFilterFiles => 'Fichiers';
+
+  @override
+  String get searchFilterLinks => 'Liens';
+
+  @override
+  String get searchChats => 'Discussions';
+
+  @override
+  String get searchMessages => 'Messages';
+
+  @override
+  String get searchIntroTitle => 'Cherchez dans vos discussions';
+
+  @override
+  String get searchIntroLine =>
+      'Noms, mots, photos, fichiers et liens. La recherche se fait sur ce téléphone et n’envoie rien nulle part.';
+
+  @override
+  String get searchNothing => 'Rien trouvé';
+
+  @override
+  String get searchNothingLine => 'Essayez un autre mot, ou un autre filtre.';
+
+  @override
+  String searchMatches(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count résultats',
+      one: '$count résultat',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count de plus',
+      one: '$count de plus',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchFilling(Object share) {
+    return 'Ajout des anciens messages · $share';
+  }
+
+  @override
+  String get searchClear => 'Effacer';
 }

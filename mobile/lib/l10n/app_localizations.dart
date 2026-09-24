@@ -10820,6 +10820,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pick one or more'**
   String get pollPickSeveral;
+
+  /// the search button on home, and its name for a screen reader
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get searchOpen;
+
+  /// hint in the search field on home and in search
+  ///
+  /// In en, this message translates to:
+  /// **'Search chats and messages'**
+  String get searchHint;
+
+  /// filter chip: everything
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get searchFilterAll;
+
+  /// filter chip: photos only
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get searchFilterPhotos;
+
+  /// filter chip: videos only
+  ///
+  /// In en, this message translates to:
+  /// **'Videos'**
+  String get searchFilterVideos;
+
+  /// filter chip: files only
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get searchFilterFiles;
+
+  /// filter chip: links only
+  ///
+  /// In en, this message translates to:
+  /// **'Links'**
+  String get searchFilterLinks;
+
+  /// section of search results: chats and contacts found by name
+  ///
+  /// In en, this message translates to:
+  /// **'Chats'**
+  String get searchChats;
+
+  /// section of search results: messages found by their words
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get searchMessages;
+
+  /// title shown in search before anything is typed
+  ///
+  /// In en, this message translates to:
+  /// **'Search your chats'**
+  String get searchIntroTitle;
+
+  /// its line: what can be found, and that the search stays on the phone
+  ///
+  /// In en, this message translates to:
+  /// **'Names, words, photos, files and links. The search runs on this phone and sends nothing anywhere.'**
+  String get searchIntroLine;
+
+  /// shown when a search finds nothing
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing found'**
+  String get searchNothing;
+
+  /// its line
+  ///
+  /// In en, this message translates to:
+  /// **'Try another word, or another filter.'**
+  String get searchNothingLine;
+
+  /// how many messages in one chat matched
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} match} other{{count} matches}}'**
+  String searchMatches(int count);
+
+  /// a link under a chat in the results that shows the rest of its matches
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} more} other{{count} more}}'**
+  String searchMore(int count);
+
+  /// while the index of an older history is still being built; {share} is how far, e.g. 40%
+  ///
+  /// In en, this message translates to:
+  /// **'Adding older messages · {share}'**
+  String searchFilling(Object share);
+
+  /// button that empties the search field
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get searchClear;
 }
 
 class _AppLocalizationsDelegate

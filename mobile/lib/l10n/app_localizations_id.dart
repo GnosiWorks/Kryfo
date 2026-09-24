@@ -6732,4 +6732,72 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get pollPickSeveral => 'Pilih satu atau lebih';
+
+  @override
+  String get searchOpen => 'Cari';
+
+  @override
+  String get searchHint => 'Cari di obrolan dan pesan';
+
+  @override
+  String get searchFilterAll => 'Semua';
+
+  @override
+  String get searchFilterPhotos => 'Foto';
+
+  @override
+  String get searchFilterVideos => 'Video';
+
+  @override
+  String get searchFilterFiles => 'File';
+
+  @override
+  String get searchFilterLinks => 'Tautan';
+
+  @override
+  String get searchChats => 'Obrolan';
+
+  @override
+  String get searchMessages => 'Pesan';
+
+  @override
+  String get searchIntroTitle => 'Cari di obrolanmu';
+
+  @override
+  String get searchIntroLine =>
+      'Nama, kata, foto, file, dan tautan. Pencarian berjalan di ponsel ini dan tidak mengirim apa pun ke mana pun.';
+
+  @override
+  String get searchNothing => 'Tidak ada hasil';
+
+  @override
+  String get searchNothingLine => 'Coba kata lain atau filter lain.';
+
+  @override
+  String searchMatches(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hasil',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lagi',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchFilling(Object share) {
+    return 'Menambahkan pesan lama · $share';
+  }
+
+  @override
+  String get searchClear => 'Hapus';
 }

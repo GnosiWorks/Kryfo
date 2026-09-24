@@ -6724,4 +6724,74 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pollPickSeveral => 'Pick one or more';
+
+  @override
+  String get searchOpen => 'Search';
+
+  @override
+  String get searchHint => 'Search chats and messages';
+
+  @override
+  String get searchFilterAll => 'All';
+
+  @override
+  String get searchFilterPhotos => 'Photos';
+
+  @override
+  String get searchFilterVideos => 'Videos';
+
+  @override
+  String get searchFilterFiles => 'Files';
+
+  @override
+  String get searchFilterLinks => 'Links';
+
+  @override
+  String get searchChats => 'Chats';
+
+  @override
+  String get searchMessages => 'Messages';
+
+  @override
+  String get searchIntroTitle => 'Search your chats';
+
+  @override
+  String get searchIntroLine =>
+      'Names, words, photos, files and links. The search runs on this phone and sends nothing anywhere.';
+
+  @override
+  String get searchNothing => 'Nothing found';
+
+  @override
+  String get searchNothingLine => 'Try another word, or another filter.';
+
+  @override
+  String searchMatches(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count matches',
+      one: '$count match',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more',
+      one: '$count more',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchFilling(Object share) {
+    return 'Adding older messages · $share';
+  }
+
+  @override
+  String get searchClear => 'Clear';
 }

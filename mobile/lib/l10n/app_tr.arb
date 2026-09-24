@@ -1782,5 +1782,22 @@
   "pollYou": "Sen",
   "pollOptionA11y": "{option}, {share}",
   "pollPickOne": "Birini seç",
-  "pollPickSeveral": "Bir veya daha fazlasını seç"
+  "pollPickSeveral": "Bir veya daha fazlasını seç",
+  "searchOpen": "Ara",
+  "searchHint": "Sohbetlerde ve mesajlarda ara",
+  "searchFilterAll": "Tümü",
+  "searchFilterPhotos": "Fotoğraflar",
+  "searchFilterVideos": "Videolar",
+  "searchFilterFiles": "Dosyalar",
+  "searchFilterLinks": "Bağlantılar",
+  "searchChats": "Sohbetler",
+  "searchMessages": "Mesajlar",
+  "searchIntroTitle": "Sohbetlerinde ara",
+  "searchIntroLine": "İsimler, kelimeler, fotoğraflar, dosyalar ve bağlantılar. Arama bu telefonda yapılır ve hiçbir yere bir şey göndermez.",
+  "searchNothing": "Hiçbir şey bulunamadı",
+  "searchNothingLine": "Başka bir kelime ya da başka bir filtre dene.",
+  "searchMatches": "{count, plural, one{{count} eşleşme} other{{count} eşleşme}}",
+  "searchMore": "{count, plural, one{{count} tane daha} other{{count} tane daha}}",
+  "searchFilling": "Eski mesajlar ekleniyor · {share}",
+  "searchClear": "Temizle"
 }

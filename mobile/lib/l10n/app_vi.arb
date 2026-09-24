@@ -1782,5 +1782,22 @@
   "pollYou": "Bạn",
   "pollOptionA11y": "{option}, {share}",
   "pollPickOne": "Chọn một",
-  "pollPickSeveral": "Chọn một hoặc nhiều"
+  "pollPickSeveral": "Chọn một hoặc nhiều",
+  "searchOpen": "Tìm kiếm",
+  "searchHint": "Tìm trong cuộc trò chuyện và tin nhắn",
+  "searchFilterAll": "Tất cả",
+  "searchFilterPhotos": "Ảnh",
+  "searchFilterVideos": "Video",
+  "searchFilterFiles": "Tệp",
+  "searchFilterLinks": "Liên kết",
+  "searchChats": "Cuộc trò chuyện",
+  "searchMessages": "Tin nhắn",
+  "searchIntroTitle": "Tìm trong các cuộc trò chuyện",
+  "searchIntroLine": "Tên, từ ngữ, ảnh, tệp và liên kết. Việc tìm kiếm diễn ra trên điện thoại này và không gửi gì đi đâu cả.",
+  "searchNothing": "Không tìm thấy gì",
+  "searchNothingLine": "Thử một từ khác hoặc một bộ lọc khác.",
+  "searchMatches": "{count, plural, other{{count} kết quả}}",
+  "searchMore": "{count, plural, other{thêm {count}}}",
+  "searchFilling": "Đang thêm các tin nhắn cũ · {share}",
+  "searchClear": "Xóa"
 }

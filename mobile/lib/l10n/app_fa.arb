@@ -1782,5 +1782,22 @@
   "pollYou": "شما",
   "pollOptionA11y": "⁨{option}⁩، ⁨{share}⁩",
   "pollPickOne": "یکی را انتخاب کنید",
-  "pollPickSeveral": "یک یا چند گزینه را انتخاب کنید"
+  "pollPickSeveral": "یک یا چند گزینه را انتخاب کنید",
+  "searchOpen": "جست‌وجو",
+  "searchHint": "جست‌وجو در گفت‌وگوها و پیام‌ها",
+  "searchFilterAll": "همه",
+  "searchFilterPhotos": "عکس‌ها",
+  "searchFilterVideos": "ویدیوها",
+  "searchFilterFiles": "فایل‌ها",
+  "searchFilterLinks": "پیوندها",
+  "searchChats": "گفت‌وگوها",
+  "searchMessages": "پیام‌ها",
+  "searchIntroTitle": "در گفت‌وگوهایتان جست‌وجو کنید",
+  "searchIntroLine": "نام‌ها، واژه‌ها، عکس‌ها، فایل‌ها و پیوندها. جست‌وجو روی همین گوشی انجام می‌شود و چیزی به جایی نمی‌فرستد.",
+  "searchNothing": "چیزی پیدا نشد",
+  "searchNothingLine": "واژه یا فیلتر دیگری را امتحان کنید.",
+  "searchMatches": "{count, plural, one{⁨{count}⁩ نتیجه} other{⁨{count}⁩ نتیجه}}",
+  "searchMore": "{count, plural, one{⁨{count}⁩ مورد دیگر} other{⁨{count}⁩ مورد دیگر}}",
+  "searchFilling": "در حال افزودن پیام‌های قدیمی‌تر · ⁨{share}⁩",
+  "searchClear": "پاک کردن"
 }

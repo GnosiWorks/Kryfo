@@ -89,7 +89,9 @@ String? _senderLabel(Map<String, String> nickById, String peer) =>
 
 class GroupChatScreen extends StatefulWidget {
   final String groupId;
-  const GroupChatScreen({super.key, required this.groupId});
+  // open at this message, lit for a moment (from search)
+  final String? jumpToUid;
+  const GroupChatScreen({super.key, required this.groupId, this.jumpToUid});
   @override
   State<GroupChatScreen> createState() => _GroupChatScreenState();
 }
@@ -525,7 +527,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       _me = await appState.meIn(widget.groupId);
       // keep whatever window the user has expanded to - a mid-scroll reaction
       // used to collapse the list back to one page and yank the view.
-      final wantAll = _searching || _pagedOut || _messages.length > _pageSize;
+      final wantAll =
+          _searching ||
+          _pagedOut ||
+          _messages.length > _pageSize ||
+          (widget.jumpToUid != null && !_didJump);
       _blocked = await db.blockedIds();
       final rows0 = wantAll
           ? await db.loadGroupMessages(widget.groupId)
@@ -635,7 +641,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       // the view to the bottom is what kept throwing pin jumps and
       // scrollback to the end of the chat.
       final nearEnd = !_scrollReady || _maxScroll - _pixels < 240;
-      if (!_loaded || (nearEnd && _jumpUid == null)) {
+      final target = !_didJump && widget.jumpToUid != null
+          ? _messages.indexWhere((m) => m.msgUid == widget.jumpToUid)
+          : -1;
+      if (widget.jumpToUid != null) _didJump = true;
+      if (target >= 0) {
+        _jumpWhenReady(target, 0);
+      } else if (!_loaded || (nearEnd && _jumpUid == null)) {
         _scrollToEnd(instant: true);
       }
       _loaded = true;
@@ -2075,6 +2087,20 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           setState(() => _jumpUid = null);
         }
       });
+    });
+  }
+
+  bool _didJump = false;
+
+  // the list has to be laid out before a jump can land: wait a few frames
+  void _jumpWhenReady(int idx, int tries) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_scrollReady) {
+        _scrollToIndex(idx);
+      } else if (tries < 20) {
+        _jumpWhenReady(idx, tries + 1);
+      }
     });
   }
 

@@ -13,6 +13,10 @@ final Map<int, String> _latin = {
   for (var i = 0; i < _accented.length; i++) _accented.codeUnitAt(i): _plain[i],
 };
 
+// letters people type another way: ss for the german sharp s, e for the
+// russian yo
+const _spelled = {0x00DF: 'ss', 0x1E9E: 'ss', 0x0451: 'е', 0x0401: 'е'};
+
 // arabic-script letters a persian or an arabic keyboard spells differently
 const _arabicForms = {
   0x0643: 'ک', // arabic kaf, typed for the persian word
@@ -40,7 +44,7 @@ bool _dropped(int r) =>
 /// one character folded: '' when it is a mark to drop
 String foldRune(int r) {
   if (_dropped(r)) return '';
-  final a = _arabicForms[r];
+  final a = _arabicForms[r] ?? _spelled[r];
   if (a != null) return a;
   final lower = String.fromCharCode(r).toLowerCase();
   if (lower.length == 1) {

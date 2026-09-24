@@ -6739,7 +6739,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get languageNameZhHant => 'Китайська (традиційна)';
 
   @override
-  String get languageNameVi => 'Вʼєтнамська';
+  String get languageNameVi => 'В’єтнамська';
 
   @override
   String get languageNameId => 'Індонезійська';
@@ -6852,4 +6852,78 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get pollPickSeveral => 'Вибери один або кілька';
+
+  @override
+  String get searchOpen => 'Пошук';
+
+  @override
+  String get searchHint => 'Шукати в чатах і повідомленнях';
+
+  @override
+  String get searchFilterAll => 'Усе';
+
+  @override
+  String get searchFilterPhotos => 'Фото';
+
+  @override
+  String get searchFilterVideos => 'Відео';
+
+  @override
+  String get searchFilterFiles => 'Файли';
+
+  @override
+  String get searchFilterLinks => 'Посилання';
+
+  @override
+  String get searchChats => 'Чати';
+
+  @override
+  String get searchMessages => 'Повідомлення';
+
+  @override
+  String get searchIntroTitle => 'Шукай у своїх чатах';
+
+  @override
+  String get searchIntroLine =>
+      'Імена, слова, фото, файли й посилання. Пошук відбувається на цьому телефоні й нічого нікуди не надсилає.';
+
+  @override
+  String get searchNothing => 'Нічого не знайдено';
+
+  @override
+  String get searchNothingLine => 'Спробуй інше слово або інший фільтр.';
+
+  @override
+  String searchMatches(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count збігу',
+      many: '$count збігів',
+      few: '$count збіги',
+      one: '$count збіг',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ще $count',
+      many: 'ще $count',
+      few: 'ще $count',
+      one: 'ще $count',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchFilling(Object share) {
+    return 'Додаю старіші повідомлення · $share';
+  }
+
+  @override
+  String get searchClear => 'Очистити';
 }

@@ -1782,5 +1782,22 @@
   "pollYou": "Du",
   "pollOptionA11y": "{option}, {share}",
   "pollPickOne": "Wähle eine",
-  "pollPickSeveral": "Wähle eine oder mehrere"
+  "pollPickSeveral": "Wähle eine oder mehrere",
+  "searchOpen": "Suchen",
+  "searchHint": "Chats und Nachrichten durchsuchen",
+  "searchFilterAll": "Alle",
+  "searchFilterPhotos": "Fotos",
+  "searchFilterVideos": "Videos",
+  "searchFilterFiles": "Dateien",
+  "searchFilterLinks": "Links",
+  "searchChats": "Chats",
+  "searchMessages": "Nachrichten",
+  "searchIntroTitle": "Durchsuche deine Chats",
+  "searchIntroLine": "Namen, Wörter, Fotos, Dateien und Links. Die Suche läuft auf diesem Handy und schickt nichts irgendwohin.",
+  "searchNothing": "Nichts gefunden",
+  "searchNothingLine": "Versuch ein anderes Wort oder einen anderen Filter.",
+  "searchMatches": "{count, plural, one{{count} Treffer} other{{count} Treffer}}",
+  "searchMore": "{count, plural, one{{count} weiterer} other{{count} weitere}}",
+  "searchFilling": "Ältere Nachrichten werden aufgenommen · {share}",
+  "searchClear": "Leeren"
 }

@@ -1782,5 +1782,22 @@
   "pollYou": "Kamu",
   "pollOptionA11y": "{option}, {share}",
   "pollPickOne": "Pilih satu",
-  "pollPickSeveral": "Pilih satu atau lebih"
+  "pollPickSeveral": "Pilih satu atau lebih",
+  "searchOpen": "Cari",
+  "searchHint": "Cari di obrolan dan pesan",
+  "searchFilterAll": "Semua",
+  "searchFilterPhotos": "Foto",
+  "searchFilterVideos": "Video",
+  "searchFilterFiles": "File",
+  "searchFilterLinks": "Tautan",
+  "searchChats": "Obrolan",
+  "searchMessages": "Pesan",
+  "searchIntroTitle": "Cari di obrolanmu",
+  "searchIntroLine": "Nama, kata, foto, file, dan tautan. Pencarian berjalan di ponsel ini dan tidak mengirim apa pun ke mana pun.",
+  "searchNothing": "Tidak ada hasil",
+  "searchNothingLine": "Coba kata lain atau filter lain.",
+  "searchMatches": "{count, plural, other{{count} hasil}}",
+  "searchMore": "{count, plural, other{{count} lagi}}",
+  "searchFilling": "Menambahkan pesan lama · {share}",
+  "searchClear": "Hapus"
 }

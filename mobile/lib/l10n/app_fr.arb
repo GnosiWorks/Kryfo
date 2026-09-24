@@ -1782,5 +1782,22 @@
   "pollYou": "Vous",
   "pollOptionA11y": "{option}, {share}",
   "pollPickOne": "Choisissez-en une",
-  "pollPickSeveral": "Choisissez-en une ou plusieurs"
+  "pollPickSeveral": "Choisissez-en une ou plusieurs",
+  "searchOpen": "Rechercher",
+  "searchHint": "Rechercher dans les discussions et les messages",
+  "searchFilterAll": "Tout",
+  "searchFilterPhotos": "Photos",
+  "searchFilterVideos": "Vidéos",
+  "searchFilterFiles": "Fichiers",
+  "searchFilterLinks": "Liens",
+  "searchChats": "Discussions",
+  "searchMessages": "Messages",
+  "searchIntroTitle": "Cherchez dans vos discussions",
+  "searchIntroLine": "Noms, mots, photos, fichiers et liens. La recherche se fait sur ce téléphone et n’envoie rien nulle part.",
+  "searchNothing": "Rien trouvé",
+  "searchNothingLine": "Essayez un autre mot, ou un autre filtre.",
+  "searchMatches": "{count, plural, one{{count} résultat} other{{count} résultats}}",
+  "searchMore": "{count, plural, one{{count} de plus} other{{count} de plus}}",
+  "searchFilling": "Ajout des anciens messages · {share}",
+  "searchClear": "Effacer"
 }

@@ -41,6 +41,7 @@ import '../delivery_mode.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../l10n/numbers.dart';
+import 'search_screen.dart';
 
 bool _miuiPromptChecked = false;
 
@@ -360,6 +361,15 @@ class _ChatsTab extends StatelessWidget {
           const _OfflineCard(),
           const _KeepsStoppingCard(),
           const _NotificationsBlockedHint(),
+          StaggerIn(
+            index: 1,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 2, 20, 10),
+              child: SearchField(
+                onTap: () => Navigator.of(context).push(searchRoute()),
+              ),
+            ),
+          ),
           StaggerIn(
             index: 1,
             child: _QuickTiles(
@@ -1655,114 +1665,134 @@ class _ContactList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rest = contacts;
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        // groups section (header + rows + new-group tile). always show the
-        // tile so user can create a group even with no existing groups.
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
-          child: Row(
-            children: [
-              Text(
-                l10n.homeGroups,
-                style: HaloType.mono(
-                  size: 10,
-                  color: HaloColors.text3,
-                  letter: 0.14,
+    // pulled down past the top, the list opens search
+    var opened = false;
+    return NotificationListener<ScrollUpdateNotification>(
+      onNotification: (n) {
+        if (!opened &&
+            n.dragDetails != null &&
+            n.metrics.axis == Axis.vertical &&
+            n.metrics.pixels < -72) {
+          opened = true;
+          HapticFeedback.lightImpact();
+          Navigator.of(context).push(searchRoute());
+        }
+        if (n.metrics.pixels >= 0) opened = false;
+        return false;
+      },
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          // groups section (header + rows + new-group tile). always show the
+          // tile so user can create a group even with no existing groups.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
+            child: Row(
+              children: [
+                Text(
+                  l10n.homeGroups,
+                  style: HaloType.mono(
+                    size: 10,
+                    color: HaloColors.text3,
+                    letter: 0.14,
+                  ),
                 ),
-              ),
-              const Spacer(),
-              GestureDetector(
-                onTap: onNewRoom,
-                behavior: HitTestBehavior.opaque,
-                child: Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 14),
+                const Spacer(),
+                GestureDetector(
+                  onTap: onNewRoom,
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 14),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.timer_outlined,
+                          size: 13,
+                          color: HaloColors.violet,
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          l10n.homeRoom,
+                          style: HaloType.mono(
+                            size: 10,
+                            color: HaloColors.violet,
+                            letter: 0.14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: onNewGroup,
+                  behavior: HitTestBehavior.opaque,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.timer_outlined,
-                        size: 13,
-                        color: HaloColors.violet,
+                        Icons.add_rounded,
+                        size: 14,
+                        color: HaloColors.amber,
                       ),
                       const SizedBox(width: 3),
                       Text(
-                        l10n.homeRoom,
+                        l10n.homeNew,
                         style: HaloType.mono(
                           size: 10,
-                          color: HaloColors.violet,
+                          color: HaloColors.amber,
                           letter: 0.14,
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
-              GestureDetector(
-                onTap: onNewGroup,
-                behavior: HitTestBehavior.opaque,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.add_rounded, size: 14, color: HaloColors.amber),
-                    const SizedBox(width: 3),
-                    Text(
-                      l10n.homeNew,
-                      style: HaloType.mono(
-                        size: 10,
-                        color: HaloColors.amber,
-                        letter: 0.14,
-                      ),
-                    ),
-                  ],
+              ],
+            ),
+          ),
+          // a room that just ended: one quiet line, gone in a few seconds
+          if (expiredRoomName != null)
+            _Enter(
+              index: 0,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                child: Text(
+                  l10n.homeRoomExpired(expiredRoomName!),
+                  style: HaloType.mono(size: 10, color: HaloColors.violet),
                 ),
               ),
-            ],
-          ),
-        ),
-        // a room that just ended: one quiet line, gone in a few seconds
-        if (expiredRoomName != null)
-          _Enter(
-            index: 0,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-              child: Text(
-                l10n.homeRoomExpired(expiredRoomName!),
-                style: HaloType.mono(size: 10, color: HaloColors.violet),
-              ),
             ),
-          ),
-        // keyed, so a row that moves up on a new message glides there
-        ...groups.asMap().entries.map(
-          (e) => ShiftInPlace(
-            key: ValueKey('g-${e.value.groupId}'),
-            index: e.key,
-            child: _Enter(
-              index: 1 + e.key,
-              child: _GroupRow(
-                g: e.value,
-                onTap: () => onOpenGroup(e.value.groupId),
-              ),
-            ),
-          ),
-        ),
-        if (rest.isNotEmpty) ...[
-          ...rest.asMap().entries.map(
+          // keyed, so a row that moves up on a new message glides there
+          ...groups.asMap().entries.map(
             (e) => ShiftInPlace(
-              key: ValueKey('c-${e.value.haloId}'),
-              index: groups.length + e.key,
+              key: ValueKey('g-${e.value.groupId}'),
+              index: e.key,
               child: _Enter(
-                index: 1 + groups.length + e.key,
-                child: _SwipeRow(
-                  c: e.value,
-                  onTap: () => onTap(e.value.haloId),
+                index: 1 + e.key,
+                child: _GroupRow(
+                  g: e.value,
+                  onTap: () => onOpenGroup(e.value.groupId),
                 ),
               ),
             ),
           ),
+          if (rest.isNotEmpty) ...[
+            ...rest.asMap().entries.map(
+              (e) => ShiftInPlace(
+                key: ValueKey('c-${e.value.haloId}'),
+                index: groups.length + e.key,
+                child: _Enter(
+                  index: 1 + groups.length + e.key,
+                  child: _SwipeRow(
+                    c: e.value,
+                    onTap: () => onTap(e.value.haloId),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }

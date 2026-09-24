@@ -1782,5 +1782,22 @@
   "pollYou": "你",
   "pollOptionA11y": "{option}，{share}",
   "pollPickOne": "選一項",
-  "pollPickSeveral": "選一項或多項"
+  "pollPickSeveral": "選一項或多項",
+  "searchOpen": "搜尋",
+  "searchHint": "搜尋聊天和訊息",
+  "searchFilterAll": "全部",
+  "searchFilterPhotos": "照片",
+  "searchFilterVideos": "影片",
+  "searchFilterFiles": "檔案",
+  "searchFilterLinks": "連結",
+  "searchChats": "聊天",
+  "searchMessages": "訊息",
+  "searchIntroTitle": "搜尋你的聊天",
+  "searchIntroLine": "名字、詞語、照片、檔案和連結。搜尋只在這支手機上進行，不會把任何東西傳到別處。",
+  "searchNothing": "找不到結果",
+  "searchNothingLine": "換個詞或換個篩選試試。",
+  "searchMatches": "{count, plural, other{{count} 筆結果}}",
+  "searchMore": "{count, plural, other{還有 {count} 筆}}",
+  "searchFilling": "正在加入較早的訊息 · {share}",
+  "searchClear": "清除"
 }

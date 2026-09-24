@@ -6856,4 +6856,78 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pollPickSeveral => 'Выбери один или несколько';
+
+  @override
+  String get searchOpen => 'Поиск';
+
+  @override
+  String get searchHint => 'Искать в чатах и сообщениях';
+
+  @override
+  String get searchFilterAll => 'Всё';
+
+  @override
+  String get searchFilterPhotos => 'Фото';
+
+  @override
+  String get searchFilterVideos => 'Видео';
+
+  @override
+  String get searchFilterFiles => 'Файлы';
+
+  @override
+  String get searchFilterLinks => 'Ссылки';
+
+  @override
+  String get searchChats => 'Чаты';
+
+  @override
+  String get searchMessages => 'Сообщения';
+
+  @override
+  String get searchIntroTitle => 'Ищи по своим чатам';
+
+  @override
+  String get searchIntroLine =>
+      'Имена, слова, фото, файлы и ссылки. Поиск идёт на этом телефоне и ничего никуда не отправляет.';
+
+  @override
+  String get searchNothing => 'Ничего не найдено';
+
+  @override
+  String get searchNothingLine => 'Попробуй другое слово или другой фильтр.';
+
+  @override
+  String searchMatches(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count совпадения',
+      many: '$count совпадений',
+      few: '$count совпадения',
+      one: '$count совпадение',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ещё $count',
+      many: 'ещё $count',
+      few: 'ещё $count',
+      one: 'ещё $count',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchFilling(Object share) {
+    return 'Добавляю старые сообщения · $share';
+  }
+
+  @override
+  String get searchClear => 'Очистить';
 }

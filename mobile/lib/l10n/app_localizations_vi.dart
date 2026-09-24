@@ -6719,4 +6719,72 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pollPickSeveral => 'Chọn một hoặc nhiều';
+
+  @override
+  String get searchOpen => 'Tìm kiếm';
+
+  @override
+  String get searchHint => 'Tìm trong cuộc trò chuyện và tin nhắn';
+
+  @override
+  String get searchFilterAll => 'Tất cả';
+
+  @override
+  String get searchFilterPhotos => 'Ảnh';
+
+  @override
+  String get searchFilterVideos => 'Video';
+
+  @override
+  String get searchFilterFiles => 'Tệp';
+
+  @override
+  String get searchFilterLinks => 'Liên kết';
+
+  @override
+  String get searchChats => 'Cuộc trò chuyện';
+
+  @override
+  String get searchMessages => 'Tin nhắn';
+
+  @override
+  String get searchIntroTitle => 'Tìm trong các cuộc trò chuyện';
+
+  @override
+  String get searchIntroLine =>
+      'Tên, từ ngữ, ảnh, tệp và liên kết. Việc tìm kiếm diễn ra trên điện thoại này và không gửi gì đi đâu cả.';
+
+  @override
+  String get searchNothing => 'Không tìm thấy gì';
+
+  @override
+  String get searchNothingLine => 'Thử một từ khác hoặc một bộ lọc khác.';
+
+  @override
+  String searchMatches(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count kết quả',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'thêm $count',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchFilling(Object share) {
+    return 'Đang thêm các tin nhắn cũ · $share';
+  }
+
+  @override
+  String get searchClear => 'Xóa';
 }

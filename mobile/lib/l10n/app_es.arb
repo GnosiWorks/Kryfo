@@ -1782,5 +1782,22 @@
   "pollYou": "Tú",
   "pollOptionA11y": "{option}, {share}",
   "pollPickOne": "Elige una",
-  "pollPickSeveral": "Elige una o más"
+  "pollPickSeveral": "Elige una o más",
+  "searchOpen": "Buscar",
+  "searchHint": "Buscar en chats y mensajes",
+  "searchFilterAll": "Todo",
+  "searchFilterPhotos": "Fotos",
+  "searchFilterVideos": "Vídeos",
+  "searchFilterFiles": "Archivos",
+  "searchFilterLinks": "Enlaces",
+  "searchChats": "Chats",
+  "searchMessages": "Mensajes",
+  "searchIntroTitle": "Busca en tus chats",
+  "searchIntroLine": "Nombres, palabras, fotos, archivos y enlaces. La búsqueda ocurre en este teléfono y no envía nada a ningún sitio.",
+  "searchNothing": "No se encontró nada",
+  "searchNothingLine": "Prueba con otra palabra u otro filtro.",
+  "searchMatches": "{count, plural, one{{count} resultado} other{{count} resultados}}",
+  "searchMore": "{count, plural, one{{count} más} other{{count} más}}",
+  "searchFilling": "Añadiendo mensajes antiguos · {share}",
+  "searchClear": "Borrar"
 }

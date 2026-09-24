@@ -6805,4 +6805,75 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pollPickSeveral => 'Wähle eine oder mehrere';
+
+  @override
+  String get searchOpen => 'Suchen';
+
+  @override
+  String get searchHint => 'Chats und Nachrichten durchsuchen';
+
+  @override
+  String get searchFilterAll => 'Alle';
+
+  @override
+  String get searchFilterPhotos => 'Fotos';
+
+  @override
+  String get searchFilterVideos => 'Videos';
+
+  @override
+  String get searchFilterFiles => 'Dateien';
+
+  @override
+  String get searchFilterLinks => 'Links';
+
+  @override
+  String get searchChats => 'Chats';
+
+  @override
+  String get searchMessages => 'Nachrichten';
+
+  @override
+  String get searchIntroTitle => 'Durchsuche deine Chats';
+
+  @override
+  String get searchIntroLine =>
+      'Namen, Wörter, Fotos, Dateien und Links. Die Suche läuft auf diesem Handy und schickt nichts irgendwohin.';
+
+  @override
+  String get searchNothing => 'Nichts gefunden';
+
+  @override
+  String get searchNothingLine =>
+      'Versuch ein anderes Wort oder einen anderen Filter.';
+
+  @override
+  String searchMatches(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Treffer',
+      one: '$count Treffer',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count weitere',
+      one: '$count weiterer',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchFilling(Object share) {
+    return 'Ältere Nachrichten werden aufgenommen · $share';
+  }
+
+  @override
+  String get searchClear => 'Leeren';
 }

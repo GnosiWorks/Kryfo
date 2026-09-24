@@ -6480,6 +6480,73 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pollPickSeveral => '选一项或多项';
+
+  @override
+  String get searchOpen => '搜索';
+
+  @override
+  String get searchHint => '搜索聊天和消息';
+
+  @override
+  String get searchFilterAll => '全部';
+
+  @override
+  String get searchFilterPhotos => '照片';
+
+  @override
+  String get searchFilterVideos => '视频';
+
+  @override
+  String get searchFilterFiles => '文件';
+
+  @override
+  String get searchFilterLinks => '链接';
+
+  @override
+  String get searchChats => '聊天';
+
+  @override
+  String get searchMessages => '消息';
+
+  @override
+  String get searchIntroTitle => '搜索你的聊天';
+
+  @override
+  String get searchIntroLine => '名字、词语、照片、文件和链接。搜索只在这台手机上进行，不会把任何东西发到别处。';
+
+  @override
+  String get searchNothing => '没有找到';
+
+  @override
+  String get searchNothingLine => '换个词或换个筛选试试。';
+
+  @override
+  String searchMatches(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 条结果',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '还有 $count 条',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchFilling(Object share) {
+    return '正在加入较早的消息 · $share';
+  }
+
+  @override
+  String get searchClear => '清除';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -12958,4 +13025,71 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pollPickSeveral => '選一項或多項';
+
+  @override
+  String get searchOpen => '搜尋';
+
+  @override
+  String get searchHint => '搜尋聊天和訊息';
+
+  @override
+  String get searchFilterAll => '全部';
+
+  @override
+  String get searchFilterPhotos => '照片';
+
+  @override
+  String get searchFilterVideos => '影片';
+
+  @override
+  String get searchFilterFiles => '檔案';
+
+  @override
+  String get searchFilterLinks => '連結';
+
+  @override
+  String get searchChats => '聊天';
+
+  @override
+  String get searchMessages => '訊息';
+
+  @override
+  String get searchIntroTitle => '搜尋你的聊天';
+
+  @override
+  String get searchIntroLine => '名字、詞語、照片、檔案和連結。搜尋只在這支手機上進行，不會把任何東西傳到別處。';
+
+  @override
+  String get searchNothing => '找不到結果';
+
+  @override
+  String get searchNothingLine => '換個詞或換個篩選試試。';
+
+  @override
+  String searchMatches(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 筆結果',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '還有 $count 筆',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchFilling(Object share) {
+    return '正在加入較早的訊息 · $share';
+  }
+
+  @override
+  String get searchClear => '清除';
 }

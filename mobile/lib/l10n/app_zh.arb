@@ -1782,5 +1782,22 @@
   "pollYou": "你",
   "pollOptionA11y": "{option}，{share}",
   "pollPickOne": "选一项",
-  "pollPickSeveral": "选一项或多项"
+  "pollPickSeveral": "选一项或多项",
+  "searchOpen": "搜索",
+  "searchHint": "搜索聊天和消息",
+  "searchFilterAll": "全部",
+  "searchFilterPhotos": "照片",
+  "searchFilterVideos": "视频",
+  "searchFilterFiles": "文件",
+  "searchFilterLinks": "链接",
+  "searchChats": "聊天",
+  "searchMessages": "消息",
+  "searchIntroTitle": "搜索你的聊天",
+  "searchIntroLine": "名字、词语、照片、文件和链接。搜索只在这台手机上进行，不会把任何东西发到别处。",
+  "searchNothing": "没有找到",
+  "searchNothingLine": "换个词或换个筛选试试。",
+  "searchMatches": "{count, plural, other{{count} 条结果}}",
+  "searchMore": "{count, plural, other{还有 {count} 条}}",
+  "searchFilling": "正在加入较早的消息 · {share}",
+  "searchClear": "清除"
 }

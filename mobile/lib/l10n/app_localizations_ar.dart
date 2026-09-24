@@ -6847,4 +6847,82 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pollPickSeveral => 'اختر إجابة أو أكثر';
+
+  @override
+  String get searchOpen => 'بحث';
+
+  @override
+  String get searchHint => 'ابحث في المحادثات والرسائل';
+
+  @override
+  String get searchFilterAll => 'الكل';
+
+  @override
+  String get searchFilterPhotos => 'الصور';
+
+  @override
+  String get searchFilterVideos => 'الفيديوهات';
+
+  @override
+  String get searchFilterFiles => 'الملفات';
+
+  @override
+  String get searchFilterLinks => 'الروابط';
+
+  @override
+  String get searchChats => 'المحادثات';
+
+  @override
+  String get searchMessages => 'الرسائل';
+
+  @override
+  String get searchIntroTitle => 'ابحث في محادثاتك';
+
+  @override
+  String get searchIntroLine =>
+      'الأسماء والكلمات والصور والملفات والروابط. يجري البحث على هذا الهاتف ولا يرسل أي شيء إلى أي مكان.';
+
+  @override
+  String get searchNothing => 'لم يُعثر على شيء';
+
+  @override
+  String get searchNothingLine => 'جرّب كلمة أخرى أو فلترًا آخر.';
+
+  @override
+  String searchMatches(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$count⁩ نتيجة',
+      many: '⁨$count⁩ نتيجة',
+      few: '⁨$count⁩ نتائج',
+      two: 'نتيجتان',
+      one: 'نتيجة واحدة',
+      zero: 'لا نتائج',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$count⁩ أخرى',
+      many: '⁨$count⁩ أخرى',
+      few: '⁨$count⁩ أخرى',
+      two: 'اثنتان أخريان',
+      one: 'واحدة أخرى',
+      zero: 'لا شيء آخر',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchFilling(Object share) {
+    return 'جارٍ إضافة الرسائل الأقدم · ⁨$share⁩';
+  }
+
+  @override
+  String get searchClear => 'مسح';
 }
