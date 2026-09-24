@@ -34,6 +34,10 @@ void setDateLocale(String intlLocale) => _chosen = intlLocale;
 String intlLocaleFor(String languageCode, {String? scriptCode}) {
   if (languageCode == 'en') return 'en_GB';
   if (languageCode == 'zh') return scriptCode == 'Hant' ? 'zh_TW' : 'zh';
+  // arabic writes arabic-indic digits (cldr's default for it). intl's plain
+  // "ar" gives them to dates but latin digits to numbers; its egyptian data
+  // gives them to both, with the same month names.
+  if (languageCode == 'ar') return 'ar_EG';
   return languageCode;
 }
 

@@ -384,7 +384,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appCheckStarted => 'بدأ';
 
   @override
-  String get appTorNotReadyIn => 'لم يجهز tor خلال 75 ث';
+  String get appTorNotReadyIn => 'لم يجهز tor خلال ٧٥ ث';
 
   @override
   String get appOk => 'تم';
@@ -510,13 +510,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appIdentityCreated => 'تم إنشاء الهوية';
 
   @override
-  String get appStartingTor30s => 'جارٍ تشغيل tor (نحو 30 ث)...';
+  String get appStartingTor30s => 'جارٍ تشغيل tor (نحو ٣٠ ث)...';
 
   @override
   String get appScanOrImportA => 'اقرأ رمز نظير أو استورده أولًا';
 
   @override
-  String get appEncryptingSending30s => 'جارٍ التشفير + الإرسال (نحو 30 ث)...';
+  String get appEncryptingSending30s => 'جارٍ التشفير + الإرسال (نحو ٣٠ ث)...';
 
   @override
   String get appTapStartListeningFirst => 'اضغط «بدء الاستماع» أولًا';
@@ -609,7 +609,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appTorIsOff => 'Tor متوقف';
 
   @override
-  String get appConnectedRoutedThrough3 => 'متصل · يمر عبر 3 مُرحِّلات';
+  String get appConnectedRoutedThrough3 => 'متصل · يمر عبر ٣ مُرحِّلات';
 
   @override
   String get appReadyToSendPublishing => 'جاهز للإرسال · جارٍ نشر عنوانك';
@@ -762,7 +762,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationsEncrypted => 'مشفّرة';
 
   @override
-  String get rooms24h => '24 س';
+  String get rooms24h => '٢٤ س';
 
   @override
   String roomsD(Object inDays) {
@@ -775,7 +775,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get rooms24Hours => '24 ساعة';
+  String get rooms24Hours => '٢٤ ساعة';
 
   @override
   String roomsDays(int count) {
@@ -996,7 +996,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commonSave => 'حفظ';
 
   @override
-  String get backupPassphraseMustBeAt => 'يجب ألا تقل عبارة المرور عن 6 أحرف';
+  String get backupPassphraseMustBeAt => 'يجب ألا تقل عبارة المرور عن ٦ أحرف';
 
   @override
   String get backupPassphrasesDonTMatch => 'عبارتا المرور غير متطابقتين';
@@ -1239,7 +1239,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cameraCouldNotSaveA => 'تعذّر حفظ نسخة على هذا الهاتف';
 
   @override
-  String get cameraTooLongForA => 'أطول من أن يُرسل · 8 م.ب كحد أقصى';
+  String get cameraTooLongForA => 'أطول من أن يُرسل · ٨ م.ب كحد أقصى';
 
   @override
   String get cameraNeverSavedToYour => 'لا يُحفظ أبدًا في صورك';
@@ -1320,7 +1320,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get chat0s => '0 ث';
+  String get chat0s => '٠ ث';
 
   @override
   String chatHM(Object h, Object m) {
@@ -1423,19 +1423,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatEditMessage => 'تعديل الرسالة';
 
   @override
-  String get chat30Seconds => '30 ثانية';
+  String get chat30Seconds => '٣٠ ثانية';
 
   @override
   String get chat1Minute => 'دقيقة واحدة';
 
   @override
-  String get chat5Minutes => '5 دقائق';
+  String get chat5Minutes => '٥ دقائق';
 
   @override
   String get chat1Hour => 'ساعة واحدة';
 
   @override
-  String get chat24Hours => '24 ساعة';
+  String get chat24Hours => '٢٤ ساعة';
 
   @override
   String get chatGhostTimer => 'مؤقّت الاختفاء';
@@ -1515,7 +1515,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatCouldNotReadThat => 'تعذّرت قراءة ذلك الملف';
 
   @override
-  String get chatFileTooBig8 => 'الملف كبير جدًا · 8 م.ب كحد أقصى';
+  String get chatFileTooBig8 => 'الملف كبير جدًا · ٨ م.ب كحد أقصى';
 
   @override
   String get chatCouldNotCleanThat => 'تعذّر تنظيف ذلك الفيديو';
@@ -1525,7 +1525,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذّر تنظيف تلك الصورة · أرسلها كصورة عادية';
 
   @override
-  String get chatGifTooBig8 => 'ملف GIF كبير جدًا · 8 م.ب كحد أقصى';
+  String get chatGifTooBig8 => 'ملف GIF كبير جدًا · ٨ م.ب كحد أقصى';
 
   @override
   String get chatCouldNotCleanThatGif => 'تعذّر تنظيف ملف GIF هذا';
@@ -1899,7 +1899,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cleanPicturesOver64Mb =>
-      'الصور التي تتجاوز 64 م.ب لا تُنظَّف على الهاتف. لم يتغيّر شيء.';
+      'الصور التي تتجاوز ٦٤ م.ب لا تُنظَّف على الهاتف. لم يتغيّر شيء.';
 
   @override
   String get cleanKryfoCouldNotRead =>
@@ -2177,7 +2177,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get donateAddressCopiedClearsIn =>
-      'نُسخ العنوان · يُزال من الحافظة بعد 60 ث';
+      'نُسخ العنوان · يُزال من الحافظة بعد ٦٠ ث';
 
   @override
   String get donateCopyAddress => 'نسخ العنوان';
@@ -2201,7 +2201,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get donatePayWithBitcoin => 'ادفع بـ bitcoin  ←';
 
   @override
-  String get donateBadgesStartAt20 => 'تبدأ الشارات من 20 دولارًا';
+  String get donateBadgesStartAt20 => 'تبدأ الشارات من ٢٠ دولارًا';
 
   @override
   String get donateReachingThePaymentService =>
@@ -2318,7 +2318,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get gettingMessagesKryfoLooksForMessages =>
-      'يبحث kryfo عن الرسائل كل 15 دقيقة. خفيف على البطارية، لكن قد تتأخر الرسائل.';
+      'يبحث kryfo عن الرسائل كل ١٥ دقيقة. خفيف على البطارية، لكن قد تتأخر الرسائل.';
 
   @override
   String get gettingMessagesOnTheLockScreen => 'على شاشة القفل';
@@ -2387,13 +2387,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupChatCouldNotReadThat => 'تعذّرت قراءة ذلك الملف';
 
   @override
-  String get groupChatGifTooBig8 => 'ملف GIF كبير جدًا · 8 م.ب كحد أقصى';
+  String get groupChatGifTooBig8 => 'ملف GIF كبير جدًا · ٨ م.ب كحد أقصى';
 
   @override
   String get groupChatCouldNotCleanThat => 'تعذّر تنظيف ملف GIF هذا';
 
   @override
-  String get groupChatFileTooBig8 => 'الملف كبير جدًا · 8 م.ب كحد أقصى';
+  String get groupChatFileTooBig8 => 'الملف كبير جدًا · ٨ م.ب كحد أقصى';
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'تعذّر تنظيف ذلك الفيديو';
@@ -2403,19 +2403,19 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذّر تنظيف تلك الصورة · أرسلها كصورة عادية';
 
   @override
-  String get groupChat30Seconds => '30 ثانية';
+  String get groupChat30Seconds => '٣٠ ثانية';
 
   @override
   String get groupChat1Minute => 'دقيقة واحدة';
 
   @override
-  String get groupChat5Minutes => '5 دقائق';
+  String get groupChat5Minutes => '٥ دقائق';
 
   @override
   String get groupChat1Hour => 'ساعة واحدة';
 
   @override
-  String get groupChat24Hours => '24 ساعة';
+  String get groupChat24Hours => '٢٤ ساعة';
 
   @override
   String get groupChatBurnTimer => 'مؤقّت الاختفاء';
@@ -2609,7 +2609,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupChatTapToRetry => '! اضغط لإعادة المحاولة';
 
   @override
-  String get groupChat0s => '0 ث';
+  String get groupChat0s => '٠ ث';
 
   @override
   String get groupChatReply => 'رد';
@@ -2882,14 +2882,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeWhatIsWrong => 'ما المشكلة';
 
   @override
-  String get homeKryfoWillCheckIn => 'سيتفقّد kryfo الرسائل كل 15 دقيقة';
+  String get homeKryfoWillCheckIn => 'سيتفقّد kryfo الرسائل كل ١٥ دقيقة';
 
   @override
   String get homeYourPhoneKeepsStopping => 'هاتفك يوقف kryfo مرارًا';
 
   @override
   String get homeItHasClosedKryfo =>
-      'أغلق kryfo ثلاث مرات اليوم، فتأخرت الرسائل أو انتظرت. التفقّد الدوري يصمد أمام ذلك: يستيقظ kryfo كل 15 دقيقة بدلًا من البقاء متصلًا.';
+      'أغلق kryfo ثلاث مرات اليوم، فتأخرت الرسائل أو انتظرت. التفقّد الدوري يصمد أمام ذلك: يستيقظ kryfo كل ١٥ دقيقة بدلًا من البقاء متصلًا.';
 
   @override
   String get homeSwitchToCheckIns => 'التبديل إلى التفقّد الدوري';
@@ -3645,11 +3645,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get myKryfoAHandleIs3 =>
-      'اسم المستخدم من 3 إلى 20 حرفًا أو رقمًا أو _';
+      'اسم المستخدم من ٣ إلى ٢٠ حرفًا أو رقمًا أو _';
 
   @override
   String get myKryfoInviteCopiedClearsIn =>
-      'نُسخت الدعوة · تُزال من الحافظة بعد 60 ث';
+      'نُسخت الدعوة · تُزال من الحافظة بعد ٦٠ ث';
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
@@ -5677,7 +5677,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String photoStory1S(Object s) {
-    return '1/⁨$s⁩ ث';
+    return '١/⁨$s⁩ ث';
   }
 
   @override
@@ -5974,10 +5974,10 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get qrPayloadANetworkNameIs => 'اسم الشبكة 32 حرفًا على الأكثر.';
+  String get qrPayloadANetworkNameIs => 'اسم الشبكة ٣٢ حرفًا على الأكثر.';
 
   @override
-  String get qrPayloadAWiFiPassword => 'كلمة مرور Wi-Fi من 8 أحرف على الأقل.';
+  String get qrPayloadAWiFiPassword => 'كلمة مرور Wi-Fi من ٨ أحرف على الأقل.';
 
   @override
   String get qrPayloadSavesAContact => 'يحفظ جهة اتصال';
@@ -5999,7 +5999,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get qrPayloadLatitudeRunsFrom90 =>
-      'خط العرض من ‎-90 إلى 90، وخط الطول من ‎-180 إلى 180.';
+      'خط العرض من ‎-90 إلى ٩٠، وخط الطول من ‎-180 إلى ١٨٠.';
 
   @override
   String get qrPayloadPayThisAddress => 'ادفع لهذا العنوان';
@@ -6009,7 +6009,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get qrPayloadTheAmountIsIn =>
-      'المبلغ بـ BTC، بما يصل إلى 8 منازل عشرية.';
+      'المبلغ بـ BTC، بما يصل إلى ٨ منازل عشرية.';
 
   @override
   String vouchTextAnd(Object names, Object names2) {
@@ -6246,7 +6246,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get motion1Hop => 'قفزة واحدة';
 
   @override
-  String get motion3Hops => '3 قفزات';
+  String get motion3Hops => '٣ قفزات';
 
   @override
   String get movedStripThisKryfoHasMoved =>
