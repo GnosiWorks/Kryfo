@@ -23,6 +23,10 @@ class HaloListenerService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // started again after a language switch too: the channel and the
+        // notification take the new words
+        createChannel()
+        val words = AppLocale.context(this)
         val openIntent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
@@ -31,8 +35,8 @@ class HaloListenerService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("kryfo is on")
-            .setContentText("your encrypted line stays open so messages arrive")
+            .setContentTitle(words.getString(R.string.service_title))
+            .setContentText(words.getString(R.string.service_text))
             .setSmallIcon(R.drawable.ic_halo_notification)
             .setColor(0xFFF59E0B.toInt())
             .setOngoing(true)
@@ -69,13 +73,13 @@ class HaloListenerService : Service() {
 
     private fun createChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val words = AppLocale.context(this)
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "staying connected",
+                words.getString(R.string.channel_name),
                 NotificationManager.IMPORTANCE_MIN
             ).apply {
-                description =
-                        "keeps kryfo connected so encrypted messages arrive while it is closed. turning this off stops delivery."
+                description = words.getString(R.string.channel_description)
                 setShowBadge(false)
                 enableVibration(false)
                 setSound(null, null)

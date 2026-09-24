@@ -6534,4 +6534,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
     return '$goodString accepted, $badString not understood';
   }
+
+  @override
+  String get languageTitle => 'Language';
+
+  @override
+  String get languageMatchPhone => 'Match phone';
+
+  @override
+  String languageMatchPhoneValue(Object language) {
+    return 'Match phone ($language)';
+  }
+
+  @override
+  String get languageRedrawLine =>
+      'Kryfo redraws in the new language and opens on your chats.';
+
+  @override
+  String languageButton(Object language) {
+    return 'Language: $language';
+  }
+
+  @override
+  String get androidServiceTitle => 'kryfo is on';
+
+  @override
+  String get androidServiceText =>
+      'your encrypted line stays open so messages arrive';
+
+  @override
+  String get androidChannelName => 'staying connected';
+
+  @override
+  String get androidChannelDescription =>
+      'keeps kryfo connected so encrypted messages arrive while it is closed. turning this off stops delivery.';
 }

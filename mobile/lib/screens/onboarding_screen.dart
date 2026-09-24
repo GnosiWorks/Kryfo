@@ -22,6 +22,7 @@ import '../widgets/motion.dart' show haloRoute;
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../l10n/marked.dart';
+import '../widgets/language_sheet.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final AppState appState;
@@ -104,6 +105,15 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        _welcome(),
+        const PositionedDirectional(top: 14, end: 20, child: LanguageChip()),
+      ],
+    );
+  }
+
+  Widget _welcome() {
     return FitColumn(
       padding: const EdgeInsets.fromLTRB(32, 60, 32, 36),
       crossAxisAlignment: CrossAxisAlignment.start,

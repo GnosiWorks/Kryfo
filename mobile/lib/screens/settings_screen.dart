@@ -31,6 +31,7 @@ import '../widgets/halo_rows.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/confirm_sheet.dart';
 import '../l10n/l10n.dart';
+import '../widgets/language_sheet.dart';
 
 Widget _postureLine(String label, bool on, String onText, String offText) {
   return Padding(
@@ -201,6 +202,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
 
+          HaloGroup(
+            children: [
+              HaloRow(
+                icon: Icons.language,
+                label: l10n.languageTitle,
+                value: languageValue(),
+                onTap: () => pickLanguage(context),
+              ),
+            ],
+          ),
           HaloSection(l10n.settingsPrivacy),
           HaloGroup(
             children: [

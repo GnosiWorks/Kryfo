@@ -10467,6 +10467,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{good} accepted, {bad} not understood'**
   String bridgesSavedSomeBad(int good, int bad);
+
+  /// widgets/language_sheet.dart: the sheet title and the settings row
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get languageTitle;
+
+  /// widgets/language_sheet.dart: the first choice: kryfo uses the phone's language when it has it
+  ///
+  /// In en, this message translates to:
+  /// **'Match phone'**
+  String get languageMatchPhone;
+
+  /// widgets/language_sheet.dart: the settings row's value; language is that language's own name, e.g. English
+  ///
+  /// In en, this message translates to:
+  /// **'Match phone ({language})'**
+  String languageMatchPhoneValue(Object language);
+
+  /// widgets/language_sheet.dart: under the title when the sheet is opened from settings
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo redraws in the new language and opens on your chats.'**
+  String get languageRedrawLine;
+
+  /// widgets/language_sheet.dart: what a screen reader says for the small language button on the first onboarding screen
+  ///
+  /// In en, this message translates to:
+  /// **'Language: {language}'**
+  String languageButton(Object language);
+
+  /// android: the title of the notification that stays while kryfo keeps its connection open. kryfo is lowercase on purpose.
+  ///
+  /// In en, this message translates to:
+  /// **'kryfo is on'**
+  String get androidServiceTitle;
+
+  /// android: the text of that notification
+  ///
+  /// In en, this message translates to:
+  /// **'your encrypted line stays open so messages arrive'**
+  String get androidServiceText;
+
+  /// android: the name of that notification's channel in the phone's settings
+  ///
+  /// In en, this message translates to:
+  /// **'staying connected'**
+  String get androidChannelName;
+
+  /// android: the channel's description in the phone's settings
+  ///
+  /// In en, this message translates to:
+  /// **'keeps kryfo connected so encrypted messages arrive while it is closed. turning this off stops delivery.'**
+  String get androidChannelDescription;
 }
 
 class _AppLocalizationsDelegate

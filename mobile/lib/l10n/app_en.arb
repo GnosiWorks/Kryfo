@@ -8323,5 +8323,51 @@
         "format": "decimalPattern"
       }
     }
+  },
+  "languageTitle": "Language",
+  "@languageTitle": {
+    "description": "widgets/language_sheet.dart: the sheet title and the settings row"
+  },
+  "languageMatchPhone": "Match phone",
+  "@languageMatchPhone": {
+    "description": "widgets/language_sheet.dart: the first choice: kryfo uses the phone's language when it has it"
+  },
+  "languageMatchPhoneValue": "Match phone ({language})",
+  "@languageMatchPhoneValue": {
+    "description": "widgets/language_sheet.dart: the settings row's value; language is that language's own name, e.g. English",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      }
+    }
+  },
+  "languageRedrawLine": "Kryfo redraws in the new language and opens on your chats.",
+  "@languageRedrawLine": {
+    "description": "widgets/language_sheet.dart: under the title when the sheet is opened from settings"
+  },
+  "languageButton": "Language: {language}",
+  "@languageButton": {
+    "description": "widgets/language_sheet.dart: what a screen reader says for the small language button on the first onboarding screen",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      }
+    }
+  },
+  "androidServiceTitle": "kryfo is on",
+  "@androidServiceTitle": {
+    "description": "android: the title of the notification that stays while kryfo keeps its connection open. kryfo is lowercase on purpose."
+  },
+  "androidServiceText": "your encrypted line stays open so messages arrive",
+  "@androidServiceText": {
+    "description": "android: the text of that notification"
+  },
+  "androidChannelName": "staying connected",
+  "@androidChannelName": {
+    "description": "android: the name of that notification's channel in the phone's settings"
+  },
+  "androidChannelDescription": "keeps kryfo connected so encrypted messages arrive while it is closed. turning this off stops delivery.",
+  "@androidChannelDescription": {
+    "description": "android: the channel's description in the phone's settings"
   }
 }

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- written by tool/arb_android.py from lib/l10n/app_en.arb -->
+<resources>
+    <string name="service_title">kryfo is on</string>
+    <string name="service_text">your encrypted line stays open so messages arrive</string>
+    <string name="channel_name">staying connected</string>
+    <string name="channel_description">keeps kryfo connected so encrypted messages arrive while it is closed. turning this off stops delivery.</string>
+</resources>

@@ -29,15 +29,7 @@ Future<void> initNotifications({void Function(String? payload)? onTap}) async {
   // importance in code did nothing. drop it and make a fresh v2 channel that
   // registers at max - that's the only way to get the banner back.
   await android?.deleteNotificationChannel(channelId: 'halo_messages');
-  final channel = AndroidNotificationChannel(
-    'halo_messages_v2',
-    l10n.notificationsChannelName,
-    description: l10n.notificationsNewEncryptedMessagesFrom,
-    importance: Importance.max,
-    playSound: true,
-    enableVibration: true,
-  );
-  await android?.createNotificationChannel(channel);
+  await nameNotificationChannel();
   // android 13+ denies notifications until asked. without this the channel
   // exists but nothing is ever delivered, silently.
   // the plugin needs an activity for this. with none attached, as in a
@@ -48,6 +40,25 @@ Future<void> initNotifications({void Function(String? payload)? onTap}) async {
   } catch (e) {
     dlog('notifications: permission ask skipped: $e');
   }
+}
+
+// made again with the same id, a channel keeps its settings and takes the
+// new name: how it follows a language switch
+Future<void> nameNotificationChannel() async {
+  final android = notifPlugin
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >();
+  await android?.createNotificationChannel(
+    AndroidNotificationChannel(
+      'halo_messages_v2',
+      l10n.notificationsChannelName,
+      description: l10n.notificationsNewEncryptedMessagesFrom,
+      importance: Importance.max,
+      playSound: true,
+      enableVibration: true,
+    ),
+  );
 }
 
 const _hideContentKey = 'notif_hide_content';

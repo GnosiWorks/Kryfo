@@ -71,6 +71,7 @@ import 'widgets/sheet_handle.dart';
 import 'widgets/halo_sheet.dart';
 import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
+import 'l10n/app_locale.dart';
 
 typedef IntArgFn = Void Function(Int32);
 typedef IntArgFnDart = void Function(int);
@@ -4938,6 +4939,19 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // the language changed: the notification channel's name and the service's
+  // own notification are android's, and are told again
+  Future<void> languageChanged() async {
+    try {
+      await nameNotificationChannel();
+      if (!kIsWeb && Platform.isAndroid) {
+        await _platformChannel.invokeMethod('applyDeliveryMode');
+      }
+    } catch (e) {
+      dlog('language: android side not told: $e');
+    }
+  }
+
   Future<void> setDeliveryMode(DeliveryMode m) async {
     if (m == _deliveryMode) return;
     _deliveryMode = m;
@@ -8377,6 +8391,9 @@ void main() async {
     appState.noteJobRun();
     return appState.drainNow();
   });
+  // the language, before anything says a word: the first frame, or a
+  // notification from a process the job started
+  await loadAppLocale();
   // no window: the process was brought back by the service or the job,
   // not by a tap. runApp would throw without a view and take the rest of
   // main with it, which is how a restarted process sat with a "kryfo is
@@ -8445,9 +8462,9 @@ class HaloApp extends StatelessWidget {
   const HaloApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<int>(
-      valueListenable: themeRevision,
-      builder: (context, _, _) => MaterialApp(
+    return ListenableBuilder(
+      listenable: Listenable.merge([themeRevision, localeRevision]),
+      builder: (context, _) => MaterialApp(
         navigatorKey: rootNavKey,
         scaffoldMessengerKey: haloMessengerKey,
         title: 'Kryfo',
@@ -8478,7 +8495,7 @@ class HaloApp extends StatelessWidget {
         // platform, no stretch-glow. the single biggest "premium" tell,
         // and it was unset so android fell back to the clamp+glow default.
         scrollBehavior: const _HaloScrollBehavior(),
-        home: _OnboardingGate(child: RootShell()),
+        home: _LocaleScope(child: _OnboardingGate(child: RootShell())),
       ),
     );
   }
@@ -9399,6 +9416,42 @@ class _OnboardingGateState extends State<_OnboardingGate> {
   }
 }
 
+// a language switch redraws everything below here from scratch, on the
+// first screen: whatever was open above it is closed. the lock and the
+// navigator stay, so a switch never asks for the pin again.
+class _LocaleScope extends StatefulWidget {
+  final Widget child;
+  const _LocaleScope({required this.child});
+  @override
+  State<_LocaleScope> createState() => _LocaleScopeState();
+}
+
+class _LocaleScopeState extends State<_LocaleScope> {
+  @override
+  void initState() {
+    super.initState();
+    localeRevision.addListener(_switched);
+  }
+
+  @override
+  void dispose() {
+    localeRevision.removeListener(_switched);
+    super.dispose();
+  }
+
+  void _switched() {
+    rootNavKey.currentState?.popUntil(
+      (r) => r.isFirst || r.settings.name == 'lock',
+    );
+    setState(() {});
+    unawaited(appState.languageChanged());
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      KeyedSubtree(key: ValueKey(localeRevision.value), child: widget.child);
+}
+
 class _LockGate extends StatefulWidget {
   final Widget child;
   const _LockGate({required this.child});
@@ -9465,6 +9518,9 @@ class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
       }
     }
   }
+
+  @override
+  void didChangeLocales(List<Locale>? locales) => systemLocalesChanged();
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {

@@ -3327,5 +3327,23 @@ void main() {
     expect(l.bridgesSavedSomeBad(5, 1), "5 accepted, 1 not understood");
     expect(l.bridgesSavedSomeBad(5, 2), "5 accepted, 2 not understood");
     expect(l.bridgesSavedSomeBad(5, 5), "5 accepted, 5 not understood");
+    expect(l.languageTitle, "Language");
+    expect(l.languageMatchPhone, "Match phone");
+    expect(l.languageMatchPhoneValue("<language>"), "Match phone (<language>)");
+    expect(
+      l.languageRedrawLine,
+      "Kryfo redraws in the new language and opens on your chats.",
+    );
+    expect(l.languageButton("<language>"), "Language: <language>");
+    expect(l.androidServiceTitle, "kryfo is on");
+    expect(
+      l.androidServiceText,
+      "your encrypted line stays open so messages arrive",
+    );
+    expect(l.androidChannelName, "staying connected");
+    expect(
+      l.androidChannelDescription,
+      "keeps kryfo connected so encrypted messages arrive while it is closed. turning this off stops delivery.",
+    );
   });
 }
