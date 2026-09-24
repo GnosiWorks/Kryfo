@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
+import '../l10n/l10n.dart';
 
 class MovedStrip extends StatelessWidget {
   const MovedStrip({super.key});
@@ -27,8 +28,7 @@ class MovedStrip extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'This kryfo has moved to another device. Nothing sent from '
-                'here reaches anyone.',
+                l10n.movedStripThisKryfoHasMoved,
                 style: HaloType.sans(
                   size: 12.5,
                   color: HaloColors.text2,

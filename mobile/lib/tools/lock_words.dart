@@ -1,3 +1,5 @@
+import '../l10n/l10n.dart';
+
 // SPDX-License-Identifier: GPL-3.0-or-later
 enum PassGrade { none, tooShort, weak, fair, strong }
 
@@ -24,12 +26,11 @@ PassGrade gradePassword(String p) {
 }
 
 String gradeLine(PassGrade g) => switch (g) {
-  PassGrade.none => 'Four random words beat one clever one.',
-  PassGrade.tooShort => 'Too short. At least $kMinPassLength characters.',
-  PassGrade.weak =>
-    'Weak. Whoever gets the file can guess as fast as they like.',
-  PassGrade.fair => 'Fair. Longer is stronger.',
-  PassGrade.strong => 'Strong. Four random words beat one clever one.',
+  PassGrade.none => l10n.lockWordsFourRandomWordsBeat,
+  PassGrade.tooShort => l10n.lockWordsTooShortAtLeast(kMinPassLength),
+  PassGrade.weak => l10n.lockWordsWeakWhoeverGetsThe,
+  PassGrade.fair => l10n.lockWordsFairLongerIsStronger,
+  PassGrade.strong => l10n.lockWordsStrongFourRandomWords,
 };
 
 const _neutral = 'locked file';

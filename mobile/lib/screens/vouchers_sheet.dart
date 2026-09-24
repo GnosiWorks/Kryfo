@@ -8,6 +8,7 @@ import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
+import '../l10n/l10n.dart';
 
 Future<void> showVouchersSheet(BuildContext context, String haloId) async {
   final rows = await db.vouchesFor(haloId);
@@ -43,7 +44,9 @@ class _VouchersSheet extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
             child: Text(
-              rows.length == 1 ? 'vouched by' : 'vouched by ${rows.length}',
+              rows.length == 1
+                  ? l10n.vouchersVouchedBy
+                  : l10n.vouchersVouchedBy2(rows.length),
               style: HaloType.serif(size: 20, color: HaloColors.text),
             ),
           ),

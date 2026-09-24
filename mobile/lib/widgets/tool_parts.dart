@@ -6,15 +6,16 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 import 'press_scale.dart';
 import 'stroke_icon.dart';
+import '../l10n/l10n.dart';
 
 const _back = ['M15 5l-7 7 7 7'];
 final _film = [svgRect(4, 5, 16, 14, 2.5), 'M10 9.5v5l4.5-2.5z'];
 
 String prettySize(int bytes) {
-  if (bytes < 1024) return '$bytes B';
-  if (bytes < 1 << 20) return '${(bytes / 1024).round()} KB';
+  if (bytes < 1024) return l10n.toolPartsB(bytes);
+  if (bytes < 1 << 20) return l10n.toolPartsKb((bytes / 1024).round());
   final mb = bytes / (1 << 20);
-  return '${mb.toStringAsFixed(mb < 100 ? 1 : 0)} MB';
+  return l10n.toolPartsMb(mb.toStringAsFixed(mb < 100 ? 1 : 0));
 }
 
 class ToolBar extends StatelessWidget {
@@ -33,7 +34,7 @@ class ToolBar extends StatelessWidget {
       child: Row(
         children: [
           PressScale(
-            label: 'Back',
+            label: l10n.commonBack,
             onTap: () => Navigator.of(context).maybePop(),
             child: SizedBox(
               width: 44,

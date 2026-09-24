@@ -12,6 +12,7 @@ import '../widgets/stagger_in.dart';
 import 'lock_setup_screen.dart';
 import 'panic_setup_screen.dart';
 import '../widgets/confirm_sheet.dart';
+import '../l10n/l10n.dart';
 
 class PinsScreen extends StatelessWidget {
   const PinsScreen({super.key});
@@ -25,7 +26,7 @@ class PinsScreen extends StatelessWidget {
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
-          'App lock',
+          l10n.pinsAppLock,
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
@@ -38,35 +39,31 @@ class PinsScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
             children: staggerAll([
               Text(
-                'Two pins',
+                l10n.pinsTwoPins,
                 style: HaloType.serif(size: 26, color: HaloColors.text),
               ),
               const SizedBox(height: 6),
               const SizedBox(height: 20),
               _PinCard(
-                name: 'Your pin',
-                state: on ? 'On' : 'Off',
+                name: l10n.pinsYourPin,
+                state: on ? l10n.commonOn : l10n.commonOff,
                 stateColor: on ? HaloColors.green : HaloColors.text3,
-                outcome:
-                    'Opens kryfo. Four digits, asked for when it comes '
-                    'to the front.',
-                primary: on ? 'Change pin' : 'Set a pin',
+                outcome: l10n.pinsOpensKryfoFourDigits,
+                primary: on ? l10n.pinsChangePin : l10n.pinsSetAPin,
                 onPrimary: () async {
                   HapticFeedback.selectionClick();
                   await Navigator.of(
                     context,
                   ).push(haloRoute(const LockSetupScreen()));
                 },
-                secondary: on ? 'Turn off' : null,
+                secondary: on ? l10n.pinsTurnOff : null,
                 onSecondary: on
                     ? () async {
                         final ok = await showConfirmSheet(
                           context,
-                          title: 'Turn off the app lock?',
-                          line:
-                              'The pin goes, and the wipe pin with it. Anyone '
-                              'holding your phone opens kryfo as you.',
-                          yes: 'Turn off',
+                          title: l10n.pinsTurnOffTheApp,
+                          line: l10n.pinsThePinGoesAnd,
+                          yes: l10n.pinsTurnOff,
                         );
                         if (!ok) return;
                         await lockState.disablePanicPin();
@@ -75,7 +72,7 @@ class PinsScreen extends StatelessWidget {
                     : null,
                 extra: on && lockState.bioSupported
                     ? _Toggle(
-                        label: 'Unlock with fingerprint',
+                        label: l10n.pinsUnlockWithFingerprint,
                         on: lockState.biometric,
                         onTap: () {
                           HapticFeedback.selectionClick();
@@ -86,15 +83,15 @@ class PinsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               _PinCard(
-                name: 'Wipe pin',
+                name: l10n.pinsWipePin,
                 state: !on
-                    ? 'Needs a pin first'
+                    ? l10n.pinsNeedsAPinFirst
                     : wipe
-                    ? 'Set'
-                    : 'Off',
+                    ? l10n.pinsSet
+                    : l10n.commonOff,
                 stateColor: wipe ? HaloColors.rose : HaloColors.text3,
-                outcome: 'The second pin wipes everything.',
-                primary: wipe ? 'Change wipe pin' : 'Set a wipe pin',
+                outcome: l10n.pinsTheSecondPinWipes,
+                primary: wipe ? l10n.pinsChangeWipePin : l10n.pinsSetAWipePin,
                 onPrimary: on
                     ? () async {
                         HapticFeedback.selectionClick();
@@ -103,16 +100,14 @@ class PinsScreen extends StatelessWidget {
                         ).push(haloRoute(PanicSetupScreen()));
                       }
                     : null,
-                secondary: wipe ? 'remove' : null,
+                secondary: wipe ? l10n.pinsRemove : null,
                 onSecondary: wipe
                     ? () async {
                         final ok = await showConfirmSheet(
                           context,
-                          title: 'Remove the wipe pin?',
-                          line:
-                              'The lock screen keeps your pin. The wipe pin '
-                              'stops doing anything.',
-                          yes: 'Remove',
+                          title: l10n.pinsRemoveTheWipePin,
+                          line: l10n.pinsTheLockScreenKeeps,
+                          yes: l10n.commonRemove,
                         );
                         if (ok) await lockState.disablePanicPin();
                       }
@@ -263,7 +258,7 @@ class _Toggle extends StatelessWidget {
           ),
         ),
         Text(
-          on ? 'On' : 'Off',
+          on ? l10n.commonOn : l10n.commonOff,
           style: HaloType.mono(
             size: 10.5,
             color: on ? HaloColors.green : HaloColors.text3,

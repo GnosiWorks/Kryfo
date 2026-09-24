@@ -22,6 +22,7 @@ import 'pair_code_screen.dart';
 import '../widgets/stagger_in.dart';
 import 'handle_screen.dart';
 import 'scan_screen.dart';
+import '../l10n/l10n.dart';
 
 enum _Way { none, here, away, handle }
 
@@ -93,7 +94,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
     if (typed.isEmpty || _finding) return;
     final raw = typed.startsWith('@') ? typed : '@$typed';
     if (handleFromInput(raw) == null) {
-      showHaloToast(context, 'A handle is 3 to 20 letters, digits or _');
+      showHaloToast(context, l10n.myKryfoAHandleIs3);
       return;
     }
     HapticFeedback.selectionClick();
@@ -117,7 +118,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
     if (_uri == null) return;
     HapticFeedback.mediumImpact();
     copySensitive(_uri!);
-    showHaloToast(context, 'Invite copied · clears in 60s');
+    showHaloToast(context, l10n.myKryfoInviteCopiedClearsIn);
   }
 
   void _shareLink() {
@@ -126,11 +127,8 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
     lockState.hold(
       () => SharePlus.instance.share(
         ShareParams(
-          text:
-              "add me on kryfo. my id is ${appState.myId}\n\n"
-              "tap to add me:\n$_uri\n\n"
-              "kryfo is a private messenger. no phone number, no email.",
-          subject: 'Add me on kryfo',
+          text: l10n.myKryfoAddMeOnKryfo(appState.myId, '$_uri'),
+          subject: l10n.myKryfoAddMeOnKryfo2,
         ),
       ),
     );
@@ -147,7 +145,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
-          'Add someone',
+          l10n.myKryfoAddSomeone,
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
@@ -185,7 +183,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
                   ],
                   const SizedBox(height: 14),
                   Text(
-                    "kryfo doesn't scan your contacts, that's the point.",
+                    l10n.myKryfoKryfoDoesnTScan,
                     textAlign: TextAlign.center,
                     style: HaloType.serif(
                       size: 15,
@@ -238,8 +236,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(6, 8, 6, 0),
               child: Text(
-                'If this link ends up somewhere you did not mean, reset it '
-                'in settings. Everyone who has it needs a new one then.',
+                l10n.myKryfoIfThisLinkEnds,
                 style: HaloType.mono(size: 10, color: HaloColors.text3),
               ),
             ),
@@ -259,8 +256,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(6, 4, 6, 6),
               child: Text(
-                'Already share a friend on kryfo? They can introduce you '
-                'both from their chat, and you skip the request.',
+                l10n.myKryfoAlreadyShareAFriend,
                 style: HaloType.sans(
                   size: 12,
                   color: HaloColors.text2,
@@ -282,7 +278,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
                   : () {
                       HapticFeedback.selectionClick();
                       copySensitive('@$handle');
-                      showHaloToast(context, 'Handle copied');
+                      showHaloToast(context, l10n.myKryfoHandleCopied);
                     },
             ),
           ]),
@@ -416,8 +412,8 @@ class _Way1Card extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _WayCard(
-      title: "they're here with me",
-      line: 'Point your phones at each other. Nothing goes through a server.',
+      title: l10n.myKryfoTheyReHereWith,
+      line: l10n.myKryfoPointYourPhonesAt,
       icon: Icons.qr_code_2_outlined,
       open: open,
       onToggle: onToggle,
@@ -429,14 +425,14 @@ class _Way1Card extends StatelessWidget {
           const SizedBox(height: 14),
           _Ghost(
             icon: Icons.center_focus_strong_outlined,
-            label: 'Scan theirs instead',
+            label: l10n.myKryfoScanTheirsInstead,
             onTap: onScan,
           ),
           const SizedBox(height: 8),
           // the code had no door: it could be shown, and nowhere typed in
           _Ghost(
             icon: Icons.dialpad_outlined,
-            label: 'They read you a code',
+            label: l10n.myKryfoTheyReadYouA,
             onTap: onCode,
           ),
         ],
@@ -467,8 +463,8 @@ class _Way2Card extends StatelessWidget {
   Widget build(BuildContext context) {
     final ready = uri != null;
     return _WayCard(
-      title: "they're somewhere else",
-      line: 'Send them a link. It opens straight into add.',
+      title: l10n.myKryfoTheyReSomewhereElse,
+      line: l10n.myKryfoSendThemALink,
       icon: Icons.send_outlined,
       open: open,
       onToggle: onToggle,
@@ -487,7 +483,7 @@ class _Way2Card extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      ready ? uri! : 'Your link appears once you are connected',
+                      ready ? uri! : l10n.myKryfoYourLinkAppearsOnce,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: HaloType.mono(
@@ -504,8 +500,7 @@ class _Way2Card extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'The link carries your id, your address and the keys to start a '
-            'chat. It works until you reset it in settings.',
+            l10n.myKryfoTheLinkCarriesYour,
             style: HaloType.sans(
               size: 12,
               color: HaloColors.text2,
@@ -514,7 +509,7 @@ class _Way2Card extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           HaloPrimaryButton(
-            label: 'Send the link',
+            label: l10n.myKryfoSendTheLink,
             onTap: ready ? onShare : null,
           ),
           const SizedBox(height: 10),
@@ -523,8 +518,8 @@ class _Way2Card extends StatelessWidget {
               Expanded(
                 child: _Ghost(
                   icon: Icons.badge_outlined,
-                  label: 'As a card',
-                  sub: 'An image with the qr',
+                  label: l10n.myKryfoAsACard,
+                  sub: l10n.myKryfoAnImageWithThe,
                   onTap: ready ? onCard : null,
                 ),
               ),
@@ -532,8 +527,8 @@ class _Way2Card extends StatelessWidget {
               Expanded(
                 child: _Ghost(
                   icon: Icons.contact_page_outlined,
-                  label: 'As a file',
-                  sub: 'Contact file',
+                  label: l10n.myKryfoAsAFile,
+                  sub: l10n.myKryfoContactFile,
                   onTap: ready ? onFile : null,
                 ),
               ),
@@ -564,8 +559,8 @@ class _Way3Card extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _WayCard(
-      title: 'I know their handle',
-      line: 'Type the @name they gave you. Works if they claimed one.',
+      title: l10n.myKryfoIKnowTheirHandle,
+      line: l10n.myKryfoTypeTheNameThey,
       icon: Icons.alternate_email,
       open: open,
       onToggle: onToggle,
@@ -598,7 +593,7 @@ class _Way3Card extends StatelessWidget {
                     decoration: InputDecoration(
                       border: InputBorder.none,
                       counterText: '',
-                      hintText: 'Wren',
+                      hintText: l10n.myKryfoWren,
                       hintStyle: HaloType.mono(
                         size: 14,
                         color: HaloColors.text3,
@@ -611,8 +606,7 @@ class _Way3Card extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'The lookup asks for that one name and nothing about you. Their '
-            'first message from you still lands as a request on their side.',
+            l10n.myKryfoTheLookupAsksFor,
             style: HaloType.sans(
               size: 12,
               color: HaloColors.text2,
@@ -621,7 +615,7 @@ class _Way3Card extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           HaloPrimaryButton(
-            label: busy ? 'Looking…' : 'Find them',
+            label: busy ? l10n.myKryfoLooking : l10n.myKryfoFindThem,
             onTap: busy ? null : onFind,
           ),
         ],
@@ -671,7 +665,7 @@ class _QrFrameState extends State<_QrFrame> {
           child: widget.uri == null
               ? Center(
                   child: Text(
-                    'Your address appears once you are connected',
+                    l10n.myKryfoYourAddressAppearsOnce,
                     textAlign: TextAlign.center,
                     style: HaloType.sans(size: 12, color: HaloColors.ink),
                   ),
@@ -722,7 +716,7 @@ class _HandleRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    claimed ? '@$handle' : 'A public handle',
+                    claimed ? '@$handle' : l10n.myKryfoAPublicHandle,
                     style: claimed
                         ? HaloType.mono(size: 16, color: HaloColors.text)
                         : HaloType.serif(
@@ -733,9 +727,7 @@ class _HandleRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    claimed
-                        ? 'Put it in a bio. Anyone who knows it can find you.'
-                        : 'A name people can find you by. Off until you claim one.',
+                    claimed ? l10n.myKryfoPutItInA : l10n.myKryfoANamePeopleCan,
                     style: HaloType.sans(
                       size: 12.5,
                       color: HaloColors.text2,
@@ -747,7 +739,7 @@ class _HandleRow extends StatelessWidget {
             ),
             if (onCopy != null)
               IconButton(
-                tooltip: 'Copy',
+                tooltip: l10n.commonCopy,
                 onPressed: onCopy,
                 icon: Icon(
                   Icons.copy_outlined,

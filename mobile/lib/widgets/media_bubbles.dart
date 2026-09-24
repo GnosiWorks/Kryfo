@@ -16,11 +16,14 @@ import 'package:path_provider/path_provider.dart';
 import '../main.dart' show shredFile;
 import '../theme.dart';
 import 'decode_px.dart';
+import '../l10n/l10n.dart';
 
 String _humanSize(int bytes) {
-  if (bytes < 1024) return '$bytes b';
-  if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(0)} kb';
-  return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} mb';
+  if (bytes < 1024) return l10n.mediaBubblesB(bytes);
+  if (bytes < 1024 * 1024) {
+    return l10n.mediaBubblesKb((bytes / 1024).toStringAsFixed(0));
+  }
+  return l10n.mediaBubblesMb((bytes / (1024 * 1024)).toStringAsFixed(1));
 }
 
 IconData _fileGlyph(String name) {
@@ -79,10 +82,7 @@ Widget fileCard(String? filePath, String? fileName, bool isOut) {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: child,
-            ),
+            ClipRRect(borderRadius: BorderRadius.circular(12), child: child),
             const SizedBox(height: 4),
             Text(
               fileName ?? 'file',
@@ -111,7 +111,7 @@ Widget _plainFileCard(String? filePath, String? fileName, bool isOut) {
   } catch (_) {}
   final ext = (fileName ?? '').contains('.')
       ? fileName!.split('.').last.toUpperCase()
-      : 'FILE';
+      : l10n.mediaBubblesFile;
   return Container(
     constraints: const BoxConstraints(maxWidth: 230),
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
@@ -367,7 +367,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Audio unavailable',
+                    l10n.mediaBubblesAudioUnavailable,
                     style: HaloType.mono(
                       size: 11,
                       color: fg.withValues(alpha: 0.55),
@@ -420,7 +420,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
                               ),
                               const SizedBox(width: 3),
                               Text(
-                                'Hidden',
+                                l10n.mediaBubblesHidden,
                                 style: HaloType.mono(
                                   size: 9,
                                   color: widget.isOut
@@ -480,7 +480,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     _busy = true;
     if (!await _rec.hasPermission()) {
       _busy = false;
-      if (mounted) showHaloToast(context, 'Mic permission needed');
+      if (mounted) showHaloToast(context, l10n.mediaBubblesMicPermissionNeeded);
       return;
     }
     // the permission prompt eats the long-press: by the time the user grants,
@@ -613,7 +613,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
                   child: cancel
                       ? Center(
                           child: Text(
-                            'Release to cancel',
+                            l10n.mediaBubblesReleaseToCancel,
                             style: HaloType.mono(
                               size: 12,
                               color: HaloColors.rose,
@@ -635,7 +635,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
                                       ),
                                       const SizedBox(width: 6),
                                       Text(
-                                        'Voice hidden · slide to cancel',
+                                        l10n.mediaBubblesVoiceHiddenSlideTo,
                                         style: HaloType.mono(
                                           size: 11,
                                           color: HaloColors.amber,
@@ -649,7 +649,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
                                         color: HaloColors.text3,
                                       ),
                                       Text(
-                                        'Slide to cancel',
+                                        l10n.mediaBubblesSlideToCancel,
                                         style: HaloType.mono(
                                           size: 11,
                                           color: HaloColors.text3,
@@ -661,7 +661,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
                         ),
                 ),
                 Semantics(
-                  label: 'Close',
+                  label: l10n.commonClose,
                   button: true,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
@@ -737,12 +737,12 @@ class ImageCaptionScreenState extends State<ImageCaptionScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    tooltip: 'Back',
+                    tooltip: l10n.commonBack,
                     icon: Icon(Icons.arrow_back, color: HaloColors.text2),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   Text(
-                    'Send photo',
+                    l10n.mediaBubblesSendPhoto,
                     style: HaloType.serif(
                       size: 16,
                       italic: true,
@@ -779,7 +779,7 @@ class ImageCaptionScreenState extends State<ImageCaptionScreen> {
                       minLines: 1,
                       maxLines: 4,
                       decoration: InputDecoration(
-                        hintText: 'Add a caption…',
+                        hintText: l10n.mediaBubblesAddACaption,
                         hintStyle: HaloType.sans(
                           size: 14,
                           color: HaloColors.text3,
@@ -800,7 +800,7 @@ class ImageCaptionScreenState extends State<ImageCaptionScreen> {
                   ),
                   const SizedBox(width: 10),
                   Semantics(
-                    label: 'Send',
+                    label: l10n.commonSend,
                     button: true,
                     child: GestureDetector(
                       onTap: () {

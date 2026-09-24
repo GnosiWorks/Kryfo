@@ -19,6 +19,7 @@ import 'dlog.dart';
 import 'dart:typed_data';
 import 'backup_stream.dart';
 import 'dart:math';
+import 'l10n/l10n.dart';
 
 const _kDbPassphrase = 'halo.db.passphrase';
 const _secureStorage = FlutterSecureStorage(
@@ -40,11 +41,10 @@ class RestoreError implements Exception {
   final RestoreFailure why;
   const RestoreError(this.why);
   String get line => switch (why) {
-    RestoreFailure.wrongPassphrase => 'That passphrase does not open this file',
-    RestoreFailure.notABackup => 'That file is not a kryfo backup',
-    RestoreFailure.newerVersion =>
-      'This backup is from a newer kryfo. Update the app, then try again',
-    RestoreFailure.damaged => 'This file is damaged and cannot be read',
+    RestoreFailure.wrongPassphrase => l10n.backupThatPassphraseDoesNot,
+    RestoreFailure.notABackup => l10n.backupThatFileIsNot,
+    RestoreFailure.newerVersion => l10n.backupThisBackupIsFrom,
+    RestoreFailure.damaged => l10n.backupThisFileIsDamaged,
   };
   @override
   String toString() => line;
@@ -513,7 +513,7 @@ Future<Object?> _runJob(Future<Object?> Function(_Job) job, _Job j) =>
 Future<Object?> _exportJob(_Job j) async {
   final lib = _engineLib();
   final key = _backupKey(lib, j.passphrase, j.salt);
-  if (key == null) return 'could not make the key';
+  if (key == null) return l10n.backupCouldNotMakeThe;
   final cipher = _EngineCipher(lib, key, kBackupChunk);
   try {
     await writeBackup(

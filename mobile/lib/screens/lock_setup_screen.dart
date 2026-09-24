@@ -10,6 +10,7 @@ import '../theme.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/pin_pad.dart';
 import '../widgets/sheet_handle.dart';
+import '../l10n/l10n.dart';
 
 class LockSetupScreen extends StatefulWidget {
   const LockSetupScreen({super.key});
@@ -73,7 +74,7 @@ class _LockSetupScreenState extends State<LockSetupScreen>
     if (!ok) {
       HapticFeedback.heavyImpact();
       if (!mounted) return;
-      showHaloToast(context, 'That is your wipe pin. Pick another.');
+      showHaloToast(context, l10n.lockSetupThatIsYourWipe);
       setState(() {
         _first = '';
         _pin = '';
@@ -95,12 +96,12 @@ class _LockSetupScreenState extends State<LockSetupScreen>
                 const SheetHandle(),
                 const SizedBox(height: 12),
                 Text(
-                  'Unlock with fingerprint?',
+                  l10n.lockSetupUnlockWithFingerprint,
                   style: HaloType.serif(size: 20, color: HaloColors.text),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'The pin still works whenever you want it. This is just faster.',
+                  l10n.lockSetupThePinStillWorks,
                   style: HaloType.sans(size: 13, color: HaloColors.text2),
                 ),
                 const SizedBox(height: 16),
@@ -115,7 +116,7 @@ class _LockSetupScreenState extends State<LockSetupScreen>
                       borderRadius: BorderRadius.circular(13),
                     ),
                     child: Text(
-                      'Use fingerprint',
+                      l10n.lockSetupUseFingerprint,
                       style: HaloType.sans(
                         size: 14,
                         weight: FontWeight.w600,
@@ -132,7 +133,7 @@ class _LockSetupScreenState extends State<LockSetupScreen>
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     child: Center(
                       child: Text(
-                        'Pin only',
+                        l10n.lockSetupPinOnly,
                         style: HaloType.sans(size: 13, color: HaloColors.text2),
                       ),
                     ),
@@ -155,12 +156,12 @@ class _LockSetupScreenState extends State<LockSetupScreen>
 
   @override
   Widget build(BuildContext context) {
-    final title = _confirming ? 'Once more' : 'Set a pin';
+    final title = _confirming ? l10n.lockSetupOnceMore : l10n.lockSetupSetAPin;
     final hint = _mismatch
-        ? 'Those were different. From the top.'
+        ? l10n.lockSetupThoseWereDifferentFrom
         : _confirming
-        ? 'The same four digits'
-        : 'Four digits, anything you will remember';
+        ? l10n.lockSetupTheSameFourDigits
+        : l10n.lockSetupFourDigitsAnythingYou;
     return Scaffold(
       backgroundColor: HaloColors.ink,
       appBar: AppBar(

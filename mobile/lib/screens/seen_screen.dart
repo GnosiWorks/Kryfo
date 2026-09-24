@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../main.dart';
 import '../theme.dart';
 import '../widgets/stagger_in.dart';
+import '../l10n/l10n.dart';
 
 class SeenScreen extends StatefulWidget {
   const SeenScreen({super.key});
@@ -29,7 +30,7 @@ class _SeenScreenState extends State<SeenScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
-          'What we can see',
+          l10n.seenWhatWeCanSee,
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
@@ -37,9 +38,7 @@ class _SeenScreenState extends State<SeenScreen> {
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 44),
         children: staggerAll([
           Text(
-            'Every messenger claims privacy. This is the specific list, by '
-            'route, including the parts that do not flatter us. Tap a row '
-            'for the why.',
+            l10n.seenEveryMessengerClaimsPrivacy,
             style: HaloType.mono(size: 12, color: HaloColors.text3),
           ),
           const SizedBox(height: 22),
@@ -63,12 +62,7 @@ class _SeenScreenState extends State<SeenScreen> {
               border: Border.all(color: HaloColors.line),
             ),
             child: Text(
-              'Honest about the last rows: that is what the app lock, the '
-              'wipe pin and encrypted storage are for, and no tool saves you '
-              'from someone holding your open phone. The full threat model '
-              'lives in THREAT_MODEL.md in the repo, written against '
-              'LINDDUN. The code is open, so none of this has to be taken on '
-              'trust.',
+              l10n.seenHonestAboutTheLast,
               style: HaloType.mono(size: 11.5, color: HaloColors.text2),
             ),
           ),
@@ -93,103 +87,69 @@ class _Row {
   const _Row(this.what, this.cells, this.why);
 }
 
-const _hidden = _Cell('hidden', _Tone.good);
-const _never = _Cell('never', _Tone.good);
-const _onDevice = _Cell('on device', _Tone.good);
-const _timing = _Cell('timing', _Tone.warn);
-const _yours = _Cell('yours', _Tone.bad);
-const _unaudited = _Cell('unaudited', _Tone.bad);
+final _hidden = _Cell(l10n.seenHidden, _Tone.good);
+final _never = _Cell(l10n.seenNever, _Tone.good);
+final _onDevice = _Cell(l10n.seenOnDevice, _Tone.good);
+final _timing = _Cell(l10n.seenTiming, _Tone.warn);
+final _yours = _Cell(l10n.seenYours, _Tone.bad);
+final _unaudited = _Cell(l10n.seenUnaudited, _Tone.bad);
 
-const _rows = [
-  _Row(
-    'Who you talk to',
-    [_hidden, _hidden, _hidden],
-    'Each conversation gets its own address, derived from both keys. A relay '
-        'sees unrelated drop boxes, not a pair of people.',
-  ),
-  _Row(
-    'what you say',
-    [_hidden, _hidden, _hidden],
-    'End to end encrypted with the signal double ratchet, then sealed again '
-        'inside a gift wrap. We could not read it if we tried.',
-  ),
-  _Row(
-    'Your ip address',
-    [_hidden, _Cell('our relay', _Tone.warn), _Cell('every relay', _Tone.bad)],
-    'On onion everything leaves through tor and the relay sees an exit node, '
-        'never you. On relay mode the connection goes straight to our own '
-        'relay: nothing forwards your address and nothing is written down, '
-        'but that one connection is ours to see. On fast every public relay '
-        'learns that you connected, though not to whom or what you said.',
-  ),
-  _Row(
-    'Your contact graph',
-    [_never, _never, _never],
-    'Kryfo does not scan your contacts. That is the point. No phone number '
-        'exists here to leak.',
-  ),
-  _Row(
-    'introductions',
-    [
-      _Cell('introducer', _Tone.good),
-      _Cell('introducer', _Tone.good),
-      _Cell('introducer', _Tone.good),
-    ],
-    'When a contact introduces you to someone, that contact learns the two '
-        'of you are now connected. Nobody else does. The relay sees '
-        'ciphertext, and no server ever sees the graph.',
-  ),
-  _Row(
-    'The scam shield',
-    [_onDevice, _onDevice, _onDevice],
-    'Runs on your phone with rules that ship in the app. No network, no list '
-        'downloads. It only reads the first message from a stranger and '
-        'cannot see anything a contact sends you.',
-  ),
-  _Row(
-    'burner rooms',
-    [
-      _Cell('room keys', _Tone.good),
-      _Cell('room keys', _Tone.good),
-      _Cell('room keys', _Tone.good),
-    ],
-    'You join a room under a key made for it, so the people inside learn '
-        'nothing that works elsewhere. Late joiners get no history. At expiry '
-        'the keys, the messages and the media are destroyed.',
-  ),
-  _Row(
-    'link previews',
-    [
-      _Cell('over tor', _Tone.good),
-      _Cell('over tor', _Tone.good),
-      _Cell('over tor', _Tone.good),
-    ],
-    'A preview is fetched by the sender, over tor, and travels inside the '
-        'encrypted message. The receiving phone makes no request. The '
-        'website learns that someone using tor asked for a page, and '
-        'nothing else. No image is ever loaded, and a stranger\'s link '
-        'stays plain text.',
-  ),
-  _Row(
-    'That a device fetched mail',
-    [_timing, _timing, _timing],
-    'A relay can tell that some address was checked, and when. It cannot '
-        'tell whose, or from where.',
-  ),
-  _Row(
-    'A seized unlocked phone',
-    [_yours, _yours, _yours],
-    'If someone holds your phone open, they read your messages. The app '
-        'lock, panic pin and encrypted storage help before that point, not '
-        'after it.',
-  ),
-  _Row(
-    'The crypto itself',
-    [_unaudited, _unaudited, _unaudited],
-    'The ratchet and storage layers are standard. The layer joining them is '
-        'ours and no one independent has reviewed it. Treat this as alpha, '
-        'because it is.',
-  ),
+final _rows = [
+  _Row(l10n.seenWhoYouTalkTo, [
+    _hidden,
+    _hidden,
+    _hidden,
+  ], l10n.seenEachConversationGetsIts),
+  _Row(l10n.seenWhatYouSay, [
+    _hidden,
+    _hidden,
+    _hidden,
+  ], l10n.seenEndToEndEncrypted),
+  _Row(l10n.seenYourIpAddress, [
+    _hidden,
+    _Cell(l10n.seenOurRelay, _Tone.warn),
+    _Cell(l10n.seenEveryRelay, _Tone.bad),
+  ], l10n.seenOnOnionEverythingLeaves),
+  _Row(l10n.seenYourContactGraph, [
+    _never,
+    _never,
+    _never,
+  ], l10n.seenKryfoDoesNotScan),
+  _Row('introductions', [
+    _Cell(l10n.seenIntroducer, _Tone.good),
+    _Cell(l10n.seenIntroducer, _Tone.good),
+    _Cell(l10n.seenIntroducer, _Tone.good),
+  ], l10n.seenWhenAContactIntroduces),
+  _Row(l10n.seenTheScamShield, [
+    _onDevice,
+    _onDevice,
+    _onDevice,
+  ], l10n.seenRunsOnYourPhone),
+  _Row(l10n.seenBurnerRooms, [
+    _Cell(l10n.seenRoomKeys, _Tone.good),
+    _Cell(l10n.seenRoomKeys, _Tone.good),
+    _Cell(l10n.seenRoomKeys, _Tone.good),
+  ], l10n.seenYouJoinARoom),
+  _Row(l10n.seenLinkPreviews, [
+    _Cell(l10n.seenOverTor, _Tone.good),
+    _Cell(l10n.seenOverTor, _Tone.good),
+    _Cell(l10n.seenOverTor, _Tone.good),
+  ], l10n.seenAPreviewIsFetched),
+  _Row(l10n.seenThatADeviceFetched, [
+    _timing,
+    _timing,
+    _timing,
+  ], l10n.seenARelayCanTell),
+  _Row(l10n.seenASeizedUnlockedPhone, [
+    _yours,
+    _yours,
+    _yours,
+  ], l10n.seenIfSomeoneHoldsYour),
+  _Row(l10n.seenTheCryptoItself, [
+    _unaudited,
+    _unaudited,
+    _unaudited,
+  ], l10n.seenTheRatchetAndStorage),
 ];
 
 const _cellW = 66.0;
@@ -205,7 +165,7 @@ class _Header extends StatelessWidget {
   const _Header({required this.active});
   @override
   Widget build(BuildContext context) {
-    const names = ['Onion', 'Relay', 'Fast'];
+    final names = [l10n.seenOnion, l10n.seenRelay, l10n.seenFast];
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(

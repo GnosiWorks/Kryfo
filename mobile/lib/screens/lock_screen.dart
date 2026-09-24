@@ -13,6 +13,7 @@ import '../wipe.dart';
 import '../widgets/fit_column.dart';
 import '../theme.dart';
 import '../widgets/pin_pad.dart';
+import '../l10n/l10n.dart';
 
 class LockScreen extends StatefulWidget {
   const LockScreen({super.key});
@@ -151,10 +152,12 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
                     duration: const Duration(milliseconds: 200),
                     child: Text(
                       _held
-                          ? 'Too many tries · ${lockState.throttleLeft.inSeconds + 1}s'
+                          ? l10n.lockTooManyTriesS(
+                              lockState.throttleLeft.inSeconds + 1,
+                            )
                           : _wrong
-                          ? 'Not it'
-                          : 'Your pin',
+                          ? l10n.lockNotIt
+                          : l10n.lockYourPin,
                       key: ValueKey(_held ? 'held' : _wrong),
                       style: HaloType.sans(
                         size: 13,
@@ -199,7 +202,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'Use fingerprint',
+                              l10n.lockUseFingerprint,
                               style: HaloType.sans(
                                 size: 12.5,
                                 color: HaloColors.text,

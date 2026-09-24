@@ -10,6 +10,7 @@ import 'widgets/confirm_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'theme.dart';
+import 'l10n/l10n.dart';
 
 const _channel = MethodChannel('halo/platform');
 const _prefKey = 'miui_autostart_prompt_seen';
@@ -64,7 +65,7 @@ Future<void> forceShowBackgroundPrompt(BuildContext context) async {
   }
   if (await Permission.ignoreBatteryOptimizations.isGranted) {
     if (context.mounted) {
-      showHaloToast(context, 'Already allowed to run in the background');
+      showHaloToast(context, l10n.miuiAutostartAlreadyAllowedToRun);
     }
     return;
   }
@@ -74,12 +75,10 @@ Future<void> forceShowBackgroundPrompt(BuildContext context) async {
 Future<void> _askBattery(BuildContext context) async {
   final ok = await showConfirmSheet(
     context,
-    title: 'Let kryfo run in the background',
-    line:
-        'Your phone pauses apps to save battery. Without an exception, '
-        'kryfo cannot receive messages while it is closed.',
-    yes: 'Allow',
-    keep: 'Skip',
+    title: l10n.miuiAutostartLetKryfoRunIn,
+    line: l10n.miuiAutostartYourPhonePausesApps,
+    yes: l10n.commonAllow,
+    keep: l10n.commonSkip,
     rose: false,
   );
   if (ok) await Permission.ignoreBatteryOptimizations.request();
@@ -97,21 +96,15 @@ Future<void> maybeShowMiuiPrompt(BuildContext context) async {
 Future<void> _askAutostart(BuildContext context) async {
   final ok = await showConfirmSheet(
     context,
-    title: 'Let kryfo run in the background',
-    line:
-        'Xiaomi turns off background apps by default. Without autostart, '
-        'kryfo cannot deliver messages when the app is closed. On the next '
-        'screen, find kryfo in the list and turn the toggle on.',
-    yes: 'Open settings',
-    keep: 'Skip',
+    title: l10n.miuiAutostartLetKryfoRunIn,
+    line: l10n.miuiAutostartXiaomiTurnsOffBackground,
+    yes: l10n.miuiAutostartOpenSettings,
+    keep: l10n.commonSkip,
     rose: false,
   );
   if (!ok) return;
   final opened = await openAutostartSettings();
   if (!opened && context.mounted) {
-    showHaloToast(
-      context,
-      "couldn't open it. look for autostart in phone settings",
-    );
+    showHaloToast(context, l10n.miuiAutostartCouldnTOpenIt);
   }
 }

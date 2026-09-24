@@ -4,6 +4,7 @@
 // waiting a week.
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'l10n/l10n.dart';
 
 const introBudgetMax = 5;
 const introBudgetWindow = Duration(days: 7);
@@ -55,11 +56,11 @@ class IntroBudget {
 String refillPhrase(Duration until) {
   if (until.inHours >= 24) {
     final d = (until.inHours / 24).ceil();
-    return d == 1 ? 'tomorrow' : 'in $d days';
+    return d == 1 ? l10n.introBudgetTomorrow : l10n.introBudgetInDays(d);
   }
   if (until.inMinutes >= 60) {
     final h = (until.inMinutes / 60).ceil();
-    return h == 1 ? 'in an hour' : 'in $h hours';
+    return h == 1 ? l10n.introBudgetInAnHour : l10n.introBudgetInHours(h);
   }
-  return 'in a few minutes';
+  return l10n.introBudgetInAFewMinutes;
 }

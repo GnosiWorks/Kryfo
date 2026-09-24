@@ -16,6 +16,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'theme.dart';
+import 'l10n/l10n.dart';
 
 class ContactCard extends StatelessWidget {
   final String haloId;
@@ -37,7 +38,7 @@ class ContactCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Message me on',
+            l10n.contactCardMessageMeOn,
             style: HaloType.mono(
               size: 10,
               color: HaloColors.text3,
@@ -84,8 +85,7 @@ class ContactCard extends StatelessWidget {
           Container(height: 1, color: const Color(0xFF2F2922)),
           const SizedBox(height: 14),
           Text(
-            'Scan it, or type the three words into kryfo.\n'
-            'This card knows nothing about you beyond that.',
+            l10n.contactCardScanItOrType,
             textAlign: TextAlign.center,
             style: HaloType.sans(
               size: 11,
@@ -153,7 +153,7 @@ Future<void> shareContactCard({
       () => SharePlus.instance.share(
         ShareParams(
           files: [XFile(file.path)],
-          text: 'Message me on kryfo · $haloId',
+          text: l10n.contactCardMessageMeOnKryfo(haloId),
         ),
       ),
     );

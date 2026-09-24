@@ -12,6 +12,7 @@
 // has to know whether to bring the foreground service back.
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'l10n/l10n.dart';
 
 enum DeliveryMode { always, checkins, helper }
 
@@ -45,21 +46,25 @@ Future<void> saveDeliveryMode(DeliveryMode m) async {
 }
 
 String deliveryModeName(DeliveryMode m) => switch (m) {
-  DeliveryMode.always => 'Always on',
-  DeliveryMode.checkins => 'Check-ins',
-  DeliveryMode.helper => 'Through a helper app',
+  DeliveryMode.always => l10n.deliveryModeAlwaysOn,
+  DeliveryMode.checkins => l10n.deliveryModeCheckIns,
+  DeliveryMode.helper => l10n.deliveryModeThroughAHelperApp,
 };
 
 String agoLine(int thenMs, int nowMs) {
   final d = nowMs - thenMs;
-  if (thenMs <= 0 || d < 0) return 'not yet';
+  if (thenMs <= 0 || d < 0) return l10n.deliveryModeNotYet;
   final min = d ~/ 60000;
-  if (min < 1) return 'just now';
-  if (min < 60) return '$min min ago';
+  if (min < 1) return l10n.deliveryModeJustNow;
+  if (min < 60) return l10n.deliveryModeMinAgo(min);
   final h = min ~/ 60;
-  if (h < 24) return h == 1 ? '1 hour ago' : '$h hours ago';
+  if (h < 24) {
+    return h == 1 ? l10n.deliveryMode1HourAgo : l10n.deliveryModeHoursAgo(h);
+  }
   final days = h ~/ 24;
-  return days == 1 ? 'yesterday' : '$days days ago';
+  return days == 1
+      ? l10n.deliveryModeYesterday
+      : l10n.deliveryModeDaysAgo(days);
 }
 
 class DeliveryStatus {
@@ -83,32 +88,44 @@ DeliveryStatus deliveryStatus({
 }) {
   switch (mode) {
     case DeliveryMode.always:
-      if (connected) return const DeliveryStatus('Connected', live: true);
-      return DeliveryStatus(connecting ? 'Connecting' : 'Not connected');
+      if (connected) {
+        return DeliveryStatus(l10n.deliveryModeConnected, live: true);
+      }
+      return DeliveryStatus(
+        connecting
+            ? l10n.deliveryModeConnecting
+            : l10n.deliveryModeNotConnected,
+      );
     case DeliveryMode.checkins:
-      if (checking) return const DeliveryStatus('Checking now', live: true);
+      if (checking) {
+        return DeliveryStatus(l10n.deliveryModeCheckingNow, live: true);
+      }
       final last = lastCheckMs > 0
-          ? 'last check-in ${agoLine(lastCheckMs, nowMs)}'
-          : 'no check-in yet';
+          ? l10n.deliveryModeLastCheckIn(agoLine(lastCheckMs, nowMs))
+          : l10n.deliveryModeNoCheckInYet;
       // with kryfo open the connection is up and messages land as they
       // always did. the last check-in rides along anyway: this screen can
       // only be read with kryfo open, so a line that hid it while open
       // would never be seen at all.
       if (connected) {
-        return DeliveryStatus('Connected now \u00B7 $last', live: true);
+        return DeliveryStatus(l10n.deliveryModeConnectedNow(last), live: true);
       }
-      if (connecting) return DeliveryStatus('Connecting \u00B7 $last');
-      if (lastCheckMs <= 0) return const DeliveryStatus('No check-in yet');
-      return DeliveryStatus('Last checked ${agoLine(lastCheckMs, nowMs)}');
-    case DeliveryMode.helper:
-      final who = (helperName == null || helperName.isEmpty)
-          ? 'a helper app'
-          : helperName;
-      if (lastWakeMs <= 0) {
-        return DeliveryStatus('Woken by $who · no wake-up yet');
+      if (connecting) return DeliveryStatus(l10n.deliveryModeConnecting2(last));
+      if (lastCheckMs <= 0) {
+        return DeliveryStatus(l10n.deliveryModeNoCheckInYet2);
       }
       return DeliveryStatus(
-        'Woken by $who · last wake-up ${agoLine(lastWakeMs, nowMs)}',
+        l10n.deliveryModeLastChecked(agoLine(lastCheckMs, nowMs)),
+      );
+    case DeliveryMode.helper:
+      final who = (helperName == null || helperName.isEmpty)
+          ? l10n.deliveryModeAHelperApp
+          : helperName;
+      if (lastWakeMs <= 0) {
+        return DeliveryStatus(l10n.deliveryModeWokenByNoWake(who));
+      }
+      return DeliveryStatus(
+        l10n.deliveryModeWokenByLastWake(who, agoLine(lastWakeMs, nowMs)),
       );
   }
 }

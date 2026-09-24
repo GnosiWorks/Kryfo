@@ -10,6 +10,7 @@ import '../widgets/motion.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/stroke_icon.dart';
 import '../widgets/tool_parts.dart';
+import '../l10n/l10n.dart';
 
 class _Field {
   final String id;
@@ -39,19 +40,19 @@ class _Kind {
   const _Kind(this.kind, this.label, this.icon, this.note, this.fields);
 }
 
-const _kinds = [
+final _kinds = [
   _Kind(
     QrKind.link,
-    'Link',
+    l10n.qrLink,
     [
       'M10 14a4.5 4.5 0 0 0 6.4 0l2.8-2.8a4.5 4.5 0 0 0-6.4-6.4L11.5 6',
       'M14 10a4.5 4.5 0 0 0-6.4 0l-2.8 2.8a4.5 4.5 0 0 0 6.4 6.4l1.3-1.2',
     ],
-    'YOUR LINK AS TYPED · NO TRACKING REDIRECT',
+    l10n.qrYourLinkAsTyped,
     [
       _Field(
         'link',
-        'Link',
+        l10n.qrLink,
         keyboard: TextInputType.url,
         plain: true,
         hint: 'https://',
@@ -60,40 +61,40 @@ const _kinds = [
   ),
   _Kind(
     QrKind.text,
-    'Text',
+    l10n.qrText,
     ['M5 6h14', 'M5 11h14', 'M5 16h9'],
-    'STAYS IN THE CODE · NO SERVER HOLDS IT',
-    [_Field('text', 'Text', keyboard: TextInputType.multiline, lines: 3)],
+    l10n.qrStaysInTheCode,
+    [_Field('text', l10n.qrText, keyboard: TextInputType.multiline, lines: 3)],
   ),
   _Kind(
     QrKind.wifi,
-    'Wi-Fi',
+    l10n.qrWiFi,
     [
       'M3 9.5a13 13 0 0 1 18 0',
       'M6 13a8.5 8.5 0 0 1 12 0',
       'M9 16.5a4 4 0 0 1 6 0',
       'M12 19.6v.1',
     ],
-    'MADE ON THIS PHONE · NO WEBSITE SAW THE PASSWORD',
+    l10n.qrMadeOnThisPhone,
     [
-      _Field('ssid', 'Network name', plain: true),
-      _Field('password', 'Password', secret: true, plain: true),
+      _Field('ssid', l10n.qrNetworkName, plain: true),
+      _Field('password', l10n.qrPassword, secret: true, plain: true),
     ],
   ),
   _Kind(
     QrKind.contact,
-    'Contact',
+    l10n.qrContact,
     [
       'M15.6 8.5a3.6 3.6 0 1 1-7.2 0 3.6 3.6 0 1 1 7.2 0z',
       'M5 19.5c1.3-3.4 4-4.9 7-4.9s5.7 1.5 7 4.9',
     ],
-    'ONLY WHAT YOU TYPE · NOTHING FROM YOUR CONTACTS',
+    l10n.qrOnlyWhatYouType,
     [
-      _Field('name', 'Name', keyboard: TextInputType.name, plain: true),
-      _Field('phone', 'Phone', keyboard: TextInputType.phone),
+      _Field('name', l10n.qrName, keyboard: TextInputType.name, plain: true),
+      _Field('phone', l10n.qrPhone, keyboard: TextInputType.phone),
       _Field(
         'email',
-        'Email',
+        l10n.qrEmail,
         keyboard: TextInputType.emailAddress,
         plain: true,
       ),
@@ -101,56 +102,61 @@ const _kinds = [
   ),
   _Kind(
     QrKind.email,
-    'Email',
+    l10n.qrEmail,
     ['M4 6.5h16v11H4z', 'M4.5 7l7.5 6 7.5-6'],
-    'OPENS THEIR MAIL APP · NOTHING SENT FROM HERE',
+    l10n.qrOpensTheirMailApp,
     [
-      _Field('to', 'To', keyboard: TextInputType.emailAddress, plain: true),
-      _Field('subject', 'Subject'),
+      _Field(
+        'to',
+        l10n.qrTo,
+        keyboard: TextInputType.emailAddress,
+        plain: true,
+      ),
+      _Field('subject', l10n.qrSubject),
     ],
   ),
   _Kind(
     QrKind.phone,
-    'Phone',
+    l10n.qrPhone,
     [
       'M6.5 4h3l1.5 4-2 1.3a9 9 0 0 0 5.7 5.7l1.3-2 4 1.5v3a2 2 0 0 1-2 2A15 15 0 0 1 4.5 6a2 2 0 0 1 2-2z',
     ],
-    'A NUMBER · NOTHING ELSE',
-    [_Field('number', 'Number', keyboard: TextInputType.phone)],
+    l10n.qrANumberNothingElse,
+    [_Field('number', l10n.qrNumber, keyboard: TextInputType.phone)],
   ),
   _Kind(
     QrKind.sms,
-    'SMS',
+    l10n.qrSms,
     [
       'M4.5 6.8A2.8 2.8 0 0 1 7.3 4h9.4a2.8 2.8 0 0 1 2.8 2.8v6.4a2.8 2.8 0 0 1-2.8 2.8H11l-4.3 3.4V16a2.8 2.8 0 0 1-2.2-2.8z',
       'M8.5 10h.01',
       'M12 10h.01',
       'M15.5 10h.01',
     ],
-    'OPENS THEIR MESSAGES APP · NOTHING SENT FROM HERE',
+    l10n.qrOpensTheirMessagesApp,
     [
-      _Field('number', 'Number', keyboard: TextInputType.phone),
-      _Field('message', 'Message', lines: 2),
+      _Field('number', l10n.qrNumber, keyboard: TextInputType.phone),
+      _Field('message', l10n.qrMessage, lines: 2),
     ],
   ),
   _Kind(
     QrKind.geo,
-    'Location',
+    l10n.qrLocation,
     [
       'M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z',
       'M14.3 10a2.3 2.3 0 1 1-4.6 0 2.3 2.3 0 1 1 4.6 0z',
     ],
-    'COORDINATES ONLY · NO MAP SERVICE ASKED',
+    l10n.qrCoordinatesOnlyNoMap,
     [
       _Field(
         'lat',
-        'Latitude',
+        l10n.qrLatitude,
         keyboard: TextInputType.numberWithOptions(signed: true, decimal: true),
         hint: '52.52000',
       ),
       _Field(
         'lon',
-        'Longitude',
+        l10n.qrLongitude,
         keyboard: TextInputType.numberWithOptions(signed: true, decimal: true),
         hint: '13.40500',
       ),
@@ -158,7 +164,7 @@ const _kinds = [
   ),
   _Kind(
     QrKind.btc,
-    'Bitcoin',
+    l10n.qrBitcoin,
     [
       'M8 5h5.5a3 3 0 0 1 0 6H8z',
       'M8 11h6.5a3 3 0 0 1 0 6H8z',
@@ -168,12 +174,12 @@ const _kinds = [
       'M10 17v2',
       'M13 17v2',
     ],
-    'ADDRESS AND AMOUNT · NO PAYMENT SITE IN BETWEEN',
+    l10n.qrAddressAndAmountNo,
     [
-      _Field('address', 'Address', plain: true),
+      _Field('address', l10n.qrAddress, plain: true),
       _Field(
         'amount',
-        'Amount in BTC',
+        l10n.qrAmountInBtc,
         keyboard: TextInputType.numberWithOptions(decimal: true),
         hint: '0.001',
       ),
@@ -200,10 +206,10 @@ const _eyeOff = [
 ];
 final _copyIcon = [svgRect(8, 8, 11, 12, 2.5), 'M5 15V6a2 2 0 0 1 2-2h8'];
 
-const _inks = [
-  ('Ink', HaloColors.qrInk),
-  ('Amber', HaloColors.qrAmber),
-  ('Violet', HaloColors.qrViolet),
+final _inks = [
+  (l10n.qrInk, HaloColors.qrInk),
+  (l10n.qrAmber, HaloColors.qrAmber),
+  (l10n.qrViolet, HaloColors.qrViolet),
 ];
 
 class QrScreen extends StatefulWidget {
@@ -244,7 +250,7 @@ class _QrScreenState extends State<QrScreen> {
     final png = await renderQrPng(g, _inks[_ink].$2, HaloColors.qrPaper);
     if (png == null) return null;
     final cache = await getTemporaryDirectory();
-    return writeQrPng(png, '${cache.path}/tools_out');
+    return writeQrPng(png, l10n.qrToolsOut(cache.path));
   }
 
   Future<void> _out(QrGrid g, {required bool save}) async {
@@ -254,24 +260,24 @@ class _QrScreenState extends State<QrScreen> {
     try {
       final path = await _render(g);
       if (path == null) {
-        said = 'Could not draw the image.';
+        said = l10n.qrCouldNotDrawThe;
       } else if (save) {
         final how = await ToolsBridge.instance.saveToGallery(
           path,
-          'qr code.png',
+          l10n.qrQrCodePng,
           'image/png',
         );
         said = switch (how) {
-          'saved' => 'Saved to your gallery',
+          'saved' => l10n.qrSavedToYourGallery,
           'kept' => null,
-          _ => 'Could not save it. Check the phone has room.',
+          _ => l10n.qrCouldNotSaveIt,
         };
       } else {
         final ok = await ToolsBridge.instance.shareOut(path, 'image/png');
-        if (!ok) said = 'No app on this phone took the image.';
+        if (!ok) said = l10n.qrNoAppOnThis;
       }
     } catch (_) {
-      said = 'Could not draw the image.';
+      said = l10n.qrCouldNotDrawThe;
     }
     if (!mounted) return;
     setState(() => _busy = false);
@@ -286,9 +292,9 @@ class _QrScreenState extends State<QrScreen> {
     final warn =
         built.problem ??
         (tooLong
-            ? 'Too much for one code. Make it shorter.'
+            ? l10n.qrTooMuchForOne
             : grid != null && grid.dense
-            ? 'This is a lot for one code. Older cameras may not read it.'
+            ? l10n.qrThisIsALot
             : null);
     final ready = grid != null && built.problem == null;
     return Scaffold(
@@ -297,7 +303,7 @@ class _QrScreenState extends State<QrScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const ToolBar(title: 'Private QR code'),
+            ToolBar(title: l10n.qrPrivateQrCode),
             Expanded(
               child: CustomScrollView(
                 keyboardDismissBehavior:
@@ -341,7 +347,7 @@ class _QrScreenState extends State<QrScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Colour',
+                            l10n.qrColour,
                             style: HaloType.sans(
                               size: 12,
                               color: HaloColors.warm,
@@ -386,7 +392,7 @@ class _QrScreenState extends State<QrScreen> {
                                   copySensitive(v);
                                   showHaloToast(
                                     context,
-                                    'Copied. It leaves the clipboard in a minute',
+                                    l10n.qrCopiedItLeavesThe,
                                   );
                                 },
                               ),
@@ -400,7 +406,7 @@ class _QrScreenState extends State<QrScreen> {
                                       horizontal: 4,
                                     ),
                                     child: Text(
-                                      'Security',
+                                      l10n.qrSecurity,
                                       style: HaloType.sans(
                                         size: 12,
                                         color: HaloColors.warm,
@@ -411,7 +417,7 @@ class _QrScreenState extends State<QrScreen> {
                                   for (final (l, name) in [
                                     (WifiLock.wpa2, 'WPA2'),
                                     (WifiLock.wpa3, 'WPA3'),
-                                    (WifiLock.none, 'None'),
+                                    (WifiLock.none, l10n.qrNone),
                                   ])
                                     Padding(
                                       padding: const EdgeInsets.only(right: 8),
@@ -478,7 +484,7 @@ class _QrScreenState extends State<QrScreen> {
                                 Expanded(
                                   child: ToolWideButton(
                                     icon: _shareIcon,
-                                    label: 'Share',
+                                    label: l10n.commonShare,
                                     height: 52,
                                     filled: true,
                                     onTap: ready && !_busy
@@ -490,7 +496,7 @@ class _QrScreenState extends State<QrScreen> {
                                 Expanded(
                                   child: ToolWideButton(
                                     icon: _saveIcon,
-                                    label: 'Save image',
+                                    label: l10n.qrSaveImage,
                                     height: 52,
                                     filled: false,
                                     onTap: ready && !_busy
@@ -633,7 +639,7 @@ class _Swatch extends StatelessWidget {
     return Semantics(
       selected: on,
       child: PressScale(
-        label: '$name colour',
+        label: l10n.qrColour2(name),
         onTap: onTap,
         child: SizedBox(
           width: 44,
@@ -706,7 +712,7 @@ class _Card extends StatelessWidget {
               child: grid == null
                   ? Center(
                       child: Text(
-                        'Type below and the\ncode draws itself',
+                        l10n.qrTypeBelowAndThe,
                         textAlign: TextAlign.center,
                         style: HaloType.sans(
                           size: 13,
@@ -716,7 +722,7 @@ class _Card extends StatelessWidget {
                       ),
                     )
                   : Semantics(
-                      label: 'QR code',
+                      label: l10n.qrQrCode,
                       image: true,
                       child: CustomPaint(painter: _QrPainter(grid!, ink)),
                     ),
@@ -831,7 +837,7 @@ class _Input extends StatelessWidget {
               ),
               if (field.secret) ...[
                 PressScale(
-                  label: shown ? 'Hide password' : 'Show password',
+                  label: shown ? l10n.qrHidePassword : l10n.qrShowPassword,
                   onTap: onToggle,
                   child: SizedBox(
                     width: 44,
@@ -846,7 +852,7 @@ class _Input extends StatelessWidget {
                   ),
                 ),
                 PressScale(
-                  label: 'Copy password',
+                  label: l10n.qrCopyPassword,
                   onTap: onCopy,
                   child: SizedBox(
                     width: 44,

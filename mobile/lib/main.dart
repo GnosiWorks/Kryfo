@@ -69,6 +69,7 @@ import 'mentions.dart';
 import 'handle_lookup.dart';
 import 'widgets/sheet_handle.dart';
 import 'widgets/halo_sheet.dart';
+import 'l10n/l10n.dart';
 
 typedef IntArgFn = Void Function(Int32);
 typedef IntArgFnDart = void Function(int);
@@ -156,7 +157,7 @@ class HaloEngine {
         .lookupFunction<
           Pointer<Utf8> Function(Pointer<Utf8>),
           Pointer<Utf8> Function(Pointer<Utf8>)
-        >('HaloStartListener');
+        >(l10n.appHalostartlistener);
     _drainInbox = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloDrainInbox');
     _getStatus = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloGetStatus');
     _nostrKick = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloNostrKick');
@@ -365,13 +366,14 @@ class HaloEngine {
 
   // the registry is a request over tor: off the ui thread, or claiming a
   // handle froze the screen until it answered and android called it an anr
-  Future<String> handleCheck(String h) => _ffiOnIsolate('HaloHandleCheck', [h]);
+  Future<String> handleCheck(String h) =>
+      _ffiOnIsolate(l10n.appHalohandlecheck, [h]);
 
   Future<String> handleClaim(String h, String invite, String bio) =>
-      _ffiOnIsolate('HaloHandleClaim', [h, invite, bio]);
+      _ffiOnIsolate(l10n.appHalohandleclaim, [h, invite, bio]);
 
   Future<String> handleRelease(String h) =>
-      _ffiOnIsolate('HaloHandleRelease', [h]);
+      _ffiOnIsolate(l10n.appHalohandlerelease, [h]);
 
   // tell the engine whether to route through tor. it decides the route; the
   // relay list for each mode is chosen below.
@@ -454,7 +456,7 @@ class HaloEngine {
   // is a rendezvous and a round trip, and run inline it held every frame
   // and android's own main thread for as long as that took.
   Future<String> torPost(String url, String body) => _ffiOnIsolate(
-    'HaloTorPost',
+    l10n.appHalotorpost,
     [url, body],
     wait: const Duration(seconds: 80),
     what: 'tor',
@@ -463,7 +465,7 @@ class HaloEngine {
   // GET over tor that accepts any 2xx - the badge service replies 202 while
   // a donation is still unconfirmed. off the ui thread, as above.
   Future<String> torGetJson(String url) => _ffiOnIsolate(
-    'HaloTorGetJSON',
+    l10n.appHalotorgetjson,
     [url],
     wait: const Duration(seconds: 80),
     what: 'tor',
@@ -561,7 +563,7 @@ class HaloEngine {
   }
 
   Future<String> roomSend(String priv, String peerPub, String msg) =>
-      _roomFfiOnIsolate('HaloRoomSend', [priv, peerPub, msg]).timeout(
+      _roomFfiOnIsolate(l10n.appHaloroomsend, [priv, peerPub, msg]).timeout(
         const Duration(seconds: 60),
         onTimeout: () => 'error: relay timeout',
       );
@@ -571,18 +573,23 @@ class HaloEngine {
     String peerPub,
     String fcPk,
     String msg,
-  ) => _roomFfiOnIsolate('HaloRoomSendFirstContact', [priv, peerPub, fcPk, msg])
-      .timeout(
+  ) =>
+      _roomFfiOnIsolate(l10n.appHaloroomsendfirstcontact, [
+        priv,
+        peerPub,
+        fcPk,
+        msg,
+      ]).timeout(
         const Duration(seconds: 60),
         onTimeout: () => 'error: relay timeout',
       );
 
   void roomSubscribeBg(String priv, String peerPub) =>
-      _roomFfiOnIsolate('HaloRoomSubscribe', [priv, peerPub]).ignore();
+      _roomFfiOnIsolate(l10n.appHaloroomsubscribe, [priv, peerPub]).ignore();
   void roomSubscribeFcBg(String priv) =>
-      _roomFfiOnIsolate('HaloRoomSubscribeFirstContact', [priv]).ignore();
+      _roomFfiOnIsolate(l10n.appHaloroomsubscribefirstcontact, [priv]).ignore();
   void roomUnsubscribeBg(String pub) =>
-      _roomFfiOnIsolate('HaloRoomUnsubscribe', [pub]).ignore();
+      _roomFfiOnIsolate(l10n.appHaloroomunsubscribe, [pub]).ignore();
 }
 
 // one to four string args in, a string out, on its own isolate like every
@@ -766,7 +773,7 @@ Future<String> _startListenerOnIsolate(String dataDir) {
         .lookupFunction<
           Pointer<Utf8> Function(Pointer<Utf8>),
           Pointer<Utf8> Function(Pointer<Utf8>)
-        >('HaloStartListener');
+        >(l10n.appHalostartlistener);
     final p = dataDir.toNativeUtf8();
     try {
       return fn(p).toDartString();
@@ -822,7 +829,7 @@ Future<String> _sendOnIsolate(({bool nostr, String a, String b}) args) {
         ? DynamicLibrary.open('libhalo.so')
         : DynamicLibrary.process();
     final fn = lib.lookupFunction<TwoArgFn, TwoArgFnDart>(
-      args.nostr ? 'HaloNostrSend' : 'HaloSendTo',
+      args.nostr ? l10n.appHalonostrsend : l10n.appHalosendto,
     );
     final p1 = args.a.toNativeUtf8();
     final p2 = args.b.toNativeUtf8();
@@ -1161,14 +1168,14 @@ class HaloDb {
           // burner rooms live in the groups table with their own key and a
           // clock. each ALTER on its own and wrapped: one throw here and
           // the app never opens again.
-          for (final col in const [
-            'room_priv TEXT',
-            'room_pub TEXT',
-            'expires_at INTEGER',
-            'creator_pub TEXT',
-            'fc_pk TEXT',
-            'member_cap INTEGER',
-            'room_seen INTEGER NOT NULL DEFAULT 0',
+          for (final col in [
+            l10n.appRoomPrivText,
+            l10n.appRoomPubText,
+            l10n.appExpiresAtInteger,
+            l10n.appCreatorPubText,
+            l10n.appFcPkText,
+            l10n.appMemberCapInteger,
+            l10n.appRoomSeenIntegerNot,
           ]) {
             try {
               await db.execute('ALTER TABLE groups ADD COLUMN $col');
@@ -3697,19 +3704,23 @@ Future<String> handleHaloUri(String raw) async {
   if (room != null) {
     final r = await appState.joinRoom(room);
     // a join used to end in a toast and a room somewhere in the list
-    if (r.startsWith('Joined') || r == 'You are already in this room') {
+    // compared with the words themselves, not a prefix of the english
+    if (r == l10n.appJoined(room.name) ||
+        r == l10n.appJoinedButTheCreator(room.name) ||
+        r == l10n.appJoinedButYourHello(room.name) ||
+        r == l10n.appYouAreAlreadyIn) {
       openRoomSoon(room.roomId);
     }
     return r;
   }
   final parsed = parseHaloUri(raw);
-  if (parsed == null) return 'invalid uri';
+  if (parsed == null) return l10n.appInvalidUri;
   if (parsed['v'] == '2' || parsed['v'] == '3') {
     final already = await db.getContact(parsed['id']!) != null;
     try {
       await processPeerBundle(parsed['id']!, parsed['bundle']!);
     } catch (e) {
-      return 'Bundle error: $e';
+      return l10n.appBundleError(e);
     }
     await db.upsertContact(parsed['id']!, parsed['onion']!, '');
     await db.setPeerBundle(parsed['id']!, parsed['bundle']!);
@@ -3724,12 +3735,12 @@ Future<String> handleHaloUri(String raw) async {
     }
     await appState.subscribePeer(parsed['id']!);
     return already
-        ? 'Already saved: ${parsed['id']}'
-        : 'Added ${parsed['id']} · you can message them now';
+        ? l10n.appAlreadySaved('${parsed['id']}')
+        : l10n.appAddedYouCanMessage('${parsed['id']}');
   } else {
     await db.upsertContact(parsed['id']!, parsed['onion']!, parsed['xpub']!);
     await appState.subscribePeer(parsed['id']!);
-    return 'Peer imported (v1): ${parsed['id']}';
+    return l10n.appPeerImportedV1('${parsed['id']}');
   }
 }
 
@@ -4904,7 +4915,7 @@ class AppState extends ChangeNotifier {
             .first;
         final ms = m['catchup_ms'] as int? ?? 0;
         final secs = (ms / 1000).toStringAsFixed(1);
-        final long = m['catchup_long'] == true ? ' long window' : '';
+        final long = m['catchup_long'] == true ? l10n.appLongWindow : '';
         final dropped = m['catchup_dropped'] == true;
         // the relay's slowest subscription - it has one per contact. a slow
         // one says how many of them were held up, how long its connect
@@ -4916,13 +4927,13 @@ class AppState extends ChangeNotifier {
           final e = m['catchup_events'] as int? ?? 0;
           final subs = m['catchup_subs'] as int? ?? 0;
           final held = m['catchup_subs_dropped'] as int? ?? 0;
-          final of = subs > 1 ? '${dropped ? held : 1} of $subs, ' : '';
-          why = ' (${of}connect ${c}s, $p pages, $e events)';
+          final of = subs > 1 ? l10n.appOf(dropped ? held : 1, subs) : '';
+          why = l10n.appConnectSPagesEvents(of, c, p, e);
         }
         parts.add(
           dropped
-              ? '$host ${secs}s dropped$long$why'
-              : '$host ${secs}s$long$why',
+              ? l10n.appSDropped(host, secs, long, why)
+              : l10n.appS(host, secs, long, why),
         );
       }
       return parts.join(' · ');
@@ -4984,7 +4995,7 @@ class AppState extends ChangeNotifier {
   Future<void> _torSleep() async {
     if (_torHeld || haloWiping) return;
     _torHeld = true;
-    final r = await _torCtlOnIsolate('HaloTorStop');
+    final r = await _torCtlOnIsolate(l10n.appHalotorstop);
     dlog('delivery: tor stopped ($r)');
     notifyListeners();
   }
@@ -4994,7 +5005,7 @@ class AppState extends ChangeNotifier {
     // 'ok': tor was asleep and is waking. 'start': there is no tor in this
     // process yet. either way the start call below does the right thing -
     // it hands back the address of the tor that is up, or makes one.
-    final r = await _torCtlOnIsolate('HaloTorResume');
+    final r = await _torCtlOnIsolate(l10n.appHalotorresume);
     if (r.startsWith('error')) {
       dlog('delivery: tor would not wake: $r');
       return false;
@@ -5022,7 +5033,7 @@ class AppState extends ChangeNotifier {
     var how = 'started';
     try {
       if (!await _torWake()) {
-        how = 'tor would not wake';
+        how = l10n.appTorWouldNotWake;
         return 0;
       }
       // ready means the engine has a route a relay can be reached over
@@ -5030,7 +5041,7 @@ class AppState extends ChangeNotifier {
         await Future.delayed(const Duration(seconds: 1));
       }
       if (!torReady) {
-        how = 'tor not ready in 75s';
+        how = l10n.appTorNotReadyIn;
         dlog('checkin($why): tor never became ready');
         return 0;
       }
@@ -5064,14 +5075,14 @@ class AppState extends ChangeNotifier {
           quiet = 0;
         }
         if (!began && secs >= 45) {
-          tail = ', no relay began';
+          tail = l10n.appNoRelayBegan;
           break;
         }
         // relays are capped at 30s each, so this should never bite. if it
         // ever does, something is holding catchupActive up and the line on
         // the transport screen will say which relay.
         if (secs >= 90) {
-          tail = ', capped';
+          tail = l10n.appCapped;
           break;
         }
         await Future.delayed(const Duration(seconds: 1));
@@ -5084,7 +5095,7 @@ class AppState extends ChangeNotifier {
       for (var i = 0; i < 10 && _queued > 0; i++) {
         await Future.delayed(const Duration(seconds: 1));
       }
-      how = 'ok$tail';
+      how = l10n.appOk(tail);
       lastCheckAt = DateTime.now().millisecondsSinceEpoch;
       if (why == 'push') lastWakeAt = lastCheckAt;
       try {
@@ -5098,8 +5109,11 @@ class AppState extends ChangeNotifier {
       return lastDrainAt != drainBefore ? 1 : 0;
     } finally {
       _checking = false;
-      lastCheckHow =
-          '$how, ${DateTime.now().difference(started).inSeconds}s, by $why';
+      lastCheckHow = l10n.appSBy(
+        how,
+        DateTime.now().difference(started).inSeconds,
+        why,
+      );
       lastCheckTriedAt = DateTime.now().millisecondsSinceEpoch;
       try {
         final prefs = await SharedPreferences.getInstance();
@@ -5681,7 +5695,7 @@ class AppState extends ChangeNotifier {
     final bodyText = unsaved
         ? [
             env.message,
-            'An attachment could not be saved on this phone',
+            l10n.appAnAttachmentCouldNot,
           ].where((s) => s.trim().isNotEmpty).join('\n')
         : env.message;
     // dedup: a message can arrive twice - the original, then the preview re-send
@@ -5800,12 +5814,12 @@ class AppState extends ChangeNotifier {
     final bool suppress;
     if (isGroup) {
       final g = await db.getGroup(env.groupId!);
-      notifTitle = (g?['name'] as String?) ?? 'group';
+      notifTitle = (g?['name'] as String?) ?? l10n.appGroup2;
       final gBody = env.message.isNotEmpty
           ? env.message
           : (fileName == 'voice.wav'
-                ? 'Voice message'
-                : fileName ?? (mediaPath != null ? 'photo' : ''));
+                ? l10n.appVoiceMessage
+                : fileName ?? (mediaPath != null ? l10n.appPhoto : ''));
       final who = looksLikeRoomKey(senderHaloId)
           ? roomTag(senderHaloId)
           : senderHaloId;
@@ -5815,8 +5829,8 @@ class AppState extends ChangeNotifier {
     } else if (!senderAccepted) {
       // a stranger chose these words; they do not go on a lock screen
       // where anyone nearby reads them. that a request arrived is enough.
-      notifTitle = 'New request';
-      notifBody = 'Someone you have not added wrote to you';
+      notifTitle = l10n.appNewRequest;
+      notifBody = l10n.appSomeoneYouHaveNot;
       notifPayload = senderHaloId;
       suppress =
           currentChatPeer == senderHaloId || await db.isMuted(senderHaloId);
@@ -5824,7 +5838,7 @@ class AppState extends ChangeNotifier {
       notifTitle = senderHaloId;
       notifBody = env.message.isNotEmpty
           ? env.message
-          : (fileName ?? (mediaPath != null ? 'photo' : env.message));
+          : (fileName ?? (mediaPath != null ? l10n.appPhoto : env.message));
       notifPayload = senderHaloId;
       suppress =
           currentChatPeer == senderHaloId || await db.isMuted(senderHaloId);
@@ -6281,7 +6295,7 @@ class AppState extends ChangeNotifier {
   // sender's claimed identity (via envelope) and move the libsignal
   // session to the real HaloID.
   Future<String?> backPairFromCipher(String cipher) async {
-    const tempPeer = '_pending_back_pair_';
+    final tempPeer = '_pending_back_pair_';
     final tempAddr = SignalProtocolAddress(tempPeer, 1);
     try {
       // always start clean: a leftover temp session or parked identity from
@@ -6413,7 +6427,7 @@ class AppState extends ChangeNotifier {
   // what the splash says while boot runs. the keys and the database come
   // first and take the longest on a new phone; tor starts once the home
   // is ready to paint
-  String bootPhase = 'Setting up your keys';
+  String bootPhase = l10n.appSettingUpYourKeys;
 
   Future<void> _boot() async {
     dlog('LAUNCH boot');
@@ -6440,7 +6454,7 @@ class AppState extends ChangeNotifier {
     }
     myXPub = engine.myXPubkey();
     dlog('BOOT identity +${bsw.elapsedMilliseconds}ms');
-    bootPhase = 'Opening your chats';
+    bootPhase = l10n.appOpeningYourChats;
     notifyListeners();
     _appLinks = AppLinks();
     // a link carries a prekey bundle, and taking one needs the signal
@@ -6491,7 +6505,7 @@ class AppState extends ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 300));
     }
     ready = true;
-    bootPhase = 'starting Tor';
+    bootPhase = l10n.appStartingTor;
     dlog('BOOT ready +${bsw.elapsedMilliseconds}ms');
     notifyListeners();
     // moved away: home can show what was here, and that is all. no tor,
@@ -6541,7 +6555,7 @@ class AppState extends ChangeNotifier {
     // good, which is always-on without the service that keeps it alive.
     if (_deliveryMode != DeliveryMode.always && !_inFront) {
       _torHeld = true;
-      await _torCtlOnIsolate('HaloTorStop');
+      await _torCtlOnIsolate(l10n.appHalotorstop);
       _docsPath = docsDir.path;
     } else {
       _docsPath = docsDir.path;
@@ -6643,10 +6657,7 @@ class AppState extends ChangeNotifier {
         if (sweepFails == 12) {
           final ctx = rootNavKey.currentContext;
           if (ctx != null && ctx.mounted) {
-            showHaloToast(
-              ctx,
-              'Timed messages are not clearing. Restart kryfo',
-            );
+            showHaloToast(ctx, l10n.appTimedMessagesAreNot);
           }
         }
       }
@@ -7127,15 +7138,15 @@ class AppState extends ChangeNotifier {
         if (text.isNotEmpty) {
           body = text;
         } else if (fileName == 'voice.wav') {
-          body = 'voice message';
+          body = l10n.appVoiceMessage2;
         } else if (fileName != null) {
           body = fileName;
         } else if (media != null) {
-          body = 'photo';
+          body = l10n.appPhoto;
         } else {
           body = '';
         }
-        if (body.isNotEmpty) preview = dir == 'out' ? 'you: $body' : body;
+        if (body.isNotEmpty) preview = dir == 'out' ? l10n.appYou(body) : body;
         final sentAt = last['sent_at'] as int?;
         if (sentAt != null) {
           when = DateTime.fromMillisecondsSinceEpoch(sentAt);
@@ -7439,7 +7450,7 @@ class AppState extends ChangeNotifier {
           engine
               .sendFirstContact(xpub, fc, cipher)
               .then((r) => settle('firstcontact', r))
-              .catchError((_) => settle('Firstcontact', 'err')),
+              .catchError((_) => settle(l10n.appFirstcontact, 'err')),
         );
       }
       return done.future;
@@ -7550,7 +7561,7 @@ class AppState extends ChangeNotifier {
   // it used to hand that frame back unchanged on an unexpected prefix or a
   // parse that threw, and the caller sent it.
   String? _roomify(String wrapped, String pub) {
-    const prefix = 'halo/1:';
+    final prefix = l10n.appHalo1;
     if (!wrapped.startsWith(prefix)) {
       dlog('room: frame is not halo/1, not sending it');
       return null;
@@ -7636,12 +7647,12 @@ class AppState extends ChangeNotifier {
   // them and opens the rest.
   Future<String> joinRoom(RoomLink link) async {
     final now = DateTime.now().millisecondsSinceEpoch;
-    if (link.expiresAt <= now) return 'This room has already expired';
+    if (link.expiresAt <= now) return l10n.appThisRoomHasAlready;
     if (await db.groupExists(link.roomId)) {
-      return 'You are already in this room';
+      return l10n.appYouAreAlreadyIn;
     }
     final k = engine.roomKeygen();
-    if (k == null) return 'could not make a room key';
+    if (k == null) return l10n.appCouldNotMakeA;
     await db.createRoom(
       groupId: link.roomId,
       name: link.name,
@@ -7667,7 +7678,7 @@ class AppState extends ChangeNotifier {
       k.pub,
     );
     if (wrapped == null) {
-      return 'Joined ${link.name}, but your hello was held back';
+      return l10n.appJoinedButYourHello(link.name);
     }
     final r = await engine.roomSendFirstContact(
       k.priv,
@@ -7677,8 +7688,8 @@ class AppState extends ChangeNotifier {
     );
     dlog('room join: $r');
     return r == 'ok'
-        ? 'Joined ${link.name}'
-        : 'Joined ${link.name}, but the creator could not be reached yet';
+        ? l10n.appJoined(link.name)
+        : l10n.appJoinedButTheCreator(link.name);
   }
 
   // open a subscription for every member key we do not listen to yet
@@ -8527,8 +8538,8 @@ class _RootShellState extends State<RootShell> {
         body: Center(
           child: Text(
             appState.onboardingComplete
-                ? 'booting...'
-                : 'Setting up your identity...',
+                ? l10n.appBooting
+                : l10n.appSettingUpYourIdentity,
             style: HaloType.mono(size: 11, color: HaloColors.text2),
           ),
         ),
@@ -8605,7 +8616,7 @@ Future<void> showAddContact(BuildContext context) async {
           const SheetHandle(),
           const SizedBox(height: 18),
           Text(
-            'Add someone',
+            l10n.appAddSomeone,
             style: HaloType.serif(
               size: 22,
               italic: true,
@@ -8614,8 +8625,7 @@ Future<void> showAddContact(BuildContext context) async {
           ),
           const SizedBox(height: 6),
           Text(
-            'Scan their code, or paste what they gave you: a link, an '
-            '@handle, or a room link.',
+            l10n.appScanTheirCodeOr,
             style: HaloType.sans(size: 12.5, color: HaloColors.text2),
           ),
           const SizedBox(height: 16),
@@ -8637,7 +8647,7 @@ Future<void> showAddContact(BuildContext context) async {
                   ),
                   const SizedBox(width: 9),
                   Text(
-                    'Scan their code',
+                    l10n.appScanTheirCode,
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w600,
@@ -8663,7 +8673,7 @@ Future<void> showAddContact(BuildContext context) async {
               style: HaloType.mono(size: 12, color: HaloColors.text),
               decoration: InputDecoration(
                 border: InputBorder.none,
-                hintText: 'A kryfo link, a room link or @wren',
+                hintText: l10n.appAKryfoLinkA,
                 hintStyle: HaloType.mono(size: 12, color: HaloColors.text3),
               ),
             ),
@@ -8679,7 +8689,7 @@ Future<void> showAddContact(BuildContext context) async {
               ),
               child: Center(
                 child: Text(
-                  'Add them',
+                  l10n.appAddThem,
                   style: HaloType.sans(
                     size: 13.5,
                     weight: FontWeight.w600,
@@ -8738,7 +8748,7 @@ Future<void> showAddContact(BuildContext context) async {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Every way to add someone',
+                          l10n.appEveryWayToAdd,
                           style: HaloType.sans(
                             size: 14.5,
                             weight: FontWeight.w600,
@@ -8747,7 +8757,7 @@ Future<void> showAddContact(BuildContext context) async {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Show your code, send a link, claim a handle',
+                          l10n.appShowYourCodeSend,
                           style: HaloType.sans(
                             size: 11.5,
                             color: HaloColors.text2,
@@ -8829,7 +8839,7 @@ class DevScreen extends StatefulWidget {
 }
 
 class _DevScreenState extends State<DevScreen> {
-  final _msgCtrl = TextEditingController(text: 'Hello from the other side');
+  final _msgCtrl = TextEditingController(text: l10n.appHelloFromTheOther);
   String _myAddr = '';
   String _status = '';
   TorStatus _torStatus = TorStatus.off;
@@ -8843,7 +8853,9 @@ class _DevScreenState extends State<DevScreen> {
   @override
   void initState() {
     super.initState();
-    _status = appState.restored ? 'Identity restored' : 'Identity created';
+    _status = appState.restored
+        ? l10n.appIdentityRestored
+        : l10n.appIdentityCreated;
     _loadLastPeer();
   }
 
@@ -8858,7 +8870,7 @@ class _DevScreenState extends State<DevScreen> {
   }
 
   Future<void> _startListener() async {
-    setState(() => _status = 'Starting tor (~30s)...');
+    setState(() => _status = l10n.appStartingTor30s);
     final docsDir = await getApplicationDocumentsDirectory();
     // must run off the ui thread - starting tor blocks on socket i/o long
     // enough that android anr'd the onboarding page. isolate twin already
@@ -8896,10 +8908,10 @@ class _DevScreenState extends State<DevScreen> {
 
   Future<void> _send() async {
     if (_peerOnion.isEmpty || _peerXPub.isEmpty) {
-      setState(() => _status = 'scan or import a peer first');
+      setState(() => _status = l10n.appScanOrImportA);
       return;
     }
-    setState(() => _status = 'Encrypting + sending (~30s)...');
+    setState(() => _status = l10n.appEncryptingSending30s);
     final plain = _msgCtrl.text;
     final cipher = engine.encryptFor(_peerXPub, plain);
     if (cipher.startsWith('error')) {
@@ -8915,7 +8927,7 @@ class _DevScreenState extends State<DevScreen> {
 
   Future<void> _showMyQr() async {
     if (_myAddr.isEmpty) {
-      setState(() => _status = 'Tap start listening first');
+      setState(() => _status = l10n.appTapStartListeningFirst);
       return;
     }
     final uri = await buildHaloUriV3(
@@ -8934,7 +8946,7 @@ class _DevScreenState extends State<DevScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Your kryfo',
+                l10n.appYourKryfo,
                 style: HaloType.serif(
                   size: 14,
                   italic: true,
@@ -8974,10 +8986,10 @@ class _DevScreenState extends State<DevScreen> {
               TextButton(
                 onPressed: () {
                   copySensitive(uri);
-                  showHaloToast(context, 'Uri copied');
+                  showHaloToast(context, l10n.appUriCopied);
                 },
                 child: Text(
-                  'Copy uri',
+                  l10n.appCopyUri,
                   style: HaloType.sans(color: HaloColors.amber),
                 ),
               ),
@@ -8995,7 +9007,7 @@ class _DevScreenState extends State<DevScreen> {
       builder: (_) => AlertDialog(
         backgroundColor: HaloColors.surface2,
         title: Text(
-          'Add a kryfo',
+          l10n.appAddAKryfo,
           style: HaloType.sans(color: HaloColors.amber),
         ),
         content: Column(
@@ -9006,7 +9018,7 @@ class _DevScreenState extends State<DevScreen> {
               child: ElevatedButton.icon(
                 onPressed: () => Navigator.pop(context, 'scan'),
                 icon: const Icon(Icons.qr_code_scanner),
-                label: const Text('Scan qr'),
+                label: Text(l10n.appScanQr),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: HaloColors.amber,
                   foregroundColor: HaloColors.onAmber,
@@ -9019,7 +9031,7 @@ class _DevScreenState extends State<DevScreen> {
               child: OutlinedButton.icon(
                 onPressed: () => Navigator.pop(context, 'code'),
                 icon: const Icon(Icons.dialpad, size: 18),
-                label: const Text('Pairing code'),
+                label: Text(l10n.appPairingCode),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: HaloColors.text2,
                   side: BorderSide(color: HaloColors.line),
@@ -9028,7 +9040,7 @@ class _DevScreenState extends State<DevScreen> {
             ),
             const SizedBox(height: 14),
             Text(
-              '- or paste -',
+              l10n.appOrPaste,
               style: HaloType.sans(size: 11, color: HaloColors.text3),
             ),
             const SizedBox(height: 10),
@@ -9046,12 +9058,12 @@ class _DevScreenState extends State<DevScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, null),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, 'paste'),
             child: Text(
-              'Import',
+              l10n.appImport,
               style: HaloType.sans(color: HaloColors.amber),
             ),
           ),
@@ -9105,7 +9117,7 @@ class _DevScreenState extends State<DevScreen> {
         backgroundColor: HaloColors.surface,
         elevation: 0,
         title: Text(
-          'Dev',
+          l10n.appDev,
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
@@ -9133,7 +9145,7 @@ class _DevScreenState extends State<DevScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Your kryfo:',
+                l10n.appYourKryfo2,
                 style: HaloType.sans(size: 11, color: HaloColors.text2),
               ),
               Container(
@@ -9157,7 +9169,7 @@ class _DevScreenState extends State<DevScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
-                    'Restored from disk',
+                    l10n.appRestoredFromDisk,
                     style: HaloType.mono(size: 9, color: HaloColors.green),
                   ),
                 ),
@@ -9169,7 +9181,9 @@ class _DevScreenState extends State<DevScreen> {
                   foregroundColor: HaloColors.onAmber,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-                child: Text(_myAddr.isEmpty ? 'Start listening' : 'listening'),
+                child: Text(
+                  _myAddr.isEmpty ? l10n.appStartListening : l10n.appListening,
+                ),
               ),
               const SizedBox(height: 12),
               Row(
@@ -9177,7 +9191,7 @@ class _DevScreenState extends State<DevScreen> {
                   Expanded(
                     child: OutlinedButton.icon(
                       icon: Icon(Icons.qr_code, color: HaloColors.amber),
-                      label: const Text('Show my qr'),
+                      label: Text(l10n.appShowMyQr),
                       onPressed: _showMyQr,
                     ),
                   ),
@@ -9185,7 +9199,7 @@ class _DevScreenState extends State<DevScreen> {
                   Expanded(
                     child: OutlinedButton.icon(
                       icon: Icon(Icons.content_paste, color: HaloColors.violet),
-                      label: const Text('Import peer'),
+                      label: Text(l10n.appImportPeer),
                       onPressed: _importPeer,
                     ),
                   ),
@@ -9194,7 +9208,7 @@ class _DevScreenState extends State<DevScreen> {
               const SizedBox(height: 16),
               if (_peerId.isNotEmpty) ...[
                 Text(
-                  'peer:',
+                  l10n.appPeer,
                   style: HaloType.sans(size: 11, color: HaloColors.text2),
                 ),
                 Container(
@@ -9216,7 +9230,7 @@ class _DevScreenState extends State<DevScreen> {
                 controller: _msgCtrl,
                 style: HaloType.sans(color: HaloColors.text),
                 decoration: InputDecoration(
-                  labelText: 'Message (will be encrypted)',
+                  labelText: l10n.appMessageWillBeEncrypted,
                   labelStyle: HaloType.sans(color: HaloColors.text2),
                   border: const OutlineInputBorder(),
                 ),
@@ -9231,14 +9245,14 @@ class _DevScreenState extends State<DevScreen> {
                   foregroundColor: HaloColors.onAmber,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
-                child: const Text('Encrypt + send'),
+                child: Text(l10n.appEncryptSend),
               ),
               const SizedBox(height: 16),
               TorWarmupGraph(status: _torStatus, bootstrapPct: _bootstrapPct),
               const SizedBox(height: 12),
               if (_status.isNotEmpty)
                 Text(
-                  'status: $_status',
+                  l10n.appStatus(_status),
                   style: HaloType.sans(size: 12, color: HaloColors.text2),
                 ),
               const SizedBox(height: 24),
@@ -9246,7 +9260,7 @@ class _DevScreenState extends State<DevScreen> {
                 onTap: () =>
                     Navigator.of(context).push(haloRoute(const ModesScreen())),
                 child: Text(
-                  'Speed & privacy →',
+                  l10n.appSpeedPrivacy,
                   style: HaloType.mono(size: 11, color: HaloColors.amber),
                 ),
               ),
@@ -9256,7 +9270,7 @@ class _DevScreenState extends State<DevScreen> {
                   context,
                 ).push(haloRoute(const GettingMessagesScreen())),
                 child: Text(
-                  'Getting messages →',
+                  l10n.appGettingMessages,
                   style: HaloType.mono(size: 11, color: HaloColors.amber),
                 ),
               ),
@@ -9269,14 +9283,14 @@ class _DevScreenState extends State<DevScreen> {
                       builder: (ctx) => AlertDialog(
                         backgroundColor: HaloColors.surface3,
                         title: Text(
-                          'Disable app lock?',
+                          l10n.appDisableAppLock,
                           style: HaloType.serif(
                             size: 18,
                             color: HaloColors.text,
                           ),
                         ),
                         content: Text(
-                          'The pin will be removed. Anyone with your phone will see kryfo when they open it.',
+                          l10n.appThePinWillBe,
                           style: HaloType.sans(
                             size: 13,
                             color: HaloColors.text2,
@@ -9286,7 +9300,7 @@ class _DevScreenState extends State<DevScreen> {
                           TextButton(
                             onPressed: () => Navigator.of(ctx).pop(false),
                             child: Text(
-                              'Cancel',
+                              l10n.commonCancel,
                               style: HaloType.sans(
                                 size: 13,
                                 color: HaloColors.text2,
@@ -9296,7 +9310,7 @@ class _DevScreenState extends State<DevScreen> {
                           TextButton(
                             onPressed: () => Navigator.of(ctx).pop(true),
                             child: Text(
-                              'Disable',
+                              l10n.appDisable,
                               style: HaloType.sans(
                                 size: 13,
                                 color: HaloColors.rose,
@@ -9316,7 +9330,7 @@ class _DevScreenState extends State<DevScreen> {
                 child: AnimatedBuilder(
                   animation: lockState,
                   builder: (_, _) => Text(
-                    lockState.enabled ? 'App lock · on →' : 'App lock · off →',
+                    lockState.enabled ? l10n.appAppLockOn : l10n.appAppLockOff,
                     style: HaloType.mono(size: 11, color: HaloColors.amber),
                   ),
                 ),
@@ -9542,14 +9556,14 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
           // messages send and arrive over relays, full 3 hops. the remaining
           // wait only publishes our own address so peers can dial us direct.
           final line = s == TorStatus.off
-              ? 'Tor is off'
+              ? l10n.appTorIsOff
               : s == TorStatus.reachable
-              ? 'Connected · routed through 3 relays'
+              ? l10n.appConnectedRoutedThrough3
               : s == TorStatus.publishing
-              ? 'Ready to send · publishing your address'
+              ? l10n.appReadyToSendPublishing
               : s == TorStatus.bootstrapped
-              ? 'Ready to send · finishing setup'
-              : 'Connecting · $pct%';
+              ? l10n.appReadyToSendFinishing
+              : l10n.appConnecting(pct);
           return Padding(
             padding: const EdgeInsets.fromLTRB(22, 0, 22, 16),
             child: Column(
@@ -9559,7 +9573,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                 const SheetHandle(),
                 const SizedBox(height: 8),
                 Text(
-                  'Tor',
+                  l10n.appTor,
                   style: HaloType.serif(
                     size: 20,
                     italic: true,
@@ -9577,8 +9591,8 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                   const SizedBox(height: 16),
                   Text(
                     s == TorStatus.off
-                        ? 'Tor is off. Turn it on to connect privately.'
-                        : 'The first connection takes a minute or two while tor builds a private route. After that it is cached, so opening kryfo later is much faster.',
+                        ? l10n.appTorIsOffTurn
+                        : l10n.appTheFirstConnectionTakes,
                     style: HaloType.sans(
                       size: 12.5,
                       color: HaloColors.text,
@@ -9589,9 +9603,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                   // shipped. a promise about something already in settings
                   // is worse than saying nothing.
                   Text(
-                    'Relay and fast modes skip tor and are quicker. They are '
-                    'in settings, under speed & privacy, and each says what '
-                    'it costs.',
+                    l10n.appRelayAndFastModes,
                     style: HaloType.sans(size: 11, color: HaloColors.text2),
                   ),
                 ],
@@ -9693,14 +9705,14 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
           }
           final mode = appState.sendMode;
           final txt = mode == 'balanced'
-              ? (appState.online ? 'Via relay' : 'offline')
+              ? (appState.online ? l10n.appViaRelay : l10n.appOffline)
               : mode == 'fast'
-              ? (appState.online ? 'Fast' : 'offline')
+              ? (appState.online ? l10n.appFast : l10n.appOffline)
               : off
-              ? 'Tor off'
+              ? l10n.appTorOff
               : (secured || usable)
-              ? 'Tor ready'
-              : 'connecting';
+              ? l10n.appTorReady
+              : l10n.appConnecting2;
           return tinted(
             (c) => Row(
               mainAxisSize: MainAxisSize.min,

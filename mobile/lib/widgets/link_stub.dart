@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../link_preview.dart';
 import '../theme.dart';
+import '../l10n/l10n.dart';
 
 class LinkStub extends StatelessWidget {
   final String url;
@@ -93,8 +94,8 @@ class LinkStub extends StatelessWidget {
                           const SizedBox(height: 3),
                           Text(
                             isOut
-                                ? 'Fetched over tor · by your device'
-                                : 'Fetched over tor · by their device',
+                                ? l10n.linkStubFetchedOverTorBy
+                                : l10n.linkStubFetchedOverTorByTheirDevice,
                             style: HaloType.mono(
                               size: 9.5,
                               color: isOut

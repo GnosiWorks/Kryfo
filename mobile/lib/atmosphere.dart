@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import 'theme.dart';
+import 'l10n/l10n.dart';
 
 enum Atmo {
   none,
@@ -63,20 +64,20 @@ Color atmoAccent(Atmo a) => switch (a) {
 };
 
 String atmoLabel(Atmo a) => switch (a) {
-  Atmo.none => 'none',
-  Atmo.ember => 'ember',
-  Atmo.dusk => 'dusk',
-  Atmo.moss => 'moss',
-  Atmo.rose => 'rose',
-  Atmo.dots => 'dots',
-  Atmo.grid => 'grid',
-  Atmo.waves => 'waves',
-  Atmo.rain => 'rain',
-  Atmo.lateNight => 'Late night',
-  Atmo.warmAfternoon => 'Warm afternoon',
-  Atmo.snow => 'snow',
-  Atmo.desert => 'desert',
-  Atmo.paper => 'paper',
+  Atmo.none => l10n.atmosphereNone,
+  Atmo.ember => l10n.atmosphereEmber,
+  Atmo.dusk => l10n.atmosphereDusk,
+  Atmo.moss => l10n.atmosphereMoss,
+  Atmo.rose => l10n.atmosphereRose,
+  Atmo.dots => l10n.atmosphereDots,
+  Atmo.grid => l10n.atmosphereGrid,
+  Atmo.waves => l10n.atmosphereWaves,
+  Atmo.rain => l10n.atmosphereRain,
+  Atmo.lateNight => l10n.atmosphereLateNight,
+  Atmo.warmAfternoon => l10n.atmosphereWarmAfternoon,
+  Atmo.snow => l10n.atmosphereSnow,
+  Atmo.desert => l10n.atmosphereDesert,
+  Atmo.paper => l10n.atmospherePaper,
 };
 
 enum AtmoDrift { none, rain, snow, glow }

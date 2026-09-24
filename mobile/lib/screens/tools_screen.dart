@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/stroke_icon.dart';
+import '../l10n/l10n.dart';
 
 // drawn in two passes so the iris can carry its own colour: one amber
 // outline, one violet centre. a single StrokeIcon paints every path the
@@ -69,7 +70,7 @@ class ToolsScreen extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(22, 0, 22, 10),
                 child: Text(
-                  'More tools',
+                  l10n.toolsMoreTools,
                   style: HaloType.mono(
                     size: 12,
                     weight: FontWeight.w600,
@@ -82,32 +83,32 @@ class ToolsScreen extends StatelessWidget {
                 icon: _sparkle,
                 tint: HaloColors.green,
                 tile: HaloColors.green.withValues(alpha: 0.24),
-                title: 'Clean a photo or video',
-                sub: 'Or share one to Kryfo from your gallery',
+                title: l10n.toolsCleanAPhotoOr,
+                sub: l10n.toolsOrShareOneTo,
                 onTap: onClean,
               ),
               _ToolRow(
                 icon: _qr,
                 tint: HaloColors.violet,
                 tile: HaloColors.violet.withValues(alpha: 0.25),
-                title: 'Make a private QR code',
-                sub: 'Links, Wi-Fi, contacts and more. Made offline',
+                title: l10n.toolsMakeAPrivateQr,
+                sub: l10n.toolsLinksWiFiContacts,
                 onTap: onQr,
               ),
               _ToolRow(
                 icon: _lock,
                 tint: HaloColors.amber,
                 tile: HaloColors.amber.withValues(alpha: 0.26),
-                title: 'Lock a file',
-                sub: 'With a password. Opens anywhere with age',
+                title: l10n.toolsLockAFile,
+                sub: l10n.toolsWithAPasswordOpens,
                 onTap: onLock,
               ),
               _ToolRow(
                 icon: _unlock,
                 tint: HaloColors.warm,
                 tile: HaloColors.surface3,
-                title: 'Open a locked file',
-                sub: 'Any .age file someone sent you',
+                title: l10n.toolsOpenALockedFile,
+                sub: l10n.toolsAnyAgeFileSomeone,
                 onTap: onOpenLocked,
                 last: true,
               ),
@@ -134,7 +135,7 @@ class _Head extends StatelessWidget {
               const SizedBox(width: 8),
               Flexible(
                 child: Text(
-                  'Works offline · no contacts needed',
+                  l10n.toolsWorksOfflineNoContacts,
                   style: HaloType.mono(
                     size: 10.5,
                     color: HaloColors.green,
@@ -146,14 +147,14 @@ class _Head extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Useful from',
+            l10n.toolsUsefulFrom,
             style: HaloType.serif(
               size: 31,
               color: HaloColors.text,
             ).copyWith(letterSpacing: -0.62, height: 1.05),
           ),
           Text(
-            'the first minute.',
+            l10n.toolsTheFirstMinute,
             style:
                 HaloType.serif(
                   size: 31,
@@ -169,8 +170,7 @@ class _Head extends StatelessWidget {
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 310),
             child: Text(
-              'Everything here happens on this phone. Nothing is uploaded, '
-              'and nobody else has to be on Kryfo.',
+              l10n.toolsEverythingHereHappensOn,
               style: HaloType.sans(
                 size: 13,
                 color: HaloColors.warm,
@@ -297,7 +297,7 @@ class _PhotoCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'What does this photo know?',
+                      l10n.toolsWhatDoesThisPhoto,
                       style: HaloType.sans(
                         size: 15.5,
                         weight: FontWeight.w600,
@@ -307,7 +307,7 @@ class _PhotoCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      'Place · phone · time',
+                      l10n.toolsPlacePhoneTime,
                       style: HaloType.mono(
                         size: 10,
                         color: ink.withValues(alpha: 0.7),
@@ -321,7 +321,7 @@ class _PhotoCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Pick a photo and see what it gives away. Then keep a clean copy.',
+            l10n.toolsPickAPhotoAnd,
             style: HaloType.sans(size: 13, color: ink, height: 1.5),
           ),
           const SizedBox(height: 12),
@@ -329,14 +329,18 @@ class _PhotoCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _CardButton(
-                  label: 'Pick a photo',
+                  label: l10n.toolsPickAPhoto,
                   icon: _picture,
                   filled: true,
                   onTap: onPhoto,
                 ),
               ),
               const SizedBox(width: 8),
-              _CardButton(label: 'Video', filled: false, onTap: onVideo),
+              _CardButton(
+                label: l10n.toolsVideo,
+                filled: false,
+                onTap: onVideo,
+              ),
             ],
           ),
         ],

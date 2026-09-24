@@ -17,6 +17,7 @@ import '../widgets/confirm_sheet.dart';
 import 'chat_screen.dart';
 import 'shield_sheet.dart';
 import '../widgets/motion.dart' show haloRoute;
+import '../l10n/l10n.dart';
 
 class RequestsScreen extends StatefulWidget {
   const RequestsScreen({super.key});
@@ -66,9 +67,9 @@ class _RequestsScreenState extends State<RequestsScreen> {
       if (msgs.isNotEmpty) {
         final last = msgs.last;
         final text = (last['plaintext'] as String?) ?? '';
-        previews[id] = text.isEmpty ? 'Sent an attachment' : text;
+        previews[id] = text.isEmpty ? l10n.requestsSentAnAttachment : text;
       } else {
-        previews[id] = 'Wants to connect';
+        previews[id] = l10n.requestsWantsToConnect;
       }
       // an introduced row names the friends who vouched. only vouchers we
       // still hold as contacts come back, so a deleted one just drops off.
@@ -136,7 +137,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
     await db.acceptRequest(id);
     await appState.afterAccept(id);
     _answering.remove(id);
-    if (mounted) showHaloToast(context, 'Accepted');
+    if (mounted) showHaloToast(context, l10n.requestsAccepted);
     await _load();
   }
 
@@ -152,11 +153,9 @@ class _RequestsScreenState extends State<RequestsScreen> {
   Future<void> _block(String id) async {
     final ok = await showConfirmSheet(
       context,
-      title: 'Block $id?',
-      line:
-          'Nothing more from them reaches you. Their request and its '
-          'messages go.',
-      yes: 'Block',
+      title: l10n.requestsBlock(id),
+      line: l10n.requestsNothingMoreFromThem,
+      yes: l10n.commonBlock,
     );
     if (!ok || !mounted || !_answering.add(id)) return;
     // the sheet says their messages go: decline drops them, block shuts
@@ -175,7 +174,10 @@ class _RequestsScreenState extends State<RequestsScreen> {
     final c = await showShieldSheet(context, id, flag);
     if (c == null || !mounted) return;
     if (c != ShieldChoice.ignore) {
-      showHaloToast(context, c == ShieldChoice.block ? 'blocked' : 'deleted');
+      showHaloToast(
+        context,
+        c == ShieldChoice.block ? l10n.requestsBlocked : l10n.requestsDeleted,
+      );
     }
     await _load();
   }
@@ -189,7 +191,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
         elevation: 0,
         leading: BackButton(color: HaloColors.text),
         title: Text(
-          'Requests',
+          l10n.requestsRequests,
           style: HaloType.serif(size: 18, color: HaloColors.text),
         ),
       ),
@@ -236,12 +238,12 @@ class _RequestsScreenState extends State<RequestsScreen> {
               const _BreathingInbox(),
               const SizedBox(height: 14),
               Text(
-                'No requests',
+                l10n.requestsNoRequests,
                 style: HaloType.serif(size: 18, color: HaloColors.text2),
               ),
               const SizedBox(height: 6),
               Text(
-                'Messages from people you have not added show up here first.',
+                l10n.requestsMessagesFromPeopleYou,
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 13,
@@ -343,7 +345,7 @@ class _RequestCardState extends State<_RequestCard>
               child: Row(
                 children: [
                   Hero(
-                    tag: 'face-${widget.haloId}',
+                    tag: l10n.requestsFace(widget.haloId),
                     child: KryfoAvatar(
                       seed: widget.haloId,
                       size: 44,
@@ -392,8 +394,7 @@ class _RequestCardState extends State<_RequestCard>
                           const SizedBox(height: 7),
                           NoticeBanner(
                             glyph: NoticeGlyph.shield,
-                            text:
-                                'Looks safe · nothing suspicious in their first message',
+                            text: l10n.requestsLooksSafeNothingSuspicious,
                             color: HaloColors.green,
                             delay: Duration(
                               milliseconds: 60 * widget.order + 220,
@@ -414,15 +415,18 @@ class _RequestCardState extends State<_RequestCard>
                         Row(
                           children: [
                             _Answer(
-                              label: 'Accept',
+                              label: l10n.commonAccept,
                               filled: true,
                               onTap: widget.onAccept,
                             ),
                             const SizedBox(width: 8),
-                            _Answer(label: 'Decline', onTap: widget.onDecline),
+                            _Answer(
+                              label: l10n.requestsDecline,
+                              onTap: widget.onDecline,
+                            ),
                             const SizedBox(width: 8),
                             _Answer(
-                              label: 'Block',
+                              label: l10n.commonBlock,
                               color: HaloColors.rose,
                               onTap: widget.onBlock,
                             ),

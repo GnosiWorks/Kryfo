@@ -31,6 +31,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # the app's words, from lib/l10n. part of the flutter sdk, not pub.dev.
+  flutter_localizations:
+    sdk: flutter
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -78,6 +81,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  # lib/l10n/*.arb -> lib/l10n/app_localizations*.dart (see l10n.yaml)
+  generate: true
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

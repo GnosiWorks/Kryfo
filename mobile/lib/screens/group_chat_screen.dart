@@ -69,6 +69,7 @@ import '../link_preview.dart' show titleFromHtml, senderPreview;
 import '../widgets/preview_strip.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/moved_strip.dart';
+import '../l10n/l10n.dart';
 
 final Map<String, String> _draftPerGroup = {};
 
@@ -272,7 +273,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 alignment: Alignment.center,
                 children: [
                   Semantics(
-                    label: 'Jump to the newest',
+                    label: l10n.groupChatJumpToTheNewest,
                     button: true,
                     child: GestureDetector(
                       onTap: () {
@@ -652,7 +653,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final c = await showShieldSheet(context, id, flag, group: true);
     if (!mounted) return;
     if (c == ShieldChoice.block) {
-      showHaloToast(context, 'Blocked everywhere');
+      showHaloToast(context, l10n.groupChatBlockedEverywhere);
       await _load();
       return;
     }
@@ -822,18 +823,20 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             _GMsg(sender: '', direction: '', text: '', when: DateTime.now()),
       );
       if (orig.direction.isNotEmpty) {
-        quotedAuthor = orig.direction == 'out' ? 'you' : orig.senderName;
+        quotedAuthor = orig.direction == 'out'
+            ? l10n.groupChatYou
+            : orig.senderName;
       }
       if (orig.text.isNotEmpty) {
         quoted = orig.text;
       } else if (orig.mediaPath != null) {
         quoted = 'photo';
       } else if (orig.fileName == 'voice.wav') {
-        quoted = 'voice message';
+        quoted = l10n.groupChatVoiceMessage;
       } else if (orig.fileName != null) {
         quoted = orig.fileName;
       } else {
-        quoted = 'Message unavailable';
+        quoted = l10n.groupChatMessageUnavailable;
         quotedAuthor = null;
       }
     }
@@ -959,10 +962,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         showHaloToast(
           context,
           html.startsWith('error: tor')
-              ? 'Tor is not up yet · sending without'
+              ? l10n.groupChatTorIsNotUp
               : html.startsWith('error:')
-              ? "couldn't reach it · sending without"
-              : 'No title came back · sending without',
+              ? l10n.groupChatCouldnTReachIt
+              : l10n.groupChatNoTitleCameBack,
         );
         return;
       }
@@ -970,7 +973,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       setState(() => _pendingPreview = senderPreview(url, title));
     } catch (_) {
       if (mounted) {
-        showHaloToast(context, "couldn't fetch it · sending without");
+        showHaloToast(context, l10n.groupChatCouldnTFetchIt);
       }
     } finally {
       if (mounted) setState(() => _previewBusy = false);
@@ -1161,11 +1164,27 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             children: [
               const SheetHandle(),
               const SizedBox(height: 6),
-              tile(Icons.photo_camera_outlined, 'Camera', _openGroupCamera),
-              tile(Icons.photo_library_outlined, 'Gallery', _pickGroupMultiple),
-              tile(Icons.videocam_outlined, 'Video', _pickGroupVideo),
-              tile(Icons.gif_box_outlined, 'Gif from phone', _pickGroupGif),
-              tile(Icons.attach_file, 'File', _pickGroupFile),
+              tile(
+                Icons.photo_camera_outlined,
+                l10n.groupChatCamera,
+                _openGroupCamera,
+              ),
+              tile(
+                Icons.photo_library_outlined,
+                l10n.groupChatGallery,
+                _pickGroupMultiple,
+              ),
+              tile(
+                Icons.videocam_outlined,
+                l10n.groupChatVideo,
+                _pickGroupVideo,
+              ),
+              tile(
+                Icons.gif_box_outlined,
+                l10n.groupChatGifFromPhone,
+                _pickGroupGif,
+              ),
+              tile(Icons.attach_file, l10n.groupChatFile, _pickGroupFile),
               const SizedBox(height: 8),
             ],
           ),
@@ -1222,7 +1241,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         ),
       );
     } catch (e) {
-      if (mounted) showHaloToast(context, 'Could not read that file');
+      if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
       return;
     }
     if (res == null || res.files.isEmpty) return;
@@ -1231,7 +1250,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     await shredPicked(res);
     if (data == null) return;
     if (data.length > 8 * 1024 * 1024) {
-      if (mounted) showHaloToast(context, 'Gif too big · 8 mb max');
+      if (mounted) showHaloToast(context, l10n.groupChatGifTooBig8);
       return;
     }
     // raw, but not with what rode along: a gif's comment and xmp blocks
@@ -1239,7 +1258,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // the gif filter is cleaned as the kind of file its bytes say it is.
     final clean = stripPictureBytes(data);
     if (clean == null) {
-      if (mounted) showHaloToast(context, 'Could not clean that gif');
+      if (mounted) showHaloToast(context, l10n.groupChatCouldNotCleanThat);
       return;
     }
     // raw bytes through the image lane - re-encoding kills the animation.
@@ -1355,7 +1374,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     } catch (e) {
       // the picker could not copy what was chosen: a provider that will
       // not hand the file over, a gone download. say so instead of nothing.
-      if (mounted) showHaloToast(context, 'Could not read that file');
+      if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
       return;
     }
     if (res == null || res.files.isEmpty) return;
@@ -1395,11 +1414,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     try {
       size = await File(src).length();
     } catch (_) {
-      if (mounted) showHaloToast(context, 'Could not read that file');
+      if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
       return;
     }
     if (size > 8 * 1024 * 1024) {
-      if (mounted) showHaloToast(context, 'File too big · 8 mb max');
+      if (mounted) showHaloToast(context, l10n.groupChatFileTooBig8);
       return;
     }
     final uid = newMsgUid();
@@ -1420,7 +1439,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         try {
           await dest.delete();
         } catch (_) {}
-        if (mounted) showHaloToast(context, 'Could not clean that video');
+        if (mounted) {
+          showHaloToast(context, l10n.groupChatCouldNotCleanThatVideo);
+        }
         return;
       }
     }
@@ -1433,10 +1454,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         await dest.delete();
       } catch (_) {}
       if (mounted) {
-        showHaloToast(
-          context,
-          'Could not clean that picture · send it as a photo',
-        );
+        showHaloToast(context, l10n.groupChatCouldNotCleanThatPictureSend);
       }
       return;
     }
@@ -1560,12 +1578,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     showHaloSheet(
       context,
       builder: (c) {
-        const options = [
-          (30, '30 seconds'),
-          (60, '1 minute'),
-          (300, '5 minutes'),
-          (3600, '1 hour'),
-          (86400, '24 hours'),
+        final options = [
+          (30, l10n.groupChat30Seconds),
+          (60, l10n.groupChat1Minute),
+          (300, l10n.groupChat5Minutes),
+          (3600, l10n.groupChat1Hour),
+          (86400, l10n.groupChat24Hours),
         ];
         return SafeArea(
           child: Column(
@@ -1574,7 +1592,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               const SheetHandle(),
               const SizedBox(height: 14),
               Text(
-                'Burn timer',
+                l10n.groupChatBurnTimer,
                 style: HaloType.serif(
                   size: 16,
                   italic: true,
@@ -1583,7 +1601,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               ),
               const SizedBox(height: 6),
               Text(
-                'New messages disappear after this',
+                l10n.groupChatNewMessagesDisappearAfter,
                 style: HaloType.sans(size: 11, color: HaloColors.text3),
               ),
               const SizedBox(height: 12),
@@ -1732,7 +1750,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       : () {
                           dismiss();
                           Clipboard.setData(ClipboardData(text: target.text));
-                          showHaloToast(context, 'Copied');
+                          showHaloToast(context, l10n.commonCopied);
                         },
                   onPin: () {
                     dismiss();
@@ -1792,21 +1810,21 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final today = DateTime(now.year, now.month, now.day);
     final d = DateTime(when.year, when.month, when.day);
     final diff = today.difference(d).inDays;
-    if (diff == 0) return 'today';
-    if (diff == 1) return 'yesterday';
-    const months = [
-      'jan',
-      'feb',
-      'mar',
-      'apr',
-      'may',
-      'jun',
-      'jul',
-      'aug',
-      'sep',
-      'oct',
-      'nov',
-      'dec',
+    if (diff == 0) return l10n.groupChatToday;
+    if (diff == 1) return l10n.groupChatYesterday;
+    final months = [
+      l10n.groupChatJan,
+      l10n.groupChatFeb,
+      l10n.groupChatMar,
+      l10n.groupChatApr,
+      l10n.groupChatMay,
+      l10n.groupChatJun,
+      l10n.groupChatJul,
+      l10n.groupChatAug,
+      l10n.groupChatSep,
+      l10n.groupChatOct,
+      l10n.groupChatNov,
+      l10n.groupChatDec,
     ];
     var label = '${when.day} ${months[when.month - 1]}';
     if (when.year != now.year) label = '$label ${when.year}';
@@ -2019,7 +2037,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           final peer = r['peer_id'] as String;
           return PinEntry(
             uid: r['msg_uid'] as String,
-            author: out ? 'You' : (_senderLabel(nickById, peer) ?? peer),
+            author: out
+                ? l10n.groupChatYou2
+                : (_senderLabel(nickById, peer) ?? peer),
             authorSeed: out ? appState.myId : peer,
             face: out ? appState.myAvatar : faceById[peer],
             when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
@@ -2073,7 +2093,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       final count = (await db.pinnedIn(groupId: widget.groupId)).length;
       if (count >= kMaxPins) {
         if (mounted) {
-          showHaloToast(context, 'This chat has $kMaxPins pins already');
+          showHaloToast(context, l10n.groupChatThisChatHasPins(kMaxPins));
         }
         return;
       }
@@ -2081,12 +2101,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (!mounted) return;
     final ok = await showConfirmSheet(
       context,
-      title: m.pinned ? 'Unpin this message?' : 'Pin this message?',
+      title: m.pinned
+          ? l10n.groupChatUnpinThisMessage
+          : l10n.groupChatPinThisMessage,
       line: m.pinned
-          ? 'It leaves the pinned list for everyone here.'
-          : 'It goes under the pin at the top of the chat, for everyone here.',
-      yes: m.pinned ? 'Unpin' : 'Pin it',
-      keep: 'Not now',
+          ? l10n.groupChatItLeavesThePinned
+          : l10n.groupChatItGoesUnderThe,
+      yes: m.pinned ? l10n.groupChatUnpin : l10n.groupChatPinIt,
+      keep: l10n.groupChatNotNow,
       rose: false,
     );
     if (!ok) return;
@@ -2098,7 +2120,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final next = !m.saved;
     setState(() => m.saved = next);
     await db.setSaved(m.msgUid!, next);
-    if (mounted) showHaloToast(context, next ? 'Saved' : 'Removed from saved');
+    if (mounted) {
+      showHaloToast(
+        context,
+        next ? l10n.groupChatSaved : l10n.groupChatRemovedFromSaved,
+      );
+    }
   }
 
   Future<void> _forwardGroupMessage(_GMsg m) async {
@@ -2114,7 +2141,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
               child: Text(
-                'Forward to',
+                l10n.groupChatForwardTo,
                 style: HaloType.serif(
                   size: 18,
                   italic: true,
@@ -2126,7 +2153,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
                 child: Text(
-                  'No contacts to forward to',
+                  l10n.groupChatNoContactsToForward,
                   style: HaloType.sans(size: 13, color: HaloColors.text2),
                 ),
               )
@@ -2205,7 +2232,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           children: [
             const SheetHandle(),
             Text(
-              'Edit message',
+              l10n.groupChatEditMessage,
               style: HaloType.serif(
                 size: 20,
                 italic: true,
@@ -2234,7 +2261,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
                   child: Text(
-                    'Cancel',
+                    l10n.commonCancel,
                     style: HaloType.sans(size: 13, color: HaloColors.text2),
                   ),
                 ),
@@ -2242,7 +2269,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, ctrl.text),
                   child: Text(
-                    'Save',
+                    l10n.commonSave,
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w500,
@@ -2282,14 +2309,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
               child: Text(
-                'Unsend message',
+                l10n.groupChatUnsendMessage,
                 style: HaloType.serif(size: 18, color: HaloColors.text),
               ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
               child: Text(
-                "It disappears with no trace. This can't be undone.",
+                l10n.groupChatItDisappearsWithNo,
                 style: HaloType.sans(size: 13, color: HaloColors.text2),
               ),
             ),
@@ -2309,7 +2336,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     ),
                     const SizedBox(width: 14),
                     Text(
-                      'Unsend',
+                      l10n.groupChatUnsend,
                       style: HaloType.sans(size: 14, color: HaloColors.rose),
                     ),
                   ],
@@ -2442,9 +2469,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             if (_isRoom && _roomBanner)
               NoticeBanner(
                 glyph: NoticeGlyph.clock,
-                text:
-                    'This room and everything in it disappears in '
-                    '${expiryWords(DateTime.fromMillisecondsSinceEpoch(_roomExpiresAt!).difference(DateTime.now()))}',
+                text: l10n.groupChatThisRoomAndEverything(
+                  expiryWords(
+                    DateTime.fromMillisecondsSinceEpoch(
+                      _roomExpiresAt!,
+                    ).difference(DateTime.now()),
+                  ),
+                ),
                 color: HaloColors.violet,
                 margin: const EdgeInsets.fromLTRB(12, 6, 12, 2),
                 delay: const Duration(milliseconds: 160),
@@ -2465,7 +2496,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Ghost mode on · burns in ${_fmtBurn(_burnSeconds)}',
+                      l10n.groupChatGhostModeOnBurns(_fmtBurn(_burnSeconds)),
                       style: HaloType.mono(
                         size: 10,
                         color: HaloColors.amber,
@@ -2481,8 +2512,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                   ? Center(
                       child: Text(
                         _isAdmin
-                            ? 'Group created. Say hi.'
-                            : 'No messages yet.',
+                            ? l10n.groupChatGroupCreatedSayHi
+                            : l10n.groupChatNoMessagesYet,
                         style: HaloType.serif(
                           size: 14,
                           italic: true,
@@ -2517,7 +2548,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                                     vertical: 6,
                                   ),
                                   child: Text(
-                                    "This message can't be shown",
+                                    l10n.groupChatThisMessageCanT,
                                     style: HaloType.sans(
                                       size: 12,
                                       color: HaloColors.text3,
@@ -2621,10 +2652,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 }
 
 String _fmtBurn(int s) {
-  if (s < 60) return '${s}s';
-  if (s < 3600) return '${s ~/ 60}m';
-  if (s < 86400) return '${s ~/ 3600}h';
-  return '${s ~/ 86400}d';
+  if (s < 60) return l10n.groupChatS(s);
+  if (s < 3600) return l10n.groupChatM(s ~/ 60);
+  if (s < 86400) return l10n.groupChatH(s ~/ 3600);
+  return l10n.groupChatD(s ~/ 86400);
 }
 
 // the phone cannot send at all: no network, or onion mode without a route
@@ -2711,7 +2742,7 @@ class _Header extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            tooltip: 'Back',
+            tooltip: l10n.commonBack,
             icon: Icon(Icons.chevron_left, color: HaloColors.text, size: 26),
             onPressed: onBack,
           ),
@@ -2724,7 +2755,7 @@ class _Header extends StatelessWidget {
                 child: Row(
                   children: [
                     Hero(
-                      tag: 'group-$groupId',
+                      tag: l10n.groupChatGroup2(groupId),
                       child: Container(
                         width: 36,
                         height: 36,
@@ -2767,7 +2798,7 @@ class _Header extends StatelessWidget {
                               children: [
                                 RoomCountdown(expiresAt: expiresAt!, size: 10),
                                 Text(
-                                  ' · $memberCount here',
+                                  l10n.groupChatHere(memberCount),
                                   style: HaloType.mono(
                                     size: 10,
                                     color: HaloColors.text3,
@@ -2777,7 +2808,7 @@ class _Header extends StatelessWidget {
                             )
                           else
                             Text(
-                              '$memberCount members',
+                              l10n.groupChatMembers(memberCount),
                               style: HaloType.mono(
                                 size: 10,
                                 color: HaloColors.text3,
@@ -2794,7 +2825,7 @@ class _Header extends StatelessWidget {
           PinHeaderButton(count: pinnedCount, onTap: onPinned),
           if (onSearch != null)
             IconButton(
-              tooltip: 'Search this chat',
+              tooltip: l10n.groupChatSearchThisChat,
               icon: Icon(Icons.search, color: HaloColors.text2, size: 21),
               onPressed: onSearch,
             ),
@@ -2828,7 +2859,9 @@ class _ReplyQuoteBar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Replying to ${target.direction == "out" ? "you" : target.senderName}',
+                  l10n.groupChatReplyingTo(
+                    target.direction == "out" ? "you" : target.senderName,
+                  ),
                   style: HaloType.mono(
                     size: 9.5,
                     color: HaloColors.amber,
@@ -2846,7 +2879,7 @@ class _ReplyQuoteBar extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'Close',
+            tooltip: l10n.commonClose,
             icon: Icon(Icons.close_rounded, size: 18, color: HaloColors.text2),
             onPressed: onCancel,
           ),
@@ -2902,7 +2935,7 @@ class _Composer extends StatelessWidget {
           Row(
             children: [
               Semantics(
-                label: 'Timed messages',
+                label: l10n.groupChatTimedMessages,
                 button: true,
                 child: GestureDetector(
                   onTap: onToggleGhost,
@@ -2921,7 +2954,7 @@ class _Composer extends StatelessWidget {
               ),
               // the camera that keeps its photos inside kryfo
               Semantics(
-                label: 'Open the camera',
+                label: l10n.groupChatOpenTheCamera,
                 button: true,
                 child: GestureDetector(
                   onTap: onCamera,
@@ -2937,7 +2970,7 @@ class _Composer extends StatelessWidget {
                 ),
               ),
               Semantics(
-                label: 'Attach a photo',
+                label: l10n.groupChatAttachAPhoto,
                 button: true,
                 child: GestureDetector(
                   onTap: onAttach,
@@ -2971,7 +3004,7 @@ class _Composer extends StatelessWidget {
                     style: HaloType.sans(size: 14, color: HaloColors.text),
                     cursorColor: HaloColors.amber,
                     decoration: InputDecoration(
-                      hintText: 'Message',
+                      hintText: l10n.groupChatMessage,
                       hintStyle: HaloType.sans(
                         size: 14,
                         color: HaloColors.text3,
@@ -2997,7 +3030,7 @@ class _Composer extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Semantics(
-                          label: 'Disguise voice',
+                          label: l10n.groupChatDisguiseVoice,
                           button: true,
                           child: GestureDetector(
                             onTap: onToggleDisguise,
@@ -3026,7 +3059,7 @@ class _Composer extends StatelessWidget {
                   }
                   final canSend = !sending && hasText;
                   return PressScale(
-                    label: 'Send',
+                    label: l10n.commonSend,
                     onTap: canSend ? onSend : null,
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
@@ -3332,7 +3365,7 @@ class _GroupBubble extends StatelessWidget {
                                 ),
                               ),
                               child: Text(
-                                'Supporter',
+                                l10n.groupChatSupporter,
                                 style: HaloType.mono(
                                   size: 7.5,
                                   color: HaloColors.amber,
@@ -3757,7 +3790,7 @@ class _GroupBubble extends StatelessWidget {
                                         ],
                                         if (m.edited) ...[
                                           Text(
-                                            'Edited ',
+                                            l10n.groupChatEdited,
                                             style: HaloType.mono(
                                               size: 9,
                                               color:
@@ -3819,7 +3852,7 @@ class _GroupBubble extends StatelessWidget {
                                         if (m.looksFailed) ...[
                                           const SizedBox(width: 6),
                                           Text(
-                                            '! tap to retry',
+                                            l10n.groupChatTapToRetry,
                                             style: HaloType.mono(
                                               size: 9,
                                               color: isOut
@@ -3961,12 +3994,12 @@ class _GroupBubble extends StatelessWidget {
 
   String _remaining(int burnAt) {
     final ms = burnAt - DateTime.now().millisecondsSinceEpoch;
-    if (ms <= 0) return '0s';
+    if (ms <= 0) return l10n.groupChat0s;
     final s = ms ~/ 1000;
-    if (s < 60) return '${s}s';
-    if (s < 3600) return '${s ~/ 60}m';
-    if (s < 86400) return '${s ~/ 3600}h';
-    return '${s ~/ 86400}d';
+    if (s < 60) return l10n.groupChatS(s);
+    if (s < 3600) return l10n.groupChatM(s ~/ 60);
+    if (s < 86400) return l10n.groupChatH(s ~/ 3600);
+    return l10n.groupChatD(s ~/ 86400);
   }
 }
 
@@ -4080,7 +4113,7 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
                       color: HaloColors.line2,
                     ),
                     Semantics(
-                      label: 'Reply',
+                      label: l10n.groupChatReply,
                       button: true,
                       child: _ActionTap(
                         icon: Icons.reply_rounded,
@@ -4130,20 +4163,29 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
       );
     }
 
-    add(Icons.push_pin_outlined, widget.pinned ? 'Unpin' : 'Pin', widget.onPin);
+    add(
+      Icons.push_pin_outlined,
+      widget.pinned ? l10n.groupChatUnpin : l10n.groupChatPin,
+      widget.onPin,
+    );
     add(
       widget.saved ? Icons.bookmark : Icons.bookmark_outline,
-      widget.saved ? 'Unsave' : 'Save',
+      widget.saved ? l10n.groupChatUnsave : l10n.commonSave,
       widget.onSave,
     );
-    add(Icons.copy_rounded, 'Copy', widget.onCopy);
-    add(Icons.forward_rounded, 'Forward', widget.onForward);
-    add(Icons.ios_share_rounded, 'Share', widget.onShare);
+    add(Icons.copy_rounded, l10n.commonCopy, widget.onCopy);
+    add(Icons.forward_rounded, l10n.groupChatForward, widget.onForward);
+    add(Icons.ios_share_rounded, l10n.commonShare, widget.onShare);
     if (widget.isOut) {
-      add(Icons.edit_outlined, 'Edit', widget.onEdit, tint: HaloColors.amber);
+      add(
+        Icons.edit_outlined,
+        l10n.commonEdit,
+        widget.onEdit,
+        tint: HaloColors.amber,
+      );
       add(
         Icons.delete_outline,
-        'Unsend',
+        l10n.groupChatUnsend,
         widget.onUnsend,
         tint: HaloColors.rose,
       );

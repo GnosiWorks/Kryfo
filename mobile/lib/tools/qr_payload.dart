@@ -2,6 +2,7 @@
 import 'dart:convert';
 
 import 'package:qr_flutter/qr_flutter.dart';
+import '../l10n/l10n.dart';
 
 enum QrKind { link, text, wifi, contact, email, phone, sms, geo, btc }
 
@@ -40,38 +41,35 @@ QrBuilt buildQr(
   switch (kind) {
     case QrKind.link:
       var url = _oneLine(get('link'));
-      if (url.isEmpty) return const QrBuilt(caption: 'OPENS A LINK');
+      if (url.isEmpty) return QrBuilt(caption: l10n.qrPayloadOpensALink);
       if (!RegExp(r'^[a-zA-Z][a-zA-Z0-9+.\-]*:').hasMatch(url)) {
         url = 'https://$url';
       }
       final host = Uri.tryParse(url)?.host ?? '';
       return QrBuilt(
         data: url,
-        caption: host.isEmpty ? 'OPENS A LINK' : 'OPENS ${host.toUpperCase()}',
+        caption: host.isEmpty
+            ? l10n.qrPayloadOpensALink
+            : l10n.qrPayloadOpens(host.toUpperCase()),
       );
     case QrKind.text:
       final t = get('text');
       return QrBuilt(
         data: t.trim().isEmpty ? null : t,
-        caption: 'SHOWS A NOTE',
+        caption: l10n.qrPayloadShowsANote,
       );
     case QrKind.wifi:
       final ssid = get('ssid');
       final pass = get('password');
-      if (ssid.isEmpty) return const QrBuilt(caption: 'SCAN TO JOIN');
-      final cap = 'SCAN TO JOIN · ${_oneLine(ssid).toUpperCase()}';
+      if (ssid.isEmpty) return QrBuilt(caption: l10n.qrPayloadScanToJoin);
+      final cap = l10n.qrPayloadScanToJoin2(_oneLine(ssid).toUpperCase());
       if (utf8.encode(ssid).length > 32) {
-        return QrBuilt(
-          caption: cap,
-          problem: 'A network name is 32 characters at most.',
-        );
+        return QrBuilt(caption: cap, problem: l10n.qrPayloadANetworkNameIs);
       }
       if (lock != WifiLock.none && pass.length < 8) {
         return QrBuilt(
           caption: cap,
-          problem: pass.isEmpty
-              ? null
-              : 'A Wi-Fi password has at least 8 characters.',
+          problem: pass.isEmpty ? null : l10n.qrPayloadAWiFiPassword,
         );
       }
       final type = switch (lock) {
@@ -89,7 +87,7 @@ QrBuilt buildQr(
       final tel = _dial(get('phone'));
       final mail = _oneLine(get('email'));
       if (name.isEmpty && tel.isEmpty && mail.isEmpty) {
-        return const QrBuilt(caption: 'SAVES A CONTACT');
+        return QrBuilt(caption: l10n.qrPayloadSavesAContact);
       }
       final lines = [
         'BEGIN:VCARD',
@@ -100,14 +98,17 @@ QrBuilt buildQr(
         if (mail.isNotEmpty) 'EMAIL:${escapeVcard(mail)}',
         'END:VCARD',
       ];
-      return QrBuilt(data: lines.join('\r\n'), caption: 'SAVES A CONTACT');
+      return QrBuilt(
+        data: lines.join('\r\n'),
+        caption: l10n.qrPayloadSavesAContact,
+      );
     case QrKind.email:
       final to = _oneLine(get('to'));
-      if (to.isEmpty) return const QrBuilt(caption: 'WRITES AN EMAIL');
+      if (to.isEmpty) return QrBuilt(caption: l10n.qrPayloadWritesAnEmail);
       if (!RegExp(r'^[^@\s]+@[^@\s]+$').hasMatch(to)) {
-        return const QrBuilt(
-          caption: 'WRITES AN EMAIL',
-          problem: 'That does not look like an email address.',
+        return QrBuilt(
+          caption: l10n.qrPayloadWritesAnEmail,
+          problem: l10n.qrPayloadThatDoesNotLook,
         );
       }
       final subject = _oneLine(get('subject'));
@@ -116,27 +117,27 @@ QrBuilt buildQr(
           : '?subject=${Uri.encodeComponent(subject)}';
       return QrBuilt(
         data: 'mailto:${Uri.encodeFull(to)}$q',
-        caption: 'WRITES AN EMAIL',
+        caption: l10n.qrPayloadWritesAnEmail,
       );
     case QrKind.phone:
       final n = _dial(get('number'));
       return QrBuilt(
         data: n.isEmpty ? null : 'tel:$n',
-        caption: 'CALLS A NUMBER',
+        caption: l10n.qrPayloadCallsANumber,
       );
     case QrKind.sms:
       final n = _dial(get('number'));
-      if (n.isEmpty) return const QrBuilt(caption: 'WRITES A TEXT');
+      if (n.isEmpty) return QrBuilt(caption: l10n.qrPayloadWritesAText);
       final body = get('message');
       return QrBuilt(
         data: body.trim().isEmpty ? 'SMSTO:$n' : 'SMSTO:$n:$body',
-        caption: 'WRITES A TEXT',
+        caption: l10n.qrPayloadWritesAText,
       );
     case QrKind.geo:
       final la = get('lat').trim().replaceAll(',', '.');
       final lo = get('lon').trim().replaceAll(',', '.');
       if (la.isEmpty && lo.isEmpty) {
-        return const QrBuilt(caption: 'OPENS A MAP');
+        return QrBuilt(caption: l10n.qrPayloadOpensAMap);
       }
       final lat = double.tryParse(la), lon = double.tryParse(lo);
       if (lat == null ||
@@ -146,39 +147,42 @@ QrBuilt buildQr(
           lat.abs() > 90 ||
           lon.abs() > 180) {
         return QrBuilt(
-          caption: 'OPENS A MAP',
+          caption: l10n.qrPayloadOpensAMap,
           problem: la.isEmpty || lo.isEmpty
               ? null
-              : 'Latitude runs from -90 to 90, longitude from -180 to 180.',
+              : l10n.qrPayloadLatitudeRunsFrom90,
         );
       }
       return QrBuilt(
         data: 'geo:${_trim(lat)},${_trim(lon)}',
-        caption: 'OPENS A MAP',
+        caption: l10n.qrPayloadOpensAMap,
       );
     case QrKind.btc:
       final addr = get('address').trim();
-      if (addr.isEmpty) return const QrBuilt(caption: 'PAY THIS ADDRESS');
+      if (addr.isEmpty) return QrBuilt(caption: l10n.qrPayloadPayThisAddress);
       if (!RegExp(r'^[A-Za-z0-9]{14,90}$').hasMatch(addr)) {
-        return const QrBuilt(
-          caption: 'PAY THIS ADDRESS',
-          problem: 'A bitcoin address is letters and digits only.',
+        return QrBuilt(
+          caption: l10n.qrPayloadPayThisAddress,
+          problem: l10n.qrPayloadABitcoinAddressIs,
         );
       }
       final raw = get('amount').trim().replaceAll(',', '.');
       if (raw.isEmpty) {
-        return QrBuilt(data: 'bitcoin:$addr', caption: 'PAY THIS ADDRESS');
+        return QrBuilt(
+          data: 'bitcoin:$addr',
+          caption: l10n.qrPayloadPayThisAddress,
+        );
       }
       if (!RegExp(r'^\d{1,8}(\.\d{1,8})?$').hasMatch(raw) ||
           double.parse(raw) <= 0) {
-        return const QrBuilt(
-          caption: 'PAY THIS ADDRESS',
-          problem: 'The amount is in BTC, with up to 8 decimals.',
+        return QrBuilt(
+          caption: l10n.qrPayloadPayThisAddress,
+          problem: l10n.qrPayloadTheAmountIsIn,
         );
       }
       return QrBuilt(
         data: 'bitcoin:$addr?amount=$raw',
-        caption: 'PAY THIS ADDRESS',
+        caption: l10n.qrPayloadPayThisAddress,
       );
   }
 }

@@ -4,14 +4,15 @@ import 'package:flutter/services.dart';
 
 import '../theme.dart';
 import 'stroke_icon.dart';
+import '../l10n/l10n.dart';
 
 enum HaloTab { chats, tools, support, me }
 
-const _labels = {
-  HaloTab.chats: 'Chats',
-  HaloTab.tools: 'Tools',
-  HaloTab.support: 'Support',
-  HaloTab.me: 'Me',
+final _labels = {
+  HaloTab.chats: l10n.navBarChats,
+  HaloTab.tools: l10n.navBarTools,
+  HaloTab.support: l10n.navBarSupport,
+  HaloTab.me: l10n.navBarMe,
 };
 
 const _icons = {

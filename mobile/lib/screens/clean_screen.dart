@@ -15,6 +15,7 @@ import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/stroke_icon.dart';
 import '../widgets/tool_parts.dart';
+import '../l10n/l10n.dart';
 
 const _share = [
   'M12 15V4',
@@ -32,29 +33,23 @@ const _note = ['M12 6.5v7', 'M12 17v.5'];
 const _tick = ['M5 12.5l4.5 4.5L19 7.5'];
 
 String failureTitle(Object f) => switch (f) {
-  CleanFailure.unknownKind => 'Kryfo can’t clean this kind of file yet.',
-  CleanFailure.motion => 'This is a motion photo.',
-  CleanFailure.tooLarge => 'This picture is too large to clean here.',
-  CleanFailure.unreadable => 'This file is damaged or cut short.',
-  CleanFailure.notClean => 'Kryfo could not make this one clean.',
-  CleanFailure.disk || 'full' => 'Not enough room on the phone.',
-  _ => 'Kryfo could not open that file.',
+  CleanFailure.unknownKind => l10n.cleanKryfoCanTClean,
+  CleanFailure.motion => l10n.cleanThisIsAMotion,
+  CleanFailure.tooLarge => l10n.cleanThisPictureIsToo,
+  CleanFailure.unreadable => l10n.cleanThisFileIsDamaged,
+  CleanFailure.notClean => l10n.cleanKryfoCouldNotMake,
+  CleanFailure.disk || 'full' => l10n.cleanNotEnoughRoomOn,
+  _ => l10n.cleanKryfoCouldNotOpen,
 };
 
 String failureBody(Object f) => switch (f) {
-  CleanFailure.unknownKind =>
-    'It cleans JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 and MOV. Nothing was changed.',
-  CleanFailure.motion =>
-    'It holds a short video beside the picture, and Kryfo can’t clean that part yet. Turn motion off in your camera, or send a screenshot of it.',
-  CleanFailure.tooLarge =>
-    'Pictures over 64 MB are not cleaned on the phone. Nothing was changed.',
-  CleanFailure.unreadable =>
-    'Kryfo could not read it to the end, so it won’t call it clean. No copy was made.',
-  CleanFailure.notClean =>
-    'Something inside is of a kind it does not know how to remove, so no copy was made.',
-  CleanFailure.disk ||
-  'full' => 'Free some space and try again. Nothing was changed.',
-  _ => 'The app that shared it may have taken it back. Try sharing it again.',
+  CleanFailure.unknownKind => l10n.cleanItCleansJpegPng,
+  CleanFailure.motion => l10n.cleanItHoldsAShort,
+  CleanFailure.tooLarge => l10n.cleanPicturesOver64Mb,
+  CleanFailure.unreadable => l10n.cleanKryfoCouldNotRead,
+  CleanFailure.notClean => l10n.cleanSomethingInsideIsOf,
+  CleanFailure.disk || 'full' => l10n.cleanFreeSomeSpaceAnd,
+  _ => l10n.cleanTheAppThatShared,
 };
 
 class CleanScreen extends StatefulWidget {
@@ -116,7 +111,7 @@ class _CleanScreenState extends State<CleanScreen>
       final cache = await getTemporaryDirectory();
       final r = await cleanFile(
         inPath,
-        '${cache.path}/tools_out',
+        l10n.cleanToolsOut(cache.path),
         originalName: widget.file.name,
       );
       if (_gone) return;
@@ -162,7 +157,7 @@ class _CleanScreenState extends State<CleanScreen>
     final ok = await ToolsBridge.instance.shareOut(r.path!, r.mime!);
     if (!mounted) return;
     setState(() => _busy = false);
-    if (!ok) _say('No app on this phone took the file.');
+    if (!ok) _say(l10n.cleanNoAppOnThis);
   }
 
   Future<void> _saveIt() async {
@@ -178,7 +173,7 @@ class _CleanScreenState extends State<CleanScreen>
     setState(() => _busy = false);
     if (how == 'kept') return;
     if (how != 'saved') {
-      _say('Could not save it. Check the phone has room.');
+      _say(l10n.cleanCouldNotSaveIt);
       return;
     }
     final outcome = await showHaloSheet<String>(
@@ -187,10 +182,10 @@ class _CleanScreenState extends State<CleanScreen>
     );
     if (!mounted) return;
     if (outcome == 'deleted') {
-      _say('The original is gone. The clean copy stays.');
+      _say(l10n.cleanTheOriginalIsGone);
     }
     if (outcome == 'failed') {
-      _say('Android would not delete it. Remove it from the gallery by hand.');
+      _say(l10n.cleanAndroidWouldNotDelete);
     }
   }
 
@@ -218,7 +213,7 @@ class _CleanScreenState extends State<CleanScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const ToolBar(title: 'Clean copy'),
+            ToolBar(title: l10n.cleanCleanCopy),
             Expanded(
               child: _failure != null
                   ? _Failed(failure: _failure!)
@@ -238,14 +233,14 @@ class _CleanScreenState extends State<CleanScreen>
                   children: [
                     ToolWideButton(
                       icon: _share,
-                      label: 'Share clean copy',
+                      label: l10n.cleanShareCleanCopy,
                       filled: true,
                       onTap: _busy ? null : _shareIt,
                     ),
                     const SizedBox(height: 10),
                     ToolWideButton(
                       icon: _down,
-                      label: 'Save to gallery',
+                      label: l10n.cleanSaveToGallery,
                       filled: false,
                       onTap: _busy ? null : _saveIt,
                     ),
@@ -256,7 +251,7 @@ class _CleanScreenState extends State<CleanScreen>
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 22),
                 child: ToolWideButton(
-                  label: 'Back',
+                  label: l10n.commonBack,
                   filled: false,
                   onTap: () => Navigator.of(context).maybePop(),
                 ),
@@ -265,7 +260,7 @@ class _CleanScreenState extends State<CleanScreen>
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 22),
                 child: ToolWideButton(
-                  label: 'Stop',
+                  label: l10n.commonStop,
                   filled: false,
                   onTap: () => Navigator.of(context).maybePop(),
                 ),
@@ -295,14 +290,14 @@ class _Working extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              copying ? 'Reading the file' : 'Cleaning',
+              copying ? l10n.cleanReadingTheFile : l10n.cleanCleaning,
               style: HaloType.serif(size: 24, color: HaloColors.text),
             ),
             const SizedBox(height: 8),
             Text(
               copying && total > 0
-                  ? '${prettySize(done)} of ${prettySize(total)}'
-                  : 'Everything stays on this phone.',
+                  ? l10n.cleanOf(prettySize(done), prettySize(total))
+                  : l10n.cleanEverythingStaysOnThis,
               style: HaloType.sans(size: 13.5, color: HaloColors.warm),
             ),
             const SizedBox(height: 22),
@@ -401,7 +396,9 @@ class _Done extends StatelessWidget {
                   child: Column(
                     children: [
                       Text(
-                        lines.isEmpty ? 'Already clean.' : 'Clean.',
+                        lines.isEmpty
+                            ? l10n.cleanAlreadyClean
+                            : l10n.cleanClean,
                         style: HaloType.serif(
                           size: 30,
                           letter: -0.02,
@@ -411,8 +408,8 @@ class _Done extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         lines.isEmpty
-                            ? 'There was nothing to find.'
-                            : 'Nothing left to find.',
+                            ? l10n.cleanThereWasNothingTo
+                            : l10n.cleanNothingLeftToFind,
                         style: HaloType.serif(
                           size: 20,
                           weight: FontWeight.w300,
@@ -465,8 +462,8 @@ class _Done extends StatelessWidget {
                                     const SizedBox(height: 2),
                                     Text(
                                       video
-                                          ? 'Same video, same quality'
-                                          : 'Same picture, same quality',
+                                          ? l10n.cleanSameVideoSameQuality
+                                          : l10n.cleanSamePictureSameQuality,
                                       style: HaloType.sans(
                                         size: 11.5,
                                         color: HaloColors.warm,
@@ -517,7 +514,7 @@ class _RemovedRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final struck = Curves.easeInOutCubic.transform(t);
     return Semantics(
-      label: '${line.label}, removed',
+      label: l10n.cleanRemoved(line.label),
       excludeSemantics: true,
       child: Container(
         padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
@@ -566,7 +563,7 @@ class _RemovedRow extends StatelessWidget {
             Opacity(
               opacity: struck,
               child: Text(
-                'REMOVED',
+                l10n.cleanRemoved2,
                 style: HaloType.mono(
                   size: 10.5,
                   letter: 0.08,
@@ -667,8 +664,8 @@ class _SavedSheetState extends State<_SavedSheet> {
     final hadPlace = before.gps != null || before.gpsBlank;
     final canDelete = widget.file.canDelete;
     final what = hadPlace
-        ? 'with the location inside. Anyone who gets that one gets your street.'
-        : 'with everything it knew still inside.';
+        ? l10n.cleanWithTheLocationInside
+        : l10n.cleanWithEverythingItKnew;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
       child: Column(
@@ -681,7 +678,7 @@ class _SavedSheetState extends State<_SavedSheet> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _Tile(
-                label: 'ORIGINAL',
+                label: l10n.cleanOriginal,
                 tint: HaloColors.rose,
                 badge: hadPlace ? _pin : _note,
                 child: ToolThumb(
@@ -692,7 +689,7 @@ class _SavedSheetState extends State<_SavedSheet> {
               ),
               const SizedBox(width: 10),
               _Tile(
-                label: 'CLEAN',
+                label: l10n.cleanClean2,
                 tint: HaloColors.green,
                 badge: _tick,
                 child: ToolThumb(
@@ -705,7 +702,7 @@ class _SavedSheetState extends State<_SavedSheet> {
           ),
           const SizedBox(height: 20),
           Text(
-            'Saved to your gallery.',
+            l10n.cleanSavedToYourGallery,
             textAlign: TextAlign.center,
             style: HaloType.serif(size: 23, color: HaloColors.text),
           ),
@@ -714,8 +711,8 @@ class _SavedSheetState extends State<_SavedSheet> {
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Text(
               canDelete
-                  ? 'The original is still there too, $what'
-                  : 'The original is still where it was, $what Kryfo can’t remove it from here, so delete it in the app it came from.',
+                  ? l10n.cleanTheOriginalIsStill(what)
+                  : l10n.cleanTheOriginalIsStillWhereIt(what),
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 13.5,
@@ -729,7 +726,7 @@ class _SavedSheetState extends State<_SavedSheet> {
             Opacity(
               opacity: _asking ? 0.55 : 1,
               child: PressScale(
-                label: 'Delete the original',
+                label: l10n.cleanDeleteTheOriginal,
                 onTap: _asking ? null : _delete,
                 scale: 0.96,
                 child: Container(
@@ -749,7 +746,7 @@ class _SavedSheetState extends State<_SavedSheet> {
                       const SizedBox(width: 9),
                       ExcludeSemantics(
                         child: Text(
-                          'Delete the original',
+                          l10n.cleanDeleteTheOriginal,
                           style: HaloType.sans(
                             size: 14.5,
                             weight: FontWeight.w600,
@@ -765,7 +762,7 @@ class _SavedSheetState extends State<_SavedSheet> {
             const SizedBox(height: 8),
           ],
           PressScale(
-            label: canDelete ? 'Keep both' : 'Done',
+            label: canDelete ? l10n.cleanKeepBoth : l10n.commonDone,
             onTap: () => Navigator.of(context).pop('kept'),
             scale: 0.96,
             child: SizedBox(
@@ -773,7 +770,7 @@ class _SavedSheetState extends State<_SavedSheet> {
               child: Center(
                 child: ExcludeSemantics(
                   child: Text(
-                    canDelete ? 'Keep both' : 'Done',
+                    canDelete ? l10n.cleanKeepBoth : l10n.commonDone,
                     style: HaloType.sans(size: 14, color: HaloColors.warm),
                   ),
                 ),
@@ -783,7 +780,7 @@ class _SavedSheetState extends State<_SavedSheet> {
           if (canDelete) ...[
             const SizedBox(height: 6),
             Text(
-              'ANDROID WILL ASK YOU TO CONFIRM',
+              l10n.cleanAndroidWillAskYou,
               textAlign: TextAlign.center,
               style: HaloType.mono(
                 size: 9.5,

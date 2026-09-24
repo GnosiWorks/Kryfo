@@ -4,6 +4,7 @@ import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../main.dart' show appState;
 import '../widgets/stagger_in.dart';
+import '../l10n/l10n.dart';
 
 // chats you have archived. hidden from the main list but still receive
 // normally. they read dimmer here on purpose - resting, not gone. a row
@@ -48,7 +49,7 @@ class ArchivedScreen extends StatelessWidget {
                   child: Row(
                     children: [
                       IconButton(
-                        tooltip: 'Back',
+                        tooltip: l10n.commonBack,
                         icon: Icon(
                           Icons.chevron_left,
                           color: HaloColors.text2,
@@ -57,7 +58,7 @@ class ArchivedScreen extends StatelessWidget {
                         onPressed: () => Navigator.of(context).pop(),
                       ),
                       Text(
-                        'Archived',
+                        l10n.archivedArchived,
                         style: HaloType.serif(size: 22, color: HaloColors.text),
                       ),
                     ],
@@ -79,8 +80,8 @@ class ArchivedScreen extends StatelessWidget {
                           ),
                           TextSpan(
                             text: archived.length == 1
-                                ? 'Chat resting here. It stays quiet until they write, then comes back to the top.'
-                                : 'Chats resting here. They stay quiet until someone writes, then come back to the top.',
+                                ? l10n.archivedChatRestingHereIt
+                                : l10n.archivedChatsRestingHereThey,
                             style: HaloType.sans(
                               size: 12.5,
                               color: HaloColors.text3,
@@ -97,7 +98,7 @@ class ArchivedScreen extends StatelessWidget {
                           child: StaggerIn(
                             index: 0,
                             child: Text(
-                              'Nothing archived',
+                              l10n.archivedNothingArchived,
                               style: HaloType.serif(
                                 size: 18,
                                 italic: true,
@@ -128,7 +129,7 @@ class ArchivedScreen extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      'Archived chats are still end-to-end encrypted',
+                      l10n.archivedArchivedChatsAreStill,
                       textAlign: TextAlign.center,
                       style: HaloType.mono(
                         size: 10,
@@ -254,7 +255,7 @@ class _ArchivedRowState extends State<_ArchivedRow> {
                 padding: const EdgeInsets.symmetric(horizontal: 10),
               ),
               child: Text(
-                'Unarchive',
+                l10n.archivedUnarchive,
                 style: HaloType.mono(
                   size: 9,
                   color: HaloColors.amber,

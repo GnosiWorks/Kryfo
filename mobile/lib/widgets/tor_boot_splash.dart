@@ -4,6 +4,7 @@ import '../dlog.dart';
 import '../main.dart' show appState;
 import '../theme.dart';
 import 'onion_loader.dart';
+import '../l10n/l10n.dart';
 
 // startup screen while the engine warms up tor. it tells the user plainly that
 // tor - the thing that makes kryfo private - is starting, so the wait reads as
@@ -52,7 +53,7 @@ class _TorBootSplashState extends State<TorBootSplash>
             const OnionLoader(size: 132),
             const SizedBox(height: 26),
             Text(
-              'No shortcuts, no traces',
+              l10n.torBootSplashNoShortcutsNoTraces,
               style: HaloType.serif(
                 size: 23,
                 weight: FontWeight.w400,
@@ -64,7 +65,7 @@ class _TorBootSplashState extends State<TorBootSplash>
             ListenableBuilder(
               listenable: appState,
               builder: (_, _) {
-                final tor = appState.bootPhase == 'starting Tor';
+                final tor = appState.bootPhase == l10n.appStartingTor;
                 return Column(
                   children: [
                     AnimatedSwitcher(
@@ -80,8 +81,8 @@ class _TorBootSplashState extends State<TorBootSplash>
                       padding: const EdgeInsets.symmetric(horizontal: 40),
                       child: Text(
                         tor
-                            ? 'The network that keeps you private is warming up'
-                            : 'Made on this phone. Nothing is sent anywhere.',
+                            ? l10n.torBootSplashTheNetworkThatKeeps
+                            : l10n.torBootSplashMadeOnThisPhone,
                         textAlign: TextAlign.center,
                         style: HaloType.sans(
                           size: 12,
@@ -112,7 +113,7 @@ class _TorBootSplashState extends State<TorBootSplash>
             Padding(
               padding: const EdgeInsets.only(bottom: 28),
               child: Text(
-                'First launch takes a moment · only on startup',
+                l10n.torBootSplashFirstLaunchTakesA,
                 style: HaloType.mono(size: 10, color: HaloColors.text3),
               ),
             ),

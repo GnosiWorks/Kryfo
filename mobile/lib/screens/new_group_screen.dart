@@ -9,6 +9,7 @@ import '../widgets/kryfo_avatar.dart';
 import 'group_chat_screen.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/stagger_in.dart';
+import '../l10n/l10n.dart';
 
 class NewGroupScreen extends StatefulWidget {
   const NewGroupScreen({super.key});
@@ -38,7 +39,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
         setState(() => _creating = false);
         showHaloToast(
           context,
-          e is StateError ? e.message : 'Could not create',
+          e is StateError ? e.message : l10n.newGroupCouldNotCreate,
         );
       }
       return;
@@ -69,7 +70,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    tooltip: 'Back',
+                    tooltip: l10n.commonBack,
                     icon: Icon(
                       Icons.chevron_left,
                       color: HaloColors.text,
@@ -79,7 +80,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                   ),
                   Expanded(
                     child: Text(
-                      'New group',
+                      l10n.newGroupNewGroup,
                       style: HaloType.serif(
                         size: 18,
                         italic: true,
@@ -101,7 +102,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        _creating ? 'creating...' : 'create',
+                        _creating ? l10n.newGroupCreating : l10n.newGroupCreate,
                         style: HaloType.sans(
                           size: 12,
                           weight: FontWeight.w500,
@@ -123,7 +124,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                 style: HaloType.sans(size: 16, color: HaloColors.text),
                 cursorColor: HaloColors.amber,
                 decoration: InputDecoration(
-                  hintText: 'Group name',
+                  hintText: l10n.newGroupGroupName,
                   hintStyle: HaloType.serif(
                     size: 16,
                     italic: true,
@@ -147,7 +148,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
               child: Row(
                 children: [
                   Text(
-                    'Members',
+                    l10n.newGroupMembers,
                     style: HaloType.mono(
                       size: 10,
                       color: HaloColors.text3,
@@ -157,8 +158,8 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                   const Spacer(),
                   Text(
                     _selected.isEmpty
-                        ? 'Pick at least one'
-                        : '${_selected.length} selected',
+                        ? l10n.newGroupPickAtLeastOne
+                        : l10n.newGroupSelected(_selected.length),
                     style: HaloType.mono(
                       size: 10,
                       color: HaloColors.text3,
@@ -174,7 +175,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 40),
                         child: Text(
-                          'Add at least one contact first before creating a group.',
+                          l10n.newGroupAddAtLeastOne,
                           textAlign: TextAlign.center,
                           style: HaloType.sans(
                             size: 13,

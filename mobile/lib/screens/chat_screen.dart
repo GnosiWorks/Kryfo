@@ -82,6 +82,7 @@ export '../atmosphere.dart'
 import '../atmosphere.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/moved_strip.dart';
+import '../l10n/l10n.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
 // chunk indices already accepted by the peer, per media msg_uid. lets a
@@ -174,9 +175,11 @@ class _Msg {
 }
 
 String _humanSize(int bytes) {
-  if (bytes < 1024) return '$bytes b';
-  if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(0)} kb';
-  return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} mb';
+  if (bytes < 1024) return l10n.chatB(bytes);
+  if (bytes < 1024 * 1024) {
+    return l10n.chatKb((bytes / 1024).toStringAsFixed(0));
+  }
+  return l10n.chatMb((bytes / (1024 * 1024)).toStringAsFixed(1));
 }
 
 IconData _fileGlyph(String name) {
@@ -207,7 +210,7 @@ Widget _fileCard(_Msg msg, bool isOut) {
   } catch (_) {}
   final ext = (msg.fileName ?? '').contains('.')
       ? msg.fileName!.split('.').last.toUpperCase()
-      : 'FILE';
+      : l10n.chatFile;
   return Container(
     constraints: const BoxConstraints(maxWidth: 230),
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
@@ -314,10 +317,10 @@ bool _sendLooksFailed(_Msg m) => m.failed && (m.gaveUp || _cannotSend());
 String _friendlyStatus(String raw) {
   if (raw.isEmpty || raw == 'parked') return '';
   if (!appState.online && raw.startsWith('error:')) {
-    return "you are offline · this sends itself when you reconnect";
+    return l10n.chatYouAreOfflineThis;
   }
   if (raw.startsWith('error:') && !appState.torReady) {
-    return "still connecting to tor · it'll go out on its own";
+    return l10n.chatStillConnectingToTor;
   }
   // online, a transport error is not the user's problem: the row retries
   // itself and the bubble stays pending. no line.
@@ -326,19 +329,19 @@ String _friendlyStatus(String raw) {
 }
 
 String _fmtFull(DateTime d) {
-  const months = [
-    'jan',
-    'feb',
-    'mar',
-    'apr',
-    'may',
-    'jun',
-    'jul',
-    'aug',
-    'sep',
-    'oct',
-    'nov',
-    'dec',
+  final months = [
+    l10n.chatJan,
+    l10n.chatFeb,
+    l10n.chatMar,
+    l10n.chatApr,
+    l10n.chatMay,
+    l10n.chatJun,
+    l10n.chatJul,
+    l10n.chatAug,
+    l10n.chatSep,
+    l10n.chatOct,
+    l10n.chatNov,
+    l10n.chatDec,
   ];
   final hh = d.hour.toString().padLeft(2, '0');
   final mm = d.minute.toString().padLeft(2, '0');
@@ -359,23 +362,23 @@ String _fmtTime(DateTime d) {
 // 4m 23s / 38s / 1h 02m. clamps at 0.
 // human-friendly label for a burn duration in seconds.
 String _humanBurn(int seconds) {
-  if (seconds < 60) return '${seconds}s';
-  if (seconds < 3600) return '${seconds ~/ 60}m';
-  if (seconds < 86400) return '${seconds ~/ 3600}h';
-  return '${seconds ~/ 86400}d';
+  if (seconds < 60) return l10n.chatS(seconds);
+  if (seconds < 3600) return l10n.chatM(seconds ~/ 60);
+  if (seconds < 86400) return l10n.chatH(seconds ~/ 3600);
+  return l10n.chatD(seconds ~/ 86400);
 }
 
 String _fmtBurn(int burnAtMs) {
   final now = DateTime.now().millisecondsSinceEpoch;
   var s = ((burnAtMs - now) / 1000).round();
-  if (s <= 0) return '0s';
+  if (s <= 0) return l10n.chat0s;
   final h = s ~/ 3600;
   s -= h * 3600;
   final m = s ~/ 60;
   s -= m * 60;
-  if (h > 0) return '${h}h ${m.toString().padLeft(2, '0')}m';
-  if (m > 0) return '${m}m ${s.toString().padLeft(2, '0')}s';
-  return '${s}s';
+  if (h > 0) return l10n.chatHM(h, m.toString().padLeft(2, '0'));
+  if (m > 0) return l10n.chatMS(m, s.toString().padLeft(2, '0'));
+  return l10n.chatS2(s);
 }
 
 // last-used ghost settings, remembered for the session
@@ -1010,7 +1013,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Text(
-              'New messages',
+              l10n.chatNewMessages,
               style: HaloType.mono(
                 size: 9.5,
                 color: HaloColors.amber,
@@ -1280,7 +1283,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                target.saved ? 'Unsave' : 'Save',
+                                target.saved
+                                    ? l10n.chatUnsave
+                                    : l10n.commonSave,
                                 style: HaloType.sans(
                                   size: 13,
                                   color: HaloColors.text,
@@ -1315,7 +1320,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
-                            'Forward',
+                            l10n.chatForward,
                             style: HaloType.sans(
                               size: 13,
                               color: HaloColors.text,
@@ -1355,7 +1360,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
-                              'Share',
+                              l10n.commonShare,
                               style: HaloType.sans(
                                 size: 13,
                                 color: HaloColors.text,
@@ -1375,7 +1380,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             dismiss();
                             HapticFeedback.selectionClick();
                             Clipboard.setData(ClipboardData(text: target.text));
-                            showHaloToast(context, 'Copied');
+                            showHaloToast(context, l10n.commonCopied);
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(
@@ -1391,7 +1396,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
-                              'Copy',
+                              l10n.commonCopy,
                               style: HaloType.sans(
                                 size: 13,
                                 color: HaloColors.text,
@@ -1425,7 +1430,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
-                            target.pinned ? 'Unpin' : 'Pin',
+                            target.pinned ? l10n.chatUnpin : l10n.chatPin,
                             style: HaloType.sans(
                               size: 13,
                               color: HaloColors.text,
@@ -1479,8 +1484,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                   target.sending &&
                                           (target.mediaPath != null ||
                                               target.filePath != null)
-                                      ? 'Stop sending'
-                                      : 'Unsend',
+                                      ? l10n.chatStopSending
+                                      : l10n.chatUnsend,
                                   style: HaloType.sans(
                                     size: 12,
                                     weight: FontWeight.w500,
@@ -1535,7 +1540,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
-                                    'Edit',
+                                    l10n.commonEdit,
                                     style: HaloType.sans(
                                       size: 12,
                                       weight: FontWeight.w500,
@@ -1570,7 +1575,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       for (final r in rows)
         PinEntry(
           uid: r['msg_uid'] as String,
-          author: r['direction'] == 'out' ? 'You' : them,
+          author: r['direction'] == 'out' ? l10n.chatYou : them,
           authorSeed: r['direction'] == 'out'
               ? appState.myId
               : widget.avatarSeed,
@@ -1669,14 +1674,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
               child: Text(
-                'Unsend message',
+                l10n.chatUnsendMessage,
                 style: HaloType.serif(size: 18, color: HaloColors.text),
               ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
               child: Text(
-                "It disappears with no trace. This can't be undone.",
+                l10n.chatItDisappearsWithNo,
                 style: HaloType.sans(size: 13, color: HaloColors.text2),
               ),
             ),
@@ -1696,7 +1701,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     ),
                     const SizedBox(width: 14),
                     Text(
-                      'Unsend',
+                      l10n.chatUnsend,
                       style: HaloType.sans(size: 14, color: HaloColors.rose),
                     ),
                   ],
@@ -1727,7 +1732,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       final count = (await db.pinnedIn(peerId: widget.peerHaloId)).length;
       if (count >= kMaxPins) {
         if (mounted) {
-          showHaloToast(context, 'This chat has $kMaxPins pins already');
+          showHaloToast(context, l10n.chatThisChatHasPins(kMaxPins));
         }
         return;
       }
@@ -1735,12 +1740,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (!mounted) return;
     final ok = await showConfirmSheet(
       context,
-      title: m.pinned ? 'Unpin this message?' : 'Pin this message?',
-      line: m.pinned
-          ? 'It leaves the pinned list for both of you.'
-          : 'It goes under the pin at the top of the chat, for both of you.',
-      yes: m.pinned ? 'Unpin' : 'Pin it',
-      keep: 'Not now',
+      title: m.pinned ? l10n.chatUnpinThisMessage : l10n.chatPinThisMessage,
+      line: m.pinned ? l10n.chatItLeavesThePinned : l10n.chatItGoesUnderThe,
+      yes: m.pinned ? l10n.chatUnpin : l10n.chatPinIt,
+      keep: l10n.chatNotNow,
       rose: false,
     );
     if (!ok) return;
@@ -1830,7 +1833,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           children: [
             const SheetHandle(),
             Text(
-              'Edit message',
+              l10n.chatEditMessage,
               style: HaloType.serif(
                 size: 20,
                 italic: true,
@@ -1859,7 +1862,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
                   child: Text(
-                    'Cancel',
+                    l10n.commonCancel,
                     style: HaloType.sans(size: 13, color: HaloColors.text2),
                   ),
                 ),
@@ -1867,7 +1870,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, ctrl.text),
                   child: Text(
-                    'Save',
+                    l10n.commonSave,
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w500,
@@ -2331,11 +2334,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   void _pickBurnDuration() {
     final options = <int, String>{
-      30: '30 seconds',
-      60: '1 minute',
-      300: '5 minutes',
-      3600: '1 hour',
-      86400: '24 hours',
+      30: l10n.chat30Seconds,
+      60: l10n.chat1Minute,
+      300: l10n.chat5Minutes,
+      3600: l10n.chat1Hour,
+      86400: l10n.chat24Hours,
     };
     showHaloSheet<void>(
       context,
@@ -2356,7 +2359,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Ghost timer',
+                    l10n.chatGhostTimer,
                     style: HaloType.serif(
                       size: 16,
                       color: HaloColors.text,
@@ -2367,7 +2370,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
               const SizedBox(height: 4),
               Text(
-                'How long before sent messages burn?',
+                l10n.chatHowLongBeforeSent,
                 style: HaloType.mono(size: 11, color: HaloColors.text3),
               ),
               const SizedBox(height: 12),
@@ -2527,11 +2530,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   size: 22,
                 ),
                 title: Text(
-                  'Camera',
+                  l10n.chatCamera,
                   style: HaloType.sans(size: 15, color: HaloColors.text),
                 ),
                 subtitle: Text(
-                  'No exif, never saved to your photos',
+                  l10n.chatNoExifNeverSaved,
                   style: HaloType.mono(size: 10, color: HaloColors.text3),
                 ),
                 onTap: () {
@@ -2546,7 +2549,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   size: 22,
                 ),
                 title: Text(
-                  'Gallery',
+                  l10n.chatGallery,
                   style: HaloType.sans(size: 15, color: HaloColors.text),
                 ),
                 onTap: () {
@@ -2561,7 +2564,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   size: 22,
                 ),
                 title: Text(
-                  'Video',
+                  l10n.chatVideo,
                   style: HaloType.sans(size: 15, color: HaloColors.text),
                 ),
                 onTap: () {
@@ -2576,7 +2579,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   size: 22,
                 ),
                 title: Text(
-                  'Gif from phone',
+                  l10n.chatGifFromPhone,
                   style: HaloType.sans(size: 15, color: HaloColors.text),
                 ),
                 onTap: () {
@@ -2591,7 +2594,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   size: 22,
                 ),
                 title: Text(
-                  'File',
+                  l10n.chatFile2,
                   style: HaloType.sans(size: 15, color: HaloColors.text),
                 ),
                 onTap: () {
@@ -2693,16 +2696,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // figure was one slice at a time.
     final slices = ((bytes * 4 / 3) / (16 * 1024)).ceil();
     final secs = ((slices / 5).ceil() * 2.2).round();
-    if (secs < 20) return 'A few seconds';
-    if (secs < 90) return 'Under a minute';
+    if (secs < 20) return l10n.chatAFewSeconds;
+    if (secs < 90) return l10n.chatUnderAMinute;
     final mins = (secs / 60).round();
-    return 'Roughly $mins min';
+    return l10n.chatRoughlyMin(mins);
   }
 
   String _humanBytes(int b) {
-    if (b < 1024) return '$b b';
-    if (b < 1024 * 1024) return '${(b / 1024).round()} kb';
-    return '${(b / (1024 * 1024)).toStringAsFixed(1)} mb';
+    if (b < 1024) return l10n.chatB2(b);
+    if (b < 1024 * 1024) return l10n.chatKb2((b / 1024).round());
+    return l10n.chatMb2((b / (1024 * 1024)).toStringAsFixed(1));
   }
 
   // anything big enough to be a wait gets a confirm first. small stuff goes
@@ -2721,20 +2724,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             children: [
               const SheetHandle(),
               Text(
-                'Send this $what?',
+                l10n.chatSendThis(what),
                 style: HaloType.serif(size: 19, color: HaloColors.text),
               ),
               const SizedBox(height: 8),
               Text(
                 appState.sendMode == 'private'
-                    ? '${_humanBytes(bytes)} · ${_wireEstimate(bytes)} over tor'
+                    ? l10n.chatOverTor(_humanBytes(bytes), _wireEstimate(bytes))
                     : _humanBytes(bytes),
                 style: HaloType.mono(size: 12, color: HaloColors.amber),
               ),
               const SizedBox(height: 6),
               Text(
-                'Big files go out in small encrypted pieces, so they take a '
-                'while. Keep the app open and it keeps going.',
+                l10n.chatBigFilesGoOut,
                 style: HaloType.sans(
                   size: 12,
                   color: HaloColors.text2,
@@ -2754,7 +2756,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           borderRadius: BorderRadius.circular(11),
                         ),
                         child: Text(
-                          'Cancel',
+                          l10n.commonCancel,
                           style: HaloType.sans(
                             size: 13,
                             color: HaloColors.text2,
@@ -2775,7 +2777,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           borderRadius: BorderRadius.circular(11),
                         ),
                         child: Text(
-                          'Send it',
+                          l10n.chatSendIt,
                           style: HaloType.sans(
                             size: 13,
                             color: HaloColors.onAmber,
@@ -2808,7 +2810,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     } catch (e) {
       // the picker could not copy what was chosen: a provider that will
       // not hand the file over, a gone download. say so instead of nothing.
-      if (mounted) showHaloToast(context, 'Could not read that file');
+      if (mounted) showHaloToast(context, l10n.chatCouldNotReadThat);
       return;
     }
     if (res == null || res.files.isEmpty) return;
@@ -2852,11 +2854,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     try {
       size = await File(src).length();
     } catch (_) {
-      if (mounted) showHaloToast(context, 'Could not read that file');
+      if (mounted) showHaloToast(context, l10n.chatCouldNotReadThat);
       return;
     }
     if (size > 8 * 1024 * 1024) {
-      if (mounted) showHaloToast(context, 'File too big · 8 mb max');
+      if (mounted) showHaloToast(context, l10n.chatFileTooBig8);
       return;
     }
     if (!await _confirmBigSend(size, 'file')) return;
@@ -2881,7 +2883,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         try {
           await dest.delete();
         } catch (_) {}
-        if (mounted) showHaloToast(context, 'Could not clean that video');
+        if (mounted) showHaloToast(context, l10n.chatCouldNotCleanThat);
         return;
       }
     }
@@ -2894,10 +2896,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         await dest.delete();
       } catch (_) {}
       if (mounted) {
-        showHaloToast(
-          context,
-          'Could not clean that picture · send it as a photo',
-        );
+        showHaloToast(context, l10n.chatCouldNotCleanThatPictureSend);
       }
       return;
     }
@@ -3015,7 +3014,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         ),
       );
     } catch (e) {
-      if (mounted) showHaloToast(context, 'Could not read that file');
+      if (mounted) showHaloToast(context, l10n.chatCouldNotReadThat);
       return;
     }
     if (res == null || res.files.isEmpty) return;
@@ -3030,7 +3029,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // chunked transfer splits big media across envelopes, so gifs can be larger
     // now. still cap to keep send time + memory sane over tor on weak phones.
     if (data.length > 8 * 1024 * 1024) {
-      if (mounted) showHaloToast(context, 'Gif too big · 8 mb max');
+      if (mounted) showHaloToast(context, l10n.chatGifTooBig8);
       return;
     }
     // raw, but not with what rode along: a gif's comment and xmp blocks
@@ -3038,7 +3037,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // the gif filter is cleaned as the kind of file its bytes say it is.
     final clean = stripPictureBytes(data);
     if (clean == null) {
-      if (mounted) showHaloToast(context, 'Could not clean that gif');
+      if (mounted) showHaloToast(context, l10n.chatCouldNotCleanThatGif);
       return;
     }
     // send raw through the image path - Image.memory animates gifs by the bytes,
@@ -3183,10 +3182,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         showHaloToast(
           context,
           html.startsWith('error: tor')
-              ? 'Tor is not up yet · sending without'
+              ? l10n.chatTorIsNotUp
               : html.startsWith('error:')
-              ? "Couldn't reach it · sending without"
-              : 'No title came back · sending without',
+              ? l10n.chatCouldnTReachIt
+              : l10n.chatNoTitleCameBack,
         );
         return;
       }
@@ -3194,7 +3193,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       setState(() => _pendingPreview = senderPreview(url, title));
     } catch (_) {
       if (mounted) {
-        showHaloToast(context, "Couldn't fetch it · sending without");
+        showHaloToast(context, l10n.chatCouldnTFetchIt);
       }
     } finally {
       if (mounted) setState(() => _previewBusy = false);
@@ -3319,7 +3318,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         msg.sending = false;
         msg.failed = true;
         _sending = false;
-        _status = 'No signal session - re-pair';
+        _status = l10n.chatNoSignalSessionRe;
       });
       return;
     }
@@ -3506,19 +3505,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (m.replyTo != null) {
       final original = _byUid[m.replyTo];
       if (original == null) {
-        quoted = 'Message unavailable';
+        quoted = l10n.chatMessageUnavailable;
       } else {
-        quotedAuthor = original.direction == 'out' ? 'you' : 'them';
+        quotedAuthor = original.direction == 'out'
+            ? l10n.chatYou2
+            : l10n.chatThem;
         if (original.text.isNotEmpty) {
           quoted = original.text;
         } else if (original.mediaPath != null) {
           quoted = 'photo';
         } else if (original.fileName == 'voice.wav') {
-          quoted = 'voice message';
+          quoted = l10n.chatVoiceMessage;
         } else if (original.fileName != null) {
           quoted = original.fileName;
         } else {
-          quoted = 'Message unavailable';
+          quoted = l10n.chatMessageUnavailable;
           quotedAuthor = null;
         }
       }
@@ -3718,7 +3719,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       const SizedBox(width: 14),
                       Text(
-                        'View contact',
+                        l10n.chatViewContact,
                         style: HaloType.sans(size: 14, color: HaloColors.text),
                       ),
                     ],
@@ -3745,7 +3746,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       const SizedBox(width: 14),
                       Text(
-                        'Shared photos',
+                        l10n.chatSharedPhotos,
                         style: HaloType.sans(size: 14, color: HaloColors.text),
                       ),
                     ],
@@ -3770,7 +3771,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       const SizedBox(width: 14),
                       Text(
-                        _muted ? 'Unmute notifications' : 'Mute notifications',
+                        _muted
+                            ? l10n.chatUnmuteNotifications
+                            : l10n.chatMuteNotifications,
                         style: HaloType.sans(size: 14, color: HaloColors.text),
                       ),
                     ],
@@ -3793,7 +3796,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       const SizedBox(width: 14),
                       Text(
-                        'Archive chat',
+                        l10n.chatArchiveChat,
                         style: HaloType.sans(size: 14, color: HaloColors.text),
                       ),
                     ],
@@ -3816,7 +3819,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       const SizedBox(width: 14),
                       Text(
-                        'Wallpaper',
+                        l10n.chatWallpaper,
                         style: HaloType.sans(size: 14, color: HaloColors.text),
                       ),
                     ],
@@ -3839,7 +3842,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       const SizedBox(width: 14),
                       Text(
-                        'Clear conversation',
+                        l10n.chatClearConversation,
                         style: HaloType.sans(size: 14, color: HaloColors.text),
                       ),
                     ],
@@ -3862,7 +3865,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       const SizedBox(width: 14),
                       Text(
-                        'Note on this contact',
+                        l10n.chatNoteOnThisContact,
                         style: HaloType.sans(size: 14, color: HaloColors.text),
                       ),
                     ],
@@ -3885,7 +3888,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       const SizedBox(width: 14),
                       Text(
-                        pinned ? 'Unpin' : 'Pin to top',
+                        pinned ? l10n.chatUnpin : l10n.chatPinToTop,
                         style: HaloType.sans(size: 14, color: HaloColors.text),
                       ),
                     ],
@@ -3904,7 +3907,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       Icon(Icons.block, size: 18, color: HaloColors.rose),
                       const SizedBox(width: 14),
                       Text(
-                        'Block contact',
+                        l10n.chatBlockContact,
                         style: HaloType.sans(size: 14, color: HaloColors.rose),
                       ),
                     ],
@@ -3979,7 +3982,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     await db.setContactPinned(widget.peerHaloId, !pinned);
     await appState.refreshContacts();
     if (mounted) {
-      showHaloToast(context, pinned ? 'Unpinned' : 'Pinned to top');
+      showHaloToast(context, pinned ? l10n.chatUnpinned : l10n.chatPinnedToTop);
     }
   }
 
@@ -4004,12 +4007,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           children: [
             const SheetHandle(),
             Text(
-              'Note on this contact',
+              l10n.chatNoteOnThisContact,
               style: HaloType.serif(size: 18, color: HaloColors.text),
             ),
             const SizedBox(height: 4),
             Text(
-              'Just for you. Never sent, never leaves this phone.',
+              l10n.chatJustForYouNever,
               style: HaloType.sans(size: 12, color: HaloColors.text2),
             ),
             const SizedBox(height: 16),
@@ -4025,7 +4028,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 color: HaloColors.text,
               ),
               decoration: InputDecoration(
-                hintText: 'A quiet reminder…',
+                hintText: l10n.chatAQuietReminder,
                 hintStyle: HaloType.serif(
                   size: 16,
                   italic: true,
@@ -4042,7 +4045,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   await db.setNote(widget.peerHaloId, ctrl.text.trim());
                   if (!ctx.mounted) return;
                   Navigator.pop(ctx);
-                  if (mounted) showHaloToast(context, 'Note saved');
+                  if (mounted) showHaloToast(context, l10n.chatNoteSaved);
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(
@@ -4054,7 +4057,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    'Save',
+                    l10n.commonSave,
                     style: HaloType.sans(
                       size: 13,
                       weight: FontWeight.w600,
@@ -4152,13 +4155,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             children: [
               const SheetHandle(),
               Text(
-                'Clear this conversation?',
+                l10n.chatClearThisConversation,
                 style: HaloType.serif(size: 18, color: HaloColors.text),
               ),
               const SizedBox(height: 8),
               Text(
-                'Every message here is erased from this phone. This only '
-                'clears your copy - it does not touch their device.',
+                l10n.chatEveryMessageHereIs,
                 style: HaloType.sans(
                   size: 13,
                   color: HaloColors.text2,
@@ -4172,7 +4174,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   TextButton(
                     onPressed: () => Navigator.pop(ctx, false),
                     child: Text(
-                      'Cancel',
+                      l10n.commonCancel,
                       style: HaloType.sans(size: 14, color: HaloColors.text2),
                     ),
                   ),
@@ -4180,7 +4182,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   TextButton(
                     onPressed: () => Navigator.pop(ctx, true),
                     child: Text(
-                      'Clear',
+                      l10n.chatClear,
                       style: HaloType.sans(
                         size: 14,
                         weight: FontWeight.w600,
@@ -4244,7 +4246,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   Icon(Icons.block, size: 15, color: HaloColors.amber),
                   const SizedBox(width: 8),
                   Text(
-                    'Block this contact?',
+                    l10n.chatBlockThisContact,
                     style: HaloType.serif(
                       size: 18,
                       italic: true,
@@ -4255,8 +4257,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
               const SizedBox(height: 8),
               Text(
-                'Their messages stop arriving and they disappear from your chats. '
-                "They're never told. You can unblock anytime from settings.",
+                l10n.chatTheirMessagesStopArriving,
                 style: HaloType.sans(
                   size: 13,
                   color: HaloColors.text2,
@@ -4269,7 +4270,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   TextButton(
                     onPressed: () => Navigator.pop(ctx, false),
                     child: Text(
-                      'Cancel',
+                      l10n.commonCancel,
                       style: HaloType.sans(size: 14, color: HaloColors.text2),
                     ),
                   ),
@@ -4277,7 +4278,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   TextButton(
                     onPressed: () => Navigator.pop(ctx, true),
                     child: Text(
-                      'Block',
+                      l10n.commonBlock,
                       style: HaloType.sans(
                         size: 14,
                         weight: FontWeight.w500,
@@ -4335,7 +4336,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     setState(() => m.saved = next);
     await db.setSaved(m.msgUid!, next);
     if (mounted) {
-      showHaloToast(context, next ? 'Saved' : 'Removed from saved');
+      showHaloToast(context, next ? l10n.chatSaved : l10n.chatRemovedFromSaved);
     }
   }
 
@@ -4352,7 +4353,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
               child: Text(
-                'Forward to',
+                l10n.chatForwardTo,
                 style: HaloType.serif(
                   size: 18,
                   italic: true,
@@ -4364,7 +4365,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
                 child: Text(
-                  'No contacts to forward to',
+                  l10n.chatNoContactsToForward,
                   style: HaloType.sans(size: 13, color: HaloColors.text2),
                 ),
               )
@@ -4497,21 +4498,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final today = DateTime(now.year, now.month, now.day);
     final d = DateTime(when.year, when.month, when.day);
     final diff = today.difference(d).inDays;
-    if (diff == 0) return 'today';
-    if (diff == 1) return 'yesterday';
-    const months = [
-      'jan',
-      'feb',
-      'mar',
-      'apr',
-      'may',
-      'jun',
-      'jul',
-      'aug',
-      'sep',
-      'oct',
-      'nov',
-      'dec',
+    if (diff == 0) return l10n.chatToday;
+    if (diff == 1) return l10n.chatYesterday;
+    final months = [
+      l10n.chatJan,
+      l10n.chatFeb,
+      l10n.chatMar,
+      l10n.chatApr,
+      l10n.chatMay,
+      l10n.chatJun,
+      l10n.chatJul,
+      l10n.chatAug,
+      l10n.chatSep,
+      l10n.chatOct,
+      l10n.chatNov,
+      l10n.chatDec,
     ];
     var label = '${when.day} ${months[when.month - 1]}';
     if (when.year != now.year) label = '$label ${when.year}';
@@ -4661,7 +4662,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                     vertical: 6,
                                   ),
                                   child: Text(
-                                    "This message can't be shown",
+                                    l10n.chatThisMessageCanT,
                                     style: HaloType.sans(
                                       size: 12,
                                       color: HaloColors.text3,
@@ -4690,7 +4691,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                 alignment: Alignment.center,
                                 children: [
                                   Semantics(
-                                    label: 'Jump to the newest',
+                                    label: l10n.chatJumpToTheNewest,
                                     button: true,
                                     child: GestureDetector(
                                       onTap: _scrollToBottom,
@@ -4843,9 +4844,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     const SizedBox(width: 7),
                     Flexible(
                       child: Text(
-                        'Building a private route · first connect is the slow '
-                        'one, later ones are quick. Anything you send now is '
-                        'queued and delivers itself.',
+                        l10n.chatBuildingAPrivateRoute,
                         style: HaloType.sans(
                           size: 10.5,
                           color: HaloColors.text2,
@@ -4867,7 +4866,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               // the calm state. same banner, softest colour, nothing to tap
               NoticeBanner(
                 glyph: NoticeGlyph.shield,
-                text: 'Looks safe · nothing suspicious in their first message',
+                text: l10n.chatLooksSafeNothingSuspicious,
                 color: HaloColors.text2,
                 margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
               ),
@@ -4958,9 +4957,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               showHaloToast(
                                 context,
                                 _secureNext
-                                    ? 'The next photo you send opens protected · '
-                                          'they cannot screenshot it'
-                                    : 'Photo protection off',
+                                    ? l10n.chatTheNextPhotoYou
+                                    : l10n.chatPhotoProtectionOff,
                               );
                             },
                             onToggleGhost: () => setState(() {
@@ -5042,8 +5040,8 @@ class _AcceptRequestBar extends StatelessWidget {
         children: [
           Text(
             introducer == null
-                ? 'Accept to reply - they get one more message in until you do.'
-                : '$introducer introduced you. Accept to reply.',
+                ? l10n.chatAcceptToReplyThey
+                : l10n.chatIntroducedYouAcceptTo('$introducer'),
             textAlign: TextAlign.center,
             style: HaloType.sans(
               size: 12.5,
@@ -5146,7 +5144,7 @@ class _IntroBanner extends StatelessWidget {
           ),
           const SizedBox(height: 7),
           Text(
-            '${vouchNames(names)} introduced you. Say hello - they got your card too.',
+            l10n.chatIntroducedYouSayHello(vouchNames(names)),
             style: HaloType.sans(
               size: 12.5,
               color: HaloColors.text2,
@@ -5186,7 +5184,7 @@ class _IntroduceRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Introduce to...',
+                    l10n.chatIntroduceTo,
                     style: HaloType.sans(
                       size: 14,
                       color: enabled ? HaloColors.text : HaloColors.text3,
@@ -5194,7 +5192,7 @@ class _IntroduceRow extends StatelessWidget {
                   ),
                   if (!enabled)
                     Text(
-                      'Accept them first',
+                      l10n.chatAcceptThemFirst,
                       style: HaloType.mono(size: 9.5, color: HaloColors.text3),
                     ),
                 ],
@@ -5229,14 +5227,14 @@ class _RequestBanner extends StatelessWidget {
               Icon(Icons.schedule, size: 13, color: HaloColors.amber),
               const SizedBox(width: 7),
               Text(
-                'Message request',
+                l10n.chatMessageRequest,
                 style: HaloType.serif(size: 13, color: HaloColors.text),
               ),
             ],
           ),
           const SizedBox(height: 5),
           Text(
-            'They need to accept before you can keep chatting.',
+            l10n.chatTheyNeedToAccept,
             style: HaloType.sans(
               size: 12.5,
               color: HaloColors.text2,
@@ -5268,7 +5266,7 @@ class _RequestLockBar extends StatelessWidget {
               const SizedBox(width: 9),
               Expanded(
                 child: Text(
-                  'Waiting for them to accept your request',
+                  l10n.chatWaitingForThemTo,
                   style: HaloType.sans(size: 13, color: HaloColors.text2),
                 ),
               ),
@@ -5297,7 +5295,7 @@ class _BlockedBar extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'You blocked this contact',
+              l10n.chatYouBlockedThisContact,
               style: HaloType.serif(
                 size: 14,
                 italic: true,
@@ -5308,7 +5306,7 @@ class _BlockedBar extends StatelessWidget {
           TextButton(
             onPressed: onUnblock,
             child: Text(
-              'Unblock',
+              l10n.commonUnblock,
               style: HaloType.sans(
                 size: 14,
                 weight: FontWeight.w500,
@@ -5364,7 +5362,7 @@ class _ChatHead extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            tooltip: 'Back',
+            tooltip: l10n.commonBack,
             icon: Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
             onPressed: onBack,
           ),
@@ -5373,7 +5371,7 @@ class _ChatHead extends StatelessWidget {
             behavior: HitTestBehavior.opaque,
             // the same face flies in from the list row
             child: Hero(
-              tag: 'face-$avatarSeed',
+              tag: l10n.chatFace(avatarSeed),
               child: KryfoAvatar(seed: avatarSeed, size: 36, choice: face),
             ),
           ),
@@ -5435,7 +5433,7 @@ class _ChatHead extends StatelessWidget {
                             ),
                           ),
                           child: Text(
-                            'Supporter',
+                            l10n.chatSupporter,
                             style: HaloType.mono(
                               size: 7.5,
                               color: HaloColors.amber,
@@ -5463,10 +5461,10 @@ class _ChatHead extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           appState.sendMode == 'balanced'
-                              ? 'Encrypted · via relay'
+                              ? l10n.chatEncryptedViaRelay
                               : appState.sendMode == 'fast'
-                              ? 'Encrypted · direct'
-                              : 'Encrypted · over tor',
+                              ? l10n.chatEncryptedDirect
+                              : l10n.chatEncryptedOverTor,
                           style: HaloType.mono(
                             size: 10,
                             color: HaloColors.text2,
@@ -5509,12 +5507,12 @@ class _ChatHead extends StatelessWidget {
 
           PinHeaderButton(count: pinnedCount, onTap: onPinned),
           IconButton(
-            tooltip: 'Search this chat',
+            tooltip: l10n.chatSearchThisChat,
             icon: Icon(Icons.search_rounded, color: HaloColors.text2, size: 21),
             onPressed: onSearch,
           ),
           IconButton(
-            tooltip: 'Contact options',
+            tooltip: l10n.chatContactOptions,
             icon: Icon(Icons.more_vert, color: HaloColors.text2, size: 21),
             onPressed: onMore,
           ),
@@ -5594,7 +5592,7 @@ class _SearchHeadState extends State<SearchHead> {
             Row(
               children: [
                 IconButton(
-                  tooltip: 'Close',
+                  tooltip: l10n.commonClose,
                   icon: Icon(
                     Icons.close_rounded,
                     color: HaloColors.text2,
@@ -5635,7 +5633,7 @@ class _SearchHeadState extends State<SearchHead> {
                             decoration: InputDecoration(
                               isDense: true,
                               border: InputBorder.none,
-                              hintText: 'Find in conversation',
+                              hintText: l10n.chatFindInConversation,
                               hintStyle: HaloType.serif(
                                 size: 13,
                                 italic: true,
@@ -5675,7 +5673,7 @@ class _SearchHeadState extends State<SearchHead> {
                               children: [
                                 TextSpan(
                                   text: widget.matchCount == 0
-                                      ? 'No matches'
+                                      ? l10n.chatNoMatches
                                       : '${widget.matchPos}',
                                   style: HaloType.mono(
                                     size: 10,
@@ -5687,8 +5685,12 @@ class _SearchHeadState extends State<SearchHead> {
                                 ),
                                 if (widget.matchCount > 0)
                                   TextSpan(
-                                    text:
-                                        ' of ${widget.matchCount} ${widget.matchCount == 1 ? 'match' : 'matches'}',
+                                    text: l10n.chatOf(
+                                      widget.matchCount,
+                                      widget.matchCount == 1
+                                          ? 'match'
+                                          : 'matches',
+                                    ),
                                   ),
                               ],
                             ),
@@ -5696,14 +5698,14 @@ class _SearchHeadState extends State<SearchHead> {
                           const Spacer(),
                           _NavBtn(
                             icon: Icons.keyboard_arrow_up_rounded,
-                            label: 'Previous match',
+                            label: l10n.chatPreviousMatch,
                             enabled: widget.matchCount > 0,
                             onTap: widget.onPrev,
                           ),
                           const SizedBox(width: 5),
                           _NavBtn(
                             icon: Icons.keyboard_arrow_down_rounded,
-                            label: 'Next match',
+                            label: l10n.chatNextMatch,
                             enabled: widget.matchCount > 0,
                             onTap: widget.onNext,
                           ),
@@ -6183,7 +6185,7 @@ class _Bubble extends StatelessWidget {
                                                     alignment: Alignment.center,
                                                     color: Colors.black26,
                                                     child: Text(
-                                                      'Photo unavailable',
+                                                      l10n.chatPhotoUnavailable,
                                                       style: HaloType.mono(
                                                         size: 11,
                                                         color: HaloColors.text2,
@@ -6241,8 +6243,8 @@ class _Bubble extends StatelessWidget {
                                                     ),
                                                     if (msg.delivered) ...[
                                                       const SizedBox(width: 4),
-                                                      const Text(
-                                                        'Delivered',
+                                                      Text(
+                                                        l10n.chatDelivered,
                                                         style: TextStyle(
                                                           fontFamily:
                                                               'JetBrains Mono',
@@ -6324,7 +6326,7 @@ class _Bubble extends StatelessWidget {
                                           if (msg.edited) ...[
                                             const SizedBox(width: 5),
                                             Text(
-                                              'Edited',
+                                              l10n.chatEdited,
                                               style: TextStyle(
                                                 fontFamily: 'JetBrains Mono',
                                                 fontSize: 9,
@@ -6347,7 +6349,7 @@ class _Bubble extends StatelessWidget {
                                           if (msg.delivered) ...[
                                             const SizedBox(width: 4),
                                             Text(
-                                              'Delivered',
+                                              l10n.chatDelivered,
                                               style: TextStyle(
                                                 fontFamily: 'JetBrains Mono',
                                                 fontSize: 8.5,
@@ -6383,7 +6385,7 @@ class _Bubble extends StatelessWidget {
                                         msg.mediaPath == null) ...[
                                       const SizedBox(height: 2),
                                       Text(
-                                        'Edited',
+                                        l10n.chatEdited,
                                         style: TextStyle(
                                           fontFamily: 'JetBrains Mono',
                                           fontSize: 9,
@@ -6442,8 +6444,8 @@ class _Bubble extends StatelessWidget {
                                       const SizedBox(height: 4),
                                       Text(
                                         parked
-                                            ? 'Waiting for them to come online or add you back'
-                                            : 'Failed · tap to retry',
+                                            ? l10n.chatWaitingForThemToComeOnline
+                                            : l10n.chatFailedTapToRetry,
                                         style: TextStyle(
                                           fontFamily: 'JetBrains Mono',
                                           fontSize: 10,
@@ -6754,7 +6756,9 @@ class _ReplyQuoteBar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Replying to ${target.direction == 'out' ? 'yourself' : 'them'}',
+                  l10n.chatReplyingTo(
+                    target.direction == 'out' ? 'yourself' : 'them',
+                  ),
                   style: HaloType.mono(
                     size: 9.5,
                     color: HaloColors.amber,
@@ -6776,7 +6780,7 @@ class _ReplyQuoteBar extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'Close',
+            tooltip: l10n.commonClose,
             iconSize: 18,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
@@ -6888,7 +6892,7 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
                   color: HaloColors.line2,
                 ),
                 Semantics(
-                  label: 'Reply',
+                  label: l10n.chatReply,
                   button: true,
                   child: _ActionTap(
                     icon: Icons.reply_rounded,
@@ -6992,7 +6996,7 @@ class _EmptyConversation extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               Text(
-                'Say hi.',
+                l10n.chatSayHi,
                 textAlign: TextAlign.center,
                 style: HaloType.serif(
                   size: 24,
@@ -7003,7 +7007,7 @@ class _EmptyConversation extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Just the two of you, end-to-end encrypted.',
+                l10n.chatJustTheTwoOf,
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 13,
@@ -7108,7 +7112,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
     // until the chat was reopened. found on the redmi on 2026-09-21.
     try {
       if (!await _rec.hasPermission()) {
-        if (mounted) showHaloToast(context, 'Mic permission needed');
+        if (mounted) showHaloToast(context, l10n.chatMicPermissionNeeded);
         return;
       }
       // the permission prompt eats the long-press: by the time the user
@@ -7162,7 +7166,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
       final p = _path;
       _path = null;
       if (p != null) shredFile(p).ignore();
-      if (mounted) showHaloToast(context, 'The mic would not start. Try again');
+      if (mounted) showHaloToast(context, l10n.chatTheMicWouldNot);
     } finally {
       _busy = false;
     }
@@ -7269,7 +7273,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
                   child: cancel
                       ? Center(
                           child: Text(
-                            'Release to cancel',
+                            l10n.chatReleaseToCancel,
                             style: HaloType.mono(
                               size: 12,
                               color: HaloColors.rose,
@@ -7291,7 +7295,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
                                       ),
                                       const SizedBox(width: 6),
                                       Text(
-                                        'Voice hidden · slide to cancel',
+                                        l10n.chatVoiceHiddenSlideTo,
                                         style: HaloType.mono(
                                           size: 11,
                                           color: HaloColors.amber,
@@ -7305,7 +7309,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
                                         color: HaloColors.text3,
                                       ),
                                       Text(
-                                        'Slide to cancel',
+                                        l10n.chatSlideToCancel,
                                         style: HaloType.mono(
                                           size: 11,
                                           color: HaloColors.text3,
@@ -7317,7 +7321,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
                         ),
                 ),
                 Semantics(
-                  label: 'Close',
+                  label: l10n.commonClose,
                   button: true,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
@@ -7447,7 +7451,7 @@ class _Composer extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          'Ghost mode',
+                          l10n.chatGhostMode,
                           style: HaloType.serif(
                             size: 12,
                             color: HaloColors.amber,
@@ -7456,7 +7460,7 @@ class _Composer extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Messages burn after ${_humanBurn(burnSeconds)}',
+                          l10n.chatMessagesBurnAfter(_humanBurn(burnSeconds)),
                           style: HaloType.mono(
                             size: 10.5,
                             color: HaloColors.text3,
@@ -7470,7 +7474,7 @@ class _Composer extends StatelessWidget {
           Row(
             children: [
               PressScale(
-                label: 'Timed messages',
+                label: l10n.chatTimedMessages,
                 onTap: onToggleGhost,
                 onLongPress: onPickBurn,
                 scale: 0.88,
@@ -7505,7 +7509,7 @@ class _Composer extends StatelessWidget {
               const SizedBox(width: 10),
               // the camera that keeps its photos inside kryfo
               PressScale(
-                label: 'Open the camera',
+                label: l10n.chatOpenTheCamera,
                 onTap: onCamera,
                 scale: 0.86,
                 child: Icon(
@@ -7516,7 +7520,7 @@ class _Composer extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               PressScale(
-                label: 'Attach a photo',
+                label: l10n.chatAttachAPhoto,
                 onTap: onAttach,
                 scale: 0.86,
                 child: Icon(
@@ -7533,7 +7537,7 @@ class _Composer extends StatelessWidget {
                   minLines: 1,
                   maxLines: 4,
                   decoration: InputDecoration(
-                    hintText: 'Message',
+                    hintText: l10n.chatMessage,
                     hintStyle: HaloType.sans(size: 14, color: HaloColors.text3),
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
@@ -7575,7 +7579,7 @@ class _Composer extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Semantics(
-                                label: 'Disguise voice',
+                                label: l10n.chatDisguiseVoice,
                                 button: true,
                                 child: GestureDetector(
                                   onTap: onToggleDisguise,
@@ -7605,7 +7609,7 @@ class _Composer extends StatelessWidget {
                       : KeyedSubtree(
                           key: const ValueKey('send'),
                           child: PressScale(
-                            label: 'Send',
+                            label: l10n.commonSend,
                             onTap: canSend ? onSend : null,
                             scale: 0.86,
                             haptic: false, // _send already fires its own impact
@@ -7690,7 +7694,7 @@ class MediaGalleryScreen extends StatelessWidget {
         backgroundColor: HaloColors.surface,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back',
+          tooltip: l10n.commonBack,
           icon: const Icon(Icons.arrow_back, size: 20),
           color: HaloColors.text,
           onPressed: () => Navigator.of(context).pop(),
@@ -7700,7 +7704,7 @@ class MediaGalleryScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Shared photos',
+              l10n.chatSharedPhotos,
               style: HaloType.serif(size: 17, color: HaloColors.text),
             ),
             Text(
@@ -7713,7 +7717,7 @@ class MediaGalleryScreen extends StatelessWidget {
       body: paths.isEmpty
           ? Center(
               child: Text(
-                'No photos in this chat yet',
+                l10n.chatNoPhotosInThis,
                 style: HaloType.sans(size: 13, color: HaloColors.text3),
               ),
             )
@@ -7785,12 +7789,12 @@ class _ImageCaptionScreenState extends State<_ImageCaptionScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    tooltip: 'Back',
+                    tooltip: l10n.commonBack,
                     icon: Icon(Icons.arrow_back, color: HaloColors.text2),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   Text(
-                    'Send photo',
+                    l10n.chatSendPhoto,
                     style: HaloType.serif(
                       size: 16,
                       italic: true,
@@ -7827,7 +7831,7 @@ class _ImageCaptionScreenState extends State<_ImageCaptionScreen> {
                       minLines: 1,
                       maxLines: 4,
                       decoration: InputDecoration(
-                        hintText: 'Add a caption…',
+                        hintText: l10n.chatAddACaption,
                         hintStyle: HaloType.sans(
                           size: 14,
                           color: HaloColors.text3,
@@ -7848,7 +7852,7 @@ class _ImageCaptionScreenState extends State<_ImageCaptionScreen> {
                   ),
                   const SizedBox(width: 10),
                   Semantics(
-                    label: 'Send',
+                    label: l10n.commonSend,
                     button: true,
                     child: GestureDetector(
                       onTap: () {
@@ -7992,7 +7996,7 @@ class _KeyChangedBanner extends StatelessWidget {
               Icon(Icons.gpp_maybe_outlined, size: 15, color: HaloColors.amber),
               const SizedBox(width: 7),
               Text(
-                'Security code changed',
+                l10n.chatSecurityCodeChanged,
                 style: TextStyle(
                   color: HaloColors.amber,
                   fontSize: 12.5,
@@ -8003,7 +8007,7 @@ class _KeyChangedBanner extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           Text(
-            '$peerName may have reinstalled, or someone could be impersonating them. Compare safety numbers to be sure.',
+            l10n.chatMayHaveReinstalledOr(peerName),
             style: TextStyle(
               color: HaloColors.text.withValues(alpha: 0.8),
               fontSize: 12,
@@ -8025,7 +8029,7 @@ class _KeyChangedBanner extends StatelessWidget {
                     borderRadius: BorderRadius.circular(9),
                   ),
                   child: Text(
-                    'Ok',
+                    l10n.chatOk,
                     style: TextStyle(color: HaloColors.text, fontSize: 12.5),
                   ),
                 ),
@@ -8042,7 +8046,7 @@ class _KeyChangedBanner extends StatelessWidget {
                       borderRadius: BorderRadius.circular(9),
                     ),
                     child: Text(
-                      'Verify',
+                      l10n.chatVerify,
                       style: TextStyle(
                         color: HaloColors.ink,
                         fontSize: 12.5,

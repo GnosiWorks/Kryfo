@@ -16,6 +16,7 @@ import '../main.dart' show appState, db;
 import '../widgets/motion.dart';
 import '../widgets/kryfo_avatar.dart';
 import 'chat_screen.dart';
+import '../l10n/l10n.dart';
 
 Future<void> showRoomLinkSheet(BuildContext context, RoomLink link) {
   return showHaloSheet<void>(
@@ -70,15 +71,14 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet>
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
               child: Text(
-                'Send the room to',
+                l10n.roomLinkSendTheRoomTo,
                 style: HaloType.serif(size: 19, color: HaloColors.text),
               ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
               child: Text(
-                'They will know this room came from you. Inside it they are '
-                'a key like everyone else.',
+                l10n.roomLinkTheyWillKnowThis,
                 style: HaloType.sans(
                   size: 12.5,
                   color: HaloColors.text2,
@@ -90,7 +90,7 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet>
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 22),
                 child: Text(
-                  'No contacts yet',
+                  l10n.roomLinkNoContactsYet,
                   style: HaloType.sans(size: 13, color: HaloColors.text2),
                 ),
               )
@@ -176,7 +176,7 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet>
                 if (DateTime.now().millisecondsSinceEpoch <
                     widget.link.expiresAt)
                   Text(
-                    'Ends in ',
+                    l10n.roomLinkEndsIn,
                     style: HaloType.mono(size: 10, color: HaloColors.text3),
                   ),
                 RoomCountdown(expiresAt: widget.link.expiresAt, size: 10),
@@ -211,9 +211,7 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet>
             ),
             const SizedBox(height: 14),
             Text(
-              'Anyone with this can join until the room ends. They come in '
-              'under a key made for this room, and see nothing sent before '
-              'they arrived.',
+              l10n.roomLinkAnyoneWithThisCan,
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 12,
@@ -226,7 +224,7 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet>
               onTap: () {
                 copySensitive(uri);
                 HapticFeedback.selectionClick();
-                showHaloToast(context, 'Room link copied');
+                showHaloToast(context, l10n.roomLinkRoomLinkCopied);
               },
             ),
             const SizedBox(height: 4),
@@ -234,12 +232,12 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _Quiet(
-                  label: 'Send to a contact',
+                  label: l10n.roomLinkSendToAContact,
                   onTap: () => _toContact(uri),
                 ),
                 const SizedBox(width: 18),
                 _Quiet(
-                  label: 'Share',
+                  label: l10n.commonShare,
                   onTap: () => lockState.hold(
                     () => SharePlus.instance.share(ShareParams(text: uri)),
                   ),
@@ -302,7 +300,7 @@ class _CopyButtonState extends State<_CopyButton> {
             borderRadius: BorderRadius.circular(14),
           ),
           child: Text(
-            'Copy room link',
+            l10n.roomLinkCopyRoomLink,
             style: HaloType.sans(
               size: 14,
               weight: FontWeight.w600,

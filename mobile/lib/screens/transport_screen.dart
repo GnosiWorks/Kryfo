@@ -12,6 +12,7 @@ import '../miui_autostart.dart' show forceShowBackgroundPrompt;
 import '../theme.dart';
 import '../widgets/motion.dart';
 import '../widgets/stagger_in.dart';
+import '../l10n/l10n.dart';
 
 class TransportScreen extends StatelessWidget {
   const TransportScreen({super.key});
@@ -25,7 +26,7 @@ class TransportScreen extends StatelessWidget {
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
-          'Transport',
+          l10n.transportTransport,
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
@@ -47,13 +48,12 @@ class TransportScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
             children: staggerAll([
               Text(
-                'Nothing here leaves the phone. It is the same state the '
-                'engine uses to decide what to do.',
+                l10n.transportNothingHereLeavesThe,
                 style: HaloType.mono(size: 12, color: HaloColors.text3),
               ),
               const SizedBox(height: 24),
 
-              _Head('staying alive'),
+              _Head(l10n.transportStayingAlive),
               const _Alive(),
               const SizedBox(height: 24),
 
@@ -62,8 +62,8 @@ class TransportScreen extends StatelessWidget {
               if (tor == TorStatus.starting)
                 _Line('bootstrap', '$pct%', HaloColors.amber),
               _Line(
-                'can send',
-                appState.torReady ? 'Yes' : 'Not yet',
+                l10n.transportCanSend,
+                appState.torReady ? l10n.commonYes : l10n.transportNotYet,
                 appState.torReady ? HaloColors.green : HaloColors.rose,
               ),
 
@@ -71,23 +71,23 @@ class TransportScreen extends StatelessWidget {
               _Head('network'),
               _Line(
                 'connectivity',
-                appState.online ? 'Online' : 'Offline',
+                appState.online ? l10n.transportOnline : l10n.transportOffline,
                 appState.online ? HaloColors.green : HaloColors.rose,
               ),
               _Line(
-                'queued to send',
+                l10n.transportQueuedToSend,
                 '${appState.queued}',
                 appState.queued == 0 ? HaloColors.text2 : HaloColors.amber,
               ),
 
               _Line(
-                'Onion published',
+                l10n.transportOnionPublished,
 
                 uploads > 0
-                    ? 'Yes ($uploads)'
+                    ? l10n.transportYes(uploads)
                     : pubFor > 0
-                    ? 'Trying ${pubFor}s'
-                    : 'Not yet',
+                    ? l10n.transportTryingS(pubFor)
+                    : l10n.transportNotYet,
 
                 uploads > 0 ? HaloColors.green : HaloColors.rose,
               ),
@@ -101,10 +101,10 @@ class TransportScreen extends StatelessWidget {
                   _relayLabel(r['url'] as String? ?? ''),
 
                   r['benched'] == true
-                      ? 'Benched ${r['bench_for_s']}s'
+                      ? l10n.transportBenchedS(r['bench_for_s'])
                       : (r['fails'] as int? ?? 0) > 0
-                      ? '${r['fails']} fails'
-                      : 'ok',
+                      ? l10n.transportFails(r['fails'])
+                      : l10n.transportOk,
 
                   r['benched'] == true
                       ? HaloColors.rose
@@ -118,7 +118,7 @@ class TransportScreen extends StatelessWidget {
               _Head('traffic'),
 
               _Line(
-                'Relay subscriptions',
+                l10n.transportRelaySubscriptions,
 
                 '$subs',
 
@@ -126,14 +126,14 @@ class TransportScreen extends StatelessWidget {
               ),
 
               _Line(
-                'last sent',
-                sx < 0 ? 'Never' : '${sx}s ago',
+                l10n.transportLastSent,
+                sx < 0 ? l10n.transportNever : l10n.transportSAgo(sx),
                 HaloColors.text2,
               ),
 
               _Line(
-                'last received',
-                rx < 0 ? 'Never' : '${rx}s ago',
+                l10n.transportLastReceived,
+                rx < 0 ? l10n.transportNever : l10n.transportSAgo2(rx),
                 HaloColors.text2,
               ),
 
@@ -150,9 +150,7 @@ class TransportScreen extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 10),
                   child: Text(
-                    'With no contacts the app subscribes to no relay '
-                    'addresses, so no message can reach you. Scan someone '
-                    'to fix it.',
+                    l10n.transportWithNoContactsThe,
                     style: HaloType.mono(
                       size: 11.5,
                       color: HaloColors.rose.withValues(alpha: 0.9),
@@ -176,7 +174,7 @@ class TransportScreen extends StatelessWidget {
                     border: Border.all(color: HaloColors.line),
                   ),
                   child: Text(
-                    'Send anything waiting, now',
+                    l10n.transportSendAnythingWaitingNow,
                     style: HaloType.mono(
                       size: 12.5,
                       color: HaloColors.amber,
@@ -194,11 +192,11 @@ class TransportScreen extends StatelessWidget {
 }
 
 String _torWord(TorStatus t) => switch (t) {
-  TorStatus.off => 'off',
-  TorStatus.starting => 'starting',
-  TorStatus.bootstrapped => 'bootstrapped',
-  TorStatus.publishing => 'Publishing address',
-  TorStatus.reachable => 'reachable',
+  TorStatus.off => l10n.transportOff,
+  TorStatus.starting => l10n.transportStarting,
+  TorStatus.bootstrapped => l10n.transportBootstrapped,
+  TorStatus.publishing => l10n.transportPublishingAddress,
+  TorStatus.reachable => l10n.transportReachable,
 };
 
 Color _torTint(TorStatus t) => switch (t) {
@@ -213,7 +211,7 @@ Color _torTint(TorStatus t) => switch (t) {
 // screen and it does not fit, so name it instead.
 String _relayLabel(String url) {
   final bare = url.replaceFirst(RegExp(r'^wss?://'), '');
-  if (bare.contains('.onion')) return 'our relay (onion)';
+  if (bare.contains('.onion')) return l10n.transportOurRelayOnion;
   return bare;
 }
 
@@ -315,24 +313,25 @@ class _AliveState extends State<_Alive> {
   }
 
   static String _ago(int ms) {
-    if (ms <= 0) return 'never';
+    if (ms <= 0) return l10n.transportNever2;
     final d = DateTime.now().difference(
       DateTime.fromMillisecondsSinceEpoch(ms),
     );
-    if (d.inSeconds < 90) return 'Just now';
-    if (d.inMinutes < 60) return '${d.inMinutes}m ago';
-    if (d.inHours < 48) return '${d.inHours}h ago';
-    return '${d.inDays}d ago';
+    if (d.inSeconds < 90) return l10n.transportJustNow;
+    if (d.inMinutes < 60) return l10n.transportMAgo(d.inMinutes);
+    if (d.inHours < 48) return l10n.transportHAgo(d.inHours);
+    return l10n.transportDAgo(d.inDays);
   }
 
   static String _span(int ms) {
     final d = Duration(milliseconds: ms);
-    if (d.inMinutes < 60) return '${d.inMinutes}m';
-    if (d.inHours < 48) return '${d.inHours}h ${d.inMinutes % 60}m';
-    return '${d.inDays}d';
+    if (d.inMinutes < 60) return l10n.transportM(d.inMinutes);
+    if (d.inHours < 48) return l10n.transportHM(d.inHours, d.inMinutes % 60);
+    return l10n.transportD(d.inDays);
   }
 
-  static String _mb(num? b) => b == null ? '?' : '${(b / 1048576).round()} mb';
+  static String _mb(num? b) =>
+      b == null ? '?' : l10n.transportMb((b / 1048576).round());
 
   @override
   Widget build(BuildContext context) {
@@ -347,10 +346,16 @@ class _AliveState extends State<_Alive> {
       children: [
         _Line(
           'listening',
-          listening ? 'Yes · checked just now' : 'No · last ${_ago(listen)}',
+          listening
+              ? l10n.transportYesCheckedJustNow
+              : l10n.transportNoLast(_ago(listen)),
           listening ? HaloColors.green : HaloColors.rose,
         ),
-        _Line('Last message in', _ago(appState.lastDrainAt), HaloColors.text),
+        _Line(
+          l10n.transportLastMessageIn,
+          _ago(appState.lastDrainAt),
+          HaloColors.text,
+        ),
         GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: _exempt == false
@@ -360,12 +365,12 @@ class _AliveState extends State<_Alive> {
                 }
               : null,
           child: _Line(
-            'Battery exemption',
+            l10n.transportBatteryExemption,
             _exempt == null
-                ? 'unknown'
+                ? l10n.transportUnknown
                 : _exempt!
-                ? 'exempt'
-                : 'Not exempt · tap to fix',
+                ? l10n.transportExempt
+                : l10n.transportNotExemptTapTo,
             _exempt == null
                 ? HaloColors.text2
                 : _exempt!
@@ -374,16 +379,16 @@ class _AliveState extends State<_Alive> {
           ),
         ),
         if (_uptimeMs != null)
-          _Line('process up', _span(_uptimeMs!), HaloColors.text),
+          _Line(l10n.transportProcessUp, _span(_uptimeMs!), HaloColors.text),
         if (exit != null)
           _Line(
-            'last stop',
+            l10n.transportLastStop,
             '${exit['word']} · ${exitAt == null ? '' : _ago(exitAt)}',
             (exit['reason'] as int?) == 2 ? HaloColors.rose : HaloColors.text2,
           ),
         _Line(
           'memory',
-          '${_mb(rss)} · engine ${_mb(_mem['heapAlloc'] as num?)}',
+          l10n.transportEngine(_mb(rss), _mb(_mem['heapAlloc'] as num?)),
           HaloColors.text,
         ),
         const SizedBox(height: 14),
@@ -391,11 +396,11 @@ class _AliveState extends State<_Alive> {
         // the fifteen-minute job knocked, and every stretch with no
         // heartbeat. together they say whether a late message was waiting
         // at the relay, and whether the phone slept or the process died
-        _Line('Last relay arrival', _travel(), HaloColors.text),
+        _Line(l10n.transportLastRelayArrival, _travel(), HaloColors.text),
         _Line(
-          'last check-in',
+          l10n.transportLastCheckIn,
           appState.lastCheckHow.isEmpty
-              ? 'None yet'
+              ? l10n.transportNoneYet
               : '${appState.lastCheckHow} · ${_ago(appState.lastCheckTriedAt > 0 ? appState.lastCheckTriedAt : appState.lastCheckAt)}',
           appState.lastCheckHow.startsWith('ok')
               ? HaloColors.green
@@ -404,8 +409,10 @@ class _AliveState extends State<_Alive> {
               : HaloColors.rose,
         ),
         _Line(
-          'last tor reconnect',
-          engine.lastReconnect().isEmpty ? 'None yet' : engine.lastReconnect(),
+          l10n.transportLastTorReconnect,
+          engine.lastReconnect().isEmpty
+              ? l10n.transportNoneYet
+              : engine.lastReconnect(),
           engine.lastReconnect().startsWith('ok')
               ? HaloColors.green
               : engine.lastReconnect().isEmpty
@@ -416,9 +423,9 @@ class _AliveState extends State<_Alive> {
         // the engine's 30s cap and its backfill was given up on; it keeps its
         // live subscription and asks again next time.
         _Line(
-          'catch-up by relay',
+          l10n.transportCatchUpByRelay,
           appState.lastCheckRelays.isEmpty
-              ? 'None yet'
+              ? l10n.transportNoneYet
               : appState.lastCheckRelays,
           appState.lastCheckRelays.contains('dropped')
               ? HaloColors.rose
@@ -430,22 +437,27 @@ class _AliveState extends State<_Alive> {
         // when tor stopped answering one. both flat is a healthy tor; either
         // one climbing is the wedge that cost ten hours once.
         _Line(
-          'control port',
-          '${ctrl['ctrl_dials'] ?? 0} dials · ${ctrl['ctrl_timeouts'] ?? 0} timeouts',
+          l10n.transportControlPort,
+          l10n.transportDialsTimeouts(
+            ctrl['ctrl_dials'] ?? 0,
+            ctrl['ctrl_timeouts'] ?? 0,
+          ),
           ((ctrl['ctrl_timeouts'] as int?) ?? 0) > 0
               ? HaloColors.rose
               : HaloColors.text2,
         ),
         _Line(
-          'job runs',
+          l10n.transportJobRuns,
           appState.jobRuns == 0
-              ? 'None yet'
-              : '${appState.jobRuns} · last ${_ago(appState.lastJobAt)}',
+              ? l10n.transportNoneYet
+              : l10n.transportLast(appState.jobRuns, _ago(appState.lastJobAt)),
           appState.jobRuns == 0 ? HaloColors.text2 : HaloColors.text,
         ),
         _Line(
-          'Quiet stretches',
-          appState.gaps.isEmpty ? 'None' : '${appState.gaps.length}',
+          l10n.transportQuietStretches,
+          appState.gaps.isEmpty
+              ? l10n.transportNone
+              : '${appState.gaps.length}',
           appState.gaps.isEmpty ? HaloColors.green : HaloColors.rose,
         ),
         for (final g in appState.gaps.reversed.take(8)) _gapLine(g),
@@ -459,7 +471,7 @@ class _AliveState extends State<_Alive> {
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 10),
               child: Text(
-                'Clear this record',
+                l10n.transportClearThisRecord,
                 style: HaloType.mono(size: 11, color: HaloColors.text3),
               ),
             ),
@@ -474,7 +486,7 @@ class _AliveState extends State<_Alive> {
   // above, and a late one shows as a long gap ending at this time
   String _travel() {
     final recv = (_mem['lastEvRecv'] as num?)?.toInt() ?? 0;
-    if (recv <= 0) return 'Nothing yet this process';
+    if (recv <= 0) return l10n.transportNothingYetThisProcess;
     final when = DateTime.fromMillisecondsSinceEpoch(recv * 1000);
     final hhmm =
         '${when.hour.toString().padLeft(2, '0')}:${when.minute.toString().padLeft(2, '0')}';
@@ -491,7 +503,9 @@ class _AliveState extends State<_Alive> {
     String t(DateTime d) =>
         '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
     final mins = to.difference(from).inMinutes;
-    final len = mins < 60 ? '${mins}m' : '${mins ~/ 60}h ${mins % 60}m';
-    return _Line('  ${t(from)} to ${t(to)}', len, HaloColors.text2);
+    final len = mins < 60
+        ? l10n.transportM2(mins)
+        : l10n.transportHM2(mins ~/ 60, mins % 60);
+    return _Line(l10n.transportTo(t(from), t(to)), len, HaloColors.text2);
   }
 }

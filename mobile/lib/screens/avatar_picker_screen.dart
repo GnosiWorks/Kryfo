@@ -19,18 +19,20 @@ import '../theme.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/avatar_mark.dart';
 import '../widgets/kryfo_avatar.dart';
+import '../l10n/l10n.dart';
 
 /// the shape / colour / turn controls, with a live preview on top.
 /// reports the packed choice, or null for "the initial your id already draws".
 class AvatarChoiceEditor extends StatefulWidget {
   final ValueChanged<int?> onChanged;
   final EdgeInsets padding;
-  final String caption;
+  // null is the usual line, looked up when it is drawn
+  final String? caption;
   const AvatarChoiceEditor({
     super.key,
     required this.onChanged,
     this.padding = const EdgeInsets.fromLTRB(20, 4, 20, 32),
-    this.caption = 'The people you message see this too',
+    this.caption,
   });
 
   @override
@@ -76,7 +78,7 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
         const SizedBox(height: 10),
         Center(
           child: Text(
-            widget.caption,
+            widget.caption ?? l10n.avatarPickerThePeopleYouMessage,
             textAlign: TextAlign.center,
             style: HaloType.mono(size: 10.5, color: HaloColors.text2),
           ),
@@ -171,7 +173,9 @@ class _AvatarPickerScreenState extends State<AvatarPickerScreen> {
     if (!mounted) return;
     showHaloToast(
       context,
-      _choice == null ? 'back to your initial' : 'that one is yours',
+      _choice == null
+          ? l10n.avatarPickerBackToYourInitial
+          : l10n.avatarPickerThatOneIsYours,
     );
     Navigator.of(context).pop();
   }
@@ -183,12 +187,15 @@ class _AvatarPickerScreenState extends State<AvatarPickerScreen> {
       appBar: AppBar(
         backgroundColor: HaloColors.surface,
         elevation: 0,
-        title: Text('Pick a face', style: HaloType.serif(size: 18)),
+        title: Text(
+          l10n.avatarPickerPickAFace,
+          style: HaloType.serif(size: 18),
+        ),
         actions: [
           TextButton(
             onPressed: _save,
             child: Text(
-              'Save',
+              l10n.commonSave,
               style: HaloType.mono(
                 size: 12.5,
                 color: HaloColors.amber,

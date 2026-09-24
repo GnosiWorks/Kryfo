@@ -22,6 +22,7 @@ import 'chat_screen.dart' show MediaGalleryScreen;
 import 'key_verification_screen.dart';
 import 'vouchers_sheet.dart';
 import '../widgets/confirm_sheet.dart';
+import '../l10n/l10n.dart';
 
 class ContactScreen extends StatefulWidget {
   final String haloId;
@@ -105,12 +106,12 @@ class _ContactScreenState extends State<ContactScreen> {
                 const SheetHandle(),
                 const SizedBox(height: 12),
                 Text(
-                  'Your name for them',
+                  l10n.contactYourNameForThem,
                   style: HaloType.serif(size: 20, color: HaloColors.text),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Stays on this phone. They never see it.',
+                  l10n.contactStaysOnThisPhone,
                   style: HaloType.sans(size: 12.5, color: HaloColors.text2),
                 ),
                 const SizedBox(height: 14),
@@ -146,7 +147,7 @@ class _ContactScreenState extends State<ContactScreen> {
                     Expanded(
                       child: HaloGhostButton(
                         quiet: true,
-                        label: 'Clear',
+                        label: l10n.contactClear,
                         onTap: () => Navigator.pop(ctx, ''),
                       ),
                     ),
@@ -154,7 +155,7 @@ class _ContactScreenState extends State<ContactScreen> {
                     Expanded(
                       flex: 2,
                       child: HaloPrimaryButton(
-                        label: 'Save',
+                        label: l10n.commonSave,
                         onTap: () => Navigator.pop(ctx, ctrl.text),
                       ),
                     ),
@@ -211,14 +212,16 @@ class _ContactScreenState extends State<ContactScreen> {
             children: [
               Expanded(
                 child: HaloPrimaryButton(
-                  label: 'Message',
+                  label: l10n.contactMessage,
                   onTap: () => Navigator.of(context).pop(),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: HaloGhostButton(
-                  label: verified ? 'Keys verified' : 'Verify keys',
+                  label: verified
+                      ? l10n.contactKeysVerified
+                      : l10n.contactVerifyKeys,
                   onTap: () async {
                     await Navigator.of(context).push(
                       haloRoute(
@@ -251,7 +254,7 @@ class _ContactScreenState extends State<ContactScreen> {
                   builder: (_, v, child) =>
                       Transform.scale(scale: v, child: child),
                   child: Hero(
-                    tag: 'face-${widget.avatarSeed}',
+                    tag: l10n.contactFace(widget.avatarSeed),
                     child: KryfoAvatar(
                       seed: widget.avatarSeed,
                       size: 96,
@@ -328,7 +331,7 @@ class _ContactScreenState extends State<ContactScreen> {
           if (_voucherNames.isNotEmpty)
             _Row(
               icon: Icons.people_outline,
-              label: 'Vouches',
+              label: l10n.contactVouches,
               sub: status,
               onTap: () => showVouchersSheet(context, widget.haloId),
             ),
@@ -352,7 +355,7 @@ class _ContactScreenState extends State<ContactScreen> {
             icon: muted
                 ? Icons.notifications_off_outlined
                 : Icons.notifications_none,
-            label: muted ? 'Unmute' : 'Mute',
+            label: muted ? l10n.contactUnmute : l10n.contactMute,
             onTap: () async {
               HapticFeedback.selectionClick();
               if (muted) {
@@ -365,7 +368,7 @@ class _ContactScreenState extends State<ContactScreen> {
           ),
           _Row(
             icon: pinned ? Icons.push_pin : Icons.push_pin_outlined,
-            label: pinned ? 'Unpin' : 'Pin to top',
+            label: pinned ? l10n.contactUnpin : l10n.contactPinToTop,
             onTap: () async {
               HapticFeedback.selectionClick();
               await db.setContactPinned(widget.haloId, !pinned);
@@ -375,8 +378,8 @@ class _ContactScreenState extends State<ContactScreen> {
           ),
           _Row(
             icon: Icons.archive_outlined,
-            label: 'Archive',
-            sub: 'Out of the list until they write again',
+            label: l10n.contactArchive,
+            sub: l10n.contactOutOfTheList,
             onTap: () async {
               await appState.archive(widget.haloId);
               if (!context.mounted) return;
@@ -385,7 +388,7 @@ class _ContactScreenState extends State<ContactScreen> {
           ),
           _Row(
             icon: Icons.block,
-            label: blocked ? 'Unblock' : 'Block',
+            label: blocked ? l10n.commonUnblock : l10n.commonBlock,
             rose: !blocked,
             onTap: () async {
               if (blocked) {
@@ -395,9 +398,9 @@ class _ContactScreenState extends State<ContactScreen> {
               }
               final ok = await showConfirmSheet(
                 context,
-                title: 'Block $_name?',
-                line: 'Their messages stop arriving. They are not told.',
-                yes: 'Block',
+                title: l10n.contactBlock(_name),
+                line: l10n.contactTheirMessagesStopArriving,
+                yes: l10n.commonBlock,
               );
               if (!ok) return;
               await appState.block(widget.haloId);
@@ -408,24 +411,22 @@ class _ContactScreenState extends State<ContactScreen> {
           ),
           _Row(
             icon: Icons.delete_outline,
-            label: 'Delete chat',
-            sub: 'Messages and contact, gone from this phone',
+            label: l10n.contactDeleteChat,
+            sub: l10n.contactMessagesAndContactGone,
             rose: true,
             onTap: () async {
               final ok = await showConfirmSheet(
                 context,
-                title: 'Delete this chat?',
-                line:
-                    'Every message and the contact, gone from this phone. Nothing '
-                    'is sent to them.',
-                yes: 'Delete',
+                title: l10n.contactDeleteThisChat,
+                line: l10n.contactEveryMessageAndThe,
+                yes: l10n.commonDelete,
               );
               if (!ok) return;
               await appState.deleteConversation(widget.haloId);
               await appState.refreshContacts();
               if (!context.mounted) return;
               HapticFeedback.mediumImpact();
-              showHaloToast(context, 'Deleted');
+              showHaloToast(context, l10n.contactDeleted);
               Navigator.of(context).popUntil((r) => r.isFirst);
             },
           ),
@@ -455,10 +456,10 @@ class _Stats extends StatelessWidget {
     final d = DateTime.now().difference(
       DateTime.fromMillisecondsSinceEpoch(ms),
     );
-    if (d.inDays < 1) return 'today';
-    if (d.inDays < 30) return '${d.inDays}d';
-    if (d.inDays < 365) return '${d.inDays ~/ 30}mo';
-    return '${d.inDays ~/ 365}y';
+    if (d.inDays < 1) return l10n.contactToday;
+    if (d.inDays < 30) return l10n.contactD(d.inDays);
+    if (d.inDays < 365) return l10n.contactMo(d.inDays ~/ 30);
+    return l10n.contactY(d.inDays ~/ 365);
   }
 
   @override
@@ -466,12 +467,12 @@ class _Stats extends StatelessWidget {
     final cards = <Widget>[
       if (verified)
         _StatCard(
-          label: 'Verified',
+          label: l10n.contactVerified,
           child: Icon(Icons.check_rounded, size: 24, color: HaloColors.green),
         ),
       if (vouches > 0)
         _StatCard(
-          label: 'Vouches',
+          label: l10n.contactVouches,
           onTap: onVouches,
           child: Text(
             '$vouches',
@@ -480,7 +481,7 @@ class _Stats extends StatelessWidget {
         ),
       if (since != null)
         _StatCard(
-          label: 'Chatting',
+          label: l10n.contactChatting,
           child: Text(
             _age(since!),
             style: HaloType.serif(size: 24, color: HaloColors.text),
@@ -610,7 +611,9 @@ class _MediaRow extends StatelessWidget {
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
-                    count == 0 ? 'nothing shared yet' : 'shared media · $count',
+                    count == 0
+                        ? l10n.contactNothingSharedYet
+                        : l10n.contactSharedMedia(count),
                     style: HaloType.sans(
                       size: 14.5,
                       color: count == 0 ? HaloColors.text2 : HaloColors.text,

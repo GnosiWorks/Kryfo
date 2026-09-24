@@ -17,6 +17,7 @@ import '../address_text.dart';
 import '../main.dart' show appState;
 import 'modes_screen.dart';
 import 'package:flutter/services.dart';
+import '../l10n/l10n.dart';
 
 class DonateScreen extends StatefulWidget {
   const DonateScreen({super.key});
@@ -33,26 +34,44 @@ class _Coin {
 // only bitcoin can unlock a badge: it's the chain we verify ourselves with
 // our own node. checking the others would mean asking a third-party api and
 // leaking the payer's ip - not worth it for a cosmetic badge.
-const _coins = [
-  _Coin('btc', 'Bitcoin', '\u20BF', 'badge unlocks', Color(0xFFF7931A)),
-  _Coin('xmr', 'Monero', '\u0271', 'manual \u00B7 no badge', Color(0xFFFF6600)),
-  _Coin('sol', 'Solana', '\u25CE', 'manual \u00B7 no badge', Color(0xFF9945FF)),
+final _coins = [
+  _Coin(
+    'btc',
+    l10n.donateBitcoin,
+    l10n.donateText,
+    l10n.donateBadgeUnlocks,
+    Color(0xFFF7931A),
+  ),
+  _Coin(
+    'xmr',
+    l10n.donateMonero,
+    '\u0271',
+    l10n.donateManualNoBadge,
+    Color(0xFFFF6600),
+  ),
+  _Coin(
+    'sol',
+    l10n.donateSolana,
+    '\u25CE',
+    l10n.donateManualNoBadge,
+    Color(0xFF9945FF),
+  ),
   _Coin(
     'eth',
-    'Ethereum',
-    '\u039E',
-    'manual \u00B7 no badge',
+    l10n.donateEthereum,
+    l10n.donateText2,
+    l10n.donateManualNoBadge,
     Color(0xFF8AA0F0),
   ),
 ];
 
 // real backing wallets. verified against wallet screenshots.
-const _addrs = {
+final _addrs = {
   'btc': 'bc1qdewmhrwkh8elts8ldehfq5qaj68ymexfnzkk7j',
-  'xmr':
-      '4ApyZS72ZYCG3z8rtwwX6JgdjSdAcphHSFRxiKrL5yLnYYz8fvXQayWMyw79AxFoQ7BXLfzEExk5f7Z2xPdEPWyRBXtVwiD',
-  'sol': 'DrxaQPM8wD63EErdGN9GrazGVnxwiCB9Pc6RYR3v2x4a',
-  'eth': '0x55014AF792d54E4350b7f4bfc7be7D62EbbCfE43',
+  'xmr': l10n
+      .donate4apyzs72zycg3z8rtwwx6jgdjsdacphhsfrxikrl5ylnyyz8fvxqaywmyw79axfo,
+  'sol': l10n.donateDrxaqpm8wd63eerdgn9grazgvnxwicb9pc6ryr3v2x4a,
+  'eth': l10n.donate0x55014af792d54e4350b7f4bfc7be7d62ebbcfe43,
 };
 
 class _DonateScreenState extends State<DonateScreen> {
@@ -69,7 +88,7 @@ class _DonateScreenState extends State<DonateScreen> {
           HapticFeedback.mediumImpact();
           showHaloToast(
             context,
-            'Your earlier bitcoin payment was seen · ${tierName(t)} badge unlocked',
+            l10n.donateYourEarlierBitcoinPayment(tierName(t)),
           );
         }
       });
@@ -108,7 +127,7 @@ class _DonateScreenState extends State<DonateScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
-          'Support',
+          l10n.donateSupport,
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
@@ -164,9 +183,9 @@ class _DonateScreenState extends State<DonateScreen> {
         Text.rich(
           TextSpan(
             children: [
-              const TextSpan(text: 'Keep kryfo '),
+              TextSpan(text: l10n.donateKeepKryfo),
               TextSpan(
-                text: 'independent',
+                text: l10n.donateIndependent,
                 style: HaloType.serif(
                   size: 25,
                   italic: true,
@@ -180,7 +199,7 @@ class _DonateScreenState extends State<DonateScreen> {
         ),
         const SizedBox(height: 6),
         Text(
-          'No ads, no investors, nothing to sell. It runs on what backers give.',
+          l10n.donateNoAdsNoInvestors,
           textAlign: TextAlign.center,
           style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.5),
         ),
@@ -195,9 +214,9 @@ class _DonateScreenState extends State<DonateScreen> {
           child: Text.rich(
             TextSpan(
               children: [
-                const TextSpan(text: 'Back it anonymously. Badge opt-in.\n'),
+                TextSpan(text: l10n.donateBackItAnonymouslyBadge),
                 TextSpan(
-                  text: 'Privacy is never behind a paywall.',
+                  text: l10n.donatePrivacyIsNeverBehind,
                   style: HaloType.mono(size: 11, color: HaloColors.amber),
                 ),
               ],
@@ -439,7 +458,7 @@ class _DonateScreenState extends State<DonateScreen> {
           Center(child: _QrCard(data: addr, size: 168)),
           const SizedBox(height: 12),
           Text(
-            '${coin.name} address · check it against your wallet',
+            l10n.donateAddressCheckItAgainst(coin.name),
             style: HaloType.mono(size: 10, color: HaloColors.text2),
           ),
           const SizedBox(height: 8),
@@ -463,7 +482,7 @@ class _DonateScreenState extends State<DonateScreen> {
             onTap: () {
               HapticFeedback.mediumImpact();
               copySensitive(addr);
-              showHaloToast(context, 'Address copied · clears in 60s');
+              showHaloToast(context, l10n.donateAddressCopiedClearsIn);
             },
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 11),
@@ -473,7 +492,7 @@ class _DonateScreenState extends State<DonateScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                'Copy address',
+                l10n.donateCopyAddress,
                 style: HaloType.mono(size: 12, color: HaloColors.onAmber),
               ),
             ),
@@ -488,11 +507,8 @@ class _DonateScreenState extends State<DonateScreen> {
             ),
             child: Text(
               _coin == 'btc'
-                  ? 'Bitcoin is verified by our own node, so your badge '
-                        'unlocks by itself once the payment lands.'
-                  : "we can't verify this chain without asking an outside "
-                        "service about you, so we don't. send it if you like. "
-                        "it won't unlock a badge.",
+                  ? l10n.donateBitcoinIsVerifiedBy
+                  : l10n.donateWeCanTVerify,
               style: HaloType.mono(size: 9.5, color: HaloColors.text2),
             ),
           ),
@@ -501,7 +517,7 @@ class _DonateScreenState extends State<DonateScreen> {
           if (_coin == 'btc' && !_onOnion) ...[
             const SizedBox(height: 10),
             Text(
-              'Bitcoin badges need onion mode',
+              l10n.donateBitcoinBadgesNeedOnion,
               textAlign: TextAlign.center,
               style: HaloType.sans(size: 13, color: HaloColors.text2),
             ),
@@ -522,7 +538,7 @@ class _DonateScreenState extends State<DonateScreen> {
                   border: Border.all(color: HaloColors.line),
                 ),
                 child: Text(
-                  'Switch to onion',
+                  l10n.donateSwitchToOnion,
                   style: HaloType.sans(
                     size: 13,
                     weight: FontWeight.w600,
@@ -549,7 +565,9 @@ class _DonateScreenState extends State<DonateScreen> {
                       ),
                     ),
                     child: Text(
-                      can ? 'Pay with bitcoin  \u2192' : 'Badges start at \$20',
+                      can
+                          ? l10n.donatePayWithBitcoin
+                          : l10n.donateBadgesStartAt20,
                       style: HaloType.sans(
                         size: 13,
                         weight: FontWeight.w600,
@@ -734,7 +752,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
-          'Bitcoin',
+          l10n.donateBitcoin,
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
@@ -809,14 +827,14 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           ),
           const SizedBox(height: 18),
           Text(
-            'Reaching the payment service over tor…',
+            l10n.donateReachingThePaymentService,
             style: HaloType.mono(size: 11, color: HaloColors.text2),
           ),
           const SizedBox(height: 8),
           Text(
             _waited < 5
-                ? 'This can take up to a minute'
-                : '${_waited}s · this can take up to a minute',
+                ? l10n.donateThisCanTakeUp
+                : l10n.donateSThisCanTake(_waited),
             style: HaloType.mono(size: 10.5, color: HaloColors.text3),
           ),
           // held back until the wait is long enough to doubt
@@ -824,7 +842,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
             const SizedBox(height: 22),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 56),
-              child: _ghostButton('Use the address instead', () {
+              child: _ghostButton(l10n.donateUseTheAddressInstead, () {
                 _ask++;
                 _waitTick?.cancel();
                 setState(() {
@@ -849,14 +867,13 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Bitcoin badges need onion mode',
+              l10n.donateBitcoinBadgesNeedOnion,
               textAlign: TextAlign.center,
               style: HaloType.serif(size: 22, color: HaloColors.text),
             ),
             const SizedBox(height: 10),
             Text(
-              'The payment service is an onion, and only onion mode can reach '
-              'it. Nothing was sent.',
+              l10n.donateThePaymentServiceIs,
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 13,
@@ -865,7 +882,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
               ),
             ),
             const SizedBox(height: 24),
-            _fillButton('Switch to onion', () async {
+            _fillButton(l10n.donateSwitchToOnion, () async {
               await Navigator.of(context).push(haloRoute(const ModesScreen()));
               if (mounted) _start();
             }),
@@ -893,13 +910,8 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
             ),
             child: Text(
               _gaveUp
-                  ? "Tor was slow to reach the payment service. You can "
-                        "donate to the address below - your badge just won't "
-                        "unlock automatically. Try again later for the badge."
-                  : "The payment service is having trouble right now. You can "
-                        "still donate to the address below - your badge just "
-                        "won't unlock automatically. Try again later for the "
-                        "badge.",
+                  ? l10n.donateTorWasSlowTo
+                  : l10n.donateThePaymentServiceIsHavingTrouble,
               style: HaloType.sans(
                 size: 12.5,
                 color: HaloColors.text2,
@@ -910,7 +922,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           const SizedBox(height: 16),
           if (addr.isNotEmpty) _StaticAddress(address: addr),
           const SizedBox(height: 14),
-          _ghostButton('Try again', _start),
+          _ghostButton(l10n.commonTryAgain, _start),
         ],
       ),
     );
@@ -927,14 +939,14 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
         children: [
           Center(
             child: Text(
-              '${inv.btc} BTC',
+              l10n.donateBtc(inv.btc),
               style: HaloType.serif(size: 26, color: HaloColors.text),
             ),
           ),
           const SizedBox(height: 2),
           Center(
             child: Text(
-              'Send exactly this amount \u00b7 expires in ${_fmtLeft()}',
+              l10n.donateSendExactlyThisAmount(_fmtLeft()),
               style: HaloType.mono(size: 10, color: HaloColors.text2),
             ),
           ),
@@ -948,7 +960,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           Row(
             children: [
               Expanded(
-                child: _fillButton('open wallet', () async {
+                child: _fillButton(l10n.donateOpenWallet, () async {
                   final uri = Uri.parse(inv.uri);
                   if (await canLaunchUrl(uri)) {
                     await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -962,8 +974,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           const SizedBox(height: 18),
           Center(
             child: Text(
-              'This screen updates itself the moment your payment is seen.\n'
-              'Keep it open - nothing is stored, nothing identifies you.',
+              l10n.donateThisScreenUpdatesItself,
               textAlign: TextAlign.center,
               style: HaloType.mono(size: 9.5, color: HaloColors.text2),
             ),
@@ -998,7 +1009,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
             ),
             const SizedBox(width: 10),
             Text(
-              'Watching the chain for your payment',
+              l10n.donateWatchingTheChainFor,
               style: HaloType.mono(size: 11, color: HaloColors.text2),
             ),
           ],
@@ -1017,15 +1028,12 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'This invoice expired',
+              l10n.donateThisInvoiceExpired,
               style: HaloType.serif(size: 22, color: HaloColors.text),
             ),
             const SizedBox(height: 10),
             Text(
-              'Invoices time out. If you already sent the payment, keep this '
-              'open: we ask the service again every minute for a while, and '
-              'the next time you open support. Start a fresh one whenever '
-              'you like.',
+              l10n.donateInvoicesTimeOutIf,
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 13,
@@ -1034,9 +1042,9 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
               ),
             ),
             const SizedBox(height: 24),
-            _fillButton('New invoice', _start),
+            _fillButton(l10n.donateNewInvoice, _start),
             const SizedBox(height: 10),
-            _ghostButton('I paid, check again', _check),
+            _ghostButton(l10n.donateIPaidCheckAgain, _check),
           ],
         ),
       ),
@@ -1072,7 +1080,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
   void _copy(String v) {
     HapticFeedback.mediumImpact();
     copySensitive(v);
-    showHaloToast(context, 'Address copied · clears in 60s');
+    showHaloToast(context, l10n.donateAddressCopiedClearsIn);
   }
 
   Widget _fillButton(String label, VoidCallback onTap) {
@@ -1150,7 +1158,7 @@ class _StaticAddress extends StatelessWidget {
             onTap: () {
               HapticFeedback.mediumImpact();
               copySensitive(address);
-              showHaloToast(context, 'Address copied · clears in 60s');
+              showHaloToast(context, l10n.donateAddressCopiedClearsIn);
             },
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 11),
@@ -1160,7 +1168,7 @@ class _StaticAddress extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                'Copy address',
+                l10n.donateCopyAddress,
                 style: HaloType.mono(size: 12, color: HaloColors.onAmber),
               ),
             ),
@@ -1232,16 +1240,15 @@ class _ConfirmedViewState extends State<_ConfirmedView>
             ),
             const SizedBox(height: 24),
             Text(
-              'Payment confirmed',
+              l10n.donatePaymentConfirmed,
               textAlign: TextAlign.center,
               style: HaloType.serif(size: 24, color: HaloColors.text),
             ),
             const SizedBox(height: 10),
             Text(
               t == SupporterTier.none
-                  ? 'Thank you for keeping kryfo independent.'
-                  : "verified on-chain - you're a ${tierName(t)} now. "
-                        'No one can take that off you.',
+                  ? l10n.donateThankYouForKeeping
+                  : l10n.donateVerifiedOnChainYou(tierName(t)),
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 13.5,
@@ -1257,7 +1264,7 @@ class _ConfirmedViewState extends State<_ConfirmedView>
                   ? _fill('done', () => _choose(false))
                   : Column(
                       children: [
-                        _fill('wear my badge', () => _choose(true)),
+                        _fill(l10n.donateWearMyBadge, () => _choose(true)),
                         const SizedBox(height: 10),
                         PressScale(
                           onTap: () => _choose(false),
@@ -1265,7 +1272,7 @@ class _ConfirmedViewState extends State<_ConfirmedView>
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             alignment: Alignment.center,
                             child: Text(
-                              'Just glad to help',
+                              l10n.donateJustGladToHelp,
                               style: HaloType.sans(
                                 size: 14,
                                 color: HaloColors.text2,

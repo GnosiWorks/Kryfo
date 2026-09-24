@@ -13,6 +13,7 @@ import '../widgets/kryfo_avatar.dart';
 import '../widgets/notice_banner.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
+import '../l10n/l10n.dart';
 
 const _noteMax = 40;
 
@@ -100,12 +101,12 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
     } else if (any) {
       Navigator.of(context).pop(
         r.toFirst
-            ? '$b got it, but $c could not be reached'
-            : '$c got it, but $b could not be reached',
+            ? l10n.introduceGotItButCould(b, c)
+            : l10n.introduceGotItButCouldNotBe(c, b),
       );
     } else {
       setState(() => _sending = false);
-      showHaloToast(context, 'Could not reach either of them. Try again later');
+      showHaloToast(context, l10n.introduceCouldNotReachEither);
     }
   }
 
@@ -128,7 +129,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 4),
               child: Text(
-                'Introduce ${widget.peerName} to...',
+                l10n.introduceIntroduceTo(widget.peerName),
                 style: HaloType.serif(size: 20, color: HaloColors.text),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -137,7 +138,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
               child: Text(
-                'Both of them get the other\'s card. Neither sees your name for the other.',
+                l10n.introduceBothOfThemGet,
                 style: HaloType.sans(
                   size: 12,
                   color: HaloColors.text2,
@@ -150,7 +151,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
                   ? Padding(
                       padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
                       child: Text(
-                        'No one else to introduce yet. Add another contact first.',
+                        l10n.introduceNoOneElseTo,
                         style: HaloType.sans(size: 13, color: HaloColors.text2),
                       ),
                     )
@@ -189,7 +190,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
                 style: HaloType.sans(size: 14, color: HaloColors.text),
                 cursorColor: HaloColors.amber,
                 decoration: InputDecoration(
-                  hintText: 'A note, like "my cousin" - optional',
+                  hintText: l10n.introduceANoteLikeMy,
                   hintStyle: HaloType.serif(
                     size: 14,
                     italic: true,
@@ -261,10 +262,10 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
     final String text;
     final refill = b.refillAt(_now);
     if (refill == null) {
-      text = '$_left of $introBudgetMax introductions left this week';
+      text = l10n.introduceOfIntroductionsLeftThis(_left, introBudgetMax);
     } else {
       final until = Duration(milliseconds: refill - _now);
-      text = 'No introductions left. Next one frees up ${refillPhrase(until)}';
+      text = l10n.introduceNoIntroductionsLeftNext(refillPhrase(until));
     }
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 200),
@@ -431,7 +432,7 @@ class _GoButtonState extends State<_GoButton> {
                   ),
                 )
               : Text(
-                  'Introduce',
+                  l10n.introduceIntroduce,
                   style: HaloType.sans(
                     size: 15,
                     weight: FontWeight.w600,

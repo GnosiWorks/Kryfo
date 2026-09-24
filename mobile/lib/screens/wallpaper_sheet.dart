@@ -12,6 +12,7 @@ import '../widgets/stagger_in.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
+import '../l10n/l10n.dart';
 
 // what the sheet hands back when the person wants a photo of their own
 // behind the chat instead of an atmosphere
@@ -74,12 +75,12 @@ class _PickerState extends State<_Picker> {
               const SheetHandle(),
               const SizedBox(height: 10),
               Text(
-                'Atmosphere',
+                l10n.wallpaperAtmosphere,
                 style: HaloType.serif(size: 18, color: HaloColors.text),
               ),
               const SizedBox(height: 4),
               Text(
-                'Just for you. They see their own.',
+                l10n.wallpaperJustForYouThey,
                 style: HaloType.sans(size: 12, color: HaloColors.text2),
               ),
               const SizedBox(height: 16),
@@ -111,12 +112,12 @@ class _PickerState extends State<_Picker> {
               ),
               if (widget.allowPhoto) ...[
                 const SizedBox(height: 16),
-                _Head('your photo'),
+                _Head(l10n.wallpaperYourPhoto),
                 const SizedBox(height: 10),
                 // a picture from the gallery, copied into the app's own
                 // folder and drawn behind this chat only
                 PressScale(
-                  label: 'From your photos',
+                  label: l10n.wallpaperFromYourPhotos,
                   onTap: () =>
                       Navigator.pop(context, const WallpaperFromPhotos()),
                   child: Container(
@@ -136,7 +137,7 @@ class _PickerState extends State<_Picker> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'From your photos',
+                          l10n.wallpaperFromYourPhotos,
                           style: HaloType.sans(
                             size: 13,
                             color: HaloColors.text,
@@ -149,7 +150,7 @@ class _PickerState extends State<_Picker> {
               ],
               const SizedBox(height: 18),
               PressScale(
-                label: 'Keep it',
+                label: l10n.wallpaperKeepIt,
                 onTap: () => Navigator.pop(context, _pick),
                 child: Container(
                   height: 46,
@@ -159,7 +160,7 @@ class _PickerState extends State<_Picker> {
                     borderRadius: BorderRadius.circular(13),
                   ),
                   child: Text(
-                    'Keep it',
+                    l10n.wallpaperKeepIt,
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w600,

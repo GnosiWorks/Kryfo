@@ -12,6 +12,7 @@ import '../widgets/halo_switch.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/stroke_icon.dart';
 import '../widgets/tool_parts.dart';
+import '../l10n/l10n.dart';
 
 final _fileIcon = [
   'M7 3.5h7l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-9.5A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z',
@@ -42,30 +43,25 @@ const _eyeOff = [
 ];
 
 String ageErrorTitle(AgeError e) => switch (e) {
-  AgeError.wrongPassword => 'That password does not open it.',
-  AgeError.corrupt => 'This file is damaged.',
-  AgeError.lockedToKey => 'This file was locked to a key, not a password.',
-  AgeError.notAge => 'This is not a locked file.',
-  AgeError.needsMemory => 'Not enough free memory right now.',
-  AgeError.cancelled => 'Stopped.',
-  AgeError.emptyPassword => 'It needs a password.',
-  AgeError.io => 'Kryfo could not read or write the file.',
+  AgeError.wrongPassword => l10n.lockFileThatPasswordDoesNot,
+  AgeError.corrupt => l10n.lockFileThisFileIsDamaged,
+  AgeError.lockedToKey => l10n.lockFileThisFileWasLocked,
+  AgeError.notAge => l10n.lockFileThisIsNotA,
+  AgeError.needsMemory => l10n.lockFileNotEnoughFreeMemory,
+  AgeError.cancelled => l10n.lockFileStopped,
+  AgeError.emptyPassword => l10n.lockFileItNeedsAPassword,
+  AgeError.io => l10n.lockFileKryfoCouldNotRead,
 };
 
 String ageErrorBody(AgeError e) => switch (e) {
-  AgeError.wrongPassword =>
-    'Check capitals and spaces. Nobody can reset it, us included.',
-  AgeError.corrupt =>
-    'It may have been cut short on the way. Ask for it to be sent again. Nothing was saved.',
-  AgeError.lockedToKey =>
-    'It opens with the key file of the person it was made for, in the age tool on a computer. Kryfo opens the password kind.',
-  AgeError.notAge =>
-    'Kryfo opens files locked with age. Those usually end in .age.',
-  AgeError.needsMemory =>
-    'Close a few apps and try again. The password check needs a few hundred megabytes for a moment.',
-  AgeError.cancelled => 'Nothing was saved.',
-  AgeError.emptyPassword => 'Type one, or let Kryfo suggest four words.',
-  AgeError.io => 'The app that holds it may have taken it back. Pick it again.',
+  AgeError.wrongPassword => l10n.lockFileCheckCapitalsAndSpaces,
+  AgeError.corrupt => l10n.lockFileItMayHaveBeen,
+  AgeError.lockedToKey => l10n.lockFileItOpensWithThe,
+  AgeError.notAge => l10n.lockFileKryfoOpensFilesLocked,
+  AgeError.needsMemory => l10n.lockFileCloseAFewApps,
+  AgeError.cancelled => l10n.lockFileNothingWasSaved,
+  AgeError.emptyPassword => l10n.lockFileTypeOneOrLet,
+  AgeError.io => l10n.lockFileTheAppThatHolds,
 };
 
 class SecretField extends StatelessWidget {
@@ -138,7 +134,9 @@ class SecretField extends StatelessWidget {
                 ),
               ),
               PressScale(
-                label: shown ? 'Hide password' : 'Show password',
+                label: shown
+                    ? l10n.lockFileHidePassword
+                    : l10n.lockFileShowPassword,
                 onTap: onToggle,
                 child: SizedBox(
                   width: 46,
@@ -225,7 +223,7 @@ class FileCard extends StatelessWidget {
           ),
           if (onChange != null)
             PressScale(
-              label: 'Change file',
+              label: l10n.lockFileChangeFile,
               onTap: onChange,
               child: SizedBox(
                 height: 44,
@@ -234,7 +232,7 @@ class FileCard extends StatelessWidget {
                   child: Center(
                     child: ExcludeSemantics(
                       child: Text(
-                        'Change',
+                        l10n.lockFileChange,
                         style: HaloType.sans(
                           size: 13,
                           weight: FontWeight.w600,
@@ -280,8 +278,8 @@ class WorkingView extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               known
-                  ? '${prettySize(done)} of ${prettySize(total)}'
-                  : 'Everything stays on this phone.',
+                  ? l10n.lockFileOf(prettySize(done), prettySize(total))
+                  : l10n.lockFileEverythingStaysOnThis,
               style: HaloType.sans(size: 13.5, color: HaloColors.warm),
             ),
             const SizedBox(height: 22),
@@ -366,7 +364,7 @@ class _LockFileScreenState extends State<LockFileScreen> {
       words = '';
     }
     if (words.isEmpty) {
-      showHaloToast(context, 'Could not make one. Type your own.');
+      showHaloToast(context, l10n.lockFileCouldNotMakeOne);
       return;
     }
     setState(() {
@@ -374,7 +372,7 @@ class _LockFileScreenState extends State<LockFileScreen> {
       _pw2.text = words;
       _shown = true;
     });
-    showHaloToast(context, 'Write it down before you lock the file');
+    showHaloToast(context, l10n.lockFileWriteItDownBefore);
   }
 
   bool get _ready =>
@@ -438,7 +436,7 @@ class _LockFileScreenState extends State<LockFileScreen> {
     );
     if (!mounted) return;
     setState(() => _busy = false);
-    if (!ok) showHaloToast(context, 'No app on this phone took the file.');
+    if (!ok) showHaloToast(context, l10n.lockFileNoAppOnThis);
   }
 
   Future<void> _save() async {
@@ -451,9 +449,9 @@ class _LockFileScreenState extends State<LockFileScreen> {
     );
     if (!mounted) return;
     setState(() => _busy = false);
-    if (how == 'saved') showHaloToast(context, 'Saved');
+    if (how == 'saved') showHaloToast(context, l10n.lockFileSaved);
     if (how == 'failed') {
-      showHaloToast(context, 'Could not save it there. Try another folder.');
+      showHaloToast(context, l10n.lockFileCouldNotSaveIt);
     }
   }
 
@@ -471,11 +469,15 @@ class _LockFileScreenState extends State<LockFileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ToolBar(title: locked ? 'Locked' : 'Lock a file'),
+              ToolBar(
+                title: locked ? l10n.lockFileLocked : l10n.lockFileLockAFile,
+              ),
               Expanded(
                 child: _working
                     ? WorkingView(
-                        title: _done == 0 ? 'Mixing the password' : 'Locking',
+                        title: _done == 0
+                            ? l10n.lockFileMixingThePassword
+                            : l10n.lockFileLocking,
                         done: _done,
                         total: _file.size,
                       )
@@ -487,7 +489,7 @@ class _LockFileScreenState extends State<LockFileScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 22),
                 child: _working
                     ? ToolWideButton(
-                        label: 'Stop',
+                        label: l10n.commonStop,
                         filled: false,
                         onTap: ageCancel,
                       )
@@ -497,7 +499,7 @@ class _LockFileScreenState extends State<LockFileScreen> {
                           Expanded(
                             child: ToolWideButton(
                               icon: _shareIcon,
-                              label: 'Share',
+                              label: l10n.commonShare,
                               filled: true,
                               height: 52,
                               onTap: _busy ? null : _share,
@@ -507,7 +509,7 @@ class _LockFileScreenState extends State<LockFileScreen> {
                           Expanded(
                             child: ToolWideButton(
                               icon: _saveIcon,
-                              label: 'Save to Files',
+                              label: l10n.lockFileSaveToFiles,
                               filled: false,
                               height: 52,
                               onTap: _busy ? null : _save,
@@ -517,7 +519,7 @@ class _LockFileScreenState extends State<LockFileScreen> {
                       )
                     : ToolWideButton(
                         icon: _lockIcon,
-                        label: 'Lock file',
+                        label: l10n.lockFileLockFile,
                         filled: true,
                         onTap: _ready ? _lock : null,
                       ),
@@ -550,12 +552,12 @@ class _LockFileScreenState extends State<LockFileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'One password.',
+                  l10n.lockFileOnePassword,
                   style: HaloType.serif(size: 26, color: HaloColors.text),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Nothing else opens it.',
+                  l10n.lockFileNothingElseOpensIt,
                   style: HaloType.serif(
                     size: 22,
                     weight: FontWeight.w300,
@@ -568,15 +570,15 @@ class _LockFileScreenState extends State<LockFileScreen> {
           ),
           const SizedBox(height: 18),
           FileCard(
-            name: _file.name ?? 'File',
+            name: _file.name ?? l10n.lockFileFile,
             detail: _file.size > 0
-                ? '${prettySize(_file.size)} · from Files'
-                : 'From Files',
+                ? l10n.lockFileFromFiles(prettySize(_file.size))
+                : l10n.lockFileFromFiles2,
             onChange: _change,
           ),
           const SizedBox(height: 18),
           SecretField(
-            label: 'Password',
+            label: l10n.lockFilePassword,
             controller: _pw1,
             shown: _shown,
             onToggle: () => setState(() => _shown = !_shown),
@@ -596,14 +598,14 @@ class _LockFileScreenState extends State<LockFileScreen> {
                   ),
                 ),
                 PressScale(
-                  label: 'Suggest four words',
+                  label: l10n.lockFileSuggestFourWords,
                   onTap: _suggest,
                   child: SizedBox(
                     height: 44,
                     child: Center(
                       child: ExcludeSemantics(
                         child: Text(
-                          'Suggest four words',
+                          l10n.lockFileSuggestFourWords,
                           style: HaloType.sans(
                             size: 12.5,
                             weight: FontWeight.w600,
@@ -619,7 +621,7 @@ class _LockFileScreenState extends State<LockFileScreen> {
           ),
           const SizedBox(height: 6),
           SecretField(
-            label: 'Type it again',
+            label: l10n.lockFileTypeItAgain,
             controller: _pw2,
             shown: _shown,
             onToggle: () => setState(() => _shown = !_shown),
@@ -629,7 +631,7 @@ class _LockFileScreenState extends State<LockFileScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(4, 7, 4, 0),
               child: Text(
-                'The two do not match yet.',
+                l10n.lockFileTheTwoDoNot,
                 style: HaloType.sans(size: 12, color: HaloColors.amber),
               ),
             ),
@@ -644,7 +646,7 @@ class _LockFileScreenState extends State<LockFileScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Hide the file name',
+                          l10n.lockFileHideTheFileName,
                           style: HaloType.sans(
                             size: 14,
                             weight: FontWeight.w500,
@@ -654,8 +656,8 @@ class _LockFileScreenState extends State<LockFileScreen> {
                         const SizedBox(height: 2),
                         Text(
                           _hideName
-                              ? 'It will be called “locked file.age”. Tell them what kind of file it is.'
-                              : 'The name alone can say what is inside.',
+                              ? l10n.lockFileItWillBeCalled
+                              : l10n.lockFileTheNameAloneCan,
                           style: HaloType.sans(
                             size: 12,
                             height: 1.35,
@@ -683,8 +685,7 @@ class _LockFileScreenState extends State<LockFileScreen> {
           else
             _Note(
               tint: HaloColors.amber,
-              text:
-                  'Anyone with the password can open it, in Kryfo or on any computer with the free tool age. Forget it and the file is gone for good. Nobody can reset it, us included.',
+              text: l10n.lockFileAnyoneWithThePassword,
             ),
         ],
       ),
@@ -773,7 +774,7 @@ class _LockedView extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Locked.',
+            l10n.lockFileLocked2,
             style: HaloType.serif(
               size: 30,
               letter: -0.02,
@@ -782,7 +783,7 @@ class _LockedView extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Only the password opens it.',
+            l10n.lockFileOnlyThePasswordOpens,
             style: HaloType.serif(
               size: 20,
               weight: FontWeight.w300,
@@ -793,8 +794,7 @@ class _LockedView extends StatelessWidget {
           const SizedBox(height: 22),
           FileCard(
             name: name,
-            detail:
-                '${prettySize(bytes)} · safe to email or put on a USB stick',
+            detail: l10n.lockFileSafeToEmailOr(prettySize(bytes)),
             icon: _lockIcon,
             tint: HaloColors.green,
           ),
@@ -811,17 +811,17 @@ class _LockedView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'No Kryfo on the other side? On a computer:',
+                  l10n.lockFileNoKryfoOnThe,
                   style: HaloType.sans(size: 12.5, color: HaloColors.warm),
                 ),
                 const SizedBox(height: 8),
                 SelectableText(
-                  '\$ age -d "$name" > "$plain"',
+                  l10n.lockFileAgeD(name, plain),
                   style: HaloType.mono(size: 11.5, color: HaloColors.text),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'It asks for the password. age is free at age-encryption.org',
+                  l10n.lockFileItAsksForThe,
                   style: HaloType.sans(
                     size: 12,
                     height: 1.4,

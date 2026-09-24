@@ -13,6 +13,7 @@ import '../lock_state.dart';
 import '../open_file.dart';
 import '../theme.dart';
 import 'remembered_height.dart';
+import '../l10n/l10n.dart';
 
 /// a tap on a file or a video: open it in whatever the phone has for it.
 /// when nothing does, the share sheet, which is all a tap used to offer.
@@ -26,7 +27,7 @@ Future<void> openReceivedFile(
     () => openWithAnotherApp(path, name: name),
   );
   if (opened || !context.mounted) return;
-  showHaloToast(context, 'Nothing here opens that · sharing instead');
+  showHaloToast(context, l10n.videoBubbleNothingHereOpensThat);
   await lockState.hold(
     () => SharePlus.instance.share(ShareParams(files: [XFile(path)])),
   );
@@ -83,8 +84,10 @@ class _VideoBubbleState extends State<VideoBubble> {
   }
 
   String _size(int b) {
-    if (b >= 1024 * 1024) return '${(b / (1024 * 1024)).toStringAsFixed(1)} MB';
-    return '${(b / 1024).ceil()} KB';
+    if (b >= 1024 * 1024) {
+      return l10n.videoBubbleMb((b / (1024 * 1024)).toStringAsFixed(1));
+    }
+    return l10n.videoBubbleKb((b / 1024).ceil());
   }
 
   @override
@@ -151,7 +154,7 @@ class _VideoBubbleState extends State<VideoBubble> {
                   child: _Tag(
                     info != null && info.length > Duration.zero
                         ? videoLength(info.length)
-                        : (_asked ? 'Video' : '…'),
+                        : (_asked ? l10n.videoBubbleVideo : '…'),
                   ),
                 ),
                 if (_bytes != null)

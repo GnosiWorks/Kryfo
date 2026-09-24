@@ -9,6 +9,7 @@ import '../theme.dart';
 import '../widgets/notice_banner.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
+import '../l10n/l10n.dart';
 
 // a stored flag, as the row in the shield table reads back.
 class ShieldFlag {
@@ -89,7 +90,7 @@ class _ShieldSheet extends StatelessWidget {
               _Line(order: i, text: flag.lines[i]),
             const SizedBox(height: 6),
             Text(
-              'Checked on this phone. Nothing was sent anywhere.',
+              l10n.shieldCheckedOnThisPhone,
               style: HaloType.mono(size: 10, color: HaloColors.text3),
             ),
             const SizedBox(height: 16),

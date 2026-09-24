@@ -1,3 +1,4 @@
+import 'l10n/l10n.dart';
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the one line that says who vouched. local nicknames only, two names at
 // most, then a count. pure so it can be pinned by a test.
@@ -6,16 +7,22 @@
 String vouchNames(List<String> names) {
   if (names.isEmpty) return '';
   if (names.length == 1) return names[0];
-  if (names.length == 2) return '${names[0]} and ${names[1]}';
+  if (names.length == 2) return l10n.vouchTextAnd(names[0], names[1]);
   final rest = names.length - 2;
-  return '${names[0]}, ${names[1]} and $rest other${rest == 1 ? '' : 's'} you know';
+  return l10n.vouchTextAndOtherYouKnow(
+    names[0],
+    names[1],
+    rest,
+    rest == 1 ? '' : 's',
+  );
 }
 
 String vouchedByLine(List<String> names) =>
-    names.isEmpty ? '' : 'Vouched by ${vouchNames(names)}';
+    names.isEmpty ? '' : l10n.vouchTextVouchedBy(vouchNames(names));
 
 String introducedByLine(List<String> names) =>
-    names.isEmpty ? '' : 'Introduced by ${vouchNames(names)}';
+    names.isEmpty ? '' : l10n.vouchTextIntroducedBy(vouchNames(names));
 
 // "this shares alice's address with bob"
-String shareWarning(String a, String b) => "this shares $a's address with $b";
+String shareWarning(String a, String b) =>
+    l10n.vouchTextThisSharesSAddress(a, b);

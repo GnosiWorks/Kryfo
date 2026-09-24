@@ -12,6 +12,7 @@ import '../widgets/sheet_handle.dart';
 import 'package:flutter/services.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/fit_column.dart';
+import '../l10n/l10n.dart';
 
 class ModesScreen extends StatefulWidget {
   const ModesScreen({super.key});
@@ -68,44 +69,34 @@ class _ModesScreenState extends State<ModesScreen> {
               const _Head(),
               const SizedBox(height: 6),
               _ModeCard(
-                name: 'Onion',
+                name: l10n.modesOnion,
                 accent: '·',
                 active: _mode == 'private',
-                desc:
-                    'Full onion routing, three hops. A message takes two to five seconds. Nobody sees who you talk to.',
-                speed: 'slower',
+                desc: l10n.modesFullOnionRoutingThree,
+                speed: l10n.modesSlower,
                 hops: '3',
                 ipVisible: false,
                 onTap: () => _pick('private'),
               ),
               _ModeCard(
-                name: 'Relay',
+                name: l10n.modesRelay,
                 active: _mode == 'balanced',
-                desc:
-                    "One sealed connection to kryfo's own relay, like a vpn "
-                    'with nothing to log. Sends land in about a second, and it '
-                    'works where tor is blocked.',
-                speed: 'quick',
+                desc: l10n.modesOneSealedConnectionTo,
+                speed: l10n.modesQuick,
                 hops: '1',
                 ipVisible: false,
-                ipText: 'Relay only',
+                ipText: l10n.modesRelayOnly,
                 ipWarn: true,
                 onTap: () => _pick('balanced'),
               ),
               _ModeCard(
-                name: 'Fast',
+                name: l10n.modesFast,
                 active: _mode == 'fast',
-                desc:
-                    'Plain connections to every relay. Near instant, and the '
-                    'least private of the three.',
-                speed: 'instant',
+                desc: l10n.modesPlainConnectionsToEvery,
+                speed: l10n.modesInstant,
                 hops: '0',
                 ipVisible: true,
-                warning:
-                    'Every relay you use knows the address you connect from, not '
-                    'only ours. Messages are still sealed, but the fact that you '
-                    'sent one is not. Off by default, and off again after a '
-                    'reinstall.',
+                warning: l10n.modesEveryRelayYouUse,
                 onTap: _pickFast,
               ),
             ]),
@@ -134,7 +125,7 @@ class _BackBar extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            tooltip: 'Back',
+            tooltip: l10n.commonBack,
             onPressed: onBack,
             icon: Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
           ),
@@ -158,12 +149,12 @@ class _Head extends StatelessWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                'Speed',
+                l10n.modesSpeed,
                 style: HaloType.serif(size: 30, weight: FontWeight.w400),
               ),
               const SizedBox(width: 8),
               Text(
-                '& privacy',
+                l10n.modesPrivacy,
                 style: HaloType.serif(
                   size: 30,
                   weight: FontWeight.w300,
@@ -175,7 +166,7 @@ class _Head extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Change globally, or per chat',
+            l10n.modesChangeGloballyOrPer,
             style: HaloType.sans(size: 11, color: HaloColors.text2),
           ),
         ],
@@ -251,7 +242,7 @@ class _ModeCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        'Soon',
+                        l10n.modesSoon,
                         style: HaloType.mono(
                           size: 9,
                           color: HaloColors.amber,
@@ -284,7 +275,7 @@ class _ModeCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'Active',
+                        l10n.modesActive,
                         style: HaloType.mono(
                           size: 10,
                           weight: FontWeight.w500,
@@ -306,13 +297,15 @@ class _ModeCard extends StatelessWidget {
               const SizedBox(height: 10),
               Row(
                 children: [
-                  _Meta(k: 'speed', v: speed),
+                  _Meta(k: l10n.modesSpeed2, v: speed),
                   const SizedBox(width: 14),
-                  _Meta(k: 'hops', v: hops),
+                  _Meta(k: l10n.modesHops, v: hops),
                   const SizedBox(width: 14),
                   _Meta(
-                    k: 'ip',
-                    v: ipText ?? (ipVisible ? 'Visible' : 'hidden'),
+                    k: l10n.modesIp,
+                    v:
+                        ipText ??
+                        (ipVisible ? l10n.modesVisible : l10n.modesHidden),
                     red: ipVisible,
                     warn: ipWarn,
                   ),
@@ -342,7 +335,7 @@ class _ModeCard extends StatelessWidget {
                       ),
                       children: [
                         TextSpan(
-                          text: 'Heads up: ',
+                          text: l10n.modesHeadsUp,
                           style: HaloType.sans(
                             size: 10,
                             weight: FontWeight.w500,
@@ -405,8 +398,7 @@ class _Footnote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'Onion is the default and stays that way unless you change it. '
-      'Switching takes effect on the next message.',
+      l10n.modesOnionIsTheDefault,
       style: HaloType.mono(size: 10, color: HaloColors.text3),
     );
   }
@@ -439,14 +431,12 @@ class _FastGateSheet extends StatelessWidget {
             const SheetHandle(),
             const SizedBox(height: 12),
             Text(
-              'Fast mode',
+              l10n.modesFastMode,
               style: HaloType.serif(size: 20, color: HaloColors.text),
             ),
             const SizedBox(height: 10),
             Text(
-              'Plain connections to every relay. Quicker, and the relays can '
-              'see your ip address. Messages stay end to end encrypted '
-              'either way.',
+              l10n.modesPlainConnectionsToEveryRelayQuicker,
               style: HaloType.sans(
                 size: 13,
                 color: HaloColors.text2,
@@ -465,7 +455,7 @@ class _FastGateSheet extends StatelessWidget {
                   borderRadius: BorderRadius.circular(13),
                 ),
                 child: Text(
-                  'Turn on fast mode',
+                  l10n.modesTurnOnFastMode,
                   style: HaloType.sans(
                     size: 14,
                     weight: FontWeight.w600,
@@ -482,7 +472,7 @@ class _FastGateSheet extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 child: Center(
                   child: Text(
-                    'Keep it off',
+                    l10n.modesKeepItOff,
                     style: HaloType.sans(size: 13, color: HaloColors.text2),
                   ),
                 ),

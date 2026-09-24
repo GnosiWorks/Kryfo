@@ -23,6 +23,7 @@ import 'package:path_provider/path_provider.dart';
 import '../backup_stream.dart' show isBackupV2;
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
+import '../l10n/l10n.dart';
 
 class RestoreScreen extends StatefulWidget {
   // when non-null, called after a successful restore instead of the
@@ -72,7 +73,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
         if (!(text.startsWith('kryfo-backup:') ||
             text.startsWith('halo-backup:'))) {
           if (mounted) {
-            setState(() => _error = 'That file is not a kryfo backup');
+            setState(() => _error = l10n.restoreThatFileIsNot);
           }
           return;
         }
@@ -80,7 +81,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _error = 'This file is damaged and cannot be read');
+        setState(() => _error = l10n.restoreThisFileIsDamaged);
       }
       return;
     } finally {
@@ -108,7 +109,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
     if (blob == null && path == null) return;
     final pw = _passCtrl.text.trim();
     if (pw.isEmpty) {
-      setState(() => _error = 'Type the passphrase the file was made with');
+      setState(() => _error = l10n.restoreTypeThePassphraseThe);
       return;
     }
     setState(() {
@@ -135,7 +136,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'This file is damaged and cannot be read';
+        _error = l10n.restoreThisFileIsDamaged;
         _busy = false;
       });
     }
@@ -154,11 +155,9 @@ class _RestoreScreenState extends State<RestoreScreen> {
     if (appState.onboardingComplete) {
       final ok = await showConfirmSheet(
         context,
-        title: 'Replace the account on this phone?',
-        line:
-            'What is here now, its identity, contacts and messages, goes. '
-            'The file takes its place. This cannot be undone.',
-        yes: 'Replace it',
+        title: l10n.restoreReplaceTheAccountOn,
+        line: l10n.restoreWhatIsHereNow,
+        yes: l10n.restoreReplaceIt,
       );
       if (!ok) return;
     }
@@ -190,14 +189,10 @@ class _RestoreScreenState extends State<RestoreScreen> {
       } else {
         final ok = await showConfirmSheet(
           context,
-          title: '@$mine could not be released',
-          line:
-              'The registry did not answer. If you go on, @$mine stays '
-              'pointed at the identity this phone is about to lose. Anyone '
-              'who adds it will be writing to nobody, and the name cannot '
-              'be claimed again. Better to get online and try once more.',
-          yes: 'Restore anyway',
-          keep: 'Not yet',
+          title: l10n.restoreCouldNotBeReleased(mine),
+          line: l10n.restoreTheRegistryDidNot(mine),
+          yes: l10n.restoreRestoreAnyway,
+          keep: l10n.restoreNotYet,
         );
         if (!ok || !mounted) return;
       }
@@ -231,9 +226,9 @@ class _RestoreScreenState extends State<RestoreScreen> {
       }
       await showNoticeSheet(
         context,
-        title: 'Restored',
-        line: 'Kryfo will close now. Tap the icon to reopen as ${s.haloId}.',
-        ok: 'Reopen kryfo',
+        title: l10n.restoreRestored,
+        line: l10n.restoreKryfoWillCloseNow(s.haloId),
+        ok: l10n.restoreReopenKryfo,
       );
       // exit so the next launch boots fresh from the restored db
       Future.delayed(const Duration(milliseconds: 200), () => exit(0));
@@ -247,7 +242,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = 'The restore did not finish. Nothing was changed';
+        _error = l10n.restoreTheRestoreDidNot;
         _busy = false;
       });
     }
@@ -258,10 +253,13 @@ class _RestoreScreenState extends State<RestoreScreen> {
     final when = s.when;
     final made = when == null
         ? ''
-        : ', made on ${when.day} ${_SummaryCard._month(when.month)} at '
-              '${when.hour.toString().padLeft(2, '0')}:'
-              '${when.minute.toString().padLeft(2, '0')}';
-    final name = s.haloId.isEmpty ? 'this identity' : s.haloId;
+        : l10n.restoreMadeOnAt(
+            when.day,
+            _SummaryCard._month(when.month),
+            when.hour.toString().padLeft(2, '0'),
+            when.minute.toString().padLeft(2, '0'),
+          );
+    final name = s.haloId.isEmpty ? l10n.restoreThisIdentity : s.haloId;
     final r = await showHaloSheet<bool>(
       context,
       builder: (ctx) => SafeArea(
@@ -275,13 +273,12 @@ class _RestoreScreenState extends State<RestoreScreen> {
                 const Center(child: SheetHandle()),
                 const SizedBox(height: 18),
                 Text(
-                  'Move your kryfo here',
+                  l10n.restoreMoveYourKryfoHere,
                   style: HaloType.serif(size: 21, color: HaloColors.text),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'This backup is $name$made. Restoring it moves that '
-                  'identity to this device.',
+                  l10n.restoreThisBackupIsRestoring(name, made),
                   style: HaloType.sans(
                     size: 13.5,
                     color: HaloColors.text2,
@@ -291,8 +288,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                 if (big) ...[
                   const SizedBox(height: 10),
                   Text(
-                    'It holds ${_mb(s.bytes)} of photos, voice notes and '
-                    'files. This may take a few minutes. Keep the app open.',
+                    l10n.restoreItHoldsOfPhotos(_mb(s.bytes)),
                     style: HaloType.sans(
                       size: 13.5,
                       color: HaloColors.amber,
@@ -301,43 +297,26 @@ class _RestoreScreenState extends State<RestoreScreen> {
                   ),
                 ],
                 const SizedBox(height: 18),
-                _head('What follows'),
-                _item('Your name, your code, and every contact.'),
-                _item('Every conversation, back to the start.'),
+                _head(l10n.restoreWhatFollows),
+                _item(l10n.restoreYourNameYourCode),
+                _item(l10n.restoreEveryConversationBackTo),
                 _item(
-                  'Your photos, voice notes and files'
-                  '${s.files > 0 ? ' · ${s.files}' : ''}.',
-                ),
-                _item(
-                  'Your onion address, so people who reach you directly '
-                  'keep reaching you.',
-                ),
-                _item(
-                  'Anything sent to you while the old phone was off, for '
-                  'fourteen days after it was sent.',
-                ),
-                _item('Your supporter badge, if you have one.'),
-                const SizedBox(height: 16),
-                _head("What doesn't"),
-                _item(
-                  'The old phone stops receiving the moment you send '
-                  'anything from here. Not gradually. The first message you '
-                  'send from this device is the last one the old phone can '
-                  'follow, and anything that reaches it after that is '
-                  "unreadable there and isn't waiting for you here either.",
-                  strong: true,
-                ),
-                if (s.moved != true)
-                  _item(
-                    'If the phone this file came from is still in use, stop '
-                    'using kryfo on it before you carry on. Two phones on one '
-                    'kryfo lose messages on both.',
-                    strong: true,
+                  l10n.restoreYourPhotosVoiceNotes(
+                    s.files > 0 ? ' · ${s.files}' : '',
                   ),
-                _item('Notifications need setting up again on this device.'),
+                ),
+                _item(l10n.restoreYourOnionAddressSo),
+                _item(l10n.restoreAnythingSentToYou),
+                _item(l10n.restoreYourSupporterBadgeIf),
+                const SizedBox(height: 16),
+                _head(l10n.restoreWhatDoesnT),
+                _item(l10n.restoreTheOldPhoneStops, strong: true),
+                if (s.moved != true)
+                  _item(l10n.restoreIfThePhoneThis, strong: true),
+                _item(l10n.restoreNotificationsNeedSettingUp),
                 const SizedBox(height: 22),
                 _Primary(
-                  label: 'Move it here',
+                  label: l10n.restoreMoveItHere,
                   onTap: () => Navigator.pop(ctx, true),
                 ),
                 const SizedBox(height: 6),
@@ -348,7 +327,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       child: Text(
-                        'Not now',
+                        l10n.restoreNotNow,
                         style: HaloType.sans(size: 13, color: HaloColors.text2),
                       ),
                     ),
@@ -416,7 +395,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
-          'Restore',
+          l10n.restoreRestore,
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
@@ -425,14 +404,12 @@ class _RestoreScreenState extends State<RestoreScreen> {
           padding: const EdgeInsets.fromLTRB(22, 4, 22, 32),
           children: staggerAll([
             Text(
-              'From a backup file',
+              l10n.restoreFromABackupFile,
               style: HaloType.serif(size: 26, color: HaloColors.text),
             ),
             const SizedBox(height: 8),
             Text(
-              'A backup brings back your identity and your contacts, and the '
-              'messages that were on the phone when the file was made. '
-              'Anything said since is not in it.',
+              l10n.restoreABackupBringsBack,
               style: HaloType.sans(
                 size: 13,
                 color: HaloColors.text2,
@@ -442,7 +419,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
             const SizedBox(height: 22),
             _Step(
               n: '1',
-              label: 'The file',
+              label: l10n.restoreTheFile,
               child: PressScale(
                 onTap: _busy ? null : _pick,
                 child: Container(
@@ -468,7 +445,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          _fileName ?? 'Pick the backup file',
+                          _fileName ?? l10n.restorePickTheBackupFile,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: HaloType.sans(
@@ -493,7 +470,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                   ? const SizedBox(width: double.infinity)
                   : _Step(
                       n: '2',
-                      label: 'The passphrase',
+                      label: l10n.restoreThePassphrase,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 14,
@@ -520,7 +497,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                           ),
                           decoration: InputDecoration(
                             border: InputBorder.none,
-                            hintText: 'The one the file was made with',
+                            hintText: l10n.restoreTheOneTheFile,
                             hintStyle: HaloType.mono(
                               size: 12.5,
                               color: HaloColors.text3,
@@ -554,7 +531,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                       padding: const EdgeInsets.only(top: 14),
                       child: _Step(
                         n: '3',
-                        label: 'What comes back',
+                        label: l10n.restoreWhatComesBack,
                         child: _SummaryCard(summary: s),
                       ),
                     ),
@@ -562,18 +539,18 @@ class _RestoreScreenState extends State<RestoreScreen> {
             const SizedBox(height: 22),
             if (s == null)
               _Primary(
-                label: _busy ? 'Checking…' : 'Check the file',
+                label: _busy ? l10n.restoreChecking : l10n.restoreCheckTheFile,
                 onTap: _busy || !_hasFile ? null : _check,
               )
             else
               _Primary(
                 label: _releasing
-                    ? 'Releasing your handle…'
+                    ? l10n.restoreReleasingYourHandle
                     : _busy
                     ? (_path != null && _progress > 0
-                          ? 'Moving… ${(_progress * 100).round()}%'
-                          : 'Restoring…')
-                    : 'Restore',
+                          ? l10n.restoreMoving((_progress * 100).round())
+                          : l10n.restoreRestoring)
+                    : l10n.restoreRestore,
                 onTap: _busy ? null : _restore,
               ),
             if (s != null) ...[
@@ -590,7 +567,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     child: Text(
-                      'Not this one',
+                      l10n.restoreNotThisOne,
                       style: HaloType.sans(size: 13, color: HaloColors.text2),
                     ),
                   ),
@@ -648,7 +625,7 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final w = summary.when;
     final date = w == null
-        ? 'Date unknown'
+        ? l10n.restoreDateUnknown
         : '${w.day} ${_month(w.month)} ${w.year}, '
               '${w.hour.toString().padLeft(2, '0')}:${w.minute.toString().padLeft(2, '0')}';
     return Container(
@@ -662,7 +639,7 @@ class _SummaryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            summary.haloId.isEmpty ? 'An identity' : summary.haloId,
+            summary.haloId.isEmpty ? l10n.restoreAnIdentity : summary.haloId,
             style: HaloType.mono(
               size: 16,
               weight: FontWeight.w600,
@@ -677,7 +654,7 @@ class _SummaryCard extends StatelessWidget {
             _line('attachments', '${summary.files} · ${_mb(summary.bytes)}'),
           const SizedBox(height: 8),
           Text(
-            'Messages sent or received after that date are not in this file.',
+            l10n.restoreMessagesSentOrReceived,
             style: HaloType.sans(
               size: 12,
               color: HaloColors.text2,
@@ -705,19 +682,19 @@ class _SummaryCard extends StatelessWidget {
     ),
   );
 
-  static String _month(int m) => const [
+  static String _month(int m) => [
     'jan',
     'feb',
     'mar',
     'apr',
     'may',
-    'jun',
-    'jul',
-    'aug',
-    'sep',
-    'oct',
-    'nov',
-    'dec',
+    l10n.restoreJun,
+    l10n.restoreJul,
+    l10n.restoreAug,
+    l10n.restoreSep,
+    l10n.restoreOct,
+    l10n.restoreNov,
+    l10n.restoreDec,
   ][m - 1];
 }
 
@@ -753,7 +730,7 @@ class _Primary extends StatelessWidget {
 
 String _mb(int bytes) {
   if (bytes >= 1024 * 1024 * 1024) {
-    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
+    return l10n.restoreGb((bytes / (1024 * 1024 * 1024)).toStringAsFixed(1));
   }
-  return '${(bytes / (1024 * 1024)).round()} MB';
+  return l10n.restoreMb((bytes / (1024 * 1024)).round());
 }

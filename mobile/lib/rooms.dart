@@ -1,3 +1,4 @@
+import 'l10n/l10n.dart';
 // SPDX-License-Identifier: GPL-3.0-or-later
 // burner room helpers with no io in them: the link, the short tag a room
 // key is shown as, the countdown wording and its colour thresholds.
@@ -13,40 +14,40 @@ const roomDefaultCap = 10;
 
 String expiryLabel(Duration d) {
   if (d.inDays >= 1 && d.inHours % 24 == 0) {
-    return d.inDays == 1 ? '24h' : '${d.inDays}d';
+    return d.inDays == 1 ? l10n.rooms24h : l10n.roomsD(d.inDays);
   }
-  return '${d.inHours}h';
+  return l10n.roomsH(d.inHours);
 }
 
 // "disappears in 24 hours" for the banner. plain words, not a timer. a
 // joiner sees what is actually left, which can be minutes.
 String expiryWords(Duration d) {
   if (d.inDays >= 1 && d.inHours % 24 == 0) {
-    return d.inDays == 1 ? '24 hours' : '${d.inDays} days';
+    return d.inDays == 1 ? l10n.rooms24Hours : l10n.roomsDays(d.inDays);
   }
-  if (d.inDays >= 1) return '${d.inDays} days';
+  if (d.inDays >= 1) return l10n.roomsDays(d.inDays);
   if (d.inHours >= 1) {
     final exact = d.inMinutes % 60 == 0;
-    if (d.inHours == 1) return exact ? 'an hour' : 'about an hour';
-    return exact ? '${d.inHours} hours' : 'about ${d.inHours} hours';
+    if (d.inHours == 1) return exact ? l10n.roomsAnHour : l10n.roomsAboutAnHour;
+    return exact ? l10n.roomsHours(d.inHours) : l10n.roomsAboutHours(d.inHours);
   }
-  if (d.inMinutes >= 2) return '${d.inMinutes} minutes';
-  return 'a minute';
+  if (d.inMinutes >= 2) return l10n.roomsMinutes(d.inMinutes);
+  return l10n.roomsAMinute;
 }
 
 // what the header and the list row show. days and hours while there is
 // time, minutes under an hour, seconds only in the last five minutes.
 String countdownLabel(Duration left) {
-  if (left.isNegative) return 'expired';
+  if (left.isNegative) return l10n.roomsExpired;
   if (left.inDays >= 1) {
     final h = left.inHours % 24;
-    return h == 0 ? '${left.inDays}d' : '${left.inDays}d ${h}h';
+    return h == 0 ? l10n.roomsD(left.inDays) : l10n.roomsDH(left.inDays, h);
   }
   if (left.inHours >= 1) {
     final m = left.inMinutes % 60;
-    return m == 0 ? '${left.inHours}h' : '${left.inHours}h ${m}m';
+    return m == 0 ? l10n.roomsH(left.inHours) : l10n.roomsHM(left.inHours, m);
   }
-  if (left.inMinutes >= 5) return '${left.inMinutes}m';
+  if (left.inMinutes >= 5) return l10n.roomsM(left.inMinutes);
   final s = (left.inSeconds % 60).toString().padLeft(2, '0');
   return '${left.inMinutes}:$s';
 }

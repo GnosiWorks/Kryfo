@@ -1,3 +1,4 @@
+import 'l10n/l10n.dart';
 // SPDX-License-Identifier: GPL-3.0-or-later
 // scam shield. runs on the phone, over a stranger's first message and their
 // id, against the contacts we already hold. nothing here does io, so every
@@ -41,16 +42,16 @@ class ShieldResult {
   // the banner line. the name one is the sharper of the two on purpose.
   String? get headline {
     if (!flagged) return null;
-    if (group) return 'Looks like a scam';
+    if (group) return l10n.scamShieldLooksLikeAScam;
     for (final h in hits) {
       if (h.code == 'name_match') {
         return h.line.replaceFirst(
           'Name matches your contact',
-          'This name matches',
+          l10n.scamShieldThisNameMatches,
         );
       }
     }
-    return 'Looks like a scam';
+    return l10n.scamShieldLooksLikeAScam;
   }
 }
 
@@ -185,9 +186,11 @@ ShieldResult checkImpersonation(
         editDistance(me, cid) == 1;
     if (!close) continue;
     final shown = c.nickname ?? c.id;
-    final hits = [ShieldHit('name_match', 'Name matches your contact $shown')];
+    final hits = [
+      ShieldHit('name_match', l10n.scamShieldNameMatchesYourContact(shown)),
+    ];
     if (strangerAvatar != null && strangerAvatar == c.avatar) {
-      hits.add(ShieldHit('face_match', 'same face as your contact $shown'));
+      hits.add(ShieldHit('face_match', l10n.scamShieldSameFaceAsYour(shown)));
     }
     return ShieldResult(hits, impersonation: true);
   }
@@ -260,7 +263,9 @@ ShieldResult scanFirstMessage(String text) {
       _btcBech32.hasMatch(t) ||
       _eth.hasMatch(t) ||
       _xmr.hasMatch(t)) {
-    hits.add(const ShieldHit('crypto_address', 'Contains a crypto address'));
+    hits.add(
+      ShieldHit('crypto_address', l10n.scamShieldContainsACryptoAddress),
+    );
   }
 
   var rush = false;
@@ -275,45 +280,28 @@ ShieldResult scanFirstMessage(String text) {
     if (rush) break;
   }
   if (rush) {
-    hits.add(
-      const ShieldHit('money_rush', 'Mentions money and urgency together'),
-    );
+    hits.add(ShieldHit('money_rush', l10n.scamShieldMentionsMoneyAndUrgency));
   }
 
   if (_appAsk.hasMatch(t)) {
-    hits.add(const ShieldHit('move_app', 'Asks you to move to another app'));
+    hits.add(ShieldHit('move_app', l10n.scamShieldAsksYouToMove));
   }
 
   for (final m in _host.allMatches(t)) {
     final host = m.group(1)!;
     if (!host.contains('.')) continue;
     if (lookalikeHost(host)) {
-      hits.add(
-        const ShieldHit(
-          'lookalike_url',
-          'Links to a lookalike of a well-known site',
-        ),
-      );
+      hits.add(ShieldHit('lookalike_url', l10n.scamShieldLinksToALookalike));
       break;
     }
   }
 
   if (t.length > 400) {
-    hits.add(
-      const ShieldHit(
-        'long_opener',
-        'A long opener from someone with no history',
-      ),
-    );
+    hits.add(ShieldHit('long_opener', l10n.scamShieldALongOpenerFrom));
   }
 
   if (_secretAsk.hasMatch(t)) {
-    hits.add(
-      const ShieldHit(
-        'secret_ask',
-        'Asks for a code, seed phrase or recovery file',
-      ),
-    );
+    hits.add(ShieldHit('secret_ask', l10n.scamShieldAsksForACode));
   }
   return ShieldResult(hits);
 }
@@ -357,7 +345,7 @@ ShieldResult shieldCheckInGroup({
       lines.add(
         ShieldHit(
           'name_note',
-          'Also: ${h.line[0].toLowerCase()}${h.line.substring(1)}',
+          l10n.scamShieldAlso(h.line[0].toLowerCase(), h.line.substring(1)),
         ),
       );
     }

@@ -13,6 +13,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dlog.dart';
 import 'notifications.dart';
 import 'package:local_auth/local_auth.dart';
+import 'l10n/l10n.dart';
 
 enum PinResult { normal, panic, invalid, throttled }
 
@@ -210,7 +211,7 @@ class LockState extends ChangeNotifier {
     try {
       final auth = LocalAuthentication();
       final ok = await auth.authenticate(
-        localizedReason: 'Unlock kryfo',
+        localizedReason: l10n.lockStateUnlockKryfo,
         biometricOnly: true,
         persistAcrossBackgrounding: true,
       );

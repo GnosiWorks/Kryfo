@@ -14,6 +14,7 @@ import '../theme.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/fit_column.dart';
 import '../wipe.dart';
+import '../l10n/l10n.dart';
 
 class MovedScreen extends StatelessWidget {
   const MovedScreen({super.key});
@@ -21,11 +22,9 @@ class MovedScreen extends StatelessWidget {
   Future<void> _wipe(BuildContext context) async {
     final ok = await showConfirmSheet(
       context,
-      title: 'Wipe this phone?',
-      line:
-          'Everything kryfo holds here goes: the messages, the contacts, the '
-          'keys. The other device keeps all of it. This cannot be undone.',
-      yes: 'Wipe it',
+      title: l10n.movedWipeThisPhone,
+      line: l10n.movedEverythingKryfoHoldsHere,
+      yes: l10n.movedWipeIt,
     );
     if (!ok) return;
     await wipeHalo();
@@ -34,21 +33,18 @@ class MovedScreen extends StatelessWidget {
   Future<void> _stay(BuildContext context) async {
     final ok = await showConfirmSheet(
       context,
-      title: 'Not moving after all?',
-      line:
-          'Only do this if the backup was never imported anywhere. If it was, '
-          'two devices now hold one identity, and messages will start going '
-          'missing on both.',
-      yes: "I'm staying here",
+      title: l10n.movedNotMovingAfterAll,
+      line: l10n.movedOnlyDoThisIf,
+      yes: l10n.movedIMStayingHere,
     );
     if (!ok) return;
     await appState.unmarkMoved();
     if (!context.mounted) return;
     await showNoticeSheet(
       context,
-      title: 'Staying here',
-      line: 'Kryfo will close now. Tap the icon to reopen as ${appState.myId}.',
-      ok: 'Reopen kryfo',
+      title: l10n.movedStayingHere,
+      line: l10n.movedKryfoWillCloseNow(appState.myId),
+      ok: l10n.movedReopenKryfo,
     );
     // exit so the next launch boots the engine again, the way a restore does
     Future.delayed(const Duration(milliseconds: 200), () => exit(0));
@@ -66,14 +62,12 @@ class MovedScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'This kryfo has moved',
+              l10n.movedThisKryfoHasMoved,
               style: HaloType.serif(size: 26, color: HaloColors.text),
             ),
             const SizedBox(height: 14),
             Text(
-              '${appState.myId} is now on another device. This phone can '
-              'still show what was here, but nothing new will arrive on '
-              'it, and anything you send from here won\'t reach anyone.',
+              l10n.movedIsNowOnAnother(appState.myId),
               style: HaloType.sans(
                 size: 14.5,
                 color: HaloColors.text2,
@@ -82,7 +76,7 @@ class MovedScreen extends StatelessWidget {
             ),
             const Spacer(),
             _Button(
-              label: 'Keep it to read',
+              label: l10n.movedKeepItToRead,
               primary: true,
               onTap: () {
                 HapticFeedback.selectionClick();
@@ -90,7 +84,10 @@ class MovedScreen extends StatelessWidget {
               },
             ),
             const SizedBox(height: 10),
-            _Button(label: 'Wipe this phone', onTap: () => _wipe(context)),
+            _Button(
+              label: l10n.movedWipeThisPhone2,
+              onTap: () => _wipe(context),
+            ),
             const SizedBox(height: 18),
             Center(
               child: GestureDetector(
@@ -102,7 +99,7 @@ class MovedScreen extends StatelessWidget {
                     vertical: 8,
                   ),
                   child: Text(
-                    "I'm not moving after all",
+                    l10n.movedIMNotMoving,
                     style: HaloType.sans(size: 12.5, color: HaloColors.text3),
                   ),
                 ),

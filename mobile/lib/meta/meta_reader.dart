@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'byte_source.dart';
 import 'tiff.dart';
+import '../l10n/l10n.dart';
 
 enum MetaKind { jpeg, png, webp, heif, gif, mp4, unknown }
 
@@ -123,14 +124,14 @@ MetaReport _read(ByteSource src, bool strict) {
     r.why = e.why;
   } on RangeError {
     r.status = MetaStatus.unreadable;
-    r.why = 'ends before it should';
+    r.why = l10n.metaReaderEndsBeforeItShould;
   } on FormatException catch (e) {
     r.status = MetaStatus.unreadable;
     r.why = e.message;
   } catch (e) {
     if (strict) rethrow;
     r.status = MetaStatus.unreadable;
-    r.why = 'could not be read';
+    r.why = l10n.metaReaderCouldNotBeRead;
   }
   return r;
 }
@@ -222,7 +223,7 @@ MetaKind _kindOf(ByteSource s) {
 void _takeExif(Uint8List tiff, MetaReport r) {
   final e = readTiff(tiff);
   if (e == null) {
-    if (!_allZero(tiff)) r.extra.add('exif that cannot be read');
+    if (!_allZero(tiff)) r.extra.add(l10n.metaReaderExifThatCannotBe);
     return;
   }
   r.orientation = e.orientation;
@@ -269,7 +270,8 @@ void _takeXmp(Uint8List body, MetaReport r) {
     return m.group(4) == neg ? -v : v;
   }
 
-  final lat = one(_xmpLat, 'S'), lon = one(_xmpLon, 'W');
+  final lat = one(_xmpLat, l10n.metaReaderS),
+      lon = one(_xmpLon, l10n.metaReaderW);
   if (lat != null && lon != null && lat.abs() <= 90 && lon.abs() <= 180) {
     r.gps ??= GpsFix(lat, lon, from: 'xmp');
   }
@@ -291,8 +293,8 @@ final _xmpHead = [...latin1.encode('http://ns.adobe.com/xap/1.0/'), 0];
 final _xmpExtHead = [...latin1.encode('http://ns.adobe.com/xmp/extension/'), 0];
 final _iccHead = [...latin1.encode('ICC_PROFILE'), 0];
 final _mpfHead = [...latin1.encode('MPF'), 0];
-final _psHead = latin1.encode('Photoshop 3.0');
-final _adobeHead = latin1.encode('Adobe');
+final _psHead = latin1.encode(l10n.metaReaderPhotoshop30);
+final _adobeHead = latin1.encode(l10n.metaReaderAdobe);
 
 void _jpeg(ByteSource s, MetaReport r) {
   var i = 2;
@@ -354,7 +356,7 @@ void _jpegSegment(int m, Uint8List body, MetaReport r) {
   } else if (m == 0xE0) {
     return;
   } else if (m >= 0xE3 && m <= 0xEF) {
-    r.extra.add('app${m - 0xE0}');
+    r.extra.add(l10n.metaReaderApp(m - 0xE0));
   } else if (m == 0xFE) {
     r.comment = true;
   }
@@ -432,14 +434,14 @@ void _sniffTrailer(ByteSource s, int from, MetaReport r) {
   final text = latin1.decode(head, allowInvalid: true);
   if (text.contains('ftyp')) r.embeddedVideo = true;
   if (text.contains('SEFH') || text.contains('SEFT')) {
-    r.extra.add('samsung trailer');
+    r.extra.add(l10n.metaReaderSamsungTrailer);
   }
   if (n > _scanChunk) {
     final tail = latin1.decode(
       s.read(s.length - _scanChunk, _scanChunk),
       allowInvalid: true,
     );
-    if (tail.contains('SEFT')) r.extra.add('samsung trailer');
+    if (tail.contains('SEFT')) r.extra.add(l10n.metaReaderSamsungTrailer);
     if (tail.contains('ftyp')) r.embeddedVideo = true;
   }
 }
@@ -499,7 +501,7 @@ void _png(ByteSource s, MetaReport r) {
     } else if (type == 'caBX') {
       r.credentials = true;
     } else if (!_pngKeep.contains(type)) {
-      r.extra.add('chunk $type');
+      r.extra.add(l10n.metaReaderChunk(type));
     }
     i = end;
     if (type == 'IEND') break;
@@ -528,8 +530,8 @@ void _webp(ByteSource s, MetaReport r) {
       _takeXmp(s.read(i + 8, len < _maxBlock ? len : _maxBlock), r);
     } else if (type == 'VP8X' && len >= 1) {
       final f = s.read(i + 8, 1)[0];
-      if (f & 0x08 != 0) r.extra.add('exif flag set');
-      if (f & 0x04 != 0) r.extra.add('xmp flag set');
+      if (f & 0x08 != 0) r.extra.add(l10n.metaReaderExifFlagSet);
+      if (f & 0x04 != 0) r.extra.add(l10n.metaReaderXmpFlagSet);
     }
     i += 8 + len + (len & 1);
   }
@@ -575,7 +577,7 @@ void _gif(ByteSource s, MetaReport r) {
         if (id == 'XMP DataXMP') {
           r.xmp = true;
         } else if (id != 'NETSCAPE2.0' && id != 'ANIMEXTS1.0') {
-          r.extra.add('app block $id');
+          r.extra.add(l10n.metaReaderAppBlock(id));
         }
       }
       i = sub(i + 2);
@@ -651,9 +653,9 @@ void _heif(ByteSource s, MetaReport r) {
     if (b.type == 'moov' || b.type == 'mpvd') {
       r.embeddedVideo = true;
     } else if (b.type == 'uuid') {
-      r.extra.add('uuid box');
+      r.extra.add(l10n.metaReaderUuidBox);
     } else if (!_heifTop.contains(b.type)) {
-      r.extra.add('${_printable(b.type)} box');
+      r.extra.add(l10n.metaReaderBox(_printable(b.type)));
     }
   }
 
@@ -682,10 +684,10 @@ void _heif(ByteSource s, MetaReport r) {
         if (rest.contains('xmp') || rest.contains('rdf+xml')) {
           want[id] = 'xmp';
         } else {
-          r.extra.add('attached data');
+          r.extra.add(l10n.metaReaderAttachedData);
         }
       } else if (!_heifItems.contains(type)) {
-        r.extra.add('${_printable(type)} item');
+        r.extra.add(l10n.metaReaderItem(_printable(type)));
       }
     }
   }
@@ -758,12 +760,12 @@ void _heif(ByteSource s, MetaReport r) {
     if (body.isEmpty || _allZero(body)) continue;
     if (what == 'exif') {
       if (body.length < 8) {
-        r.extra.add('exif that cannot be read');
+        r.extra.add(l10n.metaReaderExifThatCannotBe);
         continue;
       }
       final skip = 4 + _be32(body, 0);
       if (skip < 4 || skip >= body.length) {
-        r.extra.add('exif that cannot be read');
+        r.extra.add(l10n.metaReaderExifThatCannotBe);
         continue;
       }
       _takeExif(Uint8List.sublistView(body, skip), r);

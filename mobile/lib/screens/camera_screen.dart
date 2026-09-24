@@ -18,6 +18,7 @@ import '../main.dart' show shredFile, exportToPictures;
 import '../theme.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/decode_px.dart';
+import '../l10n/l10n.dart';
 
 class CaptureResult {
   final Uint8List? photo; // stripped jpeg bytes
@@ -84,7 +85,7 @@ class _CameraScreenState extends State<CameraScreen>
     try {
       _cams = await availableCameras();
       if (_cams.isEmpty) {
-        setState(() => _error = 'No camera on this phone');
+        setState(() => _error = l10n.cameraNoCameraOnThis);
         return;
       }
       // back camera first
@@ -94,7 +95,7 @@ class _CameraScreenState extends State<CameraScreen>
       if (_which < 0) _which = 0;
       await _open();
     } catch (e) {
-      if (mounted) setState(() => _error = 'Camera not available');
+      if (mounted) setState(() => _error = l10n.cameraCameraNotAvailable);
     }
   }
 
@@ -126,7 +127,7 @@ class _CameraScreenState extends State<CameraScreen>
         if (mounted) await _open();
         return;
       }
-      setState(() => _error = 'Camera permission is off · tap to try again');
+      setState(() => _error = l10n.cameraCameraPermissionIsOff);
       return;
     }
     _error = null;
@@ -218,10 +219,10 @@ class _CameraScreenState extends State<CameraScreen>
         () => _shot = clean == null || jpegHasExif(clean) ? null : clean,
       );
       if (_shot == null) {
-        showHaloToast(context, 'Could not strip that photo, dropped it');
+        showHaloToast(context, l10n.cameraCouldNotStripThat);
       }
     } catch (_) {
-      if (mounted) showHaloToast(context, 'No photo came out');
+      if (mounted) showHaloToast(context, l10n.cameraNoPhotoCameOut);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -264,7 +265,7 @@ class _CameraScreenState extends State<CameraScreen>
           _recStart = DateTime.now();
         });
       } catch (_) {
-        if (mounted) showHaloToast(context, 'Could not start recording');
+        if (mounted) showHaloToast(context, l10n.cameraCouldNotStartRecording);
       }
       return;
     }
@@ -290,7 +291,7 @@ class _CameraScreenState extends State<CameraScreen>
     } catch (_) {
       if (mounted) {
         setState(() => _recording = false);
-        showHaloToast(context, 'The recording was lost');
+        showHaloToast(context, l10n.cameraTheRecordingWasLost);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -325,7 +326,7 @@ class _CameraScreenState extends State<CameraScreen>
     if (!mounted) return;
     showHaloToast(
       context,
-      ok ? 'A copy is in your photos' : 'Could not save a copy on this phone',
+      ok ? l10n.cameraACopyIsIn : l10n.cameraCouldNotSaveA,
     );
   }
 
@@ -338,7 +339,7 @@ class _CameraScreenState extends State<CameraScreen>
     final c = _clip;
     if (c == null) return;
     if (_clipBytes > 8 * 1024 * 1024) {
-      showHaloToast(context, 'Too long for a message · 8 mb max');
+      showHaloToast(context, l10n.cameraTooLongForA);
       return;
     }
     // handed over: the caller shreds it once sent
@@ -370,8 +371,8 @@ class _CameraScreenState extends State<CameraScreen>
             const SizedBox(height: 14),
             Text(
               _video
-                  ? 'Never saved to your photos'
-                  : 'No exif, never saved to your photos',
+                  ? l10n.cameraNeverSavedToYour
+                  : l10n.cameraNoExifNeverSaved,
               style: HaloType.mono(
                 size: 10.5,
                 color: HaloColors.text2,
@@ -439,7 +440,7 @@ class _CameraScreenState extends State<CameraScreen>
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    'Rec',
+                    l10n.cameraRec,
                     style: HaloType.mono(
                       size: 10,
                       color: HaloColors.text,
@@ -451,7 +452,11 @@ class _CameraScreenState extends State<CameraScreen>
               const Spacer(),
               _round(_flashIcon(), 'flash', _cycleFlash),
               const SizedBox(width: 8),
-              _round(Icons.cameraswitch_outlined, 'switch camera', _flip),
+              _round(
+                Icons.cameraswitch_outlined,
+                l10n.cameraSwitchCamera,
+                _flip,
+              ),
             ],
           ),
         ),
@@ -503,13 +508,13 @@ class _CameraScreenState extends State<CameraScreen>
           Icon(Icons.movie_outlined, size: 44, color: HaloColors.amber),
           const SizedBox(height: 12),
           Text(
-            'Clip · ${secs}s · $mb mb',
+            l10n.cameraClipSMb(secs, mb),
             style: HaloType.mono(size: 12, color: HaloColors.text2),
           ),
           if (_clipBytes > 8 * 1024 * 1024) ...[
             const SizedBox(height: 8),
             Text(
-              'Too long for a message · 8 mb max',
+              l10n.cameraTooLongForA,
               style: HaloType.mono(size: 11, color: HaloColors.rose),
             ),
           ],
@@ -533,8 +538,10 @@ class _CameraScreenState extends State<CameraScreen>
         const SizedBox(height: 16),
         PressScale(
           label: _video
-              ? (_recording ? 'Stop recording' : 'Start recording')
-              : 'Take a photo',
+              ? (_recording
+                    ? l10n.cameraStopRecording
+                    : l10n.cameraStartRecording)
+              : l10n.cameraTakeAPhoto,
           onTap: _shutter,
           scale: 0.9,
           child: AnimatedContainer(
@@ -603,7 +610,7 @@ class _CameraScreenState extends State<CameraScreen>
             children: [
               Expanded(child: _ghost('retake', _retake)),
               const SizedBox(width: 10),
-              Expanded(child: _ghost('keep a copy', _keepCopy)),
+              Expanded(child: _ghost(l10n.cameraKeepACopy, _keepCopy)),
             ],
           ),
           const SizedBox(height: 10),
@@ -617,7 +624,7 @@ class _CameraScreenState extends State<CameraScreen>
                 borderRadius: BorderRadius.circular(13),
               ),
               child: Text(
-                'Use this',
+                l10n.cameraUseThis,
                 style: HaloType.sans(
                   size: 14,
                   weight: FontWeight.w600,

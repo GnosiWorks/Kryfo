@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'dlog.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'l10n/l10n.dart';
 
 final FlutterLocalNotificationsPlugin notifPlugin =
     FlutterLocalNotificationsPlugin();
@@ -28,10 +29,10 @@ Future<void> initNotifications({void Function(String? payload)? onTap}) async {
   // importance in code did nothing. drop it and make a fresh v2 channel that
   // registers at max - that's the only way to get the banner back.
   await android?.deleteNotificationChannel(channelId: 'halo_messages');
-  const channel = AndroidNotificationChannel(
+  final channel = AndroidNotificationChannel(
     'halo_messages_v2',
     'messages',
-    description: 'New encrypted messages from your contacts',
+    description: l10n.notificationsNewEncryptedMessagesFrom,
     importance: Importance.max,
     playSound: true,
     enableVibration: true,
@@ -83,12 +84,12 @@ Future<void> showMessageNotification({
   final hidden = await loadHideNotifContent();
   if (hidden) {
     title = 'kryfo';
-    body = 'new message';
+    body = l10n.notificationsNewMessage;
   }
   final details = AndroidNotificationDetails(
     'halo_messages_v2',
     'messages',
-    channelDescription: 'new encrypted messages from your contacts',
+    channelDescription: l10n.notificationsNewEncryptedMessagesFromYourContacts,
     importance: Importance.max,
     priority: Priority.high,
     fullScreenIntent: false,
@@ -104,14 +105,14 @@ Future<void> showMessageNotification({
     ledColor: const Color(0xFFF59E0B),
     ledOnMs: 600,
     ledOffMs: 2000,
-    ticker: hidden ? 'New message' : '$title: $body',
+    ticker: hidden ? l10n.notificationsNewMessage2 : '$title: $body',
     autoCancel: true,
     when: DateTime.now().millisecondsSinceEpoch,
     // sender on top, message underneath, expands for long text
     styleInformation: BigTextStyleInformation(
       body,
       contentTitle: title,
-      summaryText: hidden ? null : 'encrypted',
+      summaryText: hidden ? null : l10n.notificationsEncrypted,
     ),
   );
   // unique per message. a stable per-sender id meant the second message

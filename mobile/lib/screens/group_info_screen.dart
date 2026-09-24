@@ -18,6 +18,7 @@ import '../widgets/stagger_in.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/confirm_sheet.dart';
+import '../l10n/l10n.dart';
 
 class GroupInfoScreen extends StatefulWidget {
   final String groupId;
@@ -46,7 +47,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     final members = await db.getGroupMembers(widget.groupId);
     if (!mounted) return;
     setState(() {
-      _name = (g?['name'] as String?) ?? 'group';
+      _name = (g?['name'] as String?) ?? l10n.groupInfoGroup;
       _isAdmin = ((g?['is_admin'] as int?) ?? 0) == 1;
       _roomPub = g?['room_pub'] as String?;
       _members = members;
@@ -57,9 +58,9 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   Future<void> _rename() async {
     final newName = (await showInputSheet(
       context,
-      title: 'Rename group',
+      title: l10n.groupInfoRenameGroup,
       initial: _name,
-      save: 'rename',
+      save: l10n.groupInfoRename,
     ))?.trim();
     if (newName != null && newName.isNotEmpty && newName != _name) {
       await appState.renameGroupAndAnnounce(widget.groupId, newName);
@@ -72,7 +73,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
         .where((c) => !_members.contains(c.haloId))
         .toList();
     if (available.isEmpty) {
-      showHaloToast(context, 'No contacts to add');
+      showHaloToast(context, l10n.groupInfoNoContactsToAdd);
       return;
     }
     final picked = await showHaloSheet<Set<String>>(
@@ -86,7 +87,10 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       } catch (e) {
         // group full toast
         if (mounted) {
-          showHaloToast(context, e is StateError ? e.message : 'Could not add');
+          showHaloToast(
+            context,
+            e is StateError ? e.message : l10n.groupInfoCouldNotAdd,
+          );
         }
         return;
       }
@@ -97,9 +101,9 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   Future<void> _confirmRemove(String haloId) async {
     final ok = await showConfirmSheet(
       context,
-      title: 'Remove $haloId?',
-      line: 'They will stop receiving messages from this group.',
-      yes: 'Remove',
+      title: l10n.groupInfoRemove(haloId),
+      line: l10n.groupInfoTheyWillStopReceiving,
+      yes: l10n.commonRemove,
     );
     if (ok == true) {
       await appState.removeMembersFromGroup(widget.groupId, [haloId]);
@@ -136,29 +140,25 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   Future<void> _confirmClear() async {
     final ok = await showConfirmSheet(
       context,
-      title: 'Clear this conversation?',
-      line:
-          'Every message here is erased from this phone. This only clears '
-          'your copy, other members keep theirs.',
-      yes: 'Clear',
+      title: l10n.groupInfoClearThisConversation,
+      line: l10n.groupInfoEveryMessageHereIs,
+      yes: l10n.groupInfoClear,
     );
     if (ok == true) {
       await db.clearGroupConversation(widget.groupId);
       if (!mounted) return;
-      showHaloToast(context, 'Conversation cleared');
+      showHaloToast(context, l10n.groupInfoConversationCleared);
     }
   }
 
   Future<void> _confirmLeave() async {
     final ok = await showConfirmSheet(
       context,
-      title: _isRoom ? 'Leave room?' : 'Leave group?',
+      title: _isRoom ? l10n.groupInfoLeaveRoom : l10n.groupInfoLeaveGroup,
       line: _isRoom
-          ? 'Everything in it is wiped from this phone now, and the key you '
-                'used here is gone for good.'
-          : 'You will stop receiving messages and other members will see '
-                'you leave.',
-      yes: 'Leave',
+          ? l10n.groupInfoEverythingInItIs
+          : l10n.groupInfoYouWillStopReceiving,
+      yes: l10n.groupInfoLeave,
     );
     if (ok == true) {
       await appState.leaveGroupAndAnnounce(widget.groupId);
@@ -189,7 +189,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    tooltip: 'Back',
+                    tooltip: l10n.commonBack,
                     icon: Icon(
                       Icons.chevron_left,
                       color: HaloColors.text,
@@ -199,7 +199,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   ),
                   Expanded(
                     child: Text(
-                      'Group info',
+                      l10n.groupInfoGroupInfo,
                       style: HaloType.serif(
                         size: 18,
                         italic: true,
@@ -266,8 +266,8 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   const SizedBox(height: 4),
                   Text(
                     _members.length == 1
-                        ? '1 member'
-                        : '${_members.length} members',
+                        ? l10n.groupInfo1Member
+                        : l10n.groupInfoMembers(_members.length),
                     style: HaloType.mono(
                       size: 11,
                       color: HaloColors.text3,
@@ -277,7 +277,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   if (_isAdmin) ...[
                     const SizedBox(height: 4),
                     Text(
-                      'Admin',
+                      l10n.groupInfoAdmin,
                       style: HaloType.mono(
                         size: 10,
                         color: HaloColors.amber,
@@ -295,7 +295,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
               child: Row(
                 children: [
                   Text(
-                    'Members',
+                    l10n.groupInfoMembers2,
                     style: HaloType.mono(
                       size: 10,
                       color: HaloColors.text3,
@@ -322,7 +322,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'Invite',
+                            l10n.groupInfoInvite,
                             style: HaloType.mono(
                               size: 10,
                               color: HaloColors.violet,
@@ -345,7 +345,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                           ),
                           const SizedBox(width: 3),
                           Text(
-                            'Add',
+                            l10n.commonAdd,
                             style: HaloType.mono(
                               size: 10,
                               color: HaloColors.amber,
@@ -394,7 +394,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                                 ),
                                 if (isMe)
                                   Text(
-                                    'You',
+                                    l10n.groupInfoYou,
                                     style: HaloType.mono(
                                       size: 10,
                                       color: HaloColors.amber,
@@ -406,7 +406,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                           ),
                           if (_isAdmin && !isMe)
                             IconButton(
-                              tooltip: 'Remove from group',
+                              tooltip: l10n.groupInfoRemoveFromGroup,
                               icon: Icon(
                                 Icons.remove_circle_outline,
                                 size: 18,
@@ -434,7 +434,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    'Wallpaper',
+                    l10n.groupInfoWallpaper,
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w500,
@@ -457,7 +457,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    'Shared media',
+                    l10n.groupInfoSharedMedia,
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w500,
@@ -480,7 +480,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    'Clear conversation',
+                    l10n.groupInfoClearConversation,
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w500,
@@ -508,7 +508,9 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    _isRoom ? 'Leave room' : 'Leave group',
+                    _isRoom
+                        ? l10n.groupInfoLeaveRoom2
+                        : l10n.groupInfoLeaveGroup2,
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w500,
@@ -546,7 +548,7 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
             children: [
               const SizedBox(width: 20),
               Text(
-                'Add members',
+                l10n.groupInfoAddMembers,
                 style: HaloType.serif(
                   size: 16,
                   italic: true,
@@ -559,7 +561,7 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                     ? null
                     : () => Navigator.pop(context, _picked),
                 child: Text(
-                  'Add ${_picked.length}',
+                  l10n.groupInfoAdd(_picked.length),
                   style: HaloType.sans(
                     size: 13,
                     color: _picked.isEmpty

@@ -14,6 +14,7 @@ import '../theme.dart';
 import '../widgets/motion.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/halo_switch.dart';
+import '../l10n/l10n.dart';
 
 class BridgesScreen extends StatefulWidget {
   const BridgesScreen({super.key});
@@ -95,7 +96,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
     if (r == 'wrong') {
       // a wrong or stale captcha is a normal outcome, not a failure. fetch a
       // new one rather than making them tap again.
-      setState(() => _askError = 'That was not it. Here is another.');
+      setState(() => _askError = l10n.bridgesThatWasNotIt);
       await _request();
       return;
     }
@@ -118,7 +119,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
     });
     HapticFeedback.mediumImpact();
     if (mounted) {
-      showHaloToast(context, 'Got bridges · save to use them');
+      showHaloToast(context, l10n.bridgesGotBridgesSaveTo);
     }
   }
 
@@ -159,9 +160,9 @@ class _BridgesScreenState extends State<BridgesScreen> {
         });
         if (through) {
           HapticFeedback.mediumImpact();
-          showHaloToast(context, 'Connected');
+          showHaloToast(context, l10n.bridgesConnected);
         } else {
-          showHaloToast(context, 'Not through yet. Tor keeps trying');
+          showHaloToast(context, l10n.bridgesNotThroughYetTor);
         }
       }
     });
@@ -196,7 +197,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
-          'Bridges',
+          l10n.bridgesBridges,
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
@@ -204,13 +205,12 @@ class _BridgesScreenState extends State<BridgesScreen> {
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
         children: staggerAll([
           Text(
-            'Tor is blocked where you are?',
+            l10n.bridgesTorIsBlockedWhere,
             style: HaloType.serif(size: 26, color: HaloColors.text),
           ),
           const SizedBox(height: 6),
           Text(
-            'Bridges disguise your connection so it can get out. Pick one '
-            'way in, save, and tor reconnects through it.',
+            l10n.bridgesBridgesDisguiseYourConnection,
             style: HaloType.sans(
               size: 13,
               color: HaloColors.text2,
@@ -227,9 +227,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                 border: Border.all(color: HaloColors.line),
               ),
               child: Text(
-                'Bridges only change how tor connects, and you are not on '
-                'onion mode right now. What you set here is saved, it just '
-                'does nothing until you switch back.',
+                l10n.bridgesBridgesOnlyChangeHow,
                 style: HaloType.sans(size: 12.5, color: HaloColors.text2),
               ),
             ),
@@ -239,13 +237,10 @@ class _BridgesScreenState extends State<BridgesScreen> {
           // card one: obfs4 from the tor project, through the moat
           _BridgeCard(
             name: 'obfs4',
-            from: 'From the tor project',
-            looksLike: 'noise',
-            speed: 'good',
-            body:
-                'Makes tor traffic look like nothing in particular. The best '
-                'default for most blocked networks. Answers a captcha, then '
-                'hands you a few lines.',
+            from: l10n.bridgesFromTheTorProject,
+            looksLike: l10n.bridgesNoise,
+            speed: l10n.bridgesGood,
+            body: l10n.bridgesMakesTorTrafficLook,
             active: _source == 'moat' && n > 0,
             connected: connected && _source == 'moat',
             reconnecting: _reconnecting && _source == 'moat',
@@ -265,14 +260,11 @@ class _BridgesScreenState extends State<BridgesScreen> {
 
           // card two: a line someone gave you
           _BridgeCard(
-            name: 'Private bridge',
-            from: 'A line from a friend',
-            looksLike: 'Whatever the line says',
-            speed: 'depends',
-            body:
-                'Got a bridge line from someone you trust, or from '
-                'bridges.torproject.org? Paste it here. Obfs4 lines only, '
-                'kryfo does not speak the others yet.',
+            name: l10n.bridgesPrivateBridge,
+            from: l10n.bridgesALineFromA,
+            looksLike: l10n.bridgesWhateverTheLineSays,
+            speed: l10n.bridgesDepends,
+            body: l10n.bridgesGotABridgeLine,
             active: _source == 'paste' && n > 0,
             connected: connected && _source == 'paste',
             reconnecting: _reconnecting && _source == 'paste',
@@ -304,8 +296,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                     style: HaloType.mono(size: 11, color: HaloColors.text),
                     decoration: InputDecoration(
                       border: InputBorder.none,
-                      hintText:
-                          'obfs4 1.2.3.4:443 FINGERPRINT cert=… iat-mode=0',
+                      hintText: l10n.bridgesObfs4123,
                       hintStyle: HaloType.mono(
                         size: 10.5,
                         color: HaloColors.text3,
@@ -316,7 +307,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                 const SizedBox(height: 10),
                 _Ghost(
                   icon: Icons.content_paste_rounded,
-                  label: 'Paste from clipboard',
+                  label: l10n.bridgesPasteFromClipboard,
                   onTap: () async {
                     final d = await Clipboard.getData('text/plain');
                     final t = d?.text?.trim();
@@ -360,7 +351,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Use bridges',
+                          l10n.bridgesUseBridges,
                           style: HaloType.sans(
                             size: 14.5,
                             color: HaloColors.text,
@@ -368,10 +359,10 @@ class _BridgesScreenState extends State<BridgesScreen> {
                         ),
                         Text(
                           n == 0
-                              ? 'No lines yet'
+                              ? l10n.bridgesNoLinesYet
                               : n == 1
-                              ? '1 line saved'
-                              : '$n lines saved',
+                              ? l10n.bridges1LineSaved
+                              : l10n.bridgesLinesSaved(n),
                           style: HaloType.mono(
                             size: 10.5,
                             color: n > 0 ? HaloColors.violet : HaloColors.text3,
@@ -432,10 +423,10 @@ class _BridgesScreenState extends State<BridgesScreen> {
                         const SizedBox(width: 11),
                         Text(
                           _elapsed < 20
-                              ? 'Restarting tor…'
+                              ? l10n.bridgesRestartingTor
                               : _elapsed < 60
-                              ? 'Finding a bridge… ${_elapsed}s'
-                              : 'Still trying… ${_elapsed}s',
+                              ? l10n.bridgesFindingABridgeS(_elapsed)
+                              : l10n.bridgesStillTryingS(_elapsed),
                           style: HaloType.mono(
                             size: 12.5,
                             color: HaloColors.text2,
@@ -445,7 +436,9 @@ class _BridgesScreenState extends State<BridgesScreen> {
                       ],
                     )
                   : Text(
-                      _busy ? 'Applying…' : 'Save and reconnect',
+                      _busy
+                          ? l10n.bridgesApplying
+                          : l10n.bridgesSaveAndReconnect,
                       style: HaloType.mono(
                         size: 12.5,
                         color: HaloColors.onAmber,
@@ -473,12 +466,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
             ),
           ],
           const SizedBox(height: 22),
-          const _Note(
-            'What a bridge is',
-            'A tor entry point nobody has published, reached through a '
-                'wrapper so the connection does not look like tor. The rest '
-                'of the route is the usual three hops.',
-          ),
+          _Note(l10n.bridgesWhatABridgeIs, l10n.bridgesATorEntryPoint),
         ]),
       ),
     );
@@ -551,7 +539,7 @@ class _BridgeCard extends StatelessWidget {
                           BreathDot(color: HaloColors.green, size: 6),
                           const SizedBox(width: 6),
                           Text(
-                            'Connected',
+                            l10n.bridgesConnected,
                             style: HaloType.mono(
                               size: 10,
                               color: HaloColors.green,
@@ -588,9 +576,9 @@ class _BridgeCard extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              _Meta(k: 'Looks like', v: looksLike),
+              _Meta(k: l10n.bridgesLooksLike, v: looksLike),
               const SizedBox(width: 18),
-              _Meta(k: 'speed', v: speed),
+              _Meta(k: l10n.bridgesSpeed, v: speed),
             ],
           ),
           const SizedBox(height: 10),
@@ -668,7 +656,7 @@ class _RequestBlock extends StatelessWidget {
               Icon(Icons.download_rounded, size: 16, color: HaloColors.violet),
               const SizedBox(width: 8),
               Text(
-                'Get bridges',
+                l10n.bridgesGetBridges,
                 style: HaloType.sans(
                   size: 14.5,
                   color: HaloColors.text,
@@ -680,9 +668,8 @@ class _RequestBlock extends StatelessWidget {
           const SizedBox(height: 5),
           Text(
             captcha == null
-                ? 'Ask the tor project directly. You solve a puzzle so bots '
-                      'cannot drain the supply.'
-                : 'type what you see. lowercase is fine.',
+                ? l10n.bridgesAskTheTorProject
+                : l10n.bridgesTypeWhatYouSee,
             style: HaloType.sans(size: 12.5, color: HaloColors.text2),
           ),
           if (captcha == null) ...[
@@ -707,11 +694,7 @@ class _RequestBlock extends StatelessWidget {
                   const SizedBox(width: 9),
                   Expanded(
                     child: Text(
-                      'This one request does not go through tor - it cannot, '
-                      'since tor is what is not working. Whoever runs your '
-                      'network will see you contacting the tor project. If '
-                      'that alone is a problem where you are, get bridges '
-                      'somewhere else and paste them below.',
+                      l10n.bridgesThisOneRequestDoes,
                       style: HaloType.sans(size: 12, color: HaloColors.text2),
                     ),
                   ),
@@ -728,7 +711,7 @@ class _RequestBlock extends StatelessWidget {
                 fit: BoxFit.contain,
                 height: 90,
                 errorBuilder: (_, _, _) => Text(
-                  'Could not draw the puzzle',
+                  l10n.bridgesCouldNotDrawThe,
                   style: HaloType.mono(size: 11, color: HaloColors.rose),
                 ),
               ),
@@ -752,7 +735,7 @@ class _RequestBlock extends StatelessWidget {
                       style: HaloType.mono(size: 13, color: HaloColors.text),
                       decoration: InputDecoration(
                         border: InputBorder.none,
-                        hintText: 'Answer',
+                        hintText: l10n.bridgesAnswer,
                         hintStyle: HaloType.mono(
                           size: 12,
                           color: HaloColors.text3,
@@ -799,10 +782,10 @@ class _RequestBlock extends StatelessWidget {
           _Ghost(
             icon: Icons.refresh_rounded,
             label: asking
-                ? 'Asking…'
+                ? l10n.bridgesAsking
                 : captcha == null
-                ? 'Request bridges'
-                : 'Different puzzle',
+                ? l10n.bridgesRequestBridges
+                : l10n.bridgesDifferentPuzzle,
             onTap: asking ? () {} : onRequest,
           ),
         ],

@@ -7,6 +7,7 @@ import '../theme.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/press_scale.dart';
 import '../main.dart' show db, appState;
+import '../l10n/l10n.dart';
 
 // safety number for a contact: a 60-digit code derived from both X25519
 // public keys, order-independent so both phones show the same number. if it
@@ -89,7 +90,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    tooltip: 'Back',
+                    tooltip: l10n.commonBack,
                     icon: Icon(
                       Icons.chevron_left,
                       color: HaloColors.text2,
@@ -98,7 +99,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   Text(
-                    'Safety number',
+                    l10n.keyVerificationSafetyNumber,
                     style: HaloType.serif(size: 22, color: HaloColors.text),
                   ),
                 ],
@@ -111,7 +112,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                   StaggerIn(
                     index: 0,
                     child: Text(
-                      'With ${widget.peerName}',
+                      l10n.keyVerificationWith(widget.peerName),
                       style: HaloType.sans(size: 14, color: HaloColors.text2),
                     ),
                   ),
@@ -155,7 +156,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                   StaggerIn(
                     index: 4,
                     child: Text(
-                      'If ${widget.peerName} sees the same number, your messages are private to just the two of you. Comparing in person or over a call you trust is the surest way to be sure - but it is optional, never required to chat.',
+                      l10n.keyVerificationIfSeesTheSame(widget.peerName),
                       style: HaloType.sans(
                         size: 13,
                         color: HaloColors.text2,
@@ -223,7 +224,11 @@ class _VerifyButton extends StatelessWidget {
                 weight: FontWeight.w500,
                 color: verified ? HaloColors.green : HaloColors.text,
               ),
-              child: Text(verified ? 'Verified' : 'Mark as verified'),
+              child: Text(
+                verified
+                    ? l10n.keyVerificationVerified
+                    : l10n.keyVerificationMarkAsVerified,
+              ),
             ),
           ],
         ),

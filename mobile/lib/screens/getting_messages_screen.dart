@@ -15,6 +15,7 @@ import '../widgets/motion.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/halo_switch.dart';
 import '../widgets/stagger_in.dart';
+import '../l10n/l10n.dart';
 
 class GettingMessagesScreen extends StatefulWidget {
   const GettingMessagesScreen({super.key});
@@ -97,7 +98,7 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                 child: Row(
                   children: [
                     IconButton(
-                      tooltip: 'Back',
+                      tooltip: l10n.commonBack,
                       onPressed: () => Navigator.pop(context),
                       icon: Icon(
                         Icons.chevron_left,
@@ -114,12 +115,12 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Getting messages',
+                      l10n.gettingMessagesGettingMessages,
                       style: HaloType.serif(size: 30, weight: FontWeight.w400),
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'How new messages reach this phone. You can change it whenever you like.',
+                      l10n.gettingMessagesHowNewMessagesReach,
                       style: HaloType.sans(
                         size: 13,
                         height: 1.45,
@@ -130,25 +131,23 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                 ),
               ),
               _ModeCard(
-                title: 'Always on',
-                tag: 'most private',
-                body:
-                    'Messages arrive instantly. Nothing leaves Tor. Uses the most battery.',
+                title: l10n.gettingMessagesAlwaysOn,
+                tag: l10n.gettingMessagesMostPrivate,
+                body: l10n.gettingMessagesMessagesArriveInstantlyNothing,
                 on: mode == DeliveryMode.always,
                 onTap: () => _pick(DeliveryMode.always),
               ),
               _ModeCard(
-                title: 'Check-ins',
-                tag: 'lightest',
-                body:
-                    'Kryfo looks for messages every 15 minutes. Easy on battery, but messages can be late.',
+                title: l10n.gettingMessagesCheckIns,
+                tag: l10n.gettingMessagesLightest,
+                body: l10n.gettingMessagesKryfoLooksForMessages,
                 on: mode == DeliveryMode.checkins,
                 onTap: () => _pick(DeliveryMode.checkins),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(22, 18, 22, 2),
                 child: Text(
-                  'On the lock screen',
+                  l10n.gettingMessagesOnTheLockScreen,
                   style: HaloType.mono(
                     size: 10.5,
                     color: HaloColors.text3,
@@ -165,7 +164,7 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Hide message preview',
+                            l10n.gettingMessagesHideMessagePreview,
                             style: HaloType.sans(
                               size: 14,
                               color: HaloColors.text,
@@ -173,7 +172,7 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'A generic alert, with no sender and no message text',
+                            l10n.gettingMessagesAGenericAlertWith,
                             style: HaloType.sans(
                               size: 12,
                               color: HaloColors.text3,
@@ -184,7 +183,7 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                           if (lockState.enabled && !_hidePreview) ...[
                             const SizedBox(height: 6),
                             Text(
-                              'Shows message text in notifications, even while Kryfo is locked.',
+                              l10n.gettingMessagesShowsMessageTextIn,
                               style: HaloType.sans(
                                 size: 12,
                                 color: HaloColors.rose,
@@ -242,7 +241,7 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
                   child: Text(
-                    'When the phone sits still, Android spaces check-ins further apart. The line above shows the real last one. While Kryfo is open it stays connected.',
+                    l10n.gettingMessagesWhenThePhoneSits,
                     style: HaloType.sans(
                       size: 12.5,
                       height: 1.5,

@@ -4,8 +4,9 @@ import '../widgets/stagger_in.dart';
 import '../widgets/breathing_ring.dart';
 import '../main.dart';
 import '../theme.dart';
+import '../l10n/l10n.dart';
 
-const String kNotesPeerId = '_notes_self_';
+final String kNotesPeerId = l10n.notesNotesSelf;
 
 // note to self. a private place that never leaves the phone - stored as
 // messages against the reserved kNotesPeerId.
@@ -65,21 +66,21 @@ class _NotesScreenState extends State<NotesScreen> {
     final today = DateTime(now.year, now.month, now.day);
     final that = DateTime(d.year, d.month, d.day);
     final diff = today.difference(that).inDays;
-    if (diff == 0) return 'TODAY';
-    if (diff == 1) return 'YESTERDAY';
-    const months = [
-      'jan',
-      'feb',
-      'mar',
-      'apr',
-      'may',
-      'jun',
-      'jul',
-      'aug',
-      'sep',
-      'oct',
-      'nov',
-      'dec',
+    if (diff == 0) return l10n.notesToday;
+    if (diff == 1) return l10n.notesYesterday;
+    final months = [
+      l10n.notesJan,
+      l10n.notesFeb,
+      l10n.notesMar,
+      l10n.notesApr,
+      l10n.notesMay,
+      l10n.notesJun,
+      l10n.notesJul,
+      l10n.notesAug,
+      l10n.notesSep,
+      l10n.notesOct,
+      l10n.notesNov,
+      l10n.notesDec,
     ];
     return '${d.day} ${months[d.month - 1]}'.toUpperCase();
   }
@@ -115,7 +116,7 @@ class _NotesScreenState extends State<NotesScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Note to self',
+              l10n.notesNoteToSelf,
               style: HaloType.serif(
                 size: 20,
                 color: HaloColors.text,
@@ -123,7 +124,7 @@ class _NotesScreenState extends State<NotesScreen> {
               ),
             ),
             Text(
-              'Only on this phone',
+              l10n.notesOnlyOnThisPhone,
               style: HaloType.mono(size: 9.5, color: HaloColors.text3),
             ),
           ],
@@ -198,12 +199,12 @@ class _NotesScreenState extends State<NotesScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'A quiet place',
+                l10n.notesAQuietPlace,
                 style: HaloType.serif(size: 24, color: HaloColors.text),
               ),
               const SizedBox(height: 10),
               Text(
-                'Jot anything down. It stays on this phone and never leaves.',
+                l10n.notesJotAnythingDownIt,
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 12.5,
@@ -242,7 +243,7 @@ class _NotesScreenState extends State<NotesScreen> {
                 minLines: 1,
                 style: HaloType.sans(size: 14, color: HaloColors.text),
                 decoration: InputDecoration(
-                  hintText: 'Jot something down…',
+                  hintText: l10n.notesJotSomethingDown,
                   hintStyle: HaloType.sans(size: 13, color: HaloColors.text3),
                   border: InputBorder.none,
                   isDense: true,
@@ -255,7 +256,7 @@ class _NotesScreenState extends State<NotesScreen> {
           GestureDetector(
             onTap: _save,
             child: Semantics(
-              label: 'Save',
+              label: l10n.commonSave,
               button: true,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 120),

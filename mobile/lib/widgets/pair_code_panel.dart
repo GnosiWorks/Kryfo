@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import '../main.dart' show appState, engine, buildHaloUriV3;
 import '../theme.dart';
 import 'motion.dart' show BreathDot;
+import '../l10n/l10n.dart';
 
 class PairCodePanel extends StatefulWidget {
   // compact drops the explanatory lines, for use under a qr
@@ -36,7 +37,7 @@ class _PairCodePanelState extends State<PairCodePanel> {
     HapticFeedback.selectionClick();
     setState(() {
       _busy = true;
-      _status = 'Putting your invite in place';
+      _status = l10n.pairCodePanelPuttingYourInviteIn;
     });
     // Random.secure, because a guessable code is a code someone else can
     // stand in front of.
@@ -46,7 +47,7 @@ class _PairCodePanelState extends State<PairCodePanel> {
       if (mounted) {
         setState(() {
           _busy = false;
-          _status = 'Your invite is not ready yet';
+          _status = l10n.pairCodePanelYourInviteIsNot;
         });
       }
       return;
@@ -103,8 +104,7 @@ class _PairCodePanelState extends State<PairCodePanel> {
       children: [
         if (!widget.compact) ...[
           Text(
-            'Read six digits out loud and they can add you. Nothing else '
-            'needs to change hands.',
+            l10n.pairCodePanelReadSixDigitsOut,
             style: HaloType.sans(size: 13.5, color: HaloColors.text2),
           ),
           const SizedBox(height: 22),
@@ -127,7 +127,7 @@ class _PairCodePanelState extends State<PairCodePanel> {
               ),
             ),
             child: Text(
-              _busy ? 'Working' : 'Or make a six digit code to read out',
+              _busy ? l10n.pairCodePanelWorking : l10n.pairCodePanelOrMakeASix,
               style: HaloType.mono(
                 size: 11.5,
                 weight: FontWeight.w600,
@@ -158,7 +158,7 @@ class _PairCodePanelState extends State<PairCodePanel> {
           onTap: () {
             HapticFeedback.selectionClick();
             copySensitive(_code!);
-            showHaloToast(context, 'Code copied');
+            showHaloToast(context, l10n.pairCodePanelCodeCopied);
           },
           child: Text(
             '${_code!.substring(0, 3)} ${_code!.substring(3)}',
@@ -177,7 +177,7 @@ class _PairCodePanelState extends State<PairCodePanel> {
             BreathDot(color: HaloColors.amber, size: 6),
             const SizedBox(width: 8),
             Text(
-              'Burns in $mm:$ss',
+              l10n.pairCodePanelBurnsIn(mm, ss),
               style: HaloType.mono(size: 11, color: HaloColors.text3),
             ),
           ],
@@ -185,9 +185,8 @@ class _PairCodePanelState extends State<PairCodePanel> {
         const SizedBox(height: 12),
         Text(
           widget.compact
-              ? 'They tap add, choose code, and type these.'
-              : 'They open kryfo, tap add, choose pairing code and type these six '
-                    'digits. Make a new one for the next person.',
+              ? l10n.pairCodePanelTheyTapAddChoose
+              : l10n.pairCodePanelTheyOpenKryfoTap,
           textAlign: TextAlign.center,
           style: HaloType.sans(size: 12.5, color: HaloColors.text2),
         ),

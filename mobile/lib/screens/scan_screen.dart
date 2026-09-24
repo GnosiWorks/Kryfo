@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
 import '../theme.dart';
+import '../l10n/l10n.dart';
 
 class ScanScreen extends StatefulWidget {
   const ScanScreen({super.key});
@@ -48,7 +49,7 @@ class _ScanScreenState extends State<ScanScreen>
       if (_hintAt == null ||
           now.difference(_hintAt!) > const Duration(seconds: 2)) {
         setState(() {
-          _hint = "that's not a kryfo qr · keep pointing";
+          _hint = l10n.scanThatSNotA;
           _hintAt = now;
         });
       }
@@ -121,7 +122,7 @@ class _ScanScreenState extends State<ScanScreen>
                 child: Row(
                   children: [
                     IconButton(
-                      tooltip: 'Back',
+                      tooltip: l10n.commonBack,
                       icon: const Icon(
                         Icons.chevron_left,
                         color: Colors.white,
@@ -131,7 +132,7 @@ class _ScanScreenState extends State<ScanScreen>
                     ),
                     Expanded(
                       child: Text(
-                        'Scan a kryfo qr',
+                        l10n.scanScanAKryfoQr,
                         style: HaloType.serif(
                           size: 18,
                           italic: true,
@@ -140,7 +141,7 @@ class _ScanScreenState extends State<ScanScreen>
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Flash',
+                      tooltip: l10n.scanFlash,
                       onPressed: () async {
                         final cam = _cam;
                         if (cam == null) return;
@@ -194,8 +195,7 @@ class _ScanScreenState extends State<ScanScreen>
                       ),
                     ),
                     child: Text(
-                      _hint ??
-                          'Point at a kryfo qr · nothing leaves your phone',
+                      _hint ?? l10n.scanPointAtAKryfo,
                       textAlign: TextAlign.center,
                       style: HaloType.sans(
                         size: 12.5,

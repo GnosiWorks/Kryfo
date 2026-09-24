@@ -11,6 +11,7 @@ import 'decode_px.dart';
 import 'halo_sheet.dart';
 import 'kryfo_avatar.dart';
 import 'sheet_handle.dart';
+import '../l10n/l10n.dart';
 
 /// how many pins one chat holds. the sender checks before pinning and the
 /// receiver checks before mirroring, so nobody can fill the list from afar.
@@ -27,7 +28,7 @@ class PinHeaderButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final on = count > 0;
     return IconButton(
-      tooltip: on ? 'Pinned messages · $count' : 'Pinned messages',
+      tooltip: on ? l10n.pinsPinnedMessages(count) : l10n.pinsPinnedMessages2,
       onPressed: onTap,
       icon: SizedBox(
         width: 26,
@@ -106,33 +107,33 @@ class PinEntry {
   /// what stands in for the words when there are none
   String get preview {
     if (text.trim().isNotEmpty) return text.trim();
-    if (imagePath != null) return 'Photo';
-    if (fileName == 'voice.wav') return 'Voice message';
+    if (imagePath != null) return l10n.pinsPhoto;
+    if (fileName == 'voice.wav') return l10n.pinsVoiceMessage;
     if (fileName != null) return fileName!;
-    return 'Message';
+    return l10n.pinsMessage;
   }
 }
 
 String _pinDate(DateTime d) {
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
+  final months = [
+    l10n.pinsJan,
+    l10n.pinsFeb,
+    l10n.pinsMar,
+    l10n.pinsApr,
+    l10n.pinsMay,
+    l10n.pinsJun,
+    l10n.pinsJul,
+    l10n.pinsAug,
+    l10n.pinsSep,
+    l10n.pinsOct,
+    l10n.pinsNov,
+    l10n.pinsDec,
   ];
   final hm =
       '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
   final now = DateTime.now();
   if (d.year == now.year && d.month == now.month && d.day == now.day) {
-    return 'Today · $hm';
+    return l10n.pinsToday(hm);
   }
   final y = d.year == now.year ? '' : ' ${d.year}';
   return '${d.day} ${months[d.month - 1]}$y · $hm';
@@ -199,13 +200,13 @@ class _PinsSheetState extends State<_PinsSheet> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    'Pinned',
+                    l10n.pinsPinned,
                     style: HaloType.serif(size: 22, color: HaloColors.text),
                   ),
                   const Spacer(),
                   if (pins != null && pins.isNotEmpty)
                     Text(
-                      '${pins.length} of $kMaxPins',
+                      l10n.pinsOf(pins.length, kMaxPins),
                       style: HaloType.mono(size: 10, color: HaloColors.text3),
                     ),
                 ],
@@ -217,8 +218,7 @@ class _PinsSheetState extends State<_PinsSheet> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(22, 10, 22, 30),
                 child: Text(
-                  'Nothing pinned here yet. Hold a message and choose Pin, '
-                  'and it waits here for everyone in the chat.',
+                  l10n.pinsNothingPinnedHereYet,
                   style: HaloType.sans(
                     size: 13.5,
                     color: HaloColors.text2,
@@ -353,9 +353,13 @@ class _PinCard extends StatelessWidget {
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        _PinAction(label: 'Jump', amber: true, onTap: onJump),
+                        _PinAction(
+                          label: l10n.pinsJump,
+                          amber: true,
+                          onTap: onJump,
+                        ),
                         const SizedBox(width: 6),
-                        _PinAction(label: 'Unpin', onTap: onUnpin),
+                        _PinAction(label: l10n.pinsUnpin, onTap: onUnpin),
                       ],
                     ),
                   ],

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 import '../message_envelope.dart' show powBusy;
 import '../theme.dart';
+import '../l10n/l10n.dart';
 
 class PowNote extends StatefulWidget {
   const PowNote({super.key});
@@ -51,8 +52,10 @@ class _PowNoteState extends State<PowNote> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Text(
-        'First message to someone new \u00b7 proving it is real \u00b7 ${s}s'
-        '${s >= 20 ? " \u00b7 up to a minute on a slow phone" : ""}',
+        l10n.powNoteFirstMessageToSomeone(
+          s,
+          s >= 20 ? " \u00b7 up to a minute on a slow phone" : "",
+        ),
         style: HaloType.mono(size: 10, color: HaloColors.amber),
         maxLines: 2,
       ),

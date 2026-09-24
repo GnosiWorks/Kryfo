@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../meta/meta_reader.dart';
 import 'geo.dart';
+import '../l10n/l10n.dart';
 
 enum StoryRowKind { place, hidden, device, time, more }
 
@@ -30,10 +31,10 @@ class PhotoStory {
 }
 
 String _metres(double m) {
-  if (m >= 1000) return '${(m / 1000).round()} km';
-  if (m >= 10) return '${(m / 5).round() * 5} metres';
+  if (m >= 1000) return l10n.photoStoryKm((m / 1000).round());
+  if (m >= 10) return l10n.photoStoryMetres((m / 5).round() * 5);
   final r = m.round();
-  return r <= 1 ? '1 metre' : '$r metres';
+  return r <= 1 ? l10n.photoStory1Metre : l10n.photoStoryMetres2(r);
 }
 
 String placeLine(GpsFix fix, GeoWorld? world, GeoPlaces? places) {
@@ -41,12 +42,12 @@ String placeLine(GpsFix fix, GeoWorld? world, GeoPlaces? places) {
   final country =
       world?.at(fix.lat, fix.lon)?.country.name ??
       (near == null ? null : world?.nameOf(near.place.country));
-  if (near == null) return country ?? 'Far from any town';
+  if (near == null) return country ?? l10n.photoStoryFarFromAnyTown;
   final where = country == null || country == near.place.name
       ? near.place.name
       : '${near.place.name}, $country';
-  if (near.km <= 25) return 'Near $where';
-  return 'About ${(near.km / 5).round() * 5} km from $where';
+  if (near.km <= 25) return l10n.photoStoryNear(where);
+  return l10n.photoStoryAboutKmFrom((near.km / 5).round() * 5, where);
 }
 
 String deviceName(String? make, String? model) {
@@ -77,24 +78,26 @@ DateTime? _taken(String? raw) {
 }
 
 String _shutter(double s) {
-  if (s >= 1) return '${s.toStringAsFixed(s == s.roundToDouble() ? 0 : 1)} s';
-  return '1/${(1 / s).round()} s';
+  if (s >= 1) {
+    return l10n.photoStoryS(s.toStringAsFixed(s == s.roundToDouble() ? 0 : 1));
+  }
+  return l10n.photoStory1S((1 / s).round());
 }
 
 PhotoStory storyOf(MetaReport r, {GeoWorld? world, GeoPlaces? places}) {
   if (r.kind == MetaKind.unknown) {
-    return const PhotoStory(
-      head: 'Not a kind Kryfo can read.',
-      tail: 'So it will not guess.',
+    return PhotoStory(
+      head: l10n.photoStoryNotAKindKryfo,
+      tail: l10n.photoStorySoItWillNot,
       rows: [],
       everything: [],
       canClean: false,
     );
   }
   if (r.status == MetaStatus.unreadable) {
-    return const PhotoStory(
-      head: 'This file is damaged or cut short.',
-      tail: 'Kryfo could not read it to the end.',
+    return PhotoStory(
+      head: l10n.photoStoryThisFileIsDamaged,
+      tail: l10n.photoStoryKryfoCouldNotRead,
       rows: [],
       everything: [],
       canClean: false,
@@ -110,28 +113,29 @@ PhotoStory storyOf(MetaReport r, {GeoWorld? world, GeoPlaces? places}) {
       StoryRow(
         StoryRowKind.place,
         placeLine(fix, world, places),
-        sub: video ? 'Where it was recorded' : 'Where it was taken',
+        sub: video
+            ? l10n.photoStoryWhereItWasRecorded
+            : l10n.photoStoryWhereItWasTaken,
       ),
     );
-    all.add('Location: ${coordsLine(fix.lat, fix.lon)}');
+    all.add(l10n.photoStoryLocation(coordsLine(fix.lat, fix.lon)));
     if (fix.altitude != null) {
-      all.add('Height above the sea: ${fix.altitude!.round()} m');
+      all.add(l10n.photoStoryHeightAboveTheSea(fix.altitude!.round()));
     }
   } else if (r.gpsBlank) {
     rows.add(
-      const StoryRow(
+      StoryRow(
         StoryRowKind.hidden,
-        'Location hidden by Android',
-        sub:
-            'Android blanks it when a photo is picked this way. Sharing it to Kryfo from your gallery often keeps it. The one in your gallery may still have it.',
+        l10n.photoStoryLocationHiddenByAndroid,
+        sub: l10n.photoStoryAndroidBlanksItWhen,
       ),
     );
-    all.add('Location: blanked by Android before Kryfo saw it');
+    all.add(l10n.photoStoryLocationBlankedByAndroid);
   }
 
   final phone = deviceName(r.make, r.model);
   final optics = [
-    if (r.fNumber != null) 'f/${r.fNumber!.toStringAsFixed(1)}',
+    if (r.fNumber != null) l10n.photoStoryF(r.fNumber!.toStringAsFixed(1)),
     if (r.exposure != null) _shutter(r.exposure!),
   ].join(' · ');
   if (phone.isNotEmpty) {
@@ -139,11 +143,11 @@ PhotoStory storyOf(MetaReport r, {GeoWorld? world, GeoPlaces? places}) {
       StoryRow(
         StoryRowKind.device,
         phone,
-        sub: optics.isEmpty ? 'What took it' : null,
+        sub: optics.isEmpty ? l10n.photoStoryWhatTookIt : null,
         mono: optics.isEmpty ? null : optics,
       ),
     );
-    all.add('Phone or camera: $phone');
+    all.add(l10n.photoStoryPhoneOrCamera(phone));
   }
 
   final taken = _taken(r.taken) ?? r.created?.toLocal();
@@ -153,13 +157,13 @@ PhotoStory storyOf(MetaReport r, {GeoWorld? world, GeoPlaces? places}) {
         StoryRowKind.time,
         DateFormat('EEEE d MMMM y, HH:mm').format(taken),
         sub: r.taken == null
-            ? 'When it was recorded'
+            ? l10n.photoStoryWhenItWasRecorded
             : r.offset != null
-            ? 'To the second, with the time zone'
-            : 'To the second',
+            ? l10n.photoStoryToTheSecondWith
+            : l10n.photoStoryToTheSecond,
       ),
     );
-    all.add('Time: ${DateFormat('d MMM y, HH:mm:ss').format(taken)}');
+    all.add(l10n.photoStoryTime(DateFormat('d MMM y, HH:mm:ss').format(taken)));
   }
 
   final named = <String>[];
@@ -169,48 +173,72 @@ PhotoStory storyOf(MetaReport r, {GeoWorld? world, GeoPlaces? places}) {
     all.add(long);
   }
 
-  note(r.lens != null, 'Lens', 'Lens: ${r.lens}');
-  note(r.software != null, 'Software', 'Software: ${r.software}');
-  note(r.serial != null, 'Serial number', 'Serial number: ${r.serial}');
+  note(r.lens != null, l10n.photoStoryLens, l10n.photoStoryLens2('${r.lens}'));
+  note(
+    r.software != null,
+    l10n.photoStorySoftware,
+    l10n.photoStorySoftware2('${r.software}'),
+  );
+  note(
+    r.serial != null,
+    l10n.photoStorySerialNumber,
+    l10n.photoStorySerialNumber2('${r.serial}'),
+  );
   note(
     r.owner != null || r.copyright != null,
-    'Owner name',
-    'Owner: ${r.owner ?? r.copyright}',
+    l10n.photoStoryOwnerName,
+    l10n.photoStoryOwner('${r.owner ?? r.copyright}'),
   );
   note(
     r.thumbnailBytes > 0,
-    'Hidden thumbnail',
-    'A small copy of the picture inside the file. It can show what a crop removed',
+    l10n.photoStoryHiddenThumbnail,
+    l10n.photoStoryASmallCopyOf,
+  );
+  note(r.makerNote, l10n.photoStoryMakerNotes, l10n.photoStoryMakerNotesABlock);
+  note(
+    r.xmp,
+    l10n.photoStoryEditingHistory,
+    l10n.photoStoryXmpEditingHistoryAnd,
+  );
+  note(r.iptc, l10n.photoStoryCaptions, l10n.photoStoryIptcCaptionsAndCredits);
+  note(r.comment, l10n.photoStoryComment, l10n.photoStoryAWrittenComment);
+  note(
+    r.credentials,
+    l10n.photoStoryContentCredentials,
+    l10n.photoStoryContentCredentials,
   );
   note(
-    r.makerNote,
-    'Maker notes',
-    'Maker notes: a block only the maker can read',
+    r.secondImage,
+    l10n.photoStorySecondPicture,
+    l10n.photoStoryASecondPictureInside,
   );
-  note(r.xmp, 'Editing history', 'XMP: editing history and tags');
-  note(r.iptc, 'Captions', 'IPTC: captions and credits');
-  note(r.comment, 'Comment', 'A written comment');
-  note(r.credentials, 'Content credentials', 'Content credentials');
-  note(r.secondImage, 'Second picture', 'A second picture inside the file');
-  note(r.embeddedVideo, 'Motion video', 'A short video inside the file');
-  note(r.savedTime, 'Save time', 'The time it was last saved');
-  note(r.stamps && r.created == null, 'Time stamps', 'Creation time stamps');
+  note(
+    r.embeddedVideo,
+    l10n.photoStoryMotionVideo,
+    l10n.photoStoryAShortVideoInside,
+  );
+  note(r.savedTime, l10n.photoStorySaveTime, l10n.photoStoryTheTimeItWas);
+  note(
+    r.stamps && r.created == null,
+    l10n.photoStoryTimeStamps,
+    l10n.photoStoryCreationTimeStamps,
+  );
   note(
     r.trailingBytes > 0,
-    'Data after the picture',
-    'Data after the end of the picture: ${r.trailingBytes} bytes',
+    l10n.photoStoryDataAfterThePicture,
+    l10n.photoStoryDataAfterTheEnd(r.trailingBytes),
   );
   for (final k in r.textKeys) {
-    all.add('Text field: $k');
+    all.add(l10n.photoStoryTextField(k));
   }
   for (final k in r.videoTags) {
-    all.add('Video tag: $k');
+    all.add(l10n.photoStoryVideoTag(k));
   }
   for (final k in r.extra) {
-    all.add('Also: $k');
+    all.add(l10n.photoStoryAlso(k));
   }
   if (r.otherExifTags > 0) {
-    all.add('${r.otherExifTags} camera settings (flash, focus, exposure)');
+    all.add(l10n.photoStoryCameraSettingsFlashFocus(r.otherExifTags));
   }
   final more =
       named.length +
@@ -222,8 +250,10 @@ PhotoStory storyOf(MetaReport r, {GeoWorld? world, GeoPlaces? places}) {
     rows.add(
       StoryRow(
         StoryRowKind.more,
-        more == 1 ? '1 more field' : '$more more fields',
-        sub: named.isEmpty ? 'Camera settings' : named.take(4).join(', '),
+        more == 1 ? l10n.photoStory1MoreField : l10n.photoStoryMoreFields(more),
+        sub: named.isEmpty
+            ? l10n.photoStoryCameraSettings
+            : named.take(4).join(', '),
       ),
     );
   }
@@ -232,25 +262,25 @@ PhotoStory storyOf(MetaReport r, {GeoWorld? world, GeoPlaces? places}) {
   if (fix != null) {
     final acc = r.accuracyM;
     if (acc != null) {
-      head = 'Accurate to about ${_metres(acc)}.';
+      head = l10n.photoStoryAccurateToAbout(_metres(acc));
       tail = acc <= 30
-          ? 'Enough to find the door.'
+          ? l10n.photoStoryEnoughToFindThe
           : acc <= 300
-          ? 'Enough to find the street.'
-          : 'Enough to find the area.';
+          ? l10n.photoStoryEnoughToFindTheStreet
+          : l10n.photoStoryEnoughToFindTheArea;
     } else {
-      head = 'It knows where you were.';
-      tail = 'Down to the building.';
+      head = l10n.photoStoryItKnowsWhereYou;
+      tail = l10n.photoStoryDownToTheBuilding;
     }
   } else if (r.gpsBlank) {
-    head = 'Android hid the location.';
-    tail = 'The original may still carry it.';
+    head = l10n.photoStoryAndroidHidTheLocation;
+    tail = l10n.photoStoryTheOriginalMayStill;
   } else if (rows.isNotEmpty) {
-    head = 'No location in this one.';
-    tail = 'It still says plenty.';
+    head = l10n.photoStoryNoLocationInThis;
+    tail = l10n.photoStoryItStillSaysPlenty;
   } else {
-    head = 'This one knows nothing.';
-    tail = 'Nothing to remove.';
+    head = l10n.photoStoryThisOneKnowsNothing;
+    tail = l10n.photoStoryNothingToRemove;
   }
 
   return PhotoStory(

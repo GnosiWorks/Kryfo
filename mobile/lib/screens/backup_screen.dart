@@ -14,6 +14,7 @@ import '../main.dart';
 import '../theme.dart';
 import '../widgets/fit_column.dart';
 import '../widgets/stagger_in.dart';
+import '../l10n/l10n.dart';
 
 class BackupScreen extends StatefulWidget {
   const BackupScreen({super.key});
@@ -41,11 +42,11 @@ class _BackupScreenState extends State<BackupScreen> {
     final pw = _p1.text.trim();
     final pw2 = _p2.text.trim();
     if (pw.isEmpty || pw.length < 6) {
-      setState(() => _error = 'passphrase must be at least 6 characters');
+      setState(() => _error = l10n.backupPassphraseMustBeAt);
       return;
     }
     if (pw != pw2) {
-      setState(() => _error = "passphrases don't match");
+      setState(() => _error = l10n.backupPassphrasesDonTMatch);
       return;
     }
     setState(() {
@@ -55,7 +56,7 @@ class _BackupScreenState extends State<BackupScreen> {
     try {
       final tempDir = await getTemporaryDirectory();
       final ts = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      final name = 'kryfo-backup-$ts.kryfo';
+      final name = l10n.backupKryfoBackupKryfo(ts);
       final path = p.join(tempDir.path, name);
       await createBackupFile(
         pw,
@@ -114,7 +115,7 @@ class _BackupScreenState extends State<BackupScreen> {
     }
     if (!mounted) return false;
     if (saved) {
-      showHaloToast(context, 'Backup saved · keep the passphrase safe');
+      showHaloToast(context, l10n.backupBackupSavedKeepThe);
       return false;
     }
     return _share(path);
@@ -125,9 +126,8 @@ class _BackupScreenState extends State<BackupScreen> {
       () => SharePlus.instance.share(
         ShareParams(
           files: [XFile(path)],
-          subject: 'Kryfo backup',
-          text:
-              'Your encrypted kryfo backup. Keep both this file AND your passphrase safe - you need both to restore.',
+          subject: l10n.backupKryfoBackup,
+          text: l10n.backupYourEncryptedKryfoBackup,
         ),
       ),
     );
@@ -151,7 +151,7 @@ class _BackupScreenState extends State<BackupScreen> {
         elevation: 0,
         leading: BackButton(color: HaloColors.text2),
         title: Text(
-          'Back up kryfo',
+          l10n.backupBackUpKryfo,
           style: HaloType.serif(size: 22, color: HaloColors.text, italic: true),
         ),
       ),
@@ -165,32 +165,22 @@ class _BackupScreenState extends State<BackupScreen> {
           children: staggerAll([
             _Choice(
               on: !_move,
-              title: 'Back up',
-              line: 'A copy to keep. This phone carries on as it is.',
+              title: l10n.backupBackUp,
+              line: l10n.backupACopyToKeep,
               onTap: () => setState(() => _move = false),
             ),
             const SizedBox(height: 8),
             _Choice(
               on: _move,
-              title: 'Move to another device',
-              line:
-                  'The file takes this identity with it. Once it is made, '
-                  'this phone stops: nothing new arrives here, and nothing '
-                  'sent from here reaches anyone.',
+              title: l10n.backupMoveToAnotherDevice,
+              line: l10n.backupTheFileTakesThis,
               onTap: () => setState(() => _move = true),
             ),
             const SizedBox(height: 16),
             Text(
               _move
-                  ? 'One encrypted file: your identity, your contacts, every '
-                        'message, and every photo, voice note and file. '
-                        'Import it on the other device with the passphrase. '
-                        'Until you do, this phone can still be kept.'
-                  : 'One encrypted file: your identity, your contacts, every '
-                        'message, and every photo, voice note and file on '
-                        'this phone right now. Anything said after today is '
-                        'not in it, so make another when it matters. To '
-                        'restore you need the file and the passphrase, both.',
+                  ? l10n.backupOneEncryptedFileYour
+                  : l10n.backupOneEncryptedFileYourIdentityYour,
               style: HaloType.sans(
                 size: 13.5,
                 color: HaloColors.text2,
@@ -198,9 +188,9 @@ class _BackupScreenState extends State<BackupScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            _PinField(label: 'Passphrase', controller: _p1),
+            _PinField(label: l10n.backupPassphrase, controller: _p1),
             const SizedBox(height: 12),
-            _PinField(label: 'Confirm passphrase', controller: _p2),
+            _PinField(label: l10n.backupConfirmPassphrase, controller: _p2),
             const SizedBox(height: 12),
             if (_error != null)
               Text(
@@ -221,9 +211,11 @@ class _BackupScreenState extends State<BackupScreen> {
                 child: Text(
                   _busy
                       ? (_progress > 0
-                            ? 'writing\u2026 ${(_progress * 100).round()}%'
-                            : 'creating\u2026')
-                      : (_move ? 'Make the file and move' : 'Create backup'),
+                            ? l10n.backupWriting((_progress * 100).round())
+                            : l10n.backupCreating)
+                      : (_move
+                            ? l10n.backupMakeTheFileAnd
+                            : l10n.backupCreateBackup),
                   style: HaloType.sans(
                     size: 14,
                     color: _busy ? HaloColors.text2 : HaloColors.onAmber,

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
+import '../l10n/l10n.dart';
 
 // shown when boot() throws. sitting on the tor splash instead told the user
 // nothing and pointed them at the network when the fault is usually local.
@@ -26,14 +27,13 @@ class BootFailedScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Kryfo could not start',
+                l10n.bootFailedKryfoCouldNotStart,
                 textAlign: TextAlign.center,
                 style: HaloType.serif(size: 22, color: HaloColors.text),
               ),
               const SizedBox(height: 10),
               Text(
-                'This is a fault on this device, not the network. '
-                'Tor is not involved.',
+                l10n.bootFailedThisIsAFault,
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 13,
@@ -62,7 +62,7 @@ class BootFailedScreen extends StatelessWidget {
                     onPressed: () =>
                         Clipboard.setData(ClipboardData(text: error)),
                     child: Text(
-                      'Copy',
+                      l10n.commonCopy,
                       style: HaloType.mono(size: 12, color: HaloColors.text3),
                     ),
                   ),
@@ -81,7 +81,7 @@ class BootFailedScreen extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      'Try again',
+                      l10n.commonTryAgain,
                       style: HaloType.sans(size: 14, color: HaloColors.onAmber),
                     ),
                   ),

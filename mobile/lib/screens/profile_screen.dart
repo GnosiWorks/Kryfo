@@ -14,6 +14,7 @@ import 'donate_screen.dart';
 import 'my_kryfo_screen.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/halo_switch.dart';
+import '../l10n/l10n.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? onOpenSupport;
@@ -67,7 +68,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   void _copy(String text, String what) {
     copySensitive(text);
     HapticFeedback.selectionClick();
-    showHaloToast(context, '$what copied');
+    showHaloToast(context, l10n.profileCopied(what));
   }
 
   // a child that fades + slides up, delayed by [order] so sections stagger.
@@ -102,12 +103,12 @@ class _ProfileScreenState extends State<ProfileScreen>
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
         title: Text(
-          'Profile',
+          l10n.profileProfile,
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
         actions: [
           IconButton(
-            tooltip: 'Settings',
+            tooltip: l10n.commonSettings,
             icon: Icon(Icons.settings_outlined, color: HaloColors.text2),
             onPressed: () =>
                 Navigator.of(context).push(haloRoute(SettingsScreen())),
@@ -135,7 +136,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           ),
                         ),
                         child: Semantics(
-                          label: 'Change your face',
+                          label: l10n.profileChangeYourFace,
                           button: true,
                           child: GestureDetector(
                             behavior: HitTestBehavior.opaque,
@@ -216,7 +217,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _PressRow(
-                        onTap: () => _copy(id, 'kryfo id'),
+                        onTap: () => _copy(id, l10n.profileKryfoId),
                         child: Row(
                           children: [
                             Expanded(
@@ -241,7 +242,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                         Divider(color: HaloColors.line, height: 1),
                         const SizedBox(height: 12),
                         _PressRow(
-                          onTap: () => _copy(appState.myOnion, 'onion address'),
+                          onTap: () =>
+                              _copy(appState.myOnion, l10n.profileOnionAddress),
                           child: Row(
                             children: [
                               Expanded(
@@ -272,7 +274,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               const SizedBox(height: 24),
 
               if (hasBadge) ...[
-                _reveal(2, const _Section('Supporter badge')),
+                _reveal(2, _Section(l10n.profileSupporterBadge)),
                 _reveal(
                   2,
                   Container(
@@ -290,7 +292,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
-                                'You are a ${tierName(_tier)}. thank you.',
+                                l10n.profileYouAreAThank(tierName(_tier)),
                                 style: HaloType.sans(
                                   size: 13,
                                   color: HaloColors.text2,
@@ -301,8 +303,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                         ),
                         const SizedBox(height: 14),
                         _toggleRow(
-                          'show my badge',
-                          'On my own screens',
+                          l10n.profileShowMyBadge,
+                          l10n.profileOnMyOwnScreens,
                           _showSelf,
                           (v) async {
                             await saveShowBadgeSelf(v);
@@ -311,8 +313,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                         ),
                         const SizedBox(height: 10),
                         _toggleRow(
-                          'Let contacts see it',
-                          'off by default',
+                          l10n.profileLetContactsSeeIt,
+                          l10n.profileOffByDefault,
                           _share,
                           (v) async {
                             await saveShareBadge(v);
@@ -326,7 +328,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 const SizedBox(height: 24),
               ],
 
-              _reveal(3, const _Section('share & connect')),
+              _reveal(3, _Section(l10n.profileShareConnect)),
               const SizedBox(height: 8),
               _reveal(
                 3,
@@ -351,7 +353,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'My kryfo code',
+                            l10n.profileMyKryfoCode,
                             style: HaloType.sans(
                               size: 14,
                               color: HaloColors.text,
@@ -390,7 +392,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Add contact',
+                            l10n.profileAddContact,
                             style: HaloType.sans(
                               size: 14,
                               color: HaloColors.text,
@@ -408,7 +410,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
               ),
               const SizedBox(height: 24),
-              _reveal(3, _Section(hasBadge ? 'Give again' : 'Support kryfo')),
+              _reveal(
+                3,
+                _Section(
+                  hasBadge ? l10n.profileGiveAgain : l10n.profileSupportKryfo,
+                ),
+              ),
               _reveal(
                 3,
                 _PressRow(
@@ -437,8 +444,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                         Expanded(
                           child: Text(
                             hasBadge
-                                ? 'Kryfo runs on what people give'
-                                : 'Keep kryfo independent',
+                                ? l10n.profileKryfoRunsOnWhat
+                                : l10n.profileKeepKryfoIndependent,
                             style: HaloType.sans(
                               size: 14,
                               color: HaloColors.text,

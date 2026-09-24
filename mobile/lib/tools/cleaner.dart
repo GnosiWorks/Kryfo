@@ -7,6 +7,7 @@ import '../image_strip.dart';
 import '../meta/file_source.dart';
 import '../meta/meta_reader.dart';
 import '../mp4_strip.dart';
+import '../l10n/l10n.dart';
 
 const kMaxPictureBytes = 64 << 20;
 
@@ -181,22 +182,26 @@ class RemovedLine {
 List<RemovedLine> removedLines(MetaReport r) {
   final out = <RemovedLine>[];
   if (r.gps != null) {
-    out.add(const RemovedLine('Location'));
+    out.add(RemovedLine(l10n.cleanerLocation));
   } else if (r.gpsBlank) {
-    out.add(const RemovedLine('Location', 'already blanked by Android'));
+    out.add(
+      RemovedLine(l10n.cleanerLocation, l10n.cleanerAlreadyBlankedByAndroid),
+    );
   }
   final phone = [r.make, r.model].whereType<String>().join(' ').trim();
-  if (phone.isNotEmpty) out.add(RemovedLine('Phone model', phone));
+  if (phone.isNotEmpty) out.add(RemovedLine(l10n.cleanerPhoneModel, phone));
   if (r.taken != null || r.created != null) {
-    out.add(const RemovedLine('Time taken'));
+    out.add(RemovedLine(l10n.cleanerTimeTaken));
   }
-  if (r.serial != null) out.add(const RemovedLine('Serial number'));
+  if (r.serial != null) out.add(RemovedLine(l10n.cleanerSerialNumber));
   if (r.owner != null || r.copyright != null) {
-    out.add(const RemovedLine('Owner name'));
+    out.add(RemovedLine(l10n.cleanerOwnerName));
   }
-  if (r.thumbnailBytes > 0) out.add(const RemovedLine('Hidden thumbnail'));
-  if (r.credentials) out.add(const RemovedLine('Content credentials'));
-  if (r.trailingBytes > 0) out.add(const RemovedLine('Data after the picture'));
+  if (r.thumbnailBytes > 0) out.add(RemovedLine(l10n.cleanerHiddenThumbnail));
+  if (r.credentials) out.add(RemovedLine(l10n.cleanerContentCredentials));
+  if (r.trailingBytes > 0) {
+    out.add(RemovedLine(l10n.cleanerDataAfterThePicture));
+  }
   var other = r.otherExifTags + r.textKeys.length + r.videoTags.length;
   other += r.extra.length;
   for (final b in [
@@ -213,7 +218,11 @@ List<RemovedLine> removedLines(MetaReport r) {
     if (b) other++;
   }
   if (other > 0) {
-    out.add(RemovedLine(other == 1 ? '1 other field' : '$other other fields'));
+    out.add(
+      RemovedLine(
+        other == 1 ? l10n.cleaner1OtherField : l10n.cleanerOtherFields(other),
+      ),
+    );
   }
   return out;
 }

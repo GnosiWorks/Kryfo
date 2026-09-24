@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../link_preview.dart' show domainOf;
 import '../theme.dart';
 import 'press_scale.dart';
+import '../l10n/l10n.dart';
 
 // the sender's consent, above the composer: a link in the text offers
 // "add preview"; tapping it fetches the page title over tor on this phone
@@ -62,7 +63,9 @@ class PreviewStrip extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  '${domainOf(p['url'] ?? '')} · fetched over tor',
+                                  l10n.previewStripFetchedOverTor(
+                                    domainOf(p['url'] ?? ''),
+                                  ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: HaloType.mono(
@@ -74,7 +77,7 @@ class PreviewStrip extends StatelessWidget {
                             ),
                           ),
                           PressScale(
-                            label: 'Drop the preview',
+                            label: l10n.previewStripDropThePreview,
                             onTap: onDrop,
                             child: Padding(
                               padding: const EdgeInsets.all(6),
@@ -91,7 +94,7 @@ class PreviewStrip extends StatelessWidget {
                   : Align(
                       alignment: Alignment.centerLeft,
                       child: PressScale(
-                        label: 'Add preview',
+                        label: l10n.previewStripAddPreview,
                         onTap: busy ? null : onAdd,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
@@ -116,7 +119,9 @@ class PreviewStrip extends StatelessWidget {
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                busy ? 'Fetching over tor…' : 'Add preview',
+                                busy
+                                    ? l10n.previewStripFetchingOverTor
+                                    : l10n.previewStripAddPreview,
                                 style: HaloType.mono(
                                   size: 10.5,
                                   color: HaloColors.amber,

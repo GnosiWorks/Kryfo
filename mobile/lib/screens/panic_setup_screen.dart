@@ -9,6 +9,7 @@ import '../lock_state.dart';
 import '../widgets/fit_column.dart';
 import '../theme.dart';
 import '../widgets/pin_pad.dart';
+import '../l10n/l10n.dart';
 
 class PanicSetupScreen extends StatefulWidget {
   const PanicSetupScreen({super.key});
@@ -69,12 +70,12 @@ class _PanicSetupScreenState extends State<PanicSetupScreen>
       return;
     }
     if (_pin != _first) {
-      await _fail('Those were different. From the top.');
+      await _fail(l10n.panicSetupThoseWereDifferentFrom);
       return;
     }
     final ok = await lockState.setupPanicPin(_pin);
     if (!ok) {
-      await _fail('That is your real pin. Pick another.');
+      await _fail(l10n.panicSetupThatIsYourReal);
       return;
     }
     HapticFeedback.mediumImpact();
@@ -88,7 +89,9 @@ class _PanicSetupScreenState extends State<PanicSetupScreen>
 
   @override
   Widget build(BuildContext context) {
-    final title = _confirming ? 'Once more' : 'Set a wipe pin';
+    final title = _confirming
+        ? l10n.panicSetupOnceMore
+        : l10n.panicSetupSetAWipePin;
     return Scaffold(
       backgroundColor: HaloColors.ink,
       appBar: AppBar(
@@ -123,8 +126,8 @@ class _PanicSetupScreenState extends State<PanicSetupScreen>
             Text(
               _error ??
                   (_confirming
-                      ? 'The same four digits'
-                      : 'The second pin wipes everything.'),
+                      ? l10n.panicSetupTheSameFourDigits
+                      : l10n.panicSetupTheSecondPinWipes),
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 13,

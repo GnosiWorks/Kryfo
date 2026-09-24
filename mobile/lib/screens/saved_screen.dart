@@ -6,6 +6,7 @@ import '../theme.dart';
 import 'chat_screen.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/stagger_in.dart';
+import '../l10n/l10n.dart';
 
 // every saved message across all chats, newest first. tap a card to jump to
 // that message in its chat; tap the bookmark to unsave.
@@ -68,9 +69,9 @@ class _SavedScreenState extends State<SavedScreen> {
 
   String _preview(Map<String, Object?> r) {
     final fn = r['file_name'] as String?;
-    if (fn == 'voice.wav') return 'voice note';
+    if (fn == 'voice.wav') return l10n.savedVoiceNote;
     if (fn != null) return fn;
-    if ((r['media_path'] as String?) != null) return 'photo';
+    if ((r['media_path'] as String?) != null) return l10n.savedPhoto;
     return (r['plaintext'] as String?) ?? '';
   }
 
@@ -110,7 +111,7 @@ class _SavedScreenState extends State<SavedScreen> {
         elevation: 0,
         leading: BackButton(color: HaloColors.text2),
         title: Text(
-          'Saved',
+          l10n.savedSaved,
           style: HaloType.serif(size: 22, color: HaloColors.text, italic: true),
         ),
       ),
@@ -154,13 +155,13 @@ class _SavedScreenState extends State<SavedScreen> {
             StaggerIn(
               index: 0,
               child: Text(
-                'Nothing saved yet',
+                l10n.savedNothingSavedYet,
                 style: HaloType.serif(size: 24, color: HaloColors.text),
               ),
             ),
             const SizedBox(height: 10),
             Text(
-              'long-press any message and tap save to keep it here.',
+              l10n.savedLongPressAnyMessage,
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 12.5,
@@ -220,7 +221,7 @@ class _SavedScreenState extends State<SavedScreen> {
                 ),
                 const Spacer(),
                 Semantics(
-                  label: 'Saved',
+                  label: l10n.savedSaved,
                   button: true,
                   child: GestureDetector(
                     onTap: uid == null ? null : () => _unsave(uid),
@@ -236,7 +237,7 @@ class _SavedScreenState extends State<SavedScreen> {
             ),
             const SizedBox(height: 10),
             if (isVoice)
-              _mediaRow(Icons.graphic_eq, 'voice note')
+              _mediaRow(Icons.graphic_eq, l10n.savedVoiceNote)
             else if (isPhoto)
               _photoRow()
             else
@@ -260,7 +261,7 @@ class _SavedScreenState extends State<SavedScreen> {
                 ),
                 const SizedBox(width: 5),
                 Text(
-                  'View in chat',
+                  l10n.savedViewInChat,
                   style: HaloType.mono(size: 8.5, color: HaloColors.text3),
                 ),
               ],
@@ -304,7 +305,10 @@ class _SavedScreenState extends State<SavedScreen> {
         child: Icon(Icons.image_outlined, size: 18, color: HaloColors.text3),
       ),
       const SizedBox(width: 10),
-      Text('Photo', style: HaloType.sans(size: 13, color: HaloColors.text2)),
+      Text(
+        l10n.savedPhoto2,
+        style: HaloType.sans(size: 13, color: HaloColors.text2),
+      ),
     ],
   );
 }

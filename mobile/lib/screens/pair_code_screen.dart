@@ -13,6 +13,7 @@ import '../main.dart';
 import '../theme.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/pair_code_panel.dart';
+import '../l10n/l10n.dart';
 
 class PairCodeScreen extends StatefulWidget {
   // open on the entering side: the other person read their code out
@@ -38,12 +39,12 @@ class _PairCodeScreenState extends State<PairCodeScreen> {
               child: Row(
                 children: staggerAll([
                   IconButton(
-                    tooltip: 'Back',
+                    tooltip: l10n.commonBack,
                     icon: Icon(Icons.arrow_back, color: HaloColors.text2),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   Text(
-                    'Pairing code',
+                    l10n.pairCodePairingCode,
                     style: HaloType.serif(size: 22, italic: true),
                   ),
                 ]),
@@ -54,13 +55,13 @@ class _PairCodeScreenState extends State<PairCodeScreen> {
               child: Row(
                 children: [
                   _Tab(
-                    label: 'Show a code',
+                    label: l10n.pairCodeShowACode,
                     on: _sharing,
                     onTap: () => setState(() => _sharing = true),
                   ),
                   const SizedBox(width: 8),
                   _Tab(
-                    label: 'Enter one',
+                    label: l10n.pairCodeEnterOne,
                     on: !_sharing,
                     onTap: () => setState(() => _sharing = false),
                   ),
@@ -144,12 +145,12 @@ class _JoinSideState extends State<_JoinSide> {
   Future<void> _join() async {
     final code = _ctrl.text.replaceAll(RegExp(r'\D'), '');
     if (code.length != 6) {
-      setState(() => _status = 'Six digits');
+      setState(() => _status = l10n.pairCodeSixDigits);
       return;
     }
     setState(() {
       _busy = true;
-      _status = 'Looking…';
+      _status = l10n.pairCodeLooking;
     });
 
     // the other side may not have pressed share yet, so give it a few goes
@@ -174,16 +175,14 @@ class _JoinSideState extends State<_JoinSide> {
         return;
       }
       if (attempt < 2) {
-        setState(() => _status = 'Nothing there yet · trying again');
+        setState(() => _status = l10n.pairCodeNothingThereYetTrying);
         await Future<void>.delayed(const Duration(seconds: 4));
       }
     }
     if (!mounted) return;
     setState(() {
       _busy = false;
-      _status =
-          'Nothing at that code. It may have burned, or they have not '
-          'shared it yet.';
+      _status = l10n.pairCodeNothingAtThatCode;
     });
   }
 
@@ -193,7 +192,7 @@ class _JoinSideState extends State<_JoinSide> {
       padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
       children: [
         Text(
-          'Type the six digits they read out.',
+          l10n.pairCodeTypeTheSixDigits,
           style: HaloType.sans(size: 13.5, color: HaloColors.text2),
         ),
         const SizedBox(height: 20),
@@ -236,7 +235,7 @@ class _JoinSideState extends State<_JoinSide> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              _busy ? 'Looking…' : 'Add them',
+              _busy ? l10n.pairCodeLooking : l10n.pairCodeAddThem,
               style: HaloType.mono(
                 size: 12,
                 weight: FontWeight.w600,

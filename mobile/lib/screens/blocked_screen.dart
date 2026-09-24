@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../main.dart' show appState;
 import '../widgets/stagger_in.dart';
+import '../l10n/l10n.dart';
 
 // lists contacts you have blocked. unblock restores them to your chats and
 // lets their messages through again. blocking never notifies the other side.
@@ -51,7 +52,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    tooltip: 'Back',
+                    tooltip: l10n.commonBack,
                     icon: Icon(
                       Icons.chevron_left,
                       color: HaloColors.text2,
@@ -60,7 +61,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   Text(
-                    'Blocked',
+                    l10n.blockedBlocked,
                     style: HaloType.serif(size: 22, color: HaloColors.text),
                   ),
                 ],
@@ -74,7 +75,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
                       child: StaggerIn(
                         index: 0,
                         child: Text(
-                          'No one is blocked',
+                          l10n.blockedNoOneIsBlocked,
                           style: HaloType.serif(
                             size: 18,
                             italic: true,
@@ -122,7 +123,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
                                   TextButton(
                                     onPressed: () => _unblock(c.haloId),
                                     child: Text(
-                                      'Unblock',
+                                      l10n.commonUnblock,
                                       style: HaloType.sans(
                                         size: 13,
                                         weight: FontWeight.w500,

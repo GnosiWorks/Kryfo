@@ -20,6 +20,7 @@ import 'avatar_picker_screen.dart' show AvatarChoiceEditor;
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/stagger_in.dart';
+import '../l10n/l10n.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final AppState appState;
@@ -132,7 +133,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
         ),
         const SizedBox(height: 28),
         Text(
-          'PRIVATE BY DEFAULT',
+          l10n.onboardingPrivateByDefault,
           style: HaloType.mono(
             size: 10,
             color: HaloColors.amber,
@@ -148,9 +149,9 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
               height: 1.05,
             ),
             children: [
-              const TextSpan(text: 'Private messaging,\n'),
+              TextSpan(text: l10n.onboardingPrivateMessaging),
               TextSpan(
-                text: 'without the catch',
+                text: l10n.onboardingWithoutTheCatch,
                 style: HaloType.serif(
                   size: 38,
                   weight: FontWeight.w300,
@@ -164,19 +165,16 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
           ),
         ),
         const SizedBox(height: 26),
+        _bullet(l10n.onboardingYourNameIsThree, l10n.onboardingNoPhoneNoEmail),
+        const SizedBox(height: 13),
         _bullet(
-          'Your name is three words.',
-          'No phone, no email, no address book.',
+          l10n.onboardingNobodyGetsInUnless,
+          l10n.onboardingThereIsNoSearch,
         ),
         const SizedBox(height: 13),
         _bullet(
-          'Nobody gets in unless you let them.',
-          'There is no search. People are added by hand, both ways.',
-        ),
-        const SizedBox(height: 13),
-        _bullet(
-          'The first connection takes a minute.',
-          'Kryfo builds a private route before it sends. Quick after.',
+          l10n.onboardingTheFirstConnectionTakes,
+          l10n.onboardingKryfoBuildsAPrivate,
         ),
         const Spacer(),
         GestureDetector(
@@ -189,7 +187,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
             ),
             alignment: Alignment.center,
             child: Text(
-              'Begin',
+              l10n.onboardingBegin,
               style: HaloType.sans(
                 size: 14,
                 color: HaloColors.onAmber,
@@ -205,7 +203,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
               Navigator.of(context).push(haloRoute(const RestoreScreen()));
             },
             child: Text(
-              'Have a backup? Restore →',
+              l10n.onboardingHaveABackupRestore,
               style: HaloType.sans(size: 12, color: HaloColors.text2),
             ),
           ),
@@ -213,7 +211,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
         const SizedBox(height: 14),
         Center(
           child: Text(
-            'Kryfo is open source',
+            l10n.onboardingKryfoIsOpenSource,
             style: HaloType.mono(
               size: 10,
               color: HaloColors.text3,
@@ -341,7 +339,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
             _sigilReveal(),
             const SizedBox(height: 22),
             Text(
-              'YOUR KRYFO ID',
+              l10n.onboardingYourKryfoId,
               style: HaloType.mono(
                 size: 10,
                 color: HaloColors.amber,
@@ -365,12 +363,9 @@ class _IdentityScreenState extends State<_IdentityScreen>
                       height: 1.55,
                     ),
                     children: [
-                      const TextSpan(
-                        text:
-                            'Generated from a key that lives only on this phone. ',
-                      ),
+                      TextSpan(text: l10n.onboardingGeneratedFromAKey),
                       TextSpan(
-                        text: 'Memorable, unique, yours alone.',
+                        text: l10n.onboardingMemorableUniqueYoursAlone,
                         style: HaloType.sans(
                           size: 11,
                           color: HaloColors.text2,
@@ -378,7 +373,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
                           height: 1.55,
                         ),
                       ),
-                      const TextSpan(text: ' No one else has this.'),
+                      TextSpan(text: l10n.onboardingNoOneElseHas),
                     ],
                   ),
                 ),
@@ -402,7 +397,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'Try another',
+                        l10n.onboardingTryAnother,
                         style: HaloType.sans(size: 12, color: HaloColors.text2),
                       ),
                     ),
@@ -420,7 +415,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'Use this name \u2192',
+                        l10n.onboardingUseThisName,
                         style: HaloType.sans(
                           size: 12,
                           color: HaloColors.onAmber,
@@ -485,9 +480,9 @@ class _IdentityScreenState extends State<_IdentityScreen>
         height: 1.25,
       ),
       children: [
-        const TextSpan(text: 'Three words. '),
+        TextSpan(text: l10n.onboardingThreeWords),
         TextSpan(
-          text: 'Yours alone.',
+          text: l10n.onboardingYoursAlone,
           style: HaloType.serif(
             size: 19,
             weight: FontWeight.w300,
@@ -594,7 +589,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Text(
-        '\u00b7',
+        l10n.onboardingText,
         style: HaloType.mono(size: 14, color: HaloColors.text3),
       ),
     ),
@@ -681,7 +676,7 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
                 height: 1.05,
               ),
               children: [
-                const TextSpan(text: 'Pick a '),
+                TextSpan(text: l10n.onboardingPickA),
                 TextSpan(
                   text: 'face',
                   style: HaloType.serif(
@@ -698,8 +693,7 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Drawn on this phone from a number, never uploaded. '
-            'Change it whenever you like.',
+            l10n.onboardingDrawnOnThisPhone,
             style: HaloType.sans(
               size: 13.5,
               color: HaloColors.text2,
@@ -710,7 +704,7 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
           Expanded(
             child: AvatarChoiceEditor(
               padding: const EdgeInsets.only(top: 12, bottom: 12),
-              caption: 'The people you message see this too',
+              caption: l10n.onboardingThePeopleYouMessage,
               onChanged: (c) => setState(() {
                 _choice = c;
                 _touched = true;
@@ -728,7 +722,7 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
                     vertical: 11,
                   ),
                   child: Text(
-                    'Keep my initial',
+                    l10n.onboardingKeepMyInitial,
                     style: HaloType.sans(size: 12, color: HaloColors.text2),
                   ),
                 ),
@@ -746,7 +740,7 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    _touched ? 'That one →' : 'Continue →',
+                    _touched ? l10n.onboardingThatOne : l10n.onboardingContinue,
                     style: HaloType.sans(
                       size: 12,
                       color: HaloColors.onAmber,
@@ -805,11 +799,10 @@ class _TransportScreenState extends State<_TransportScreen> {
       children: [
         const _Step(4),
         const SizedBox(height: 22),
-        _headline('How your messages ', 'travel'),
+        _headline(l10n.onboardingHowYourMessages, 'travel'),
         const SizedBox(height: 12),
         Text(
-          'You can change this any time in settings, for everyone or for '
-          'one chat.',
+          l10n.onboardingYouCanChangeThis,
           style: HaloType.sans(
             size: 13.5,
             color: HaloColors.text2,
@@ -819,34 +812,34 @@ class _TransportScreenState extends State<_TransportScreen> {
         const SizedBox(height: 24),
         ...staggerAll([
           _ModeCard(
-            title: 'Onion',
-            cost: 'Slower. A message takes two to five seconds.',
-            gain: 'Hides your address from everyone, our relay included.',
+            title: l10n.onboardingOnion,
+            cost: l10n.onboardingSlowerAMessageTakes,
+            gain: l10n.onboardingHidesYourAddressFrom,
             on: _pick == 'private',
             onTap: () => setState(() => _pick = 'private'),
           ),
           const SizedBox(height: 10),
           _ModeCard(
-            title: 'Relay',
-            cost: 'Our relay sees your address. Nobody else does.',
-            gain: 'About a second. Works where tor is blocked.',
+            title: l10n.onboardingRelay,
+            cost: l10n.onboardingOurRelaySeesYour,
+            gain: l10n.onboardingAboutASecondWorks,
             on: _pick == 'balanced',
             onTap: () => setState(() => _pick = 'balanced'),
           ),
           const SizedBox(height: 10),
           _ModeCard(
-            title: 'Fast',
-            cost:
-                'Every relay you use sees your address. The least private '
-                'of the three.',
-            gain: 'Near instant.',
+            title: l10n.onboardingFast,
+            cost: l10n.onboardingEveryRelayYouUse,
+            gain: l10n.onboardingNearInstant,
             on: _pick == 'fast',
             onTap: () => setState(() => _pick = 'fast'),
           ),
         ]),
         const Spacer(),
         _Cta(
-          label: _pick == 'private' ? 'Keep onion →' : 'Use this →',
+          label: _pick == 'private'
+              ? l10n.onboardingKeepOnion
+              : l10n.onboardingUseThis,
           onTap: _go,
         ),
         const SizedBox(height: 10),
@@ -862,7 +855,7 @@ class _TransportScreenState extends State<_TransportScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Text(
-                'Skip · onion is a fine default',
+                l10n.onboardingSkipOnionIsA,
                 style: HaloType.sans(size: 13, color: HaloColors.text2),
               ),
             ),
@@ -971,10 +964,10 @@ class _ThreeThingsScreen extends StatelessWidget {
       children: [
         const _Step(5),
         const SizedBox(height: 22),
-        _headline('Three things,\nthen ', "you're in"),
+        _headline(l10n.onboardingThreeThingsThen, l10n.onboardingYouReIn),
         const SizedBox(height: 12),
         Text(
-          'Everything else the app will tell you when it matters.',
+          l10n.onboardingEverythingElseTheApp,
           style: HaloType.sans(
             size: 13.5,
             color: HaloColors.text2,
@@ -985,34 +978,24 @@ class _ThreeThingsScreen extends StatelessWidget {
         ...staggerAll([
           _Card(
             num: '01',
-            title: 'Your name is three words',
-            desc:
-                'That is the whole identity. No number to leak, no email '
-                'to phish, nothing to look up. People you talk to see '
-                'these words and the face you picked.',
+            title: l10n.onboardingYourNameIsThreeWords,
+            desc: l10n.onboardingThatIsTheWhole,
           ),
           const SizedBox(height: 12),
           _Card(
             num: '02',
-            title: 'Nobody can reach you until you let them in',
-            desc:
-                'A stranger with your words can only knock. Their first '
-                'message waits in requests until you say yes, and you can '
-                'say no without them ever knowing.',
+            title: l10n.onboardingNobodyCanReachYou,
+            desc: l10n.onboardingAStrangerWithYour,
           ),
           const SizedBox(height: 12),
           _Card(
             num: '03',
-            title: 'The first connection takes a minute',
-            desc:
-                'Kryfo builds a private route before it sends anything. '
-                'While you are offline, messages wait and arrive when you '
-                'are back.',
+            title: l10n.onboardingTheFirstConnectionTakesAMinute,
+            desc: l10n.onboardingKryfoBuildsAPrivateRouteBefore,
           ),
           const SizedBox(height: 16),
           Text(
-            'Your identity lives on this phone. Back it up from settings '
-            'when you are ready.',
+            l10n.onboardingYourIdentityLivesOn,
             style: HaloType.sans(
               size: 12,
               color: HaloColors.text3,
@@ -1021,7 +1004,7 @@ class _ThreeThingsScreen extends StatelessWidget {
           ),
         ], from: 1),
         const Spacer(),
-        _Cta(label: 'I understand →', onTap: onContinue),
+        _Cta(label: l10n.onboardingIUnderstand, onTap: onContinue),
       ],
     );
   }
@@ -1044,12 +1027,10 @@ class _NotificationScreen extends StatelessWidget {
       children: [
         const _Step(6),
         const SizedBox(height: 22),
-        _headline('One quiet ', 'notification'),
+        _headline(l10n.onboardingOneQuiet, 'notification'),
         const SizedBox(height: 12),
         Text(
-          'Android needs a visible notification while an app listens in '
-          'the background. That is how messages reach you when kryfo is '
-          'closed.',
+          l10n.onboardingAndroidNeedsAVisible,
           style: HaloType.sans(
             size: 13.5,
             color: HaloColors.text2,
@@ -1058,16 +1039,14 @@ class _NotificationScreen extends StatelessWidget {
         ),
         const SizedBox(height: 24),
         ...staggerAll([
-          const _Card(
+          _Card(
             icon: Icons.notifications_none,
-            title: 'Silent, and at the bottom of the shade',
-            desc:
-                'It never buzzes. Turn it off and messages wait until you '
-                'open the app again.',
+            title: l10n.onboardingSilentAndAtThe,
+            desc: l10n.onboardingItNeverBuzzesTurn,
           ),
         ], from: 1),
         const Spacer(),
-        _Cta(label: 'Got it →', onTap: onContinue),
+        _Cta(label: l10n.onboardingGotIt, onTap: onContinue),
       ],
     );
   }
@@ -1087,11 +1066,10 @@ class _AddSomeoneScreen extends StatelessWidget {
       children: [
         const _Step(7),
         const SizedBox(height: 22),
-        _headline('Now, ', 'add someone'),
+        _headline(l10n.onboardingNow, l10n.onboardingAddSomeone),
         const SizedBox(height: 12),
         Text(
-          'The app is ready. Nobody can message you until you add them '
-          'or let them in.',
+          l10n.onboardingTheAppIsReady,
           style: HaloType.sans(
             size: 13.5,
             color: HaloColors.text2,
@@ -1102,10 +1080,8 @@ class _AddSomeoneScreen extends StatelessWidget {
         ...staggerAll([
           _Path(
             icon: Icons.qr_code_2_outlined,
-            title: 'Every way to add someone',
-            desc:
-                'Show your code, send them a link, or type the @handle '
-                'they gave you.',
+            title: l10n.onboardingEveryWayToAdd,
+            desc: l10n.onboardingShowYourCodeSend,
             onTap: () async {
               // open the page first, then finish onboarding once it
               // returns. completing first rebuilds the tree to home and
@@ -1118,8 +1094,8 @@ class _AddSomeoneScreen extends StatelessWidget {
           const SizedBox(height: 12),
           _Path(
             icon: Icons.center_focus_weak,
-            title: 'Scan theirs',
-            desc: 'Point the camera at their code',
+            title: l10n.onboardingScanTheirs,
+            desc: l10n.onboardingPointTheCameraAt,
             onTap: () async {
               final nav = Navigator.of(context);
               final raw = await nav.push<String>(
@@ -1141,7 +1117,7 @@ class _AddSomeoneScreen extends StatelessWidget {
         const Spacer(),
         Center(
           child: Text(
-            'The app is ready when you are.',
+            l10n.onboardingTheAppIsReadyWhenYou,
             style: HaloType.serif(
               size: 16,
               weight: FontWeight.w300,
@@ -1158,7 +1134,7 @@ class _AddSomeoneScreen extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
               child: Text(
-                'Not now · add people later',
+                l10n.onboardingNotNowAddPeople,
                 style: HaloType.sans(size: 12.5, color: HaloColors.text2),
               ),
             ),

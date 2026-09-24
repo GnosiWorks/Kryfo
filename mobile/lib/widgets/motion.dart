@@ -6,6 +6,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../l10n/l10n.dart';
 
 const kInk = Color(0xFF0D0B09);
 const kSurface = Color(0xFF161310);
@@ -208,45 +209,45 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   String get _label {
     switch (widget.status) {
       case TorStatus.off:
-        return 'STANDBY';
+        return l10n.motionStandby;
       case TorStatus.starting:
-        return 'CONNECTING';
+        return l10n.motionConnecting;
       case TorStatus.bootstrapped:
-        return 'BUILDING';
+        return l10n.motionBuilding;
       case TorStatus.publishing:
-        return 'PUBLISHING';
+        return l10n.motionPublishing;
       case TorStatus.reachable:
-        return 'READY';
+        return l10n.motionReady;
     }
   }
 
   String get _italic {
     switch (widget.status) {
       case TorStatus.off:
-        return 'Preparing to connect';
+        return l10n.motionPreparingToConnect;
       case TorStatus.starting:
-        return 'Finding a private path';
+        return l10n.motionFindingAPrivatePath;
       case TorStatus.bootstrapped:
-        return 'Carving the path';
+        return l10n.motionCarvingThePath;
       case TorStatus.publishing:
-        return 'Announcing your arrival';
+        return l10n.motionAnnouncingYourArrival;
       case TorStatus.reachable:
-        return "you're anonymous";
+        return l10n.motionYouReAnonymous;
     }
   }
 
   String get _help {
     switch (widget.status) {
       case TorStatus.off:
-        return 'Tor is starting in the background. This graph lights up as the connection forms.';
+        return l10n.motionTorIsStartingIn;
       case TorStatus.starting:
-        return 'Making a fresh route through anonymous relays.';
+        return l10n.motionMakingAFreshRoute;
       case TorStatus.bootstrapped:
-        return 'Bouncing through relays so no one can trace this back to you.';
+        return l10n.motionBouncingThroughRelaysSo;
       case TorStatus.publishing:
-        return "telling the network you're online \u2014 without revealing where.";
+        return l10n.motionTellingTheNetworkYou;
       case TorStatus.reachable:
-        return 'Your ip is hidden. Only people with your kryfo can reach you.';
+        return l10n.motionYourIpIsHidden;
     }
   }
 
@@ -255,12 +256,12 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
       case TorStatus.off:
         return '\u2014';
       case TorStatus.starting:
-        return 'building';
+        return l10n.motionBuilding2;
       case TorStatus.bootstrapped:
       case TorStatus.publishing:
-        return 'open';
+        return l10n.motionOpen;
       case TorStatus.reachable:
-        return 'live';
+        return l10n.motionLive;
     }
   }
 
@@ -373,7 +374,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
                       letterSpacing: 0.4,
                     ),
                     children: [
-                      const TextSpan(text: 'Circuit \u00b7 '),
+                      TextSpan(text: l10n.motionCircuit),
                       TextSpan(
                         text: _circuit,
                         style: TextStyle(
@@ -740,14 +741,14 @@ class _SendPillState extends State<SendPill>
   }
 
   String get _label {
-    if (widget.delivered) return 'delivered';
+    if (widget.delivered) return l10n.motionDelivered;
     switch (widget.mode) {
       case PrivacyMode.fast:
-        return 'sent';
+        return l10n.motionSent;
       case PrivacyMode.normal:
-        return '1 hop';
+        return l10n.motion1Hop;
       case PrivacyMode.private:
-        return '3 hops';
+        return l10n.motion3Hops;
     }
   }
 

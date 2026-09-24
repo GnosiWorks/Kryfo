@@ -15,6 +15,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'theme.dart';
+import 'l10n/l10n.dart';
 
 /// outgoing: msgUid -> 0..1
 final Map<String, double> mediaSendProgress = {};
@@ -124,15 +125,12 @@ class SendProgressLabel extends StatelessWidget {
 /// slim "receiving media" pill above the composer. self-hiding.
 class IncomingMediaBanner extends StatelessWidget {
   final String chatKey;
+
   /// stops an outgoing send from the strip itself. the way out already
   /// existed, behind a long press on a bubble that is busy sending, which
   /// is not somewhere anyone looks while a strip says "keep the app open".
   final void Function(String msgUid)? onCancel;
-  const IncomingMediaBanner({
-    super.key,
-    required this.chatKey,
-    this.onCancel,
-  });
+  const IncomingMediaBanner({super.key, required this.chatKey, this.onCancel});
 
   @override
   Widget build(BuildContext context) {
@@ -188,10 +186,13 @@ class IncomingMediaBanner extends StatelessWidget {
                 Flexible(
                   child: Text(
                     sending
-                        ? 'Sending \u00b7 ${(v * 100).round()}% \u00b7 keep the app open'
+                        ? l10n.mediaProgressSendingKeepTheApp((v * 100).round())
                         : stalled && count != null
-                        ? 'Paused \u00b7 ${count.$1} of ${count.$2} \u00b7 waiting for the rest'
-                        : 'Receiving media \u00b7 ${(v * 100).round()}%',
+                        ? l10n.mediaProgressPausedOfWaitingFor(
+                            count.$1,
+                            count.$2,
+                          )
+                        : l10n.mediaProgressReceivingMedia((v * 100).round()),
                     style: HaloType.mono(
                       size: 10.5,
                       color: stalled ? HaloColors.text2 : HaloColors.amber,
@@ -202,7 +203,7 @@ class IncomingMediaBanner extends StatelessWidget {
                   const SizedBox(width: 10),
                   Semantics(
                     button: true,
-                    label: 'Cancel sending',
+                    label: l10n.mediaProgressCancelSending,
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTap: () => cancel(cancelUid),
@@ -212,7 +213,7 @@ class IncomingMediaBanner extends StatelessWidget {
                           vertical: 3,
                         ),
                         child: Text(
-                          'Cancel',
+                          l10n.commonCancel,
                           style: HaloType.mono(
                             size: 10.5,
                             weight: FontWeight.w700,

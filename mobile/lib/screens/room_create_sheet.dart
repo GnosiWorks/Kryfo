@@ -10,6 +10,7 @@ import '../widgets/notice_banner.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/halo_switch.dart';
+import '../l10n/l10n.dart';
 
 // returns the new room's group id, or null if the sheet was dismissed
 Future<String?> showRoomCreateSheet(BuildContext context) {
@@ -53,7 +54,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _creating = false);
-      showHaloToast(context, 'Could not create the room');
+      showHaloToast(context, l10n.roomCreateCouldNotCreateThe);
     }
   }
 
@@ -74,7 +75,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
               const SheetHandle(),
               const SizedBox(height: 18),
               Text(
-                'Burner room',
+                l10n.roomCreateBurnerRoom,
                 style: HaloType.serif(
                   size: 22,
                   italic: true,
@@ -83,8 +84,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
               ),
               const SizedBox(height: 4),
               Text(
-                'A room that ends. Everyone joins under a key made for it, '
-                'and when it ends nothing is left on any phone.',
+                l10n.roomCreateARoomThatEnds,
                 style: HaloType.sans(
                   size: 12,
                   color: HaloColors.text2,
@@ -99,7 +99,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
                 style: HaloType.sans(size: 16, color: HaloColors.text),
                 cursorColor: HaloColors.violet,
                 decoration: InputDecoration(
-                  hintText: 'Room name',
+                  hintText: l10n.roomCreateRoomName,
                   hintStyle: HaloType.serif(
                     size: 16,
                     italic: true,
@@ -120,7 +120,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Ends after',
+                l10n.roomCreateEndsAfter,
                 style: HaloType.mono(
                   size: 10,
                   color: HaloColors.text3,
@@ -151,7 +151,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Member cap',
+                          l10n.roomCreateMemberCap,
                           style: HaloType.sans(
                             size: 13,
                             color: HaloColors.text,
@@ -159,8 +159,8 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
                         ),
                         Text(
                           _capOn
-                              ? 'No one past the first $_cap'
-                              : 'off. Anyone with the link',
+                              ? l10n.roomCreateNoOnePastThe(_cap)
+                              : l10n.roomCreateOffAnyoneWithThe,
                           style: HaloType.mono(
                             size: 9.5,
                             color: HaloColors.text3,
@@ -206,13 +206,16 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
               const SizedBox(height: 14),
               NoticeBanner(
                 glyph: NoticeGlyph.clock,
-                text:
-                    'This room and everything in it disappears in ${expiryWords(_expiry)}',
+                text: l10n.roomCreateThisRoomAndEverything(
+                  expiryWords(_expiry),
+                ),
                 color: HaloColors.violet,
               ),
               const SizedBox(height: 14),
               _GoButton(
-                label: _creating ? 'creating...' : 'Create room',
+                label: _creating
+                    ? l10n.roomCreateCreating
+                    : l10n.roomCreateCreateRoom,
                 enabled: !_creating,
                 onTap: _create,
               ),

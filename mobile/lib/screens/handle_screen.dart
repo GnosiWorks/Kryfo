@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import '../main.dart' show appState, engine, buildHaloUriV3;
 import '../theme.dart';
 import '../widgets/stagger_in.dart';
+import '../l10n/l10n.dart';
 
 class HandleScreen extends StatefulWidget {
   const HandleScreen({super.key});
@@ -82,7 +83,7 @@ class _HandleScreenState extends State<HandleScreen> {
       await appState.setMyHandle(h, bio: _bio.text.trim());
       if (!mounted) return;
       setState(() => _claimed = h);
-      showHaloToast(context, 'You are @$h');
+      showHaloToast(context, l10n.handleYouAre(h));
     } else {
       showHaloToast(context, r.replaceFirst('error: ', ''));
     }
@@ -115,7 +116,7 @@ class _HandleScreenState extends State<HandleScreen> {
         _ctrl.clear();
         _state = '';
       });
-      showHaloToast(context, 'Handle deleted · the page is gone');
+      showHaloToast(context, l10n.handleHandleDeletedThePage);
     } else {
       showHaloToast(context, r.replaceFirst('error: ', ''));
     }
@@ -128,7 +129,7 @@ class _HandleScreenState extends State<HandleScreen> {
       appBar: AppBar(
         backgroundColor: HaloColors.surface,
         elevation: 0,
-        title: Text('Public handle', style: HaloType.serif(size: 18)),
+        title: Text(l10n.handlePublicHandle, style: HaloType.serif(size: 18)),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
@@ -141,13 +142,13 @@ class _HandleScreenState extends State<HandleScreen> {
             const SizedBox(height: 22),
           ] else ...[
             Text(
-              'Optional. Your three words keep working either way.',
+              l10n.handleOptionalYourThreeWords,
               style: HaloType.sans(size: 13.5, color: HaloColors.text2),
             ),
             const SizedBox(height: 20),
             _Field(
               ctrl: _ctrl,
-              hint: 'wren',
+              hint: l10n.handleWren,
               prefix: '@',
               onChanged: _onTyped,
               max: 20,
@@ -157,7 +158,7 @@ class _HandleScreenState extends State<HandleScreen> {
             const SizedBox(height: 18),
             _Field(
               ctrl: _bio,
-              hint: 'A line about you · optional',
+              hint: l10n.handleALineAboutYou,
               max: 200,
               lines: 2,
             ),
@@ -182,7 +183,7 @@ class _HandleScreenState extends State<HandleScreen> {
                   ),
                 ),
                 child: Text(
-                  _busy ? 'Claiming…' : 'Claim this handle',
+                  _busy ? l10n.handleClaiming : l10n.handleClaimThisHandle,
                   style: HaloType.mono(
                     size: 12.5,
                     weight: FontWeight.w600,
@@ -228,8 +229,7 @@ class _ClaimedCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Anyone with this link can start a private chat with you. It '
-            'carries your invite and nothing else.',
+            l10n.handleAnyoneWithThisLink,
             style: HaloType.sans(size: 13, color: HaloColors.text2),
           ),
           const SizedBox(height: 14),
@@ -237,7 +237,7 @@ class _ClaimedCard extends StatelessWidget {
             onTap: () {
               HapticFeedback.selectionClick();
               copySensitive(url);
-              showHaloToast(context, 'Link copied');
+              showHaloToast(context, l10n.handleLinkCopied);
             },
             behavior: HitTestBehavior.opaque,
             child: Container(
@@ -266,7 +266,7 @@ class _ClaimedCard extends StatelessWidget {
             onTap: onRelease,
             behavior: HitTestBehavior.opaque,
             child: Text(
-              'Delete this handle',
+              l10n.handleDeleteThisHandle,
               style: HaloType.mono(size: 11.5, color: HaloColors.rose),
             ),
           ),
@@ -286,13 +286,13 @@ class _Availability extends StatelessWidget {
     late final String txt;
     late final Color c;
     if (state == 'checking') {
-      txt = 'Checking…';
+      txt = l10n.handleChecking;
       c = HaloColors.text3;
     } else if (state == 'free') {
-      txt = '✓ available';
+      txt = l10n.handleAvailable;
       c = HaloColors.green;
     } else if (state == 'taken') {
-      txt = 'already taken';
+      txt = l10n.handleAlreadyTaken;
       c = HaloColors.rose;
     } else {
       txt = state.replaceFirst('error: ', '');
@@ -321,7 +321,7 @@ class _RiskBlock extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'What a handle does',
+            l10n.handleWhatAHandleDoes,
             style: HaloType.mono(
               size: 11,
               color: HaloColors.amber,
@@ -331,10 +331,7 @@ class _RiskBlock extends StatelessWidget {
           ),
           const SizedBox(height: 9),
           Text(
-            'Anyone who knows it can ask to message you, which is the point '
-            'of having one. The page holds your invite and the line you '
-            'wrote, nothing else, and keeps no record of who reads it. You '
-            'can delete it whenever you like.',
+            l10n.handleAnyoneWhoKnowsIt,
             style: HaloType.sans(size: 12.5, color: HaloColors.text2),
           ),
         ],
@@ -421,15 +418,12 @@ class _ForeignCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '@$handle is not yours on this phone',
+            l10n.handleIsNotYoursOn(handle),
             style: HaloType.serif(size: 19, color: HaloColors.text),
           ),
           const SizedBox(height: 8),
           Text(
-            'The registry holds it under a different key, most likely an '
-            'identity this phone had before a restore. People who add '
-            '@$handle are not reaching you. It cannot be released or '
-            'updated from here. Pick another name.',
+            l10n.handleTheRegistryHoldsIt(handle),
             style: HaloType.sans(
               size: 13,
               color: HaloColors.text2,
@@ -449,7 +443,7 @@ class _ForeignCard extends StatelessWidget {
                 border: Border.all(color: HaloColors.line),
               ),
               child: Text(
-                'Forget it on this phone',
+                l10n.handleForgetItOnThis,
                 style: HaloType.sans(
                   size: 13.5,
                   weight: FontWeight.w600,

@@ -19,6 +19,7 @@ import '../widgets/sheet_handle.dart';
 import '../widgets/stroke_icon.dart';
 import '../widgets/tool_parts.dart';
 import 'clean_screen.dart';
+import '../l10n/l10n.dart';
 
 const _pin = [
   'M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z',
@@ -159,7 +160,7 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
             const Center(child: SheetHandle()),
             const SizedBox(height: 12),
             Text(
-              'Everything inside',
+              l10n.photoKnowsEverythingInside,
               style: HaloType.serif(size: 23, color: HaloColors.text),
             ),
             const SizedBox(height: 14),
@@ -186,7 +187,9 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
     final story = _story;
     final report = _report;
     final video = report?.kind == MetaKind.mp4;
-    final name = widget.file.name ?? (video ? 'Video' : 'Photo');
+    final name =
+        widget.file.name ??
+        (video ? l10n.photoKnowsVideo : l10n.photoKnowsPhoto);
     return Scaffold(
       backgroundColor: HaloColors.surface,
       body: SafeArea(
@@ -194,7 +197,9 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ToolBar(
-              title: video ? 'What this video knows' : 'What this photo knows',
+              title: video
+                  ? l10n.photoKnowsWhatThisVideoKnows
+                  : l10n.photoKnowsWhatThisPhotoKnows,
               sub: report == null ? name : '$name · ${prettySize(_bytes)}',
               leading: _inPath == null || report == null
                   ? null
@@ -224,7 +229,7 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
                   if (story != null && story.canClean) ...[
                     ToolWideButton(
                       icon: _sparkle,
-                      label: 'Remove all of it',
+                      label: l10n.photoKnowsRemoveAllOfIt,
                       filled: true,
                       onTap: _clean,
                     ),
@@ -235,19 +240,21 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
                   // room above it. the way out becomes the button instead.
                   if (story != null && !story.canClean)
                     ToolWideButton(
-                      label: 'Done',
+                      label: l10n.commonDone,
                       filled: true,
                       onTap: () => Navigator.of(context).maybePop(),
                     )
                   else if (_failure != null)
                     ToolWideButton(
-                      label: 'Back',
+                      label: l10n.commonBack,
                       filled: true,
                       onTap: () => Navigator.of(context).maybePop(),
                     )
                   else
                     PressScale(
-                      label: story == null ? 'Stop' : 'Keep it as it is',
+                      label: story == null
+                          ? l10n.commonStop
+                          : l10n.photoKnowsKeepItAsIt,
                       onTap: () => Navigator.of(context).maybePop(),
                       scale: 0.96,
                       child: SizedBox(
@@ -255,7 +262,9 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
                         child: Center(
                           child: ExcludeSemantics(
                             child: Text(
-                              story == null ? 'Stop' : 'Keep it as it is',
+                              story == null
+                                  ? l10n.commonStop
+                                  : l10n.photoKnowsKeepItAsIt,
                               style: HaloType.sans(
                                 size: 13.5,
                                 color: HaloColors.warm,
@@ -267,8 +276,8 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
                     ),
                   Text(
                     video
-                        ? 'READ ON THIS PHONE · THE VIDEO WENT NOWHERE'
-                        : 'READ ON THIS PHONE · THE PHOTO WENT NOWHERE',
+                        ? l10n.photoKnowsReadOnThisPhone
+                        : l10n.photoKnowsReadOnThisPhoneThePhoto,
                     textAlign: TextAlign.center,
                     style: HaloType.mono(
                       size: 9.5,
@@ -302,14 +311,14 @@ class _Reading extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Reading the file',
+              l10n.photoKnowsReadingTheFile,
               style: HaloType.serif(size: 24, color: HaloColors.text),
             ),
             const SizedBox(height: 8),
             Text(
               total > 0 && done > 0
-                  ? '${prettySize(done)} of ${prettySize(total)}'
-                  : 'Everything stays on this phone.',
+                  ? l10n.photoKnowsOf(prettySize(done), prettySize(total))
+                  : l10n.photoKnowsEverythingStaysOnThis,
               style: HaloType.sans(size: 13.5, color: HaloColors.warm),
             ),
             const SizedBox(height: 22),
@@ -433,7 +442,7 @@ class _Body extends StatelessWidget {
                       lat: fix.lat,
                       lon: fix.lon,
                       reveal: reveal,
-                      label: 'Map with a pin. ${place ?? ''}',
+                      label: l10n.photoKnowsMapWithAPin(place ?? ''),
                     ),
                   ),
                   Positioned(
@@ -454,7 +463,7 @@ class _Body extends StatelessWidget {
                           BreathDot(color: HaloColors.green, size: 5),
                           const SizedBox(width: 6),
                           Text(
-                            'DRAWN OFFLINE',
+                            l10n.photoKnowsDrawnOffline,
                             style: HaloType.mono(
                               size: 9.5,
                               letter: 0.1,
@@ -653,7 +662,7 @@ class _StoryRowView extends StatelessWidget {
     );
     if (onTap == null) return body;
     return PressScale(
-      label: '${row.title}. Show everything',
+      label: l10n.photoKnowsShowEverything(row.title),
       onTap: onTap,
       scale: 0.98,
       child: ExcludeSemantics(child: body),

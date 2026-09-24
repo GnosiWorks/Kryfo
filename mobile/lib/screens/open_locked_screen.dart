@@ -10,6 +10,7 @@ import '../tools/tools_bridge.dart';
 import '../widgets/stroke_icon.dart';
 import '../widgets/tool_parts.dart';
 import 'lock_file_screen.dart';
+import '../l10n/l10n.dart';
 
 final _lockIcon = [
   svgRect(5, 10.5, 14, 10, 2.5),
@@ -156,21 +157,25 @@ class _OpenLockedScreenState extends State<OpenLockedScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               ToolBar(
-                title: _stage == _Stage.done ? 'Opened' : 'Open a locked file',
+                title: _stage == _Stage.done
+                    ? l10n.openLockedOpened
+                    : l10n.openLockedOpenALockedFile,
               ),
               Expanded(
                 child: switch (_stage) {
-                  _Stage.checking => const WorkingView(
-                    title: 'Checking the password',
+                  _Stage.checking => WorkingView(
+                    title: l10n.openLockedCheckingThePassword,
                     done: 0,
                     total: 0,
                   ),
                   _Stage.writing => WorkingView(
-                    title: 'Opening',
+                    title: l10n.openLockedOpening,
                     done: _done,
                     total: _file.size,
                   ),
-                  _Stage.done => _OpenedView(name: _savedAs ?? 'File'),
+                  _Stage.done => _OpenedView(
+                    name: _savedAs ?? l10n.openLockedFile,
+                  ),
                   _Stage.form => _form(),
                 },
               ),
@@ -178,19 +183,19 @@ class _OpenLockedScreenState extends State<OpenLockedScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 22),
                 child: switch (_stage) {
                   _Stage.checking => const SizedBox(height: 50),
-                  _Stage.writing => const ToolWideButton(
-                    label: 'Stop',
+                  _Stage.writing => ToolWideButton(
+                    label: l10n.commonStop,
                     filled: false,
                     onTap: ageCancel,
                   ),
                   _Stage.done => ToolWideButton(
-                    label: 'Done',
+                    label: l10n.commonDone,
                     filled: false,
                     onTap: () => Navigator.of(context).maybePop(),
                   ),
                   _Stage.form => ToolWideButton(
                     icon: _unlockIcon,
-                    label: 'Open file',
+                    label: l10n.openLockedOpenFile,
                     filled: true,
                     onTap: _pw.text.isEmpty ? null : _open,
                   ),
@@ -216,12 +221,12 @@ class _OpenLockedScreenState extends State<OpenLockedScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Type the password.',
+                  l10n.openLockedTypeThePassword,
                   style: HaloType.serif(size: 26, color: HaloColors.text),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'It opens on this phone.',
+                  l10n.openLockedItOpensOnThis,
                   style: HaloType.serif(
                     size: 22,
                     weight: FontWeight.w300,
@@ -234,17 +239,17 @@ class _OpenLockedScreenState extends State<OpenLockedScreen> {
           ),
           const SizedBox(height: 18),
           FileCard(
-            name: _file.name ?? 'Locked file',
+            name: _file.name ?? l10n.openLockedLockedFile,
             detail: _file.size > 0
-                ? '${prettySize(_file.size)} · from Files'
-                : 'From Files',
+                ? l10n.openLockedFromFiles(prettySize(_file.size))
+                : l10n.openLockedFromFiles2,
             icon: _lockIcon,
             tint: HaloColors.green,
             onChange: _change,
           ),
           const SizedBox(height: 18),
           SecretField(
-            label: 'Password',
+            label: l10n.openLockedPassword,
             controller: _pw,
             shown: _shown,
             onToggle: () => setState(() => _shown = !_shown),
@@ -293,7 +298,7 @@ class _OpenLockedScreenState extends State<OpenLockedScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(
-                'The password is checked first. Only then does Kryfo ask where to put the opened file, and it goes straight there.',
+                l10n.openLockedThePasswordIsChecked,
                 style: HaloType.sans(
                   size: 12.5,
                   height: 1.5,
@@ -348,7 +353,7 @@ class _OpenedView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Opened.',
+              l10n.openLockedOpened2,
               style: HaloType.serif(
                 size: 30,
                 letter: -0.02,
@@ -357,7 +362,7 @@ class _OpenedView extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'Saved where you chose.',
+              l10n.openLockedSavedWhereYouChose,
               style: HaloType.serif(
                 size: 20,
                 weight: FontWeight.w300,

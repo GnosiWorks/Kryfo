@@ -38,6 +38,7 @@ import '../widgets/shift_in_place.dart';
 import '../widgets/confirm_sheet.dart';
 import '../notif_permission.dart';
 import '../delivery_mode.dart';
+import '../l10n/l10n.dart';
 
 bool _miuiPromptChecked = false;
 
@@ -482,28 +483,28 @@ class GroupSummary {
 
 // ───────── date header ─────────
 
-const _days = [
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-  'Sunday',
+final _days = [
+  l10n.homeMonday,
+  l10n.homeTuesday,
+  l10n.homeWednesday,
+  l10n.homeThursday,
+  l10n.homeFriday,
+  l10n.homeSaturday,
+  l10n.homeSunday,
 ];
-const _months = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
+final _months = [
+  l10n.homeJanuary,
+  l10n.homeFebruary,
+  l10n.homeMarch,
+  l10n.homeApril,
+  l10n.homeMay,
+  l10n.homeJune,
+  l10n.homeJuly,
+  l10n.homeAugust,
+  l10n.homeSeptember,
+  l10n.homeOctober,
+  l10n.homeNovember,
+  l10n.homeDecember,
 ];
 // the relay route's colour - cool enough never to read as tor's violet
 const kRelayCyan = Color(0xFF4BB8C9);
@@ -527,7 +528,7 @@ class _AddScanButton extends StatelessWidget {
           ),
         ),
         child: Semantics(
-          label: 'Add a contact',
+          label: l10n.homeAddAContact,
           button: true,
           child: Icon(Icons.add, size: 20, color: HaloColors.amber),
         ),
@@ -548,7 +549,7 @@ class _GearButtonState extends State<_GearButton> {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Settings',
+      label: l10n.commonSettings,
       button: true,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -630,7 +631,7 @@ class _HomeHead extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Your kryfo',
+                  l10n.homeYourKryfo,
                   style: HaloType.mono(
                     size: 9.5,
                     color: HaloColors.text3,
@@ -728,9 +729,9 @@ class _OfflineCardState extends State<_OfflineCard> {
   String _howLong(Duration d) {
     if (d.inHours >= 1) {
       final h = d.inHours;
-      return h == 1 ? 'an hour' : '$h hours';
+      return h == 1 ? l10n.homeAnHour : l10n.homeHours(h);
     }
-    return '${d.inMinutes} minutes';
+    return l10n.homeMinutes(d.inMinutes);
   }
 
   @override
@@ -756,7 +757,7 @@ class _OfflineCardState extends State<_OfflineCard> {
                   BreathDot(color: HaloColors.rose, size: 7),
                   const SizedBox(width: 9),
                   Text(
-                    'Kryfo is offline',
+                    l10n.homeKryfoIsOffline,
                     style: HaloType.mono(
                       size: 11,
                       color: HaloColors.rose,
@@ -768,8 +769,7 @@ class _OfflineCardState extends State<_OfflineCard> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Tor has not been able to connect for ${_howLong(since)}. '
-                'Nothing can arrive or leave until it does.',
+                l10n.homeTorHasNotBeen(_howLong(since)),
                 style: HaloType.sans(size: 13, color: HaloColors.warm),
               ),
               const SizedBox(height: 12),
@@ -790,7 +790,7 @@ class _OfflineCardState extends State<_OfflineCard> {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        _busy ? 'Reconnecting' : 'Reconnect',
+                        _busy ? l10n.homeReconnecting : l10n.homeReconnect,
                         style: HaloType.mono(
                           size: 11.5,
                           color: HaloColors.ink,
@@ -811,7 +811,7 @@ class _OfflineCardState extends State<_OfflineCard> {
                         vertical: 8,
                       ),
                       child: Text(
-                        'What is wrong',
+                        l10n.homeWhatIsWrong,
                         style: HaloType.mono(
                           size: 11.5,
                           color: HaloColors.warm,
@@ -845,7 +845,7 @@ class _KeepsStoppingCardState extends State<_KeepsStoppingCard> {
     await appState.setDeliveryMode(DeliveryMode.checkins);
     await appState.nudgeAnswered();
     if (!mounted) return;
-    showHaloToast(context, 'Kryfo will check in every 15 minutes');
+    showHaloToast(context, l10n.homeKryfoWillCheckIn);
     unawaited(forceShowBackgroundPrompt(context));
   }
 
@@ -871,7 +871,7 @@ class _KeepsStoppingCardState extends State<_KeepsStoppingCard> {
                   BreathDot(color: HaloColors.amber, size: 7),
                   const SizedBox(width: 9),
                   Text(
-                    'Your phone keeps stopping kryfo',
+                    l10n.homeYourPhoneKeepsStopping,
                     style: HaloType.mono(
                       size: 11,
                       color: HaloColors.amber,
@@ -883,9 +883,7 @@ class _KeepsStoppingCardState extends State<_KeepsStoppingCard> {
               ),
               const SizedBox(height: 8),
               Text(
-                'It has closed kryfo three times today, so messages were '
-                'late or waited. Check-ins survive that: kryfo wakes every '
-                '15 minutes instead of staying connected.',
+                l10n.homeItHasClosedKryfo,
                 style: HaloType.sans(size: 13, color: HaloColors.warm),
               ),
               const SizedBox(height: 12),
@@ -904,7 +902,7 @@ class _KeepsStoppingCardState extends State<_KeepsStoppingCard> {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'Switch to check-ins',
+                        l10n.homeSwitchToCheckIns,
                         style: HaloType.mono(
                           size: 11.5,
                           color: HaloColors.ink,
@@ -923,7 +921,7 @@ class _KeepsStoppingCardState extends State<_KeepsStoppingCard> {
                         vertical: 8,
                       ),
                       child: Text(
-                        'Not now',
+                        l10n.homeNotNow,
                         style: HaloType.mono(
                           size: 11.5,
                           color: HaloColors.warm,
@@ -990,7 +988,7 @@ class _NotificationsBlockedHintState extends State<_NotificationsBlockedHint>
               BreathDot(color: HaloColors.amber, size: 7),
               const SizedBox(width: 9),
               Text(
-                'Notifications are off',
+                l10n.homeNotificationsAreOff,
                 style: HaloType.mono(
                   size: 11,
                   color: HaloColors.amber,
@@ -1002,8 +1000,7 @@ class _NotificationsBlockedHintState extends State<_NotificationsBlockedHint>
           ),
           const SizedBox(height: 8),
           Text(
-            'Android is blocking them, so nothing reaches you while kryfo '
-            'is closed. Messages still arrive when you open it.',
+            l10n.homeAndroidIsBlockingThem,
             style: HaloType.sans(size: 13, color: HaloColors.text2),
           ),
           const SizedBox(height: 12),
@@ -1013,10 +1010,7 @@ class _NotificationsBlockedHintState extends State<_NotificationsBlockedHint>
                 onTap: () async {
                   final opened = await openNotificationSettings();
                   if (!opened && context.mounted) {
-                    showHaloToast(
-                      context,
-                      "Couldn't open it. Look for kryfo in phone settings",
-                    );
+                    showHaloToast(context, l10n.homeCouldnTOpenIt);
                   }
                 },
                 behavior: HitTestBehavior.opaque,
@@ -1030,7 +1024,7 @@ class _NotificationsBlockedHintState extends State<_NotificationsBlockedHint>
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    'Turn them on',
+                    l10n.homeTurnThemOn,
                     style: HaloType.mono(
                       size: 11.5,
                       color: HaloColors.ink,
@@ -1052,7 +1046,7 @@ class _NotificationsBlockedHintState extends State<_NotificationsBlockedHint>
                     vertical: 8,
                   ),
                   child: Text(
-                    'Leave them off',
+                    l10n.homeLeaveThemOff,
                     style: HaloType.mono(size: 11.5, color: HaloColors.text2),
                   ),
                 ),
@@ -1092,7 +1086,7 @@ class _RelayDownHint extends StatelessWidget {
                   BreathDot(color: HaloColors.amber, size: 7),
                   const SizedBox(width: 9),
                   Text(
-                    'Our relay is quiet',
+                    l10n.homeOurRelayIsQuiet,
                     style: HaloType.mono(
                       size: 11,
                       color: HaloColors.amber,
@@ -1104,9 +1098,7 @@ class _RelayDownHint extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                "Relay mode uses only our own relay, and it is not answering "
-                "right now. Fast mode adds public relays alongside it, so "
-                "messages still land. Everything stays sealed either way.",
+                l10n.homeRelayModeUsesOnly,
                 style: HaloType.sans(size: 13, color: HaloColors.text2),
               ),
               const SizedBox(height: 13),
@@ -1121,7 +1113,7 @@ class _RelayDownHint extends StatelessWidget {
                       if (!ok || !context.mounted) return;
                       await appState.setSendMode('fast');
                       if (context.mounted) {
-                        showHaloToast(context, 'Switched to fast');
+                        showHaloToast(context, l10n.homeSwitchedToFast);
                       }
                     },
                     behavior: HitTestBehavior.opaque,
@@ -1135,7 +1127,7 @@ class _RelayDownHint extends StatelessWidget {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'Use fast mode',
+                        l10n.homeUseFastMode,
                         style: HaloType.mono(
                           size: 11.5,
                           color: HaloColors.ink,
@@ -1154,7 +1146,7 @@ class _RelayDownHint extends StatelessWidget {
                         vertical: 8,
                       ),
                       child: Text(
-                        'Keep waiting',
+                        l10n.homeKeepWaiting,
                         style: HaloType.mono(
                           size: 11.5,
                           color: HaloColors.text3,
@@ -1197,7 +1189,7 @@ class _BridgeStuckHint extends StatelessWidget {
                   BreathDot(color: HaloColors.rose, size: 7),
                   const SizedBox(width: 9),
                   Text(
-                    'Not connecting',
+                    l10n.homeNotConnecting,
                     style: HaloType.mono(
                       size: 11,
                       color: HaloColors.rose,
@@ -1209,9 +1201,7 @@ class _BridgeStuckHint extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                "Bridges are on and tor still is not through. Bridges are "
-                "slower, and some go dead without warning. If your network "
-                "does not block tor, going direct is faster and more reliable.",
+                l10n.homeBridgesAreOnAnd,
                 style: HaloType.sans(size: 13, color: HaloColors.text2),
               ),
               const SizedBox(height: 13),
@@ -1221,7 +1211,7 @@ class _BridgeStuckHint extends StatelessWidget {
                   await appState.applyBridges(appState.bridgeLines, false);
                   engine.restartTor();
                   if (context.mounted) {
-                    showHaloToast(context, 'Going direct · reconnecting');
+                    showHaloToast(context, l10n.homeGoingDirectReconnecting);
                   }
                 },
                 behavior: HitTestBehavior.opaque,
@@ -1235,7 +1225,7 @@ class _BridgeStuckHint extends StatelessWidget {
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    'Turn bridges off',
+                    l10n.homeTurnBridgesOff,
                     style: HaloType.mono(
                       size: 11.5,
                       color: HaloColors.text,
@@ -1286,7 +1276,7 @@ class _BridgeHint extends StatelessWidget {
                   BreathDot(color: HaloColors.violet, size: 7),
                   const SizedBox(width: 9),
                   Text(
-                    'Still trying',
+                    l10n.homeStillTrying,
                     style: HaloType.mono(
                       size: 11,
                       color: HaloColors.violet,
@@ -1298,9 +1288,7 @@ class _BridgeHint extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                "Tor is not getting through. Some networks block it on "
-                "purpose. Our own relay is one plain connection and usually "
-                "works anyway - or bridges, which take longer to set up.",
+                l10n.homeTorIsNotGetting,
                 style: HaloType.sans(size: 13, color: HaloColors.text2),
               ),
               const SizedBox(height: 13),
@@ -1311,7 +1299,7 @@ class _BridgeHint extends StatelessWidget {
                       HapticFeedback.selectionClick();
                       await appState.setSendMode('balanced');
                       if (context.mounted) {
-                        showHaloToast(context, 'Switched to relay');
+                        showHaloToast(context, l10n.homeSwitchedToRelay);
                       }
                     },
                     behavior: HitTestBehavior.opaque,
@@ -1325,7 +1313,7 @@ class _BridgeHint extends StatelessWidget {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'Use our relay',
+                        l10n.homeUseOurRelay,
                         style: HaloType.mono(
                           size: 11.5,
                           color: HaloColors.ink,
@@ -1349,7 +1337,7 @@ class _BridgeHint extends StatelessWidget {
                         vertical: 8,
                       ),
                       child: Text(
-                        'Bridges',
+                        l10n.homeBridges,
                         style: HaloType.mono(
                           size: 11.5,
                           color: HaloColors.violet,
@@ -1368,7 +1356,7 @@ class _BridgeHint extends StatelessWidget {
                         vertical: 8,
                       ),
                       child: Text(
-                        'Keep waiting',
+                        l10n.homeKeepWaiting,
                         style: HaloType.mono(
                           size: 11.5,
                           color: HaloColors.text3,
@@ -1418,20 +1406,20 @@ class _OfflineStrip extends StatelessWidget {
         // is worth stating even with nothing queued.
         if (torDown && n == 0 && p == 0) return const SizedBox.shrink();
         final tint = offline ? HaloColors.rose : HaloColors.amber;
-        final head = offline ? 'Offline' : 'Waiting';
+        final head = offline ? l10n.homeOffline : l10n.homeWaiting;
         // the old strip said "offline" and stopped, which left people
         // guessing whether anything was queued or lost.
         final tail = n == 0
-            ? 'Nothing waiting to send'
+            ? l10n.homeNothingWaitingToSend
             : offline
-            ? "$n waiting · sends when you're back"
+            ? l10n.homeWaitingSendsWhenYou(n)
             : torDown
-            ? '$n waiting · tor is still connecting'
+            ? l10n.homeWaitingTorIsStill(n)
             : p >= n
-            ? '$n waiting · for them to add you back'
+            ? l10n.homeWaitingForThemTo(n)
             : p > 0
-            ? '$n waiting · $p for them to add you back'
-            : '$n waiting · sending now';
+            ? l10n.homeWaitingForThemToAddYou(n, p)
+            : l10n.homeWaitingSendingNow(n);
 
         return Container(
           width: double.infinity,
@@ -1489,7 +1477,7 @@ class _OfflineStrip extends StatelessWidget {
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
-                      'Retry',
+                      l10n.commonRetry,
                       style: HaloType.mono(
                         size: 11,
                         color: tint,
@@ -1545,7 +1533,7 @@ class _EmptyStateState extends State<_EmptyState> {
             ),
             const SizedBox(height: 14),
             Text(
-              'No kryfos yet.',
+              l10n.homeNoKryfosYet,
               textAlign: TextAlign.center,
               style: HaloType.serif(
                 size: 22,
@@ -1556,7 +1544,7 @@ class _EmptyStateState extends State<_EmptyState> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Scan their code, send them a link, or type the @handle they gave you.',
+              l10n.homeScanTheirCodeSend,
               textAlign: TextAlign.center,
               style: HaloType.sans(size: 13, color: HaloColors.text2),
             ),
@@ -1573,7 +1561,7 @@ class _EmptyStateState extends State<_EmptyState> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  'Add someone',
+                  l10n.homeAddSomeone,
                   style: HaloType.sans(
                     size: 13,
                     weight: FontWeight.w500,
@@ -1628,7 +1616,7 @@ class _ArchivedPin extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Archived',
+                        l10n.homeArchived,
                         style: HaloType.sans(
                           size: 14,
                           weight: FontWeight.w500,
@@ -1637,7 +1625,7 @@ class _ArchivedPin extends StatelessWidget {
                       ),
                       const SizedBox(height: 1),
                       Text(
-                        count == 1 ? '1 chat' : '$count chats',
+                        count == 1 ? l10n.home1Chat : l10n.homeChats(count),
                         style: HaloType.mono(size: 10, color: HaloColors.text3),
                       ),
                     ],
@@ -1683,7 +1671,7 @@ class _ContactList extends StatelessWidget {
           child: Row(
             children: [
               Text(
-                'Groups',
+                l10n.homeGroups,
                 style: HaloType.mono(
                   size: 10,
                   color: HaloColors.text3,
@@ -1706,7 +1694,7 @@ class _ContactList extends StatelessWidget {
                       ),
                       const SizedBox(width: 3),
                       Text(
-                        'Room',
+                        l10n.homeRoom,
                         style: HaloType.mono(
                           size: 10,
                           color: HaloColors.violet,
@@ -1726,7 +1714,7 @@ class _ContactList extends StatelessWidget {
                     Icon(Icons.add_rounded, size: 14, color: HaloColors.amber),
                     const SizedBox(width: 3),
                     Text(
-                      'New',
+                      l10n.homeNew,
                       style: HaloType.mono(
                         size: 10,
                         color: HaloColors.amber,
@@ -1746,7 +1734,7 @@ class _ContactList extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
               child: Text(
-                '${expiredRoomName!} · room expired',
+                l10n.homeRoomExpired(expiredRoomName!),
                 style: HaloType.mono(size: 10, color: HaloColors.violet),
               ),
             ),
@@ -1871,7 +1859,7 @@ class _GroupRow extends StatelessWidget {
               // of the group name in italic serif. distinct from contact
               // avatars (circular) so groups feel different at a glance.
               Hero(
-                tag: 'group-${g.groupId}',
+                tag: l10n.homeGroup(g.groupId),
                 child: Container(
                   width: 36,
                   height: 36,
@@ -1920,7 +1908,7 @@ class _GroupRow extends StatelessWidget {
                     else if (g.mentioned)
                       // your three words came up in there
                       Text(
-                        'Mentioned you',
+                        l10n.homeMentionedYou,
                         style: HaloType.mono(
                           size: 10,
                           color: HaloColors.amber,
@@ -1930,7 +1918,7 @@ class _GroupRow extends StatelessWidget {
                       )
                     else
                       Text(
-                        '${g.memberCount} members',
+                        l10n.homeMembers(g.memberCount),
                         style: HaloType.mono(size: 10, color: HaloColors.text3),
                       ),
                   ],
@@ -1992,7 +1980,7 @@ Widget _supporterPill() {
       border: Border.all(color: HaloColors.amber.withValues(alpha: 0.4)),
     ),
     child: Text(
-      'Supporter',
+      l10n.homeSupporter,
       style: HaloType.mono(size: 8, color: HaloColors.amber),
     ),
   );
@@ -2041,7 +2029,7 @@ class _SwipeRow extends StatelessWidget {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 24),
         child: Semantics(
-          label: 'Archived chats',
+          label: l10n.homeArchivedChats,
           button: true,
           child: Icon(
             Icons.archive_outlined,
@@ -2084,7 +2072,7 @@ void _chatMenu(BuildContext context, ContactPreview c) {
               size: 22,
             ),
             title: Text(
-              c.muted ? 'Unmute' : 'mute',
+              c.muted ? l10n.homeUnmute : 'mute',
               style: HaloType.sans(size: 15, color: HaloColors.text),
             ),
             onTap: () {
@@ -2099,7 +2087,7 @@ void _chatMenu(BuildContext context, ContactPreview c) {
               size: 22,
             ),
             title: Text(
-              'Archive',
+              l10n.homeArchive,
               style: HaloType.sans(size: 15, color: HaloColors.text),
             ),
             onTap: () {
@@ -2114,11 +2102,11 @@ void _chatMenu(BuildContext context, ContactPreview c) {
               size: 22,
             ),
             title: Text(
-              'Delete chat',
+              l10n.homeDeleteChat,
               style: HaloType.sans(size: 15, color: HaloColors.rose),
             ),
             subtitle: Text(
-              'Messages and contact, gone from this phone',
+              l10n.homeMessagesAndContactGone,
               style: HaloType.mono(size: 11, color: HaloColors.text3),
             ),
             onTap: () {
@@ -2136,12 +2124,9 @@ void _chatMenu(BuildContext context, ContactPreview c) {
 Future<void> _confirmDelete(BuildContext context, ContactPreview c) async {
   final ok = await showConfirmSheet(
     context,
-    title: 'Delete this chat?',
-    line:
-        'Every message with ${c.nickname ?? c.haloId} goes, and they stop '
-        'being a contact. It only clears this phone - their copy stays with '
-        'them. If they message again it lands in requests.',
-    yes: 'Delete',
+    title: l10n.homeDeleteThisChat,
+    line: l10n.homeEveryMessageWithGoes(c.nickname ?? c.haloId),
+    yes: l10n.commonDelete,
   );
   if (!ok) return;
   HapticFeedback.heavyImpact();
@@ -2180,7 +2165,7 @@ class _Row extends StatelessWidget {
                 clipBehavior: Clip.none,
                 children: [
                   Hero(
-                    tag: 'face-${c.avatarSeed}',
+                    tag: l10n.homeFace(c.avatarSeed),
                     child: KryfoAvatar(
                       seed: c.avatarSeed,
                       size: 44,
@@ -2256,7 +2241,7 @@ class _Row extends StatelessWidget {
                               appState.queuedFor(c.haloId) > 0 &&
                               (!appState.online || !appState.torReady))
                             Text(
-                              'Queued',
+                              l10n.homeQueued,
                               style: HaloType.mono(
                                 size: 10,
                                 color: HaloColors.text2,
@@ -2265,7 +2250,7 @@ class _Row extends StatelessWidget {
                             )
                           else
                             Text(
-                              (c.blocked ? 'blocked' : _relTime(c.when)),
+                              (c.blocked ? l10n.homeBlocked : _relTime(c.when)),
                               style: HaloType.serif(
                                 size: 11.5,
                                 italic: true,
@@ -2286,7 +2271,7 @@ class _Row extends StatelessWidget {
                           // a room link is an invitation, not a line of
                           // two hundred characters
                           (c.preview ?? '').contains('kryfo://room?')
-                              ? 'Room invite'
+                              ? l10n.homeRoomInvite
                               : (c.preview ?? ''),
                           style: HaloType.sans(
                             size: 12,
@@ -2317,25 +2302,25 @@ class _Row extends StatelessWidget {
 String _relTime(DateTime? t) {
   if (t == null) return '';
   final d = DateTime.now().difference(t);
-  if (d.inMinutes < 1) return 'now';
-  if (d.inMinutes < 60) return '${d.inMinutes}m';
-  if (d.inHours < 24) return '${d.inHours}h';
-  if (d.inDays == 1) return 'yesterday';
-  if (d.inDays < 7) return '${d.inDays}d';
+  if (d.inMinutes < 1) return l10n.homeNow;
+  if (d.inMinutes < 60) return l10n.homeM(d.inMinutes);
+  if (d.inHours < 24) return l10n.homeH(d.inHours);
+  if (d.inDays == 1) return l10n.homeYesterday;
+  if (d.inDays < 7) return l10n.homeD(d.inDays);
   // older than a week: a short date reads better than a big day count
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
+  final months = [
+    l10n.homeJan,
+    l10n.homeFeb,
+    l10n.homeMar,
+    l10n.homeApr,
+    l10n.homeMay,
+    l10n.homeJun,
+    l10n.homeJul,
+    l10n.homeAug,
+    l10n.homeSep,
+    l10n.homeOct,
+    l10n.homeNov,
+    l10n.homeDec,
   ];
   return '${t.day} ${months[t.month - 1]}';
 }
@@ -2356,8 +2341,8 @@ class _QuickTiles extends StatelessWidget {
           Expanded(
             child: _QuickTile(
               icon: Icons.edit_note_rounded,
-              title: 'Note to self',
-              line: 'Only on this phone',
+              title: l10n.homeNoteToSelf,
+              line: l10n.homeOnlyOnThisPhone,
               onTap: onNotes,
             ),
           ),
@@ -2365,8 +2350,8 @@ class _QuickTiles extends StatelessWidget {
           Expanded(
             child: _QuickTile(
               icon: Icons.bookmark,
-              title: 'Saved',
-              line: 'Kept from every chat',
+              title: l10n.homeSaved,
+              line: l10n.homeKeptFromEveryChat,
               onTap: onSaved,
             ),
           ),
@@ -2488,7 +2473,7 @@ class _RequestsPin extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Requests',
+                    l10n.homeRequests,
                     style: HaloType.serif(
                       size: 14,
                       color: HaloColors.text,
@@ -2498,8 +2483,8 @@ class _RequestsPin extends StatelessWidget {
                   const SizedBox(height: 1),
                   Text(
                     count == 1
-                        ? '1 person wants to reach you'
-                        : '$count people want to reach you',
+                        ? l10n.home1PersonWantsTo
+                        : l10n.homePeopleWantToReach(count),
                     style: HaloType.sans(size: 11, color: HaloColors.text3),
                   ),
                 ],
