@@ -2660,8 +2660,8 @@ Widget _groupStamp(_GMsg m) => Container(
   child: Text(
     hourMinute(m.when),
     style: TextStyle(
-      fontFamily: 'JetBrains Mono',
-      fontFamilyFallback: HaloType.monoFallback,
+      fontFamily: HaloType.monoFamily,
+      fontFamilyFallback: HaloType.monoFallbackNow,
       fontSize: 9,
       color: Colors.white,
       letterSpacing: track(0.4),
@@ -3826,9 +3826,9 @@ class _GroupBubble extends StatelessWidget {
                                           Text(
                                             '✓',
                                             style: TextStyle(
-                                              fontFamily: 'JetBrains Mono',
+                                              fontFamily: HaloType.monoFamily,
                                               fontFamilyFallback:
-                                                  HaloType.monoFallback,
+                                                  HaloType.monoFallbackNow,
                                               fontSize: 11,
                                               color: m.mediaPath != null
                                                   ? HaloColors.text2

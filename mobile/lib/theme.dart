@@ -140,9 +140,27 @@ class HaloType {
   // (ế, ự, ỹ...). drawn from the phone's font a letter at a time they sat in
   // the middle of words in another typeface, so in vietnamese the whole sans
   // is noto sans, which has them all. fraunces and jetbrains mono have them.
-  static String get sansFamily => l10nLocale.languageCode == 'vi'
+  static String get sansFamily => _joinedScript
+      ? 'Noto Sans Arabic'
+      : l10nLocale.languageCode == 'vi'
       ? 'Noto Sans Vietnamese'
       : 'Instrument Sans';
+
+  // in persian and arabic the arabic-script font leads and ours follow for
+  // the latin words in a sentence. led by fraunces, a persian word with a
+  // zero-width non-joiner in it came out with its letters unjoined after
+  // the non-joiner, on the samsung.
+  static String get serifFamily =>
+      _joinedScript ? 'Noto Naskh Arabic' : 'Fraunces';
+  static String get monoFamily =>
+      _joinedScript ? 'Noto Sans Arabic' : 'JetBrains Mono';
+  static List<String> get serifFallbackNow =>
+      _joinedScript ? const ['Fraunces', 'Noto Serif Cyrillic'] : serifFallback;
+  static List<String> get sansFallbackNow => _joinedScript
+      ? const ['Instrument Sans', 'Noto Sans Cyrillic']
+      : sansFallback;
+  static List<String> get monoFallbackNow =>
+      _joinedScript ? const ['JetBrains Mono'] : monoFallback;
 
   static TextStyle serif({
     double size = 26,
@@ -152,8 +170,8 @@ class HaloType {
     double height = 1.05,
     double letter = -0.015,
   }) => TextStyle(
-    fontFamily: 'Fraunces',
-    fontFamilyFallback: serifFallback,
+    fontFamily: serifFamily,
+    fontFamilyFallback: serifFallbackNow,
     fontSize: size,
     fontWeight: weight,
     fontStyle: italic ? slant() : FontStyle.normal,
@@ -170,7 +188,7 @@ class HaloType {
     double letter = 0,
   }) => TextStyle(
     fontFamily: sansFamily,
-    fontFamilyFallback: sansFallback,
+    fontFamilyFallback: sansFallbackNow,
     fontSize: size,
     fontWeight: weight,
     color: color ?? HaloColors.text,
@@ -184,8 +202,8 @@ class HaloType {
     Color? color,
     double letter = 0.12,
   }) => TextStyle(
-    fontFamily: 'JetBrains Mono',
-    fontFamilyFallback: monoFallback,
+    fontFamily: monoFamily,
+    fontFamilyFallback: monoFallbackNow,
     fontSize: size,
     fontWeight: weight,
     color: color ?? HaloColors.text2,
@@ -216,7 +234,7 @@ ThemeData buildHaloTheme() {
     colorScheme: scheme,
     textTheme: base.textTheme.apply(
       fontFamily: HaloType.sansFamily,
-      fontFamilyFallback: HaloType.sansFallback,
+      fontFamilyFallback: HaloType.sansFallbackNow,
       bodyColor: HaloColors.text,
       displayColor: HaloColors.text,
     ),

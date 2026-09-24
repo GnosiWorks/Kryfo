@@ -13,6 +13,12 @@ include: package:flutter_lints/flutter.yaml
 analyzer:
   exclude:
     - third_party/**
+    # generated from app_fa.arb and app_ar.arb: the right-to-left messages
+    # carry invisible direction isolates on purpose (each value dropped into
+    # a sentence keeps its own direction), which the trojan-source lint
+    # flags in every string. hand-written code is still checked for them.
+    - lib/l10n/app_localizations_fa.dart
+    - lib/l10n/app_localizations_ar.dart
 
 linter:
   # The lint rules applied to this project can be customized in the

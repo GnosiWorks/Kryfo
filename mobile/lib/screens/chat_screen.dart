@@ -324,8 +324,8 @@ Widget _mediaStamp(_Msg msg, bool pending, bool failedShown, bool ackOk) =>
           Text(
             _fmtTime(msg.when),
             style: TextStyle(
-              fontFamily: 'JetBrains Mono',
-              fontFamilyFallback: HaloType.monoFallback,
+              fontFamily: HaloType.monoFamily,
+              fontFamilyFallback: HaloType.monoFallbackNow,
               fontSize: 9,
               color: Colors.white,
               letterSpacing: track(0.4),
@@ -347,8 +347,8 @@ Widget _mediaStamp(_Msg msg, bool pending, bool failedShown, bool ackOk) =>
               Text(
                 l10n.chatDelivered,
                 style: TextStyle(
-                  fontFamily: 'JetBrains Mono',
-                  fontFamilyFallback: HaloType.monoFallback,
+                  fontFamily: HaloType.monoFamily,
+                  fontFamilyFallback: HaloType.monoFallbackNow,
                   fontSize: 8.5,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
@@ -6316,9 +6316,9 @@ class _Bubble extends StatelessWidget {
                                           Text(
                                             _fmtTime(msg.when),
                                             style: TextStyle(
-                                              fontFamily: 'JetBrains Mono',
+                                              fontFamily: HaloType.monoFamily,
                                               fontFamilyFallback:
-                                                  HaloType.monoFallback,
+                                                  HaloType.monoFallbackNow,
                                               fontSize: 9,
                                               color: metaColor,
                                               letterSpacing: track(0.4),
@@ -6329,9 +6329,9 @@ class _Bubble extends StatelessWidget {
                                             Text(
                                               l10n.chatEdited,
                                               style: TextStyle(
-                                                fontFamily: 'JetBrains Mono',
+                                                fontFamily: HaloType.monoFamily,
                                                 fontFamilyFallback:
-                                                    HaloType.monoFallback,
+                                                    HaloType.monoFallbackNow,
                                                 fontSize: 9,
                                                 color: metaColor,
                                                 fontStyle: slant(),
@@ -6354,9 +6354,9 @@ class _Bubble extends StatelessWidget {
                                             Text(
                                               l10n.chatDelivered,
                                               style: TextStyle(
-                                                fontFamily: 'JetBrains Mono',
+                                                fontFamily: HaloType.monoFamily,
                                                 fontFamilyFallback:
-                                                    HaloType.monoFallback,
+                                                    HaloType.monoFallbackNow,
                                                 fontSize: 8.5,
                                                 fontWeight: FontWeight.w600,
                                                 color: metaColor,
@@ -6392,9 +6392,9 @@ class _Bubble extends StatelessWidget {
                                       Text(
                                         l10n.chatEdited,
                                         style: TextStyle(
-                                          fontFamily: 'JetBrains Mono',
+                                          fontFamily: HaloType.monoFamily,
                                           fontFamilyFallback:
-                                              HaloType.monoFallback,
+                                              HaloType.monoFallbackNow,
                                           fontSize: 9,
                                           color: HaloColors.amber.withValues(
                                             alpha: 0.55,
@@ -6457,9 +6457,9 @@ class _Bubble extends StatelessWidget {
                                             ? l10n.chatWaitingForThemToComeOnline
                                             : l10n.chatFailedTapToRetry,
                                         style: TextStyle(
-                                          fontFamily: 'JetBrains Mono',
+                                          fontFamily: HaloType.monoFamily,
                                           fontFamilyFallback:
-                                              HaloType.monoFallback,
+                                              HaloType.monoFallbackNow,
                                           fontSize: 10,
                                           color: HaloColors.onAmber.withValues(
                                             alpha: 0.95,
