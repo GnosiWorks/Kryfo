@@ -1793,10 +1793,12 @@ class HaloDb {
     ''');
   }
 
+  // headline and lines are stored as shield codes (ShieldHit.toJson), and
+  // worded when shown. an empty headline is a clean check.
   Future<void> setShield(
     String haloId,
     String headline,
-    List<String> lines,
+    List<Map<String, String>> lines,
   ) async {
     final db = await open();
     await db.insert('shield', {
@@ -3683,13 +3685,19 @@ Future<String?> signalDecrypt(
 
 int _outboxGrind(String seed) => grindPow(seed, powBits);
 
-Future<String> handleHaloUri(String raw) async {
+Future<String> handleHaloUri(String raw) async =>
+    (await handleHaloUriAdded(raw)).$1;
+
+// the result line, and whether the link left the person in the contacts
+// (added now, or already there). a caller that acts on that asks this; the
+// line is in the app's language and is not compared with anything.
+Future<(String, bool)> handleHaloUriAdded(String raw) async {
   // @wren or the handle page link: ask the registry for the invite behind it
   // and carry on as if that had been pasted
   final h = handleFromInput(raw);
   if (h != null) {
     final r = await resolveHandle(h, _torGetJsonOnIsolate);
-    if (r.startsWith('error:')) return r.substring(7);
+    if (r.startsWith('error:')) return (r.substring(7), false);
     raw = r;
   }
   // the link, out of whatever was pasted around it
@@ -3705,16 +3713,16 @@ Future<String> handleHaloUri(String raw) async {
         r == l10n.appYouAreAlreadyIn) {
       openRoomSoon(room.roomId);
     }
-    return r;
+    return (r, false);
   }
   final parsed = parseHaloUri(raw);
-  if (parsed == null) return l10n.appInvalidUri;
+  if (parsed == null) return (l10n.appInvalidUri, false);
   if (parsed['v'] == '2' || parsed['v'] == '3') {
     final already = await db.getContact(parsed['id']!) != null;
     try {
       await processPeerBundle(parsed['id']!, parsed['bundle']!);
     } catch (e) {
-      return l10n.appBundleError(e);
+      return (l10n.appBundleError(e), false);
     }
     await db.upsertContact(parsed['id']!, parsed['onion']!, '');
     await db.setPeerBundle(parsed['id']!, parsed['bundle']!);
@@ -3728,13 +3736,16 @@ Future<String> handleHaloUri(String raw) async {
       await appState.rememberPeerFc(parsed['id']!, fc);
     }
     await appState.subscribePeer(parsed['id']!);
-    return already
-        ? l10n.appAlreadySaved('${parsed['id']}')
-        : l10n.appAddedYouCanMessage('${parsed['id']}');
+    return (
+      already
+          ? l10n.appAlreadySaved('${parsed['id']}')
+          : l10n.appAddedYouCanMessage('${parsed['id']}'),
+      true,
+    );
   } else {
     await db.upsertContact(parsed['id']!, parsed['onion']!, parsed['xpub']!);
     await appState.subscribePeer(parsed['id']!);
-    return l10n.appPeerImportedV1('${parsed['id']}');
+    return (l10n.appPeerImportedV1('${parsed['id']}'), false);
   }
 }
 
@@ -5888,8 +5899,8 @@ class AppState extends ChangeNotifier {
         notifyListeners();
         return;
       }
-      await db.setShield(senderHaloId, r.headline!, [
-        for (final h in r.hits) h.line,
+      await db.setShield(senderHaloId, jsonEncode(r.lead!.toJson()), [
+        for (final h in r.hits) h.toJson(),
       ]);
       _shieldRev++;
       dlog('shield: flagged ${r.hits.map((h) => h.code).join(',')}');

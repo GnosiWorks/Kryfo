@@ -3,7 +3,6 @@
 // faint tint of one accent colour. no border, no pill, no emoji. used for
 // vouches, the scam shield and burner rooms so they all read as one voice.
 import 'package:flutter/material.dart';
-import '../copy.dart';
 import '../theme.dart';
 
 enum NoticeGlyph { people, shield, clock, link }
@@ -75,7 +74,7 @@ class _NoticeBannerState extends State<NoticeBanner>
           const SizedBox(width: 9),
           Expanded(
             child: Text(
-              sentence(widget.text),
+              widget.text,
               style: HaloType.sans(
                 size: 12.5,
                 weight: FontWeight.w500,

@@ -1297,8 +1297,8 @@ abstract class AppLocalizations {
   /// scam_shield.dart
   ///
   /// In en, this message translates to:
-  /// **'This name matches'**
-  String get scamShieldThisNameMatches;
+  /// **'This name matches {shown}'**
+  String scamShieldThisNameMatches(Object shown);
 
   /// scam_shield.dart
   ///
@@ -1351,8 +1351,8 @@ abstract class AppLocalizations {
   /// scam_shield.dart
   ///
   /// In en, this message translates to:
-  /// **'Also: {h}{h2}'**
-  String scamShieldAlso(Object h, Object h2);
+  /// **'Also: name matches your contact {shown}'**
+  String scamShieldAlso(Object shown);
 
   /// screens/archived_screen.dart, screens/blocked_screen.dart, screens/chat_screen.dart, screens/clean_screen.dart, screens/getting_messages_screen.dart, screens/group_chat_screen.dart, screens/group_info_screen.dart, screens/key_verification_screen.dart, screens/modes_screen.dart, screens/new_group_screen.dart, screens/pair_code_screen.dart, screens/photo_knows_screen.dart, screens/scan_screen.dart, widgets/media_bubbles.dart, widgets/tool_parts.dart
   ///
@@ -4165,7 +4165,7 @@ abstract class AppLocalizations {
   /// screens/group_info_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'rename'**
+  /// **'Rename'**
   String get groupInfoRename;
 
   /// screens/group_info_screen.dart
@@ -5503,19 +5503,19 @@ abstract class AppLocalizations {
   /// screens/modes_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'speed'**
+  /// **'SPEED'**
   String get modesSpeed2;
 
   /// screens/modes_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'hops'**
+  /// **'HOPS'**
   String get modesHops;
 
   /// screens/modes_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'ip'**
+  /// **'IP'**
   String get modesIp;
 
   /// screens/modes_screen.dart
@@ -7903,8 +7903,8 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'type \'wipe\' to confirm'**
-  String get settingsTypeWipeToConfirm;
+  /// **'type \'{word}\' to confirm'**
+  String settingsTypeWipeToConfirm(Object word);
 
   /// screens/settings_screen.dart
   ///
@@ -7912,11 +7912,11 @@ abstract class AppLocalizations {
   /// **'The last step. Nothing survives it.'**
   String get settingsTheLastStepNothing;
 
-  /// screens/settings_screen.dart
+  /// screens/settings_screen.dart: the word typed to confirm wiping kryfo. one lowercase word, easy to type on a phone keyboard in this language. the english word is accepted too.
   ///
   /// In en, this message translates to:
-  /// **'Wipe'**
-  String get settingsWipe;
+  /// **'wipe'**
+  String get settingsWipeWord;
 
   /// screens/settings_screen.dart
   ///
@@ -7933,37 +7933,37 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'tor routing'**
+  /// **'Tor routing'**
   String get settingsTorRouting;
 
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'connecting'**
+  /// **'Connecting'**
   String get settingsConnecting;
 
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'off · relay mode'**
+  /// **'Off · relay mode'**
   String get settingsOffMode;
 
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'off · fast mode'**
+  /// **'Off · fast mode'**
   String get settingsOffFastMode;
 
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'app lock'**
+  /// **'App lock'**
   String get settingsAppLock;
 
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'blocked by android'**
+  /// **'Blocked by android'**
   String get settingsBlockedByAndroid;
 
   /// screens/settings_screen.dart
@@ -7975,7 +7975,7 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'fast'**
+  /// **'Fast'**
   String get settingsFast;
 
   /// screens/settings_screen.dart
@@ -8281,7 +8281,7 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'danger zone'**
+  /// **'Danger zone'**
   String get settingsDangerZone;
 
   /// screens/settings_screen.dart
@@ -9559,7 +9559,7 @@ abstract class AppLocalizations {
   /// vouch_text.dart
   ///
   /// In en, this message translates to:
-  /// **'this shares {a}\'s address with {b}'**
+  /// **'This shares {a}\'s address with {b}'**
   String vouchTextThisSharesSAddress(Object a, Object b);
 
   /// widgets/boot_failed.dart
@@ -10285,19 +10285,19 @@ abstract class AppLocalizations {
   /// screens/avatar_picker_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'shape'**
+  /// **'Shape'**
   String get avatarPickerShape;
 
   /// screens/avatar_picker_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'colour'**
+  /// **'Colour'**
   String get avatarPickerColour;
 
   /// screens/avatar_picker_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'turn'**
+  /// **'Turn'**
   String get avatarPickerTurn;
 
   /// screens/transport_screen.dart
@@ -10363,73 +10363,73 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'connected'**
+  /// **'Connected'**
   String get settingsConnected;
 
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'screenshots'**
+  /// **'Screenshots'**
   String get settingsScreenshots;
 
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'blocked'**
+  /// **'Blocked'**
   String get settingsBlocked2;
 
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'allowed'**
+  /// **'Allowed'**
   String get settingsAllowed;
 
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'on'**
+  /// **'On'**
   String get settingsOn;
 
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'off'**
+  /// **'Off'**
   String get settingsOff;
 
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'notifications'**
+  /// **'Notifications'**
   String get settingsNotifications;
 
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'privacy'**
+  /// **'Privacy'**
   String get settingsPrivacy;
 
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'security'**
+  /// **'Security'**
   String get settingsSecurity;
 
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'backup'**
+  /// **'Backup'**
   String get settingsBackup;
 
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'voice'**
+  /// **'Voice'**
   String get settingsVoice;
 
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'about'**
+  /// **'About'**
   String get settingsAbout;
 
   /// screens/wallpaper_sheet.dart

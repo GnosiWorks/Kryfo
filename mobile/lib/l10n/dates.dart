@@ -39,6 +39,16 @@ String intlLocaleFor(String languageCode, {String? scriptCode}) {
 /// "23 Sep"
 String dayMonth(DateTime d) => DateFormat.MMMd(_locale).format(d);
 
+/// a date in capitals, for the small labels set in capitals ("23 SEPT").
+/// only dates: messages are stored in the case they are shown. dart's
+/// toUpperCase knows no language, and turkish and azerbaijani keep the dot
+/// on a capital i.
+String dateCaps(String s) {
+  final lang = _chosen.split('_').first;
+  if (lang == 'tr' || lang == 'az') s = s.replaceAll('i', 'İ');
+  return s.toUpperCase();
+}
+
 /// "23 Sep 2025"
 String dayMonthYear(DateTime d) => DateFormat.yMMMd(_locale).format(d);
 

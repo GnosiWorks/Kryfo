@@ -69,7 +69,7 @@ class _NotesScreenState extends State<NotesScreen> {
     final diff = today.difference(that).inDays;
     if (diff == 0) return l10n.notesToday;
     if (diff == 1) return l10n.notesYesterday;
-    return dayMonth(d);
+    return dateCaps(dayMonth(d));
   }
 
   Widget _dayDivider(int ms) => Center(

@@ -797,7 +797,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scamShieldLooksLikeAScam => 'Looks like a scam';
 
   @override
-  String get scamShieldThisNameMatches => 'This name matches';
+  String scamShieldThisNameMatches(Object shown) {
+    return 'This name matches $shown';
+  }
 
   @override
   String scamShieldNameMatchesYourContact(Object shown) {
@@ -832,8 +834,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Asks for a code, seed phrase or recovery file';
 
   @override
-  String scamShieldAlso(Object h, Object h2) {
-    return 'Also: $h$h2';
+  String scamShieldAlso(Object shown) {
+    return 'Also: name matches your contact $shown';
   }
 
   @override
@@ -2477,7 +2479,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupInfoRenameGroup => 'Rename group';
 
   @override
-  String get groupInfoRename => 'rename';
+  String get groupInfoRename => 'Rename';
 
   @override
   String get groupInfoNoContactsToAdd => 'No contacts to add';
@@ -3322,13 +3324,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get modesActive => 'Active';
 
   @override
-  String get modesSpeed2 => 'speed';
+  String get modesSpeed2 => 'SPEED';
 
   @override
-  String get modesHops => 'hops';
+  String get modesHops => 'HOPS';
 
   @override
-  String get modesIp => 'ip';
+  String get modesIp => 'IP';
 
   @override
   String get modesVisible => 'Visible';
@@ -4687,14 +4689,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonContinue => 'Continue';
 
   @override
-  String get settingsTypeWipeToConfirm => 'type \'wipe\' to confirm';
+  String settingsTypeWipeToConfirm(Object word) {
+    return 'type \'$word\' to confirm';
+  }
 
   @override
   String get settingsTheLastStepNothing =>
       'The last step. Nothing survives it.';
 
   @override
-  String get settingsWipe => 'Wipe';
+  String get settingsWipeWord => 'wipe';
 
   @override
   String get settingsWipeKryfo2 => 'Wipe kryfo';
@@ -4703,28 +4707,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsYourProtections => 'Your protections';
 
   @override
-  String get settingsTorRouting => 'tor routing';
+  String get settingsTorRouting => 'Tor routing';
 
   @override
-  String get settingsConnecting => 'connecting';
+  String get settingsConnecting => 'Connecting';
 
   @override
-  String get settingsOffMode => 'off · relay mode';
+  String get settingsOffMode => 'Off · relay mode';
 
   @override
-  String get settingsOffFastMode => 'off · fast mode';
+  String get settingsOffFastMode => 'Off · fast mode';
 
   @override
-  String get settingsAppLock => 'app lock';
+  String get settingsAppLock => 'App lock';
 
   @override
-  String get settingsBlockedByAndroid => 'blocked by android';
+  String get settingsBlockedByAndroid => 'Blocked by android';
 
   @override
   String get settingsSpeedPrivacy => 'Speed & privacy';
 
   @override
-  String get settingsFast => 'fast';
+  String get settingsFast => 'Fast';
 
   @override
   String get settingsRelay1Hop => 'Relay · 1 hop';
@@ -4890,7 +4894,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Not independently audited. Pre-alpha - good for testing, not yet for high-stakes use.';
 
   @override
-  String get settingsDangerZone => 'danger zone';
+  String get settingsDangerZone => 'Danger zone';
 
   @override
   String get settingsWipeKryfoFromThis => 'Wipe kryfo from this phone';
@@ -5730,7 +5734,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String vouchTextThisSharesSAddress(Object a, Object b) {
-    return 'this shares $a\'s address with $b';
+    return 'This shares $a\'s address with $b';
   }
 
   @override
@@ -6161,13 +6165,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileIdentity => 'identity';
 
   @override
-  String get avatarPickerShape => 'shape';
+  String get avatarPickerShape => 'Shape';
 
   @override
-  String get avatarPickerColour => 'colour';
+  String get avatarPickerColour => 'Colour';
 
   @override
-  String get avatarPickerTurn => 'turn';
+  String get avatarPickerTurn => 'Turn';
 
   @override
   String get transportStatus => 'status';
@@ -6200,40 +6204,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transportMemory => 'memory';
 
   @override
-  String get settingsConnected => 'connected';
+  String get settingsConnected => 'Connected';
 
   @override
-  String get settingsScreenshots => 'screenshots';
+  String get settingsScreenshots => 'Screenshots';
 
   @override
-  String get settingsBlocked2 => 'blocked';
+  String get settingsBlocked2 => 'Blocked';
 
   @override
-  String get settingsAllowed => 'allowed';
+  String get settingsAllowed => 'Allowed';
 
   @override
-  String get settingsOn => 'on';
+  String get settingsOn => 'On';
 
   @override
-  String get settingsOff => 'off';
+  String get settingsOff => 'Off';
 
   @override
-  String get settingsNotifications => 'notifications';
+  String get settingsNotifications => 'Notifications';
 
   @override
-  String get settingsPrivacy => 'privacy';
+  String get settingsPrivacy => 'Privacy';
 
   @override
-  String get settingsSecurity => 'security';
+  String get settingsSecurity => 'Security';
 
   @override
-  String get settingsBackup => 'backup';
+  String get settingsBackup => 'Backup';
 
   @override
-  String get settingsVoice => 'voice';
+  String get settingsVoice => 'Voice';
 
   @override
-  String get settingsAbout => 'about';
+  String get settingsAbout => 'About';
 
   @override
   String get wallpaperGradients => 'gradients';

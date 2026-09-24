@@ -1068,9 +1068,14 @@
   "@scamShieldLooksLikeAScam": {
     "description": "scam_shield.dart"
   },
-  "scamShieldThisNameMatches": "This name matches",
+  "scamShieldThisNameMatches": "This name matches {shown}",
   "@scamShieldThisNameMatches": {
-    "description": "scam_shield.dart"
+    "description": "scam_shield.dart",
+    "placeholders": {
+      "shown": {
+        "type": "Object"
+      }
+    }
   },
   "scamShieldNameMatchesYourContact": "Name matches your contact {shown}",
   "@scamShieldNameMatchesYourContact": {
@@ -1114,14 +1119,11 @@
   "@scamShieldAsksForACode": {
     "description": "scam_shield.dart"
   },
-  "scamShieldAlso": "Also: {h}{h2}",
+  "scamShieldAlso": "Also: name matches your contact {shown}",
   "@scamShieldAlso": {
     "description": "scam_shield.dart",
     "placeholders": {
-      "h": {
-        "type": "Object"
-      },
-      "h2": {
+      "shown": {
         "type": "Object"
       }
     }
@@ -3292,7 +3294,7 @@
   "@groupInfoRenameGroup": {
     "description": "screens/group_info_screen.dart"
   },
-  "groupInfoRename": "rename",
+  "groupInfoRename": "Rename",
   "@groupInfoRename": {
     "description": "screens/group_info_screen.dart"
   },
@@ -4369,15 +4371,15 @@
   "@modesActive": {
     "description": "screens/modes_screen.dart"
   },
-  "modesSpeed2": "speed",
+  "modesSpeed2": "SPEED",
   "@modesSpeed2": {
     "description": "screens/modes_screen.dart"
   },
-  "modesHops": "hops",
+  "modesHops": "HOPS",
   "@modesHops": {
     "description": "screens/modes_screen.dart"
   },
-  "modesIp": "ip",
+  "modesIp": "IP",
   "@modesIp": {
     "description": "screens/modes_screen.dart"
   },
@@ -6111,17 +6113,22 @@
   "@commonContinue": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsTypeWipeToConfirm": "type 'wipe' to confirm",
+  "settingsTypeWipeToConfirm": "type '{word}' to confirm",
   "@settingsTypeWipeToConfirm": {
-    "description": "screens/settings_screen.dart"
+    "description": "screens/settings_screen.dart",
+    "placeholders": {
+      "word": {
+        "type": "Object"
+      }
+    }
   },
   "settingsTheLastStepNothing": "The last step. Nothing survives it.",
   "@settingsTheLastStepNothing": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsWipe": "Wipe",
-  "@settingsWipe": {
-    "description": "screens/settings_screen.dart"
+  "settingsWipeWord": "wipe",
+  "@settingsWipeWord": {
+    "description": "screens/settings_screen.dart: the word typed to confirm wiping kryfo. one lowercase word, easy to type on a phone keyboard in this language. the english word is accepted too."
   },
   "settingsWipeKryfo2": "Wipe kryfo",
   "@settingsWipeKryfo2": {
@@ -6131,27 +6138,27 @@
   "@settingsYourProtections": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsTorRouting": "tor routing",
+  "settingsTorRouting": "Tor routing",
   "@settingsTorRouting": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsConnecting": "connecting",
+  "settingsConnecting": "Connecting",
   "@settingsConnecting": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsOffMode": "off · relay mode",
+  "settingsOffMode": "Off · relay mode",
   "@settingsOffMode": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsOffFastMode": "off · fast mode",
+  "settingsOffFastMode": "Off · fast mode",
   "@settingsOffFastMode": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsAppLock": "app lock",
+  "settingsAppLock": "App lock",
   "@settingsAppLock": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsBlockedByAndroid": "blocked by android",
+  "settingsBlockedByAndroid": "Blocked by android",
   "@settingsBlockedByAndroid": {
     "description": "screens/settings_screen.dart"
   },
@@ -6159,7 +6166,7 @@
   "@settingsSpeedPrivacy": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsFast": "fast",
+  "settingsFast": "Fast",
   "@settingsFast": {
     "description": "screens/settings_screen.dart"
   },
@@ -6373,7 +6380,7 @@
   "@settingsNotIndependentlyAuditedPre": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsDangerZone": "danger zone",
+  "settingsDangerZone": "Danger zone",
   "@settingsDangerZone": {
     "description": "screens/settings_screen.dart"
   },
@@ -7510,7 +7517,7 @@
       }
     }
   },
-  "vouchTextThisSharesSAddress": "this shares {a}'s address with {b}",
+  "vouchTextThisSharesSAddress": "This shares {a}'s address with {b}",
   "@vouchTextThisSharesSAddress": {
     "description": "vouch_text.dart",
     "placeholders": {
@@ -8121,15 +8128,15 @@
   "@profileIdentity": {
     "description": "screens/profile_screen.dart"
   },
-  "avatarPickerShape": "shape",
+  "avatarPickerShape": "Shape",
   "@avatarPickerShape": {
     "description": "screens/avatar_picker_screen.dart"
   },
-  "avatarPickerColour": "colour",
+  "avatarPickerColour": "Colour",
   "@avatarPickerColour": {
     "description": "screens/avatar_picker_screen.dart"
   },
-  "avatarPickerTurn": "turn",
+  "avatarPickerTurn": "Turn",
   "@avatarPickerTurn": {
     "description": "screens/avatar_picker_screen.dart"
   },
@@ -8173,51 +8180,51 @@
   "@transportMemory": {
     "description": "screens/transport_screen.dart"
   },
-  "settingsConnected": "connected",
+  "settingsConnected": "Connected",
   "@settingsConnected": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsScreenshots": "screenshots",
+  "settingsScreenshots": "Screenshots",
   "@settingsScreenshots": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsBlocked2": "blocked",
+  "settingsBlocked2": "Blocked",
   "@settingsBlocked2": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsAllowed": "allowed",
+  "settingsAllowed": "Allowed",
   "@settingsAllowed": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsOn": "on",
+  "settingsOn": "On",
   "@settingsOn": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsOff": "off",
+  "settingsOff": "Off",
   "@settingsOff": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsNotifications": "notifications",
+  "settingsNotifications": "Notifications",
   "@settingsNotifications": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsPrivacy": "privacy",
+  "settingsPrivacy": "Privacy",
   "@settingsPrivacy": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsSecurity": "security",
+  "settingsSecurity": "Security",
   "@settingsSecurity": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsBackup": "backup",
+  "settingsBackup": "Backup",
   "@settingsBackup": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsVoice": "voice",
+  "settingsVoice": "Voice",
   "@settingsVoice": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsAbout": "about",
+  "settingsAbout": "About",
   "@settingsAbout": {
     "description": "screens/settings_screen.dart"
   },

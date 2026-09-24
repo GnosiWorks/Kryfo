@@ -12,7 +12,8 @@ import 'package:share_plus/share_plus.dart';
 import '../contact_card.dart';
 import '../dlog.dart';
 import '../handle_lookup.dart' show handleFromInput;
-import '../main.dart' show appState, buildHaloUriV3, handleHaloUri;
+import '../main.dart'
+    show appState, buildHaloUriV3, handleHaloUri, handleHaloUriAdded;
 import '../theme.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -100,13 +101,12 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
     HapticFeedback.selectionClick();
     FocusScope.of(context).unfocus();
     setState(() => _finding = true);
-    final status = await handleHaloUri(raw);
+    final (status, added) = await handleHaloUriAdded(raw);
     await appState.refreshContacts();
     if (!mounted) return;
     setState(() => _finding = false);
     showHaloToast(context, status);
-    final low = status.toLowerCase();
-    if (low.startsWith('added') || low.startsWith('already')) {
+    if (added) {
       HapticFeedback.mediumImpact();
       _handleCtrl.clear();
       final nav = Navigator.of(context);

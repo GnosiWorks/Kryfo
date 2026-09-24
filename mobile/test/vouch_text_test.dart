@@ -23,7 +23,7 @@ void main() {
   test('share warning names both', () {
     expect(
       shareWarning('alice', 'bob'),
-      "this shares alice's address with bob",
+      "This shares alice's address with bob",
     );
   });
 }

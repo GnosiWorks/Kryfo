@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 
-import '../copy.dart';
 import '../theme.dart';
 
 class HaloSection extends StatelessWidget {
@@ -12,7 +11,7 @@ class HaloSection extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(6, 4, 4, 8),
       child: Text(
-        sentence(label),
+        label,
         style: HaloType.mono(size: 10.5, color: HaloColors.text3, letter: 0.06),
       ),
     );
@@ -111,15 +110,12 @@ class HaloRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    sentence(label),
-                    style: HaloType.sans(size: 14, color: fg),
-                  ),
+                  Text(label, style: HaloType.sans(size: 14, color: fg)),
                   if (hint != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 3, right: 10),
                       child: Text(
-                        sentence(hint!),
+                        hint!,
                         style: HaloType.mono(
                           size: 10.5,
                           color: HaloColors.text3,
@@ -130,7 +126,7 @@ class HaloRow extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 4, right: 10),
                       child: Text(
-                        sentence(v),
+                        v,
                         style: HaloType.sans(size: 13, color: HaloColors.text2),
                       ),
                     ),
@@ -139,10 +135,7 @@ class HaloRow extends StatelessWidget {
             ),
             if (v.isNotEmpty && !stacked) ...[
               const SizedBox(width: 8),
-              Text(
-                sentence(v),
-                style: HaloType.sans(size: 13, color: HaloColors.text2),
-              ),
+              Text(v, style: HaloType.sans(size: 13, color: HaloColors.text2)),
             ],
             if (onTap != null) ...[
               const SizedBox(width: 6),

@@ -369,10 +369,7 @@ class _Meta extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(
-          k.toUpperCase(),
-          style: HaloType.mono(size: 10, color: HaloColors.text3),
-        ),
+        Text(k, style: HaloType.mono(size: 10, color: HaloColors.text3)),
         const SizedBox(width: 4),
         Text(
           v,

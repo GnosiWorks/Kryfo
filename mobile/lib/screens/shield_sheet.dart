@@ -10,6 +10,7 @@ import '../widgets/notice_banner.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../l10n/l10n.dart';
+import '../scam_shield.dart';
 
 // a stored flag, as the row in the shield table reads back.
 class ShieldFlag {
@@ -25,11 +26,17 @@ class ShieldFlag {
   static ShieldFlag? fromRow(Map<String, Object?>? r) {
     if (r == null || (r['dismissed'] as int? ?? 0) == 1) return null;
     if (cleanRow(r)) return null;
+    // a flag an older build stored is english sentences, shown as they are
     try {
-      final lines = (jsonDecode(r['lines'] as String) as List)
-          .map((e) => e.toString())
-          .toList();
-      return ShieldFlag(r['headline'] as String, lines);
+      final head = r['headline'] as String;
+      final lines = [
+        for (final e in jsonDecode(r['lines'] as String) as List)
+          e is Map ? ShieldHit.fromJson(e).line : '$e',
+      ];
+      final headline = head.startsWith('{')
+          ? shieldHeadline(ShieldHit.fromJson(jsonDecode(head) as Map))
+          : head;
+      return ShieldFlag(headline, lines);
     } catch (_) {
       return null;
     }

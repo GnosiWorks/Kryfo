@@ -33,5 +33,10 @@ void main() {
     expect(hourMinute(d), '07:05');
     setDateLocale(intlLocaleFor('zh', scriptCode: 'Hant'));
     expect(dayMonth(d), '9月23日');
+    expect(dateCaps(dayMonth(d)), '9月23日');
+    setDateLocale(intlLocaleFor('tr'));
+    expect(dateCaps(dayMonth(DateTime(2026, 4, 1))), '1 NİS');
+    setDateLocale(intlLocaleFor('en'));
+    expect(dateCaps(dayMonth(d)), '23 SEPT');
   });
 }

@@ -86,7 +86,7 @@ void main() {
       t,
     ) async {
       await t.pumpWidget(
-        host(HaloRow(label: 'bridges', value: 'Off', onTap: () {})),
+        host(HaloRow(label: 'Bridges', value: 'Off', onTap: () {})),
       );
       expect(find.text('Bridges'), findsOneWidget);
       expect(
@@ -103,7 +103,7 @@ void main() {
     testWidgets('a long value goes under the label', (t) async {
       await t.pumpWidget(
         host(
-          const HaloRow(label: 'transport', value: 'What the network is doing'),
+          const HaloRow(label: 'Transport', value: 'What the network is doing'),
         ),
       );
       expect(
@@ -115,7 +115,7 @@ void main() {
     testWidgets('rose tints the label and the tile', (t) async {
       await t.pumpWidget(
         host(
-          HaloRow(label: 'wipe', rose: true, icon: Icons.delete, onTap: () {}),
+          HaloRow(label: 'Wipe', rose: true, icon: Icons.delete, onTap: () {}),
         ),
       );
       expect(t.widget<Text>(find.text('Wipe')).style!.color, HaloColors.rose);
@@ -143,8 +143,10 @@ void main() {
     expect(lines.length, 2);
   });
 
-  testWidgets('HaloSection sentence-cases its caption', (t) async {
-    await t.pumpWidget(host(const HaloSection('danger zone')));
+  testWidgets('HaloSection shows its caption as the message has it', (t) async {
+    await t.pumpWidget(host(const HaloSection('Danger zone')));
     expect(find.text('Danger zone'), findsOneWidget);
+    await t.pumpWidget(host(const HaloSection('istanbul')));
+    expect(find.text('istanbul'), findsOneWidget);
   });
 }

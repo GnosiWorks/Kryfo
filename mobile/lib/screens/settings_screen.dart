@@ -15,7 +15,6 @@ import 'why_kryfo_screen.dart';
 import 'transport_screen.dart';
 import 'bridges_screen.dart';
 import 'seen_screen.dart';
-import '../copy.dart';
 import '../theme.dart';
 import '../notif_permission.dart';
 import 'modes_screen.dart';
@@ -51,10 +50,7 @@ Widget _postureLine(String label, bool on, String onText, String offText) {
           ),
         ),
         const SizedBox(width: 10),
-        Text(
-          sentence(label),
-          style: HaloType.sans(size: 13, color: HaloColors.text),
-        ),
+        Text(label, style: HaloType.sans(size: 13, color: HaloColors.text)),
         const Spacer(),
         AnimatedDefaultTextStyle(
           duration: const Duration(milliseconds: 240),
@@ -62,7 +58,7 @@ Widget _postureLine(String label, bool on, String onText, String offText) {
             size: 10,
             color: on ? HaloColors.amber : HaloColors.text3,
           ),
-          child: Text(sentence(on ? onText : offText)),
+          child: Text(on ? onText : offText),
         ),
       ],
     ),
@@ -89,17 +85,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!go || !mounted) return;
 
     // step 2: type the word
-    final ok =
-        (await showInputSheet(
-          context,
-          title: l10n.settingsTypeWipeToConfirm,
-          line: l10n.settingsTheLastStepNothing,
-          hint: l10n.settingsWipe,
-          mono: true,
-          rose: true,
-          save: l10n.settingsWipeKryfo2,
-        ))?.trim().toLowerCase() ==
-        'wipe';
+    final typed = (await showInputSheet(
+      context,
+      title: l10n.settingsTypeWipeToConfirm(l10n.settingsWipeWord),
+      line: l10n.settingsTheLastStepNothing,
+      hint: l10n.settingsWipeWord,
+      mono: true,
+      rose: true,
+      save: l10n.settingsWipeKryfo2,
+    ))?.trim().toLowerCase();
+    final ok = typed == l10n.settingsWipeWord.toLowerCase() || typed == 'wipe';
     if (ok) await wipeHalo();
   }
 

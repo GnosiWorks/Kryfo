@@ -1,9 +1,10 @@
-import 'l10n/l10n.dart';
 // SPDX-License-Identifier: GPL-3.0-or-later
 // scam shield. runs on the phone, over a stranger's first message and their
 // id, against the contacts we already hold. nothing here does io, so every
 // rule is a plain function and a test can hit it directly. the rules ship in
 // the apk; there is no list to fetch and nothing to report back to.
+
+import 'l10n/l10n.dart';
 
 class ShieldContact {
   final String id;
@@ -14,14 +15,39 @@ class ShieldContact {
 
 class ShieldHit {
   final String code;
-  final String line; // the plain sentence shown to the person
-  const ShieldHit(this.code, this.line);
+  // the contact a name or face match points at
+  final String? who;
+  const ShieldHit(this.code, [this.who]);
+
+  // the plain sentence shown to the person, in the app's language
+  String get line => switch (code) {
+    'name_match' => l10n.scamShieldNameMatchesYourContact(who ?? ''),
+    'face_match' => l10n.scamShieldSameFaceAsYour(who ?? ''),
+    'name_note' => l10n.scamShieldAlso(who ?? ''),
+    'crypto_address' => l10n.scamShieldContainsACryptoAddress,
+    'money_rush' => l10n.scamShieldMentionsMoneyAndUrgency,
+    'move_app' => l10n.scamShieldAsksYouToMove,
+    'lookalike_url' => l10n.scamShieldLinksToALookalike,
+    'long_opener' => l10n.scamShieldALongOpenerFrom,
+    'secret_ask' => l10n.scamShieldAsksForACode,
+    _ => l10n.scamShieldLooksLikeAScam,
+  };
+
+  // how a flag is stored: the code and the contact, never the words
+  Map<String, String> toJson() => {'code': code, 'who': ?who};
+  static ShieldHit fromJson(Map m) =>
+      ShieldHit('${m['code']}', m['who'] as String?);
+
   @override
   bool operator ==(Object other) =>
-      other is ShieldHit && other.code == code && other.line == line;
+      other is ShieldHit && other.code == code && other.who == who;
   @override
-  int get hashCode => Object.hash(code, line);
+  int get hashCode => Object.hash(code, who);
 }
+
+String shieldHeadline(ShieldHit lead) => lead.code == 'name_match'
+    ? l10n.scamShieldThisNameMatches(lead.who ?? '')
+    : l10n.scamShieldLooksLikeAScam;
 
 class ShieldResult {
   final List<ShieldHit> hits;
@@ -40,19 +66,18 @@ class ShieldResult {
       ? hits.isNotEmpty
       : hits.length >= 2;
   // the banner line. the name one is the sharper of the two on purpose.
-  String? get headline {
+  // stored as the hit it names; worded by shieldHeadline.
+  ShieldHit? get lead {
     if (!flagged) return null;
-    if (group) return l10n.scamShieldLooksLikeAScam;
-    for (final h in hits) {
-      if (h.code == 'name_match') {
-        return h.line.replaceFirst(
-          'Name matches your contact',
-          l10n.scamShieldThisNameMatches,
-        );
+    if (!group) {
+      for (final h in hits) {
+        if (h.code == 'name_match') return h;
       }
     }
-    return l10n.scamShieldLooksLikeAScam;
+    return const ShieldHit('scam');
   }
+
+  String? get headline => lead == null ? null : shieldHeadline(lead!);
 }
 
 const _wellKnown = [
@@ -186,11 +211,9 @@ ShieldResult checkImpersonation(
         editDistance(me, cid) == 1;
     if (!close) continue;
     final shown = c.nickname ?? c.id;
-    final hits = [
-      ShieldHit('name_match', l10n.scamShieldNameMatchesYourContact(shown)),
-    ];
+    final hits = [ShieldHit('name_match', shown)];
     if (strangerAvatar != null && strangerAvatar == c.avatar) {
-      hits.add(ShieldHit('face_match', l10n.scamShieldSameFaceAsYour(shown)));
+      hits.add(ShieldHit('face_match', shown));
     }
     return ShieldResult(hits, impersonation: true);
   }
@@ -263,9 +286,7 @@ ShieldResult scanFirstMessage(String text) {
       _btcBech32.hasMatch(t) ||
       _eth.hasMatch(t) ||
       _xmr.hasMatch(t)) {
-    hits.add(
-      ShieldHit('crypto_address', l10n.scamShieldContainsACryptoAddress),
-    );
+    hits.add(const ShieldHit('crypto_address'));
   }
 
   var rush = false;
@@ -280,28 +301,28 @@ ShieldResult scanFirstMessage(String text) {
     if (rush) break;
   }
   if (rush) {
-    hits.add(ShieldHit('money_rush', l10n.scamShieldMentionsMoneyAndUrgency));
+    hits.add(const ShieldHit('money_rush'));
   }
 
   if (_appAsk.hasMatch(t)) {
-    hits.add(ShieldHit('move_app', l10n.scamShieldAsksYouToMove));
+    hits.add(const ShieldHit('move_app'));
   }
 
   for (final m in _host.allMatches(t)) {
     final host = m.group(1)!;
     if (!host.contains('.')) continue;
     if (lookalikeHost(host)) {
-      hits.add(ShieldHit('lookalike_url', l10n.scamShieldLinksToALookalike));
+      hits.add(const ShieldHit('lookalike_url'));
       break;
     }
   }
 
   if (t.length > 400) {
-    hits.add(ShieldHit('long_opener', l10n.scamShieldALongOpenerFrom));
+    hits.add(const ShieldHit('long_opener'));
   }
 
   if (_secretAsk.hasMatch(t)) {
-    hits.add(ShieldHit('secret_ask', l10n.scamShieldAsksForACode));
+    hits.add(const ShieldHit('secret_ask'));
   }
   return ShieldResult(hits);
 }
@@ -342,12 +363,7 @@ ShieldResult shieldCheckInGroup({
   final who = checkImpersonation(strangerId, strangerAvatar, contacts);
   for (final h in who.hits) {
     if (h.code == 'name_match') {
-      lines.add(
-        ShieldHit(
-          'name_note',
-          l10n.scamShieldAlso(h.line[0].toLowerCase(), h.line.substring(1)),
-        ),
-      );
+      lines.add(ShieldHit('name_note', h.who));
     }
   }
   return ShieldResult(lines, group: true);

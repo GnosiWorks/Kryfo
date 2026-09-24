@@ -14,7 +14,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../main.dart' show appState;
-import '../copy.dart';
 import '../theme.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/avatar_mark.dart';
@@ -215,7 +214,7 @@ class _Label extends StatelessWidget {
   const _Label(this.text);
   @override
   Widget build(BuildContext context) => Text(
-    sentence(text),
+    text,
     style: HaloType.mono(
       size: 11,
       color: HaloColors.text2,
