@@ -109,6 +109,23 @@ flutter:
         - asset: assets/fonts/JetBrainsMono.ttf
         - asset: assets/fonts/JetBrainsMono-Italic.ttf
           style: italic
+    # fallbacks, cut down by assets/fonts/noto-subset.sh to the scripts our
+    # three fonts lack: cyrillic behind fraunces and instrument sans, arabic
+    # and persian behind all three. chinese is left to the phone's font.
+    - family: Noto Serif Cyrillic
+      fonts:
+        - asset: assets/fonts/NotoSerif-Cyrillic.ttf
+        - asset: assets/fonts/NotoSerif-Cyrillic-Italic.ttf
+          style: italic
+    - family: Noto Sans Cyrillic
+      fonts:
+        - asset: assets/fonts/NotoSans-Cyrillic.ttf
+    - family: Noto Naskh Arabic
+      fonts:
+        - asset: assets/fonts/NotoNaskhArabic-Kryfo.ttf
+    - family: Noto Sans Arabic
+      fonts:
+        - asset: assets/fonts/NotoSansArabic-Kryfo.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

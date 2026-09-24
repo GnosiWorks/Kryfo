@@ -3667,6 +3667,9 @@ class _GroupBubble extends StatelessWidget {
                                                         style: const TextStyle(
                                                           fontFamily:
                                                               'JetBrains Mono',
+                                                          fontFamilyFallback:
+                                                              HaloType
+                                                                  .monoFallback,
                                                           fontSize: 9,
                                                           color: Colors.white,
                                                           letterSpacing: 0.4,
@@ -3839,6 +3842,8 @@ class _GroupBubble extends StatelessWidget {
                                             '✓',
                                             style: TextStyle(
                                               fontFamily: 'JetBrains Mono',
+                                              fontFamilyFallback:
+                                                  HaloType.monoFallback,
                                               fontSize: 11,
                                               color: m.mediaPath != null
                                                   ? HaloColors.text2

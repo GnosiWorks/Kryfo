@@ -7,6 +7,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../l10n/l10n.dart';
+import '../theme.dart' show HaloType;
 
 const kInk = Color(0xFF0D0B09);
 const kSurface = Color(0xFF161310);
@@ -320,6 +321,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
             _label,
             style: TextStyle(
               fontFamily: 'JetBrains Mono',
+              fontFamilyFallback: HaloType.monoFallback,
               fontSize: 11,
               letterSpacing: 4,
               fontWeight: FontWeight.w500,
@@ -334,6 +336,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontFamily: 'Fraunces',
+                fontFamilyFallback: HaloType.serifFallback,
                 fontStyle: FontStyle.italic,
                 fontSize: 22,
                 fontWeight: FontWeight.w300,
@@ -353,6 +356,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontFamily: 'Instrument Sans',
+                fontFamilyFallback: HaloType.sansFallback,
                 fontSize: 11.5,
                 color: kText3,
                 height: 1.55,
@@ -369,6 +373,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
                   text: TextSpan(
                     style: const TextStyle(
                       fontFamily: 'JetBrains Mono',
+                      fontFamilyFallback: HaloType.monoFallback,
                       fontSize: 10.5,
                       color: kText2,
                       letterSpacing: 0.4,
@@ -389,6 +394,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
                   '${_displayPct()}%',
                   style: TextStyle(
                     fontFamily: 'JetBrains Mono',
+                    fontFamilyFallback: HaloType.monoFallback,
                     fontSize: 10.5,
                     color: _accent,
                     fontWeight: FontWeight.w500,
@@ -604,6 +610,7 @@ class _ZigZagWarmupPainter extends CustomPainter {
         text: text,
         style: TextStyle(
           fontFamily: 'JetBrains Mono',
+          fontFamilyFallback: HaloType.monoFallback,
           fontSize: 7,
           fontWeight: FontWeight.w500,
           color: green || activeIdx >= 0 || lit.isNotEmpty ? accent : kText3,
@@ -784,6 +791,7 @@ class _SendPillState extends State<SendPill>
             _label,
             style: TextStyle(
               fontFamily: 'JetBrains Mono',
+              fontFamilyFallback: HaloType.monoFallback,
               fontSize: 9.5,
               letterSpacing: 0.5,
               fontWeight: FontWeight.w500,

@@ -115,6 +115,14 @@ class HaloColors {
 }
 
 class HaloType {
+  // what draws the letters our own fonts do not have. flutter asks these,
+  // in order, for any character the family lacks, before the phone's fonts;
+  // they carry only cyrillic and arabic, so latin never reaches them.
+  // jetbrains mono has cyrillic itself; nothing monospaced has arabic.
+  static const serifFallback = ['Noto Serif Cyrillic', 'Noto Naskh Arabic'];
+  static const sansFallback = ['Noto Sans Cyrillic', 'Noto Sans Arabic'];
+  static const monoFallback = ['Noto Sans Arabic'];
+
   static TextStyle serif({
     double size = 26,
     FontWeight weight = FontWeight.w400,
@@ -124,6 +132,7 @@ class HaloType {
     double letter = -0.015,
   }) => TextStyle(
     fontFamily: 'Fraunces',
+    fontFamilyFallback: serifFallback,
     fontSize: size,
     fontWeight: weight,
     fontStyle: italic ? FontStyle.italic : FontStyle.normal,
@@ -140,6 +149,7 @@ class HaloType {
     double letter = 0,
   }) => TextStyle(
     fontFamily: 'Instrument Sans',
+    fontFamilyFallback: sansFallback,
     fontSize: size,
     fontWeight: weight,
     color: color ?? HaloColors.text,
@@ -154,6 +164,7 @@ class HaloType {
     double letter = 0.12,
   }) => TextStyle(
     fontFamily: 'JetBrains Mono',
+    fontFamilyFallback: monoFallback,
     fontSize: size,
     fontWeight: weight,
     color: color ?? HaloColors.text2,
@@ -184,6 +195,7 @@ ThemeData buildHaloTheme() {
     colorScheme: scheme,
     textTheme: base.textTheme.apply(
       fontFamily: 'Instrument Sans',
+      fontFamilyFallback: HaloType.sansFallback,
       bodyColor: HaloColors.text,
       displayColor: HaloColors.text,
     ),

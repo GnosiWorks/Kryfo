@@ -6222,6 +6222,8 @@ class _Bubble extends StatelessWidget {
                                                     style: const TextStyle(
                                                       fontFamily:
                                                           'JetBrains Mono',
+                                                      fontFamilyFallback:
+                                                          HaloType.monoFallback,
                                                       fontSize: 9,
                                                       color: Colors.white,
                                                       letterSpacing: 0.4,
@@ -6248,6 +6250,9 @@ class _Bubble extends StatelessWidget {
                                                         style: TextStyle(
                                                           fontFamily:
                                                               'JetBrains Mono',
+                                                          fontFamilyFallback:
+                                                              HaloType
+                                                                  .monoFallback,
                                                           fontSize: 8.5,
                                                           fontWeight:
                                                               FontWeight.w600,
@@ -6318,6 +6323,8 @@ class _Bubble extends StatelessWidget {
                                             _fmtTime(msg.when),
                                             style: TextStyle(
                                               fontFamily: 'JetBrains Mono',
+                                              fontFamilyFallback:
+                                                  HaloType.monoFallback,
                                               fontSize: 9,
                                               color: metaColor,
                                               letterSpacing: 0.4,
@@ -6329,6 +6336,8 @@ class _Bubble extends StatelessWidget {
                                               l10n.chatEdited,
                                               style: TextStyle(
                                                 fontFamily: 'JetBrains Mono',
+                                                fontFamilyFallback:
+                                                    HaloType.monoFallback,
                                                 fontSize: 9,
                                                 color: metaColor,
                                                 fontStyle: FontStyle.italic,
@@ -6352,6 +6361,8 @@ class _Bubble extends StatelessWidget {
                                               l10n.chatDelivered,
                                               style: TextStyle(
                                                 fontFamily: 'JetBrains Mono',
+                                                fontFamilyFallback:
+                                                    HaloType.monoFallback,
                                                 fontSize: 8.5,
                                                 fontWeight: FontWeight.w600,
                                                 color: metaColor,
@@ -6388,6 +6399,8 @@ class _Bubble extends StatelessWidget {
                                         l10n.chatEdited,
                                         style: TextStyle(
                                           fontFamily: 'JetBrains Mono',
+                                          fontFamilyFallback:
+                                              HaloType.monoFallback,
                                           fontSize: 9,
                                           color: HaloColors.amber.withValues(
                                             alpha: 0.55,
@@ -6448,6 +6461,8 @@ class _Bubble extends StatelessWidget {
                                             : l10n.chatFailedTapToRetry,
                                         style: TextStyle(
                                           fontFamily: 'JetBrains Mono',
+                                          fontFamilyFallback:
+                                              HaloType.monoFallback,
                                           fontSize: 10,
                                           color: HaloColors.onAmber.withValues(
                                             alpha: 0.95,
