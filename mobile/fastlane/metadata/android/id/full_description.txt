@@ -1,0 +1,26 @@
+aplikasi pesan privat. tanpa nomor telepon, tanpa email, tanpa akun. kamu
+adalah sepasang kunci yang dibuat di perangkatmu. tidak ada seorang pun,
+termasuk kami, yang bisa mencarimu atau mengaitkan obrolanmu dengan
+identitas asli.
+
+semuanya berjalan lewat tor. isi pesan terenkripsi ujung ke ujung dengan
+protokol Signal. saat kontak sedang offline, pesan menunggu di relay,
+tersegel sehingga relay tidak tahu apa pun tentang siapa yang bicara atau
+apa yang dikatakan. buku alamat tidak pernah diunggah.
+
+fitur:
+
+* tanpa nomor telepon atau email untuk mendaftar
+* enkripsi ujung ke ujung (protokol Signal)
+* semua lalu lintas lewat klien tor bawaan
+* pengiriman onion langsung, relay sebagai jalur pengganti saat kontak offline
+* grup dengan foto, file, pesan suara, balasan, reaksi, sematan
+* pesan berwaktu: pesan yang hilang setelah waktu yang ditentukan
+* database lokal terenkripsi dan cadangan terenkripsi
+* kunci aplikasi dengan PIN atau biometrik
+* hapus total darurat yang menghapus semuanya, termasuk media yang tersimpan di perangkat
+* tanpa analitik, tanpa telemetri, tanpa iklan
+
+pendanaan: tanpa iklan, tanpa investor. kryfo hidup dari pemberian para
+penyokong. sokongan bersifat opsional dan anonim, dan setiap fitur tetap
+bekerja sama, menyokong atau tidak.

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- written by tool/arb_android.py from lib/l10n/app_vi.arb -->
+<resources>
+    <string name="service_title">kryfo đang bật</string>
+    <string name="service_text">đường truyền được mã hóa của bạn luôn mở để tin nhắn đến được</string>
+    <string name="channel_name">duy trì kết nối</string>
+    <string name="channel_description">giữ kryfo kết nối để tin nhắn được mã hóa vẫn đến khi ứng dụng đang đóng. tắt mục này sẽ dừng việc nhận tin.</string>
+</resources>

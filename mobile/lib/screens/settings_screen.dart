@@ -32,6 +32,7 @@ import '../widgets/stagger_in.dart';
 import '../widgets/confirm_sheet.dart';
 import '../l10n/l10n.dart';
 import '../widgets/language_sheet.dart';
+import '../wipe_word.dart';
 
 Widget _postureLine(String label, bool on, String onText, String offText) {
   return Padding(
@@ -94,9 +95,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       mono: true,
       rose: true,
       save: l10n.settingsWipeKryfo2,
-    ))?.trim().toLowerCase();
-    final ok = typed == l10n.settingsWipeWord.toLowerCase() || typed == 'wipe';
-    if (ok) await wipeHalo();
+    ));
+    if (isWipeWord(typed, l10n.settingsWipeWord)) await wipeHalo();
   }
 
   bool _disguise = false;

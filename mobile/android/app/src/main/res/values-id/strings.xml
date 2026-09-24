@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- written by tool/arb_android.py from lib/l10n/app_id.arb -->
+<resources>
+    <string name="service_title">kryfo aktif</string>
+    <string name="service_text">jalur terenkripsimu tetap terbuka agar pesan bisa masuk</string>
+    <string name="channel_name">tetap terhubung</string>
+    <string name="channel_description">menjaga kryfo tetap terhubung agar pesan terenkripsi masuk saat aplikasi ditutup. mematikan ini menghentikan pengiriman.</string>
+</resources>
