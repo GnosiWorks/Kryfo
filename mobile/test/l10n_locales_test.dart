@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // generated from lib/l10n/app_en.arb by the l10n tools: every key renders
 // in every language, and prints what the english prints.
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/app_localizations.dart';
 
