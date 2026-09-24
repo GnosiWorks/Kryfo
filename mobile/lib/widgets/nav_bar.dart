@@ -8,7 +8,7 @@ import '../l10n/l10n.dart';
 
 enum HaloTab { chats, tools, support, me }
 
-final _labels = {
+Map<HaloTab, String> get _labels => {
   HaloTab.chats: l10n.navBarChats,
   HaloTab.tools: l10n.navBarTools,
   HaloTab.support: l10n.navBarSupport,

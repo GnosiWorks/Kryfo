@@ -624,9 +624,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get metaReaderExifThatCannotBe => 'exif that cannot be read';
 
   @override
-  String get metaReaderPhotoshop30 => 'Photoshop 3.0';
-
-  @override
   String get metaReaderSamsungTrailer => 'samsung trailer';
 
   @override

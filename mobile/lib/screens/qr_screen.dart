@@ -40,7 +40,7 @@ class _Kind {
   const _Kind(this.kind, this.label, this.icon, this.note, this.fields);
 }
 
-final _kinds = [
+List<_Kind> get _kinds => [
   _Kind(
     QrKind.link,
     l10n.qrLink,
@@ -206,7 +206,7 @@ const _eyeOff = [
 ];
 final _copyIcon = [svgRect(8, 8, 11, 12, 2.5), 'M5 15V6a2 2 0 0 1 2-2h8'];
 
-final _inks = [
+List<(String, Color)> get _inks => [
   (l10n.qrInk, HaloColors.qrInk),
   (l10n.qrAmber, HaloColors.qrAmber),
   (l10n.qrViolet, HaloColors.qrViolet),
@@ -221,7 +221,8 @@ class QrScreen extends StatefulWidget {
 
 class _QrScreenState extends State<QrScreen> {
   final Map<String, TextEditingController> _text = {};
-  var _kind = _kinds.first;
+  var _kindId = QrKind.link;
+  _Kind get _kind => _kinds.firstWhere((k) => k.kind == _kindId);
   var _ink = 0;
   var _lock = WifiLock.wpa2;
   var _showSecret = false;
@@ -319,9 +320,9 @@ class _QrScreenState extends State<QrScreen> {
                         separatorBuilder: (_, _) => const SizedBox(width: 8),
                         itemBuilder: (_, i) => _Chip(
                           kind: _kinds[i],
-                          on: identical(_kinds[i], _kind),
+                          on: _kinds[i].kind == _kindId,
                           onTap: () => setState(() {
-                            _kind = _kinds[i];
+                            _kindId = _kinds[i].kind;
                             _showSecret = false;
                           }),
                         ),

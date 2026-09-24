@@ -376,7 +376,6 @@ void main() {
     expect(l.metaReaderEndsBeforeItShould, "ends before it should");
     expect(l.metaReaderCouldNotBeRead, "could not be read");
     expect(l.metaReaderExifThatCannotBe, "exif that cannot be read");
-    expect(l.metaReaderPhotoshop30, "Photoshop 3.0");
     expect(l.metaReaderSamsungTrailer, "samsung trailer");
     expect(l.metaReaderChunk("<type>"), "chunk <type>");
     expect(l.metaReaderExifFlagSet, "exif flag set");

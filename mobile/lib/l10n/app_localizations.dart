@@ -1063,12 +1063,6 @@ abstract class AppLocalizations {
   /// meta/meta_reader.dart
   ///
   /// In en, this message translates to:
-  /// **'Photoshop 3.0'**
-  String get metaReaderPhotoshop30;
-
-  /// meta/meta_reader.dart
-  ///
-  /// In en, this message translates to:
   /// **'samsung trailer'**
   String get metaReaderSamsungTrailer;
 

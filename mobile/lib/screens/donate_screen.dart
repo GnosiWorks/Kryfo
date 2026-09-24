@@ -35,7 +35,7 @@ class _Coin {
 // only bitcoin can unlock a badge: it's the chain we verify ourselves with
 // our own node. checking the others would mean asking a third-party api and
 // leaking the payer's ip - not worth it for a cosmetic badge.
-final _coins = [
+List<_Coin> get _coins => [
   _Coin(
     'btc',
     l10n.donateBitcoin,

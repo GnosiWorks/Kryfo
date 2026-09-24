@@ -292,7 +292,7 @@ final _xmpHead = [...latin1.encode('http://ns.adobe.com/xap/1.0/'), 0];
 final _xmpExtHead = [...latin1.encode('http://ns.adobe.com/xmp/extension/'), 0];
 final _iccHead = [...latin1.encode('ICC_PROFILE'), 0];
 final _mpfHead = [...latin1.encode('MPF'), 0];
-final _psHead = latin1.encode(l10n.metaReaderPhotoshop30);
+final _psHead = latin1.encode('Photoshop 3.0');
 final _adobeHead = latin1.encode('Adobe');
 
 void _jpeg(ByteSource s, MetaReport r) {

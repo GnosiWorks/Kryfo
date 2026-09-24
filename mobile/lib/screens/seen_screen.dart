@@ -43,9 +43,9 @@ class _SeenScreenState extends State<SeenScreen> {
           ),
           const SizedBox(height: 22),
           _Header(active: col),
-          for (var i = 0; i < _rows.length; i++)
+          for (final (i, row) in _rows.indexed)
             _RowTile(
-              row: _rows[i],
+              row: row,
               active: col,
               open: _open == i,
               onTap: () {
@@ -87,14 +87,14 @@ class _Row {
   const _Row(this.what, this.cells, this.why);
 }
 
-final _hidden = _Cell(l10n.seenHidden, _Tone.good);
-final _never = _Cell(l10n.seenNever, _Tone.good);
-final _onDevice = _Cell(l10n.seenOnDevice, _Tone.good);
-final _timing = _Cell(l10n.seenTiming, _Tone.warn);
-final _yours = _Cell(l10n.seenYours, _Tone.bad);
-final _unaudited = _Cell(l10n.seenUnaudited, _Tone.bad);
+_Cell get _hidden => _Cell(l10n.seenHidden, _Tone.good);
+_Cell get _never => _Cell(l10n.seenNever, _Tone.good);
+_Cell get _onDevice => _Cell(l10n.seenOnDevice, _Tone.good);
+_Cell get _timing => _Cell(l10n.seenTiming, _Tone.warn);
+_Cell get _yours => _Cell(l10n.seenYours, _Tone.bad);
+_Cell get _unaudited => _Cell(l10n.seenUnaudited, _Tone.bad);
 
-final _rows = [
+List<_Row> get _rows => [
   _Row(l10n.seenWhoYouTalkTo, [
     _hidden,
     _hidden,

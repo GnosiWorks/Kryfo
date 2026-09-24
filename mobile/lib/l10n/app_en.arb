@@ -841,10 +841,6 @@
   "@metaReaderExifThatCannotBe": {
     "description": "meta/meta_reader.dart"
   },
-  "metaReaderPhotoshop30": "Photoshop 3.0",
-  "@metaReaderPhotoshop30": {
-    "description": "meta/meta_reader.dart"
-  },
   "metaReaderSamsungTrailer": "samsung trailer",
   "@metaReaderSamsungTrailer": {
     "description": "meta/meta_reader.dart"
