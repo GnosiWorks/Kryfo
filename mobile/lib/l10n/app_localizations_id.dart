@@ -6587,4 +6587,53 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get photoKnowsNotInIt => 'tidak ada';
+
+  @override
+  String get languageNameEn => 'Inggris';
+
+  @override
+  String get languageNameDe => 'Jerman';
+
+  @override
+  String get languageNameFr => 'Prancis';
+
+  @override
+  String get languageNameEs => 'Spanyol';
+
+  @override
+  String get languageNamePt => 'Portugis (Brasil)';
+
+  @override
+  String get languageNameIt => 'Italia';
+
+  @override
+  String get languageNameRu => 'Rusia';
+
+  @override
+  String get languageNameUk => 'Ukraina';
+
+  @override
+  String get languageNameTr => 'Turki';
+
+  @override
+  String get languageNameZh => 'Tionghoa (Sederhana)';
+
+  @override
+  String get languageNameZhHant => 'Tionghoa (Tradisional)';
+
+  @override
+  String get languageNameVi => 'Vietnam';
+
+  @override
+  String get languageNameId => 'Indonesia';
+
+  @override
+  String get languageNameFa => 'Persia';
+
+  @override
+  String get languageNameAr => 'Arab';
+
+  @override
+  String get languageLaterLine =>
+      'Kamu bisa mengubahnya kapan saja di pengaturan.';
 }

@@ -1739,5 +1739,21 @@
   "videoViewerCannotPlay": "Dieses Handy kann das Video hier nicht abspielen.",
   "videoViewerOpenElsewhere": "In anderer App öffnen",
   "photoKnowsLookedFor": "Gesucht nach",
-  "photoKnowsNotInIt": "nicht drin"
+  "photoKnowsNotInIt": "nicht drin",
+  "languageNameEn": "Englisch",
+  "languageNameDe": "Deutsch",
+  "languageNameFr": "Französisch",
+  "languageNameEs": "Spanisch",
+  "languageNamePt": "Portugiesisch (Brasilien)",
+  "languageNameIt": "Italienisch",
+  "languageNameRu": "Russisch",
+  "languageNameUk": "Ukrainisch",
+  "languageNameTr": "Türkisch",
+  "languageNameZh": "Chinesisch (vereinfacht)",
+  "languageNameZhHant": "Chinesisch (traditionell)",
+  "languageNameVi": "Vietnamesisch",
+  "languageNameId": "Indonesisch",
+  "languageNameFa": "Persisch",
+  "languageNameAr": "Arabisch",
+  "languageLaterLine": "Du kannst das jederzeit in den Einstellungen ändern."
 }

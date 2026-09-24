@@ -1739,5 +1739,21 @@
   "videoViewerCannotPlay": "این گوشی نمی‌تواند این ویدیو را این‌جا پخش کند.",
   "videoViewerOpenElsewhere": "باز کردن در برنامه‌ی دیگر",
   "photoKnowsLookedFor": "دنبالشان گشتیم",
-  "photoKnowsNotInIt": "در آن نیست"
+  "photoKnowsNotInIt": "در آن نیست",
+  "languageNameEn": "انگلیسی",
+  "languageNameDe": "آلمانی",
+  "languageNameFr": "فرانسوی",
+  "languageNameEs": "اسپانیایی",
+  "languageNamePt": "پرتغالی (برزیل)",
+  "languageNameIt": "ایتالیایی",
+  "languageNameRu": "روسی",
+  "languageNameUk": "اوکراینی",
+  "languageNameTr": "ترکی",
+  "languageNameZh": "چینی (ساده‌شده)",
+  "languageNameZhHant": "چینی (سنتی)",
+  "languageNameVi": "ویتنامی",
+  "languageNameId": "اندونزیایی",
+  "languageNameFa": "فارسی",
+  "languageNameAr": "عربی",
+  "languageLaterLine": "هر وقت خواستید می‌توانید این را در تنظیمات تغییر دهید."
 }

@@ -1739,5 +1739,21 @@
   "videoViewerCannotPlay": "这部手机无法在这里播放这个视频。",
   "videoViewerOpenElsewhere": "用其他应用打开",
   "photoKnowsLookedFor": "查找了",
-  "photoKnowsNotInIt": "没有"
+  "photoKnowsNotInIt": "没有",
+  "languageNameEn": "英语",
+  "languageNameDe": "德语",
+  "languageNameFr": "法语",
+  "languageNameEs": "西班牙语",
+  "languageNamePt": "葡萄牙语（巴西）",
+  "languageNameIt": "意大利语",
+  "languageNameRu": "俄语",
+  "languageNameUk": "乌克兰语",
+  "languageNameTr": "土耳其语",
+  "languageNameZh": "简体中文",
+  "languageNameZhHant": "繁体中文",
+  "languageNameVi": "越南语",
+  "languageNameId": "印度尼西亚语",
+  "languageNameFa": "波斯语",
+  "languageNameAr": "阿拉伯语",
+  "languageLaterLine": "你随时可以在设置里更改。"
 }

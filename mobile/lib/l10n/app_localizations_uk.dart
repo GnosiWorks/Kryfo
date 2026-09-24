@@ -6704,4 +6704,53 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get photoKnowsNotInIt => 'немає';
+
+  @override
+  String get languageNameEn => 'Англійська';
+
+  @override
+  String get languageNameDe => 'Німецька';
+
+  @override
+  String get languageNameFr => 'Французька';
+
+  @override
+  String get languageNameEs => 'Іспанська';
+
+  @override
+  String get languageNamePt => 'Португальська (Бразилія)';
+
+  @override
+  String get languageNameIt => 'Італійська';
+
+  @override
+  String get languageNameRu => 'Російська';
+
+  @override
+  String get languageNameUk => 'Українська';
+
+  @override
+  String get languageNameTr => 'Турецька';
+
+  @override
+  String get languageNameZh => 'Китайська (спрощена)';
+
+  @override
+  String get languageNameZhHant => 'Китайська (традиційна)';
+
+  @override
+  String get languageNameVi => 'Вʼєтнамська';
+
+  @override
+  String get languageNameId => 'Індонезійська';
+
+  @override
+  String get languageNameFa => 'Перська';
+
+  @override
+  String get languageNameAr => 'Арабська';
+
+  @override
+  String get languageLaterLine =>
+      'Мову можна будь-коли змінити в налаштуваннях.';
 }

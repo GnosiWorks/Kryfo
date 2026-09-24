@@ -6601,4 +6601,53 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get photoKnowsNotInIt => 'در آن نیست';
+
+  @override
+  String get languageNameEn => 'انگلیسی';
+
+  @override
+  String get languageNameDe => 'آلمانی';
+
+  @override
+  String get languageNameFr => 'فرانسوی';
+
+  @override
+  String get languageNameEs => 'اسپانیایی';
+
+  @override
+  String get languageNamePt => 'پرتغالی (برزیل)';
+
+  @override
+  String get languageNameIt => 'ایتالیایی';
+
+  @override
+  String get languageNameRu => 'روسی';
+
+  @override
+  String get languageNameUk => 'اوکراینی';
+
+  @override
+  String get languageNameTr => 'ترکی';
+
+  @override
+  String get languageNameZh => 'چینی (ساده‌شده)';
+
+  @override
+  String get languageNameZhHant => 'چینی (سنتی)';
+
+  @override
+  String get languageNameVi => 'ویتنامی';
+
+  @override
+  String get languageNameId => 'اندونزیایی';
+
+  @override
+  String get languageNameFa => 'فارسی';
+
+  @override
+  String get languageNameAr => 'عربی';
+
+  @override
+  String get languageLaterLine =>
+      'هر وقت خواستید می‌توانید این را در تنظیمات تغییر دهید.';
 }

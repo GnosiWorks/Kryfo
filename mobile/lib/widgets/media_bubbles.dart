@@ -18,6 +18,7 @@ import '../theme.dart';
 import 'decode_px.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
+import 'halo_bar.dart';
 
 String _humanSize(int bytes) {
   if (bytes < 1024) return l10n.mediaBubblesB(whole(bytes));
@@ -389,14 +390,11 @@ class VoiceBubbleState extends State<VoiceBubble> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(2),
-                          child: LinearProgressIndicator(
-                            value: progress,
-                            minHeight: 3,
-                            backgroundColor: track,
-                            valueColor: AlwaysStoppedAnimation(fg),
-                          ),
+                        HaloBar(
+                          value: progress,
+                          height: 3,
+                          color: fg,
+                          track: track,
                         ),
                         const SizedBox(height: 5),
                         Row(

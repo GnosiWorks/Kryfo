@@ -16,6 +16,7 @@ import '../widgets/sheet_handle.dart';
 import '../widgets/stroke_icon.dart';
 import '../widgets/tool_parts.dart';
 import '../l10n/l10n.dart';
+import '../widgets/halo_bar.dart';
 
 const _share = [
   'M12 15V4',
@@ -301,15 +302,7 @@ class _Working extends StatelessWidget {
               style: HaloType.sans(size: 13.5, color: HaloColors.warm),
             ),
             const SizedBox(height: 22),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(3),
-              child: LinearProgressIndicator(
-                value: frac,
-                minHeight: 4,
-                backgroundColor: HaloColors.surface3,
-                valueColor: AlwaysStoppedAnimation(HaloColors.amber),
-              ),
-            ),
+            HaloBar(value: frac),
           ],
         ),
       ),

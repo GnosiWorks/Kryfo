@@ -6708,4 +6708,53 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get photoKnowsNotInIt => 'нет';
+
+  @override
+  String get languageNameEn => 'Английский';
+
+  @override
+  String get languageNameDe => 'Немецкий';
+
+  @override
+  String get languageNameFr => 'Французский';
+
+  @override
+  String get languageNameEs => 'Испанский';
+
+  @override
+  String get languageNamePt => 'Португальский (Бразилия)';
+
+  @override
+  String get languageNameIt => 'Итальянский';
+
+  @override
+  String get languageNameRu => 'Русский';
+
+  @override
+  String get languageNameUk => 'Украинский';
+
+  @override
+  String get languageNameTr => 'Турецкий';
+
+  @override
+  String get languageNameZh => 'Китайский (упрощённый)';
+
+  @override
+  String get languageNameZhHant => 'Китайский (традиционный)';
+
+  @override
+  String get languageNameVi => 'Вьетнамский';
+
+  @override
+  String get languageNameId => 'Индонезийский';
+
+  @override
+  String get languageNameFa => 'Персидский';
+
+  @override
+  String get languageNameAr => 'Арабский';
+
+  @override
+  String get languageLaterLine =>
+      'Язык можно поменять в настройках в любой момент.';
 }

@@ -6615,4 +6615,53 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get photoKnowsNotInIt => 'yok';
+
+  @override
+  String get languageNameEn => 'İngilizce';
+
+  @override
+  String get languageNameDe => 'Almanca';
+
+  @override
+  String get languageNameFr => 'Fransızca';
+
+  @override
+  String get languageNameEs => 'İspanyolca';
+
+  @override
+  String get languageNamePt => 'Portekizce (Brezilya)';
+
+  @override
+  String get languageNameIt => 'İtalyanca';
+
+  @override
+  String get languageNameRu => 'Rusça';
+
+  @override
+  String get languageNameUk => 'Ukraynaca';
+
+  @override
+  String get languageNameTr => 'Türkçe';
+
+  @override
+  String get languageNameZh => 'Çince (Basitleştirilmiş)';
+
+  @override
+  String get languageNameZhHant => 'Çince (Geleneksel)';
+
+  @override
+  String get languageNameVi => 'Vietnamca';
+
+  @override
+  String get languageNameId => 'Endonezce';
+
+  @override
+  String get languageNameFa => 'Farsça';
+
+  @override
+  String get languageNameAr => 'Arapça';
+
+  @override
+  String get languageLaterLine =>
+      'Bunu istediğin zaman ayarlardan değiştirebilirsin.';
 }

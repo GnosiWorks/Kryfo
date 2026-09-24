@@ -6337,6 +6337,54 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get photoKnowsNotInIt => '没有';
+
+  @override
+  String get languageNameEn => '英语';
+
+  @override
+  String get languageNameDe => '德语';
+
+  @override
+  String get languageNameFr => '法语';
+
+  @override
+  String get languageNameEs => '西班牙语';
+
+  @override
+  String get languageNamePt => '葡萄牙语（巴西）';
+
+  @override
+  String get languageNameIt => '意大利语';
+
+  @override
+  String get languageNameRu => '俄语';
+
+  @override
+  String get languageNameUk => '乌克兰语';
+
+  @override
+  String get languageNameTr => '土耳其语';
+
+  @override
+  String get languageNameZh => '简体中文';
+
+  @override
+  String get languageNameZhHant => '繁体中文';
+
+  @override
+  String get languageNameVi => '越南语';
+
+  @override
+  String get languageNameId => '印度尼西亚语';
+
+  @override
+  String get languageNameFa => '波斯语';
+
+  @override
+  String get languageNameAr => '阿拉伯语';
+
+  @override
+  String get languageLaterLine => '你随时可以在设置里更改。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -12672,4 +12720,52 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get photoKnowsNotInIt => '沒有';
+
+  @override
+  String get languageNameEn => '英文';
+
+  @override
+  String get languageNameDe => '德文';
+
+  @override
+  String get languageNameFr => '法文';
+
+  @override
+  String get languageNameEs => '西班牙文';
+
+  @override
+  String get languageNamePt => '葡萄牙文（巴西）';
+
+  @override
+  String get languageNameIt => '義大利文';
+
+  @override
+  String get languageNameRu => '俄文';
+
+  @override
+  String get languageNameUk => '烏克蘭文';
+
+  @override
+  String get languageNameTr => '土耳其文';
+
+  @override
+  String get languageNameZh => '簡體中文';
+
+  @override
+  String get languageNameZhHant => '繁體中文';
+
+  @override
+  String get languageNameVi => '越南文';
+
+  @override
+  String get languageNameId => '印尼文';
+
+  @override
+  String get languageNameFa => '波斯文';
+
+  @override
+  String get languageNameAr => '阿拉伯文';
+
+  @override
+  String get languageLaterLine => '你隨時可以在設定中更改。';
 }

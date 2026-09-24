@@ -8372,5 +8372,69 @@
   "photoKnowsNotInIt": "not in it",
   "@photoKnowsNotInIt": {
     "description": "screens/photo_knows_screen.dart: after each field that was looked for and is not in the file (location, time taken, phone model...)"
+  },
+  "languageNameEn": "English",
+  "@languageNameEn": {
+    "description": "the name of English in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
+  },
+  "languageNameDe": "German",
+  "@languageNameDe": {
+    "description": "the name of German in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
+  },
+  "languageNameFr": "French",
+  "@languageNameFr": {
+    "description": "the name of French in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
+  },
+  "languageNameEs": "Spanish",
+  "@languageNameEs": {
+    "description": "the name of Spanish in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
+  },
+  "languageNamePt": "Portuguese (Brazil)",
+  "@languageNamePt": {
+    "description": "the name of Portuguese (Brazil) in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
+  },
+  "languageNameIt": "Italian",
+  "@languageNameIt": {
+    "description": "the name of Italian in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
+  },
+  "languageNameRu": "Russian",
+  "@languageNameRu": {
+    "description": "the name of Russian in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
+  },
+  "languageNameUk": "Ukrainian",
+  "@languageNameUk": {
+    "description": "the name of Ukrainian in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
+  },
+  "languageNameTr": "Turkish",
+  "@languageNameTr": {
+    "description": "the name of Turkish in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
+  },
+  "languageNameZh": "Chinese (Simplified)",
+  "@languageNameZh": {
+    "description": "the name of Chinese (Simplified) in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
+  },
+  "languageNameZhHant": "Chinese (Traditional)",
+  "@languageNameZhHant": {
+    "description": "the name of Chinese (Traditional) in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
+  },
+  "languageNameVi": "Vietnamese",
+  "@languageNameVi": {
+    "description": "the name of Vietnamese in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
+  },
+  "languageNameId": "Indonesian",
+  "@languageNameId": {
+    "description": "the name of Indonesian in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
+  },
+  "languageNameFa": "Persian",
+  "@languageNameFa": {
+    "description": "the name of Persian in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
+  },
+  "languageNameAr": "Arabic",
+  "@languageNameAr": {
+    "description": "the name of Arabic in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it"
+  },
+  "languageLaterLine": "You can change this any time in settings.",
+  "@languageLaterLine": {
+    "description": "under the title of the language sheet during onboarding: the choice is not final"
   }
 }

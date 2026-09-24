@@ -1739,5 +1739,21 @@
   "videoViewerCannotPlay": "這支手機無法在這裡播放這部影片。",
   "videoViewerOpenElsewhere": "用其他應用程式開啟",
   "photoKnowsLookedFor": "查找了",
-  "photoKnowsNotInIt": "沒有"
+  "photoKnowsNotInIt": "沒有",
+  "languageNameEn": "英文",
+  "languageNameDe": "德文",
+  "languageNameFr": "法文",
+  "languageNameEs": "西班牙文",
+  "languageNamePt": "葡萄牙文（巴西）",
+  "languageNameIt": "義大利文",
+  "languageNameRu": "俄文",
+  "languageNameUk": "烏克蘭文",
+  "languageNameTr": "土耳其文",
+  "languageNameZh": "簡體中文",
+  "languageNameZhHant": "繁體中文",
+  "languageNameVi": "越南文",
+  "languageNameId": "印尼文",
+  "languageNameFa": "波斯文",
+  "languageNameAr": "阿拉伯文",
+  "languageLaterLine": "你隨時可以在設定中更改。"
 }

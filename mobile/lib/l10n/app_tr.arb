@@ -1739,5 +1739,21 @@
   "videoViewerCannotPlay": "Bu telefon bu videoyu burada oynatamıyor.",
   "videoViewerOpenElsewhere": "Başka uygulamada aç",
   "photoKnowsLookedFor": "Aranan",
-  "photoKnowsNotInIt": "yok"
+  "photoKnowsNotInIt": "yok",
+  "languageNameEn": "İngilizce",
+  "languageNameDe": "Almanca",
+  "languageNameFr": "Fransızca",
+  "languageNameEs": "İspanyolca",
+  "languageNamePt": "Portekizce (Brezilya)",
+  "languageNameIt": "İtalyanca",
+  "languageNameRu": "Rusça",
+  "languageNameUk": "Ukraynaca",
+  "languageNameTr": "Türkçe",
+  "languageNameZh": "Çince (Basitleştirilmiş)",
+  "languageNameZhHant": "Çince (Geleneksel)",
+  "languageNameVi": "Vietnamca",
+  "languageNameId": "Endonezce",
+  "languageNameFa": "Farsça",
+  "languageNameAr": "Arapça",
+  "languageLaterLine": "Bunu istediğin zaman ayarlardan değiştirebilirsin."
 }

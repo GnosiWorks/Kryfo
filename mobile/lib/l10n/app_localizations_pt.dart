@@ -6637,4 +6637,53 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get photoKnowsNotInIt => 'não tem';
+
+  @override
+  String get languageNameEn => 'Inglês';
+
+  @override
+  String get languageNameDe => 'Alemão';
+
+  @override
+  String get languageNameFr => 'Francês';
+
+  @override
+  String get languageNameEs => 'Espanhol';
+
+  @override
+  String get languageNamePt => 'Português (Brasil)';
+
+  @override
+  String get languageNameIt => 'Italiano';
+
+  @override
+  String get languageNameRu => 'Russo';
+
+  @override
+  String get languageNameUk => 'Ucraniano';
+
+  @override
+  String get languageNameTr => 'Turco';
+
+  @override
+  String get languageNameZh => 'Chinês (simplificado)';
+
+  @override
+  String get languageNameZhHant => 'Chinês (tradicional)';
+
+  @override
+  String get languageNameVi => 'Vietnamita';
+
+  @override
+  String get languageNameId => 'Indonésio';
+
+  @override
+  String get languageNameFa => 'Persa';
+
+  @override
+  String get languageNameAr => 'Árabe';
+
+  @override
+  String get languageLaterLine =>
+      'Você pode mudar isso quando quiser nas configurações.';
 }

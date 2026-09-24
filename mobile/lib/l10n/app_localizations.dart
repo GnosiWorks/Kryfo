@@ -10562,6 +10562,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'not in it'**
   String get photoKnowsNotInIt;
+
+  /// the name of English in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get languageNameEn;
+
+  /// the name of German in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it
+  ///
+  /// In en, this message translates to:
+  /// **'German'**
+  String get languageNameDe;
+
+  /// the name of French in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it
+  ///
+  /// In en, this message translates to:
+  /// **'French'**
+  String get languageNameFr;
+
+  /// the name of Spanish in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish'**
+  String get languageNameEs;
+
+  /// the name of Portuguese (Brazil) in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it
+  ///
+  /// In en, this message translates to:
+  /// **'Portuguese (Brazil)'**
+  String get languageNamePt;
+
+  /// the name of Italian in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it
+  ///
+  /// In en, this message translates to:
+  /// **'Italian'**
+  String get languageNameIt;
+
+  /// the name of Russian in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it
+  ///
+  /// In en, this message translates to:
+  /// **'Russian'**
+  String get languageNameRu;
+
+  /// the name of Ukrainian in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it
+  ///
+  /// In en, this message translates to:
+  /// **'Ukrainian'**
+  String get languageNameUk;
+
+  /// the name of Turkish in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it
+  ///
+  /// In en, this message translates to:
+  /// **'Turkish'**
+  String get languageNameTr;
+
+  /// the name of Chinese (Simplified) in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it
+  ///
+  /// In en, this message translates to:
+  /// **'Chinese (Simplified)'**
+  String get languageNameZh;
+
+  /// the name of Chinese (Traditional) in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it
+  ///
+  /// In en, this message translates to:
+  /// **'Chinese (Traditional)'**
+  String get languageNameZhHant;
+
+  /// the name of Vietnamese in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it
+  ///
+  /// In en, this message translates to:
+  /// **'Vietnamese'**
+  String get languageNameVi;
+
+  /// the name of Indonesian in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it
+  ///
+  /// In en, this message translates to:
+  /// **'Indonesian'**
+  String get languageNameId;
+
+  /// the name of Persian in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it
+  ///
+  /// In en, this message translates to:
+  /// **'Persian'**
+  String get languageNameFa;
+
+  /// the name of Arabic in the app's current language. shown small under the language's own name in the language sheet, so a person who cannot read that script still finds it
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic'**
+  String get languageNameAr;
+
+  /// under the title of the language sheet during onboarding: the choice is not final
+  ///
+  /// In en, this message translates to:
+  /// **'You can change this any time in settings.'**
+  String get languageLaterLine;
 }
 
 class _AppLocalizationsDelegate

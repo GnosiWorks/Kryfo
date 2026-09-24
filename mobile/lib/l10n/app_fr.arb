@@ -1739,5 +1739,21 @@
   "videoViewerCannotPlay": "Ce téléphone ne peut pas lire cette vidéo ici.",
   "videoViewerOpenElsewhere": "Ouvrir dans une autre appli",
   "photoKnowsLookedFor": "Recherché",
-  "photoKnowsNotInIt": "absent"
+  "photoKnowsNotInIt": "absent",
+  "languageNameEn": "Anglais",
+  "languageNameDe": "Allemand",
+  "languageNameFr": "Français",
+  "languageNameEs": "Espagnol",
+  "languageNamePt": "Portugais (Brésil)",
+  "languageNameIt": "Italien",
+  "languageNameRu": "Russe",
+  "languageNameUk": "Ukrainien",
+  "languageNameTr": "Turc",
+  "languageNameZh": "Chinois (simplifié)",
+  "languageNameZhHant": "Chinois (traditionnel)",
+  "languageNameVi": "Vietnamien",
+  "languageNameId": "Indonésien",
+  "languageNameFa": "Persan",
+  "languageNameAr": "Arabe",
+  "languageLaterLine": "Vous pouvez la changer à tout moment dans les paramètres."
 }

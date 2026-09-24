@@ -1739,5 +1739,21 @@
   "videoViewerCannotPlay": "Ponsel ini tidak bisa memutar video ini di sini.",
   "videoViewerOpenElsewhere": "Buka di aplikasi lain",
   "photoKnowsLookedFor": "Yang dicari",
-  "photoKnowsNotInIt": "tidak ada"
+  "photoKnowsNotInIt": "tidak ada",
+  "languageNameEn": "Inggris",
+  "languageNameDe": "Jerman",
+  "languageNameFr": "Prancis",
+  "languageNameEs": "Spanyol",
+  "languageNamePt": "Portugis (Brasil)",
+  "languageNameIt": "Italia",
+  "languageNameRu": "Rusia",
+  "languageNameUk": "Ukraina",
+  "languageNameTr": "Turki",
+  "languageNameZh": "Tionghoa (Sederhana)",
+  "languageNameZhHant": "Tionghoa (Tradisional)",
+  "languageNameVi": "Vietnam",
+  "languageNameId": "Indonesia",
+  "languageNameFa": "Persia",
+  "languageNameAr": "Arab",
+  "languageLaterLine": "Kamu bisa mengubahnya kapan saja di pengaturan."
 }

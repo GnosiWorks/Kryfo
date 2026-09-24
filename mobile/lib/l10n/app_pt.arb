@@ -1739,5 +1739,21 @@
   "videoViewerCannotPlay": "Este celular não consegue reproduzir este vídeo aqui.",
   "videoViewerOpenElsewhere": "Abrir em outro app",
   "photoKnowsLookedFor": "Procuramos",
-  "photoKnowsNotInIt": "não tem"
+  "photoKnowsNotInIt": "não tem",
+  "languageNameEn": "Inglês",
+  "languageNameDe": "Alemão",
+  "languageNameFr": "Francês",
+  "languageNameEs": "Espanhol",
+  "languageNamePt": "Português (Brasil)",
+  "languageNameIt": "Italiano",
+  "languageNameRu": "Russo",
+  "languageNameUk": "Ucraniano",
+  "languageNameTr": "Turco",
+  "languageNameZh": "Chinês (simplificado)",
+  "languageNameZhHant": "Chinês (tradicional)",
+  "languageNameVi": "Vietnamita",
+  "languageNameId": "Indonésio",
+  "languageNameFa": "Persa",
+  "languageNameAr": "Árabe",
+  "languageLaterLine": "Você pode mudar isso quando quiser nas configurações."
 }

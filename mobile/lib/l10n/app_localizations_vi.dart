@@ -6574,4 +6574,53 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get photoKnowsNotInIt => 'không có';
+
+  @override
+  String get languageNameEn => 'Tiếng Anh';
+
+  @override
+  String get languageNameDe => 'Tiếng Đức';
+
+  @override
+  String get languageNameFr => 'Tiếng Pháp';
+
+  @override
+  String get languageNameEs => 'Tiếng Tây Ban Nha';
+
+  @override
+  String get languageNamePt => 'Tiếng Bồ Đào Nha (Brazil)';
+
+  @override
+  String get languageNameIt => 'Tiếng Ý';
+
+  @override
+  String get languageNameRu => 'Tiếng Nga';
+
+  @override
+  String get languageNameUk => 'Tiếng Ukraina';
+
+  @override
+  String get languageNameTr => 'Tiếng Thổ Nhĩ Kỳ';
+
+  @override
+  String get languageNameZh => 'Tiếng Trung (Giản thể)';
+
+  @override
+  String get languageNameZhHant => 'Tiếng Trung (Phồn thể)';
+
+  @override
+  String get languageNameVi => 'Tiếng Việt';
+
+  @override
+  String get languageNameId => 'Tiếng Indonesia';
+
+  @override
+  String get languageNameFa => 'Tiếng Ba Tư';
+
+  @override
+  String get languageNameAr => 'Tiếng Ả Rập';
+
+  @override
+  String get languageLaterLine =>
+      'Bạn có thể đổi bất cứ lúc nào trong cài đặt.';
 }

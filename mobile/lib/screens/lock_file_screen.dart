@@ -13,6 +13,7 @@ import '../widgets/press_scale.dart';
 import '../widgets/stroke_icon.dart';
 import '../widgets/tool_parts.dart';
 import '../l10n/l10n.dart';
+import '../widgets/halo_bar.dart';
 
 final _fileIcon = [
   'M7 3.5h7l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-9.5A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z',
@@ -283,15 +284,7 @@ class WorkingView extends StatelessWidget {
               style: HaloType.sans(size: 13.5, color: HaloColors.warm),
             ),
             const SizedBox(height: 22),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(3),
-              child: LinearProgressIndicator(
-                value: known ? (done / total).clamp(0.0, 1.0) : null,
-                minHeight: 4,
-                backgroundColor: HaloColors.surface3,
-                valueColor: AlwaysStoppedAnimation(HaloColors.amber),
-              ),
-            ),
+            HaloBar(value: known ? (done / total).clamp(0.0, 1.0) : null),
           ],
         ),
       ),

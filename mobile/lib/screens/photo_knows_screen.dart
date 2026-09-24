@@ -21,6 +21,7 @@ import '../widgets/stroke_icon.dart';
 import '../widgets/tool_parts.dart';
 import 'clean_screen.dart';
 import '../l10n/l10n.dart';
+import '../widgets/halo_bar.dart';
 
 const _pin = [
   'M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z',
@@ -328,16 +329,10 @@ class _Reading extends StatelessWidget {
               style: HaloType.sans(size: 13.5, color: HaloColors.warm),
             ),
             const SizedBox(height: 22),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(3),
-              child: LinearProgressIndicator(
-                value: total > 0 && done > 0
-                    ? (done / total).clamp(0.0, 1.0)
-                    : null,
-                minHeight: 4,
-                backgroundColor: HaloColors.surface3,
-                valueColor: AlwaysStoppedAnimation(HaloColors.amber),
-              ),
+            HaloBar(
+              value: total > 0 && done > 0
+                  ? (done / total).clamp(0.0, 1.0)
+                  : null,
             ),
           ],
         ),

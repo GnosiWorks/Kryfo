@@ -1739,5 +1739,21 @@
   "videoViewerCannotPlay": "Цей телефон не може відтворити це відео тут.",
   "videoViewerOpenElsewhere": "Відкрити в іншому застосунку",
   "photoKnowsLookedFor": "Що шукали",
-  "photoKnowsNotInIt": "немає"
+  "photoKnowsNotInIt": "немає",
+  "languageNameEn": "Англійська",
+  "languageNameDe": "Німецька",
+  "languageNameFr": "Французька",
+  "languageNameEs": "Іспанська",
+  "languageNamePt": "Португальська (Бразилія)",
+  "languageNameIt": "Італійська",
+  "languageNameRu": "Російська",
+  "languageNameUk": "Українська",
+  "languageNameTr": "Турецька",
+  "languageNameZh": "Китайська (спрощена)",
+  "languageNameZhHant": "Китайська (традиційна)",
+  "languageNameVi": "Вʼєтнамська",
+  "languageNameId": "Індонезійська",
+  "languageNameFa": "Перська",
+  "languageNameAr": "Арабська",
+  "languageLaterLine": "Мову можна будь-коли змінити в налаштуваннях."
 }

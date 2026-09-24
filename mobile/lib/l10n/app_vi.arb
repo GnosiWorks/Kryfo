@@ -1739,5 +1739,21 @@
   "videoViewerCannotPlay": "Điện thoại này không phát được video này ở đây.",
   "videoViewerOpenElsewhere": "Mở bằng ứng dụng khác",
   "photoKnowsLookedFor": "Đã tìm",
-  "photoKnowsNotInIt": "không có"
+  "photoKnowsNotInIt": "không có",
+  "languageNameEn": "Tiếng Anh",
+  "languageNameDe": "Tiếng Đức",
+  "languageNameFr": "Tiếng Pháp",
+  "languageNameEs": "Tiếng Tây Ban Nha",
+  "languageNamePt": "Tiếng Bồ Đào Nha (Brazil)",
+  "languageNameIt": "Tiếng Ý",
+  "languageNameRu": "Tiếng Nga",
+  "languageNameUk": "Tiếng Ukraina",
+  "languageNameTr": "Tiếng Thổ Nhĩ Kỳ",
+  "languageNameZh": "Tiếng Trung (Giản thể)",
+  "languageNameZhHant": "Tiếng Trung (Phồn thể)",
+  "languageNameVi": "Tiếng Việt",
+  "languageNameId": "Tiếng Indonesia",
+  "languageNameFa": "Tiếng Ba Tư",
+  "languageNameAr": "Tiếng Ả Rập",
+  "languageLaterLine": "Bạn có thể đổi bất cứ lúc nào trong cài đặt."
 }

@@ -1739,5 +1739,21 @@
   "videoViewerCannotPlay": "لا يستطيع هذا الهاتف تشغيل هذا الفيديو هنا.",
   "videoViewerOpenElsewhere": "فتح في تطبيق آخر",
   "photoKnowsLookedFor": "بحثنا عن",
-  "photoKnowsNotInIt": "غير موجود"
+  "photoKnowsNotInIt": "غير موجود",
+  "languageNameEn": "الإنجليزية",
+  "languageNameDe": "الألمانية",
+  "languageNameFr": "الفرنسية",
+  "languageNameEs": "الإسبانية",
+  "languageNamePt": "البرتغالية (البرازيل)",
+  "languageNameIt": "الإيطالية",
+  "languageNameRu": "الروسية",
+  "languageNameUk": "الأوكرانية",
+  "languageNameTr": "التركية",
+  "languageNameZh": "الصينية (المبسطة)",
+  "languageNameZhHant": "الصينية (التقليدية)",
+  "languageNameVi": "الفيتنامية",
+  "languageNameId": "الإندونيسية",
+  "languageNameFa": "الفارسية",
+  "languageNameAr": "العربية",
+  "languageLaterLine": "يمكنك تغيير هذا في أي وقت من الإعدادات."
 }

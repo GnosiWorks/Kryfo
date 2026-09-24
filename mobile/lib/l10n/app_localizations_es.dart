@@ -6641,4 +6641,52 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get photoKnowsNotInIt => 'no está';
+
+  @override
+  String get languageNameEn => 'Inglés';
+
+  @override
+  String get languageNameDe => 'Alemán';
+
+  @override
+  String get languageNameFr => 'Francés';
+
+  @override
+  String get languageNameEs => 'Español';
+
+  @override
+  String get languageNamePt => 'Portugués (Brasil)';
+
+  @override
+  String get languageNameIt => 'Italiano';
+
+  @override
+  String get languageNameRu => 'Ruso';
+
+  @override
+  String get languageNameUk => 'Ucraniano';
+
+  @override
+  String get languageNameTr => 'Turco';
+
+  @override
+  String get languageNameZh => 'Chino (simplificado)';
+
+  @override
+  String get languageNameZhHant => 'Chino (tradicional)';
+
+  @override
+  String get languageNameVi => 'Vietnamita';
+
+  @override
+  String get languageNameId => 'Indonesio';
+
+  @override
+  String get languageNameFa => 'Persa';
+
+  @override
+  String get languageNameAr => 'Árabe';
+
+  @override
+  String get languageLaterLine => 'Puedes cambiarlo cuando quieras en ajustes.';
 }
