@@ -71,6 +71,7 @@ import '../widgets/halo_sheet.dart';
 import '../widgets/moved_strip.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
+import '../l10n/marked.dart';
 
 final Map<String, String> _draftPerGroup = {};
 
@@ -2779,17 +2780,16 @@ class _Header extends StatelessWidget {
                             ),
                           ),
                           if (expiresAt != null)
-                            Row(
-                              children: [
-                                RoomCountdown(expiresAt: expiresAt!, size: 10),
-                                Text(
-                                  l10n.groupChatHere(memberCount),
-                                  style: HaloType.mono(
-                                    size: 10,
-                                    color: HaloColors.text3,
-                                  ),
-                                ),
-                              ],
+                            SlotLine(
+                              msg: (t) => l10n.groupChatHere(memberCount, t),
+                              slot: RoomCountdown(
+                                expiresAt: expiresAt!,
+                                size: 10,
+                              ),
+                              style: HaloType.mono(
+                                size: 10,
+                                color: HaloColors.text3,
+                              ),
                             )
                           else
                             Text(
@@ -3778,7 +3778,7 @@ class _GroupBubble extends StatelessWidget {
                                         ],
                                         if (m.edited) ...[
                                           Text(
-                                            l10n.groupChatEdited,
+                                            '${l10n.groupChatEdited} ',
                                             style: HaloType.mono(
                                               size: 9,
                                               color:

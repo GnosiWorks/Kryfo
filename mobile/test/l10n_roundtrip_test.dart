@@ -718,7 +718,22 @@ void main() {
     expect(l.commonClose, "Close");
     expect(l.chatFindInConversation, "Find in conversation");
     expect(l.chatNoMatches, "No matches");
-    expect(l.chatOf("<matchCount>", "<widget>"), " of <matchCount> <widget>");
+    expect(l.chatOf(0, 0), "*0* of 0 matches");
+    expect(l.chatOf(0, 1), "*1* of 0 matches");
+    expect(l.chatOf(0, 2), "*2* of 0 matches");
+    expect(l.chatOf(0, 5), "*5* of 0 matches");
+    expect(l.chatOf(1, 0), "*0* of 1 match");
+    expect(l.chatOf(1, 1), "*1* of 1 match");
+    expect(l.chatOf(1, 2), "*2* of 1 match");
+    expect(l.chatOf(1, 5), "*5* of 1 match");
+    expect(l.chatOf(2, 0), "*0* of 2 matches");
+    expect(l.chatOf(2, 1), "*1* of 2 matches");
+    expect(l.chatOf(2, 2), "*2* of 2 matches");
+    expect(l.chatOf(2, 5), "*5* of 2 matches");
+    expect(l.chatOf(5, 0), "*0* of 5 matches");
+    expect(l.chatOf(5, 1), "*1* of 5 matches");
+    expect(l.chatOf(5, 2), "*2* of 5 matches");
+    expect(l.chatOf(5, 5), "*5* of 5 matches");
     expect(l.chatPreviousMatch, "Previous match");
     expect(l.chatNextMatch, "Next match");
     expect(l.chatPhotoUnavailable, "Photo unavailable");
@@ -903,17 +918,15 @@ void main() {
       "Your earlier bitcoin payment was seen · <tierName> badge unlocked",
     );
     expect(l.donateSupport, "Support");
-    expect(l.donateKeepKryfo, "Keep kryfo ");
-    expect(l.donateIndependent, "independent");
+    expect(l.donateKeepKryfo, "Keep kryfo *independent*");
     expect(
       l.donateNoAdsNoInvestors,
       "No ads, no investors, nothing to sell. It runs on what backers give.",
     );
     expect(
       l.donateBackItAnonymouslyBadge,
-      "Back it anonymously. Badge opt-in.\n",
+      "Back it anonymously. Badge opt-in.\n*Privacy is never behind a paywall.*",
     );
-    expect(l.donatePrivacyIsNeverBehind, "Privacy is never behind a paywall.");
     expect(
       l.donateAddressCheckItAgainst("<coinName>"),
       "<coinName> address · check it against your wallet",
@@ -1094,7 +1107,10 @@ void main() {
     expect(l.groupChatM("<s>"), "<s>m");
     expect(l.groupChatH("<s>"), "<s>h");
     expect(l.groupChatD("<s>"), "<s>d");
-    expect(l.groupChatHere("<memberCount>"), " · <memberCount> here");
+    expect(l.groupChatHere(0, "<time>"), "<time> · 0 here");
+    expect(l.groupChatHere(1, "<time>"), "<time> · 1 here");
+    expect(l.groupChatHere(2, "<time>"), "<time> · 2 here");
+    expect(l.groupChatHere(5, "<time>"), "<time> · 5 here");
     expect(l.groupChatMembers(0), "0 members");
     expect(l.groupChatMembers(1), "1 member");
     expect(l.groupChatMembers(2), "2 members");
@@ -1107,7 +1123,7 @@ void main() {
     expect(l.groupChatMessage, "Message");
     expect(l.groupChatDisguiseVoice, "Disguise voice");
     expect(l.groupChatSupporter, "Supporter");
-    expect(l.groupChatEdited, "Edited ");
+    expect(l.groupChatEdited, "Edited");
     expect(l.groupChatTapToRetry, "! tap to retry");
     expect(l.groupChat0s, "0s");
     expect(l.groupChatReply, "Reply");
@@ -1653,7 +1669,7 @@ void main() {
     expect(l.modesIp, "ip");
     expect(l.modesVisible, "Visible");
     expect(l.modesHidden, "hidden");
-    expect(l.modesHeadsUp, "Heads up: ");
+    expect(l.modesHeadsUp("<warning>"), "*Heads up:* <warning>");
     expect(
       l.modesOnionIsTheDefault,
       "Onion is the default and stays that way unless you change it. Switching takes effect on the next message.",
@@ -1788,25 +1804,21 @@ void main() {
     );
     expect(l.notesJotSomethingDown, "Jot something down…");
     expect(l.onboardingPrivateByDefault, "PRIVATE BY DEFAULT");
-    expect(l.onboardingPrivateMessaging, "Private messaging,\n");
-    expect(l.onboardingWithoutTheCatch, "without the catch");
-    expect(l.onboardingYourNameIsThree, "Your name is three words.");
-    expect(l.onboardingNoPhoneNoEmail, "No phone, no email, no address book.");
     expect(
-      l.onboardingNobodyGetsInUnless,
-      "Nobody gets in unless you let them.",
+      l.onboardingPrivateMessaging,
+      "Private messaging,\n*without the catch*.",
     );
     expect(
-      l.onboardingThereIsNoSearch,
-      "There is no search. People are added by hand, both ways.",
+      l.onboardingYourNameIsThree,
+      "*Your name is three words.* No phone, no email, no address book.",
+    );
+    expect(
+      l.onboardingNobodyGetsInUnless,
+      "*Nobody gets in unless you let them.* There is no search. People are added by hand, both ways.",
     );
     expect(
       l.onboardingTheFirstConnectionTakes,
-      "The first connection takes a minute.",
-    );
-    expect(
-      l.onboardingKryfoBuildsAPrivate,
-      "Kryfo builds a private route before it sends. Quick after.",
+      "*The first connection takes a minute.* Kryfo builds a private route before it sends. Quick after.",
     );
     expect(l.onboardingBegin, "Begin");
     expect(l.onboardingHaveABackupRestore, "Have a backup? Restore →");
@@ -1814,19 +1826,12 @@ void main() {
     expect(l.onboardingYourKryfoId, "YOUR KRYFO ID");
     expect(
       l.onboardingGeneratedFromAKey,
-      "Generated from a key that lives only on this phone. ",
+      "Generated from a key that lives only on this phone. *Memorable, unique, yours alone.* No one else has this.",
     );
-    expect(
-      l.onboardingMemorableUniqueYoursAlone,
-      "Memorable, unique, yours alone.",
-    );
-    expect(l.onboardingNoOneElseHas, " No one else has this.");
     expect(l.onboardingTryAnother, "Try another");
     expect(l.onboardingUseThisName, "Use this name →");
-    expect(l.onboardingThreeWords, "Three words. ");
-    expect(l.onboardingYoursAlone, "Yours alone.");
-    expect(l.onboardingText, "·");
-    expect(l.onboardingPickA, "Pick a ");
+    expect(l.onboardingThreeWords, "Three words. *Yours alone.*");
+    expect(l.onboardingPickA, "Pick a *face*.");
     expect(
       l.onboardingDrawnOnThisPhone,
       "Drawn on this phone from a number, never uploaded. Change it whenever you like.",
@@ -1838,7 +1843,7 @@ void main() {
     expect(l.onboardingKeepMyInitial, "Keep my initial");
     expect(l.onboardingThatOne, "That one →");
     expect(l.onboardingContinue, "Continue →");
-    expect(l.onboardingHowYourMessages, "How your messages ");
+    expect(l.onboardingHowYourMessages, "How your messages *travel*.");
     expect(
       l.onboardingYouCanChangeThis,
       "You can change this any time in settings, for everyone or for one chat.",
@@ -1870,8 +1875,7 @@ void main() {
     expect(l.onboardingKeepOnion, "Keep onion →");
     expect(l.onboardingUseThis, "Use this →");
     expect(l.onboardingSkipOnionIsA, "Skip · onion is a fine default");
-    expect(l.onboardingThreeThingsThen, "Three things,\nthen ");
-    expect(l.onboardingYouReIn, "you're in");
+    expect(l.onboardingThreeThingsThen, "Three things,\nthen *you're in*.");
     expect(
       l.onboardingEverythingElseTheApp,
       "Everything else the app will tell you when it matters.",
@@ -1902,7 +1906,7 @@ void main() {
       "Your identity lives on this phone. Back it up from settings when you are ready.",
     );
     expect(l.onboardingIUnderstand, "I understand →");
-    expect(l.onboardingOneQuiet, "One quiet ");
+    expect(l.onboardingOneQuiet, "One quiet *notification*.");
     expect(
       l.onboardingAndroidNeedsAVisible,
       "Android needs a visible notification while an app listens in the background. That is how messages reach you when kryfo is closed.",
@@ -1916,8 +1920,7 @@ void main() {
       "It never buzzes. Turn it off and messages wait until you open the app again.",
     );
     expect(l.onboardingGotIt, "Got it →");
-    expect(l.onboardingNow, "Now, ");
-    expect(l.onboardingAddSomeone, "add someone");
+    expect(l.onboardingNow, "Now, *add someone*.");
     expect(
       l.onboardingTheAppIsReady,
       "The app is ready. Nobody can message you until you add them or let them in.",
@@ -2177,12 +2180,15 @@ void main() {
       l.restoreTheRestoreDidNot,
       "The restore did not finish. Nothing was changed",
     );
-    expect(l.restoreMadeOnAt("<date>", "<time>"), ", made on <date> at <time>");
     expect(l.restoreThisIdentity, "this identity");
     expect(l.restoreMoveYourKryfoHere, "Move your kryfo here");
     expect(
-      l.restoreThisBackupIsRestoring("<name>", "<made>"),
-      "This backup is <name><made>. Restoring it moves that identity to this device.",
+      l.restoreThisBackupIsRestoring("<name>"),
+      "This backup is <name>. Restoring it moves that identity to this device.",
+    );
+    expect(
+      l.restoreThisBackupMadeOn("<name>", "<date>", "<time>"),
+      "This backup is <name>, made on <date> at <time>. Restoring it moves that identity to this device.",
     );
     expect(
       l.restoreItHoldsOfPhotos("<mb>"),
@@ -2279,7 +2285,7 @@ void main() {
       "They will know this room came from you. Inside it they are a key like everyone else.",
     );
     expect(l.roomLinkNoContactsYet, "No contacts yet");
-    expect(l.roomLinkEndsIn, "Ends in ");
+    expect(l.roomLinkEndsIn("<time>"), "Ends in <time>");
     expect(
       l.roomLinkAnyoneWithThisCan,
       "Anyone with this can join until the room ends. They come in under a key made for this room, and see nothing sent before they arrived.",
@@ -2605,7 +2611,7 @@ void main() {
     expect(l.transportNothingYetThisProcess, "Nothing yet this process");
     expect(l.transportM2("<mins>"), "<mins>m");
     expect(l.transportHM2("<mins>", "<mins2>"), "<mins>h <mins2>m");
-    expect(l.transportTo("<t>", "<t2>"), "  <t> to <t2>");
+    expect(l.transportTo("<t>", "<t2>"), "<t> to <t2>");
     expect(l.vouchersVouchedBy(0), "vouched by 0");
     expect(l.vouchersVouchedBy(1), "vouched by");
     expect(l.vouchersVouchedBy(2), "vouched by 2");
@@ -2953,7 +2959,7 @@ void main() {
     expect(l.motionBuilding2, "building");
     expect(l.motionOpen, "open");
     expect(l.motionLive, "live");
-    expect(l.motionCircuit, "Circuit · ");
+    expect(l.motionCircuit("<circuit>"), "Circuit · *<circuit>*");
     expect(l.motionDelivered, "delivered");
     expect(l.motionSent, "sent");
     expect(l.motion1Hop, "1 hop");

@@ -1610,8 +1610,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatNoMatches => 'No matches';
 
   @override
-  String chatOf(Object matchCount, Object widget) {
-    return ' of $matchCount $widget';
+  String chatOf(int count, int pos) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '*$pos* of $count matches',
+      one: '*$pos* of $count match',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2004,10 +2010,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get donateSupport => 'Support';
 
   @override
-  String get donateKeepKryfo => 'Keep kryfo ';
-
-  @override
-  String get donateIndependent => 'independent';
+  String get donateKeepKryfo => 'Keep kryfo *independent*';
 
   @override
   String get donateNoAdsNoInvestors =>
@@ -2015,10 +2018,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get donateBackItAnonymouslyBadge =>
-      'Back it anonymously. Badge opt-in.\n';
-
-  @override
-  String get donatePrivacyIsNeverBehind => 'Privacy is never behind a paywall.';
+      'Back it anonymously. Badge opt-in.\n*Privacy is never behind a paywall.*';
 
   @override
   String donateAddressCheckItAgainst(Object coinName) {
@@ -2368,8 +2368,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String groupChatHere(Object memberCount) {
-    return ' · $memberCount here';
+  String groupChatHere(int count, Object time) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$time · $count here',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2410,7 +2415,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupChatSupporter => 'Supporter';
 
   @override
-  String get groupChatEdited => 'Edited ';
+  String get groupChatEdited => 'Edited';
 
   @override
   String get groupChatTapToRetry => '! tap to retry';
@@ -3297,7 +3302,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get modesHidden => 'hidden';
 
   @override
-  String get modesHeadsUp => 'Heads up: ';
+  String modesHeadsUp(Object warning) {
+    return '*Heads up:* $warning';
+  }
 
   @override
   String get modesOnionIsTheDefault =>
@@ -3535,32 +3542,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingPrivateByDefault => 'PRIVATE BY DEFAULT';
 
   @override
-  String get onboardingPrivateMessaging => 'Private messaging,\n';
+  String get onboardingPrivateMessaging =>
+      'Private messaging,\n*without the catch*.';
 
   @override
-  String get onboardingWithoutTheCatch => 'without the catch';
-
-  @override
-  String get onboardingYourNameIsThree => 'Your name is three words.';
-
-  @override
-  String get onboardingNoPhoneNoEmail => 'No phone, no email, no address book.';
+  String get onboardingYourNameIsThree =>
+      '*Your name is three words.* No phone, no email, no address book.';
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      'Nobody gets in unless you let them.';
-
-  @override
-  String get onboardingThereIsNoSearch =>
-      'There is no search. People are added by hand, both ways.';
+      '*Nobody gets in unless you let them.* There is no search. People are added by hand, both ways.';
 
   @override
   String get onboardingTheFirstConnectionTakes =>
-      'The first connection takes a minute.';
-
-  @override
-  String get onboardingKryfoBuildsAPrivate =>
-      'Kryfo builds a private route before it sends. Quick after.';
+      '*The first connection takes a minute.* Kryfo builds a private route before it sends. Quick after.';
 
   @override
   String get onboardingBegin => 'Begin';
@@ -3576,14 +3571,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingGeneratedFromAKey =>
-      'Generated from a key that lives only on this phone. ';
-
-  @override
-  String get onboardingMemorableUniqueYoursAlone =>
-      'Memorable, unique, yours alone.';
-
-  @override
-  String get onboardingNoOneElseHas => ' No one else has this.';
+      'Generated from a key that lives only on this phone. *Memorable, unique, yours alone.* No one else has this.';
 
   @override
   String get onboardingTryAnother => 'Try another';
@@ -3592,16 +3580,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingUseThisName => 'Use this name →';
 
   @override
-  String get onboardingThreeWords => 'Three words. ';
+  String get onboardingThreeWords => 'Three words. *Yours alone.*';
 
   @override
-  String get onboardingYoursAlone => 'Yours alone.';
-
-  @override
-  String get onboardingText => '·';
-
-  @override
-  String get onboardingPickA => 'Pick a ';
+  String get onboardingPickA => 'Pick a *face*.';
 
   @override
   String get onboardingDrawnOnThisPhone =>
@@ -3621,7 +3603,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingContinue => 'Continue →';
 
   @override
-  String get onboardingHowYourMessages => 'How your messages ';
+  String get onboardingHowYourMessages => 'How your messages *travel*.';
 
   @override
   String get onboardingYouCanChangeThis =>
@@ -3669,10 +3651,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingSkipOnionIsA => 'Skip · onion is a fine default';
 
   @override
-  String get onboardingThreeThingsThen => 'Three things,\nthen ';
-
-  @override
-  String get onboardingYouReIn => 'you\'re in';
+  String get onboardingThreeThingsThen => 'Three things,\nthen *you\'re in*.';
 
   @override
   String get onboardingEverythingElseTheApp =>
@@ -3709,7 +3688,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingIUnderstand => 'I understand →';
 
   @override
-  String get onboardingOneQuiet => 'One quiet ';
+  String get onboardingOneQuiet => 'One quiet *notification*.';
 
   @override
   String get onboardingAndroidNeedsAVisible =>
@@ -3727,10 +3706,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingGotIt => 'Got it →';
 
   @override
-  String get onboardingNow => 'Now, ';
-
-  @override
-  String get onboardingAddSomeone => 'add someone';
+  String get onboardingNow => 'Now, *add someone*.';
 
   @override
   String get onboardingTheAppIsReady =>
@@ -4289,19 +4265,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'The restore did not finish. Nothing was changed';
 
   @override
-  String restoreMadeOnAt(Object date, Object time) {
-    return ', made on $date at $time';
-  }
-
-  @override
   String get restoreThisIdentity => 'this identity';
 
   @override
   String get restoreMoveYourKryfoHere => 'Move your kryfo here';
 
   @override
-  String restoreThisBackupIsRestoring(Object name, Object made) {
-    return 'This backup is $name$made. Restoring it moves that identity to this device.';
+  String restoreThisBackupIsRestoring(Object name) {
+    return 'This backup is $name. Restoring it moves that identity to this device.';
+  }
+
+  @override
+  String restoreThisBackupMadeOn(Object name, Object date, Object time) {
+    return 'This backup is $name, made on $date at $time. Restoring it moves that identity to this device.';
   }
 
   @override
@@ -4477,7 +4453,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roomLinkNoContactsYet => 'No contacts yet';
 
   @override
-  String get roomLinkEndsIn => 'Ends in ';
+  String roomLinkEndsIn(Object time) {
+    return 'Ends in $time';
+  }
 
   @override
   String get roomLinkAnyoneWithThisCan =>
@@ -5184,7 +5162,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String transportTo(Object t, Object t2) {
-    return '  $t to $t2';
+    return '$t to $t2';
   }
 
   @override
@@ -5877,7 +5855,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get motionLive => 'live';
 
   @override
-  String get motionCircuit => 'Circuit · ';
+  String motionCircuit(Object circuit) {
+    return 'Circuit · *$circuit*';
+  }
 
   @override
   String get motionDelivered => 'delivered';

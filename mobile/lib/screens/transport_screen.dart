@@ -235,10 +235,11 @@ class _Head extends StatelessWidget {
 }
 
 class _Line extends StatelessWidget {
-  const _Line(this.label, this.value, this.tint);
+  const _Line(this.label, this.value, this.tint, {this.indent = false});
   final String label;
   final String value;
   final Color tint;
+  final bool indent;
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 7),
@@ -246,11 +247,14 @@ class _Line extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Flexible(
-          child: Text(
-            label,
-            style: HaloType.mono(size: 13, color: HaloColors.text2),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          child: Padding(
+            padding: EdgeInsetsDirectional.only(start: indent ? 15.6 : 0),
+            child: Text(
+              label,
+              style: HaloType.mono(size: 13, color: HaloColors.text2),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ),
         const SizedBox(width: 12),
@@ -504,6 +508,11 @@ class _AliveState extends State<_Alive> {
     final len = mins < 60
         ? l10n.transportM2(mins)
         : l10n.transportHM2(mins ~/ 60, mins % 60);
-    return _Line(l10n.transportTo(t(from), t(to)), len, HaloColors.text2);
+    return _Line(
+      l10n.transportTo(t(from), t(to)),
+      len,
+      HaloColors.text2,
+      indent: true,
+    );
   }
 }

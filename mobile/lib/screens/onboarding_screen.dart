@@ -21,6 +21,7 @@ import '../widgets/kryfo_avatar.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
+import '../l10n/marked.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final AppState appState;
@@ -148,34 +149,24 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
               color: HaloColors.text,
               height: 1.05,
             ),
-            children: [
-              TextSpan(text: l10n.onboardingPrivateMessaging),
-              TextSpan(
-                text: l10n.onboardingWithoutTheCatch,
-                style: HaloType.serif(
-                  size: 38,
-                  weight: FontWeight.w300,
-                  italic: true,
-                  color: HaloColors.amber,
-                  height: 1.05,
-                ),
+            children: markedSpans(
+              l10n.onboardingPrivateMessaging,
+              HaloType.serif(
+                size: 38,
+                weight: FontWeight.w300,
+                italic: true,
+                color: HaloColors.amber,
+                height: 1.05,
               ),
-              const TextSpan(text: '.'),
-            ],
+            ),
           ),
         ),
         const SizedBox(height: 26),
-        _bullet(l10n.onboardingYourNameIsThree, l10n.onboardingNoPhoneNoEmail),
+        _bullet(l10n.onboardingYourNameIsThree),
         const SizedBox(height: 13),
-        _bullet(
-          l10n.onboardingNobodyGetsInUnless,
-          l10n.onboardingThereIsNoSearch,
-        ),
+        _bullet(l10n.onboardingNobodyGetsInUnless),
         const SizedBox(height: 13),
-        _bullet(
-          l10n.onboardingTheFirstConnectionTakes,
-          l10n.onboardingKryfoBuildsAPrivate,
-        ),
+        _bullet(l10n.onboardingTheFirstConnectionTakes),
         const Spacer(),
         GestureDetector(
           onTap: widget.onContinue,
@@ -222,7 +213,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
     );
   }
 
-  Widget _bullet(String bold, String rest) => Row(
+  Widget _bullet(String msg) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Container(
@@ -239,18 +230,15 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
               color: HaloColors.text2,
               height: 1.6,
             ),
-            children: [
-              TextSpan(
-                text: '$bold ',
-                style: HaloType.sans(
-                  size: 13.5,
-                  color: HaloColors.text,
-                  weight: FontWeight.w500,
-                  height: 1.6,
-                ),
+            children: markedSpans(
+              msg,
+              HaloType.sans(
+                size: 13.5,
+                color: HaloColors.text,
+                weight: FontWeight.w500,
+                height: 1.6,
               ),
-              TextSpan(text: rest),
-            ],
+            ),
           ),
         ),
       ),
@@ -362,19 +350,15 @@ class _IdentityScreenState extends State<_IdentityScreen>
                       color: HaloColors.text3,
                       height: 1.55,
                     ),
-                    children: [
-                      TextSpan(text: l10n.onboardingGeneratedFromAKey),
-                      TextSpan(
-                        text: l10n.onboardingMemorableUniqueYoursAlone,
-                        style: HaloType.sans(
-                          size: 11,
-                          color: HaloColors.text2,
-                          weight: FontWeight.w500,
-                          height: 1.55,
-                        ),
+                    children: markedSpans(
+                      l10n.onboardingGeneratedFromAKey,
+                      HaloType.sans(
+                        size: 11,
+                        color: HaloColors.text2,
+                        weight: FontWeight.w500,
+                        height: 1.55,
                       ),
-                      TextSpan(text: l10n.onboardingNoOneElseHas),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -479,19 +463,16 @@ class _IdentityScreenState extends State<_IdentityScreen>
         color: HaloColors.text,
         height: 1.25,
       ),
-      children: [
-        TextSpan(text: l10n.onboardingThreeWords),
-        TextSpan(
-          text: l10n.onboardingYoursAlone,
-          style: HaloType.serif(
-            size: 19,
-            weight: FontWeight.w300,
-            italic: true,
-            color: HaloColors.amber,
-            height: 1.25,
-          ),
+      children: markedSpans(
+        l10n.onboardingThreeWords,
+        HaloType.serif(
+          size: 19,
+          weight: FontWeight.w300,
+          italic: true,
+          color: HaloColors.amber,
+          height: 1.25,
         ),
-      ],
+      ),
     ),
   );
 
@@ -588,10 +569,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
     delayMs,
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Text(
-        l10n.onboardingText,
-        style: HaloType.mono(size: 14, color: HaloColors.text3),
-      ),
+      child: Text('·', style: HaloType.mono(size: 14, color: HaloColors.text3)),
     ),
   );
 
@@ -675,20 +653,16 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
                 color: HaloColors.text,
                 height: 1.05,
               ),
-              children: [
-                TextSpan(text: l10n.onboardingPickA),
-                TextSpan(
-                  text: 'face',
-                  style: HaloType.serif(
-                    size: 30,
-                    weight: FontWeight.w300,
-                    italic: true,
-                    color: HaloColors.amber,
-                    height: 1.05,
-                  ),
+              children: markedSpans(
+                l10n.onboardingPickA,
+                HaloType.serif(
+                  size: 30,
+                  weight: FontWeight.w300,
+                  italic: true,
+                  color: HaloColors.amber,
+                  height: 1.05,
                 ),
-                const TextSpan(text: '.'),
-              ],
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -799,7 +773,7 @@ class _TransportScreenState extends State<_TransportScreen> {
       children: [
         const _Step(4),
         const SizedBox(height: 22),
-        _headline(l10n.onboardingHowYourMessages, 'travel'),
+        _headline(l10n.onboardingHowYourMessages),
         const SizedBox(height: 12),
         Text(
           l10n.onboardingYouCanChangeThis,
@@ -964,7 +938,7 @@ class _ThreeThingsScreen extends StatelessWidget {
       children: [
         const _Step(5),
         const SizedBox(height: 22),
-        _headline(l10n.onboardingThreeThingsThen, l10n.onboardingYouReIn),
+        _headline(l10n.onboardingThreeThingsThen),
         const SizedBox(height: 12),
         Text(
           l10n.onboardingEverythingElseTheApp,
@@ -1027,7 +1001,7 @@ class _NotificationScreen extends StatelessWidget {
       children: [
         const _Step(6),
         const SizedBox(height: 22),
-        _headline(l10n.onboardingOneQuiet, 'notification'),
+        _headline(l10n.onboardingOneQuiet),
         const SizedBox(height: 12),
         Text(
           l10n.onboardingAndroidNeedsAVisible,
@@ -1066,7 +1040,7 @@ class _AddSomeoneScreen extends StatelessWidget {
       children: [
         const _Step(7),
         const SizedBox(height: 22),
-        _headline(l10n.onboardingNow, l10n.onboardingAddSomeone),
+        _headline(l10n.onboardingNow),
         const SizedBox(height: 12),
         Text(
           l10n.onboardingTheAppIsReady,
@@ -1163,7 +1137,7 @@ class _Step extends StatelessWidget {
   }
 }
 
-Widget _headline(String plain, String accent) => RichText(
+Widget _headline(String msg) => RichText(
   text: TextSpan(
     style: HaloType.serif(
       size: 30,
@@ -1171,20 +1145,16 @@ Widget _headline(String plain, String accent) => RichText(
       color: HaloColors.text,
       height: 1.05,
     ),
-    children: [
-      TextSpan(text: plain),
-      TextSpan(
-        text: accent,
-        style: HaloType.serif(
-          size: 30,
-          weight: FontWeight.w300,
-          italic: true,
-          color: HaloColors.amber,
-          height: 1.05,
-        ),
+    children: markedSpans(
+      msg,
+      HaloType.serif(
+        size: 30,
+        weight: FontWeight.w300,
+        italic: true,
+        color: HaloColors.amber,
+        height: 1.05,
       ),
-      const TextSpan(text: '.'),
-    ],
+    ),
   ),
 );
 

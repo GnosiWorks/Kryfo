@@ -8,6 +8,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../l10n/l10n.dart';
 import '../theme.dart' show HaloType;
+import '../l10n/marked.dart';
 
 const kInk = Color(0xFF0D0B09);
 const kSurface = Color(0xFF161310);
@@ -378,16 +379,10 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
                       color: kText2,
                       letterSpacing: 0.4,
                     ),
-                    children: [
-                      TextSpan(text: l10n.motionCircuit),
-                      TextSpan(
-                        text: _circuit,
-                        style: TextStyle(
-                          color: _accent,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                    children: markedSpans(
+                      l10n.motionCircuit(_circuit),
+                      TextStyle(color: _accent, fontWeight: FontWeight.w500),
+                    ),
                   ),
                 ),
                 Text(

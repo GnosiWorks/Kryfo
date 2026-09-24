@@ -84,6 +84,7 @@ import '../widgets/halo_sheet.dart';
 import '../widgets/moved_strip.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
+import '../l10n/marked.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
 // chunk indices already accepted by the peer, per media msg_uid. lets a
@@ -5636,29 +5637,28 @@ class _SearchHeadState extends State<SearchHead> {
                                 size: 10,
                                 color: HaloColors.text2,
                               ),
-                              children: [
-                                TextSpan(
-                                  text: widget.matchCount == 0
-                                      ? l10n.chatNoMatches
-                                      : '${widget.matchPos}',
-                                  style: HaloType.mono(
-                                    size: 10,
-                                    color: widget.matchCount == 0
-                                        ? HaloColors.text3
-                                        : HaloColors.amber,
-                                    weight: FontWeight.w500,
-                                  ),
-                                ),
-                                if (widget.matchCount > 0)
-                                  TextSpan(
-                                    text: l10n.chatOf(
-                                      widget.matchCount,
-                                      widget.matchCount == 1
-                                          ? 'match'
-                                          : 'matches',
+                              children: widget.matchCount == 0
+                                  ? [
+                                      TextSpan(
+                                        text: l10n.chatNoMatches,
+                                        style: HaloType.mono(
+                                          size: 10,
+                                          color: HaloColors.text3,
+                                          weight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ]
+                                  : markedSpans(
+                                      l10n.chatOf(
+                                        widget.matchCount,
+                                        widget.matchPos,
+                                      ),
+                                      HaloType.mono(
+                                        size: 10,
+                                        color: HaloColors.amber,
+                                        weight: FontWeight.w500,
+                                      ),
                                     ),
-                                  ),
-                              ],
                             ),
                           ),
                           const Spacer(),

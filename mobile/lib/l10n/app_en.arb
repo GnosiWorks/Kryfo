@@ -2183,15 +2183,15 @@
   "@chatNoMatches": {
     "description": "screens/chat_screen.dart"
   },
-  "chatOf": " of {matchCount} {widget}",
+  "chatOf": "{count, plural, one{*{pos}* of {count} match} other{*{pos}* of {count} matches}}",
   "@chatOf": {
     "description": "screens/chat_screen.dart",
     "placeholders": {
-      "matchCount": {
-        "type": "Object"
+      "count": {
+        "type": "int"
       },
-      "widget": {
-        "type": "Object"
+      "pos": {
+        "type": "int"
       }
     }
   },
@@ -2723,24 +2723,16 @@
   "@donateSupport": {
     "description": "screens/donate_screen.dart"
   },
-  "donateKeepKryfo": "Keep kryfo ",
+  "donateKeepKryfo": "Keep kryfo *independent*",
   "@donateKeepKryfo": {
-    "description": "screens/donate_screen.dart"
-  },
-  "donateIndependent": "independent",
-  "@donateIndependent": {
     "description": "screens/donate_screen.dart"
   },
   "donateNoAdsNoInvestors": "No ads, no investors, nothing to sell. It runs on what backers give.",
   "@donateNoAdsNoInvestors": {
     "description": "screens/donate_screen.dart"
   },
-  "donateBackItAnonymouslyBadge": "Back it anonymously. Badge opt-in.\n",
+  "donateBackItAnonymouslyBadge": "Back it anonymously. Badge opt-in.\n*Privacy is never behind a paywall.*",
   "@donateBackItAnonymouslyBadge": {
-    "description": "screens/donate_screen.dart"
-  },
-  "donatePrivacyIsNeverBehind": "Privacy is never behind a paywall.",
-  "@donatePrivacyIsNeverBehind": {
     "description": "screens/donate_screen.dart"
   },
   "donateAddressCheckItAgainst": "{coinName} address · check it against your wallet",
@@ -3199,11 +3191,14 @@
       }
     }
   },
-  "groupChatHere": " · {memberCount} here",
+  "groupChatHere": "{count, plural, other{{time} · {count} here}}",
   "@groupChatHere": {
     "description": "screens/group_chat_screen.dart",
     "placeholders": {
-      "memberCount": {
+      "count": {
+        "type": "int"
+      },
+      "time": {
         "type": "Object"
       }
     }
@@ -3254,7 +3249,7 @@
   "@groupChatSupporter": {
     "description": "screens/group_chat_screen.dart"
   },
-  "groupChatEdited": "Edited ",
+  "groupChatEdited": "Edited",
   "@groupChatEdited": {
     "description": "screens/group_chat_screen.dart"
   },
@@ -4387,9 +4382,14 @@
   "@modesHidden": {
     "description": "screens/modes_screen.dart"
   },
-  "modesHeadsUp": "Heads up: ",
+  "modesHeadsUp": "*Heads up:* {warning}",
   "@modesHeadsUp": {
-    "description": "screens/modes_screen.dart"
+    "description": "screens/modes_screen.dart",
+    "placeholders": {
+      "warning": {
+        "type": "Object"
+      }
+    }
   },
   "modesOnionIsTheDefault": "Onion is the default and stays that way unless you change it. Switching takes effect on the next message.",
   "@modesOnionIsTheDefault": {
@@ -4686,36 +4686,20 @@
   "@onboardingPrivateByDefault": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingPrivateMessaging": "Private messaging,\n",
+  "onboardingPrivateMessaging": "Private messaging,\n*without the catch*.",
   "@onboardingPrivateMessaging": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingWithoutTheCatch": "without the catch",
-  "@onboardingWithoutTheCatch": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingYourNameIsThree": "Your name is three words.",
+  "onboardingYourNameIsThree": "*Your name is three words.* No phone, no email, no address book.",
   "@onboardingYourNameIsThree": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingNoPhoneNoEmail": "No phone, no email, no address book.",
-  "@onboardingNoPhoneNoEmail": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingNobodyGetsInUnless": "Nobody gets in unless you let them.",
+  "onboardingNobodyGetsInUnless": "*Nobody gets in unless you let them.* There is no search. People are added by hand, both ways.",
   "@onboardingNobodyGetsInUnless": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingThereIsNoSearch": "There is no search. People are added by hand, both ways.",
-  "@onboardingThereIsNoSearch": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingTheFirstConnectionTakes": "The first connection takes a minute.",
+  "onboardingTheFirstConnectionTakes": "*The first connection takes a minute.* Kryfo builds a private route before it sends. Quick after.",
   "@onboardingTheFirstConnectionTakes": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingKryfoBuildsAPrivate": "Kryfo builds a private route before it sends. Quick after.",
-  "@onboardingKryfoBuildsAPrivate": {
     "description": "screens/onboarding_screen.dart"
   },
   "onboardingBegin": "Begin",
@@ -4734,16 +4718,8 @@
   "@onboardingYourKryfoId": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingGeneratedFromAKey": "Generated from a key that lives only on this phone. ",
+  "onboardingGeneratedFromAKey": "Generated from a key that lives only on this phone. *Memorable, unique, yours alone.* No one else has this.",
   "@onboardingGeneratedFromAKey": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingMemorableUniqueYoursAlone": "Memorable, unique, yours alone.",
-  "@onboardingMemorableUniqueYoursAlone": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingNoOneElseHas": " No one else has this.",
-  "@onboardingNoOneElseHas": {
     "description": "screens/onboarding_screen.dart"
   },
   "onboardingTryAnother": "Try another",
@@ -4754,19 +4730,11 @@
   "@onboardingUseThisName": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingThreeWords": "Three words. ",
+  "onboardingThreeWords": "Three words. *Yours alone.*",
   "@onboardingThreeWords": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingYoursAlone": "Yours alone.",
-  "@onboardingYoursAlone": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingText": "·",
-  "@onboardingText": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingPickA": "Pick a ",
+  "onboardingPickA": "Pick a *face*.",
   "@onboardingPickA": {
     "description": "screens/onboarding_screen.dart"
   },
@@ -4790,7 +4758,7 @@
   "@onboardingContinue": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingHowYourMessages": "How your messages ",
+  "onboardingHowYourMessages": "How your messages *travel*.",
   "@onboardingHowYourMessages": {
     "description": "screens/onboarding_screen.dart"
   },
@@ -4846,12 +4814,8 @@
   "@onboardingSkipOnionIsA": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingThreeThingsThen": "Three things,\nthen ",
+  "onboardingThreeThingsThen": "Three things,\nthen *you're in*.",
   "@onboardingThreeThingsThen": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingYouReIn": "you're in",
-  "@onboardingYouReIn": {
     "description": "screens/onboarding_screen.dart"
   },
   "onboardingEverythingElseTheApp": "Everything else the app will tell you when it matters.",
@@ -4890,7 +4854,7 @@
   "@onboardingIUnderstand": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingOneQuiet": "One quiet ",
+  "onboardingOneQuiet": "One quiet *notification*.",
   "@onboardingOneQuiet": {
     "description": "screens/onboarding_screen.dart"
   },
@@ -4910,12 +4874,8 @@
   "@onboardingGotIt": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingNow": "Now, ",
+  "onboardingNow": "Now, *add someone*.",
   "@onboardingNow": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingAddSomeone": "add someone",
-  "@onboardingAddSomeone": {
     "description": "screens/onboarding_screen.dart"
   },
   "onboardingTheAppIsReady": "The app is ready. Nobody can message you until you add them or let them in.",
@@ -5652,18 +5612,6 @@
   "@restoreTheRestoreDidNot": {
     "description": "screens/restore_screen.dart"
   },
-  "restoreMadeOnAt": ", made on {date} at {time}",
-  "@restoreMadeOnAt": {
-    "description": "screens/restore_screen.dart",
-    "placeholders": {
-      "date": {
-        "type": "Object"
-      },
-      "time": {
-        "type": "Object"
-      }
-    }
-  },
   "restoreThisIdentity": "this identity",
   "@restoreThisIdentity": {
     "description": "screens/restore_screen.dart"
@@ -5672,14 +5620,26 @@
   "@restoreMoveYourKryfoHere": {
     "description": "screens/restore_screen.dart"
   },
-  "restoreThisBackupIsRestoring": "This backup is {name}{made}. Restoring it moves that identity to this device.",
+  "restoreThisBackupIsRestoring": "This backup is {name}. Restoring it moves that identity to this device.",
   "@restoreThisBackupIsRestoring": {
     "description": "screens/restore_screen.dart",
     "placeholders": {
       "name": {
         "type": "Object"
+      }
+    }
+  },
+  "restoreThisBackupMadeOn": "This backup is {name}, made on {date} at {time}. Restoring it moves that identity to this device.",
+  "@restoreThisBackupMadeOn": {
+    "description": "screens/restore_screen.dart",
+    "placeholders": {
+      "name": {
+        "type": "Object"
       },
-      "made": {
+      "date": {
+        "type": "Object"
+      },
+      "time": {
         "type": "Object"
       }
     }
@@ -5907,9 +5867,14 @@
   "@roomLinkNoContactsYet": {
     "description": "screens/room_link_sheet.dart"
   },
-  "roomLinkEndsIn": "Ends in ",
+  "roomLinkEndsIn": "Ends in {time}",
   "@roomLinkEndsIn": {
-    "description": "screens/room_link_sheet.dart"
+    "description": "screens/room_link_sheet.dart",
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
   },
   "roomLinkAnyoneWithThisCan": "Anyone with this can join until the room ends. They come in under a key made for this room, and see nothing sent before they arrived.",
   "@roomLinkAnyoneWithThisCan": {
@@ -6844,7 +6809,7 @@
       }
     }
   },
-  "transportTo": "  {t} to {t2}",
+  "transportTo": "{t} to {t2}",
   "@transportTo": {
     "description": "screens/transport_screen.dart",
     "placeholders": {
@@ -7778,9 +7743,14 @@
   "@motionLive": {
     "description": "widgets/motion.dart"
   },
-  "motionCircuit": "Circuit · ",
+  "motionCircuit": "Circuit · *{circuit}*",
   "@motionCircuit": {
-    "description": "widgets/motion.dart"
+    "description": "widgets/motion.dart",
+    "placeholders": {
+      "circuit": {
+        "type": "Object"
+      }
+    }
   },
   "motionDelivered": "delivered",
   "@motionDelivered": {

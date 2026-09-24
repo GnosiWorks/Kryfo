@@ -252,10 +252,10 @@ class _RestoreScreenState extends State<RestoreScreen> {
   Future<bool> _moveSheet(BackupSummary s) async {
     final big = s.bytes > 50 * 1024 * 1024;
     final when = s.when;
-    final made = when == null
-        ? ''
-        : l10n.restoreMadeOnAt(dayMonth(when), hourMinute(when));
     final name = s.haloId.isEmpty ? l10n.restoreThisIdentity : s.haloId;
+    final about = when == null
+        ? l10n.restoreThisBackupIsRestoring(name)
+        : l10n.restoreThisBackupMadeOn(name, dayMonth(when), hourMinute(when));
     final r = await showHaloSheet<bool>(
       context,
       builder: (ctx) => SafeArea(
@@ -274,7 +274,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  l10n.restoreThisBackupIsRestoring(name, made),
+                  about,
                   style: HaloType.sans(
                     size: 13.5,
                     color: HaloColors.text2,

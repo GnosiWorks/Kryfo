@@ -2725,8 +2725,8 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **' of {matchCount} {widget}'**
-  String chatOf(Object matchCount, Object widget);
+  /// **'{count, plural, one{*{pos}* of {count} match} other{*{pos}* of {count} matches}}'**
+  String chatOf(int count, int pos);
 
   /// screens/chat_screen.dart
   ///
@@ -3421,14 +3421,8 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Keep kryfo '**
+  /// **'Keep kryfo *independent*'**
   String get donateKeepKryfo;
-
-  /// screens/donate_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'independent'**
-  String get donateIndependent;
 
   /// screens/donate_screen.dart
   ///
@@ -3439,14 +3433,8 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Back it anonymously. Badge opt-in.\n'**
+  /// **'Back it anonymously. Badge opt-in.\n*Privacy is never behind a paywall.*'**
   String get donateBackItAnonymouslyBadge;
-
-  /// screens/donate_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Privacy is never behind a paywall.'**
-  String get donatePrivacyIsNeverBehind;
 
   /// screens/donate_screen.dart
   ///
@@ -4045,8 +4033,8 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **' · {memberCount} here'**
-  String groupChatHere(Object memberCount);
+  /// **'{count, plural, other{{time} · {count} here}}'**
+  String groupChatHere(int count, Object time);
 
   /// screens/group_chat_screen.dart
   ///
@@ -4105,7 +4093,7 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Edited '**
+  /// **'Edited'**
   String get groupChatEdited;
 
   /// screens/group_chat_screen.dart
@@ -5527,8 +5515,8 @@ abstract class AppLocalizations {
   /// screens/modes_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Heads up: '**
-  String get modesHeadsUp;
+  /// **'*Heads up:* {warning}'**
+  String modesHeadsUp(Object warning);
 
   /// screens/modes_screen.dart
   ///
@@ -5941,50 +5929,26 @@ abstract class AppLocalizations {
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Private messaging,\n'**
+  /// **'Private messaging,\n*without the catch*.'**
   String get onboardingPrivateMessaging;
 
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'without the catch'**
-  String get onboardingWithoutTheCatch;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Your name is three words.'**
+  /// **'*Your name is three words.* No phone, no email, no address book.'**
   String get onboardingYourNameIsThree;
 
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'No phone, no email, no address book.'**
-  String get onboardingNoPhoneNoEmail;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Nobody gets in unless you let them.'**
+  /// **'*Nobody gets in unless you let them.* There is no search. People are added by hand, both ways.'**
   String get onboardingNobodyGetsInUnless;
 
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'There is no search. People are added by hand, both ways.'**
-  String get onboardingThereIsNoSearch;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'The first connection takes a minute.'**
+  /// **'*The first connection takes a minute.* Kryfo builds a private route before it sends. Quick after.'**
   String get onboardingTheFirstConnectionTakes;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Kryfo builds a private route before it sends. Quick after.'**
-  String get onboardingKryfoBuildsAPrivate;
 
   /// screens/onboarding_screen.dart
   ///
@@ -6013,20 +5977,8 @@ abstract class AppLocalizations {
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Generated from a key that lives only on this phone. '**
+  /// **'Generated from a key that lives only on this phone. *Memorable, unique, yours alone.* No one else has this.'**
   String get onboardingGeneratedFromAKey;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Memorable, unique, yours alone.'**
-  String get onboardingMemorableUniqueYoursAlone;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **' No one else has this.'**
-  String get onboardingNoOneElseHas;
 
   /// screens/onboarding_screen.dart
   ///
@@ -6043,25 +5995,13 @@ abstract class AppLocalizations {
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Three words. '**
+  /// **'Three words. *Yours alone.*'**
   String get onboardingThreeWords;
 
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Yours alone.'**
-  String get onboardingYoursAlone;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'·'**
-  String get onboardingText;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Pick a '**
+  /// **'Pick a *face*.'**
   String get onboardingPickA;
 
   /// screens/onboarding_screen.dart
@@ -6097,7 +6037,7 @@ abstract class AppLocalizations {
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'How your messages '**
+  /// **'How your messages *travel*.'**
   String get onboardingHowYourMessages;
 
   /// screens/onboarding_screen.dart
@@ -6181,14 +6121,8 @@ abstract class AppLocalizations {
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Three things,\nthen '**
+  /// **'Three things,\nthen *you\'re in*.'**
   String get onboardingThreeThingsThen;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'you\'re in'**
-  String get onboardingYouReIn;
 
   /// screens/onboarding_screen.dart
   ///
@@ -6247,7 +6181,7 @@ abstract class AppLocalizations {
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'One quiet '**
+  /// **'One quiet *notification*.'**
   String get onboardingOneQuiet;
 
   /// screens/onboarding_screen.dart
@@ -6277,14 +6211,8 @@ abstract class AppLocalizations {
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Now, '**
+  /// **'Now, *add someone*.'**
   String get onboardingNow;
-
-  /// screens/onboarding_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'add someone'**
-  String get onboardingAddSomeone;
 
   /// screens/onboarding_screen.dart
   ///
@@ -7303,12 +7231,6 @@ abstract class AppLocalizations {
   /// screens/restore_screen.dart
   ///
   /// In en, this message translates to:
-  /// **', made on {date} at {time}'**
-  String restoreMadeOnAt(Object date, Object time);
-
-  /// screens/restore_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'this identity'**
   String get restoreThisIdentity;
 
@@ -7321,8 +7243,14 @@ abstract class AppLocalizations {
   /// screens/restore_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'This backup is {name}{made}. Restoring it moves that identity to this device.'**
-  String restoreThisBackupIsRestoring(Object name, Object made);
+  /// **'This backup is {name}. Restoring it moves that identity to this device.'**
+  String restoreThisBackupIsRestoring(Object name);
+
+  /// screens/restore_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'This backup is {name}, made on {date} at {time}. Restoring it moves that identity to this device.'**
+  String restoreThisBackupMadeOn(Object name, Object date, Object time);
 
   /// screens/restore_screen.dart
   ///
@@ -7609,8 +7537,8 @@ abstract class AppLocalizations {
   /// screens/room_link_sheet.dart
   ///
   /// In en, this message translates to:
-  /// **'Ends in '**
-  String get roomLinkEndsIn;
+  /// **'Ends in {time}'**
+  String roomLinkEndsIn(Object time);
 
   /// screens/room_link_sheet.dart
   ///
@@ -8827,7 +8755,7 @@ abstract class AppLocalizations {
   /// screens/transport_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'  {t} to {t2}'**
+  /// **'{t} to {t2}'**
   String transportTo(Object t, Object t2);
 
   /// screens/vouchers_sheet.dart
@@ -9889,8 +9817,8 @@ abstract class AppLocalizations {
   /// widgets/motion.dart
   ///
   /// In en, this message translates to:
-  /// **'Circuit · '**
-  String get motionCircuit;
+  /// **'Circuit · *{circuit}*'**
+  String motionCircuit(Object circuit);
 
   /// widgets/motion.dart
   ///

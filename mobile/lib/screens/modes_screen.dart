@@ -13,6 +13,7 @@ import 'package:flutter/services.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/fit_column.dart';
 import '../l10n/l10n.dart';
+import '../l10n/marked.dart';
 
 class ModesScreen extends StatefulWidget {
   const ModesScreen({super.key});
@@ -333,17 +334,14 @@ class _ModeCard extends StatelessWidget {
                         color: HaloColors.rose,
                         height: 1.4,
                       ),
-                      children: [
-                        TextSpan(
-                          text: l10n.modesHeadsUp,
-                          style: HaloType.sans(
-                            size: 10,
-                            weight: FontWeight.w500,
-                            color: HaloColors.rose,
-                          ),
+                      children: markedSpans(
+                        l10n.modesHeadsUp(warning!),
+                        HaloType.sans(
+                          size: 10,
+                          weight: FontWeight.w500,
+                          color: HaloColors.rose,
                         ),
-                        TextSpan(text: warning!),
-                      ],
+                      ),
                     ),
                   ),
                 ),

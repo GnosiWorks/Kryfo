@@ -17,6 +17,7 @@ import '../widgets/motion.dart';
 import '../widgets/kryfo_avatar.dart';
 import 'chat_screen.dart';
 import '../l10n/l10n.dart';
+import '../l10n/marked.dart';
 
 Future<void> showRoomLinkSheet(BuildContext context, RoomLink link) {
   return showHaloSheet<void>(
@@ -171,17 +172,20 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet>
               ),
             ),
             const SizedBox(height: 4),
-            Row(
-              children: [
-                if (DateTime.now().millisecondsSinceEpoch <
-                    widget.link.expiresAt)
-                  Text(
-                    l10n.roomLinkEndsIn,
+            DateTime.now().millisecondsSinceEpoch < widget.link.expiresAt
+                ? SlotLine(
+                    msg: l10n.roomLinkEndsIn,
+                    slot: RoomCountdown(
+                      expiresAt: widget.link.expiresAt,
+                      size: 10,
+                    ),
                     style: HaloType.mono(size: 10, color: HaloColors.text3),
+                  )
+                : Row(
+                    children: [
+                      RoomCountdown(expiresAt: widget.link.expiresAt, size: 10),
+                    ],
                   ),
-                RoomCountdown(expiresAt: widget.link.expiresAt, size: 10),
-              ],
-            ),
             const SizedBox(height: 18),
             Center(
               child: ScaleTransition(

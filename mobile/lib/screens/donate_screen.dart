@@ -18,6 +18,7 @@ import '../main.dart' show appState;
 import 'modes_screen.dart';
 import 'package:flutter/services.dart';
 import '../l10n/l10n.dart';
+import '../l10n/marked.dart';
 
 class DonateScreen extends StatefulWidget {
   const DonateScreen({super.key});
@@ -182,17 +183,10 @@ class _DonateScreenState extends State<DonateScreen> {
         const SizedBox(height: 14),
         Text.rich(
           TextSpan(
-            children: [
-              TextSpan(text: l10n.donateKeepKryfo),
-              TextSpan(
-                text: l10n.donateIndependent,
-                style: HaloType.serif(
-                  size: 25,
-                  italic: true,
-                  color: HaloColors.amber,
-                ),
-              ),
-            ],
+            children: markedSpans(
+              l10n.donateKeepKryfo,
+              HaloType.serif(size: 25, italic: true, color: HaloColors.amber),
+            ),
           ),
           textAlign: TextAlign.center,
           style: HaloType.serif(size: 25, color: HaloColors.text),
@@ -213,13 +207,10 @@ class _DonateScreenState extends State<DonateScreen> {
           ),
           child: Text.rich(
             TextSpan(
-              children: [
-                TextSpan(text: l10n.donateBackItAnonymouslyBadge),
-                TextSpan(
-                  text: l10n.donatePrivacyIsNeverBehind,
-                  style: HaloType.mono(size: 11, color: HaloColors.amber),
-                ),
-              ],
+              children: markedSpans(
+                l10n.donateBackItAnonymouslyBadge,
+                HaloType.mono(size: 11, color: HaloColors.amber),
+              ),
             ),
             textAlign: TextAlign.center,
             style: HaloType.mono(size: 11, color: HaloColors.text2),
