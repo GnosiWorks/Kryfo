@@ -379,6 +379,9 @@ class HaloEngine {
   Future<String> handleRelease(String h) =>
       _ffiOnIsolate('HaloHandleRelease', [h]);
 
+  Future<String> handleListing(String h, bool listed, String name) =>
+      _ffiOnIsolate('HaloHandleListing', [h, listed ? '1' : '0', name]);
+
   // tell the engine whether to route through tor. it decides the route; the
   // relay list for each mode is chosen below.
   String setTransportMode(String mode) {
@@ -4994,8 +4997,33 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> loadMyHandle() async {
-    _myHandle = await const FlutterSecureStorage().read(key: 'my_handle');
+    const st = FlutterSecureStorage();
+    _myHandle = await st.read(key: 'my_handle');
+    _handleListed = (await st.read(key: 'my_handle_listed')) == '1';
+    _handleName = await st.read(key: 'my_handle_name') ?? '';
     notifyListeners();
+  }
+
+  // a handle and being findable are separate: the registry's search shows
+  // only handles whose owner asked, under a name they chose. off until then.
+  bool _handleListed = false;
+  String _handleName = '';
+  bool get handleListed => _handleListed;
+  String get handleName => _handleName;
+
+  Future<String> setHandleListing(bool on, {String name = ''}) async {
+    final h = _myHandle;
+    if (h == null) return 'error: no handle';
+    final n = on ? name.trim() : '';
+    final r = await engine.handleListing(h, on, n);
+    if (r != 'ok') return r;
+    _handleListed = on;
+    _handleName = n;
+    const st = FlutterSecureStorage();
+    await st.write(key: 'my_handle_listed', value: on ? '1' : '0');
+    await st.write(key: 'my_handle_name', value: n);
+    notifyListeners();
+    return r;
   }
 
   // the published invite is static; a phone that claimed under a key since
@@ -5019,6 +5047,11 @@ class AppState extends ChangeNotifier {
     if (h == null) {
       await st.delete(key: 'my_handle');
       await st.delete(key: 'my_handle_bio');
+      // a released handle is gone from search with the rest of it
+      await st.delete(key: 'my_handle_listed');
+      await st.delete(key: 'my_handle_name');
+      _handleListed = false;
+      _handleName = '';
     } else {
       await st.write(key: 'my_handle', value: h);
       // kept so a republish carries the same bio rather than a blank one

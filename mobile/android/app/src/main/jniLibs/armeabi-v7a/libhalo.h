@@ -234,6 +234,13 @@ extern char* HaloHandleClaim(char* cHandle, char* cInvite, char* cBio);
 // give it back. the same signature proves it was yours to release.
 extern char* HaloHandleRelease(char* cHandle);
 
+// in search or out of it: "1" puts the handle in the registry's search
+// under name, "0" takes it out. a handle and being findable are separate:
+// claiming one never lists it. signed with the identity key, with the time,
+// so the registry takes each change once and in order.
+//
+extern char* HaloHandleListing(char* cHandle, char* cListed, char* cName);
+
 // ask for a captcha. returns "ok|<base64 png>|<challenge>" or "error: ...".
 // the challenge is opaque and must be handed back with the answer; it carries
 // a signed timestamp and dies after thirty minutes.

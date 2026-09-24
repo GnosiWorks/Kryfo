@@ -6925,4 +6925,82 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get searchClear => 'مسح';
+
+  @override
+  String get handleShowInSearch => 'أظهرني في البحث';
+
+  @override
+  String get handleShowInSearchLine =>
+      'يمكن لأي شخص العثور على اسم المستخدم هذا ومراسلتك.';
+
+  @override
+  String handleShownAs(Object name) {
+    return 'يظهر باسم ⁨$name⁩';
+  }
+
+  @override
+  String get handleNameInSearch => 'الاسم في البحث';
+
+  @override
+  String get handleNameInSearchLine =>
+      'اختياري. يظهر بجانب اسم المستخدم عندما يبحث أحد. يمكن لأي شخص العثور على اسم المستخدم هذا ومراسلتك.';
+
+  @override
+  String get handleNameHint => 'اسمك، أو اتركه فارغًا';
+
+  @override
+  String get handleShowMe => 'أظهرني';
+
+  @override
+  String get handleSearchOff => 'لم تعد في البحث';
+
+  @override
+  String handleSearchOn(Object handle) {
+    return 'أنت في البحث باسم ⁨@$handle⁩';
+  }
+
+  @override
+  String get handleRegistryFailed =>
+      'تعذّر الوصول إلى السجل. حاول مجددًا بعد دقيقة.';
+
+  @override
+  String get searchPeople => 'أشخاص';
+
+  @override
+  String searchPeopleAsk(Object query) {
+    return 'ابحث عن «⁨$query⁩» بين أسماء المستخدمين العامة';
+  }
+
+  @override
+  String get searchPeopleLine => 'يُسأل عبر Tor. لا يحتفظ السجل بأي أثر له.';
+
+  @override
+  String get searchPeopleNone => 'لا يطابق أي اسم مستخدم عام';
+
+  @override
+  String get searchPeopleOffline => 'Tor ليس جاهزًا بعد';
+
+  @override
+  String get searchPeopleBusy => 'عمليات بحث كثيرة الآن. حاول مجددًا بعد قليل.';
+
+  @override
+  String get searchPeopleUnreachable => 'تعذّر الوصول إلى السجل';
+
+  @override
+  String get peopleVerified => 'اسم مستخدم موثّق';
+
+  @override
+  String get peopleAdd => 'إضافة';
+
+  @override
+  String peopleFingerprint(Object fp) {
+    return 'بصمة المفتاح · ⁨$fp⁩';
+  }
+
+  @override
+  String get peopleFingerprintLine =>
+      'تأكد من تطابقها مع ما يراه الطرف الآخر في تطبيقه.';
+
+  @override
+  String get peopleAdding => 'جارٍ الإضافة…';
 }

@@ -6832,4 +6832,84 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get searchClear => 'Temizle';
+
+  @override
+  String get handleShowInSearch => 'Beni aramada göster';
+
+  @override
+  String get handleShowInSearchLine =>
+      'Herkes bu kullanıcı adını bulup sana yazabilir.';
+
+  @override
+  String handleShownAs(Object name) {
+    return '$name olarak görünüyor';
+  }
+
+  @override
+  String get handleNameInSearch => 'Aramadaki ad';
+
+  @override
+  String get handleNameInSearchLine =>
+      'İsteğe bağlı. Biri arama yaptığında kullanıcı adının yanında görünür. Herkes bu kullanıcı adını bulup sana yazabilir.';
+
+  @override
+  String get handleNameHint => 'Adın ya da boş bırak';
+
+  @override
+  String get handleShowMe => 'Göster';
+
+  @override
+  String get handleSearchOff => 'Artık aramada değilsin';
+
+  @override
+  String handleSearchOn(Object handle) {
+    return 'Aramada @$handle olarak görünüyorsun';
+  }
+
+  @override
+  String get handleRegistryFailed =>
+      'Kayıt defterine ulaşılamadı. Bir dakika sonra yeniden dene.';
+
+  @override
+  String get searchPeople => 'Kişiler';
+
+  @override
+  String searchPeopleAsk(Object query) {
+    return 'Herkese açık kullanıcı adlarında “$query” ara';
+  }
+
+  @override
+  String get searchPeopleLine =>
+      'Tor üzerinden soruluyor. Kayıt defteri bunun kaydını tutmaz.';
+
+  @override
+  String get searchPeopleNone => 'Eşleşen herkese açık kullanıcı adı yok';
+
+  @override
+  String get searchPeopleOffline => 'Tor henüz hazır değil';
+
+  @override
+  String get searchPeopleBusy =>
+      'Şu an çok fazla arama var. Birazdan yeniden dene.';
+
+  @override
+  String get searchPeopleUnreachable => 'Kayıt defterine ulaşılamadı';
+
+  @override
+  String get peopleVerified => 'Doğrulanmış kullanıcı adı';
+
+  @override
+  String get peopleAdd => 'Ekle';
+
+  @override
+  String peopleFingerprint(Object fp) {
+    return 'Anahtar parmak izi · $fp';
+  }
+
+  @override
+  String get peopleFingerprintLine =>
+      'Karşı tarafın uygulamasında gördüğüyle aynı olduğunu kontrol et.';
+
+  @override
+  String get peopleAdding => 'Ekleniyor…';
 }

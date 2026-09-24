@@ -6870,4 +6870,84 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get searchClear => 'Cancella';
+
+  @override
+  String get handleShowInSearch => 'Mostrami nella ricerca';
+
+  @override
+  String get handleShowInSearchLine =>
+      'Chiunque può trovare questo nome utente e scriverti.';
+
+  @override
+  String handleShownAs(Object name) {
+    return 'Mostrato come $name';
+  }
+
+  @override
+  String get handleNameInSearch => 'Nome nella ricerca';
+
+  @override
+  String get handleNameInSearchLine =>
+      'Facoltativo. Appare accanto al tuo nome utente quando qualcuno cerca. Chiunque può trovare questo nome utente e scriverti.';
+
+  @override
+  String get handleNameHint => 'Il tuo nome, o lascia vuoto';
+
+  @override
+  String get handleShowMe => 'Mostrami';
+
+  @override
+  String get handleSearchOff => 'Non sei più nella ricerca';
+
+  @override
+  String handleSearchOn(Object handle) {
+    return 'Sei nella ricerca come @$handle';
+  }
+
+  @override
+  String get handleRegistryFailed =>
+      'Il registro non ha risposto. Riprova tra un minuto.';
+
+  @override
+  String get searchPeople => 'Persone';
+
+  @override
+  String searchPeopleAsk(Object query) {
+    return 'Cerca «$query» tra i nomi utente pubblici';
+  }
+
+  @override
+  String get searchPeopleLine =>
+      'Chiesto tramite Tor. Il registro non ne tiene traccia.';
+
+  @override
+  String get searchPeopleNone => 'Nessun nome utente pubblico corrisponde';
+
+  @override
+  String get searchPeopleOffline => 'Tor non è ancora pronto';
+
+  @override
+  String get searchPeopleBusy =>
+      'Troppe ricerche in questo momento. Riprova tra poco.';
+
+  @override
+  String get searchPeopleUnreachable => 'Il registro non ha risposto';
+
+  @override
+  String get peopleVerified => 'Nome utente verificato';
+
+  @override
+  String get peopleAdd => 'Aggiungi';
+
+  @override
+  String peopleFingerprint(Object fp) {
+    return 'Impronta della chiave · $fp';
+  }
+
+  @override
+  String get peopleFingerprintLine =>
+      'Controlla che corrisponda a quella che vede nella sua app.';
+
+  @override
+  String get peopleAdding => 'Aggiungo…';
 }

@@ -6853,4 +6853,84 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get searchClear => 'Limpar';
+
+  @override
+  String get handleShowInSearch => 'Mostrar-me na pesquisa';
+
+  @override
+  String get handleShowInSearchLine =>
+      'Qualquer pessoa pode encontrar este nome de usuário e te mandar mensagem.';
+
+  @override
+  String handleShownAs(Object name) {
+    return 'Aparece como $name';
+  }
+
+  @override
+  String get handleNameInSearch => 'Nome na pesquisa';
+
+  @override
+  String get handleNameInSearchLine =>
+      'Opcional. Aparece ao lado do seu nome de usuário quando alguém pesquisa. Qualquer pessoa pode encontrar este nome de usuário e te mandar mensagem.';
+
+  @override
+  String get handleNameHint => 'Seu nome, ou deixe em branco';
+
+  @override
+  String get handleShowMe => 'Mostrar-me';
+
+  @override
+  String get handleSearchOff => 'Você saiu da pesquisa';
+
+  @override
+  String handleSearchOn(Object handle) {
+    return 'Você está na pesquisa como @$handle';
+  }
+
+  @override
+  String get handleRegistryFailed =>
+      'Não foi possível falar com o registro. Tente de novo em um minuto.';
+
+  @override
+  String get searchPeople => 'Pessoas';
+
+  @override
+  String searchPeopleAsk(Object query) {
+    return 'Procurar “$query” entre os nomes de usuário públicos';
+  }
+
+  @override
+  String get searchPeopleLine =>
+      'Perguntado via Tor. O registro não guarda nenhum registro disso.';
+
+  @override
+  String get searchPeopleNone => 'Nenhum nome de usuário público corresponde';
+
+  @override
+  String get searchPeopleOffline => 'O Tor ainda não está pronto';
+
+  @override
+  String get searchPeopleBusy =>
+      'Muitas pesquisas agora. Tente de novo daqui a pouco.';
+
+  @override
+  String get searchPeopleUnreachable => 'Não foi possível falar com o registro';
+
+  @override
+  String get peopleVerified => 'Nome de usuário verificado';
+
+  @override
+  String get peopleAdd => 'Adicionar';
+
+  @override
+  String peopleFingerprint(Object fp) {
+    return 'Impressão digital da chave · $fp';
+  }
+
+  @override
+  String get peopleFingerprintLine =>
+      'Confira se é a mesma que a pessoa vê no app dela.';
+
+  @override
+  String get peopleAdding => 'Adicionando…';
 }

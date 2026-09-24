@@ -9,7 +9,12 @@ void main() {
       'something_else': 'x',
     });
     expect(plan.write, {'my_handle': 'wren', 'fc_counter': '3'});
-    expect(plan.remove, ['my_handle_bio', 'peer_fc']);
+    expect(plan.remove, [
+      'my_handle_bio',
+      'my_handle_listed',
+      'my_handle_name',
+      'peer_fc',
+    ]);
   });
 
   test('a backup from before they were carried removes them all', () {

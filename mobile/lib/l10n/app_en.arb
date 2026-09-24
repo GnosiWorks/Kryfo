@@ -8650,5 +8650,113 @@
   "searchClear": "Clear",
   "@searchClear": {
     "description": "button that empties the search field"
+  },
+  "handleShowInSearch": "Show me in search",
+  "@handleShowInSearch": {
+    "description": "switch on the handle screen: be findable in the registry's search. off by default"
+  },
+  "handleShowInSearchLine": "Anyone can find this handle and message you.",
+  "@handleShowInSearchLine": {
+    "description": "the warning under that switch"
+  },
+  "handleShownAs": "Shown as {name}",
+  "@handleShownAs": {
+    "description": "under the switch when on and a name was given",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "handleNameInSearch": "Name in search",
+  "@handleNameInSearch": {
+    "description": "title of the sheet asking for a name to show in search"
+  },
+  "handleNameInSearchLine": "Optional. It shows next to your handle when someone searches. Anyone can find this handle and message you.",
+  "@handleNameInSearchLine": {
+    "description": "its line: optional, and the warning again"
+  },
+  "handleNameHint": "Your name, or leave it empty",
+  "@handleNameHint": {
+    "description": "hint in the name field"
+  },
+  "handleShowMe": "Show me",
+  "@handleShowMe": {
+    "description": "the sheet's button that turns search on"
+  },
+  "handleSearchOff": "You're out of search",
+  "@handleSearchOff": {
+    "description": "toast after leaving search"
+  },
+  "handleSearchOn": "You're in search as @{handle}",
+  "@handleSearchOn": {
+    "description": "toast after joining search",
+    "placeholders": {
+      "handle": {
+        "type": "Object"
+      }
+    }
+  },
+  "handleRegistryFailed": "Couldn't reach the registry. Try again in a minute.",
+  "@handleRegistryFailed": {
+    "description": "toast when the registry did not answer"
+  },
+  "searchPeople": "People",
+  "@searchPeople": {
+    "description": "section of search results: public handles of people who asked to be found"
+  },
+  "searchPeopleAsk": "Look for “{query}” among public handles",
+  "@searchPeopleAsk": {
+    "description": "a row in search that asks the registry for people matching what was typed; nothing is sent until it is tapped",
+    "placeholders": {
+      "query": {
+        "type": "Object"
+      }
+    }
+  },
+  "searchPeopleLine": "Asked over Tor. The registry keeps no record of it.",
+  "@searchPeopleLine": {
+    "description": "small line under the people section: how the question travels"
+  },
+  "searchPeopleNone": "No public handle matches",
+  "@searchPeopleNone": {
+    "description": "shown when no public handle matches"
+  },
+  "searchPeopleOffline": "Tor isn't ready yet",
+  "@searchPeopleOffline": {
+    "description": "people search could not run: tor is not up yet"
+  },
+  "searchPeopleBusy": "Too many searches right now. Try again in a moment.",
+  "@searchPeopleBusy": {
+    "description": "people search refused for now: too many searches"
+  },
+  "searchPeopleUnreachable": "Couldn't reach the registry",
+  "@searchPeopleUnreachable": {
+    "description": "people search: the registry did not answer"
+  },
+  "peopleVerified": "Verified handle",
+  "@peopleVerified": {
+    "description": "label with the green tick on a public handle: the handle is held by the key that signed it"
+  },
+  "peopleAdd": "Add",
+  "@peopleAdd": {
+    "description": "button on a public profile that adds the person"
+  },
+  "peopleFingerprint": "Key fingerprint · {fp}",
+  "@peopleFingerprint": {
+    "description": "a short fingerprint of their identity key, e.g. ABCD 1234",
+    "placeholders": {
+      "fp": {
+        "type": "Object"
+      }
+    }
+  },
+  "peopleFingerprintLine": "Check it matches what they see in their app.",
+  "@peopleFingerprintLine": {
+    "description": "under the fingerprint: compare it with the other person"
+  },
+  "peopleAdding": "Adding…",
+  "@peopleAdding": {
+    "description": "the add button while adding"
   }
 }

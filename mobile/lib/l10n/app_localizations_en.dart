@@ -6794,4 +6794,84 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchClear => 'Clear';
+
+  @override
+  String get handleShowInSearch => 'Show me in search';
+
+  @override
+  String get handleShowInSearchLine =>
+      'Anyone can find this handle and message you.';
+
+  @override
+  String handleShownAs(Object name) {
+    return 'Shown as $name';
+  }
+
+  @override
+  String get handleNameInSearch => 'Name in search';
+
+  @override
+  String get handleNameInSearchLine =>
+      'Optional. It shows next to your handle when someone searches. Anyone can find this handle and message you.';
+
+  @override
+  String get handleNameHint => 'Your name, or leave it empty';
+
+  @override
+  String get handleShowMe => 'Show me';
+
+  @override
+  String get handleSearchOff => 'You\'re out of search';
+
+  @override
+  String handleSearchOn(Object handle) {
+    return 'You\'re in search as @$handle';
+  }
+
+  @override
+  String get handleRegistryFailed =>
+      'Couldn\'t reach the registry. Try again in a minute.';
+
+  @override
+  String get searchPeople => 'People';
+
+  @override
+  String searchPeopleAsk(Object query) {
+    return 'Look for “$query” among public handles';
+  }
+
+  @override
+  String get searchPeopleLine =>
+      'Asked over Tor. The registry keeps no record of it.';
+
+  @override
+  String get searchPeopleNone => 'No public handle matches';
+
+  @override
+  String get searchPeopleOffline => 'Tor isn\'t ready yet';
+
+  @override
+  String get searchPeopleBusy =>
+      'Too many searches right now. Try again in a moment.';
+
+  @override
+  String get searchPeopleUnreachable => 'Couldn\'t reach the registry';
+
+  @override
+  String get peopleVerified => 'Verified handle';
+
+  @override
+  String get peopleAdd => 'Add';
+
+  @override
+  String peopleFingerprint(Object fp) {
+    return 'Key fingerprint · $fp';
+  }
+
+  @override
+  String get peopleFingerprintLine =>
+      'Check it matches what they see in their app.';
+
+  @override
+  String get peopleAdding => 'Adding…';
 }

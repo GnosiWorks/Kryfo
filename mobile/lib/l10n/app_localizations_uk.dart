@@ -6926,4 +6926,83 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get searchClear => 'Очистити';
+
+  @override
+  String get handleShowInSearch => 'Показувати мене в пошуку';
+
+  @override
+  String get handleShowInSearchLine =>
+      'Будь-хто зможе знайти це ім’я користувача й написати тобі.';
+
+  @override
+  String handleShownAs(Object name) {
+    return 'Показується як $name';
+  }
+
+  @override
+  String get handleNameInSearch => 'Ім’я в пошуку';
+
+  @override
+  String get handleNameInSearchLine =>
+      'Необов’язково. Воно видно поруч з іменем користувача, коли хтось шукає. Будь-хто зможе знайти це ім’я користувача й написати тобі.';
+
+  @override
+  String get handleNameHint => 'Твоє ім’я, або залиш порожнім';
+
+  @override
+  String get handleShowMe => 'Показувати';
+
+  @override
+  String get handleSearchOff => 'Тебе більше немає в пошуку';
+
+  @override
+  String handleSearchOn(Object handle) {
+    return 'Ти в пошуку як @$handle';
+  }
+
+  @override
+  String get handleRegistryFailed => 'Реєстр не відповів. Спробуй за хвилину.';
+
+  @override
+  String get searchPeople => 'Люди';
+
+  @override
+  String searchPeopleAsk(Object query) {
+    return 'Шукати «$query» серед публічних імен користувачів';
+  }
+
+  @override
+  String get searchPeopleLine =>
+      'Запит іде через Tor. Реєстр нічого про нього не зберігає.';
+
+  @override
+  String get searchPeopleNone => 'Жодне публічне ім’я не підходить';
+
+  @override
+  String get searchPeopleOffline => 'Tor ще не готовий';
+
+  @override
+  String get searchPeopleBusy =>
+      'Зараз забагато запитів. Спробуй трохи згодом.';
+
+  @override
+  String get searchPeopleUnreachable => 'Реєстр не відповів';
+
+  @override
+  String get peopleVerified => 'Підтверджене ім’я користувача';
+
+  @override
+  String get peopleAdd => 'Додати';
+
+  @override
+  String peopleFingerprint(Object fp) {
+    return 'Відбиток ключа · $fp';
+  }
+
+  @override
+  String get peopleFingerprintLine =>
+      'Перевір, що він збігається з тим, що бачить співрозмовник у своєму застосунку.';
+
+  @override
+  String get peopleAdding => 'Додаю…';
 }

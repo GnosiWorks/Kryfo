@@ -6547,6 +6547,81 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get searchClear => '清除';
+
+  @override
+  String get handleShowInSearch => '在搜索中显示我';
+
+  @override
+  String get handleShowInSearchLine => '任何人都能找到这个用户名并给你发消息。';
+
+  @override
+  String handleShownAs(Object name) {
+    return '显示为 $name';
+  }
+
+  @override
+  String get handleNameInSearch => '搜索中的名字';
+
+  @override
+  String get handleNameInSearchLine =>
+      '可选。有人搜索时，它会显示在你的用户名旁边。任何人都能找到这个用户名并给你发消息。';
+
+  @override
+  String get handleNameHint => '你的名字，也可以留空';
+
+  @override
+  String get handleShowMe => '显示我';
+
+  @override
+  String get handleSearchOff => '你已不在搜索中';
+
+  @override
+  String handleSearchOn(Object handle) {
+    return '你以 @$handle 出现在搜索中';
+  }
+
+  @override
+  String get handleRegistryFailed => '联系不上登记处。请一分钟后再试。';
+
+  @override
+  String get searchPeople => '人';
+
+  @override
+  String searchPeopleAsk(Object query) {
+    return '在公开用户名中查找“$query”';
+  }
+
+  @override
+  String get searchPeopleLine => '通过 Tor 询问。登记处不留任何记录。';
+
+  @override
+  String get searchPeopleNone => '没有匹配的公开用户名';
+
+  @override
+  String get searchPeopleOffline => 'Tor 还没准备好';
+
+  @override
+  String get searchPeopleBusy => '现在搜索太多了，请稍后再试。';
+
+  @override
+  String get searchPeopleUnreachable => '联系不上登记处';
+
+  @override
+  String get peopleVerified => '已验证的用户名';
+
+  @override
+  String get peopleAdd => '添加';
+
+  @override
+  String peopleFingerprint(Object fp) {
+    return '密钥指纹 · $fp';
+  }
+
+  @override
+  String get peopleFingerprintLine => '请核对是否与对方应用里显示的一致。';
+
+  @override
+  String get peopleAdding => '正在添加…';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -13092,4 +13167,79 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get searchClear => '清除';
+
+  @override
+  String get handleShowInSearch => '在搜尋中顯示我';
+
+  @override
+  String get handleShowInSearchLine => '任何人都能找到這個使用者名稱並傳訊息給你。';
+
+  @override
+  String handleShownAs(Object name) {
+    return '顯示為 $name';
+  }
+
+  @override
+  String get handleNameInSearch => '搜尋中的名字';
+
+  @override
+  String get handleNameInSearchLine =>
+      '可選。有人搜尋時，它會顯示在你的使用者名稱旁邊。任何人都能找到這個使用者名稱並傳訊息給你。';
+
+  @override
+  String get handleNameHint => '你的名字，也可以留空';
+
+  @override
+  String get handleShowMe => '顯示我';
+
+  @override
+  String get handleSearchOff => '你已不在搜尋中';
+
+  @override
+  String handleSearchOn(Object handle) {
+    return '你以 @$handle 出現在搜尋中';
+  }
+
+  @override
+  String get handleRegistryFailed => '聯絡不上註冊處。請一分鐘後再試。';
+
+  @override
+  String get searchPeople => '人';
+
+  @override
+  String searchPeopleAsk(Object query) {
+    return '在公開使用者名稱中尋找「$query」';
+  }
+
+  @override
+  String get searchPeopleLine => '透過 Tor 詢問。註冊處不留任何紀錄。';
+
+  @override
+  String get searchPeopleNone => '沒有相符的公開使用者名稱';
+
+  @override
+  String get searchPeopleOffline => 'Tor 還沒準備好';
+
+  @override
+  String get searchPeopleBusy => '現在搜尋太多了，請稍後再試。';
+
+  @override
+  String get searchPeopleUnreachable => '聯絡不上註冊處';
+
+  @override
+  String get peopleVerified => '已驗證的使用者名稱';
+
+  @override
+  String get peopleAdd => '新增';
+
+  @override
+  String peopleFingerprint(Object fp) {
+    return '金鑰指紋 · $fp';
+  }
+
+  @override
+  String get peopleFingerprintLine => '請核對是否與對方應用程式裡顯示的一致。';
+
+  @override
+  String get peopleAdding => '正在新增…';
 }

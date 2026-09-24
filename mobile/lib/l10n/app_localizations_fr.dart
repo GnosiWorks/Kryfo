@@ -6868,4 +6868,84 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get searchClear => 'Effacer';
+
+  @override
+  String get handleShowInSearch => 'Me montrer dans la recherche';
+
+  @override
+  String get handleShowInSearchLine =>
+      'N’importe qui peut trouver ce pseudo et vous écrire.';
+
+  @override
+  String handleShownAs(Object name) {
+    return 'Affiché comme $name';
+  }
+
+  @override
+  String get handleNameInSearch => 'Nom dans la recherche';
+
+  @override
+  String get handleNameInSearchLine =>
+      'Facultatif. Il apparaît à côté de votre pseudo quand quelqu’un cherche. N’importe qui peut trouver ce pseudo et vous écrire.';
+
+  @override
+  String get handleNameHint => 'Votre nom, ou laissez vide';
+
+  @override
+  String get handleShowMe => 'Me montrer';
+
+  @override
+  String get handleSearchOff => 'Vous n’êtes plus dans la recherche';
+
+  @override
+  String handleSearchOn(Object handle) {
+    return 'Vous êtes dans la recherche en tant que @$handle';
+  }
+
+  @override
+  String get handleRegistryFailed =>
+      'Le registre n’a pas répondu. Réessayez dans une minute.';
+
+  @override
+  String get searchPeople => 'Personnes';
+
+  @override
+  String searchPeopleAsk(Object query) {
+    return 'Chercher « $query » parmi les pseudos publics';
+  }
+
+  @override
+  String get searchPeopleLine =>
+      'Demandé via Tor. Le registre n’en garde aucune trace.';
+
+  @override
+  String get searchPeopleNone => 'Aucun pseudo public ne correspond';
+
+  @override
+  String get searchPeopleOffline => 'Tor n’est pas encore prêt';
+
+  @override
+  String get searchPeopleBusy =>
+      'Trop de recherches en ce moment. Réessayez dans un instant.';
+
+  @override
+  String get searchPeopleUnreachable => 'Le registre n’a pas répondu';
+
+  @override
+  String get peopleVerified => 'Pseudo vérifié';
+
+  @override
+  String get peopleAdd => 'Ajouter';
+
+  @override
+  String peopleFingerprint(Object fp) {
+    return 'Empreinte de la clé · $fp';
+  }
+
+  @override
+  String get peopleFingerprintLine =>
+      'Vérifiez qu’elle correspond à ce qu’ils voient dans leur appli.';
+
+  @override
+  String get peopleAdding => 'Ajout…';
 }

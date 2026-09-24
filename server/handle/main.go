@@ -18,6 +18,7 @@ package main
 // invite, and only whoever claimed it can release it.
 
 import (
+	"context"
 	"crypto/ed25519"
 	"embed"
 	"encoding/hex"
@@ -25,6 +26,7 @@ import (
 	"fmt"
 	"html"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -33,7 +35,9 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
+	"unicode"
 )
 
 var handleOK = regexp.MustCompile(`^[a-z0-9_]{3,20}$`)
@@ -53,6 +57,13 @@ type entry struct {
 	Bio       string `json:"bio"`
 	Pubkey    string `json:"pubkey"`
 	ClaimedAt int64  `json:"claimed_at"`
+	// in search only when the owner asked for it, under a name they chose.
+	// every handle claimed before search existed has none of these and
+	// stays out of it until its owner opts in. ListedAt is the time on the
+	// owner's last signed change, so an older one cannot be replayed.
+	Listed   bool   `json:"listed,omitempty"`
+	Name     string `json:"name,omitempty"`
+	ListedAt int64  `json:"listed_at,omitempty"`
 }
 
 type store struct {
@@ -236,6 +247,27 @@ func main() {
 	}
 	st := openStore(filepath.Join(dir, "handles.json"))
 
+	log.Printf("handles: listening on %s, store in %s", addr, dir)
+	log.Fatal(newServer(addr, st, newLimiter(2, 20)).ListenAndServe())
+}
+
+// the server: the routes, and a counter on every connection so search can
+// be limited per connection. no address is kept, only the count.
+func newServer(addr string, st *store, lim *limiter) *http.Server {
+	return &http.Server{
+		Addr:              addr,
+		Handler:           routes(st, lim),
+		ReadHeaderTimeout: 10 * time.Second,
+		ConnContext: func(ctx context.Context, _ net.Conn) context.Context {
+			return context.WithValue(ctx, connKey{}, new(atomic.Int32))
+		},
+		// deliberately no ErrorLog: a request that fails should not leave a
+		// line behind with an address in it.
+		ErrorLog: log.New(discard{}, "", 0),
+	}
+}
+
+func routes(st *store, lim *limiter) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/handle/check", func(w http.ResponseWriter, r *http.Request) {
@@ -284,9 +316,14 @@ func main() {
 		}
 		// re-claiming your own handle repoints it, which is how someone
 		// updates an invite after a reinstall. anyone else is refused.
-		if old, ok := st.get(in.Handle); ok && old.Pubkey != in.Pubkey {
-			refuse(w, "that handle is taken")
-			return
+		if old, ok := st.get(in.Handle); ok {
+			if old.Pubkey != in.Pubkey {
+				refuse(w, "that handle is taken")
+				return
+			}
+			// the app repoints on every start; that must not take someone
+			// out of search, or put them back into it
+			in.Listed, in.Name, in.ListedAt = old.Listed, old.Name, old.ListedAt
 		}
 		in.ClaimedAt = time.Now().Unix()
 		if err := st.put(in); err != nil {
@@ -372,16 +409,9 @@ func main() {
 		fmt.Fprint(w, page(h, e.Bio, e.Invite, fingerprint(e.Pubkey)))
 	})
 
-	log.Printf("handles: listening on %s, store in %s", addr, dir)
-	srv := &http.Server{
-		Addr:              addr,
-		Handler:           mux,
-		ReadHeaderTimeout: 10 * time.Second,
-		// deliberately no ErrorLog: a request that fails should not leave a
-		// line behind with an address in it.
-		ErrorLog: log.New(discard{}, "", 0),
-	}
-	log.Fatal(srv.ListenAndServe())
+	mux.HandleFunc("/handle/listing", listingHandler(st))
+	mux.HandleFunc("/handle/search", searchHandler(st, lim))
+	return mux
 }
 
 type discard struct{}
@@ -462,3 +492,275 @@ body{margin:0;min-height:100vh;background:#0D0B09;color:#F5F1EA;
 .foot{margin-top:20px;padding-top:18px;border-top:1px solid #2F2922;
       font-size:11px;color:#A79E92}
 </style>`
+
+// ---- search ----
+//
+// people who asked to be found can be found by their handle or the name they
+// gave. nobody else: a handle and being searchable are separate choices, and
+// every handle claimed before this existed stays out until its owner opts
+// in. what a search asked for is never written down anywhere: there is no
+// log line in this file, the server's error log is discarded, and the
+// answer is marked not to be stored.
+//
+// scraping the list is made slow rather than impossible: at least three
+// characters, no wildcards, twenty answers at most, a cap per connection and
+// one for the whole service. the requests come in over tor, so there is no
+// address to limit by, and none is kept.
+
+const (
+	searchMax       = 20
+	perConnSearches = 30
+	nameMax         = 40
+	bioInSearch     = 120
+	listingSkew     = 10 * 60 // seconds a listing change may be off the clock
+)
+
+type connKey struct{}
+
+// the message an owner signs to go into search or out of it. the time
+// makes each change once only, the name is signed with it so nobody else
+// can change what the search shows.
+func listingMsg(h string, listed bool, ts int64, name string) string {
+	l := "0"
+	if listed {
+		l = "1"
+	}
+	return fmt.Sprintf("kryfo-handle-list-v1:%s:%s:%d:%s", h, l, ts, name)
+}
+
+func verifyMsg(pubHex, sigHex, msg string) bool {
+	pub, err := hex.DecodeString(pubHex)
+	if err != nil || len(pub) != ed25519.PublicKeySize {
+		return false
+	}
+	sig, err := hex.DecodeString(sigHex)
+	if err != nil || len(sig) != ed25519.SignatureSize {
+		return false
+	}
+	return ed25519.Verify(pub, []byte(msg), sig)
+}
+
+// a name as search shows it: no control characters, single spaces, forty
+// characters at most
+func cleanName(s string) string {
+	var b strings.Builder
+	space := false
+	n := 0
+	for _, r := range strings.TrimSpace(s) {
+		// a tab or a line break is a space; anything else invisible goes
+		if unicode.IsSpace(r) {
+			if !space && b.Len() > 0 {
+				b.WriteRune(' ')
+				n++
+			}
+			space = true
+			continue
+		}
+		if unicode.IsControl(r) || r == '\u200e' || r == '\u200f' ||
+			(r >= '\u202a' && r <= '\u202e') || (r >= '\u2066' && r <= '\u2069') {
+			continue
+		}
+		space = false
+		b.WriteRune(r)
+		n++
+		if n >= nameMax {
+			break
+		}
+	}
+	return strings.TrimSpace(b.String())
+}
+
+func listingHandler(st *store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			refuse(w, "post only")
+			return
+		}
+		var raw map[string]string
+		if json.NewDecoder(http.MaxBytesReader(w, r.Body, 8<<10)).Decode(&raw) != nil {
+			refuse(w, "bad request")
+			return
+		}
+		h := strings.ToLower(strings.TrimSpace(raw["handle"]))
+		e, ok := st.get(h)
+		if !ok {
+			refuse(w, "no such handle")
+			return
+		}
+		var ts int64
+		if _, err := fmt.Sscan(raw["ts"], &ts); err != nil {
+			refuse(w, "bad request")
+			return
+		}
+		now := time.Now().Unix()
+		if ts < now-listingSkew || ts > now+listingSkew {
+			refuse(w, "check the phone's clock")
+			return
+		}
+		if ts <= e.ListedAt {
+			refuse(w, "an older change")
+			return
+		}
+		listed := raw["listed"] == "1"
+		if raw["listed"] != "1" && raw["listed"] != "0" {
+			refuse(w, "bad request")
+			return
+		}
+		name := raw["name"]
+		if e.Pubkey != raw["pubkey"] ||
+			!verifyMsg(raw["pubkey"], raw["sig"], listingMsg(h, listed, ts, name)) {
+			refuse(w, "not yours to change")
+			return
+		}
+		e.Listed = listed
+		e.ListedAt = ts
+		e.Name = ""
+		if listed {
+			e.Name = cleanName(name)
+		}
+		if err := st.put(e); err != nil {
+			refuse(w, "could not save")
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"ok": true})
+	}
+}
+
+// what someone typed, as it is matched: lowercase, no leading @, single
+// spaces. ok when it is 3 to 32 characters of letters, digits, spaces and
+// _ - . with at least three letters or digits: nothing that works as a
+// wildcard, and nothing short enough to sweep the list.
+func searchQuery(raw string) (string, bool) {
+	q := strings.ToLower(strings.TrimSpace(raw))
+	q = strings.TrimPrefix(q, "@")
+	q = strings.Join(strings.Fields(q), " ")
+	n, alnum := 0, 0
+	for _, r := range q {
+		n++
+		switch {
+		case unicode.IsLetter(r) || unicode.IsDigit(r):
+			alnum++
+		case r == ' ' || r == '_' || r == '-' || r == '.':
+		default:
+			return "", false
+		}
+	}
+	return q, n >= 3 && n <= 32 && alnum >= 3
+}
+
+type hit struct {
+	Handle   string `json:"handle"`
+	Name     string `json:"name,omitempty"`
+	Bio      string `json:"bio,omitempty"`
+	Verified bool   `json:"verified"`
+	FP       string `json:"fp"`
+}
+
+func (s *store) search(q string) []hit {
+	type ranked struct {
+		rank int
+		e    entry
+	}
+	var found []ranked
+	s.mu.RLock()
+	for _, e := range s.m {
+		if !e.Listed {
+			continue
+		}
+		rank := -1
+		switch {
+		case e.Handle == q:
+			rank = 0
+		case strings.HasPrefix(e.Handle, q):
+			rank = 1
+		case strings.Contains(e.Handle, q):
+			rank = 2
+		case e.Name != "" && strings.Contains(strings.ToLower(e.Name), q):
+			rank = 3
+		}
+		if rank >= 0 {
+			found = append(found, ranked{rank, e})
+		}
+	}
+	s.mu.RUnlock()
+	sort.Slice(found, func(i, j int) bool {
+		if found[i].rank != found[j].rank {
+			return found[i].rank < found[j].rank
+		}
+		return found[i].e.Handle < found[j].e.Handle
+	})
+	if len(found) > searchMax {
+		found = found[:searchMax]
+	}
+	out := make([]hit, 0, len(found))
+	for _, f := range found {
+		bio := []rune(f.e.Bio)
+		if len(bio) > bioInSearch {
+			bio = append(bio[:bioInSearch], '…')
+		}
+		out = append(out, hit{
+			Handle: f.e.Handle,
+			Name:   f.e.Name,
+			Bio:    string(bio),
+			// the handle is held by the key that signed it: the same
+			// "verified handle" its page says
+			Verified: true,
+			FP:       fingerprint(f.e.Pubkey),
+		})
+	}
+	return out
+}
+
+// a token bucket for the whole service: rate a second, up to burst at once
+type limiter struct {
+	mu     sync.Mutex
+	rate   float64
+	burst  float64
+	tokens float64
+	last   time.Time
+}
+
+func newLimiter(rate, burst float64) *limiter {
+	return &limiter{rate: rate, burst: burst, tokens: burst, last: time.Now()}
+}
+
+func (l *limiter) allow() bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	now := time.Now()
+	l.tokens += now.Sub(l.last).Seconds() * l.rate
+	if l.tokens > l.burst {
+		l.tokens = l.burst
+	}
+	l.last = now
+	if l.tokens < 1 {
+		return false
+	}
+	l.tokens--
+	return true
+}
+
+func searchHandler(st *store, lim *limiter) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			refuseCode(w, http.StatusMethodNotAllowed, "get only")
+			return
+		}
+		q, ok := searchQuery(r.URL.Query().Get("q"))
+		if !ok {
+			refuseCode(w, http.StatusBadRequest, "at least three letters or digits, nothing else")
+			return
+		}
+		if c, _ := r.Context().Value(connKey{}).(*atomic.Int32); c != nil &&
+			c.Add(1) > perConnSearches {
+			w.Header().Set("Connection", "close")
+			refuseCode(w, http.StatusTooManyRequests, "slow down")
+			return
+		}
+		if !lim.allow() {
+			refuseCode(w, http.StatusTooManyRequests, "slow down")
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"results": st.search(q)})
+	}
+}

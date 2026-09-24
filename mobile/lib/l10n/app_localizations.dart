@@ -10922,6 +10922,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear'**
   String get searchClear;
+
+  /// switch on the handle screen: be findable in the registry's search. off by default
+  ///
+  /// In en, this message translates to:
+  /// **'Show me in search'**
+  String get handleShowInSearch;
+
+  /// the warning under that switch
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone can find this handle and message you.'**
+  String get handleShowInSearchLine;
+
+  /// under the switch when on and a name was given
+  ///
+  /// In en, this message translates to:
+  /// **'Shown as {name}'**
+  String handleShownAs(Object name);
+
+  /// title of the sheet asking for a name to show in search
+  ///
+  /// In en, this message translates to:
+  /// **'Name in search'**
+  String get handleNameInSearch;
+
+  /// its line: optional, and the warning again
+  ///
+  /// In en, this message translates to:
+  /// **'Optional. It shows next to your handle when someone searches. Anyone can find this handle and message you.'**
+  String get handleNameInSearchLine;
+
+  /// hint in the name field
+  ///
+  /// In en, this message translates to:
+  /// **'Your name, or leave it empty'**
+  String get handleNameHint;
+
+  /// the sheet's button that turns search on
+  ///
+  /// In en, this message translates to:
+  /// **'Show me'**
+  String get handleShowMe;
+
+  /// toast after leaving search
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re out of search'**
+  String get handleSearchOff;
+
+  /// toast after joining search
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re in search as @{handle}'**
+  String handleSearchOn(Object handle);
+
+  /// toast when the registry did not answer
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach the registry. Try again in a minute.'**
+  String get handleRegistryFailed;
+
+  /// section of search results: public handles of people who asked to be found
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get searchPeople;
+
+  /// a row in search that asks the registry for people matching what was typed; nothing is sent until it is tapped
+  ///
+  /// In en, this message translates to:
+  /// **'Look for “{query}” among public handles'**
+  String searchPeopleAsk(Object query);
+
+  /// small line under the people section: how the question travels
+  ///
+  /// In en, this message translates to:
+  /// **'Asked over Tor. The registry keeps no record of it.'**
+  String get searchPeopleLine;
+
+  /// shown when no public handle matches
+  ///
+  /// In en, this message translates to:
+  /// **'No public handle matches'**
+  String get searchPeopleNone;
+
+  /// people search could not run: tor is not up yet
+  ///
+  /// In en, this message translates to:
+  /// **'Tor isn\'t ready yet'**
+  String get searchPeopleOffline;
+
+  /// people search refused for now: too many searches
+  ///
+  /// In en, this message translates to:
+  /// **'Too many searches right now. Try again in a moment.'**
+  String get searchPeopleBusy;
+
+  /// people search: the registry did not answer
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach the registry'**
+  String get searchPeopleUnreachable;
+
+  /// label with the green tick on a public handle: the handle is held by the key that signed it
+  ///
+  /// In en, this message translates to:
+  /// **'Verified handle'**
+  String get peopleVerified;
+
+  /// button on a public profile that adds the person
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get peopleAdd;
+
+  /// a short fingerprint of their identity key, e.g. ABCD 1234
+  ///
+  /// In en, this message translates to:
+  /// **'Key fingerprint · {fp}'**
+  String peopleFingerprint(Object fp);
+
+  /// under the fingerprint: compare it with the other person
+  ///
+  /// In en, this message translates to:
+  /// **'Check it matches what they see in their app.'**
+  String get peopleFingerprintLine;
+
+  /// the add button while adding
+  ///
+  /// In en, this message translates to:
+  /// **'Adding…'**
+  String get peopleAdding;
 }
 
 class _AppLocalizationsDelegate

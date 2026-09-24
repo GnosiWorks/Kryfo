@@ -6856,4 +6856,84 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get searchClear => 'Borrar';
+
+  @override
+  String get handleShowInSearch => 'Mostrarme en la búsqueda';
+
+  @override
+  String get handleShowInSearchLine =>
+      'Cualquiera puede encontrar este nombre de usuario y escribirte.';
+
+  @override
+  String handleShownAs(Object name) {
+    return 'Se muestra como $name';
+  }
+
+  @override
+  String get handleNameInSearch => 'Nombre en la búsqueda';
+
+  @override
+  String get handleNameInSearchLine =>
+      'Opcional. Aparece junto a tu nombre de usuario cuando alguien busca. Cualquiera puede encontrar este nombre de usuario y escribirte.';
+
+  @override
+  String get handleNameHint => 'Tu nombre, o déjalo vacío';
+
+  @override
+  String get handleShowMe => 'Mostrarme';
+
+  @override
+  String get handleSearchOff => 'Ya no estás en la búsqueda';
+
+  @override
+  String handleSearchOn(Object handle) {
+    return 'Estás en la búsqueda como @$handle';
+  }
+
+  @override
+  String get handleRegistryFailed =>
+      'No se pudo contactar con el registro. Inténtalo en un minuto.';
+
+  @override
+  String get searchPeople => 'Personas';
+
+  @override
+  String searchPeopleAsk(Object query) {
+    return 'Buscar «$query» entre los nombres de usuario públicos';
+  }
+
+  @override
+  String get searchPeopleLine =>
+      'Se pregunta por Tor. El registro no guarda constancia.';
+
+  @override
+  String get searchPeopleNone => 'Ningún nombre de usuario público coincide';
+
+  @override
+  String get searchPeopleOffline => 'Tor aún no está listo';
+
+  @override
+  String get searchPeopleBusy =>
+      'Demasiadas búsquedas ahora. Inténtalo en un momento.';
+
+  @override
+  String get searchPeopleUnreachable => 'No se pudo contactar con el registro';
+
+  @override
+  String get peopleVerified => 'Nombre de usuario verificado';
+
+  @override
+  String get peopleAdd => 'Añadir';
+
+  @override
+  String peopleFingerprint(Object fp) {
+    return 'Huella de la clave · $fp';
+  }
+
+  @override
+  String get peopleFingerprintLine =>
+      'Comprueba que coincide con lo que ve la otra persona en su app.';
+
+  @override
+  String get peopleAdding => 'Añadiendo…';
 }

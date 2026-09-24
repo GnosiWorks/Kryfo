@@ -10,6 +10,9 @@ import 'package:flutter/services.dart';
 
 import '../main.dart' show appState, engine, buildHaloUriV3;
 import '../theme.dart';
+import '../widgets/confirm_sheet.dart';
+import '../widgets/halo_bar.dart';
+import '../widgets/halo_switch.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 
@@ -139,6 +142,8 @@ class _HandleScreenState extends State<HandleScreen> {
             const SizedBox(height: 22),
           ] else if (_claimed != null) ...[
             _ClaimedCard(handle: _claimed!, onRelease: _busy ? null : _release),
+            const SizedBox(height: 14),
+            _ListingCard(handle: _claimed!),
             const SizedBox(height: 22),
           ] else ...[
             Text(
@@ -194,6 +199,132 @@ class _HandleScreenState extends State<HandleScreen> {
             ),
           ],
         ]),
+      ),
+    );
+  }
+}
+
+// being findable is a second choice after having a handle, off until made.
+// on asks for a name to show beside the handle, and says what it costs.
+class _ListingCard extends StatefulWidget {
+  final String handle;
+  const _ListingCard({required this.handle});
+  @override
+  State<_ListingCard> createState() => _ListingCardState();
+}
+
+class _ListingCardState extends State<_ListingCard> {
+  bool _busy = false;
+
+  Future<void> _set(bool on) async {
+    var name = '';
+    if (on) {
+      final n = await showInputSheet(
+        context,
+        title: l10n.handleNameInSearch,
+        line: l10n.handleNameInSearchLine,
+        hint: l10n.handleNameHint,
+        save: l10n.handleShowMe,
+        initial: appState.handleName,
+        maxLength: 40,
+      );
+      if (n == null || !mounted) return;
+      name = n;
+    }
+    HapticFeedback.selectionClick();
+    setState(() => _busy = true);
+    final r = await appState.setHandleListing(on, name: name);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (r == 'ok') {
+      HapticFeedback.lightImpact();
+      showHaloToast(
+        context,
+        on ? l10n.handleSearchOn(widget.handle) : l10n.handleSearchOff,
+      );
+    } else {
+      showHaloToast(context, l10n.handleRegistryFailed);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final on = appState.handleListed;
+    final name = appState.handleName;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      padding: const EdgeInsets.fromLTRB(18, 16, 14, 16),
+      decoration: BoxDecoration(
+        color: on
+            ? Color.alphaBlend(
+                HaloColors.amber.withValues(alpha: 0.07),
+                HaloColors.surface2,
+              )
+            : HaloColors.surface2,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: on ? HaloColors.amber.withValues(alpha: 0.5) : HaloColors.line,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.handleShowInSearch,
+                      style: HaloType.sans(
+                        size: 15,
+                        weight: FontWeight.w600,
+                        color: HaloColors.text,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.handleShowInSearchLine,
+                      style: HaloType.sans(
+                        size: 12.5,
+                        color: HaloColors.text2,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              AnimatedOpacity(
+                duration: const Duration(milliseconds: 160),
+                opacity: _busy ? 0.4 : 1,
+                child: IgnorePointer(
+                  ignoring: _busy,
+                  child: HaloSwitch(value: on, onChanged: _set),
+                ),
+              ),
+            ],
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            child: _busy
+                ? const Padding(
+                    padding: EdgeInsets.only(top: 12),
+                    child: HaloBar(value: null, height: 3),
+                  )
+                : on && name.isNotEmpty
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: Text(
+                      l10n.handleShownAs(name),
+                      style: HaloType.mono(size: 11, color: HaloColors.amber),
+                    ),
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
+        ],
       ),
     );
   }

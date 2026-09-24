@@ -6787,4 +6787,83 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get searchClear => 'Xóa';
+
+  @override
+  String get handleShowInSearch => 'Hiện tôi trong tìm kiếm';
+
+  @override
+  String get handleShowInSearchLine =>
+      'Bất kỳ ai cũng có thể tìm thấy tên người dùng này và nhắn tin cho bạn.';
+
+  @override
+  String handleShownAs(Object name) {
+    return 'Hiển thị là $name';
+  }
+
+  @override
+  String get handleNameInSearch => 'Tên trong tìm kiếm';
+
+  @override
+  String get handleNameInSearchLine =>
+      'Không bắt buộc. Tên này hiện cạnh tên người dùng của bạn khi có người tìm kiếm. Bất kỳ ai cũng có thể tìm thấy tên người dùng này và nhắn tin cho bạn.';
+
+  @override
+  String get handleNameHint => 'Tên của bạn, hoặc để trống';
+
+  @override
+  String get handleShowMe => 'Hiện tôi';
+
+  @override
+  String get handleSearchOff => 'Bạn đã rời khỏi tìm kiếm';
+
+  @override
+  String handleSearchOn(Object handle) {
+    return 'Bạn có trong tìm kiếm là @$handle';
+  }
+
+  @override
+  String get handleRegistryFailed =>
+      'Không liên lạc được với nơi đăng ký. Hãy thử lại sau một phút.';
+
+  @override
+  String get searchPeople => 'Mọi người';
+
+  @override
+  String searchPeopleAsk(Object query) {
+    return 'Tìm “$query” trong các tên người dùng công khai';
+  }
+
+  @override
+  String get searchPeopleLine => 'Hỏi qua Tor. Nơi đăng ký không lưu lại gì.';
+
+  @override
+  String get searchPeopleNone => 'Không có tên người dùng công khai nào khớp';
+
+  @override
+  String get searchPeopleOffline => 'Tor chưa sẵn sàng';
+
+  @override
+  String get searchPeopleBusy =>
+      'Lúc này có quá nhiều lượt tìm. Hãy thử lại sau giây lát.';
+
+  @override
+  String get searchPeopleUnreachable => 'Không liên lạc được với nơi đăng ký';
+
+  @override
+  String get peopleVerified => 'Tên người dùng đã xác minh';
+
+  @override
+  String get peopleAdd => 'Thêm';
+
+  @override
+  String peopleFingerprint(Object fp) {
+    return 'Dấu vân tay khóa · $fp';
+  }
+
+  @override
+  String get peopleFingerprintLine =>
+      'Hãy kiểm tra nó khớp với những gì người kia thấy trong ứng dụng.';
+
+  @override
+  String get peopleAdding => 'Đang thêm…';
 }

@@ -6876,4 +6876,84 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get searchClear => 'Leeren';
+
+  @override
+  String get handleShowInSearch => 'In der Suche zeigen';
+
+  @override
+  String get handleShowInSearchLine =>
+      'Jeder kann diesen Benutzernamen finden und dir schreiben.';
+
+  @override
+  String handleShownAs(Object name) {
+    return 'Angezeigt als $name';
+  }
+
+  @override
+  String get handleNameInSearch => 'Name in der Suche';
+
+  @override
+  String get handleNameInSearchLine =>
+      'Optional. Er steht neben deinem Benutzernamen, wenn jemand sucht. Jeder kann diesen Benutzernamen finden und dir schreiben.';
+
+  @override
+  String get handleNameHint => 'Dein Name, oder leer lassen';
+
+  @override
+  String get handleShowMe => 'Zeigen';
+
+  @override
+  String get handleSearchOff => 'Du bist nicht mehr in der Suche';
+
+  @override
+  String handleSearchOn(Object handle) {
+    return 'Du bist in der Suche als @$handle';
+  }
+
+  @override
+  String get handleRegistryFailed =>
+      'Das Verzeichnis war nicht erreichbar. Versuch es gleich noch mal.';
+
+  @override
+  String get searchPeople => 'Personen';
+
+  @override
+  String searchPeopleAsk(Object query) {
+    return '„$query“ unter öffentlichen Benutzernamen suchen';
+  }
+
+  @override
+  String get searchPeopleLine =>
+      'Über Tor gefragt. Das Verzeichnis merkt sich nichts davon.';
+
+  @override
+  String get searchPeopleNone => 'Kein öffentlicher Benutzername passt';
+
+  @override
+  String get searchPeopleOffline => 'Tor ist noch nicht bereit';
+
+  @override
+  String get searchPeopleBusy =>
+      'Gerade zu viele Suchen. Versuch es gleich noch mal.';
+
+  @override
+  String get searchPeopleUnreachable => 'Das Verzeichnis war nicht erreichbar';
+
+  @override
+  String get peopleVerified => 'Bestätigter Benutzername';
+
+  @override
+  String get peopleAdd => 'Hinzufügen';
+
+  @override
+  String peopleFingerprint(Object fp) {
+    return 'Schlüssel-Fingerabdruck · $fp';
+  }
+
+  @override
+  String get peopleFingerprintLine =>
+      'Prüf, ob er mit dem in ihrer App übereinstimmt.';
+
+  @override
+  String get peopleAdding => 'Wird hinzugefügt…';
 }

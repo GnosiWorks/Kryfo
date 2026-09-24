@@ -8,8 +8,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:path_provider/path_provider.dart';
 
 import '../dlog.dart';
+import '../handle_search.dart';
 import '../l10n/dates.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
@@ -21,6 +24,8 @@ import '../text_fold.dart';
 import '../theme.dart';
 import '../widgets/decode_px.dart';
 import '../widgets/halo_bar.dart';
+import '../widgets/halo_sheet.dart';
+import '../widgets/sheet_handle.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/poll_card.dart' show pollGlyph;
@@ -99,6 +104,13 @@ class _SearchScreenState extends State<SearchScreen> {
   bool _done = false;
   List<_Name> _names = const [];
   List<_Chat> _chats = const [];
+  // people: asked of the registry only on @ or a tap, never on a word
+  // someone looks for in their own chats
+  Timer? _peopleWait;
+  String? _peopleAsked;
+  bool _peopleBusy = false;
+  List<PublicHandle> _people = const [];
+  PeopleError _peopleErr = PeopleError.none;
 
   @override
   void initState() {
@@ -134,6 +146,7 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void dispose() {
     _wait?.cancel();
+    _peopleWait?.cancel();
     _ctrl.dispose();
     _focus.dispose();
     super.dispose();
@@ -142,7 +155,49 @@ class _SearchScreenState extends State<SearchScreen> {
   void _changed() {
     _wait?.cancel();
     _wait = Timer(const Duration(milliseconds: 110), _run);
+    _peopleWait?.cancel();
+    final t = _ctrl.text;
+    if (looksLikePerson(t) && peopleQuery(t) != null) {
+      _peopleWait = Timer(const Duration(milliseconds: 600), _askPeople);
+    }
     setState(() {});
+  }
+
+  Future<void> _askPeople() async {
+    final q = peopleQuery(_ctrl.text);
+    if (q == null || (_peopleBusy && _peopleAsked == q)) return;
+    setState(() {
+      _peopleAsked = q;
+      _peopleBusy = true;
+    });
+    final r = await searchPeople(q, _peopleFetch);
+    if (!mounted || _peopleAsked != q) return;
+    setState(() {
+      _peopleBusy = false;
+      _people = r.people;
+      _peopleErr = r.error;
+    });
+  }
+
+  // debug builds only: a canned answer from app_flutter/people_fixture.json,
+  // so the screen can be looked at before the registry has the endpoint.
+  // a release build has only the tor request.
+  Future<String> _peopleFetch(String url) async {
+    if (kDebugMode) {
+      final dir = await getApplicationDocumentsDirectory();
+      final f = File('${dir.path}/people_fixture.json');
+      if (await f.exists()) {
+        await Future.delayed(const Duration(milliseconds: 700));
+        return f.readAsString();
+      }
+    }
+    return torStrictGetOnIsolate(url);
+  }
+
+  void _openPerson(PublicHandle p) {
+    HapticFeedback.selectionClick();
+    _focus.unfocus();
+    showHaloSheet<void>(context, builder: (_) => _PersonSheet(p: p));
   }
 
   void _pick(SearchKind k) {
@@ -290,10 +345,22 @@ class _SearchScreenState extends State<SearchScreen> {
     final q = _ctrl.text;
     final Widget body;
     final String bodyKey;
+    final pq = _kind == SearchKind.all ? peopleQuery(q) : null;
+    final people = pq == null
+        ? null
+        : _People(
+            query: pq,
+            asked: _peopleAsked == pq,
+            busy: _peopleBusy,
+            people: _people,
+            error: _peopleErr,
+            onAsk: _askPeople,
+            onOpen: _openPerson,
+          );
     if (ftsMatch(q) == null && _kind == SearchKind.all) {
       body = const _Intro();
       bodyKey = 'intro';
-    } else if (_done && _names.isEmpty && _chats.isEmpty) {
+    } else if (_done && _names.isEmpty && _chats.isEmpty && people == null) {
       body = const _Nothing();
       bodyKey = 'nothing';
     } else {
@@ -303,6 +370,8 @@ class _SearchScreenState extends State<SearchScreen> {
         query: q,
         kind: _kind,
         onOpen: _open,
+        people: people,
+        peopleFirst: looksLikePerson(q),
       );
       bodyKey = 'r$_kind';
     }
@@ -663,12 +732,16 @@ class _Results extends StatelessWidget {
   final SearchKind kind;
   final Future<void> Function({String? groupId, String? peer, String? uid})
   onOpen;
+  final Widget? people;
+  final bool peopleFirst;
   const _Results({
     required this.names,
     required this.chats,
     required this.query,
     required this.kind,
     required this.onOpen,
+    this.people,
+    this.peopleFirst = false,
   });
 
   @override
@@ -677,6 +750,7 @@ class _Results extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 24),
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       children: [
+        if (peopleFirst && people != null) people!,
         if (names.isNotEmpty) ...[
           _Label(l10n.searchChats),
           for (final n in names)
@@ -697,7 +771,380 @@ class _Results extends StatelessWidget {
               onOpen: onOpen,
             ),
         ],
+        if (!peopleFirst && people != null) people!,
       ],
+    );
+  }
+}
+
+// the people section: a row that asks, then what came back
+class _People extends StatelessWidget {
+  final String query;
+  final bool asked;
+  final bool busy;
+  final List<PublicHandle> people;
+  final PeopleError error;
+  final VoidCallback onAsk;
+  final ValueChanged<PublicHandle> onOpen;
+  const _People({
+    required this.query,
+    required this.asked,
+    required this.busy,
+    required this.people,
+    required this.error,
+    required this.onAsk,
+    required this.onOpen,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final still = MediaQuery.of(context).disableAnimations;
+    final Widget inner;
+    if (!asked) {
+      inner = PressScale(
+        key: const ValueKey('ask'),
+        scale: 0.98,
+        label: l10n.searchPeopleAsk(query),
+        onTap: onAsk,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 14),
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+          decoration: BoxDecoration(
+            color: HaloColors.surface2,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: HaloColors.line, width: 0.5),
+          ),
+          child: Row(
+            children: [
+              StrokeIcon(
+                const [
+                  'M12 12a4 4 0 1 0 0-8a4 4 0 1 0 0 8z',
+                  'M4 20c1.5-3.5 4.5-5 8-5s6.5 1.5 8 5',
+                ],
+                size: 18,
+                color: HaloColors.amber,
+                stroke: 1.6,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  l10n.searchPeopleAsk(query),
+                  semanticsLabel: '',
+                  style: HaloType.sans(size: 13.5, color: HaloColors.text),
+                ),
+              ),
+              StrokeIcon(
+                const ['M9 5l7 7l-7 7'],
+                size: 16,
+                color: HaloColors.text2,
+                pointing: true,
+              ),
+            ],
+          ),
+        ),
+      );
+    } else if (busy) {
+      inner = const Padding(
+        key: ValueKey('busy'),
+        padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
+        child: HaloBar(value: null, height: 3),
+      );
+    } else if (error != PeopleError.none || people.isEmpty) {
+      inner = Padding(
+        key: ValueKey('msg$error'),
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 6),
+        child: Text(switch (error) {
+          PeopleError.offline => l10n.searchPeopleOffline,
+          PeopleError.busy => l10n.searchPeopleBusy,
+          PeopleError.unreachable => l10n.searchPeopleUnreachable,
+          PeopleError.none => l10n.searchPeopleNone,
+        }, style: HaloType.sans(size: 13, color: HaloColors.text2)),
+      );
+    } else {
+      inner = Column(
+        key: ValueKey('people${people.length}'),
+        children: [
+          for (final p in people) _PersonRow(p: p, onTap: () => onOpen(p)),
+        ],
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Label(l10n.searchPeople),
+        AnimatedSize(
+          duration: Duration(milliseconds: still ? 0 : 240),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: AnimatedSwitcher(
+            duration: Duration(milliseconds: still ? 0 : 200),
+            child: inner,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+          child: Text(
+            l10n.searchPeopleLine,
+            style: HaloType.mono(size: 9.5, color: HaloColors.text2),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// the round seal the public page shows, its letter the handle's first
+class _Seal extends StatelessWidget {
+  final String handle;
+  final double size;
+  const _Seal({required this.handle, required this.size});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF8BC5C), Color(0xFF6E2F07)],
+        ),
+      ),
+      child: Text(
+        handle.isEmpty ? '·' : handle[0].toUpperCase(),
+        style: HaloType.serif(
+          size: size * 0.44,
+          color: const Color(0xFF2A1400),
+          height: 1,
+        ),
+      ),
+    );
+  }
+}
+
+class _Tick extends StatelessWidget {
+  final double size;
+  const _Tick({this.size = 14});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: HaloColors.green,
+      ),
+      child: StrokeIcon(
+        const ['M6 12.5l4 4l8-9'],
+        size: size * 0.72,
+        color: HaloColors.ink,
+        stroke: 2.6,
+      ),
+    );
+  }
+}
+
+class _PersonRow extends StatelessWidget {
+  final PublicHandle p;
+  final VoidCallback onTap;
+  const _PersonRow({required this.p, required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    return PressScale(
+      scale: 0.98,
+      haptic: false,
+      label: '@${p.handle}${p.name.isEmpty ? '' : ', ${p.name}'}',
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        child: Row(
+          children: [
+            _Seal(handle: p.handle, size: 42),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          ltr('@${p.handle}'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: HaloType.sans(
+                            size: 15,
+                            weight: FontWeight.w600,
+                            color: HaloColors.text,
+                          ),
+                        ),
+                      ),
+                      if (p.verified) ...[
+                        const SizedBox(width: 6),
+                        const _Tick(),
+                      ],
+                    ],
+                  ),
+                  if (p.name.isNotEmpty)
+                    Text(
+                      p.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: HaloType.sans(size: 13, color: HaloColors.text),
+                    ),
+                  if (p.bio.isNotEmpty)
+                    Text(
+                      p.bio,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: HaloType.sans(size: 12, color: HaloColors.text2),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// a public profile: who they say they are, the key to compare, and add
+class _PersonSheet extends StatefulWidget {
+  final PublicHandle p;
+  const _PersonSheet({required this.p});
+  @override
+  State<_PersonSheet> createState() => _PersonSheetState();
+}
+
+class _PersonSheetState extends State<_PersonSheet> {
+  bool _adding = false;
+
+  Future<void> _add() async {
+    if (_adding) return;
+    HapticFeedback.lightImpact();
+    setState(() => _adding = true);
+    final (line, _) = await handleHaloUriAdded('@${widget.p.handle}');
+    if (!mounted) return;
+    setState(() => _adding = false);
+    Navigator.of(context).pop();
+    showHaloToast(context, line);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = widget.p;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(22, 0, 22, 18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SheetHandle(),
+            const SizedBox(height: 14),
+            _Seal(handle: p.handle, size: 68),
+            const SizedBox(height: 14),
+            Text(
+              ltr('@${p.handle}'),
+              style: HaloType.serif(size: 24, color: HaloColors.text),
+            ),
+            if (p.verified) ...[
+              const SizedBox(height: 6),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const _Tick(size: 13),
+                  const SizedBox(width: 6),
+                  Text(
+                    l10n.peopleVerified,
+                    style: HaloType.mono(
+                      size: 10.5,
+                      color: HaloColors.green,
+                      letter: 0.4,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            if (p.name.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Text(
+                p.name,
+                textAlign: TextAlign.center,
+                style: HaloType.sans(
+                  size: 15,
+                  weight: FontWeight.w600,
+                  color: HaloColors.text,
+                ),
+              ),
+            ],
+            if (p.bio.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                p.bio,
+                textAlign: TextAlign.center,
+                style: HaloType.sans(
+                  size: 13.5,
+                  color: HaloColors.text2,
+                  height: 1.45,
+                ),
+              ),
+            ],
+            if (p.fp.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: HaloColors.surface3,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      l10n.peopleFingerprint(p.fp),
+                      style: HaloType.mono(size: 11, color: HaloColors.text),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      l10n.peopleFingerprintLine,
+                      textAlign: TextAlign.center,
+                      style: HaloType.sans(size: 11.5, color: HaloColors.text2),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 18),
+            PressScale(
+              onTap: _adding ? null : _add,
+              label: l10n.peopleAdd,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                height: 48,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: HaloColors.amber,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(
+                  _adding ? l10n.peopleAdding : l10n.peopleAdd,
+                  style: HaloType.sans(
+                    size: 15,
+                    weight: FontWeight.w600,
+                    color: HaloColors.onAmber,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

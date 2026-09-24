@@ -6817,4 +6817,84 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get searchClear => 'پاک کردن';
+
+  @override
+  String get handleShowInSearch => 'نمایش من در جست‌وجو';
+
+  @override
+  String get handleShowInSearchLine =>
+      'هر کسی می‌تواند این نام کاربری را پیدا کند و به شما پیام بدهد.';
+
+  @override
+  String handleShownAs(Object name) {
+    return 'نمایش با نام ⁨$name⁩';
+  }
+
+  @override
+  String get handleNameInSearch => 'نام در جست‌وجو';
+
+  @override
+  String get handleNameInSearchLine =>
+      'اختیاری. وقتی کسی جست‌وجو می‌کند، کنار نام کاربری شما دیده می‌شود. هر کسی می‌تواند این نام کاربری را پیدا کند و به شما پیام بدهد.';
+
+  @override
+  String get handleNameHint => 'نام شما، یا خالی بگذارید';
+
+  @override
+  String get handleShowMe => 'نمایش من';
+
+  @override
+  String get handleSearchOff => 'دیگر در جست‌وجو نیستید';
+
+  @override
+  String handleSearchOn(Object handle) {
+    return 'در جست‌وجو با ⁨@$handle⁩ دیده می‌شوید';
+  }
+
+  @override
+  String get handleRegistryFailed =>
+      'دفتر ثبت پاسخ نداد. یک دقیقهٔ دیگر دوباره امتحان کنید.';
+
+  @override
+  String get searchPeople => 'افراد';
+
+  @override
+  String searchPeopleAsk(Object query) {
+    return 'جست‌وجوی «⁨$query⁩» میان نام‌های کاربری عمومی';
+  }
+
+  @override
+  String get searchPeopleLine =>
+      'از راه Tor پرسیده می‌شود. دفتر ثبت هیچ سابقه‌ای از آن نگه نمی‌دارد.';
+
+  @override
+  String get searchPeopleNone => 'هیچ نام کاربری عمومی‌ای مطابقت ندارد';
+
+  @override
+  String get searchPeopleOffline => 'Tor هنوز آماده نیست';
+
+  @override
+  String get searchPeopleBusy =>
+      'الان جست‌وجوها زیاد است. کمی بعد دوباره امتحان کنید.';
+
+  @override
+  String get searchPeopleUnreachable => 'دفتر ثبت پاسخ نداد';
+
+  @override
+  String get peopleVerified => 'نام کاربری تأییدشده';
+
+  @override
+  String get peopleAdd => 'افزودن';
+
+  @override
+  String peopleFingerprint(Object fp) {
+    return 'اثر انگشت کلید · ⁨$fp⁩';
+  }
+
+  @override
+  String get peopleFingerprintLine =>
+      'بررسی کنید با آنچه طرف مقابل در برنامه‌اش می‌بیند یکی باشد.';
+
+  @override
+  String get peopleAdding => 'در حال افزودن…';
 }

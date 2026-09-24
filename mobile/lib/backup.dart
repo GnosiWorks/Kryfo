@@ -349,6 +349,8 @@ Future<List<BackupFileEntry>> _filesToCarry(Directory docs) async {
 const kIdentitySecureKeys = [
   'my_handle',
   'my_handle_bio',
+  'my_handle_listed',
+  'my_handle_name',
   'fc_counter',
   'peer_fc',
 ];

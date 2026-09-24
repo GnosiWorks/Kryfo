@@ -6930,4 +6930,84 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get searchClear => 'Очистить';
+
+  @override
+  String get handleShowInSearch => 'Показывать меня в поиске';
+
+  @override
+  String get handleShowInSearchLine =>
+      'Кто угодно сможет найти это имя пользователя и написать тебе.';
+
+  @override
+  String handleShownAs(Object name) {
+    return 'Показывается как $name';
+  }
+
+  @override
+  String get handleNameInSearch => 'Имя в поиске';
+
+  @override
+  String get handleNameInSearchLine =>
+      'Необязательно. Оно видно рядом с именем пользователя, когда кто-то ищет. Кто угодно сможет найти это имя пользователя и написать тебе.';
+
+  @override
+  String get handleNameHint => 'Твоё имя, или оставь пустым';
+
+  @override
+  String get handleShowMe => 'Показывать';
+
+  @override
+  String get handleSearchOff => 'Тебя больше нет в поиске';
+
+  @override
+  String handleSearchOn(Object handle) {
+    return 'Ты в поиске как @$handle';
+  }
+
+  @override
+  String get handleRegistryFailed =>
+      'Реестр не ответил. Попробуй через минуту.';
+
+  @override
+  String get searchPeople => 'Люди';
+
+  @override
+  String searchPeopleAsk(Object query) {
+    return 'Искать «$query» среди публичных имён пользователей';
+  }
+
+  @override
+  String get searchPeopleLine =>
+      'Запрос идёт через Tor. Реестр ничего о нём не хранит.';
+
+  @override
+  String get searchPeopleNone => 'Ни одно публичное имя не подходит';
+
+  @override
+  String get searchPeopleOffline => 'Tor ещё не готов';
+
+  @override
+  String get searchPeopleBusy =>
+      'Сейчас слишком много запросов. Попробуй чуть позже.';
+
+  @override
+  String get searchPeopleUnreachable => 'Реестр не ответил';
+
+  @override
+  String get peopleVerified => 'Подтверждённое имя пользователя';
+
+  @override
+  String get peopleAdd => 'Добавить';
+
+  @override
+  String peopleFingerprint(Object fp) {
+    return 'Отпечаток ключа · $fp';
+  }
+
+  @override
+  String get peopleFingerprintLine =>
+      'Сверь его с тем, что видно у собеседника в приложении.';
+
+  @override
+  String get peopleAdding => 'Добавляю…';
 }

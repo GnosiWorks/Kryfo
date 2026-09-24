@@ -6800,4 +6800,84 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get searchClear => 'Hapus';
+
+  @override
+  String get handleShowInSearch => 'Tampilkan aku di pencarian';
+
+  @override
+  String get handleShowInSearchLine =>
+      'Siapa pun bisa menemukan nama pengguna ini dan mengirimimu pesan.';
+
+  @override
+  String handleShownAs(Object name) {
+    return 'Tampil sebagai $name';
+  }
+
+  @override
+  String get handleNameInSearch => 'Nama di pencarian';
+
+  @override
+  String get handleNameInSearchLine =>
+      'Opsional. Nama ini muncul di samping nama penggunamu saat ada yang mencari. Siapa pun bisa menemukan nama pengguna ini dan mengirimimu pesan.';
+
+  @override
+  String get handleNameHint => 'Namamu, atau biarkan kosong';
+
+  @override
+  String get handleShowMe => 'Tampilkan aku';
+
+  @override
+  String get handleSearchOff => 'Kamu sudah keluar dari pencarian';
+
+  @override
+  String handleSearchOn(Object handle) {
+    return 'Kamu ada di pencarian sebagai @$handle';
+  }
+
+  @override
+  String get handleRegistryFailed =>
+      'Tidak bisa menghubungi registri. Coba lagi semenit lagi.';
+
+  @override
+  String get searchPeople => 'Orang';
+
+  @override
+  String searchPeopleAsk(Object query) {
+    return 'Cari “$query” di antara nama pengguna publik';
+  }
+
+  @override
+  String get searchPeopleLine =>
+      'Ditanyakan lewat Tor. Registri tidak menyimpan catatannya.';
+
+  @override
+  String get searchPeopleNone => 'Tidak ada nama pengguna publik yang cocok';
+
+  @override
+  String get searchPeopleOffline => 'Tor belum siap';
+
+  @override
+  String get searchPeopleBusy =>
+      'Terlalu banyak pencarian saat ini. Coba lagi sebentar lagi.';
+
+  @override
+  String get searchPeopleUnreachable => 'Tidak bisa menghubungi registri';
+
+  @override
+  String get peopleVerified => 'Nama pengguna terverifikasi';
+
+  @override
+  String get peopleAdd => 'Tambah';
+
+  @override
+  String peopleFingerprint(Object fp) {
+    return 'Sidik jari kunci · $fp';
+  }
+
+  @override
+  String get peopleFingerprintLine =>
+      'Periksa apakah cocok dengan yang mereka lihat di aplikasinya.';
+
+  @override
+  String get peopleAdding => 'Menambahkan…';
 }
