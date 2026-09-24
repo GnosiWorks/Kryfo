@@ -52,8 +52,16 @@ Widget _postureLine(String label, bool on, String onText, String offText) {
           ),
         ),
         const SizedBox(width: 10),
-        Text(label, style: HaloType.sans(size: 13, color: HaloColors.text)),
-        const Spacer(),
+        // the label wraps and the state keeps its place: in russian at a
+        // big font size the two did not fit one line and the state ran off
+        // the card
+        Expanded(
+          child: Text(
+            label,
+            style: HaloType.sans(size: 13, color: HaloColors.text),
+          ),
+        ),
+        const SizedBox(width: 8),
         AnimatedDefaultTextStyle(
           duration: const Duration(milliseconds: 240),
           style: HaloType.mono(

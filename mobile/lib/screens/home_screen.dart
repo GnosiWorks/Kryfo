@@ -585,25 +585,42 @@ class _HomeHead extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  l10n.homeDateWeekday(weekday(now)),
-                  style: HaloType.serif(size: 26, weight: FontWeight.w400),
-                  // display type, capped. at 200% this became one word per
-                  // line and pushed the whole list off screen.
-                  textScaler: TextScaler.linear(
-                    MediaQuery.of(context).textScaler.scale(1).clamp(1.0, 1.15),
+                // one line each, shrunk to fit rather than broken: a long
+                // weekday or month ("Donnerstag", "24. September") beside the
+                // buttons was split in the middle of the word
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    l10n.homeDateWeekday(weekday(now)),
+                    maxLines: 1,
+                    style: HaloType.serif(size: 26, weight: FontWeight.w400),
+                    // display type, capped. at 200% this became one word per
+                    // line and pushed the whole list off screen.
+                    textScaler: TextScaler.linear(
+                      MediaQuery.of(
+                        context,
+                      ).textScaler.scale(1).clamp(1.0, 1.15),
+                    ),
                   ),
                 ),
-                Text(
-                  dayMonthLong(now),
-                  style: HaloType.serif(
-                    size: 26,
-                    weight: FontWeight.w300,
-                    color: HaloColors.amber,
-                    italic: true,
-                  ),
-                  textScaler: TextScaler.linear(
-                    MediaQuery.of(context).textScaler.scale(1).clamp(1.0, 1.15),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    dayMonthLong(now),
+                    maxLines: 1,
+                    style: HaloType.serif(
+                      size: 26,
+                      weight: FontWeight.w300,
+                      color: HaloColors.amber,
+                      italic: true,
+                    ),
+                    textScaler: TextScaler.linear(
+                      MediaQuery.of(
+                        context,
+                      ).textScaler.scale(1).clamp(1.0, 1.15),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -2297,28 +2314,33 @@ class _QuickTiles extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // the two tiles keep one height when one subtitle wraps and the other
+    // does not
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: _QuickTile(
-              icon: Icons.edit_note_rounded,
-              title: l10n.homeNoteToSelf,
-              line: l10n.homeOnlyOnThisPhone,
-              onTap: onNotes,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: _QuickTile(
+                icon: Icons.edit_note_rounded,
+                title: l10n.homeNoteToSelf,
+                line: l10n.homeOnlyOnThisPhone,
+                onTap: onNotes,
+              ),
             ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _QuickTile(
-              icon: Icons.bookmark,
-              title: l10n.homeSaved,
-              line: l10n.homeKeptFromEveryChat,
-              onTap: onSaved,
+            const SizedBox(width: 10),
+            Expanded(
+              child: _QuickTile(
+                icon: Icons.bookmark,
+                title: l10n.homeSaved,
+                line: l10n.homeKeptFromEveryChat,
+                onTap: onSaved,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -2366,20 +2388,25 @@ class _QuickTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: HaloType.serif(
-                      size: 14,
-                      color: HaloColors.text,
-                      italic: true,
+                  // the whole title, shrunk if it has to be: at a big
+                  // font size in german it read "Notiz an ..."
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Text(
+                      title,
+                      maxLines: 1,
+                      style: HaloType.serif(
+                        size: 14,
+                        color: HaloColors.text,
+                        italic: true,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 1),
                   Text(
                     line,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: HaloType.sans(size: 10.5, color: HaloColors.text3),
                   ),

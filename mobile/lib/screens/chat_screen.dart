@@ -5504,15 +5504,21 @@ class _ChatHead extends StatelessWidget {
                           color: HaloColors.amber,
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          appState.sendMode == 'balanced'
-                              ? l10n.chatEncryptedViaRelay
-                              : appState.sendMode == 'fast'
-                              ? l10n.chatEncryptedDirect
-                              : l10n.chatEncryptedOverTor,
-                          style: HaloType.mono(
-                            size: 10,
-                            color: HaloColors.text2,
+                        // a longer language at a big font size ran this line
+                        // past the header's buttons; it ends in … instead
+                        Flexible(
+                          child: Text(
+                            appState.sendMode == 'balanced'
+                                ? l10n.chatEncryptedViaRelay
+                                : appState.sendMode == 'fast'
+                                ? l10n.chatEncryptedDirect
+                                : l10n.chatEncryptedOverTor,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: HaloType.mono(
+                              size: 10,
+                              color: HaloColors.text2,
+                            ),
                           ),
                         ),
                       ],
