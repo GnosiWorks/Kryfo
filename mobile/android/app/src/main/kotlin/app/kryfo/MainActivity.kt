@@ -284,6 +284,8 @@ class MainActivity : FlutterFragmentActivity() {
                     // mode before calling, so this only has to act on it.
                     "applyDeliveryMode" -> {
                         try {
+                            // also how a language switch reaches android
+                            HaloListenerService.nameChannel(this, onlyIfThere = true)
                             if (DeliveryPrefs.staysOn(this)) {
                                 startListenerService()
                             } else {

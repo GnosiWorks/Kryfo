@@ -173,17 +173,21 @@ class _NavTabState extends State<_NavTab> with SingleTickerProviderStateMixin {
                 ),
               ),
               const SizedBox(height: 4),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  textScaler: scale,
-                  style: HaloType.sans(
-                    size: 11,
-                    weight: on ? FontWeight.w600 : FontWeight.w400,
-                    color: on ? HaloColors.text : HaloColors.warm,
-                    height: 1.2,
+              // a gap to the next tab's word, even when a long one shrinks
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 3),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    textScaler: scale,
+                    style: HaloType.sans(
+                      size: 11,
+                      weight: on ? FontWeight.w600 : FontWeight.w400,
+                      color: on ? HaloColors.text : HaloColors.warm,
+                      height: 1.2,
+                    ),
                   ),
                 ),
               ),

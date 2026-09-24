@@ -9447,7 +9447,20 @@ class _LocaleScope extends StatefulWidget {
   State<_LocaleScope> createState() => _LocaleScopeState();
 }
 
-class _LocaleScopeState extends State<_LocaleScope> {
+class _LocaleScopeState extends State<_LocaleScope>
+    with SingleTickerProviderStateMixin {
+  // the new language comes up out of the background instead of every word
+  // changing in one frame
+  late final AnimationController _fade = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 240),
+    value: 1,
+  );
+  late final _shown = CurvedAnimation(
+    parent: _fade,
+    curve: Curves.easeOutCubic,
+  );
+
   @override
   void initState() {
     super.initState();
@@ -9457,6 +9470,8 @@ class _LocaleScopeState extends State<_LocaleScope> {
   @override
   void dispose() {
     localeRevision.removeListener(_switched);
+    _shown.dispose();
+    _fade.dispose();
     super.dispose();
   }
 
@@ -9465,12 +9480,21 @@ class _LocaleScopeState extends State<_LocaleScope> {
       (r) => r.isFirst || r.settings.name == 'lock',
     );
     setState(() {});
+    if (!reduceMotion(context)) _fade.forward(from: 0);
     unawaited(appState.languageChanged());
   }
 
   @override
-  Widget build(BuildContext context) =>
-      KeyedSubtree(key: ValueKey(localeRevision.value), child: widget.child);
+  Widget build(BuildContext context) => ColoredBox(
+    color: HaloColors.surface,
+    child: FadeTransition(
+      opacity: _shown,
+      child: KeyedSubtree(
+        key: ValueKey(localeRevision.value),
+        child: widget.child,
+      ),
+    ),
+  );
 }
 
 class _LockGate extends StatefulWidget {

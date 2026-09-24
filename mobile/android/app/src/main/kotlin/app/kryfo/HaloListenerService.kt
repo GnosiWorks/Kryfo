@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
@@ -15,17 +16,39 @@ class HaloListenerService : Service() {
     companion object {
         const val CHANNEL_ID = "halo_listener_v2"
         const val NOTIFICATION_ID = 1
+
+        // the channel keeps the words it was made with. a service that is
+        // not running (check-ins) never gets to say them again, so a
+        // language switch renames it from here too; [onlyIfThere] leaves a
+        // phone that never had the service without one
+        fun nameChannel(context: Context, onlyIfThere: Boolean = false) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+            val nm = context.getSystemService(NotificationManager::class.java)
+            if (onlyIfThere && nm.getNotificationChannel(CHANNEL_ID) == null) return
+            val words = AppLocale.context(context)
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                words.getString(R.string.channel_name),
+                NotificationManager.IMPORTANCE_MIN
+            ).apply {
+                description = words.getString(R.string.channel_description)
+                setShowBadge(false)
+                enableVibration(false)
+                setSound(null, null)
+            }
+            nm.createNotificationChannel(channel)
+        }
     }
 
     override fun onCreate() {
         super.onCreate()
-        createChannel()
+        nameChannel(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         // started again after a language switch too: the channel and the
         // notification take the new words
-        createChannel()
+        nameChannel(this)
         val words = AppLocale.context(this)
         val openIntent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
@@ -70,22 +93,4 @@ class HaloListenerService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
-
-    private fun createChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val words = AppLocale.context(this)
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                words.getString(R.string.channel_name),
-                NotificationManager.IMPORTANCE_MIN
-            ).apply {
-                description = words.getString(R.string.channel_description)
-                setShowBadge(false)
-                enableVibration(false)
-                setSound(null, null)
-            }
-            val nm = getSystemService(NotificationManager::class.java)
-            nm.createNotificationChannel(channel)
-        }
-    }
 }
