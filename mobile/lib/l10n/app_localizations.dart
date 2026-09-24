@@ -2251,8 +2251,8 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Send this {what}?'**
-  String chatSendThis(Object what);
+  /// **'Send this file?'**
+  String get chatSendThis;
 
   /// screens/chat_screen.dart
   ///
@@ -2361,6 +2361,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'voice message'**
   String get chatVoiceMessage;
+
+  /// screens/chat_screen.dart: in the quote above a reply, when the message replied to is a photo with no caption
+  ///
+  /// In en, this message translates to:
+  /// **'photo'**
+  String get chatQuotedPhoto;
 
   /// screens/chat_screen.dart
   ///
@@ -3681,6 +3687,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'voice message'**
   String get groupChatVoiceMessage;
+
+  /// screens/group_chat_screen.dart: in the quote above a reply, when the message replied to is a photo with no caption
+  ///
+  /// In en, this message translates to:
+  /// **'photo'**
+  String get groupChatQuotedPhoto;
 
   /// screens/group_chat_screen.dart
   ///

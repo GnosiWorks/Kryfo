@@ -2689,7 +2689,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   // anything big enough to be a wait gets a confirm first. small stuff goes
   // straight out - a dialog on a 40kb photo would just be noise.
-  Future<bool> _confirmBigSend(int bytes, String what) async {
+  Future<bool> _confirmBigSend(int bytes) async {
     if (bytes < 512 * 1024) return true;
     if (!mounted) return false;
     final ok = await showHaloSheet<bool>(
@@ -2703,7 +2703,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             children: [
               const SheetHandle(),
               Text(
-                l10n.chatSendThis(what),
+                l10n.chatSendThis,
                 style: HaloType.serif(size: 19, color: HaloColors.text),
               ),
               const SizedBox(height: 8),
@@ -2840,7 +2840,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (mounted) showHaloToast(context, l10n.chatFileTooBig8);
       return;
     }
-    if (!await _confirmBigSend(size, 'file')) return;
+    if (!await _confirmBigSend(size)) return;
     // after the confirm, not before: two cancelled sends used to spend both
     // slots a stranger gets and lock the composer for nothing
     if (_requestPending) setState(() => _sentCount++);
@@ -3492,7 +3492,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         if (original.text.isNotEmpty) {
           quoted = original.text;
         } else if (original.mediaPath != null) {
-          quoted = 'photo';
+          quoted = l10n.chatQuotedPhoto;
         } else if (original.fileName == 'voice.wav') {
           quoted = l10n.chatVoiceMessage;
         } else if (original.fileName != null) {

@@ -1455,9 +1455,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String chatSendThis(Object what) {
-    return 'Send this $what?';
-  }
+  String get chatSendThis => 'Send this file?';
 
   @override
   String chatOverTor(Object humanBytes, Object wireEstimate) {
@@ -1516,6 +1514,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatVoiceMessage => 'voice message';
+
+  @override
+  String get chatQuotedPhoto => 'photo';
 
   @override
   String get chatViewContact => 'View contact';
@@ -2304,6 +2305,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupChatVoiceMessage => 'voice message';
+
+  @override
+  String get groupChatQuotedPhoto => 'photo';
 
   @override
   String get groupChatMessageUnavailable => 'Message unavailable';

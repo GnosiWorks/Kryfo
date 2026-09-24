@@ -1857,14 +1857,9 @@
       }
     }
   },
-  "chatSendThis": "Send this {what}?",
+  "chatSendThis": "Send this file?",
   "@chatSendThis": {
-    "description": "screens/chat_screen.dart",
-    "placeholders": {
-      "what": {
-        "type": "Object"
-      }
-    }
+    "description": "screens/chat_screen.dart"
   },
   "chatOverTor": "{humanBytes} · {wireEstimate} over tor",
   "@chatOverTor": {
@@ -1945,6 +1940,10 @@
   "chatVoiceMessage": "voice message",
   "@chatVoiceMessage": {
     "description": "screens/chat_screen.dart"
+  },
+  "chatQuotedPhoto": "photo",
+  "@chatQuotedPhoto": {
+    "description": "screens/chat_screen.dart: in the quote above a reply, when the message replied to is a photo with no caption"
   },
   "chatViewContact": "View contact",
   "@chatViewContact": {
@@ -2942,6 +2941,10 @@
   "groupChatVoiceMessage": "voice message",
   "@groupChatVoiceMessage": {
     "description": "screens/group_chat_screen.dart"
+  },
+  "groupChatQuotedPhoto": "photo",
+  "@groupChatQuotedPhoto": {
+    "description": "screens/group_chat_screen.dart: in the quote above a reply, when the message replied to is a photo with no caption"
   },
   "groupChatMessageUnavailable": "Message unavailable",
   "@groupChatMessageUnavailable": {

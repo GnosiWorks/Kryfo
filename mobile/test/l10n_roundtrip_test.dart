@@ -718,7 +718,7 @@ void main() {
     expect(l.chatB2("<b>"), "<b> b");
     expect(l.chatKb2("<b>"), "<b> kb");
     expect(l.chatMb2("<b>"), "<b> mb");
-    expect(l.chatSendThis("<what>"), "Send this <what>?");
+    expect(l.chatSendThis, "Send this file?");
     expect(
       l.chatOverTor("<humanBytes>", "<wireEstimate>"),
       "<humanBytes> · <wireEstimate> over tor",
@@ -746,6 +746,7 @@ void main() {
     expect(l.chatYou2, "you");
     expect(l.chatThem, "them");
     expect(l.chatVoiceMessage, "voice message");
+    expect(l.chatQuotedPhoto, "photo");
     expect(l.chatViewContact, "View contact");
     expect(l.chatSharedPhotos, "Shared photos");
     expect(l.chatSharedPhotoCount(0, "<title>"), "0 photos · <title>");
@@ -1170,6 +1171,7 @@ void main() {
     expect(l.groupChatBlockedEverywhere, "Blocked everywhere");
     expect(l.groupChatYou, "you");
     expect(l.groupChatVoiceMessage, "voice message");
+    expect(l.groupChatQuotedPhoto, "photo");
     expect(l.groupChatMessageUnavailable, "Message unavailable");
     expect(l.groupChatTorIsNotUp, "Tor is not up yet · sending without");
     expect(l.groupChatCouldnTReachIt, "couldn't reach it · sending without");

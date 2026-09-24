@@ -833,7 +833,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (orig.text.isNotEmpty) {
         quoted = orig.text;
       } else if (orig.mediaPath != null) {
-        quoted = 'photo';
+        quoted = l10n.groupChatQuotedPhoto;
       } else if (orig.fileName == 'voice.wav') {
         quoted = l10n.groupChatVoiceMessage;
       } else if (orig.fileName != null) {

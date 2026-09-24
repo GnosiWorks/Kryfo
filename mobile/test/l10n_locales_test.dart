@@ -635,7 +635,7 @@ final _calls = <_Call>[
   ('chatB2', ["⟨b⟩"], (l) => l.chatB2("⟨b⟩")),
   ('chatKb2', ["⟨b⟩"], (l) => l.chatKb2("⟨b⟩")),
   ('chatMb2', ["⟨b⟩"], (l) => l.chatMb2("⟨b⟩")),
-  ('chatSendThis', ["⟨what⟩"], (l) => l.chatSendThis("⟨what⟩")),
+  ('chatSendThis', [], (l) => l.chatSendThis),
   (
     'chatOverTor',
     ["⟨humanBytes⟩", "⟨wireEstimate⟩"],
@@ -662,6 +662,7 @@ final _calls = <_Call>[
   ('chatYou2', [], (l) => l.chatYou2),
   ('chatThem', [], (l) => l.chatThem),
   ('chatVoiceMessage', [], (l) => l.chatVoiceMessage),
+  ('chatQuotedPhoto', [], (l) => l.chatQuotedPhoto),
   ('chatViewContact', [], (l) => l.chatViewContact),
   ('chatSharedPhotos', [], (l) => l.chatSharedPhotos),
   (
@@ -1038,6 +1039,7 @@ final _calls = <_Call>[
   ('groupChatBlockedEverywhere', [], (l) => l.groupChatBlockedEverywhere),
   ('groupChatYou', [], (l) => l.groupChatYou),
   ('groupChatVoiceMessage', [], (l) => l.groupChatVoiceMessage),
+  ('groupChatQuotedPhoto', [], (l) => l.groupChatQuotedPhoto),
   ('groupChatMessageUnavailable', [], (l) => l.groupChatMessageUnavailable),
   ('groupChatTorIsNotUp', [], (l) => l.groupChatTorIsNotUp),
   ('groupChatCouldnTReachIt', [], (l) => l.groupChatCouldnTReachIt),
