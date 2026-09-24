@@ -1737,5 +1737,7 @@
   "videoViewerPause": "暂停",
   "videoViewerPlayAgain": "重新播放",
   "videoViewerCannotPlay": "这部手机无法在这里播放这个视频。",
-  "videoViewerOpenElsewhere": "用其他应用打开"
+  "videoViewerOpenElsewhere": "用其他应用打开",
+  "photoKnowsLookedFor": "查找了",
+  "photoKnowsNotInIt": "没有"
 }

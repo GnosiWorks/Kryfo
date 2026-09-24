@@ -2883,6 +2883,8 @@ final _calls = <_Call>[
   ('videoViewerPlayAgain', [], (l) => l.videoViewerPlayAgain),
   ('videoViewerCannotPlay', [], (l) => l.videoViewerCannotPlay),
   ('videoViewerOpenElsewhere', [], (l) => l.videoViewerOpenElsewhere),
+  ('photoKnowsLookedFor', [], (l) => l.photoKnowsLookedFor),
+  ('photoKnowsNotInIt', [], (l) => l.photoKnowsNotInIt),
 ];
 
 void main() {

@@ -3333,5 +3333,7 @@ void main() {
     expect(l.videoViewerPlayAgain, "Play again");
     expect(l.videoViewerCannotPlay, "This phone can't play this video here.");
     expect(l.videoViewerOpenElsewhere, "Open in another app");
+    expect(l.photoKnowsLookedFor, "Looked for");
+    expect(l.photoKnowsNotInIt, "not in it");
   });
 }

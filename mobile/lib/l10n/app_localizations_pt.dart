@@ -6613,4 +6613,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get videoViewerOpenElsewhere => 'Abrir em outro app';
+
+  @override
+  String get photoKnowsLookedFor => 'Procuramos';
+
+  @override
+  String get photoKnowsNotInIt => 'não tem';
 }

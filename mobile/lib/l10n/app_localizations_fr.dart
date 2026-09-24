@@ -6629,4 +6629,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get videoViewerOpenElsewhere => 'Ouvrir dans une autre appli';
+
+  @override
+  String get photoKnowsLookedFor => 'Recherché';
+
+  @override
+  String get photoKnowsNotInIt => 'absent';
 }

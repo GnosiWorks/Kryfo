@@ -1737,5 +1737,7 @@
   "videoViewerPause": "Tạm dừng",
   "videoViewerPlayAgain": "Phát lại",
   "videoViewerCannotPlay": "Điện thoại này không phát được video này ở đây.",
-  "videoViewerOpenElsewhere": "Mở bằng ứng dụng khác"
+  "videoViewerOpenElsewhere": "Mở bằng ứng dụng khác",
+  "photoKnowsLookedFor": "Đã tìm",
+  "photoKnowsNotInIt": "không có"
 }

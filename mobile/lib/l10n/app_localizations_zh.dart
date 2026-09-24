@@ -6316,6 +6316,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get videoViewerOpenElsewhere => '用其他应用打开';
+
+  @override
+  String get photoKnowsLookedFor => '查找了';
+
+  @override
+  String get photoKnowsNotInIt => '没有';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -12630,4 +12636,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get videoViewerOpenElsewhere => '用其他應用程式開啟';
+
+  @override
+  String get photoKnowsLookedFor => '查找了';
+
+  @override
+  String get photoKnowsNotInIt => '沒有';
 }

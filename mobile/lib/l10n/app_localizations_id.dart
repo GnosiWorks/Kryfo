@@ -6566,4 +6566,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get videoViewerOpenElsewhere => 'Buka di aplikasi lain';
+
+  @override
+  String get photoKnowsLookedFor => 'Yang dicari';
+
+  @override
+  String get photoKnowsNotInIt => 'tidak ada';
 }

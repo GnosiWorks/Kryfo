@@ -6674,4 +6674,10 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get videoViewerOpenElsewhere => 'Відкрити в іншому застосунку';
+
+  @override
+  String get photoKnowsLookedFor => 'Що шукали';
+
+  @override
+  String get photoKnowsNotInIt => 'немає';
 }

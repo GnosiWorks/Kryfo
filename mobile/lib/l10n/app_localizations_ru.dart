@@ -6678,4 +6678,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get videoViewerOpenElsewhere => 'Открыть в другом приложении';
+
+  @override
+  String get photoKnowsLookedFor => 'Что искали';
+
+  @override
+  String get photoKnowsNotInIt => 'нет';
 }

@@ -6594,4 +6594,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get videoViewerOpenElsewhere => 'Başka uygulamada aç';
+
+  @override
+  String get photoKnowsLookedFor => 'Aranan';
+
+  @override
+  String get photoKnowsNotInIt => 'yok';
 }

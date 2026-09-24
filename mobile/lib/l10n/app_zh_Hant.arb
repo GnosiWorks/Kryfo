@@ -1737,5 +1737,7 @@
   "videoViewerPause": "暫停",
   "videoViewerPlayAgain": "重新播放",
   "videoViewerCannotPlay": "這支手機無法在這裡播放這部影片。",
-  "videoViewerOpenElsewhere": "用其他應用程式開啟"
+  "videoViewerOpenElsewhere": "用其他應用程式開啟",
+  "photoKnowsLookedFor": "查找了",
+  "photoKnowsNotInIt": "沒有"
 }

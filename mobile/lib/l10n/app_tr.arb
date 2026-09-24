@@ -1737,5 +1737,7 @@
   "videoViewerPause": "Duraklat",
   "videoViewerPlayAgain": "Tekrar oynat",
   "videoViewerCannotPlay": "Bu telefon bu videoyu burada oynatamıyor.",
-  "videoViewerOpenElsewhere": "Başka uygulamada aç"
+  "videoViewerOpenElsewhere": "Başka uygulamada aç",
+  "photoKnowsLookedFor": "Aranan",
+  "photoKnowsNotInIt": "yok"
 }

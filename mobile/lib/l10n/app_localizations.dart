@@ -10546,6 +10546,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open in another app'**
   String get videoViewerOpenElsewhere;
+
+  /// screens/photo_knows_screen.dart: the heading over the fields the app looked for in a file that turned out to carry none of them
+  ///
+  /// In en, this message translates to:
+  /// **'Looked for'**
+  String get photoKnowsLookedFor;
+
+  /// screens/photo_knows_screen.dart: after each field that was looked for and is not in the file (location, time taken, phone model...)
+  ///
+  /// In en, this message translates to:
+  /// **'not in it'**
+  String get photoKnowsNotInIt;
 }
 
 class _AppLocalizationsDelegate

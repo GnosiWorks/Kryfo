@@ -1737,5 +1737,7 @@
   "videoViewerPause": "Jeda",
   "videoViewerPlayAgain": "Putar lagi",
   "videoViewerCannotPlay": "Ponsel ini tidak bisa memutar video ini di sini.",
-  "videoViewerOpenElsewhere": "Buka di aplikasi lain"
+  "videoViewerOpenElsewhere": "Buka di aplikasi lain",
+  "photoKnowsLookedFor": "Yang dicari",
+  "photoKnowsNotInIt": "tidak ada"
 }

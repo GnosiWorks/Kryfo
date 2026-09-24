@@ -6553,4 +6553,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get videoViewerOpenElsewhere => 'Mở bằng ứng dụng khác';
+
+  @override
+  String get photoKnowsLookedFor => 'Đã tìm';
+
+  @override
+  String get photoKnowsNotInIt => 'không có';
 }

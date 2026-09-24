@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../meta/meta_reader.dart';
 import '../theme.dart';
@@ -127,7 +128,11 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
       if (_still) {
         _reveal.value = 1;
       } else {
-        _reveal.forward();
+        // a clean file ends on its ticks landing: felt, once
+        final clean = !(_story?.canClean ?? true);
+        _reveal.forward().then((_) {
+          if (clean && !_gone) HapticFeedback.lightImpact();
+        });
       }
     } on ToolsFailure catch (e) {
       if (_gone || e.code == 'cancelled') return;
@@ -219,6 +224,7 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
                       geo: _geo,
                       reveal: _reveal,
                       onMore: _showAll,
+                      path: _inPath,
                     ),
             ),
             Padding(
@@ -403,12 +409,14 @@ class _Body extends StatelessWidget {
   final GeoData? geo;
   final Animation<double> reveal;
   final VoidCallback onMore;
+  final String? path;
   const _Body({
     required this.story,
     required this.report,
     required this.geo,
     required this.reveal,
     required this.onMore,
+    required this.path,
   });
 
   @override
@@ -548,6 +556,12 @@ class _Body extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (story.rows.isEmpty && !report.gpsBlank)
+                    _NothingFound(
+                      path: path,
+                      video: report.kind == MetaKind.mp4,
+                      t: t,
+                    ),
                   if (story.rows.isNotEmpty)
                     Container(
                       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -582,6 +596,150 @@ class _Body extends StatelessWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+}
+
+// a file with nothing in it: the picture, a tick landing on it, and what
+// was looked for, each found not there. the page used to be a heading and a
+// button with nothing between them.
+class _NothingFound extends StatelessWidget {
+  final String? path;
+  final bool video;
+  final double t;
+  const _NothingFound({
+    required this.path,
+    required this.video,
+    required this.t,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final fields = [
+      l10n.cleanerLocation,
+      l10n.cleanerTimeTaken,
+      l10n.cleanerPhoneModel,
+      l10n.cleanerSerialNumber,
+      l10n.cleanerOwnerName,
+      l10n.cleanerHiddenThumbnail,
+    ];
+    final pop = Curves.easeOutBack.transform(_span(t, 0.28, 0.5));
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _Rise(
+            t: _span(t, 0.1, 0.32),
+            child: Center(
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  if (path != null)
+                    ToolThumb(path: path!, video: video, size: 104)
+                  else
+                    const SizedBox(width: 104, height: 104),
+                  PositionedDirectional(
+                    end: -10,
+                    bottom: -10,
+                    child: Transform.scale(
+                      scale: pop,
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: HaloColors.green,
+                          border: Border.all(
+                            color: HaloColors.surface,
+                            width: 3,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.check_rounded,
+                          size: 22,
+                          color: HaloColors.surface,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 26),
+          _Rise(
+            t: _span(t, 0.36, 0.52),
+            child: Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: HaloColors.surface2,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: HaloColors.line, width: 0.5),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
+                    child: Text(
+                      l10n.photoKnowsLookedFor,
+                      style: HaloType.mono(size: 11, color: HaloColors.amber),
+                    ),
+                  ),
+                  for (var i = 0; i < fields.length; i++)
+                    _Checked(
+                      label: fields[i],
+                      t: _span(t, 0.46 + i * 0.06, 0.62 + i * 0.06),
+                    ),
+                  const SizedBox(height: 6),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Checked extends StatelessWidget {
+  final String label;
+  final double t;
+  const _Checked({required this.label, required this.t});
+
+  @override
+  Widget build(BuildContext context) {
+    final k = Curves.easeOutCubic.transform(t);
+    final tick = Curves.easeOutBack.transform(t);
+    return Opacity(
+      opacity: k,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 9, 14, 9),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: HaloType.sans(size: 13.5, color: HaloColors.text),
+              ),
+            ),
+            Text(
+              l10n.photoKnowsNotInIt,
+              style: HaloType.mono(size: 10.5, color: HaloColors.green),
+            ),
+            const SizedBox(width: 6),
+            Transform.scale(
+              scale: tick,
+              child: Icon(
+                Icons.check_rounded,
+                size: 16,
+                color: HaloColors.green,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

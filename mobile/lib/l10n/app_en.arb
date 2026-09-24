@@ -8364,5 +8364,13 @@
   "videoViewerOpenElsewhere": "Open in another app",
   "@videoViewerOpenElsewhere": {
     "description": "widgets/video_viewer.dart: hands the video to another app when kryfo cannot play it"
+  },
+  "photoKnowsLookedFor": "Looked for",
+  "@photoKnowsLookedFor": {
+    "description": "screens/photo_knows_screen.dart: the heading over the fields the app looked for in a file that turned out to carry none of them"
+  },
+  "photoKnowsNotInIt": "not in it",
+  "@photoKnowsNotInIt": {
+    "description": "screens/photo_knows_screen.dart: after each field that was looked for and is not in the file (location, time taken, phone model...)"
   }
 }

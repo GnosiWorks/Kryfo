@@ -6558,4 +6558,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoViewerOpenElsewhere => 'Open in another app';
+
+  @override
+  String get photoKnowsLookedFor => 'Looked for';
+
+  @override
+  String get photoKnowsNotInIt => 'not in it';
 }

@@ -1737,5 +1737,7 @@
   "videoViewerPause": "Pause",
   "videoViewerPlayAgain": "Relire",
   "videoViewerCannotPlay": "Ce téléphone ne peut pas lire cette vidéo ici.",
-  "videoViewerOpenElsewhere": "Ouvrir dans une autre appli"
+  "videoViewerOpenElsewhere": "Ouvrir dans une autre appli",
+  "photoKnowsLookedFor": "Recherché",
+  "photoKnowsNotInIt": "absent"
 }

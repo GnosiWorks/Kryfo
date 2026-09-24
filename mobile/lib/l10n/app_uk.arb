@@ -1737,5 +1737,7 @@
   "videoViewerPause": "Пауза",
   "videoViewerPlayAgain": "Переглянути ще раз",
   "videoViewerCannotPlay": "Цей телефон не може відтворити це відео тут.",
-  "videoViewerOpenElsewhere": "Відкрити в іншому застосунку"
+  "videoViewerOpenElsewhere": "Відкрити в іншому застосунку",
+  "photoKnowsLookedFor": "Що шукали",
+  "photoKnowsNotInIt": "немає"
 }
