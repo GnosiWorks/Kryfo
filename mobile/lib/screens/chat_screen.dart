@@ -703,6 +703,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
     appState.addListener(_onAppStateChanged);
     appState.loadSendMode();
+    lockState.addListener(_lockLifted);
     currentChatPeer = widget.peerHaloId;
     db.clearUnread(widget.peerHaloId).then((_) => appState.refreshContacts());
     unawaited(clearNotificationsFor(widget.peerHaloId));
@@ -3528,6 +3529,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
   }
 
+  // the lock lifted with this chat on top: it is the one being read again,
+  // so its messages are not counted unread and a tap on one of its
+  // notifications does not open a second copy of it
+  void _lockLifted() {
+    if (!mounted || !lockState.loaded || lockState.locked) return;
+    if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+      return;
+    }
+    if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
+    if (currentChatPeer == widget.peerHaloId) return;
+    currentChatPeer = widget.peerHaloId;
+    db.clearUnread(widget.peerHaloId).then((_) => appState.refreshContacts());
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // mirror groups: when we leave the app, this chat is no longer the
@@ -3733,6 +3748,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _autoRetryTimer?.cancel();
     _burnTick?.cancel();
     if (currentChatPeer == widget.peerHaloId) currentChatPeer = null;
+    lockState.removeListener(_lockLifted);
     appState.removeListener(_onAppStateChanged);
     _lastReadPerPeer[widget.peerHaloId] = _messages.isNotEmpty
         ? _messages.last.when.millisecondsSinceEpoch
@@ -7157,6 +7173,7 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
 
   @override
   void dispose() {
+    _recUnguard?.call();
     _ticker?.cancel();
     _overlay?.remove();
     _rec.dispose();

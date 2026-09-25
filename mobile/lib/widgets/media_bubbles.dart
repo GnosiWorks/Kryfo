@@ -344,9 +344,13 @@ class VoiceBubbleState extends State<VoiceBubble> {
       _unguard = null;
       _player.pause();
     } else {
+      // the lock went up while the note was loading
+      if (lockGuard.isLocked()) return;
       _unguard ??= lockGuard.closeOnLock(() {
         _unguard = null;
-        _player.pause();
+        // stop, not pause: a note a call paused would start again by
+        // itself when the call ends. the next tap carries on from here
+        _player.stop();
       });
       _player.play();
     }

@@ -48,7 +48,7 @@ class LockGuard extends NavigatorObserver {
     return false;
   }
 
-  // the lock lifted: what waited happens now, in the order it came
+  // the lock lifted: what waited starts now, in the order it came
   void lifted() {
     if (_held.isEmpty) return;
     final held = Map.of(_held);
@@ -62,8 +62,26 @@ class LockGuard extends NavigatorObserver {
   // something open that must close when the lock goes up. returns what
   // takes it off the list again
   VoidCallback closeOnLock(VoidCallback close) {
+    // the lock went up while this was still starting: it closes at once,
+    // before anything of it is drawn
+    if (isLocked()) {
+      scheduleMicrotask(() {
+        try {
+          close();
+        } catch (_) {}
+      });
+      return () {};
+    }
     _closers.add(close);
     return () => _closers.remove(close);
+  }
+
+  // done once the lock is not up: for work that ends in a system dialog
+  Future<void> unlocked() {
+    if (!isLocked()) return Future.value();
+    final done = Completer<void>();
+    _held[_unkeyed++] = () async => done.complete();
+    return done.future;
   }
 
   // the lock is going up
