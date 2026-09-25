@@ -10,6 +10,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:crypto/crypto.dart';
+import 'bidi_safe.dart';
 import 'dlog.dart';
 import 'media_resend.dart';
 
@@ -53,8 +54,12 @@ class UnwrappedMessage {
   final IntroFrame? intro; // 'in' - a contact's card, vouched by the sender
   final NeedFrame? need; // 'nd' - slices of a file the receiver never got
   final bool canResend; // 'cr' - on a slice: this sender answers an 'nd'
+  // 'm' as it was sent, before the direction controls came out: the
+  // proof of work was done over these characters
+  final String? powText;
   UnwrappedMessage(
     this.message, {
+    this.powText,
     this.secure = false,
     this.senderHaloId,
     this.senderEdPub,
@@ -316,12 +321,16 @@ Future<String> wrapMessage(
 
 UnwrappedMessage unwrapMessage(String wrapped) {
   if (!wrapped.startsWith(_envelopePrefix)) {
-    return UnwrappedMessage(wrapped);
+    return UnwrappedMessage(unmarked(wrapped), powText: wrapped);
   }
   try {
-    final json =
+    final sent =
         jsonDecode(wrapped.substring(_envelopePrefix.length))
             as Map<String, dynamic>;
+    // every word in it without direction controls (bidi_safe.dart), the
+    // images and files as they came
+    final json =
+        unmarkedJson(sent, skip: const {'i', 'f'}) as Map<String, dynamic>;
     ReactionFrame? reaction;
     final rRaw = json['r'];
     if (rRaw is Map) {
@@ -396,6 +405,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
     }
     return UnwrappedMessage(
       (json['m'] as String?) ?? '',
+      powText: sent['m'] as String?,
       senderHaloId: json['h'] as String?,
       senderAvatar: (json['av'] as num?)?.toInt(),
       senderEdPub: json['e'] as String?,
@@ -440,6 +450,6 @@ UnwrappedMessage unwrapMessage(String wrapped) {
     dlog(
       'UNWRAP-FAIL $e raw=${wrapped.substring(0, wrapped.length < 80 ? wrapped.length : 80)}',
     );
-    return UnwrappedMessage(wrapped);
+    return UnwrappedMessage(unmarked(wrapped), powText: wrapped);
   }
 }

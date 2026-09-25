@@ -5590,7 +5590,7 @@ class AppState extends ChangeNotifier {
       if (!vouched &&
           fromBackPair &&
           (env.powNonce == null ||
-              !verifyPow(env.message, env.powNonce!, powBits))) {
+              !verifyPow(env.powText ?? env.message, env.powNonce!, powBits))) {
         dlog(
           'pow: dropping first-contact from $senderHaloId (nonce=${env.powNonce} bits=${env.powBitsUsed})',
         );

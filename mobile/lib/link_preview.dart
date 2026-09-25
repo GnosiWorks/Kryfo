@@ -4,6 +4,8 @@
 // page, over whatever route the app is on, and only the title comes back.
 // no image is ever loaded. these are the pure parts.
 
+import 'bidi_safe.dart';
+
 // the first http(s) url in a message, scheme lowercased. keyboards
 // capitalise the first letter of a message, so "Https://" has to count.
 String? firstUrl(String text) {
@@ -77,7 +79,8 @@ String? titleFromHtml(String html) {
     caseSensitive: false,
   ).firstMatch(html)?.group(1);
   if (t == null) return null;
-  t = unescapeHtml(t).replaceAll(RegExp(r'\s+'), ' ').trim();
+  // a page's title is anyone's words: no direction controls (bidi_safe.dart)
+  t = unmarked(unescapeHtml(t)).replaceAll(RegExp(r'\s+'), ' ').trim();
   if (t.isEmpty) return null;
   return t.length > 120 ? '${t.substring(0, 119)}…' : t;
 }

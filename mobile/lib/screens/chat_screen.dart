@@ -87,6 +87,7 @@ import '../l10n/dates.dart';
 import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
 import '../widgets/video_viewer.dart';
+import '../bidi_safe.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
 // chunk indices already accepted by the peer, per media msg_uid. lets a
@@ -5673,6 +5674,7 @@ class _SearchHeadState extends State<SearchHead> {
                         Expanded(
                           child: TextField(
                             controller: widget.controller,
+                            inputFormatters: const [UnmarkedInput()],
                             focusNode: _focus,
                             onChanged: widget.onChanged,
                             cursorColor: HaloColors.amber,

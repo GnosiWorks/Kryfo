@@ -74,6 +74,7 @@ import '../l10n/dates.dart';
 import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
 import '../widgets/video_viewer.dart';
+import '../bidi_safe.dart';
 
 final Map<String, String> _draftPerGroup = {};
 
@@ -3008,6 +3009,7 @@ class _Composer extends StatelessWidget {
                   ),
                   child: TextField(
                     controller: controller,
+                    inputFormatters: const [UnmarkedInput()],
                     style: HaloType.sans(size: 14, color: HaloColors.text),
                     cursorColor: HaloColors.amber,
                     decoration: InputDecoration(

@@ -1,3 +1,4 @@
+import 'bidi_safe.dart';
 import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -121,7 +122,7 @@ class RoomLink {
         return null;
       }
       if (!looksLikeRoomKey(pub) || fc.length != 64) return null;
-      final name = (u.queryParameters['n'] ?? '').trim();
+      final name = unmarked(u.queryParameters['n'] ?? '').trim();
       return RoomLink(
         roomId: id,
         name: name.isEmpty ? 'room' : name,
