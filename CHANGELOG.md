@@ -2,6 +2,11 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.3.1] - 2026-09-25
+
+### Security
+- a security fix. update when you can.
+
 ## [0.3.0] - 2026-09-24
 
 0.2.11 and 0.2.12 were never released, so this is everything since 0.2.10.
