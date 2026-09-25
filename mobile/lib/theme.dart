@@ -289,7 +289,12 @@ final GlobalKey<ScaffoldMessengerState> haloMessengerKey =
 OverlayState? Function()? haloToastOverlay;
 
 OverlayEntry? _toastEntry;
+// every toast on the overlay, drawn yet or not, until it is off it
 final _toastKeys = <OverlayEntry, GlobalKey<_ToastState>>{};
+
+void _dropToast(OverlayEntry e) {
+  if (_toastKeys.remove(e) != null) e.remove();
+}
 
 /// a short line at the top of the screen: it drops in with a small spring,
 /// stays three and a half seconds, and goes up and out; a tap or a flick
@@ -309,11 +314,9 @@ void showHaloToast(BuildContext context, String message) {
 
 /// the lock is going up: no toast stays on screen
 void haloClearToasts() {
-  final e = _toastEntry;
   _toastEntry = null;
-  if (e != null) {
-    if (e.mounted) e.remove();
-    _toastKeys.remove(e);
+  for (final e in List.of(_toastKeys.keys)) {
+    _dropToast(e);
   }
   haloMessengerKey.currentState?.clearSnackBars();
 }
@@ -335,8 +338,7 @@ void _showHaloToast(BuildContext context, String message) {
     if (shown != null) {
       shown.leave();
     } else {
-      if (prev.mounted) prev.remove();
-      _toastKeys.remove(prev);
+      _dropToast(prev);
     }
   }
   final key = GlobalKey<_ToastState>();
@@ -346,8 +348,7 @@ void _showHaloToast(BuildContext context, String message) {
       key: key,
       message: message,
       onGone: () {
-        if (entry.mounted) entry.remove();
-        _toastKeys.remove(entry);
+        _dropToast(entry);
         if (identical(_toastEntry, entry)) _toastEntry = null;
       },
     ),
