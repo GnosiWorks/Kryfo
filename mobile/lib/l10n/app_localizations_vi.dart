@@ -3400,10 +3400,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lockUseFingerprint => 'Dùng vân tay';
 
   @override
-  String get lockSetupThatIsYourWipe =>
-      'Đó là mã PIN xóa sạch của bạn. Hãy chọn mã khác.';
-
-  @override
   String get lockSetupUnlockWithFingerprint => 'Mở khóa bằng vân tay?';
 
   @override
@@ -4018,20 +4014,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Hai lần nhập khác nhau. Làm lại từ đầu nhé.';
 
   @override
-  String get panicSetupThatIsYourReal =>
-      'Đó là mã PIN thật của bạn. Hãy chọn mã khác.';
-
-  @override
   String get panicSetupOnceMore => 'Thêm lần nữa';
 
   @override
-  String get panicSetupSetAWipePin => 'Đặt mã PIN xóa sạch';
-
-  @override
   String get panicSetupTheSameFourDigits => 'Nhập lại đúng các chữ số đó';
-
-  @override
-  String get panicSetupTheSecondPinWipes => 'Mã PIN thứ hai xóa sạch mọi thứ.';
 
   @override
   String get photoKnowsEverythingInside => 'Mọi thứ bên trong';
@@ -4091,9 +4077,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pinsAppLock => 'Khóa ứng dụng';
 
   @override
-  String get pinsTwoPins => 'Hai mã PIN';
-
-  @override
   String get pinsYourPin => 'Mã PIN của bạn';
 
   @override
@@ -4133,9 +4116,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pinsSet => 'Đặt';
-
-  @override
-  String get pinsTheSecondPinWipes => 'Mã PIN thứ hai xóa sạch mọi thứ.';
 
   @override
   String get pinsChangeWipePin => 'Đổi mã PIN xóa sạch';
@@ -4996,7 +4976,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsAppLock2 => 'Khóa ứng dụng';
 
   @override
-  String get settingsYourPinAndA => 'Mã PIN, và mã PIN xóa sạch';
+  String get settingsYourPinAndA => 'Mã PIN và bảo vệ nâng cao';
 
   @override
   String get settingsPinWipePin => 'PIN · PIN xóa sạch';
@@ -6883,4 +6863,115 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lockFingerAfterPin => 'Nhập mã PIN một lần để dùng lại vân tay.';
+
+  @override
+  String get pinsAdvanced => 'Bảo vệ nâng cao';
+
+  @override
+  String get pinsAdvancedLine =>
+      'Dành cho lúc có người bắt bạn mở khóa điện thoại.';
+
+  @override
+  String get pinsWipeLine =>
+      'Nhập ở màn hình khóa, mã này sẽ xóa Kryfo khỏi điện thoại này.';
+
+  @override
+  String get pinsDecoyPin => 'Mã PIN ngụy trang';
+
+  @override
+  String get pinsDecoyLine => 'Mở một Kryfo trống, như vừa mới cài.';
+
+  @override
+  String get pinsSetADecoyPin => 'Đặt mã PIN ngụy trang';
+
+  @override
+  String get pinsChangeDecoyPin => 'Đổi mã PIN ngụy trang';
+
+  @override
+  String get pinsRemoveTheDecoyPin => 'Gỡ mã PIN ngụy trang?';
+
+  @override
+  String get pinsTheDecoyGoes => 'Kryfo trống mà nó mở cũng mất theo.';
+
+  @override
+  String get pinsTurnOffWithDecoy =>
+      'Mọi mã PIN đều bị gỡ, kể cả mã ngụy trang và Kryfo của nó. Bất kỳ ai cầm điện thoại của bạn đều mở được Kryfo với tư cách là bạn.';
+
+  @override
+  String get pinsHowThisWorks => 'Cách hoạt động';
+
+  @override
+  String get flowEnterYourPin => 'Nhập mã PIN của bạn';
+
+  @override
+  String get flowEnterYourPinLine => 'Mã dùng để mở Kryfo.';
+
+  @override
+  String get flowWipeTitle => 'Mã PIN xóa sạch';
+
+  @override
+  String get flowWipe1 =>
+      'Nhập ở màn hình khóa thay cho mã PIN của bạn, mã này sẽ xóa Kryfo khỏi điện thoại này rồi đóng lại. Với người đang nhìn, ứng dụng chỉ như vừa dừng.';
+
+  @override
+  String get flowWipe2 =>
+      'Mọi cuộc trò chuyện và danh tính của bạn sẽ mất theo, cả phần ngụy trang nếu bạn có.';
+
+  @override
+  String get flowWipeChoose => 'Chọn mã PIN xóa sạch';
+
+  @override
+  String get flowWipeDone => 'Đã đặt mã PIN xóa sạch';
+
+  @override
+  String get flowWipeDoneLine =>
+      'Màn hình khóa không để lộ gì cho thấy nó tồn tại.';
+
+  @override
+  String get flowDecoyTitle => 'Mã PIN ngụy trang';
+
+  @override
+  String get flowDecoy1 =>
+      'Mở một Kryfo trống, như vừa mới cài. Nó chịu được một lần xem lướt điện thoại của bạn. Nó không che giấu dung lượng Kryfo đang dùng, và sẽ không qua mắt được người biết ba từ của bạn, người thử nhắn tin cho nó, hay người sao chép điện thoại.';
+
+  @override
+  String get flowDecoyFinger =>
+      'Vân tay của bạn mở Kryfo thật. Nếu có người có thể ép bạn dùng nó, hãy tắt vân tay.';
+
+  @override
+  String get flowDecoyDigits =>
+      'Dùng số chữ số bằng với mã PIN của bạn. Các dấu chấm có thể đếm được.';
+
+  @override
+  String get flowDecoyShade =>
+      'Thông báo đã nằm trong bảng thông báo thì đã bị thấy rồi. Khi phần ngụy trang đang mở, không có thông báo mới nào hiện ra.';
+
+  @override
+  String get flowDecoyChoose => 'Chọn mã PIN ngụy trang';
+
+  @override
+  String get flowDecoyDone => 'Đã đặt mã PIN ngụy trang';
+
+  @override
+  String get flowDecoyDoneLine =>
+      'Nhập mã này ở màn hình khóa để mở Kryfo trống. Để thoát, chuyển sang ứng dụng khác rồi nhập mã PIN của bạn.';
+
+  @override
+  String get flowLaw =>
+      'Ở một số nước, từ chối mở khóa điện thoại hoặc giấu dữ liệu khỏi nhà chức trách tự nó đã là vi phạm. Hãy nắm luật ở nơi bạn đến.';
+
+  @override
+  String get howWipe =>
+      'Nhập ở màn hình khóa, mã PIN xóa sạch sẽ xóa mọi cuộc trò chuyện, danh tính của bạn và mọi phần ngụy trang, rồi đóng Kryfo. Nó vẫn hoạt động cả khi bàn phím đang bị tạm khóa sau những lần nhập sai.';
+
+  @override
+  String get howDecoy =>
+      'Mã PIN ngụy trang mở một Kryfo thứ hai, trống, với ba từ riêng. Tin nhắn gửi đến Kryfo thật của bạn vẫn đến bên dưới, lặng lẽ. Để thoát khỏi phần ngụy trang, chuyển sang ứng dụng khác rồi nhập mã PIN của bạn.';
+
+  @override
+  String get howLimits =>
+      'Một cái nhìn lướt, không phải phòng thí nghiệm. Bản sao điện thoại tạo bằng công cụ pháp y có thể cho thấy Kryfo chứa nhiều hơn những gì nó hiện ra, và mã PIN ngắn có thể bị đoán ngoại tuyến.';
+
+  @override
+  String get flowNotSet => 'Không đặt được. Hãy thử lại.';
 }

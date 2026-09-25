@@ -3429,10 +3429,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get lockUseFingerprint => 'Parmak izi kullan';
 
   @override
-  String get lockSetupThatIsYourWipe =>
-      'Bu senin silme PIN’in. Başka bir tane seç.';
-
-  @override
   String get lockSetupUnlockWithFingerprint =>
       'Parmak iziyle kilit açılsın mı?';
 
@@ -4051,20 +4047,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'İkisi farklıydı. Baştan alalım.';
 
   @override
-  String get panicSetupThatIsYourReal =>
-      'Bu senin gerçek PIN’in. Başka bir tane seç.';
-
-  @override
   String get panicSetupOnceMore => 'Bir kez daha';
 
   @override
-  String get panicSetupSetAWipePin => 'Silme PIN’i belirle';
-
-  @override
   String get panicSetupTheSameFourDigits => 'Aynı rakamları bir kez daha';
-
-  @override
-  String get panicSetupTheSecondPinWipes => 'İkinci PIN her şeyi siler.';
 
   @override
   String get photoKnowsEverythingInside => 'İçindeki her şey';
@@ -4123,9 +4109,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pinsAppLock => 'Uygulama kilidi';
 
   @override
-  String get pinsTwoPins => 'İki PIN';
-
-  @override
   String get pinsYourPin => 'PIN kodun';
 
   @override
@@ -4165,9 +4148,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pinsSet => 'Belirle';
-
-  @override
-  String get pinsTheSecondPinWipes => 'İkinci PIN her şeyi siler.';
 
   @override
   String get pinsChangeWipePin => 'Silme PIN’ini değiştir';
@@ -5024,7 +5004,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsAppLock2 => 'Uygulama kilidi';
 
   @override
-  String get settingsYourPinAndA => 'PIN kodun ve bir silme PIN’i';
+  String get settingsYourPinAndA => 'PIN kodun ve gelişmiş koruma';
 
   @override
   String get settingsPinWipePin => 'PIN · silme PIN’i';
@@ -6931,4 +6911,115 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get lockFingerAfterPin =>
       'Parmak izini yeniden kullanmak için PIN\'ini bir kez gir.';
+
+  @override
+  String get pinsAdvanced => 'Gelişmiş koruma';
+
+  @override
+  String get pinsAdvancedLine =>
+      'Biri seni telefonunun kilidini açmaya zorladığında.';
+
+  @override
+  String get pinsWipeLine =>
+      'Kilit ekranında girildiğinde Kryfo’yu bu telefondan siler.';
+
+  @override
+  String get pinsDecoyPin => 'Yem PIN’i';
+
+  @override
+  String get pinsDecoyLine => 'Yeni kurulmuş gibi boş bir Kryfo açar.';
+
+  @override
+  String get pinsSetADecoyPin => 'Yem PIN’i belirle';
+
+  @override
+  String get pinsChangeDecoyPin => 'Yem PIN’ini değiştir';
+
+  @override
+  String get pinsRemoveTheDecoyPin => 'Yem PIN’i kaldırılsın mı?';
+
+  @override
+  String get pinsTheDecoyGoes => 'Açtığı boş Kryfo da onunla birlikte gider.';
+
+  @override
+  String get pinsTurnOffWithDecoy =>
+      'Bütün PIN’ler kaldırılır, yem ve onun Kryfo’su da onlarla birlikte. Telefonun kimin elindeyse Kryfo’yu senmiş gibi açar.';
+
+  @override
+  String get pinsHowThisWorks => 'Nasıl çalışır';
+
+  @override
+  String get flowEnterYourPin => 'PIN’ini gir';
+
+  @override
+  String get flowEnterYourPinLine => 'Kryfo’yu açan PIN.';
+
+  @override
+  String get flowWipeTitle => 'Bir silme PIN’i';
+
+  @override
+  String get flowWipe1 =>
+      'Kilit ekranında PIN’inin yerine girildiğinde Kryfo’yu bu telefondan siler ve kapatır. İzleyen kişiye göre uygulama sadece durdu.';
+
+  @override
+  String get flowWipe2 =>
+      'Her sohbeti ve kimliğini, varsa yemi de beraberinde götürür.';
+
+  @override
+  String get flowWipeChoose => 'Bir silme PIN’i seç';
+
+  @override
+  String get flowWipeDone => 'Silme PIN’i belirlendi';
+
+  @override
+  String get flowWipeDoneLine =>
+      'Kilit ekranında varlığını belli eden hiçbir şey yok.';
+
+  @override
+  String get flowDecoyTitle => 'Bir yem PIN’i';
+
+  @override
+  String get flowDecoy1 =>
+      'Yeni kurulmuş gibi boş bir Kryfo açar. Telefonuna hızlıca göz atılmasına dayanır. Kryfo’nun ne kadar yer kapladığını gizlemez; üç kelimeni bilen, ona mesaj atmaya çalışan ya da telefonu kopyalayan birini kandırmaz.';
+
+  @override
+  String get flowDecoyFinger =>
+      'Parmak izin gerçek Kryfo’nu açar. Biri seni onu kullanmaya zorlayabilecekse parmak izini kapat.';
+
+  @override
+  String get flowDecoyDigits =>
+      'PIN’inde kaç rakam varsa o kadar kullan. Noktalar sayılabilir.';
+
+  @override
+  String get flowDecoyShade =>
+      'Bildirim panelinde zaten olan bildirimler zaten görüldü. Yem açıkken yeni bildirim gelmez.';
+
+  @override
+  String get flowDecoyChoose => 'Bir yem PIN’i seç';
+
+  @override
+  String get flowDecoyDone => 'Yem PIN’i belirlendi';
+
+  @override
+  String get flowDecoyDoneLine =>
+      'Boş Kryfo’yu açmak için kilit ekranında gir. Çıkmak için başka bir uygulamaya geç ve PIN’ini gir.';
+
+  @override
+  String get flowLaw =>
+      'Bazı ülkelerde bir telefonun kilidini açmayı reddetmek ya da verileri yetkililerden gizlemek başlı başına suçtur. Seyahat ettiğin yerlerin yasalarını bil.';
+
+  @override
+  String get howWipe =>
+      'Kilit ekranında girildiğinde silme PIN’i her sohbeti, kimliğini ve varsa yemi siler, sonra Kryfo’yu kapatır. Yanlış denemelerden sonra tuş takımı beklemedeyken bile çalışır.';
+
+  @override
+  String get howDecoy =>
+      'Yem PIN’i, kendi üç kelimesi olan ikinci ve boş bir Kryfo açar. Gerçek Kryfo’na gelen mesajlar altta sessizce gelmeye devam eder. Yemden çıkmak için başka bir uygulamaya geç ve PIN’ini gir.';
+
+  @override
+  String get howLimits =>
+      'Hızlı bir bakış, laboratuvar değil. Adli araçlarla alınmış bir telefon kopyası, Kryfo’nun gösterdiğinden fazlasını tuttuğunu gösterebilir; kısa bir PIN çevrimdışı tahmin edilebilir.';
+
+  @override
+  String get flowNotSet => 'Belirlenemedi. Tekrar dene.';
 }

@@ -3454,10 +3454,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get lockUseFingerprint => 'Fingerabdruck nutzen';
 
   @override
-  String get lockSetupThatIsYourWipe =>
-      'Das ist deine Lösch-PIN. Wähle eine andere.';
-
-  @override
   String get lockSetupUnlockWithFingerprint => 'Mit Fingerabdruck entsperren?';
 
   @override
@@ -4078,20 +4074,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die waren verschieden. Noch mal von vorn.';
 
   @override
-  String get panicSetupThatIsYourReal =>
-      'Das ist deine echte PIN. Wähle eine andere.';
-
-  @override
   String get panicSetupOnceMore => 'Noch einmal';
 
   @override
-  String get panicSetupSetAWipePin => 'Lösch-PIN festlegen';
-
-  @override
   String get panicSetupTheSameFourDigits => 'Dieselben Ziffern noch einmal';
-
-  @override
-  String get panicSetupTheSecondPinWipes => 'Die zweite PIN löscht alles.';
 
   @override
   String get photoKnowsEverythingInside => 'Alles, was drin ist';
@@ -4151,9 +4137,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pinsAppLock => 'App-Sperre';
 
   @override
-  String get pinsTwoPins => 'Zwei PINs';
-
-  @override
   String get pinsYourPin => 'Deine PIN';
 
   @override
@@ -4193,9 +4176,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pinsSet => 'Festlegen';
-
-  @override
-  String get pinsTheSecondPinWipes => 'Die zweite PIN löscht alles.';
 
   @override
   String get pinsChangeWipePin => 'Lösch-PIN ändern';
@@ -5059,7 +5039,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsAppLock2 => 'App-Sperre';
 
   @override
-  String get settingsYourPinAndA => 'Deine PIN und eine Lösch-PIN';
+  String get settingsYourPinAndA => 'Deine PIN und erweiterter Schutz';
 
   @override
   String get settingsPinWipePin => 'PIN · Lösch-PIN';
@@ -6976,4 +6956,118 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get lockFingerAfterPin =>
       'Gib einmal deine PIN ein, dann geht der Fingerabdruck wieder.';
+
+  @override
+  String get pinsAdvanced => 'Erweiterter Schutz';
+
+  @override
+  String get pinsAdvancedLine =>
+      'Für den Fall, dass dich jemand zwingt, dein Handy zu entsperren.';
+
+  @override
+  String get pinsWipeLine =>
+      'Auf dem Sperrbildschirm eingegeben, löscht sie Kryfo von diesem Handy.';
+
+  @override
+  String get pinsDecoyPin => 'Tarn-PIN';
+
+  @override
+  String get pinsDecoyLine =>
+      'Öffnet ein leeres Kryfo, wie frisch installiert.';
+
+  @override
+  String get pinsSetADecoyPin => 'Tarn-PIN festlegen';
+
+  @override
+  String get pinsChangeDecoyPin => 'Tarn-PIN ändern';
+
+  @override
+  String get pinsRemoveTheDecoyPin => 'Tarn-PIN entfernen?';
+
+  @override
+  String get pinsTheDecoyGoes =>
+      'Das leere Kryfo, das sie öffnet, verschwindet mit ihr.';
+
+  @override
+  String get pinsTurnOffWithDecoy =>
+      'Alle PINs werden entfernt, die Tarn-PIN und ihr Kryfo mit ihnen. Wer dein Handy in der Hand hat, öffnet Kryfo als du.';
+
+  @override
+  String get pinsHowThisWorks => 'So funktioniert es';
+
+  @override
+  String get flowEnterYourPin => 'Gib deine PIN ein';
+
+  @override
+  String get flowEnterYourPinLine => 'Die, mit der sich Kryfo öffnet.';
+
+  @override
+  String get flowWipeTitle => 'Eine Lösch-PIN';
+
+  @override
+  String get flowWipe1 =>
+      'Statt deiner PIN auf dem Sperrbildschirm eingegeben, löscht sie Kryfo von diesem Handy und schließt es. Für alle, die zusehen, hat die App einfach aufgehört.';
+
+  @override
+  String get flowWipe2 =>
+      'Sie nimmt jeden Chat und deine Identität mit, und die Tarnung, falls du eine hast.';
+
+  @override
+  String get flowWipeChoose => 'Wähle eine Lösch-PIN';
+
+  @override
+  String get flowWipeDone => 'Lösch-PIN festgelegt';
+
+  @override
+  String get flowWipeDoneLine =>
+      'Auf dem Sperrbildschirm deutet nichts auf sie hin.';
+
+  @override
+  String get flowDecoyTitle => 'Eine Tarn-PIN';
+
+  @override
+  String get flowDecoy1 =>
+      'Öffnet ein leeres Kryfo, wie frisch installiert. Es hält einem schnellen Blick durch dein Handy stand. Es verbirgt nicht, wie viel Speicher Kryfo belegt, und täuscht niemanden, der deine drei Wörter kennt, ihm eine Nachricht zu schicken versucht oder das Handy kopiert.';
+
+  @override
+  String get flowDecoyFinger =>
+      'Dein Fingerabdruck öffnet dein echtes Kryfo. Wenn dich jemand zwingen könnte, ihn zu benutzen, schalte den Fingerabdruck aus.';
+
+  @override
+  String get flowDecoyDigits =>
+      'Nimm so viele Ziffern wie bei deiner PIN. Die Punkte lassen sich zählen.';
+
+  @override
+  String get flowDecoyShade =>
+      'Benachrichtigungen, die schon in der Leiste sind, wurden schon gesehen. Solange die Tarnung offen ist, kommen keine neuen.';
+
+  @override
+  String get flowDecoyChoose => 'Wähle eine Tarn-PIN';
+
+  @override
+  String get flowDecoyDone => 'Tarn-PIN festgelegt';
+
+  @override
+  String get flowDecoyDoneLine =>
+      'Gib sie auf dem Sperrbildschirm ein, um das leere Kryfo zu öffnen. Zum Verlassen wechsle weg und gib deine PIN ein.';
+
+  @override
+  String get flowLaw =>
+      'In manchen Ländern ist es schon eine Straftat, ein Handy nicht zu entsperren oder Daten vor Behörden zu verbergen. Kenne das Recht dort, wo du hinreist.';
+
+  @override
+  String get howWipe =>
+      'Auf dem Sperrbildschirm eingegeben, löscht die Lösch-PIN jeden Chat, deine Identität und jede Tarnung und schließt dann Kryfo. Sie wirkt auch, während das Tastenfeld nach falschen Versuchen gesperrt ist.';
+
+  @override
+  String get howDecoy =>
+      'Die Tarn-PIN öffnet ein zweites, leeres Kryfo mit eigenen drei Wörtern. Nachrichten an dein echtes Kryfo kommen darunter weiter an, lautlos. Zum Verlassen der Tarnung wechsle weg und gib deine PIN ein.';
+
+  @override
+  String get howLimits =>
+      'Ein schneller Blick, kein Labor. Eine Kopie des Handys mit forensischen Werkzeugen kann zeigen, dass Kryfo mehr enthält, als es zeigt, und eine kurze PIN lässt sich offline erraten.';
+
+  @override
+  String get flowNotSet =>
+      'Konnte nicht festgelegt werden. Versuch es noch einmal.';
 }

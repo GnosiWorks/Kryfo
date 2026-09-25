@@ -15,6 +15,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'notifications.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -4454,6 +4455,15 @@ class QuietIdentity {
   final String invite;
 }
 
+// what home shows of a session: its chats, requests, groups and avatar
+class _Shown {
+  const _Shown(this.contacts, this.pending, this.groups, this.avatar);
+  final List<ContactPreview> contacts;
+  final int pending;
+  final List<GroupPreview> groups;
+  final int? avatar;
+}
+
 // the everyday container's database. what arrives lands here whichever
 // session is open; screens never touch it, they ask the session
 final live = HaloDb();
@@ -6810,6 +6820,17 @@ class AppState extends ChangeNotifier {
   bool get hasDecoy => !sessionQuiet && _decoyDb != null;
   // bumped when the screens change session: home starts over
   int sessionRev = 0;
+  // what home shows of the session that is not open: read ahead, so an
+  // unlock only swaps them in and every outcome shows at the same moment
+  _Shown? _otherShown;
+
+  Future<_Shown> _shownOf(HaloDb d) async {
+    final (list, pending) = await _contactsOf(d);
+    final a = await const FlutterSecureStorage().read(
+      key: d.container.key('my_avatar'),
+    );
+    return _Shown(list, pending, await _groupsOf(d), int.tryParse(a ?? ''));
+  }
 
   Future<void> _openContainers() async {
     try {
@@ -6821,6 +6842,7 @@ class AppState extends ChangeNotifier {
         if (q != null) {
           _decoyDb = d;
           _decoyId = q;
+          _otherShown = await _shownOf(d);
         } else {
           await d.close();
         }
@@ -6838,6 +6860,23 @@ class AppState extends ChangeNotifier {
   Future<QuietIdentity?> _quietOf(HaloDb d) async {
     final raw = await d.open();
     final saved = await d.loadIdentity();
+    // a restore made in the decoy leaves its onion key beside the database
+    final left = File(
+      p.join(
+        (await getApplicationDocumentsDirectory()).path,
+        'onion${d.container.suffix}.key',
+      ),
+    );
+    if (await left.exists()) {
+      final hex = (await left.readAsBytes())
+          .map((b) => b.toRadixString(16).padLeft(2, '0'))
+          .join();
+      await raw.insert('signal_meta', {
+        'k': 'onion_key',
+        'v': hex,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      await shredFile(left.path);
+    }
     final rows = await raw.query(
       'signal_meta',
       where: 'k = ?',
@@ -6882,10 +6921,10 @@ class AppState extends ChangeNotifier {
   Future<bool> setDecoyPin(String pin) async {
     if (sessionQuiet) return false;
     if (_decoyDb != null) return lockState.setupDecoyPin(pin);
-    final q = engine.quietIdentity();
-    if (q == null) return false;
     final d = HaloDb(HaloContainer.decoy);
     try {
+      final q = engine.quietIdentity();
+      if (q == null) throw StateError('no quiet identity');
       final raw = await d.open();
       await d.saveIdentity(
         q['id'] as String,
@@ -6904,13 +6943,15 @@ class AppState extends ChangeNotifier {
       }
       _decoyDb = d;
       _decoyId = id;
+      _otherShown = await _shownOf(d);
       decoyReady = true;
       notifyListeners();
       return true;
     } catch (e) {
+      // anything but a clash: nothing is left behind, and the flow says so
       dlog('decoy: not made ($e)');
       await _dropDecoyFiles(d);
-      return false;
+      rethrow;
     }
   }
 
@@ -6940,22 +6981,35 @@ class AppState extends ChangeNotifier {
     if (want == null) return;
     // what was already in the shade was already seen; nothing more comes
     if (decoy) unawaited(notifPlugin.cancelAll());
+    lockState.inDecoy = decoy;
     if (identical(_session, want)) return;
+    // no reads here: what home shows of the other session was read ahead,
+    // and swapping it in costs the same whichever way it goes
+    final leaving = _Shown(contacts, pendingCount, groups, _quietAvatar);
+    final coming = _otherShown;
+    _otherShown = leaving;
     _session = want;
     _quiet = decoy ? _decoyId : null;
+    if (coming != null) {
+      contacts = coming.contacts;
+      pendingCount = coming.pending;
+      groups = coming.groups;
+      if (decoy) _quietAvatar = coming.avatar;
+    }
     if (decoy) {
       _quietSince = DateTime.now().millisecondsSinceEpoch;
       _quietJobs = _jobRuns;
-      final a = await const FlutterSecureStorage().read(
-        key: HaloContainer.decoy.key('my_avatar'),
-      );
-      _quietAvatar = a == null ? null : int.tryParse(a);
     }
     rootRoutes.dropUnderLock();
     sessionRev++;
-    await refreshContacts();
-    await refreshGroups();
     notifyListeners();
+    // read again for real once the lock is gone, off the clock
+    unawaited(
+      Future.delayed(const Duration(milliseconds: 700), () async {
+        await refreshContacts();
+        await refreshGroups();
+      }),
+    );
   }
 
   String myOnion = '';
@@ -8043,8 +8097,15 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> refreshContacts() async {
-    final rows = await session.contacts();
-    final lasts = await session.lastMessages();
+    final (list, pending) = await _contactsOf(session);
+    contacts = list;
+    pendingCount = pending;
+    notifyListeners();
+  }
+
+  Future<(List<ContactPreview>, int)> _contactsOf(HaloDb d) async {
+    final rows = await d.contacts();
+    final lasts = await d.lastMessages();
     final list = <ContactPreview>[];
     for (final r in rows) {
       final haloId = r['halo_id'] as String;
@@ -8100,19 +8161,22 @@ class AppState extends ChangeNotifier {
       if (a.pinned != b.pinned) return a.pinned ? -1 : 1;
       return (b.when ?? DateTime(0)).compareTo(a.when ?? DateTime(0));
     });
-    contacts = list;
-    pendingCount = await session.pendingRequestCount();
-    notifyListeners();
+    return (list, await d.pendingRequestCount());
   }
 
   // ---- groups ----
 
   Future<void> refreshGroups() async {
-    final rows = await session.loadGroups();
+    groups = await _groupsOf(session);
+    notifyListeners();
+  }
+
+  Future<List<GroupPreview>> _groupsOf(HaloDb d) async {
+    final rows = await d.loadGroups();
     final list = <GroupPreview>[];
     for (final r in rows) {
       final gid = r['group_id'] as String;
-      final members = await session.getGroupMembers(gid);
+      final members = await d.getGroupMembers(gid);
       list.add(
         GroupPreview(
           groupId: gid,
@@ -8128,8 +8192,7 @@ class AppState extends ChangeNotifier {
         ),
       );
     }
-    groups = list;
-    notifyListeners();
+    return list;
   }
 
   // the tier to advertise to contacts, or null when sharing is off.

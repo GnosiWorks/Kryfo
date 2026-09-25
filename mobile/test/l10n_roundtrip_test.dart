@@ -327,7 +327,7 @@ void main() {
     expect(l.appDisableAppLock, "Disable app lock?");
     expect(
       l.appThePinWillBe,
-      "The pin will be removed. Anyone with your phone will see kryfo when they open it.",
+      "The PIN will be removed. Anyone with your phone will see kryfo when they open it.",
     );
     expect(l.appDisable, "Disable");
     expect(l.appAppLockOn, "App lock · on →");
@@ -1755,9 +1755,8 @@ void main() {
     );
     expect(l.lockTooManyTriesS("<lockState>"), "Too many tries · <lockState>s");
     expect(l.lockNotIt, "Not it");
-    expect(l.lockYourPin, "Your pin");
+    expect(l.lockYourPin, "Your PIN");
     expect(l.lockUseFingerprint, "Use fingerprint");
-    expect(l.lockSetupThatIsYourWipe, "That is your wipe pin. Pick another.");
     expect(l.lockSetupUnlockWithFingerprint, "Unlock with fingerprint?");
     expect(
       l.lockSetupThePinStillWorks,
@@ -2108,11 +2107,8 @@ void main() {
       l.panicSetupThoseWereDifferentFrom,
       "Those were different. From the top.",
     );
-    expect(l.panicSetupThatIsYourReal, "That is your real pin. Pick another.");
     expect(l.panicSetupOnceMore, "Once more");
-    expect(l.panicSetupSetAWipePin, "Set a wipe PIN");
     expect(l.panicSetupTheSameFourDigits, "The same digits again");
-    expect(l.panicSetupTheSecondPinWipes, "The second pin wipes everything.");
     expect(l.photoKnowsEverythingInside, "Everything inside");
     expect(l.photoKnowsVideo, "Video");
     expect(l.photoKnowsPhoto, "Photo");
@@ -2141,7 +2137,6 @@ void main() {
     expect(l.photoKnowsDrawnOffline, "DRAWN OFFLINE");
     expect(l.photoKnowsShowEverything("<title>"), "<title>. Show everything");
     expect(l.pinsAppLock, "App lock");
-    expect(l.pinsTwoPins, "Two pins");
     expect(l.pinsYourPin, "Your PIN");
     expect(l.commonOn, "On");
     expect(l.commonOff, "Off");
@@ -2161,7 +2156,6 @@ void main() {
     expect(l.pinsWipePin, "Wipe PIN");
     expect(l.pinsNeedsAPinFirst, "Needs a PIN first");
     expect(l.pinsSet, "Set");
-    expect(l.pinsTheSecondPinWipes, "The second pin wipes everything.");
     expect(l.pinsChangeWipePin, "Change wipe PIN");
     expect(l.pinsSetAWipePin, "Set a wipe PIN");
     expect(l.pinsRemove, "Remove");
@@ -2475,7 +2469,7 @@ void main() {
     );
     expect(
       l.seenHonestAboutTheLast,
-      "Honest about the last rows: that is what the app lock, the wipe pin and encrypted storage are for, and no tool saves you from someone holding your open phone. The full threat model lives in THREAT_MODEL.md in the repo, written against LINDDUN. The code is open, so none of this has to be taken on trust.",
+      "Honest about the last rows: that is what the app lock, the wipe PIN and encrypted storage are for, and no tool saves you from someone holding your open phone. The full threat model lives in THREAT_MODEL.md in the repo, written against LINDDUN. The code is open, so none of this has to be taken on trust.",
     );
     expect(l.seenHidden, "hidden");
     expect(l.seenNever, "never");
@@ -2535,7 +2529,7 @@ void main() {
     expect(l.seenASeizedUnlockedPhone, "A seized unlocked phone");
     expect(
       l.seenIfSomeoneHoldsYour,
-      "If someone holds your phone open, they read your messages. The app lock, wipe pin and encrypted storage help before that point, not after it.",
+      "If someone holds your phone open, they read your messages. The app lock, wipe PIN and encrypted storage help before that point, not after it.",
     );
     expect(l.seenTheCryptoItself, "The crypto itself");
     expect(
@@ -2606,7 +2600,7 @@ void main() {
     expect(l.settingsLightTheme, "Light theme");
     expect(l.settingsSameProtectionBrighter, "Same protection, brighter");
     expect(l.settingsAppLock2, "App lock");
-    expect(l.settingsYourPinAndA, "Your pin, and a wipe pin");
+    expect(l.settingsYourPinAndA, "Your PIN and Advanced protection");
     expect(l.settingsPinWipePin, "PIN · wipe PIN");
     expect(l.settingsBackUpIdentity, "Back up identity");
     expect(l.settingsEncryptedFile, "Encrypted file");

@@ -3440,10 +3440,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get lockUseFingerprint => 'Usar digital';
 
   @override
-  String get lockSetupThatIsYourWipe =>
-      'Esse é o seu PIN de apagamento. Escolha outro.';
-
-  @override
   String get lockSetupUnlockWithFingerprint => 'Desbloquear com a digital?';
 
   @override
@@ -4059,20 +4055,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get panicSetupThoseWereDifferentFrom => 'Eram diferentes. Do começo.';
 
   @override
-  String get panicSetupThatIsYourReal =>
-      'Esse é o seu PIN de verdade. Escolha outro.';
-
-  @override
   String get panicSetupOnceMore => 'Mais uma vez';
 
   @override
-  String get panicSetupSetAWipePin => 'Novo PIN de apagamento';
-
-  @override
   String get panicSetupTheSameFourDigits => 'Os mesmos dígitos de novo';
-
-  @override
-  String get panicSetupTheSecondPinWipes => 'O segundo PIN apaga tudo.';
 
   @override
   String get photoKnowsEverythingInside => 'Tudo o que tem dentro';
@@ -4131,9 +4117,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get pinsAppLock => 'Bloqueio do app';
 
   @override
-  String get pinsTwoPins => 'Dois PINs';
-
-  @override
   String get pinsYourPin => 'Seu PIN';
 
   @override
@@ -4173,9 +4156,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get pinsSet => 'Definido';
-
-  @override
-  String get pinsTheSecondPinWipes => 'O segundo PIN apaga tudo.';
 
   @override
   String get pinsChangeWipePin => 'Mudar PIN de apagamento';
@@ -5035,7 +5015,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsAppLock2 => 'Bloqueio do app';
 
   @override
-  String get settingsYourPinAndA => 'Seu PIN e um PIN de apagamento';
+  String get settingsYourPinAndA => 'Seu PIN e proteção avançada';
 
   @override
   String get settingsPinWipePin => 'PIN · PIN de apagamento';
@@ -6952,4 +6932,116 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get lockFingerAfterPin =>
       'Digite seu PIN uma vez para usar a digital de novo.';
+
+  @override
+  String get pinsAdvanced => 'Proteção avançada';
+
+  @override
+  String get pinsAdvancedLine =>
+      'Para quando alguém obriga você a desbloquear o celular.';
+
+  @override
+  String get pinsWipeLine =>
+      'Digitado na tela de bloqueio, apaga o Kryfo deste celular.';
+
+  @override
+  String get pinsDecoyPin => 'PIN de disfarce';
+
+  @override
+  String get pinsDecoyLine =>
+      'Abre um Kryfo vazio, como se acabasse de ser instalado.';
+
+  @override
+  String get pinsSetADecoyPin => 'Definir PIN de disfarce';
+
+  @override
+  String get pinsChangeDecoyPin => 'Mudar PIN de disfarce';
+
+  @override
+  String get pinsRemoveTheDecoyPin => 'Remover o PIN de disfarce?';
+
+  @override
+  String get pinsTheDecoyGoes => 'O Kryfo vazio que ele abre vai junto.';
+
+  @override
+  String get pinsTurnOffWithDecoy =>
+      'Todos os PINs saem, e o disfarce e o Kryfo dele junto. Qualquer pessoa com seu celular abre o Kryfo como se fosse você.';
+
+  @override
+  String get pinsHowThisWorks => 'Como funciona';
+
+  @override
+  String get flowEnterYourPin => 'Digite seu PIN';
+
+  @override
+  String get flowEnterYourPinLine => 'O que abre o Kryfo.';
+
+  @override
+  String get flowWipeTitle => 'Um PIN de apagamento';
+
+  @override
+  String get flowWipe1 =>
+      'Digitado na tela de bloqueio no lugar do seu PIN, ele apaga o Kryfo deste celular e o fecha. Para quem estiver olhando, o app só parou.';
+
+  @override
+  String get flowWipe2 =>
+      'Ele leva cada conversa e sua identidade junto, e o disfarce se você tiver um.';
+
+  @override
+  String get flowWipeChoose => 'Escolha um PIN de apagamento';
+
+  @override
+  String get flowWipeDone => 'PIN de apagamento definido';
+
+  @override
+  String get flowWipeDoneLine =>
+      'Nada na tela de bloqueio mostra que ele existe.';
+
+  @override
+  String get flowDecoyTitle => 'Um PIN de disfarce';
+
+  @override
+  String get flowDecoy1 =>
+      'Abre um Kryfo vazio, como se acabasse de ser instalado. Aguenta uma olhada rápida no seu celular. Não esconde quanto espaço o Kryfo ocupa, e não engana quem conhece suas três palavras, quem tenta mandar mensagem para ele ou quem copia o celular.';
+
+  @override
+  String get flowDecoyFinger =>
+      'Sua digital abre seu Kryfo de verdade. Se alguém puder obrigar você a usá-la, desative a digital.';
+
+  @override
+  String get flowDecoyDigits =>
+      'Use tantos dígitos quanto o seu PIN. Os pontos podem ser contados.';
+
+  @override
+  String get flowDecoyShade =>
+      'As notificações que já estão na barra já foram vistas. Enquanto o disfarce estiver aberto, nenhuma nova aparece.';
+
+  @override
+  String get flowDecoyChoose => 'Escolha um PIN de disfarce';
+
+  @override
+  String get flowDecoyDone => 'PIN de disfarce definido';
+
+  @override
+  String get flowDecoyDoneLine =>
+      'Digite-o na tela de bloqueio para abrir o Kryfo vazio. Para sair, troque de app e digite seu PIN.';
+
+  @override
+  String get flowLaw =>
+      'Em alguns países, recusar-se a desbloquear um celular ou esconder dados das autoridades já é crime por si só. Conheça a lei dos lugares para onde você viaja.';
+
+  @override
+  String get howWipe =>
+      'Digitado na tela de bloqueio, o PIN de apagamento apaga cada conversa, sua identidade e qualquer disfarce, e depois fecha o Kryfo. Funciona mesmo quando o teclado está travado depois de tentativas erradas.';
+
+  @override
+  String get howDecoy =>
+      'O PIN de disfarce abre um segundo Kryfo, vazio, com três palavras próprias. As mensagens para o seu Kryfo de verdade continuam chegando por baixo, em silêncio. Para sair do disfarce, troque de app e digite seu PIN.';
+
+  @override
+  String get howLimits =>
+      'Uma olhada rápida, não um laboratório. Uma cópia do celular feita com ferramentas forenses pode mostrar que o Kryfo guarda mais do que mostra, e um PIN curto pode ser adivinhado offline.';
+
+  @override
+  String get flowNotSet => 'Não deu para definir. Tente de novo.';
 }

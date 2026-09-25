@@ -3425,10 +3425,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get lockUseFingerprint => 'استفاده از اثر انگشت';
 
   @override
-  String get lockSetupThatIsYourWipe =>
-      'این PIN پاک‌سازی شماست. یکی دیگر انتخاب کنید.';
-
-  @override
   String get lockSetupUnlockWithFingerprint => 'باز کردن قفل با اثر انگشت؟';
 
   @override
@@ -4043,20 +4039,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get panicSetupThoseWereDifferentFrom => 'یکی نبودند. از اول.';
 
   @override
-  String get panicSetupThatIsYourReal =>
-      'این PIN اصلی شماست. یکی دیگر انتخاب کنید.';
-
-  @override
   String get panicSetupOnceMore => 'یک بار دیگر';
 
   @override
-  String get panicSetupSetAWipePin => 'تعیین PIN پاک‌سازی';
-
-  @override
   String get panicSetupTheSameFourDigits => 'همان رقم‌ها را دوباره';
-
-  @override
-  String get panicSetupTheSecondPinWipes => 'PIN دوم همه‌چیز را پاک می‌کند.';
 
   @override
   String get photoKnowsEverythingInside => 'همه‌چیزِ درونش';
@@ -4115,9 +4101,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get pinsAppLock => 'قفل برنامه';
 
   @override
-  String get pinsTwoPins => 'دو PIN';
-
-  @override
   String get pinsYourPin => 'PIN شما';
 
   @override
@@ -4157,9 +4140,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get pinsSet => 'تعیین';
-
-  @override
-  String get pinsTheSecondPinWipes => 'PIN دوم همه‌چیز را پاک می‌کند.';
 
   @override
   String get pinsChangeWipePin => 'تغییر PIN پاک‌سازی';
@@ -5014,7 +4994,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsAppLock2 => 'قفل برنامه';
 
   @override
-  String get settingsYourPinAndA => 'PIN شما، و یک PIN پاک‌سازی';
+  String get settingsYourPinAndA => 'PIN شما و حفاظت پیشرفته';
 
   @override
   String get settingsPinWipePin => 'PIN · PIN پاک‌سازی';
@@ -6917,4 +6897,115 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get lockFingerAfterPin =>
       'یک بار PIN خود را وارد کنید تا دوباره بتوانید از اثر انگشت استفاده کنید.';
+
+  @override
+  String get pinsAdvanced => 'حفاظت پیشرفته';
+
+  @override
+  String get pinsAdvancedLine =>
+      'برای وقتی که کسی شما را وادار می‌کند قفل گوشی‌تان را باز کنید.';
+
+  @override
+  String get pinsWipeLine =>
+      'اگر در صفحه‌ی قفل وارد شود، Kryfo را از این گوشی پاک می‌کند.';
+
+  @override
+  String get pinsDecoyPin => 'PIN فریب';
+
+  @override
+  String get pinsDecoyLine => 'یک Kryfo خالی باز می‌کند، انگار تازه نصب شده.';
+
+  @override
+  String get pinsSetADecoyPin => 'تعیین PIN فریب';
+
+  @override
+  String get pinsChangeDecoyPin => 'تغییر PIN فریب';
+
+  @override
+  String get pinsRemoveTheDecoyPin => 'PIN فریب حذف شود؟';
+
+  @override
+  String get pinsTheDecoyGoes => 'Kryfo خالی‌ای که باز می‌کند هم با آن می‌رود.';
+
+  @override
+  String get pinsTurnOffWithDecoy =>
+      'همه‌ی PINها حذف می‌شوند، PIN فریب و Kryfo آن هم با آن‌ها. هر کس گوشی شما را در دست داشته باشد، Kryfo را به‌عنوان شما باز می‌کند.';
+
+  @override
+  String get pinsHowThisWorks => 'این چطور کار می‌کند';
+
+  @override
+  String get flowEnterYourPin => 'PIN خود را وارد کنید';
+
+  @override
+  String get flowEnterYourPinLine => 'همان که Kryfo را باز می‌کند.';
+
+  @override
+  String get flowWipeTitle => 'یک PIN پاک‌سازی';
+
+  @override
+  String get flowWipe1 =>
+      'اگر در صفحه‌ی قفل به‌جای PIN شما وارد شود، Kryfo را از این گوشی پاک می‌کند و می‌بندد. از نگاه کسی که تماشا می‌کند، برنامه فقط از کار افتاد.';
+
+  @override
+  String get flowWipe2 =>
+      'همه‌ی گفتگوها و هویت شما را با خود می‌برد، و اگر فریبی دارید آن را هم.';
+
+  @override
+  String get flowWipeChoose => 'یک PIN پاک‌سازی انتخاب کنید';
+
+  @override
+  String get flowWipeDone => 'PIN پاک‌سازی تعیین شد';
+
+  @override
+  String get flowWipeDoneLine =>
+      'هیچ چیز در صفحه‌ی قفل نشان نمی‌دهد که وجود دارد.';
+
+  @override
+  String get flowDecoyTitle => 'یک PIN فریب';
+
+  @override
+  String get flowDecoy1 =>
+      'یک Kryfo خالی باز می‌کند، انگار تازه نصب شده. در برابر یک نگاه سریع به گوشی شما دوام می‌آورد. پنهان نمی‌کند که Kryfo چقدر فضا گرفته، و کسی را که سه واژه‌ی شما را می‌داند، سعی می‌کند به آن پیام بدهد یا از گوشی کپی می‌گیرد، فریب نمی‌دهد.';
+
+  @override
+  String get flowDecoyFinger =>
+      'اثر انگشت شما Kryfo واقعی را باز می‌کند. اگر ممکن است کسی شما را به استفاده از آن وادار کند، اثر انگشت را خاموش کنید.';
+
+  @override
+  String get flowDecoyDigits =>
+      'به اندازه‌ی PIN خود رقم بگذارید. نقطه‌ها را می‌شود شمرد.';
+
+  @override
+  String get flowDecoyShade =>
+      'اعلان‌هایی که از قبل در فهرست اعلان‌ها هستند، دیده شده‌اند. تا وقتی فریب باز است، اعلان تازه‌ای نشان داده نمی‌شود.';
+
+  @override
+  String get flowDecoyChoose => 'یک PIN فریب انتخاب کنید';
+
+  @override
+  String get flowDecoyDone => 'PIN فریب تعیین شد';
+
+  @override
+  String get flowDecoyDoneLine =>
+      'آن را در صفحه‌ی قفل وارد کنید تا Kryfo خالی باز شود. برای بیرون آمدن، به برنامه‌ی دیگری بروید و PIN خود را وارد کنید.';
+
+  @override
+  String get flowLaw =>
+      'در برخی کشورها، خودداری از باز کردن قفل گوشی یا پنهان کردن داده‌ها از مأموران به‌خودی‌خود جرم است. قانون جایی را که به آن سفر می‌کنید بشناسید.';
+
+  @override
+  String get howWipe =>
+      'اگر PIN پاک‌سازی در صفحه‌ی قفل وارد شود، همه‌ی گفتگوها، هویت شما و هر فریبی را پاک می‌کند و سپس Kryfo را می‌بندد. حتی وقتی صفحه‌کلید پس از تلاش‌های نادرست متوقف شده، کار می‌کند.';
+
+  @override
+  String get howDecoy =>
+      'PIN فریب یک Kryfo دوم و خالی با سه واژه‌ی خودش باز می‌کند. پیام‌ها به Kryfo واقعی شما در زیر آن بی‌صدا می‌رسند. برای بیرون آمدن از فریب، به برنامه‌ی دیگری بروید و PIN خود را وارد کنید.';
+
+  @override
+  String get howLimits =>
+      'یک نگاه سریع، نه آزمایشگاه. کپی‌ای که با ابزارهای جرم‌یابی از گوشی گرفته شود می‌تواند نشان دهد Kryfo بیش از آنچه نشان می‌دهد در خود دارد، و یک PIN کوتاه را می‌توان بدون اتصال حدس زد.';
+
+  @override
+  String get flowNotSet => 'تعیین نشد. دوباره امتحان کنید.';
 }

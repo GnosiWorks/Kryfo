@@ -432,4 +432,102 @@ void main() {
     await lock.setBiometric(false);
     expect(bio.key, 'none');
   });
+
+  test(
+    'the session each unlock opens is built before the lock lifts',
+    () async {
+      final lock = await make();
+      final seen = <(PinResult, bool)>[];
+      lock.onOutcome = (r) async => seen.add((r, lock.locked));
+      await lock.verifyPin('5555');
+      lock.lock();
+      await lock.verifyPin('1234');
+      lock.lock();
+      await lock.verifyPin('0000');
+      expect(seen, [(PinResult.decoy, true), (PinResult.normal, true)]);
+    },
+  );
+
+  test('inside the decoy the pins are the decoy\'s own', () async {
+    final lock = await make();
+    lock.inDecoy = true;
+    // its own pin changes entry 2, which opens the decoy
+    expect(await lock.setupPin('4444'), isTrue);
+    lock.inDecoy = false;
+    expect(await lock.verifyPin('4444'), PinResult.decoy);
+    lock.inDecoy = true;
+    // a wipe pin set there is a real one
+    expect(await lock.setupPanicPin('8888'), isTrue);
+    expect(lock.panicEnabled, isTrue);
+    lock.lock();
+    expect(await lock.verifyPin('8888'), PinResult.panic);
+    // a decoy pin set there opens the decoy too
+    expect(await lock.setupDecoyPin('7777'), isTrue);
+    expect(lock.decoyPinOn, isTrue);
+    lock.lock();
+    expect(await lock.verifyPin('7777'), PinResult.decoy);
+  });
+
+  test(
+    'inside the decoy a pin equal to a hidden one is taken and kept nowhere',
+    () async {
+      final lock = await make();
+      lock.inDecoy = true;
+      final before = store.m['halo.lock.table'];
+      final state = store.m['halo.lock.state'];
+      // 1234 is the everyday pin, 9999 the everyday wipe pin
+      expect(await lock.setupPin('1234'), isTrue);
+      expect(await lock.setupPanicPin('9999'), isTrue);
+      expect(store.m['halo.lock.table'], before);
+      expect(store.m['halo.lock.state'], state);
+      lock.inDecoy = false;
+      lock.lock();
+      expect(await lock.verifyPin('1234'), PinResult.normal);
+    },
+  );
+
+  test(
+    'turning the lock off inside the decoy pauses it and deletes nothing',
+    () async {
+      final lock = await make();
+      await lock.verifyPin('5555');
+      lock.inDecoy = true;
+      final before = Map.of(store.m);
+      await lock.disable();
+      expect(store.m, before);
+      expect(lock.lockOn, isFalse);
+      lock.lock();
+      expect(lock.locked, isFalse);
+      // the next start locks again
+      final again = await make();
+      expect(again.locked, isTrue);
+    },
+  );
+
+  test(
+    'enter your pin: the session\'s pin, a miss counts, the wipe pin wipes',
+    () async {
+      final lock = await make();
+      expect(await lock.confirmPin('1234'), PinResult.normal);
+      expect(await lock.confirmPin('5555'), PinResult.invalid);
+      expect(jsonDecode(store.m['halo.lock.state']!)['b'], 1);
+      expect(await lock.confirmPin('9999'), PinResult.panic);
+      lock.inDecoy = true;
+      expect(await lock.confirmPin('5555'), PinResult.normal);
+      expect(await lock.confirmPin('1234'), PinResult.invalid);
+    },
+  );
+
+  test('removing the decoy clears all three of its entries', () async {
+    final lock = await make();
+    lock.inDecoy = true;
+    await lock.setupPanicPin('8888');
+    await lock.setupDecoyPin('7777');
+    lock.inDecoy = false;
+    await lock.clearDecoyPins();
+    final e = jsonDecode(store.m['halo.lock.table']!)['e'] as Map;
+    expect(e.keys.toSet(), {'${PinSlot.app}', '${PinSlot.wipe}'});
+    expect(store.m.containsKey('halo.lock.d.wipe'), isFalse);
+    expect(store.m.containsKey('halo.lock.d.decoy'), isFalse);
+  });
 }

@@ -448,6 +448,9 @@ class LockState extends ChangeNotifier {
   static const _kState = 'halo.lock.state';
   static const _kBio = 'halo.lock.biometric';
   static const _kWipeOn = 'halo.lock.panic_enabled';
+  // whether the decoy has a wipe pin, or a decoy pin, of its own
+  static const _kDWipe = 'halo.lock.d.wipe';
+  static const _kDDecoy = 'halo.lock.d.decoy';
   // from before the table: sha256("salt:pin"), kept until migrated
   static const _kHash = 'halo.lock.pin_hash';
   static const _kSalt = 'halo.lock.pin_salt';
@@ -480,7 +483,26 @@ class LockState extends ChangeNotifier {
   bool get locked => (_enabled || _unreadable) && _locked;
   bool get biometric => _biometric;
   bool get bioSupported => _bioSupported;
-  bool get panicEnabled => _panicEnabled;
+  bool get panicEnabled => _inDecoy ? _dWipe : _panicEnabled;
+
+  // a decoy session is open (the session switch says so). the App lock
+  // screen then works on the decoy's own entries: its pin, its wipe pin, its
+  // decoy pin. a pin that clashes with one it cannot see is taken and kept
+  // nowhere, so nothing there says another exists; turning the lock off
+  // only pauses it until the next start
+  bool _inDecoy = false;
+  bool get inDecoy => _inDecoy;
+  set inDecoy(bool v) {
+    _inDecoy = v;
+    notifyListeners();
+  }
+
+  bool _paused = false;
+  bool _dWipe = false;
+  bool _dDecoy = false;
+  // what the App lock screen shows as on
+  bool get lockOn => _enabled && !_paused;
+  bool get decoyPinOn => _dDecoy;
   // a decoy session is open: nothing may notify
   bool get quiet => _counters.quiet;
   // the old wipe pin is still the sha256 kind: App lock asks for it again
@@ -496,6 +518,8 @@ class LockState extends ChangeNotifier {
       _enabled = (await _store.read(_kEnabled)) == 'true';
       _biometric = (await _store.read(_kBio)) == 'true';
       _panicEnabled = (await _store.read(_kWipeOn)) == 'true';
+      _dWipe = (await _store.read(_kDWipe)) == 'true';
+      _dDecoy = (await _store.read(_kDDecoy)) == 'true';
       _table = await _store.read(_kTable);
       _legacy = {
         'as': await _store.read(_kSalt) ?? '',
@@ -615,9 +639,18 @@ class LockState extends ChangeNotifier {
         dlog('lock: session not opened: $e');
       }
     }
+    final built = DateTime.now().difference(t0);
 
-    final left = revealAfter - DateTime.now().difference(t0);
+    final left = revealAfter - built;
     if (left > Duration.zero) await Future.delayed(left);
+    // profile builds only, and only times: how close every outcome comes
+    // to the moment it is shown
+    if (kProfileMode) {
+      debugPrint(
+        'lock: ready ${built.inMilliseconds} ms, shown '
+        '${DateTime.now().difference(t0).inMilliseconds} ms',
+      );
+    }
 
     if (result == PinResult.normal || result == PinResult.decoy) {
       _locked = false;
@@ -675,30 +708,101 @@ class LockState extends ChangeNotifier {
 
   // false when the pin is already in use: the screen says "pick a
   // different pin" and never which one it matched
-  Future<bool> setupPin(String pin) =>
-      _setup(pin, PinSlot.app, PinKind.everyday);
+  Future<bool> setupPin(String pin) => _inDecoy
+      ? _setup(
+          pin,
+          PinSlot.decoy,
+          PinKind.decoy,
+          container: HaloContainer.decoy.id,
+        )
+      : _setup(pin, PinSlot.app, PinKind.everyday);
 
   // the decoy's pin opens the decoy container. its entry is written last
   // when a decoy is made, and cleared first when one is removed
-  Future<bool> setupDecoyPin(String pin) => _setup(
-    pin,
-    PinSlot.decoy,
-    PinKind.decoy,
-    container: HaloContainer.decoy.id,
-  );
+  Future<bool> setupDecoyPin(String pin) async {
+    final ok = await _setup(
+      pin,
+      _inDecoy ? PinSlot.decoyDecoy : PinSlot.decoy,
+      PinKind.decoy,
+      container: HaloContainer.decoy.id,
+    );
+    if (ok && _inDecoy) {
+      await _store.write(_kDDecoy, 'true');
+      _dDecoy = true;
+      notifyListeners();
+    }
+    return ok;
+  }
 
+  // everything the decoy opens or set for itself, from the everyday side
   Future<void> clearDecoyPins() async {
     var t = _table;
-    if (t == null) return;
-    for (final i in [PinSlot.decoy, PinSlot.decoyWipe, PinSlot.decoyDecoy]) {
-      t = await _engine.clear(t!, i);
+    if (t != null) {
+      for (final i in [PinSlot.decoy, PinSlot.decoyWipe, PinSlot.decoyDecoy]) {
+        t = await _engine.clear(t!, i);
+      }
+      await _store.write(_kTable, t!);
+      _table = t;
     }
-    await _store.write(_kTable, t!);
-    _table = t;
+    await _store.delete(_kDWipe);
+    await _store.delete(_kDDecoy);
+    _dWipe = false;
+    _dDecoy = false;
     notifyListeners();
   }
 
+  // inside the decoy: its own decoy pin goes
+  Future<void> clearInnerDecoyPin() async {
+    final t = _table;
+    if (t != null) {
+      final out = await _engine.clear(t, PinSlot.decoyDecoy);
+      await _store.write(_kTable, out);
+      _table = out;
+    }
+    await _store.delete(_kDDecoy);
+    _dDecoy = false;
+    notifyListeners();
+  }
+
+  // "Enter your PIN" before any Advanced protection flow: the pin of the
+  // session that is open. a miss counts as it would on the lock screen, the
+  // wipe pin wipes as it would there, and an old sha256 pin moves into the
+  // table here too, for people who only ever used their fingerprint
+  Future<PinResult> confirmPin(String pin) async {
+    final uptime = await _clock.uptimeMs();
+    final boot = await _clock.bootCount();
+    final base = _counters.rebased(uptime, boot);
+    _standIn ??= await _engine.newTable(14);
+    final r = await _engine.check(pin, _table ?? _standIn!, _legacyJson);
+    final kind = (r['k'] as num?)?.toInt() ?? 0;
+    if (kind == PinKind.wipe || r['lw'] == true) return PinResult.panic;
+    if (base.holdLeft(uptime, boot) > 0) return PinResult.throttled;
+    final ok = _inDecoy
+        ? kind == PinKind.decoy
+        : kind == PinKind.everyday || r['la'] == true;
+    if (!ok) {
+      _counters = base.miss(uptime, boot);
+      await _store.write(_kState, _counters.encode());
+      await _refreshHoldForScreen();
+      notifyListeners();
+      return PinResult.invalid;
+    }
+    if (!_inDecoy && kind != PinKind.everyday && r['la'] == true) {
+      await _migrateApp(pin);
+    }
+    return PinResult.normal;
+  }
+
   Future<bool> setupPanicPin(String pin) async {
+    if (_inDecoy) {
+      final ok = await _setup(pin, PinSlot.decoyWipe, PinKind.wipe);
+      if (ok) {
+        await _store.write(_kDWipe, 'true');
+        _dWipe = true;
+        notifyListeners();
+      }
+      return ok;
+    }
     final ok = await _setup(pin, PinSlot.wipe, PinKind.wipe);
     if (ok) {
       await _store.write(_kWipeOn, 'true');
@@ -741,6 +845,8 @@ class LockState extends ChangeNotifier {
       await _store.write(_kTable, t);
       _table = t;
     } on PinCollision {
+      // inside the decoy a clash is taken and kept nowhere
+      if (_inDecoy) return true;
       final uptime = await _clock.uptimeMs();
       final boot = await _clock.bootCount();
       _counters = _counters.miss(uptime, boot);
@@ -763,6 +869,18 @@ class LockState extends ChangeNotifier {
   }
 
   Future<void> disablePanicPin() async {
+    if (_inDecoy) {
+      final t = _table;
+      if (t != null) {
+        final out = await _engine.clear(t, PinSlot.decoyWipe);
+        await _store.write(_kTable, out);
+        _table = out;
+      }
+      await _store.delete(_kDWipe);
+      _dWipe = false;
+      notifyListeners();
+      return;
+    }
     final t = _table;
     if (t != null) {
       final out = await _engine.clear(t, PinSlot.wipe);
@@ -777,14 +895,22 @@ class LockState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // everything goes: the table, the counters, the old keys
+  // everything goes: the table, the counters, the old keys. inside the
+  // decoy it only stops locking until the next start and deletes nothing
   Future<void> disable() async {
+    if (_inDecoy) {
+      _paused = true;
+      notifyListeners();
+      return;
+    }
     for (final k in [
       _kEnabled,
       _kTable,
       _kState,
       _kBio,
       _kWipeOn,
+      _kDWipe,
+      _kDDecoy,
       _kHash,
       _kSalt,
       _kPanicHash,
@@ -885,7 +1011,7 @@ class LockState extends ChangeNotifier {
   }
 
   void lock() {
-    if (!_enabled || holding) return;
+    if (!_enabled || holding || _paused) return;
     if (!_locked) {
       _locked = true;
       notifyListeners();
