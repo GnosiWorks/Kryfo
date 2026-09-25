@@ -56,6 +56,8 @@ import '../main.dart'
         hasSessionWith,
         appState,
         currentChatPeer,
+        claimChat,
+        releaseChat,
         shredFile,
         torStrictGetOnIsolate,
         TorHalo;
@@ -90,7 +92,7 @@ import '../l10n/numbers.dart';
 import '../widgets/video_viewer.dart';
 import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
-import '../lock_guard.dart' show lockGuard;
+import '../lock_guard.dart' show lockGuard, onScreen;
 
 // persists last-seen cipher per peer across ChatScreen instances
 // chunk indices already accepted by the peer, per media msg_uid. lets a
@@ -705,11 +707,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     appState.addListener(_onAppStateChanged);
     appState.loadSendMode();
     lockState.addListener(_lockLifted);
-    currentChatPeer = widget.peerHaloId;
-    session
-        .clearUnread(widget.peerHaloId)
-        .then((_) => appState.refreshContacts());
-    unawaited(clearNotificationsFor(widget.peerHaloId));
+    claimChat(widget.peerHaloId);
+    // opened while the lock is up (it never is by hand): read once it lifts
+    lockGuard.isLocked() ? _underLock = true : _markRead();
     _unreadAfterMs =
         _lastReadPerPeer[widget.peerHaloId] ??
         DateTime.now().millisecondsSinceEpoch;
@@ -3565,20 +3565,27 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // the lock lifted with this chat on top: it is the one being read again,
   // so its messages are not counted unread and a tap on one of its
   // notifications does not open a second copy of it
+  // set while the lock is up, so its lifting is acted on once
+  bool _underLock = false;
+
   void _lockLifted() {
-    if (!mounted || !lockState.loaded || lockState.locked) return;
-    // inactive too: a fingerprint unlock lifts it under the system prompt
-    final life = WidgetsBinding.instance.lifecycleState;
-    if (life != AppLifecycleState.resumed &&
-        life != AppLifecycleState.inactive) {
+    if (!mounted) return;
+    if (lockGuard.isLocked()) {
+      _underLock = true;
       return;
     }
+    if (!_underLock) return;
+    _underLock = false;
     if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
-    if (currentChatPeer == widget.peerHaloId) return;
-    currentChatPeer = widget.peerHaloId;
+    claimChat(widget.peerHaloId);
+    _markRead();
+  }
+
+  void _markRead() {
     session
         .clearUnread(widget.peerHaloId)
         .then((_) => appState.refreshContacts());
+    unawaited(clearNotificationsFor(widget.peerHaloId));
   }
 
   @override
@@ -3590,17 +3597,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden ||
         state == AppLifecycleState.inactive) {
-      if (currentChatPeer == widget.peerHaloId) currentChatPeer = null;
+      releaseChat(widget.peerHaloId);
     } else if (state == AppLifecycleState.resumed) {
-      // only re-claim "this chat is open" if we're actually the visible route.
-      // without the check, backing out to home and resuming later left this
-      // peer marked as open forever, and their unread dot never lit again.
-      final visible = ModalRoute.of(context)?.isCurrent ?? false;
-      if (!visible) {
-        if (currentChatPeer == widget.peerHaloId) currentChatPeer = null;
+      // only re-claim "this chat is open" if it is really being looked at:
+      // the visible route, with no lock over it. without the check, backing
+      // out to home and resuming later left this peer marked as open
+      // forever, and their unread dot never lit again. under the lock the
+      // claim waits for _lockLifted.
+      if (!onScreen(context)) {
+        releaseChat(widget.peerHaloId);
         return;
       }
-      currentChatPeer = widget.peerHaloId;
+      claimChat(widget.peerHaloId);
       session
           .clearUnread(widget.peerHaloId)
           .then((_) => appState.refreshContacts());
@@ -3630,7 +3638,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void deactivate() {
     // popped or covered: stop claiming this chat is the one being read, so a
     // message arriving right after we leave still lights the home dot.
-    if (currentChatPeer == widget.peerHaloId) currentChatPeer = null;
+    releaseChat(widget.peerHaloId);
     super.deactivate();
   }
 
@@ -3787,7 +3795,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _pollTimer?.cancel();
     _autoRetryTimer?.cancel();
     _burnTick?.cancel();
-    if (currentChatPeer == widget.peerHaloId) currentChatPeer = null;
+    releaseChat(widget.peerHaloId);
     lockState.removeListener(_lockLifted);
     appState.removeListener(_onAppStateChanged);
     _lastReadPerPeer[widget.peerHaloId] = _messages.isNotEmpty

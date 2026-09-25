@@ -112,6 +112,9 @@ class _CameraScreenState extends State<CameraScreen>
   }
 
   Future<void> _open() async {
+    // the lock can go up in the same resume that reopens the camera, and
+    // the camera may not run under it
+    if (lockGuard.isLocked()) return;
     final old = _cam;
     _cam = null;
     if (mounted) setState(() {});

@@ -39,7 +39,8 @@ import '../main.dart'
     show
         appState,
         session,
-        currentChatPeer,
+        claimChat,
+        releaseChat,
         newMsgUid,
         torStrictGetOnIsolate,
         shredFile;
@@ -80,7 +81,7 @@ import '../widgets/poll_card.dart';
 import '../widgets/stroke_icon.dart';
 import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
-import '../lock_guard.dart' show lockGuard;
+import '../lock_guard.dart' show lockGuard, onScreen;
 
 final Map<String, String> _draftPerGroup = {};
 
@@ -191,7 +192,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   void initState() {
     super.initState();
 
-    currentChatPeer = 'group:${widget.groupId}';
+    claimChat('group:${widget.groupId}');
     WidgetsBinding.instance.addObserver(this);
     lockState.addListener(_lockLifted);
     // a room is never in the app switcher and never screenshotted. the flag
@@ -211,10 +212,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         if (link != null && mounted) await showRoomLinkSheet(context, link);
       }
     });
-    session
-        .clearGroupUnread(widget.groupId)
-        .then((_) => appState.refreshGroups());
-    unawaited(clearNotificationsFor('group:${widget.groupId}'));
+    // opened while the lock is up (it never is by hand): read once it lifts
+    lockGuard.isLocked() ? _underLock = true : _markRead();
     // restore a draft left behind last time this group was open.
     _msgCtrl.text = _draftPerGroup[widget.groupId] ?? '';
     // save it live on every keystroke so it survives leaving regardless of
@@ -2504,21 +2503,27 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   // the lock lifted with this group on top: it is the one being read again
+  // set while the lock is up, so its lifting is acted on once
+  bool _underLock = false;
+
   void _lockLifted() {
-    if (!mounted || !lockState.loaded || lockState.locked) return;
-    // inactive too: a fingerprint unlock lifts it under the system prompt
-    final life = WidgetsBinding.instance.lifecycleState;
-    if (life != AppLifecycleState.resumed &&
-        life != AppLifecycleState.inactive) {
+    if (!mounted) return;
+    if (lockGuard.isLocked()) {
+      _underLock = true;
       return;
     }
+    if (!_underLock) return;
+    _underLock = false;
     if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
-    final me = 'group:${widget.groupId}';
-    if (currentChatPeer == me) return;
-    currentChatPeer = me;
+    claimChat('group:${widget.groupId}');
+    _markRead();
+  }
+
+  void _markRead() {
     session
         .clearGroupUnread(widget.groupId)
         .then((_) => appState.refreshGroups());
+    unawaited(clearNotificationsFor('group:${widget.groupId}'));
   }
 
   @override
@@ -2528,18 +2533,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden ||
         state == AppLifecycleState.inactive) {
-      if (currentChatPeer == 'group:${widget.groupId}') currentChatPeer = null;
+      releaseChat('group:${widget.groupId}');
     } else if (state == AppLifecycleState.resumed) {
-      // only re-claim the marker while we're the visible route, else backing
-      // out and resuming later leaves the group marked open and its badge dead.
-      final visible = ModalRoute.of(context)?.isCurrent ?? false;
-      if (!visible) {
-        if (currentChatPeer == 'group:${widget.groupId}') {
-          currentChatPeer = null;
-        }
+      // only re-claim the marker while it is really being looked at: the
+      // visible route with no lock over it, else backing out and resuming
+      // later leaves the group marked open and its badge dead. under the
+      // lock the claim waits for _lockLifted.
+      if (!onScreen(context)) {
+        releaseChat('group:${widget.groupId}');
         return;
       }
-      currentChatPeer = 'group:${widget.groupId}';
+      claimChat('group:${widget.groupId}');
       session
           .clearGroupUnread(widget.groupId)
           .then((_) => appState.refreshGroups());
@@ -2549,7 +2553,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   @override
   void deactivate() {
     // popped or covered: stop claiming this group is being read.
-    if (currentChatPeer == 'group:${widget.groupId}') currentChatPeer = null;
+    releaseChat('group:${widget.groupId}');
     _leaveRoomScreen();
     super.deactivate();
   }
@@ -2592,7 +2596,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     _stickyShown.dispose();
     WidgetsBinding.instance.removeObserver(this);
     lockState.removeListener(_lockLifted);
-    if (currentChatPeer == 'group:${widget.groupId}') currentChatPeer = null;
+    releaseChat('group:${widget.groupId}');
     appState.removeListener(_onAppStateChanged);
     _burnTick?.cancel();
     _autoRetryTimer?.cancel();

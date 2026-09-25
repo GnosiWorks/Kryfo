@@ -90,7 +90,9 @@ class MainActivity : FlutterFragmentActivity() {
         // sat there in plain text until some other file was opened. an app
         // that still holds it open keeps its descriptor; the name is gone.
         clearOpenCopies()
-        askForNotificationsOnce()
+        // the notification ask is android's own dialog and it would open over
+        // the app lock's pin pad: dart asks for it (askNotifications) once
+        // the lock is down
         startListenerService()
         schedulePeriodicJob()
     }
@@ -262,6 +264,10 @@ class MainActivity : FlutterFragmentActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "isMiui" -> result.success(isMiuiDevice())
+                    "askNotifications" -> {
+                        askForNotificationsOnce()
+                        result.success(null)
+                    }
                     // the three facts the transport screen shows so a
                     // person can tell asleep from killed without adb
                     "isBatteryExempt" -> {

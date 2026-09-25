@@ -46,11 +46,25 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
   late final AnimationController _breath = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1800),
-  )..repeat(reverse: true);
+    value: 1,
+  );
   late final Animation<double> _breathOpacity = Tween(
     begin: 0.15,
     end: 1.0,
   ).animate(CurvedAnimation(parent: _breath, curve: Curves.easeInOut));
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // it breathes, unless the phone asks for less movement
+    if (MediaQuery.of(context).disableAnimations) {
+      _breath
+        ..stop()
+        ..value = 1;
+    } else if (!_breath.isAnimating) {
+      _breath.repeat(reverse: true);
+    }
+  }
 
   @override
   void initState() {
@@ -163,6 +177,9 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // the keyboard of the screen under it goes down as it comes up: the
+      // pad stays where it is
+      resizeToAvoidBottomInset: false,
       backgroundColor: HaloColors.ink,
       body: Stack(
         children: [

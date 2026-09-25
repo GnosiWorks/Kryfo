@@ -17,6 +17,7 @@ import 'package:share_plus/share_plus.dart';
 
 import 'theme.dart';
 import 'l10n/l10n.dart';
+import 'lock_guard.dart' show lockGuard, LockDropped;
 
 class ContactCard extends StatelessWidget {
   final String haloId;
@@ -107,6 +108,14 @@ Future<void> shareContactCard({
   required String haloId,
   required String uri,
 }) async {
+  // it is drawn off screen and captured, and under the lock nothing is
+  // drawn: it waits for the lock to lift, and gives up if a decoy opens
+  try {
+    await lockGuard.unlocked();
+  } on LockDropped {
+    return;
+  }
+  if (!context.mounted) return;
   final key = GlobalKey();
   final overlay = OverlayEntry(
     builder: (_) => Positioned(

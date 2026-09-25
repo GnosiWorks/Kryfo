@@ -14,6 +14,7 @@ import 'scan_mode_dropdown.dart';
 class ReaderWidget extends StatefulWidget {
   const ReaderWidget({
     super.key,
+    this.mayOpen,
     this.onScan,
     this.onScanFailure,
     this.onMultiScan,
@@ -57,6 +58,11 @@ class ReaderWidget extends StatefulWidget {
   });
 
   /// Called when a code is detected
+  // kryfo: asked before the camera comes back on after a resume. the app's
+  // lock can go up during that same resume, and the camera may not run
+  // under it
+  final bool Function()? mayOpen;
+
   final Function(Code)? onScan;
 
   /// Called when a code is not detected
@@ -238,6 +244,7 @@ class _ReaderWidgetState extends State<ReaderWidget>
 
     switch (state) {
       case AppLifecycleState.resumed:
+        if (!(widget.mayOpen?.call() ?? true)) break;
         if (cameras.isNotEmpty && !_isCameraOn) {
           onNewCameraSelected(cameras.first);
         }

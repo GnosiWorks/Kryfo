@@ -484,6 +484,8 @@ class _RestoreScreenState extends State<RestoreScreen> {
                         child: TextField(
                           controller: _passCtrl,
                           obscureText: true,
+                          // never offered to the phone's autofill service
+                          autofillHints: null,
                           autocorrect: false,
                           enableSuggestions: false,
                           enabled: !_busy && s == null,

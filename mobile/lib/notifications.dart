@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dlog.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'l10n/l10n.dart';
 import 'container.dart';
+import 'lock_guard.dart' show lockGuard;
 import 'lock_state.dart' show quietNow;
 
 final FlutterLocalNotificationsPlugin notifPlugin =
@@ -33,15 +35,23 @@ Future<void> initNotifications({void Function(String? payload)? onTap}) async {
   await android?.deleteNotificationChannel(channelId: 'halo_messages');
   await nameNotificationChannel();
   // android 13+ denies notifications until asked. without this the channel
-  // exists but nothing is ever delivered, silently.
-  // the plugin needs an activity for this. with none attached, as in a
-  // process the service brought back, it throws and used to take the whole
-  // boot down. the activity asks natively on resume anyway.
-  try {
-    await android?.requestNotificationsPermission();
-  } catch (e) {
-    dlog('notifications: permission ask skipped: $e');
-  }
+  // exists but nothing is ever delivered, silently. the ask is android's own
+  // dialog, so it waits for the app lock to lift: never over the pin pad.
+  // the activity asks at most once (askForNotificationsOnce), and with no
+  // activity, as in a process the service brought back, there is no channel
+  // and nothing is asked.
+  unawaited(
+    lockGuard
+        .unlocked()
+        .then(
+          (_) => const MethodChannel(
+            'halo/platform',
+          ).invokeMethod<void>('askNotifications'),
+        )
+        .catchError((Object e) {
+          dlog('notifications: permission ask skipped: $e');
+        }),
+  );
 }
 
 // made again with the same id, a channel keeps its settings and takes the

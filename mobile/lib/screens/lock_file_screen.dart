@@ -112,6 +112,8 @@ class SecretField extends StatelessWidget {
                     child: TextField(
                       controller: controller,
                       obscureText: !shown,
+                      // never offered to the phone's autofill service
+                      autofillHints: null,
                       autocorrect: false,
                       enableSuggestions: false,
                       enableIMEPersonalizedLearning: false,

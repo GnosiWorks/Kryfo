@@ -93,6 +93,7 @@ class _ScanScreenState extends State<ScanScreen>
       body: Stack(
         children: [
           ReaderWidget(
+            mayOpen: () => !lockGuard.isLocked(),
             onScan: _onScan,
             onControllerCreated: (controller, error) => _cam = controller,
             showScannerOverlay: false,

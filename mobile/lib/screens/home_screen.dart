@@ -21,6 +21,7 @@ import 'qr_screen.dart';
 import 'lock_file_screen.dart';
 import 'open_locked_screen.dart';
 import '../tools/tools_bridge.dart';
+import '../lock_guard.dart' show lockGuard;
 import '../lock_state.dart';
 import '../widgets/nav_bar.dart';
 import 'package:flutter/services.dart';
@@ -1801,6 +1802,15 @@ class _ContactList extends StatelessWidget {
 }
 
 bool _homeEntered = false;
+bool _enterUnderLock = false;
+
+// the app came out from under the lock. rows built under it have waited for
+// their entrance and play it now; from here on no row plays one. a decoy's
+// home, built under the lock before the first reveal, plays it the same way
+// as the everyday one would, and after that neither does
+void homeRevealed() {
+  if (_enterUnderLock) _homeEntered = true;
+}
 
 // one-shot staggered entrance for the home list. plays on the first render
 // after launch, then stays put so message updates never re-animate rows.
@@ -1824,7 +1834,9 @@ class _EnterState extends State<_Enter> with SingleTickerProviderStateMixin {
   void initState() {
     super.initState();
     if (_animate) {
-      if (!_homeEntered) {
+      if (lockGuard.isLocked()) {
+        _enterUnderLock = true;
+      } else {
         WidgetsBinding.instance.addPostFrameCallback(
           (_) => _homeEntered = true,
         );
@@ -1973,7 +1985,8 @@ class _UnreadBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return TweenAnimationBuilder<double>(
       key: ValueKey(count),
-      tween: Tween(begin: 0.55, end: 1),
+      // no pop for a badge made under the lock: nothing moves at the reveal
+      tween: Tween(begin: lockGuard.isLocked() ? 1.0 : 0.55, end: 1),
       duration: const Duration(milliseconds: 260),
       curve: Curves.easeOutBack,
       builder: (_, t, child) => Transform.scale(scale: t, child: child),

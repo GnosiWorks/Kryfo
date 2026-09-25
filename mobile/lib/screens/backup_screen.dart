@@ -242,6 +242,8 @@ class _PinField extends StatelessWidget {
     return TextField(
       controller: controller,
       obscureText: true,
+      // never offered to the phone's autofill service
+      autofillHints: null,
       style: HaloType.mono(size: 14, color: HaloColors.text),
       decoration: InputDecoration(
         labelText: label,

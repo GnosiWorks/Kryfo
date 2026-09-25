@@ -1,32 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// lock_guard.dart - nothing gets past the app lock. what comes from outside
-// while it is up, a notification tap or a link, waits until it lifts. a
-// screen pushed while it is up waits under it. if the lock's own route is
-// popped or removed while locked, a new one goes straight back on top. and
-// what the app has open above its routes or running in the background (a
-// message menu, a recorder, a voice note, the camera) closes as it goes up.
-// a decoy unlock drops what waited instead, and a session changing under
-// the lock takes out every screen between home and the lock.
+// lock_guard.dart - what the app lock's layer cannot cover by drawing over
+// it. what comes from outside while it is up, a notification tap or a link,
+// waits until it lifts, since opening it underneath would still run it. what
+// runs outside the widget tree (a voice note, a recorder, the camera, a
+// video) stops as it goes up. work that ends in a system dialog waits for it
+// to lift. a decoy unlock drops what waited instead.
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 
 import 'lock_state.dart';
 
-class LockGuard extends NavigatorObserver {
+class LockGuard {
   LockGuard({required this.isLocked});
 
   final bool Function() isLocked;
 
-  // the lock's own route, while it is up
-  Route<dynamic>? lock;
-  // the gate puts a new lock route up when this one went while locked
-  VoidCallback? onLockLost;
-
   final Map<Object, Future<void> Function()> _held = {};
   int _unkeyed = 0;
-  // the root navigator's routes, bottom first
-  final List<Route<dynamic>> _routes = [];
   // work waiting to open a system dialog once the lock lifts
   final List<Completer<void>> _waiting = [];
   final Set<VoidCallback> _closers = {};
@@ -69,11 +60,10 @@ class LockGuard extends NavigatorObserver {
     }
   }
 
-  // something open that must close when the lock goes up. returns what
+  // something running that must stop when the lock goes up. returns what
   // takes it off the list again
   VoidCallback closeOnLock(VoidCallback close) {
-    // the lock went up while this was still starting: it closes at once,
-    // before anything of it is drawn
+    // the lock went up while this was still starting: it stops at once
     if (isLocked()) {
       scheduleMicrotask(() {
         try {
@@ -104,17 +94,6 @@ class LockGuard extends NavigatorObserver {
     _waiting.clear();
   }
 
-  // the session changed under the lock: every screen between home and the
-  // lock goes, so none of the other session's is there when it lifts
-  void dropUnderLock() {
-    final l = lock;
-    if (l == null) return;
-    for (final r in List.of(_routes)) {
-      if (r == l || r.isFirst || !r.isActive) continue;
-      r.navigator?.removeRoute(r);
-    }
-  }
-
   // the lock is going up
   void locking() {
     for (final close in List.of(_closers)) {
@@ -123,49 +102,6 @@ class LockGuard extends NavigatorObserver {
         close();
       } catch (_) {}
     }
-  }
-
-  void _lost(Route<dynamic>? route) {
-    final l = lock;
-    if (l == null || route != l || !isLocked()) return;
-    lock = null;
-    // the navigator is mid-change inside an observer: the new lock goes
-    // up right after, still before anything is drawn
-    scheduleMicrotask(() => onLockLost?.call());
-  }
-
-  @override
-  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    _routes.add(route);
-    final l = lock;
-    if (l == null || route == l || !isLocked()) return;
-    // the new screen stays where it is, under a lock put back on top
-    scheduleMicrotask(() {
-      if (lock == l && l.isActive) l.navigator?.removeRoute(l);
-    });
-  }
-
-  @override
-  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    _routes.remove(route);
-    _lost(route);
-  }
-
-  @override
-  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    _routes.remove(route);
-    _lost(route);
-  }
-
-  @override
-  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
-    final i = oldRoute == null ? -1 : _routes.indexOf(oldRoute);
-    if (i >= 0) {
-      newRoute == null ? _routes.removeAt(i) : _routes[i] = newRoute;
-    } else if (newRoute != null) {
-      _routes.add(newRoute);
-    }
-    _lost(oldRoute);
   }
 }
 
@@ -178,3 +114,7 @@ class LockDropped implements Exception {
 final lockGuard = LockGuard(
   isLocked: () => !lockState.loaded || lockState.locked,
 );
+
+// a screen is being looked at: its route is on top and no lock is over it
+bool onScreen(BuildContext context) =>
+    !lockGuard.isLocked() && (ModalRoute.of(context)?.isCurrent ?? false);

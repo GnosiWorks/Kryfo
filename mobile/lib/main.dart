@@ -44,7 +44,9 @@ import 'screens/my_kryfo_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'container.dart';
 import 'lock_state.dart';
+import 'app_shell.dart';
 import 'lock_guard.dart';
+import 'lock_layer.dart';
 import 'screens/lock_screen.dart';
 import 'screens/lock_setup_screen.dart';
 import 'screens/moved_screen.dart';
@@ -4479,11 +4481,14 @@ bool get sessionQuiet => _session.container.quiet;
 // join is a sheet or a screen about to close itself, and a room pushed
 // before that close would be the thing that got closed.
 void openRoomSoon(String groupId) {
-  Future.delayed(const Duration(milliseconds: 450), () async {
-    final nav = rootNavKey.currentState;
-    if (nav == null || !await session.groupExists(groupId)) return;
-    nav.push(haloRoute(GroupChatScreen(groupId: groupId)));
-  });
+  Future.delayed(
+    const Duration(milliseconds: 450),
+    () => lockGuard.afterUnlock(key: 'room:$groupId', () async {
+      final nav = rootNavKey.currentState;
+      if (nav == null || !await session.groupExists(groupId)) return;
+      nav.push(haloRoute(GroupChatScreen(groupId: groupId)));
+    }),
+  );
 }
 
 // what a link opened from outside the app came to. it went to the debug
@@ -4523,12 +4528,33 @@ Future<void> _openChatFor(String? haloId) async {
   );
 }
 
-// kryfo id of the peer whose chat is currently on screen. set by
-// ChatScreen.initState, cleared on dispose. used to suppress
-// notifications for the conversation the user is already in.
-String? currentChatPeer;
+// the chat or group whose screen is open ('group:<id>' for a group), as the
+// screens report it
+String? _chatOnScreen;
 
-final GlobalKey<NavigatorState> rootNavKey = GlobalKey<NavigatorState>();
+// the chat being read: the one on screen, and only while the lock is down.
+// a message for it is marked read and its notification suppressed, so under
+// the lock there is none
+String? get currentChatPeer => lockGuard.isLocked() ? null : _chatOnScreen;
+
+void claimChat(String id) => _chatOnScreen = id;
+
+void releaseChat(String id) {
+  if (_chatOnScreen == id) _chatOnScreen = null;
+}
+
+// the root navigator. each session gets its own: switching sessions under
+// the lock swaps the key, and every route, popping route, hero flight, toast
+// and menu of the other session goes with the old navigator at once
+GlobalKey<NavigatorState> _rootNavKey = GlobalKey<NavigatorState>();
+GlobalKey<NavigatorState> get rootNavKey => _rootNavKey;
+final navRevision = ValueNotifier<int>(0);
+
+void renewRootNavigator() {
+  haloClearToasts();
+  _rootNavKey = GlobalKey<NavigatorState>();
+  navRevision.value++;
+}
 
 int _msgUidCounter = 0;
 // stable cross-device message id. used by reactions + replies + group
@@ -5994,21 +6020,22 @@ class AppState extends ChangeNotifier {
 
   Future<void> forceSecure(bool on) async {
     _secureForced = on;
-    try {
-      await _platformChannel.invokeMethod('setSecure', {
-        'on': on || _blockScreenshotsApplied || screenSecureByLock,
-      });
-    } catch (e) {
-      dlog('setSecure: $e');
-    }
+    await _applyScreenSecure();
   }
 
+  // what android was last told. the call runs on android's main thread,
+  // which dart shares, so an unchanged value is not sent: a room closing
+  // in a session switch would otherwise hold the decoy's reveal alone
+  bool? _secureSent;
+
   Future<void> _applyScreenSecure() async {
+    final on = _blockScreenshotsApplied || _secureForced || screenSecureByLock;
+    if (on == _secureSent) return;
+    _secureSent = on;
     try {
-      await _platformChannel.invokeMethod('setSecure', {
-        'on': _blockScreenshotsApplied || _secureForced || screenSecureByLock,
-      });
+      await _platformChannel.invokeMethod('setSecure', {'on': on});
     } catch (e) {
+      _secureSent = null;
       dlog('setSecure: $e');
     }
   }
@@ -6933,7 +6960,7 @@ class AppState extends ChangeNotifier {
       _quietSince = DateTime.now().millisecondsSinceEpoch;
       _quietJobs = _jobRuns;
     }
-    lockGuard.dropUnderLock();
+    renewRootNavigator();
     sessionRev++;
     notifyListeners();
     // once the lock is gone, off the clock: what was already in the shade
@@ -9574,12 +9601,15 @@ void main() async {
       if (PlatformDispatcher.instance.implicitView == null) return;
       t.cancel();
       dlog('LAUNCH window arrived');
+      WidgetsBinding.instance.addObserver(lockBack);
       runApp(const HaloApp());
       WidgetsBinding.instance.addPostFrameCallback((_) => _openFromNotif());
     });
     return;
   }
   WidgetsBinding.instance.addPostFrameCallback((_) => dlog('LAUNCH frame'));
+  // before runApp, so it is asked about back before the app's navigator
+  WidgetsBinding.instance.addObserver(lockBack);
   runApp(const HaloApp());
   dlog('LAUNCH runApp returned');
   // cold-start: if launched from a notification tap, open the chat
@@ -9613,39 +9643,15 @@ class HaloApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: Listenable.merge([themeRevision, localeRevision]),
-      builder: (context, _) => MaterialApp(
+      listenable: Listenable.merge([
+        themeRevision,
+        localeRevision,
+        navRevision,
+      ]),
+      builder: (context, _) => haloAppShell(
         navigatorKey: rootNavKey,
-        navigatorObservers: [lockGuard],
-        scaffoldMessengerKey: haloMessengerKey,
-        title: 'Kryfo',
-        theme: buildHaloTheme(),
         locale: l10nLocale,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        // one place for the two accessibility settings everything else
-        // should obey. clamped rather than uncapped - past 1.6 the chat
-        // bubbles stop being readable, which helps nobody.
-        builder: (ctx, child) {
-          final mq = MediaQuery.of(ctx);
-          return MediaQuery(
-            data: mq.copyWith(
-              textScaler: mq.textScaler.clamp(
-                minScaleFactor: 0.85,
-                maxScaleFactor: 1.6,
-              ),
-            ),
-            // the lock sits here, above the navigator, so it covers
-            // whatever screen was open. as the home route it only covered
-            // home: pause from settings or a chat and the pin never showed
-            // until you walked back.
-            child: _LockGate(child: child ?? const SizedBox.shrink()),
-          );
-        },
-        // one scroll feel everywhere: ios-style rubber-band on every
-        // platform, no stretch-glow. the single biggest "premium" tell,
-        // and it was unset so android fell back to the clamp+glow default.
-        scrollBehavior: const _HaloScrollBehavior(),
+        lock: (navigator) => _LockGate(child: navigator),
         home: _LocaleScope(child: _OnboardingGate(child: RootShell())),
       ),
     );
@@ -9655,16 +9661,6 @@ class HaloApp extends StatelessWidget {
 // true when the phone asks for less movement. widgets check this before
 // running anything decorative.
 bool reduceMotion(BuildContext c) => MediaQuery.of(c).disableAnimations;
-
-class _HaloScrollBehavior extends ScrollBehavior {
-  const _HaloScrollBehavior();
-  @override
-  ScrollPhysics getScrollPhysics(BuildContext context) =>
-      const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
-  @override
-  Widget buildOverscrollIndicator(BuildContext context, Widget child, _) =>
-      child; // no glow - the bounce is the feedback
-}
 
 class RootShell extends StatefulWidget {
   const RootShell({super.key});
@@ -10609,9 +10605,13 @@ class _LocaleScopeState extends State<_LocaleScope>
   }
 
   void _switched() {
-    rootNavKey.currentState?.popUntil(
-      (r) => r.isFirst || r.settings.name == 'lock',
-    );
+    if (lockGuard.isLocked()) {
+      // under the lock nothing animates, so nothing may be left mid-pop:
+      // a new navigator, home only
+      renewRootNavigator();
+    } else {
+      rootNavKey.currentState?.popUntil((r) => r.isFirst);
+    }
     setState(() {});
     if (!reduceMotion(context)) _fade.forward(from: 0);
     unawaited(appState.languageChanged());
@@ -10638,22 +10638,13 @@ class _LockGate extends StatefulWidget {
 }
 
 class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
-  // the lock is a route on the root navigator: it covers whatever is open,
-  // takes the back button, and leaves the screen underneath where it was.
-  // as a sibling in a stack the hidden navigator still answered back
-  // presses, and an open chat still counted as the one being read.
-  Route<void>? _lockRoute;
+  // the lock is a layer above the navigator (lock_layer.dart). this keeps
+  // what drives it: reading it at the start, and leaving and coming back.
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    lockState.addListener(_sync);
-    // the lock's route went while locked: a new one goes up at once
-    lockGuard.onLockLost = () {
-      _lockRoute = null;
-      _sync();
-    };
     lockState.load();
     // the lifecycle only reports changes, and a fresh start in front is not
     // one. a process the job started builds this too, with nobody looking.
@@ -10664,55 +10655,8 @@ class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    lockState.removeListener(_sync);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
-  }
-
-  void _sync() {
-    final nav = rootNavKey.currentState;
-    if (nav == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _sync());
-      return;
-    }
-    final locked = lockState.locked;
-    if (locked && _lockRoute == null) {
-      // a composer left focused would keep its keyboard up under the pin
-      FocusManager.instance.primaryFocus?.unfocus();
-      // what is open above the routes or running goes first: menus,
-      // recorders, a voice note, the camera, a toast
-      lockGuard.locking();
-      haloClearToasts();
-      final r = PageRouteBuilder<void>(
-        opaque: true,
-        settings: const RouteSettings(name: 'lock'),
-        transitionDuration: Duration.zero,
-        reverseTransitionDuration: const Duration(milliseconds: 220),
-        // its own messenger: nothing meant for the app's screens is shown
-        // on the pin pad
-        pageBuilder: (_, _, _) => const ScaffoldMessenger(
-          child: PopScope(canPop: false, child: LockScreen()),
-        ),
-        transitionsBuilder: (_, a, _, child) =>
-            FadeTransition(opacity: a, child: child),
-      );
-      _lockRoute = r;
-      lockGuard.lock = r;
-      nav.push(r);
-    } else if (!locked && _lockRoute != null) {
-      final r = _lockRoute!;
-      _lockRoute = null;
-      lockGuard.lock = null;
-      if (r.isCurrent) {
-        nav.pop();
-      } else if (r.isActive) {
-        nav.removeRoute(r);
-      }
-    }
-    // what waited happens in an everyday session and is dropped in a decoy
-    if (lockState.loaded && !lockState.locked) {
-      sessionQuiet ? lockGuard.dropHeld() : lockGuard.lifted();
-    }
   }
 
   @override
@@ -10735,20 +10679,22 @@ class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: lockState,
-      builder: (_, _) => Stack(
-        fit: StackFit.expand,
-        children: [
-          widget.child,
-          // nothing is known before the first read: paint ink, not a home
-          // screen that is about to lock
-          if (!lockState.loaded) ColoredBox(color: HaloColors.ink),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => LockLayer(
+    app: widget.child,
+    lock: lockState,
+    loaded: () => lockState.loaded,
+    locked: () => lockState.locked,
+    pad: (_) => const LockScreen(),
+    onLockUp: () {
+      lockGuard.locking();
+      haloClearToasts();
+    },
+    onLifted: () {
+      homeRevealed();
+      // what waited happens in an everyday session and is dropped in a decoy
+      sessionQuiet ? lockGuard.dropHeld() : lockGuard.lifted();
+    },
+  );
 }
 
 class TorHalo extends StatefulWidget {

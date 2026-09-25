@@ -39,6 +39,13 @@
                 android:name="io.flutter.embedding.android.NormalTheme"
                 android:resource="@style/NormalTheme"
                 />
+            <!-- kryfo:// links are read by the app's own link handler, which
+                 holds them while the app lock is up. flutter's route push for
+                 the same intent would bypass that -->
+            <meta-data
+                android:name="flutter_deeplinking_enabled"
+                android:value="false"
+                />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

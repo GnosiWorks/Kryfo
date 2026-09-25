@@ -811,6 +811,8 @@ class _Input extends StatelessWidget {
                       controller: controller,
                       keyboardType: field.keyboard,
                       obscureText: field.secret && !shown,
+                      // never offered to the phone's autofill service
+                      autofillHints: null,
                       minLines: 1,
                       maxLines: field.secret ? 1 : field.lines,
                       autocorrect: !field.plain && !field.secret,
