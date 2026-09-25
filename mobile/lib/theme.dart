@@ -283,9 +283,26 @@ Future<void> copySensitive(String value) async {
 final GlobalKey<ScaffoldMessengerState> haloMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
+/// the app lock's say, set at start: a toast shown while it is up waits
+/// for it to lift
+Future<void> Function(Future<void> Function() act)? haloWhenOpen;
+
 void showHaloToast(BuildContext context, String message) {
+  final later = haloWhenOpen;
+  if (later == null) {
+    _showHaloToast(context, message);
+  } else {
+    unawaited(later(() async => _showHaloToast(context, message)));
+  }
+}
+
+/// the lock is going up: no toast stays on screen
+void haloClearToasts() => haloMessengerKey.currentState?.clearSnackBars();
+
+void _showHaloToast(BuildContext context, String message) {
   ScaffoldMessengerState? messenger = haloMessengerKey.currentState;
   if (messenger == null) {
+    if (!context.mounted) return;
     try {
       messenger = ScaffoldMessenger.of(context);
     } catch (_) {

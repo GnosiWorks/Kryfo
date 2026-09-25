@@ -9,6 +9,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
 import '../theme.dart';
 import '../l10n/l10n.dart';
+import '../lock_guard.dart' show lockGuard;
 
 class ScanScreen extends StatefulWidget {
   const ScanScreen({super.key});
@@ -29,9 +30,21 @@ class _ScanScreenState extends State<ScanScreen>
   DateTime? _hintAt;
   late final AnimationController _scanAnim;
 
+  // the lock closes the scanner: its camera never runs under the pin pad
+  VoidCallback? _unguard;
+  void _closeForLock() {
+    _unguard = null;
+    final r = ModalRoute.of(context);
+    if (mounted && r != null && r.isActive)
+      Navigator.of(context).removeRoute(r);
+  }
+
+  bool get _inFront => mounted && (ModalRoute.of(context)?.isCurrent ?? false);
+
   @override
   void initState() {
     super.initState();
+    _unguard = lockGuard.closeOnLock(_closeForLock);
     _scanAnim = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1800),
@@ -39,7 +52,7 @@ class _ScanScreenState extends State<ScanScreen>
   }
 
   void _onScan(Code code) {
-    if (_handled) return;
+    if (_handled || !_inFront) return;
     final raw = code.text;
     if (raw == null || raw.isEmpty) return;
     if (!raw.startsWith('kryfo://')) {
@@ -59,13 +72,14 @@ class _ScanScreenState extends State<ScanScreen>
     setState(() => _detectedSuccess = true);
     // short success pulse before popping
     Future.delayed(const Duration(milliseconds: 380), () {
-      if (!mounted) return;
+      if (!_inFront) return;
       Navigator.of(context).pop(raw);
     });
   }
 
   @override
   void dispose() {
+    _unguard?.call();
     _scanAnim.dispose();
     super.dispose();
   }

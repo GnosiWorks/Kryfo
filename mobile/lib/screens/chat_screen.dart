@@ -88,6 +88,7 @@ import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
 import '../widgets/video_viewer.dart';
 import '../bidi_safe.dart';
+import '../lock_guard.dart' show lockGuard;
 
 // persists last-seen cipher per peer across ChatScreen instances
 // chunk indices already accepted by the peer, per media msg_uid. lets a
@@ -1222,7 +1223,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     if (mounted) setState(() => _liftedUid = target.msgUid);
     late OverlayEntry entry;
+    VoidCallback? unguard;
     void dismiss() {
+      unguard?.call();
       if (entry.mounted) entry.remove();
       if (mounted) setState(() => _liftedUid = null);
     }
@@ -1616,6 +1619,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       },
     );
     Overlay.of(context).insert(entry);
+    // the lock closes it, with what it shows
+    unguard = lockGuard.closeOnLock(dismiss);
   }
 
   // the list is read from the database, not from the rows on screen: a pin
@@ -7177,6 +7182,8 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
       }
       _overlay = OverlayEntry(builder: (_) => _bar());
       if (mounted) Overlay.of(context).insert(_overlay!);
+      // the lock stops the recording and throws it away
+      _recUnguard = lockGuard.closeOnLock(_abort);
     } catch (e) {
       dlog('voice: could not start: $e');
       _ticker?.cancel();
@@ -7195,6 +7202,8 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
   Future<void> _end() async {
     // still starting: _start sees the finger is gone and cleans up itself
     if (_busy) return;
+    _recUnguard?.call();
+    _recUnguard = null;
     if (_ticker == null && _overlay == null) return;
     _ticker?.cancel();
     _ticker = null;
@@ -7216,6 +7225,8 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
     HapticFeedback.mediumImpact();
     widget.onComplete(path ?? _path ?? '', ms, false);
   }
+
+  VoidCallback? _recUnguard;
 
   // kill the recording from the bar itself - covers any state where the
   // finger isn't down anymore but the mic is still going.

@@ -18,6 +18,7 @@ import '../theme.dart';
 import 'decode_px.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
+import '../lock_guard.dart' show lockGuard;
 
 String _humanSize(int bytes) {
   if (bytes < 1024) return l10n.mediaBubblesB(whole(bytes));
@@ -314,8 +315,12 @@ class VoiceBubbleState extends State<VoiceBubble> {
     }
   }
 
+  // the lock pauses a note that is playing
+  VoidCallback? _unguard;
+
   @override
   void dispose() {
+    _unguard?.call();
     _player.dispose();
     super.dispose();
   }
@@ -332,8 +337,14 @@ class VoiceBubbleState extends State<VoiceBubble> {
       }
     }
     if (_playing) {
+      _unguard?.call();
+      _unguard = null;
       _player.pause();
     } else {
+      _unguard ??= lockGuard.closeOnLock(() {
+        _unguard = null;
+        _player.pause();
+      });
       _player.play();
     }
   }
@@ -468,8 +479,11 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
   String? _path;
   double _bottomInset = 0;
 
+  VoidCallback? _unguard;
+
   @override
   void dispose() {
+    _unguard?.call();
     _ticker?.cancel();
     _overlay?.remove();
     _rec.dispose();
@@ -513,10 +527,14 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     if (mounted) _bottomInset = MediaQuery.of(context).padding.bottom;
     _overlay = OverlayEntry(builder: (_) => _bar());
     if (mounted) Overlay.of(context).insert(_overlay!);
+    // the lock stops the recording and throws it away
+    _unguard = lockGuard.closeOnLock(_abort);
     _busy = false;
   }
 
   Future<void> _end() async {
+    _unguard?.call();
+    _unguard = null;
     _ticker?.cancel();
     _ticker = null;
     _overlay?.remove();
