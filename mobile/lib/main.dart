@@ -43,6 +43,7 @@ import 'screens/settings_screen.dart';
 import 'screens/my_kryfo_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'lock_state.dart';
+import 'lock_guard.dart';
 import 'screens/lock_screen.dart';
 import 'screens/lock_setup_screen.dart';
 import 'screens/moved_screen.dart';
@@ -3979,9 +3980,13 @@ void _sayLinkResult(String result) {
 
 // open ChatScreen for a given kryfo id. used by notification taps
 // (both warm - onDidReceiveNotificationResponse - and cold starts
-// via getNotificationAppLaunchDetails). reads contact details from
-// the db and pushes the route on the root navigator.
-Future<void> openChatForHalo(String? haloId) async {
+// via getNotificationAppLaunchDetails), once the app lock is open.
+// reads contact details from the db and pushes the route on the root
+// navigator.
+Future<void> openChatForHalo(String? haloId) =>
+    lockGuard.afterUnlock(() => _openChatFor(haloId));
+
+Future<void> _openChatFor(String? haloId) async {
   if (haloId == null || haloId.isEmpty) return;
   final nav = rootNavKey.currentState;
   if (nav == null) return;
@@ -4009,6 +4014,9 @@ Future<void> openChatForHalo(String? haloId) async {
 String? currentChatPeer;
 
 final GlobalKey<NavigatorState> rootNavKey = GlobalKey<NavigatorState>();
+
+// what comes from outside while the app lock is up waits for the unlock
+final lockGuard = LockGuard(isLocked: () => lockState.locked);
 
 int _msgUidCounter = 0;
 // stable cross-device message id. used by reactions + replies + group
@@ -6493,14 +6501,15 @@ class AppState extends ChangeNotifier {
     // store, which boots after the home paints. both handlers wait for it,
     // or a link tapped with kryfo closed was dropped with nothing shown
     _appLinks.uriLinkStream.listen((uri) async {
-      if (uri.scheme == 'kryfo') {
+      if (uri.scheme != 'kryfo') return;
+      await lockGuard.afterUnlock(() async {
         await _signalReady.future;
         final result = await handleHaloUri(uri.toString());
         dlog('deep link: $result');
         _sayLinkResult(result);
         await refreshContacts();
         notifyListeners();
-      }
+      });
     });
     // the stream only fires while we're already running. a link tapped with
     // kryfo closed cold-starts the app and would otherwise be dropped.
@@ -6509,12 +6518,14 @@ class AppState extends ChangeNotifier {
           .getInitialLink()
           .then((uri) async {
             if (uri == null || uri.scheme != 'kryfo') return;
-            await _signalReady.future;
-            final result = await handleHaloUri(uri.toString());
-            dlog('deep link (cold start): $result');
-            _sayLinkResult(result);
-            await refreshContacts();
-            notifyListeners();
+            await lockGuard.afterUnlock(() async {
+              await _signalReady.future;
+              final result = await handleHaloUri(uri.toString());
+              dlog('deep link (cold start): $result');
+              _sayLinkResult(result);
+              await refreshContacts();
+              notifyListeners();
+            });
           })
           .catchError((Object e) {
             dlog('deep link (cold start) failed: $e');
@@ -8488,6 +8499,7 @@ class HaloApp extends StatelessWidget {
       listenable: Listenable.merge([themeRevision, localeRevision]),
       builder: (context, _) => MaterialApp(
         navigatorKey: rootNavKey,
+        navigatorObservers: [lockGuard],
         scaffoldMessengerKey: haloMessengerKey,
         title: 'Kryfo',
         theme: buildHaloTheme(),
@@ -9555,15 +9567,18 @@ class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
             FadeTransition(opacity: a, child: child),
       );
       _lockRoute = r;
+      lockGuard.lock = r;
       nav.push(r);
     } else if (!locked && _lockRoute != null) {
       final r = _lockRoute!;
       _lockRoute = null;
+      lockGuard.lock = null;
       if (r.isCurrent) {
         nav.pop();
       } else if (r.isActive) {
         nav.removeRoute(r);
       }
+      lockGuard.lifted();
     }
   }
 
