@@ -530,4 +530,18 @@ void main() {
     expect(store.m.containsKey('halo.lock.d.wipe'), isFalse);
     expect(store.m.containsKey('halo.lock.d.decoy'), isFalse);
   });
+
+  test('the quiet flag is read from storage every time', () async {
+    // a process the job starts has no lock state of its own: it reads this
+    expect(await quietNow(store), isFalse);
+    final lock = await make();
+    await lock.verifyPin('5555');
+    expect(await quietNow(store), isTrue);
+    lock.lock();
+    await lock.verifyPin('1234');
+    expect(await quietNow(store), isFalse);
+    // unreadable counts as quiet: a missed notification over one in a decoy
+    store.failReads = true;
+    expect(await quietNow(store), isTrue);
+  });
 }
