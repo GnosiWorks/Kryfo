@@ -1821,5 +1821,7 @@
   "peopleAdd": "Добавить",
   "peopleFingerprint": "Отпечаток ключа · {fp}",
   "peopleFingerprintLine": "Сверь его с тем, что видно у собеседника в приложении.",
-  "peopleAdding": "Добавляю…"
+  "peopleAdding": "Добавляю…",
+  "handleNobodyHasClaimed": "Никто не занял {handle}",
+  "handleThatHandleIsTaken": "Это имя пользователя уже занято"
 }

@@ -37,7 +37,10 @@ class _PressScaleState extends State<PressScale> {
 
   @override
   Widget build(BuildContext context) {
+    // the whole box takes the tap, like an ink well: a row's empty end
+    // between its text and the edge was dead
     final w = GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTapDown: (_) => _set(true),
       onTapUp: (_) => _set(false),
       onTapCancel: () => _set(false),

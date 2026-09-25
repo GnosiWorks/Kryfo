@@ -6956,4 +6956,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get peopleAdding => 'Wird hinzugefügt…';
+
+  @override
+  String handleNobodyHasClaimed(Object handle) {
+    return 'Niemand hat $handle gesichert';
+  }
+
+  @override
+  String get handleThatHandleIsTaken =>
+      'Dieser Benutzername ist schon vergeben';
 }

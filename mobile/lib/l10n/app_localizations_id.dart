@@ -6880,4 +6880,12 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get peopleAdding => 'Menambahkan…';
+
+  @override
+  String handleNobodyHasClaimed(Object handle) {
+    return 'Belum ada yang mengklaim $handle';
+  }
+
+  @override
+  String get handleThatHandleIsTaken => 'Nama pengguna itu sudah dipakai';
 }

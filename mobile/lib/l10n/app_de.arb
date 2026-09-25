@@ -1821,5 +1821,7 @@
   "peopleAdd": "Hinzufügen",
   "peopleFingerprint": "Schlüssel-Fingerabdruck · {fp}",
   "peopleFingerprintLine": "Prüf, ob er mit dem in ihrer App übereinstimmt.",
-  "peopleAdding": "Wird hinzugefügt…"
+  "peopleAdding": "Wird hinzugefügt…",
+  "handleNobodyHasClaimed": "Niemand hat {handle} gesichert",
+  "handleThatHandleIsTaken": "Dieser Benutzername ist schon vergeben"
 }

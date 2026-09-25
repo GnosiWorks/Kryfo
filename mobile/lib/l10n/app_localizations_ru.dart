@@ -7010,4 +7010,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get peopleAdding => 'Добавляю…';
+
+  @override
+  String handleNobodyHasClaimed(Object handle) {
+    return 'Никто не занял $handle';
+  }
+
+  @override
+  String get handleThatHandleIsTaken => 'Это имя пользователя уже занято';
 }

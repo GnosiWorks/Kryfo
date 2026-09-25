@@ -6,6 +6,7 @@
 // a word someone looks for in their own chats is theirs.
 import 'dart:convert';
 
+import 'bidi_safe.dart';
 import 'handle_lookup.dart' show kHandleRegistry;
 
 class PublicHandle {
@@ -63,7 +64,7 @@ List<PublicHandle> parsePeople(String body) {
       if (h is! String || !_handleRe.hasMatch(h)) continue;
       String str(Object? v, int max) {
         if (v is! String) return '';
-        final t = v.replaceAll(RegExp(r'\s+'), ' ').trim();
+        final t = unmarked(v).replaceAll(RegExp(r'\s+'), ' ').trim();
         return t.length > max ? t.substring(0, max) : t;
       }
 

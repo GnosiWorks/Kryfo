@@ -79,6 +79,8 @@ import '../widgets/attach_grid.dart';
 import '../widgets/new_poll_sheet.dart';
 import '../widgets/poll_card.dart';
 import '../widgets/stroke_icon.dart';
+import '../widgets/written_field.dart';
+import '../bidi_safe.dart';
 
 final Map<String, String> _draftPerGroup = {};
 
@@ -3116,23 +3118,30 @@ class _Composer extends StatelessWidget {
                       width: 0.6,
                     ),
                   ),
-                  child: TextField(
+                  child: WrittenDir(
                     controller: controller,
-                    style: HaloType.sans(size: 14, color: HaloColors.text),
-                    cursorColor: HaloColors.amber,
-                    decoration: InputDecoration(
-                      hintText: l10n.groupChatMessage,
-                      hintStyle: HaloType.sans(
-                        size: 14,
-                        color: HaloColors.text3,
+                    builder: (dir) => TextField(
+                      textDirection: dir,
+                      inputFormatters: const [UnmarkedInput()],
+                      controller: controller,
+                      style: HaloType.sans(size: 14, color: HaloColors.text),
+                      cursorColor: HaloColors.amber,
+                      decoration: InputDecoration(
+                        hintText: l10n.groupChatMessage,
+                        hintStyle: HaloType.sans(
+                          size: 14,
+                          color: HaloColors.text3,
+                        ),
+                        border: InputBorder.none,
+                        isCollapsed: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                        ),
                       ),
-                      border: InputBorder.none,
-                      isCollapsed: true,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                      minLines: 1,
+                      maxLines: 5,
+                      onSubmitted: (_) => onSend(),
                     ),
-                    minLines: 1,
-                    maxLines: 5,
-                    onSubmitted: (_) => onSend(),
                   ),
                 ),
               ),
@@ -3857,6 +3866,9 @@ class _GroupBubble extends StatelessWidget {
                                                           m.mediaPath == null)
                                                       ? HaloColors.onAmber
                                                       : null,
+                                                ),
+                                                textDirection: writtenDir(
+                                                  m.text,
                                                 ),
                                               ),
                                       ),

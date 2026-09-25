@@ -63,8 +63,8 @@ void main() {
   });
 
   test('coordinates read the way a person writes them', () {
-    expect(coordsLine(52.48113, 13.43529), '52.48113° N · 13.43529° E');
-    expect(coordsLine(-33.5, -70.25), '33.50000° S · 70.25000° W');
+    expect(coordsLine(52.48113, 13.43529), '52.48113°\u00a0N · 13.43529°\u00a0E');
+    expect(coordsLine(-33.5, -70.25), '33.50000°\u00a0S · 70.25000°\u00a0W');
   });
 
   test('a cut or foreign file is refused, not read', () {

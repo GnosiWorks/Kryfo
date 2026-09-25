@@ -6933,4 +6933,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get peopleAdding => 'Adicionando…';
+
+  @override
+  String handleNobodyHasClaimed(Object handle) {
+    return 'Ninguém reservou $handle';
+  }
+
+  @override
+  String get handleThatHandleIsTaken => 'Esse nome de usuário já está em uso';
 }

@@ -11054,6 +11054,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Adding…'**
   String get peopleAdding;
+
+  /// toast after adding someone by their handle: the registry has no such handle. {handle} includes its @, e.g. @wren
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody has claimed {handle}'**
+  String handleNobodyHasClaimed(Object handle);
+
+  /// toast: the registry refused a claim because someone else holds the handle
+  ///
+  /// In en, this message translates to:
+  /// **'That handle is taken'**
+  String get handleThatHandleIsTaken;
 }
 
 class _AppLocalizationsDelegate

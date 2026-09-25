@@ -26,6 +26,9 @@ Future<T?> showHaloSheet<T>(
         ? builder
         : (ctx) {
             final mq = MediaQuery.of(ctx);
+            // the sheet's route takes the status bar out of its padding, so
+            // the window is asked how tall that bar is
+            final bar = MediaQueryData.fromView(View.of(ctx)).padding.top;
             // the keyboard inset is spent here, so content that pads for
             // it too (the confirm sheets) does not pad twice
             return Padding(
@@ -39,10 +42,7 @@ Future<T?> showHaloSheet<T>(
                   constraints: BoxConstraints(
                     maxHeight: math.min(
                       mq.size.height * 0.9,
-                      mq.size.height -
-                          mq.viewInsets.bottom -
-                          mq.padding.top -
-                          12,
+                      mq.size.height - mq.viewInsets.bottom - bar - 12,
                     ),
                   ),
                   child: SingleChildScrollView(child: builder(ctx)),

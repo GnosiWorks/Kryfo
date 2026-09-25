@@ -15,6 +15,8 @@ import 'poll_card.dart' show pollGlyph;
 import 'press_scale.dart';
 import 'sheet_handle.dart';
 import 'stroke_icon.dart';
+import '../widgets/written_field.dart';
+import '../bidi_safe.dart';
 
 typedef PollDraft = ({String question, List<String> options, bool multi});
 
@@ -156,25 +158,33 @@ class _NewPollSheetState extends State<_NewPollSheet> {
             ),
             const SizedBox(height: 16),
             _box(
-              child: TextField(
+              child: WrittenDir(
                 controller: _question,
-                autofocus: true,
-                minLines: 1,
-                maxLines: 4,
-                maxLength: kPollMaxQuestion,
-                textCapitalization: TextCapitalization.sentences,
-                textInputAction: TextInputAction.next,
-                onSubmitted: (_) => _fields.first.focus.requestFocus(),
-                style: HaloType.serif(
-                  size: 17,
-                  color: HaloColors.text,
-                  height: 1.3,
-                ),
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  counterText: '',
-                  hintText: l10n.pollQuestionHint,
-                  hintStyle: HaloType.serif(size: 17, color: HaloColors.text2),
+                builder: (dir) => TextField(
+                  textDirection: dir,
+                  inputFormatters: const [UnmarkedInput()],
+                  controller: _question,
+                  autofocus: true,
+                  minLines: 1,
+                  maxLines: 4,
+                  maxLength: kPollMaxQuestion,
+                  textCapitalization: TextCapitalization.sentences,
+                  textInputAction: TextInputAction.next,
+                  onSubmitted: (_) => _fields.first.focus.requestFocus(),
+                  style: HaloType.serif(
+                    size: 17,
+                    color: HaloColors.text,
+                    height: 1.3,
+                  ),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    counterText: '',
+                    hintText: l10n.pollQuestionHint,
+                    hintStyle: HaloType.serif(
+                      size: 17,
+                      color: HaloColors.text2,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -202,34 +212,40 @@ class _NewPollSheetState extends State<_NewPollSheet> {
                         Expanded(
                           child: Focus(
                             onFocusChange: (_) => setState(() {}),
-                            child: TextField(
+                            child: WrittenDir(
                               controller: f.ctrl,
-                              focusNode: f.focus,
-                              maxLength: kPollMaxOption,
-                              textCapitalization: TextCapitalization.sentences,
-                              textInputAction: i == _fields.length - 1
-                                  ? TextInputAction.done
-                                  : TextInputAction.next,
-                              onSubmitted: (_) {
-                                if (i + 1 < _fields.length) {
-                                  _fields[i + 1].focus.requestFocus();
-                                }
-                              },
-                              style: HaloType.sans(
-                                size: 15,
-                                color: HaloColors.text,
-                              ),
-                              decoration: InputDecoration(
-                                border: InputBorder.none,
-                                counterText: '',
-                                hintText:
-                                    i == _fields.length - 1 &&
-                                        i >= kPollMinOptions
-                                    ? l10n.pollAddOption
-                                    : l10n.pollOptionHint(whole(i + 1)),
-                                hintStyle: HaloType.sans(
+                              builder: (dir) => TextField(
+                                textDirection: dir,
+                                inputFormatters: const [UnmarkedInput()],
+                                controller: f.ctrl,
+                                focusNode: f.focus,
+                                maxLength: kPollMaxOption,
+                                textCapitalization:
+                                    TextCapitalization.sentences,
+                                textInputAction: i == _fields.length - 1
+                                    ? TextInputAction.done
+                                    : TextInputAction.next,
+                                onSubmitted: (_) {
+                                  if (i + 1 < _fields.length) {
+                                    _fields[i + 1].focus.requestFocus();
+                                  }
+                                },
+                                style: HaloType.sans(
                                   size: 15,
-                                  color: HaloColors.text2,
+                                  color: HaloColors.text,
+                                ),
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  counterText: '',
+                                  hintText:
+                                      i == _fields.length - 1 &&
+                                          i >= kPollMinOptions
+                                      ? l10n.pollAddOption
+                                      : l10n.pollOptionHint(whole(i + 1)),
+                                  hintStyle: HaloType.sans(
+                                    size: 15,
+                                    color: HaloColors.text2,
+                                  ),
                                 ),
                               ),
                             ),

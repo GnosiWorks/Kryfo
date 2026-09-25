@@ -19,6 +19,8 @@ import 'decode_px.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import 'halo_bar.dart';
+import 'written_field.dart';
+import '../bidi_safe.dart';
 
 String _humanSize(int bytes) {
   if (bytes < 1024) return l10n.mediaBubblesB(whole(bytes));
@@ -770,28 +772,33 @@ class ImageCaptionScreenState extends State<ImageCaptionScreen> {
               child: Row(
                 children: [
                   Expanded(
-                    child: TextField(
+                    child: WrittenDir(
                       controller: _ctrl,
-                      autofocus: true,
-                      style: HaloType.sans(size: 14),
-                      minLines: 1,
-                      maxLines: 4,
-                      decoration: InputDecoration(
-                        hintText: l10n.mediaBubblesAddACaption,
-                        hintStyle: HaloType.sans(
-                          size: 14,
-                          color: HaloColors.text3,
-                        ),
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 10,
-                        ),
-                        filled: true,
-                        fillColor: HaloColors.surface2,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide.none,
+                      builder: (dir) => TextField(
+                        textDirection: dir,
+                        inputFormatters: const [UnmarkedInput()],
+                        controller: _ctrl,
+                        autofocus: true,
+                        style: HaloType.sans(size: 14),
+                        minLines: 1,
+                        maxLines: 4,
+                        decoration: InputDecoration(
+                          hintText: l10n.mediaBubblesAddACaption,
+                          hintStyle: HaloType.sans(
+                            size: 14,
+                            color: HaloColors.text3,
+                          ),
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          filled: true,
+                          fillColor: HaloColors.surface2,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: BorderSide.none,
+                          ),
                         ),
                       ),
                     ),

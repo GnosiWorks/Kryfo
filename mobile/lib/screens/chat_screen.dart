@@ -87,6 +87,8 @@ import '../l10n/dates.dart';
 import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
 import '../widgets/video_viewer.dart';
+import '../widgets/written_field.dart';
+import '../bidi_safe.dart';
 
 // persists last-seen cipher per peer across ChatScreen instances
 // chunk indices already accepted by the peer, per media msg_uid. lets a
@@ -5671,27 +5673,32 @@ class _SearchHeadState extends State<SearchHead> {
                         ),
                         const SizedBox(width: 9),
                         Expanded(
-                          child: TextField(
+                          child: WrittenDir(
                             controller: widget.controller,
-                            focusNode: _focus,
-                            onChanged: widget.onChanged,
-                            cursorColor: HaloColors.amber,
-                            cursorWidth: 1.5,
-                            style: HaloType.sans(
-                              size: 13,
-                              color: HaloColors.text,
-                            ),
-                            decoration: InputDecoration(
-                              isDense: true,
-                              border: InputBorder.none,
-                              hintText: l10n.chatFindInConversation,
-                              hintStyle: HaloType.serif(
+                            builder: (dir) => TextField(
+                              textDirection: dir,
+                              inputFormatters: const [UnmarkedInput()],
+                              controller: widget.controller,
+                              focusNode: _focus,
+                              onChanged: widget.onChanged,
+                              cursorColor: HaloColors.amber,
+                              cursorWidth: 1.5,
+                              style: HaloType.sans(
                                 size: 13,
-                                italic: true,
-                                color: HaloColors.text3,
+                                color: HaloColors.text,
                               ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 10,
+                              decoration: InputDecoration(
+                                isDense: true,
+                                border: InputBorder.none,
+                                hintText: l10n.chatFindInConversation,
+                                hintStyle: HaloType.serif(
+                                  size: 13,
+                                  italic: true,
+                                  color: HaloColors.text3,
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
                               ),
                             ),
                           ),
@@ -5905,7 +5912,10 @@ class _Bubble extends StatelessWidget {
       );
       start = hit + q.length;
     }
-    return Text.rich(TextSpan(style: base, children: spans));
+    return Text.rich(
+      TextSpan(style: base, children: spans),
+      textDirection: writtenDir(text),
+    );
   }
 
   @override

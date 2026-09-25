@@ -1821,5 +1821,7 @@
   "peopleAdd": "Tambah",
   "peopleFingerprint": "Sidik jari kunci · {fp}",
   "peopleFingerprintLine": "Periksa apakah cocok dengan yang mereka lihat di aplikasinya.",
-  "peopleAdding": "Menambahkan…"
+  "peopleAdding": "Menambahkan…",
+  "handleNobodyHasClaimed": "Belum ada yang mengklaim {handle}",
+  "handleThatHandleIsTaken": "Nama pengguna itu sudah dipakai"
 }

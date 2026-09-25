@@ -6948,4 +6948,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get peopleAdding => 'Ajout…';
+
+  @override
+  String handleNobodyHasClaimed(Object handle) {
+    return 'Personne n’a réservé $handle';
+  }
+
+  @override
+  String get handleThatHandleIsTaken => 'Ce pseudo est déjà pris';
 }

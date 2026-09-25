@@ -6866,4 +6866,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get peopleAdding => 'Đang thêm…';
+
+  @override
+  String handleNobodyHasClaimed(Object handle) {
+    return 'Chưa ai đăng ký $handle';
+  }
+
+  @override
+  String get handleThatHandleIsTaken => 'Tên người dùng này đã có người dùng';
 }

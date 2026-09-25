@@ -4,6 +4,7 @@
 // chat at the message. everything here is read from this phone's own
 // encrypted database; nothing is asked of anyone.
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -33,6 +34,8 @@ import '../widgets/press_scale.dart';
 import '../widgets/stroke_icon.dart';
 import 'chat_screen.dart';
 import 'group_chat_screen.dart';
+import '../widgets/written_field.dart';
+import '../bidi_safe.dart';
 
 /// the search field on home flies into the one here
 const kSearchHero = 'home-search';
@@ -497,19 +500,24 @@ class _Field extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: HaloType.sans(size: 14, color: HaloColors.text2),
                   )
-                : TextField(
-                    controller: ctrl,
-                    focusNode: focus,
-                    textInputAction: TextInputAction.search,
-                    style: HaloType.sans(size: 15, color: HaloColors.text),
-                    cursorColor: HaloColors.amber,
-                    decoration: InputDecoration(
-                      isDense: true,
-                      border: InputBorder.none,
-                      hintText: l10n.searchHint,
-                      hintStyle: HaloType.sans(
-                        size: 14,
-                        color: HaloColors.text2,
+                : WrittenDir(
+                    controller: ctrl!,
+                    builder: (dir) => TextField(
+                      textDirection: dir,
+                      inputFormatters: const [UnmarkedInput()],
+                      controller: ctrl,
+                      focusNode: focus,
+                      textInputAction: TextInputAction.search,
+                      style: HaloType.sans(size: 15, color: HaloColors.text),
+                      cursorColor: HaloColors.amber,
+                      decoration: InputDecoration(
+                        isDense: true,
+                        border: InputBorder.none,
+                        hintText: l10n.searchHint,
+                        hintStyle: HaloType.sans(
+                          size: 14,
+                          color: HaloColors.text2,
+                        ),
                       ),
                     ),
                   ),
@@ -991,6 +999,8 @@ class _PersonRow extends StatelessWidget {
                   if (p.name.isNotEmpty)
                     Text(
                       p.name,
+                      textDirection: writtenDir(p.name),
+                      textAlign: startOf(context),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: HaloType.sans(size: 13, color: HaloColors.text),
@@ -998,6 +1008,8 @@ class _PersonRow extends StatelessWidget {
                   if (p.bio.isNotEmpty)
                     Text(
                       p.bio,
+                      textDirection: writtenDir(p.bio),
+                      textAlign: startOf(context),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: HaloType.sans(size: 12, color: HaloColors.text2),
@@ -1020,18 +1032,42 @@ class _PersonSheet extends StatefulWidget {
   State<_PersonSheet> createState() => _PersonSheetState();
 }
 
-class _PersonSheetState extends State<_PersonSheet> {
+class _PersonSheetState extends State<_PersonSheet>
+    with SingleTickerProviderStateMixin {
   bool _adding = false;
+  // why the last add went nowhere, said under the button; the sheet stays
+  String? _why;
+  late final _shake = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 380),
+  );
+
+  @override
+  void dispose() {
+    _shake.dispose();
+    super.dispose();
+  }
 
   Future<void> _add() async {
     if (_adding) return;
     HapticFeedback.lightImpact();
-    setState(() => _adding = true);
-    final (line, _) = await handleHaloUriAdded('@${widget.p.handle}');
+    setState(() {
+      _adding = true;
+      _why = null;
+    });
+    final (line, added) = await handleHaloUriAdded('@${widget.p.handle}');
     if (!mounted) return;
-    setState(() => _adding = false);
-    Navigator.of(context).pop();
-    showHaloToast(context, line);
+    if (added) {
+      Navigator.of(context).pop();
+      showHaloToast(context, line);
+      return;
+    }
+    HapticFeedback.heavyImpact();
+    setState(() {
+      _adding = false;
+      _why = line;
+    });
+    if (!MediaQuery.of(context).disableAnimations) _shake.forward(from: 0);
   }
 
   @override
@@ -1073,6 +1109,7 @@ class _PersonSheetState extends State<_PersonSheet> {
               const SizedBox(height: 10),
               Text(
                 p.name,
+                textDirection: writtenDir(p.name),
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 15,
@@ -1085,6 +1122,7 @@ class _PersonSheetState extends State<_PersonSheet> {
               const SizedBox(height: 8),
               Text(
                 p.bio,
+                textDirection: writtenDir(p.bio),
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 13.5,
@@ -1107,7 +1145,8 @@ class _PersonSheetState extends State<_PersonSheet> {
                 child: Column(
                   children: [
                     Text(
-                      l10n.peopleFingerprint(p.fp),
+                      // one piece: in arabic and persian it broke at its space
+                      l10n.peopleFingerprint(p.fp.replaceAll(' ', '\u00a0')),
                       style: HaloType.mono(size: 11, color: HaloColors.text),
                     ),
                     const SizedBox(height: 3),
@@ -1121,26 +1160,79 @@ class _PersonSheetState extends State<_PersonSheet> {
               ),
             ],
             const SizedBox(height: 18),
-            PressScale(
-              onTap: _adding ? null : _add,
-              label: l10n.peopleAdd,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                height: 48,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: HaloColors.amber,
-                  borderRadius: BorderRadius.circular(14),
+            AnimatedBuilder(
+              animation: _shake,
+              // a damped side to side, three swings, when the add went nowhere
+              builder: (_, child) => Transform.translate(
+                offset: Offset(
+                  math.sin(_shake.value * math.pi * 6) * 9 * (1 - _shake.value),
+                  0,
                 ),
-                child: Text(
-                  _adding ? l10n.peopleAdding : l10n.peopleAdd,
-                  style: HaloType.sans(
-                    size: 15,
-                    weight: FontWeight.w600,
-                    color: HaloColors.onAmber,
+                child: child,
+              ),
+              child: PressScale(
+                onTap: _adding ? null : _add,
+                label: _adding ? l10n.peopleAdding : l10n.peopleAdd,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  height: 48,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: _adding ? HaloColors.amberSoft : HaloColors.amber,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    switchInCurve: Curves.easeOutCubic,
+                    transitionBuilder: (c, a) => FadeTransition(
+                      opacity: a,
+                      child: SlideTransition(
+                        position: Tween(
+                          begin: const Offset(0, 0.35),
+                          end: Offset.zero,
+                        ).animate(a),
+                        child: c,
+                      ),
+                    ),
+                    child: Text(
+                      _adding ? l10n.peopleAdding : l10n.peopleAdd,
+                      key: ValueKey(_adding),
+                      style: HaloType.sans(
+                        size: 15,
+                        weight: FontWeight.w600,
+                        color: _adding ? HaloColors.amber : HaloColors.onAmber,
+                      ),
+                    ),
                   ),
                 ),
               ),
+            ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: _adding
+                  ? const Padding(
+                      padding: EdgeInsets.fromLTRB(40, 12, 40, 0),
+                      child: HaloBar(value: null, height: 3),
+                    )
+                  : _why == null
+                  ? const SizedBox(width: double.infinity)
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          _why!,
+                          textAlign: TextAlign.center,
+                          style: HaloType.sans(
+                            size: 13,
+                            weight: FontWeight.w500,
+                            color: HaloColors.rose,
+                          ),
+                        ),
+                      ),
+                    ),
             ),
           ],
         ),
@@ -1533,6 +1625,8 @@ class _Lit extends StatelessWidget {
     if (at < t.length) spans.add(TextSpan(text: t.substring(at)));
     return Text.rich(
       TextSpan(style: style, children: spans),
+      textDirection: writtenDir(t),
+      textAlign: startOf(context),
       maxLines: maxLines,
       overflow: TextOverflow.ellipsis,
     );

@@ -4112,7 +4112,17 @@ Future<(String, bool)> handleHaloUriAdded(String raw) async {
   final h = handleFromInput(raw);
   if (h != null) {
     final r = await resolveHandle(h, _torGetJsonOnIsolate);
-    if (r.startsWith('error:')) return (r.substring(7), false);
+    // the lookup answers in fixed english words; the person reads their own
+    if (r.startsWith('error:')) {
+      return (
+        r.contains('nobody has claimed')
+            ? l10n.handleNobodyHasClaimed('@$h')
+            : r.contains('not a handle')
+            ? l10n.appInvalidUri
+            : l10n.handleRegistryFailed,
+        false,
+      );
+    }
     raw = r;
   }
   // the link, out of whatever was pasted around it
@@ -6060,7 +6070,7 @@ class AppState extends ChangeNotifier {
       if (!vouched &&
           fromBackPair &&
           (env.powNonce == null ||
-              !verifyPow(env.message, env.powNonce!, powBits))) {
+              !verifyPow(env.powText ?? env.message, env.powNonce!, powBits))) {
         dlog(
           'pow: dropping first-contact from $senderHaloId (nonce=${env.powNonce} bits=${env.powBitsUsed})',
         );

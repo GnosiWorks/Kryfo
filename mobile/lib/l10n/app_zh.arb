@@ -1821,5 +1821,7 @@
   "peopleAdd": "添加",
   "peopleFingerprint": "密钥指纹 · {fp}",
   "peopleFingerprintLine": "请核对是否与对方应用里显示的一致。",
-  "peopleAdding": "正在添加…"
+  "peopleAdding": "正在添加…",
+  "handleNobodyHasClaimed": "没有人认领 {handle}",
+  "handleThatHandleIsTaken": "这个用户名已被占用"
 }

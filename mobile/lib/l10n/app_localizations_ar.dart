@@ -2775,7 +2775,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String handleYouAre(Object h) {
-    return 'أنت ‎⁨@$h⁩';
+    return 'أنت ⁦@$h⁩';
   }
 
   @override
@@ -2828,12 +2828,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String handleIsNotYoursOn(Object handle) {
-    return '‎⁨@$handle⁩ ليس لك على هذا الهاتف';
+    return '⁦@$handle⁩ ليس لك على هذا الهاتف';
   }
 
   @override
   String handleTheRegistryHoldsIt(Object handle) {
-    return 'يحتفظ به السجل تحت مفتاح مختلف، والأرجح أنه هوية كانت على هذا الهاتف قبل استعادة. من يضيف ‎⁨@$handle⁩ لا يصل إليك. لا يمكن تحريره أو تحديثه من هنا. اختر اسمًا آخر.';
+    return 'يحتفظ به السجل تحت مفتاح مختلف، والأرجح أنه هوية كانت على هذا الهاتف قبل استعادة. من يضيف ⁦@$handle⁩ لا يصل إليك. لا يمكن تحريره أو تحديثه من هنا. اختر اسمًا آخر.';
   }
 
   @override
@@ -4533,12 +4533,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String restoreCouldNotBeReleased(Object mine) {
-    return 'تعذّر تحرير ‎⁨@$mine⁩';
+    return 'تعذّر تحرير ⁦@$mine⁩';
   }
 
   @override
   String restoreTheRegistryDidNot(Object mine) {
-    return 'لم يُجب السجل. إن تابعت، سيبقى ‎⁨@$mine⁩ مشيرًا إلى الهوية التي يوشك هذا الهاتف أن يفقدها. كل من يضيفه سيكتب إلى لا أحد، ولا يمكن حجز الاسم مجددًا. الأفضل أن تتصل بالإنترنت وتحاول مرة أخرى.';
+    return 'لم يُجب السجل. إن تابعت، سيبقى ⁦@$mine⁩ مشيرًا إلى الهوية التي يوشك هذا الهاتف أن يفقدها. كل من يضيفه سيكتب إلى لا أحد، ولا يمكن حجز الاسم مجددًا. الأفضل أن تتصل بالإنترنت وتحاول مرة أخرى.';
   }
 
   @override
@@ -5731,7 +5731,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String photoStoryLocation(Object coordsLine) {
-    return 'الموقع: ⁨$coordsLine⁩';
+    return 'الموقع: ⁦$coordsLine⁩';
   }
 
   @override
@@ -6956,7 +6956,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String handleSearchOn(Object handle) {
-    return 'أنت في البحث باسم ⁨@$handle⁩';
+    return 'أنت في البحث باسم ⁦@$handle⁩';
   }
 
   @override
@@ -6968,7 +6968,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String searchPeopleAsk(Object query) {
-    return 'ابحث عن «⁨$query⁩» بين أسماء المستخدمين العامة';
+    return 'ابحث عن «$query» بين أسماء المستخدمين العامة';
   }
 
   @override
@@ -7003,4 +7003,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get peopleAdding => 'جارٍ الإضافة…';
+
+  @override
+  String handleNobodyHasClaimed(Object handle) {
+    return 'لم يحجز أحد ⁦$handle⁩';
+  }
+
+  @override
+  String get handleThatHandleIsTaken => 'اسم المستخدم هذا محجوز بالفعل';
 }

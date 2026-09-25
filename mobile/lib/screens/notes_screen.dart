@@ -6,6 +6,8 @@ import '../main.dart';
 import '../theme.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
+import '../widgets/written_field.dart';
+import '../bidi_safe.dart';
 
 const String kNotesPeerId = '_notes_self_';
 
@@ -224,17 +226,22 @@ class _NotesScreenState extends State<NotesScreen> {
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: HaloColors.line, width: 0.5),
               ),
-              child: TextField(
+              child: WrittenDir(
                 controller: _input,
-                maxLines: 5,
-                minLines: 1,
-                style: HaloType.sans(size: 14, color: HaloColors.text),
-                decoration: InputDecoration(
-                  hintText: l10n.notesJotSomethingDown,
-                  hintStyle: HaloType.sans(size: 13, color: HaloColors.text3),
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                builder: (dir) => TextField(
+                  textDirection: dir,
+                  inputFormatters: const [UnmarkedInput()],
+                  controller: _input,
+                  maxLines: 5,
+                  minLines: 1,
+                  style: HaloType.sans(size: 14, color: HaloColors.text),
+                  decoration: InputDecoration(
+                    hintText: l10n.notesJotSomethingDown,
+                    hintStyle: HaloType.sans(size: 13, color: HaloColors.text3),
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                  ),
                 ),
               ),
             ),

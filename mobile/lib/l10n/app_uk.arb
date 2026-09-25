@@ -1821,5 +1821,7 @@
   "peopleAdd": "Додати",
   "peopleFingerprint": "Відбиток ключа · {fp}",
   "peopleFingerprintLine": "Перевір, що він збігається з тим, що бачить співрозмовник у своєму застосунку.",
-  "peopleAdding": "Додаю…"
+  "peopleAdding": "Додаю…",
+  "handleNobodyHasClaimed": "Ніхто не зайняв {handle}",
+  "handleThatHandleIsTaken": "Це ім’я користувача вже зайняте"
 }

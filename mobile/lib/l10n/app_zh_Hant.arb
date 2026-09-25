@@ -1821,5 +1821,7 @@
   "peopleAdd": "新增",
   "peopleFingerprint": "金鑰指紋 · {fp}",
   "peopleFingerprintLine": "請核對是否與對方應用程式裡顯示的一致。",
-  "peopleAdding": "正在新增…"
+  "peopleAdding": "正在新增…",
+  "handleNobodyHasClaimed": "沒有人認領 {handle}",
+  "handleThatHandleIsTaken": "這個使用者名稱已被使用"
 }

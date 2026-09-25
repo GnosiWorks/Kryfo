@@ -6874,4 +6874,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get peopleAdding => 'Adding…';
+
+  @override
+  String handleNobodyHasClaimed(Object handle) {
+    return 'Nobody has claimed $handle';
+  }
+
+  @override
+  String get handleThatHandleIsTaken => 'That handle is taken';
 }

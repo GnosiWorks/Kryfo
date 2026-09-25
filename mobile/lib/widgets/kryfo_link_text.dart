@@ -88,7 +88,10 @@ class _KryfoLinkTextState extends State<KryfoLinkText> {
   @override
   Widget build(BuildContext context) {
     final text = widget.text;
-    if (!text.contains('kryfo://')) return Text(text, style: widget.style);
+    final dir = writtenDir(text);
+    if (!text.contains('kryfo://')) {
+      return Text(text, style: widget.style, textDirection: dir);
+    }
     final only = text.trim();
     final room = RoomLink.parse(only);
     if (room != null && firstKryfoLink(only) == only) {
@@ -118,7 +121,10 @@ class _KryfoLinkTextState extends State<KryfoLinkText> {
       at = m.end;
     }
     if (at < text.length) spans.add(TextSpan(text: text.substring(at)));
-    return Text.rich(TextSpan(style: widget.style, children: spans));
+    return Text.rich(
+      TextSpan(style: widget.style, children: spans),
+      textDirection: dir,
+    );
   }
 }
 

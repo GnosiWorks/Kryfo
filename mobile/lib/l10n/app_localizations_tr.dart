@@ -6912,4 +6912,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get peopleAdding => 'Ekleniyor…';
+
+  @override
+  String handleNobodyHasClaimed(Object handle) {
+    return '$handle adını kimse almamış';
+  }
+
+  @override
+  String get handleThatHandleIsTaken => 'Bu kullanıcı adı zaten alınmış';
 }

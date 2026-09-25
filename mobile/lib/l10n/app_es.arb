@@ -1821,5 +1821,7 @@
   "peopleAdd": "Añadir",
   "peopleFingerprint": "Huella de la clave · {fp}",
   "peopleFingerprintLine": "Comprueba que coincide con lo que ve la otra persona en su app.",
-  "peopleAdding": "Añadiendo…"
+  "peopleAdding": "Añadiendo…",
+  "handleNobodyHasClaimed": "Nadie ha reservado {handle}",
+  "handleThatHandleIsTaken": "Ese nombre de usuario ya está en uso"
 }

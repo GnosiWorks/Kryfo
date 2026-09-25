@@ -1821,5 +1821,7 @@
   "peopleAdd": "Thêm",
   "peopleFingerprint": "Dấu vân tay khóa · {fp}",
   "peopleFingerprintLine": "Hãy kiểm tra nó khớp với những gì người kia thấy trong ứng dụng.",
-  "peopleAdding": "Đang thêm…"
+  "peopleAdding": "Đang thêm…",
+  "handleNobodyHasClaimed": "Chưa ai đăng ký {handle}",
+  "handleThatHandleIsTaken": "Tên người dùng này đã có người dùng"
 }

@@ -88,7 +88,7 @@ class _HandleScreenState extends State<HandleScreen> {
       setState(() => _claimed = h);
       showHaloToast(context, l10n.handleYouAre(h));
     } else {
-      showHaloToast(context, r.replaceFirst('error: ', ''));
+      showHaloToast(context, _refused(r, h));
     }
   }
 
@@ -121,8 +121,17 @@ class _HandleScreenState extends State<HandleScreen> {
       });
       showHaloToast(context, l10n.handleHandleDeletedThePage);
     } else {
-      showHaloToast(context, r.replaceFirst('error: ', ''));
+      showHaloToast(context, _refused(r, h));
     }
+  }
+
+  // the engine and the registry answer in fixed english words
+  String _refused(String r, String h) {
+    if (r.contains('is taken') || r.contains('not available')) {
+      return l10n.handleThatHandleIsTaken;
+    }
+    if (r.contains('not yours')) return l10n.handleIsNotYoursOn(h);
+    return l10n.handleRegistryFailed;
   }
 
   @override

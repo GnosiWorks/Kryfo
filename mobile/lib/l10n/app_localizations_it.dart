@@ -6950,4 +6950,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get peopleAdding => 'Aggiungo…';
+
+  @override
+  String handleNobodyHasClaimed(Object handle) {
+    return 'Nessuno ha registrato $handle';
+  }
+
+  @override
+  String get handleThatHandleIsTaken => 'Quel nome utente è già preso';
 }

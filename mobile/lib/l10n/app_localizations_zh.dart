@@ -6622,6 +6622,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get peopleAdding => '正在添加…';
+
+  @override
+  String handleNobodyHasClaimed(Object handle) {
+    return '没有人认领 $handle';
+  }
+
+  @override
+  String get handleThatHandleIsTaken => '这个用户名已被占用';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -13242,4 +13250,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get peopleAdding => '正在新增…';
+
+  @override
+  String handleNobodyHasClaimed(Object handle) {
+    return '沒有人認領 $handle';
+  }
+
+  @override
+  String get handleThatHandleIsTaken => '這個使用者名稱已被使用';
 }

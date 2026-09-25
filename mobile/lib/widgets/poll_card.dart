@@ -237,6 +237,8 @@ class _PollCardState extends State<PollCard> {
           const SizedBox(height: 7),
           Text(
             widget.question,
+            textDirection: writtenDir(widget.question),
+            textAlign: startOf(context),
             style: HaloType.serif(
               size: 17,
               color: HaloColors.text,
@@ -470,6 +472,8 @@ class _PickRow extends StatelessWidget {
                 Expanded(
                   child: Text(
                     text,
+                    textDirection: writtenDir(text),
+                    textAlign: startOf(context),
                     style: HaloType.sans(
                       size: 14,
                       color: HaloColors.text,
@@ -532,6 +536,8 @@ class _ResultRow extends StatelessWidget {
                   Expanded(
                     child: Text(
                       text,
+                      textDirection: writtenDir(text),
+                      textAlign: startOf(context),
                       style: HaloType.sans(
                         size: 14,
                         weight: leader || mine
@@ -696,6 +702,8 @@ class _VotersSheet extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               question,
+              textDirection: writtenDir(question),
+              textAlign: startOf(context),
               style: HaloType.sans(
                 size: 13,
                 color: HaloColors.text2,
@@ -719,6 +727,8 @@ class _VotersSheet extends StatelessWidget {
                         Expanded(
                           child: Text(
                             poll.options[i],
+                            textDirection: writtenDir(poll.options[i]),
+                            textAlign: startOf(context),
                             style: HaloType.sans(
                               size: 14,
                               weight: FontWeight.w600,

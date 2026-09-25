@@ -2713,7 +2713,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String handleYouAre(Object h) {
-    return 'شما ‎⁨@$h⁩ هستید';
+    return 'شما ⁦@$h⁩ هستید';
   }
 
   @override
@@ -2767,12 +2767,12 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String handleIsNotYoursOn(Object handle) {
-    return '‎⁨@$handle⁩ روی این گوشی مال شما نیست';
+    return '⁦@$handle⁩ روی این گوشی مال شما نیست';
   }
 
   @override
   String handleTheRegistryHoldsIt(Object handle) {
-    return 'دفتر ثبت آن را زیر کلید دیگری نگه داشته، به احتمال زیاد هویتی که این گوشی پیش از یک بازیابی داشته. کسانی که ‎⁨@$handle⁩ را اضافه می‌کنند به شما نمی‌رسند. از این‌جا نمی‌توان آن را آزاد یا به‌روز کرد. نام دیگری انتخاب کنید.';
+    return 'دفتر ثبت آن را زیر کلید دیگری نگه داشته، به احتمال زیاد هویتی که این گوشی پیش از یک بازیابی داشته. کسانی که ⁦@$handle⁩ را اضافه می‌کنند به شما نمی‌رسند. از این‌جا نمی‌توان آن را آزاد یا به‌روز کرد. نام دیگری انتخاب کنید.';
   }
 
   @override
@@ -4468,12 +4468,12 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String restoreCouldNotBeReleased(Object mine) {
-    return '‎⁨@$mine⁩ آزاد نشد';
+    return '⁦@$mine⁩ آزاد نشد';
   }
 
   @override
   String restoreTheRegistryDidNot(Object mine) {
-    return 'دفتر ثبت پاسخ نداد. اگر ادامه دهید، ‎⁨@$mine⁩ همچنان به هویتی اشاره می‌کند که این گوشی در آستانه‌ی از دست دادنش است. هر کس آن را اضافه کند برای هیچ‌کس می‌نویسد، و دیگر نمی‌شود آن نام را ثبت کرد. بهتر است آنلاین شوید و یک بار دیگر امتحان کنید.';
+    return 'دفتر ثبت پاسخ نداد. اگر ادامه دهید، ⁦@$mine⁩ همچنان به هویتی اشاره می‌کند که این گوشی در آستانه‌ی از دست دادنش است. هر کس آن را اضافه کند برای هیچ‌کس می‌نویسد، و دیگر نمی‌شود آن نام را ثبت کرد. بهتر است آنلاین شوید و یک بار دیگر امتحان کنید.';
   }
 
   @override
@@ -5644,7 +5644,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String photoStoryLocation(Object coordsLine) {
-    return 'مکان: ‎⁨$coordsLine⁩';
+    return 'مکان: ⁦$coordsLine⁩';
   }
 
   @override
@@ -6848,7 +6848,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String handleSearchOn(Object handle) {
-    return 'در جست‌وجو با ⁨@$handle⁩ دیده می‌شوید';
+    return 'در جست‌وجو با ⁦@$handle⁩ دیده می‌شوید';
   }
 
   @override
@@ -6860,7 +6860,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String searchPeopleAsk(Object query) {
-    return 'جست‌وجوی «⁨$query⁩» میان نام‌های کاربری عمومی';
+    return 'جست‌وجوی «$query» میان نام‌های کاربری عمومی';
   }
 
   @override
@@ -6897,4 +6897,12 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get peopleAdding => 'در حال افزودن…';
+
+  @override
+  String handleNobodyHasClaimed(Object handle) {
+    return 'هیچ‌کس ⁦$handle⁩ را ثبت نکرده است';
+  }
+
+  @override
+  String get handleThatHandleIsTaken => 'این نام کاربری قبلاً گرفته شده';
 }

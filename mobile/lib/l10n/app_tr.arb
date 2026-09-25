@@ -1821,5 +1821,7 @@
   "peopleAdd": "Ekle",
   "peopleFingerprint": "Anahtar parmak izi · {fp}",
   "peopleFingerprintLine": "Karşı tarafın uygulamasında gördüğüyle aynı olduğunu kontrol et.",
-  "peopleAdding": "Ekleniyor…"
+  "peopleAdding": "Ekleniyor…",
+  "handleNobodyHasClaimed": "{handle} adını kimse almamış",
+  "handleThatHandleIsTaken": "Bu kullanıcı adı zaten alınmış"
 }

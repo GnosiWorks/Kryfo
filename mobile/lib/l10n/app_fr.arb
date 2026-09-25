@@ -1821,5 +1821,7 @@
   "peopleAdd": "Ajouter",
   "peopleFingerprint": "Empreinte de la clé · {fp}",
   "peopleFingerprintLine": "Vérifiez qu’elle correspond à ce qu’ils voient dans leur appli.",
-  "peopleAdding": "Ajout…"
+  "peopleAdding": "Ajout…",
+  "handleNobodyHasClaimed": "Personne n’a réservé {handle}",
+  "handleThatHandleIsTaken": "Ce pseudo est déjà pris"
 }

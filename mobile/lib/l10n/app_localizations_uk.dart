@@ -7005,4 +7005,12 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get peopleAdding => 'Додаю…';
+
+  @override
+  String handleNobodyHasClaimed(Object handle) {
+    return 'Ніхто не зайняв $handle';
+  }
+
+  @override
+  String get handleThatHandleIsTaken => 'Це ім’я користувача вже зайняте';
 }

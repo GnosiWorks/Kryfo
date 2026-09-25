@@ -8758,5 +8758,18 @@
   "peopleAdding": "Adding…",
   "@peopleAdding": {
     "description": "the add button while adding"
+  },
+  "handleNobodyHasClaimed": "Nobody has claimed {handle}",
+  "@handleNobodyHasClaimed": {
+    "description": "toast after adding someone by their handle: the registry has no such handle. {handle} includes its @, e.g. @wren",
+    "placeholders": {
+      "handle": {
+        "type": "Object"
+      }
+    }
+  },
+  "handleThatHandleIsTaken": "That handle is taken",
+  "@handleThatHandleIsTaken": {
+    "description": "toast: the registry refused a claim because someone else holds the handle"
   }
 }

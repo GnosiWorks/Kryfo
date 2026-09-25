@@ -1821,5 +1821,7 @@
   "peopleAdd": "Aggiungi",
   "peopleFingerprint": "Impronta della chiave · {fp}",
   "peopleFingerprintLine": "Controlla che corrisponda a quella che vede nella sua app.",
-  "peopleAdding": "Aggiungo…"
+  "peopleAdding": "Aggiungo…",
+  "handleNobodyHasClaimed": "Nessuno ha registrato {handle}",
+  "handleThatHandleIsTaken": "Quel nome utente è già preso"
 }
