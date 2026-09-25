@@ -34,9 +34,9 @@ class _ScanScreenState extends State<ScanScreen>
   VoidCallback? _unguard;
   void _closeForLock() {
     _unguard = null;
+    if (!mounted) return;
     final r = ModalRoute.of(context);
-    if (mounted && r != null && r.isActive)
-      Navigator.of(context).removeRoute(r);
+    if (r != null && r.isActive) Navigator.of(context).removeRoute(r);
   }
 
   bool get _inFront => mounted && (ModalRoute.of(context)?.isCurrent ?? false);
@@ -72,7 +72,7 @@ class _ScanScreenState extends State<ScanScreen>
     setState(() => _detectedSuccess = true);
     // short success pulse before popping
     Future.delayed(const Duration(milliseconds: 380), () {
-      if (!_inFront) return;
+      if (!mounted || !_inFront) return;
       Navigator.of(context).pop(raw);
     });
   }

@@ -88,9 +88,9 @@ class _CameraScreenState extends State<CameraScreen>
   VoidCallback? _unguard;
   void _closeForLock() {
     _unguard = null;
+    if (!mounted) return;
     final r = ModalRoute.of(context);
-    if (mounted && r != null && r.isActive)
-      Navigator.of(context).removeRoute(r);
+    if (r != null && r.isActive) Navigator.of(context).removeRoute(r);
   }
 
   Future<void> _setup() async {

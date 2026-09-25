@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // nothing gets past the app lock (lock_guard.dart)
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/lock_guard.dart';
@@ -102,6 +104,35 @@ void main() {
     g.locking();
     expect(menu, 1);
     expect(player, 0);
+  });
+
+  test('what starts after the lock went up closes at once', () async {
+    final g = LockGuard(isLocked: () => true);
+    var closed = 0;
+    final unguard = g.closeOnLock(() => closed++);
+    // taking it off the list does not stop it closing
+    unguard();
+    await Future<void>.delayed(Duration.zero);
+    expect(closed, 1);
+    g.locking();
+    expect(closed, 1);
+  });
+
+  test('a system dialog waits for the lock to lift', () async {
+    var locked = true;
+    final g = LockGuard(isLocked: () => locked);
+    var opened = false;
+    unawaited(g.unlocked().then((_) => opened = true));
+    await Future<void>.delayed(Duration.zero);
+    expect(opened, isFalse);
+    locked = false;
+    g.lifted();
+    await Future<void>.delayed(Duration.zero);
+    expect(opened, isTrue);
+    // and does not wait at all while the app is open
+    var now = false;
+    await g.unlocked().then((_) => now = true);
+    expect(now, isTrue);
   });
 
   testWidgets('a screen pushed while locked waits under the lock', (

@@ -16,6 +16,7 @@ import '../open_file.dart';
 import '../theme.dart';
 import '../l10n/l10n.dart';
 import 'video_bubble.dart' show openReceivedFile;
+import '../lock_guard.dart' show lockGuard;
 
 const _channel = MethodChannel('kryfo/video');
 
@@ -115,6 +116,7 @@ class _VideoViewerState extends State<_VideoViewer>
 
   @override
   void dispose() {
+    _unguard?.call();
     WidgetsBinding.instance.removeObserver(this);
     widget.route.removeStatusListener(_routeStatus);
     _poll?.cancel();
@@ -162,15 +164,22 @@ class _VideoViewerState extends State<_VideoViewer>
     if (widget.route.status == AnimationStatus.completed) _play();
   }
 
+  // the lock pauses a video that is playing
+  VoidCallback? _unguard;
+
   Future<void> _play() async {
     final id = _id;
-    if (id == null) return;
+    if (id == null || lockGuard.isLocked()) return;
     await _channel.invokeMethod('play', {'id': id});
     if (!mounted) return;
     setState(() {
       _started = true;
       _playing = true;
       _done = false;
+    });
+    _unguard ??= lockGuard.closeOnLock(() {
+      _unguard = null;
+      if (mounted && _playing) _pause();
     });
     _poll ??= Timer.periodic(const Duration(milliseconds: 200), (_) => _read());
     _hideSoon();

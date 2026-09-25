@@ -16,6 +16,7 @@ import '../widgets/fit_column.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
+import '../lock_guard.dart' show lockGuard;
 
 class BackupScreen extends StatefulWidget {
   const BackupScreen({super.key});
@@ -69,6 +70,9 @@ class _BackupScreenState extends State<BackupScreen> {
       );
       var shared = false;
       try {
+        // an export that ends while the lock is up waits for it: the save
+        // dialog never opens over the pin pad
+        await lockGuard.unlocked();
         shared = await _handOver(path, name);
       } finally {
         // a shared file is read by the other app after share() returns,
