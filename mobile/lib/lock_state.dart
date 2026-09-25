@@ -14,6 +14,7 @@ import 'dlog.dart';
 import 'notifications.dart';
 import 'package:local_auth/local_auth.dart';
 import 'l10n/l10n.dart';
+import 'lock_guard.dart' show lockGuard;
 
 enum PinResult { normal, panic, invalid, throttled }
 
@@ -235,6 +236,10 @@ class LockState extends ChangeNotifier {
       _holdUntil != null && DateTime.now().isBefore(_holdUntil!);
 
   Future<T> hold<T>(Future<T> Function() body) async {
+    // work that ends in a system dialog while the lock is up (an export, a
+    // file opened with its password) waits for it: the dialog never opens
+    // over the pin pad
+    await lockGuard.unlocked();
     _holdUntil = DateTime.now().add(const Duration(minutes: 5));
     final gen = ++_holdGen;
     try {

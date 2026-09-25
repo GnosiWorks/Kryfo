@@ -180,6 +180,27 @@ void main() {
     expect(find.text('chat'), findsOneWidget);
   });
 
+  testWidgets('something drawn above the routes after the lock went up '
+      'is gone before its first frame', (tester) async {
+    final h = _Harness(tester);
+    await h.pump();
+    await h.lockUp();
+    // what a message menu does when its db write ends after the lock
+    final entry = OverlayEntry(
+      builder: (_) => const Positioned.fill(child: Text('menu')),
+    );
+    h.nav.currentState!.overlay!.insert(entry);
+    var gone = false;
+    h.g.closeOnLock(() {
+      if (gone) return;
+      gone = true;
+      entry.remove();
+    });
+    await tester.pump();
+    expect(find.text('menu'), findsNothing);
+    expect(find.text('pin'), findsOneWidget);
+  });
+
   testWidgets('a toast waits for the lock and never shows on the pin pad', (
     tester,
   ) async {

@@ -1192,7 +1192,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         uid,
       );
     }
-    if (!mounted || !bubbleContext.mounted) return;
+    // the lock went up while the uid was written: no menu
+    if (!mounted || !bubbleContext.mounted || lockGuard.isLocked()) return;
     final box = bubbleContext.findRenderObject() as RenderBox?;
     if (box == null) return;
     final offset = box.localToGlobal(Offset.zero);
@@ -1225,9 +1226,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (mounted) setState(() => _liftedUid = target.msgUid);
     late OverlayEntry entry;
     VoidCallback? unguard;
+    // not entry.mounted: an entry closed before its first frame is not
+    // mounted yet and has to go all the same
+    var gone = false;
     void dismiss() {
+      if (gone) return;
+      gone = true;
       unguard?.call();
-      if (entry.mounted) entry.remove();
+      entry.remove();
       if (mounted) setState(() => _liftedUid = null);
     }
 
@@ -3492,7 +3498,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // notifications does not open a second copy of it
   void _lockLifted() {
     if (!mounted || !lockState.loaded || lockState.locked) return;
-    if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+    // inactive too: a fingerprint unlock lifts it under the system prompt
+    final life = WidgetsBinding.instance.lifecycleState;
+    if (life != AppLifecycleState.resumed &&
+        life != AppLifecycleState.inactive) {
       return;
     }
     if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
