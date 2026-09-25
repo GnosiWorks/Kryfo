@@ -15,4 +15,4 @@ fonctionnalités :
 * effacement d’urgence qui supprime tout, y compris les médias sur le disque
 * aucune statistique d’usage, aucune télémétrie, aucune pub
 
-financement : pas de pub, pas d’investisseurs. kryfo vit de ce que donnent ceux qui le soutiennent. le soutien est facultatif et anonyme, et chaque fonctionnalité marche de la même façon dans les deux cas.
+financement : pas de pub, pas d’investisseurs. Kryfo vit de ce que donnent ceux qui le soutiennent. le soutien est facultatif et anonyme, et chaque fonctionnalité marche de la même façon dans les deux cas.

@@ -4483,11 +4483,16 @@ bool get sessionQuiet => _session.container.quiet;
 void openRoomSoon(String groupId) {
   Future.delayed(
     const Duration(milliseconds: 450),
-    () => lockGuard.afterUnlock(key: 'room:$groupId', () async {
-      final nav = rootNavKey.currentState;
-      if (nav == null || !await session.groupExists(groupId)) return;
-      nav.push(haloRoute(GroupChatScreen(groupId: groupId)));
-    }),
+    // one of a kind only while it waits for the lock: opened by hand twice
+    // in a row, it opens twice
+    () => lockGuard.afterUnlock(
+      key: lockGuard.isLocked() ? 'room:$groupId' : null,
+      () async {
+        final nav = rootNavKey.currentState;
+        if (nav == null || !await session.groupExists(groupId)) return;
+        nav.push(haloRoute(GroupChatScreen(groupId: groupId)));
+      },
+    ),
   );
 }
 
@@ -6960,9 +6965,17 @@ class AppState extends ChangeNotifier {
       _quietSince = DateTime.now().millisecondsSinceEpoch;
       _quietJobs = _jobRuns;
     }
+    expiredRoomName = null;
     renewRootNavigator();
     sessionRev++;
     notifyListeners();
+    // the new home is built now, still under the lock, so it comes up as
+    // settled as the everyday one. when it shows is still verifyPin's wait,
+    // the same for every outcome
+    await WidgetsBinding.instance.endOfFrame.timeout(
+      const Duration(milliseconds: 250),
+      onTimeout: () {},
+    );
     // once the lock is gone, off the clock: what was already in the shade
     // was already seen and goes, and the lists are read again for real. a
     // call into android here would hold the main thread, and dart with it,
@@ -8767,7 +8780,9 @@ class AppState extends ChangeNotifier {
     }
     await d.deleteGroupMessages(groupId);
     await d.deleteGroup(groupId);
-    if (expired) {
+    // the line in the list is only for a room of the session on screen: an
+    // everyday room ending while the decoy is open says nothing there
+    if (expired && identical(d, session)) {
       expiredRoomName = g['name'] as String?;
       Timer(const Duration(seconds: 6), () {
         expiredRoomName = null;
@@ -10295,7 +10310,7 @@ class _DevScreenState extends State<DevScreen> {
             children: [
               const SizedBox(height: 8),
               Text(
-                'kryfo',
+                'Kryfo',
                 style: HaloType.serif(
                   size: 56,
                   weight: FontWeight.w300,
@@ -10517,6 +10532,10 @@ class _OnboardingGate extends StatefulWidget {
   State<_OnboardingGate> createState() => _OnboardingGateState();
 }
 
+// when the cold start's splash lets go, set once for the process: a gate
+// built again for a switched session holds it to the same moment
+DateTime? _splashUntil;
+
 class _OnboardingGateState extends State<_OnboardingGate> {
   // boot is ~450ms now, the onion was gone before it registered. hold the
   // splash a beat on cold start so it gets seen. warm reopens skip it.
@@ -10527,8 +10546,12 @@ class _OnboardingGateState extends State<_OnboardingGate> {
     super.initState();
     if (!appState.ready) {
       appState.bootWhenWanted();
+      _splashUntil ??= DateTime.now().add(const Duration(milliseconds: 2500));
+    }
+    final left = _splashUntil?.difference(DateTime.now());
+    if (left != null && left > Duration.zero) {
       _hold = true;
-      Future.delayed(const Duration(milliseconds: 2500), () {
+      Future.delayed(left, () {
         if (mounted) setState(() => _hold = false);
       });
     }
@@ -10637,62 +10660,24 @@ class _LockGate extends StatefulWidget {
   State<_LockGate> createState() => _LockGateState();
 }
 
-class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
-  // the lock is a layer above the navigator (lock_layer.dart). this keeps
-  // what drives it: reading it at the start, and leaving and coming back.
-
+class _LockGateState extends State<_LockGate> {
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    lockState.load();
-    // the lifecycle only reports changes, and a fresh start in front is not
-    // one. a process the job started builds this too, with nobody looking.
-    if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
-      appState.appInFront(true);
-    }
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeLocales(List<Locale>? locales) => systemLocalesChanged();
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // paused and hidden mean the user left. inactive also fires for a
-    // permission prompt, a screenshot toolbar or a pulled-down shade, and
-    // locking behind those put a pin between someone and the camera they
-    // just allowed.
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.hidden) {
-      lockState.leaving();
-      appState.appInFront(false);
-    } else if (state == AppLifecycleState.resumed) {
-      lockState.returned();
-      appState.appInFront(true);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => LockLayer(
+  Widget build(BuildContext context) => LockGate(
     app: widget.child,
     lock: lockState,
     loaded: () => lockState.loaded,
     locked: () => lockState.locked,
+    load: lockState.load,
+    leaving: lockState.leaving,
+    returned: lockState.returned,
+    guard: lockGuard,
+    quiet: () => sessionQuiet,
     pad: (_) => const LockScreen(),
-    onLockUp: () {
-      lockGuard.locking();
-      haloClearToasts();
-    },
-    onLifted: () {
+    inFront: appState.appInFront,
+    localesChanged: systemLocalesChanged,
+    revealed: () {
+      appRevealed = true;
       homeRevealed();
-      // what waited happens in an everyday session and is dropped in a decoy
-      sessionQuiet ? lockGuard.dropHeld() : lockGuard.lifted();
     },
   );
 }

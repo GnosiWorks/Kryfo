@@ -21,7 +21,7 @@ import 'qr_screen.dart';
 import 'lock_file_screen.dart';
 import 'open_locked_screen.dart';
 import '../tools/tools_bridge.dart';
-import '../lock_guard.dart' show lockGuard;
+import '../lock_guard.dart' show entranceDone, lockGuard;
 import '../lock_state.dart';
 import '../widgets/nav_bar.dart';
 import 'package:flutter/services.dart';
@@ -1986,7 +1986,7 @@ class _UnreadBadge extends StatelessWidget {
     return TweenAnimationBuilder<double>(
       key: ValueKey(count),
       // no pop for a badge made under the lock: nothing moves at the reveal
-      tween: Tween(begin: lockGuard.isLocked() ? 1.0 : 0.55, end: 1),
+      tween: Tween(begin: entranceDone ? 1.0 : 0.55, end: 1),
       duration: const Duration(milliseconds: 260),
       curve: Curves.easeOutBack,
       builder: (_, t, child) => Transform.scale(scale: t, child: child),

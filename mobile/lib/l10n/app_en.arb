@@ -60,11 +60,11 @@
   "@backupThatPassphraseDoesNot": {
     "description": "backup.dart"
   },
-  "backupThatFileIsNot": "That file is not a kryfo backup",
+  "backupThatFileIsNot": "That file is not a Kryfo backup",
   "@backupThatFileIsNot": {
     "description": "backup.dart"
   },
-  "backupThisBackupIsFrom": "This backup is from a newer kryfo. Update the app, then try again",
+  "backupThisBackupIsFrom": "This backup is from a newer Kryfo. Update the app, then try again",
   "@backupThisBackupIsFrom": {
     "description": "backup.dart"
   },
@@ -80,11 +80,11 @@
   "@contactCardMessageMeOn": {
     "description": "contact_card.dart"
   },
-  "contactCardScanItOrType": "Scan it, or type the three words into kryfo.\nThis card knows nothing about you beyond that.",
+  "contactCardScanItOrType": "Scan it, or type the three words into Kryfo.\nThis card knows nothing about you beyond that.",
   "@contactCardScanItOrType": {
     "description": "contact_card.dart"
   },
-  "contactCardMessageMeOnKryfo": "Message me on kryfo · {haloId}",
+  "contactCardMessageMeOnKryfo": "Message me on Kryfo · {haloId}",
   "@contactCardMessageMeOnKryfo": {
     "description": "contact_card.dart",
     "placeholders": {
@@ -431,7 +431,7 @@
   },
   "appSBy": "{why, select, push{{how}, {secs}s, by push} other{{how}, {secs}s, by job}}",
   "@appSBy": {
-    "description": "main.dart: the last check-in on the transport screen. push: a unifiedpush helper woke kryfo. job: the fifteen-minute background job.",
+    "description": "main.dart: the last check-in on the transport screen. push: a unifiedpush helper woke Kryfo. job: the fifteen-minute background job.",
     "placeholders": {
       "how": {
         "type": "Object"
@@ -481,7 +481,7 @@
   "@appStartingTor": {
     "description": "main.dart"
   },
-  "appTimedMessagesAreNot": "Timed messages are not clearing. Restart kryfo",
+  "appTimedMessagesAreNot": "Timed messages are not clearing. Restart Kryfo",
   "@appTimedMessagesAreNot": {
     "description": "main.dart"
   },
@@ -557,7 +557,7 @@
   "@appScanTheirCode": {
     "description": "main.dart"
   },
-  "appAKryfoLinkA": "A kryfo link, a room link or @wren",
+  "appAKryfoLinkA": "A Kryfo link, a room link or @wren",
   "@appAKryfoLinkA": {
     "description": "main.dart"
   },
@@ -601,7 +601,7 @@
   "@appTapStartListeningFirst": {
     "description": "main.dart"
   },
-  "appYourKryfo": "Your kryfo",
+  "appYourKryfo": "Your Kryfo",
   "@appYourKryfo": {
     "description": "main.dart"
   },
@@ -613,7 +613,7 @@
   "@appCopyUri": {
     "description": "main.dart"
   },
-  "appAddAKryfo": "Add a kryfo",
+  "appAddAKryfo": "Add a Kryfo",
   "@appAddAKryfo": {
     "description": "main.dart"
   },
@@ -641,7 +641,7 @@
   "@appDev": {
     "description": "main.dart"
   },
-  "appYourKryfo2": "Your kryfo:",
+  "appYourKryfo2": "Your Kryfo:",
   "@appYourKryfo2": {
     "description": "main.dart"
   },
@@ -698,7 +698,7 @@
   "@appDisableAppLock": {
     "description": "main.dart"
   },
-  "appThePinWillBe": "The PIN will be removed. Anyone with your phone will see kryfo when they open it.",
+  "appThePinWillBe": "The PIN will be removed. Anyone with your phone will see Kryfo when they open it.",
   "@appThePinWillBe": {
     "description": "main.dart"
   },
@@ -747,7 +747,7 @@
   "@appTorIsOffTurn": {
     "description": "main.dart"
   },
-  "appTheFirstConnectionTakes": "The first connection takes a minute or two while tor builds a private route. After that it is cached, so opening kryfo later is much faster.",
+  "appTheFirstConnectionTakes": "The first connection takes a minute or two while tor builds a private route. After that it is cached, so opening Kryfo later is much faster.",
   "@appTheFirstConnectionTakes": {
     "description": "main.dart"
   },
@@ -885,11 +885,11 @@
   "@miuiAutostartAlreadyAllowedToRun": {
     "description": "miui_autostart.dart"
   },
-  "miuiAutostartLetKryfoRunIn": "Let kryfo run in the background",
+  "miuiAutostartLetKryfoRunIn": "Let Kryfo run in the background",
   "@miuiAutostartLetKryfoRunIn": {
     "description": "miui_autostart.dart"
   },
-  "miuiAutostartYourPhonePausesApps": "Your phone pauses apps to save battery. Without an exception, kryfo cannot receive messages while it is closed.",
+  "miuiAutostartYourPhonePausesApps": "Your phone pauses apps to save battery. Without an exception, Kryfo cannot receive messages while it is closed.",
   "@miuiAutostartYourPhonePausesApps": {
     "description": "miui_autostart.dart"
   },
@@ -901,7 +901,7 @@
   "@commonSkip": {
     "description": "miui_autostart.dart"
   },
-  "miuiAutostartXiaomiTurnsOffBackground": "Xiaomi turns off background apps by default. Without autostart, kryfo cannot deliver messages when the app is closed. On the next screen, find kryfo in the list and turn the toggle on.",
+  "miuiAutostartXiaomiTurnsOffBackground": "Xiaomi turns off background apps by default. Without autostart, Kryfo cannot deliver messages when the app is closed. On the next screen, find Kryfo in the list and turn the toggle on.",
   "@miuiAutostartXiaomiTurnsOffBackground": {
     "description": "miui_autostart.dart"
   },
@@ -1220,11 +1220,11 @@
   "@backupKryfoBackup": {
     "description": "screens/backup_screen.dart"
   },
-  "backupYourEncryptedKryfoBackup": "Your encrypted kryfo backup. Keep both this file AND your passphrase safe - you need both to restore.",
+  "backupYourEncryptedKryfoBackup": "Your encrypted Kryfo backup. Keep both this file AND your passphrase safe - you need both to restore.",
   "@backupYourEncryptedKryfoBackup": {
     "description": "screens/backup_screen.dart"
   },
-  "backupBackUpKryfo": "Back up kryfo",
+  "backupBackUpKryfo": "Back up Kryfo",
   "@backupBackUpKryfo": {
     "description": "screens/backup_screen.dart"
   },
@@ -1357,7 +1357,7 @@
   "@bridgesDepends": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesGotABridgeLine": "Got a bridge line from someone you trust, or from bridges.torproject.org? Paste it here. Obfs4 lines only, kryfo does not speak the others yet.",
+  "bridgesGotABridgeLine": "Got a bridge line from someone you trust, or from bridges.torproject.org? Paste it here. Obfs4 lines only, Kryfo does not speak the others yet.",
   "@bridgesGotABridgeLine": {
     "description": "screens/bridges_screen.dart"
   },
@@ -2712,7 +2712,7 @@
   "@donateSupport": {
     "description": "screens/donate_screen.dart"
   },
-  "donateKeepKryfo": "Keep kryfo *independent*",
+  "donateKeepKryfo": "Keep Kryfo *independent*",
   "@donateKeepKryfo": {
     "description": "screens/donate_screen.dart"
   },
@@ -2852,7 +2852,7 @@
   "@donatePaymentConfirmed": {
     "description": "screens/donate_screen.dart"
   },
-  "donateThankYouForKeeping": "Thank you for keeping kryfo independent.",
+  "donateThankYouForKeeping": "Thank you for keeping Kryfo independent.",
   "@donateThankYouForKeeping": {
     "description": "screens/donate_screen.dart"
   },
@@ -3520,7 +3520,7 @@
   "@commonSettings": {
     "description": "screens/home_screen.dart, screens/profile_screen.dart, screens/settings_screen.dart"
   },
-  "homeYourKryfo": "Your kryfo",
+  "homeYourKryfo": "Your Kryfo",
   "@homeYourKryfo": {
     "description": "screens/home_screen.dart"
   },
@@ -3586,11 +3586,11 @@
   "@homeKryfoWillCheckIn": {
     "description": "screens/home_screen.dart"
   },
-  "homeYourPhoneKeepsStopping": "Your phone keeps stopping kryfo",
+  "homeYourPhoneKeepsStopping": "Your phone keeps stopping Kryfo",
   "@homeYourPhoneKeepsStopping": {
     "description": "screens/home_screen.dart"
   },
-  "homeItHasClosedKryfo": "It has closed kryfo three times today, so messages were late or waited. Check-ins survive that: kryfo wakes every 15 minutes instead of staying connected.",
+  "homeItHasClosedKryfo": "It has closed Kryfo three times today, so messages were late or waited. Check-ins survive that: Kryfo wakes every 15 minutes instead of staying connected.",
   "@homeItHasClosedKryfo": {
     "description": "screens/home_screen.dart"
   },
@@ -3606,11 +3606,11 @@
   "@homeNotificationsAreOff": {
     "description": "screens/home_screen.dart"
   },
-  "homeAndroidIsBlockingThem": "Android is blocking them, so nothing reaches you while kryfo is closed. Messages still arrive when you open it.",
+  "homeAndroidIsBlockingThem": "Android is blocking them, so nothing reaches you while Kryfo is closed. Messages still arrive when you open it.",
   "@homeAndroidIsBlockingThem": {
     "description": "screens/home_screen.dart"
   },
-  "homeCouldnTOpenIt": "Couldn't open it. Look for kryfo in phone settings",
+  "homeCouldnTOpenIt": "Couldn't open it. Look for Kryfo in phone settings",
   "@homeCouldnTOpenIt": {
     "description": "screens/home_screen.dart"
   },
@@ -3748,7 +3748,7 @@
   "@commonRetry": {
     "description": "screens/home_screen.dart"
   },
-  "homeNoKryfosYet": "No kryfos yet.",
+  "homeNoKryfosYet": "No Kryfos yet.",
   "@homeNoKryfosYet": {
     "description": "screens/home_screen.dart"
   },
@@ -4333,7 +4333,7 @@
   "@modesRelay": {
     "description": "screens/modes_screen.dart"
   },
-  "modesOneSealedConnectionTo": "One sealed connection to kryfo's own relay, like a vpn with nothing to log. Sends land in about a second, and it works where tor is blocked.",
+  "modesOneSealedConnectionTo": "One sealed connection to Kryfo's own relay, like a vpn with nothing to log. Sends land in about a second, and it works where tor is blocked.",
   "@modesOneSealedConnectionTo": {
     "description": "screens/modes_screen.dart"
   },
@@ -4434,7 +4434,7 @@
   "@movedWipeThisPhone": {
     "description": "screens/moved_screen.dart"
   },
-  "movedEverythingKryfoHoldsHere": "Everything kryfo holds here goes: the messages, the contacts, the keys. The other device keeps all of it. This cannot be undone.",
+  "movedEverythingKryfoHoldsHere": "Everything Kryfo holds here goes: the messages, the contacts, the keys. The other device keeps all of it. This cannot be undone.",
   "@movedEverythingKryfoHoldsHere": {
     "description": "screens/moved_screen.dart"
   },
@@ -4467,11 +4467,11 @@
       }
     }
   },
-  "movedReopenKryfo": "Reopen kryfo",
+  "movedReopenKryfo": "Reopen Kryfo",
   "@movedReopenKryfo": {
     "description": "screens/moved_screen.dart"
   },
-  "movedThisKryfoHasMoved": "This kryfo has moved",
+  "movedThisKryfoHasMoved": "This Kryfo has moved",
   "@movedThisKryfoHasMoved": {
     "description": "screens/moved_screen.dart"
   },
@@ -4504,7 +4504,7 @@
   "@myKryfoInviteCopiedClearsIn": {
     "description": "screens/my_kryfo_screen.dart"
   },
-  "myKryfoAddMeOnKryfo": "add me on kryfo. my id is {myId}\n\ntap to add me:\n{uri}\n\nkryfo is a private messenger. no phone number, no email.",
+  "myKryfoAddMeOnKryfo": "Add me on Kryfo. My ID is {myId}\n\nTap to add me:\n{uri}\n\nKryfo is a private messenger. No phone number, no email.",
   "@myKryfoAddMeOnKryfo": {
     "description": "screens/my_kryfo_screen.dart",
     "placeholders": {
@@ -4516,7 +4516,7 @@
       }
     }
   },
-  "myKryfoAddMeOnKryfo2": "Add me on kryfo",
+  "myKryfoAddMeOnKryfo2": "Add me on Kryfo",
   "@myKryfoAddMeOnKryfo2": {
     "description": "screens/my_kryfo_screen.dart"
   },
@@ -4524,7 +4524,7 @@
   "@myKryfoAddSomeone": {
     "description": "screens/my_kryfo_screen.dart"
   },
-  "myKryfoKryfoDoesnTScan": "kryfo doesn't scan your contacts, that's the point.",
+  "myKryfoKryfoDoesnTScan": "Kryfo doesn't scan your contacts, that's the point.",
   "@myKryfoKryfoDoesnTScan": {
     "description": "screens/my_kryfo_screen.dart"
   },
@@ -4532,7 +4532,7 @@
   "@myKryfoIfThisLinkEnds": {
     "description": "screens/my_kryfo_screen.dart"
   },
-  "myKryfoAlreadyShareAFriend": "Already share a friend on kryfo? They can introduce you both from their chat, and you skip the request.",
+  "myKryfoAlreadyShareAFriend": "Already share a friend on Kryfo? They can introduce you both from their chat, and you skip the request.",
   "@myKryfoAlreadyShareAFriend": {
     "description": "screens/my_kryfo_screen.dart"
   },
@@ -4878,7 +4878,7 @@
   "@onboardingOneQuiet": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingAndroidNeedsAVisible": "Android needs a visible notification while an app listens in the background. That is how messages reach you when kryfo is closed.",
+  "onboardingAndroidNeedsAVisible": "Android needs a visible notification while an app listens in the background. That is how messages reach you when Kryfo is closed.",
   "@onboardingAndroidNeedsAVisible": {
     "description": "screens/onboarding_screen.dart"
   },
@@ -5210,7 +5210,7 @@
   "@profileChangeYourFace": {
     "description": "screens/profile_screen.dart"
   },
-  "profileKryfoId": "kryfo id",
+  "profileKryfoId": "Kryfo id",
   "@profileKryfoId": {
     "description": "screens/profile_screen.dart"
   },
@@ -5251,7 +5251,7 @@
   "@profileShareConnect": {
     "description": "screens/profile_screen.dart"
   },
-  "profileMyKryfoCode": "My kryfo code",
+  "profileMyKryfoCode": "My Kryfo code",
   "@profileMyKryfoCode": {
     "description": "screens/profile_screen.dart"
   },
@@ -5263,7 +5263,7 @@
   "@profileGiveAgain": {
     "description": "screens/profile_screen.dart"
   },
-  "profileSupportKryfo": "Support kryfo",
+  "profileSupportKryfo": "Support Kryfo",
   "@profileSupportKryfo": {
     "description": "screens/profile_screen.dart"
   },
@@ -5271,7 +5271,7 @@
   "@profileKryfoRunsOnWhat": {
     "description": "screens/profile_screen.dart"
   },
-  "profileKeepKryfoIndependent": "Keep kryfo independent",
+  "profileKeepKryfoIndependent": "Keep Kryfo independent",
   "@profileKeepKryfoIndependent": {
     "description": "screens/profile_screen.dart"
   },
@@ -5537,7 +5537,7 @@
   "@requestsDecline": {
     "description": "screens/requests_screen.dart"
   },
-  "restoreThatFileIsNot": "That file is not a kryfo backup",
+  "restoreThatFileIsNot": "That file is not a Kryfo backup",
   "@restoreThatFileIsNot": {
     "description": "screens/restore_screen.dart"
   },
@@ -5600,7 +5600,7 @@
       }
     }
   },
-  "restoreReopenKryfo": "Reopen kryfo",
+  "restoreReopenKryfo": "Reopen Kryfo",
   "@restoreReopenKryfo": {
     "description": "screens/restore_screen.dart"
   },
@@ -5612,7 +5612,7 @@
   "@restoreThisIdentity": {
     "description": "screens/restore_screen.dart"
   },
-  "restoreMoveYourKryfoHere": "Move your kryfo here",
+  "restoreMoveYourKryfoHere": "Move your Kryfo here",
   "@restoreMoveYourKryfoHere": {
     "description": "screens/restore_screen.dart"
   },
@@ -5695,7 +5695,7 @@
   "@restoreTheOldPhoneStops": {
     "description": "screens/restore_screen.dart"
   },
-  "restoreIfThePhoneThis": "If the phone this file came from is still in use, stop using kryfo on it before you carry on. Two phones on one kryfo lose messages on both.",
+  "restoreIfThePhoneThis": "If the phone this file came from is still in use, stop using Kryfo on it before you carry on. Two phones on one Kryfo lose messages on both.",
   "@restoreIfThePhoneThis": {
     "description": "screens/restore_screen.dart"
   },
@@ -5922,11 +5922,11 @@
   "@savedPhoto2": {
     "description": "screens/saved_screen.dart"
   },
-  "scanThatSNotA": "that's not a kryfo qr · keep pointing",
+  "scanThatSNotA": "that's not a Kryfo qr · keep pointing",
   "@scanThatSNotA": {
     "description": "screens/scan_screen.dart"
   },
-  "scanScanAKryfoQr": "Scan a kryfo qr",
+  "scanScanAKryfoQr": "Scan a Kryfo qr",
   "@scanScanAKryfoQr": {
     "description": "screens/scan_screen.dart"
   },
@@ -5934,7 +5934,7 @@
   "@scanFlash": {
     "description": "screens/scan_screen.dart"
   },
-  "scanPointAtAKryfo": "Point at a kryfo qr · nothing leaves your phone",
+  "scanPointAtAKryfo": "Point at a Kryfo qr · nothing leaves your phone",
   "@scanPointAtAKryfo": {
     "description": "screens/scan_screen.dart"
   },
@@ -6090,7 +6090,7 @@
   "@seenFast": {
     "description": "screens/seen_screen.dart"
   },
-  "settingsWipeKryfo": "Wipe kryfo?",
+  "settingsWipeKryfo": "Wipe Kryfo?",
   "@settingsWipeKryfo": {
     "description": "screens/settings_screen.dart"
   },
@@ -6117,9 +6117,9 @@
   },
   "settingsWipeWord": "wipe",
   "@settingsWipeWord": {
-    "description": "screens/settings_screen.dart: the word typed to confirm wiping kryfo. one lowercase word, easy to type on a phone keyboard in this language. the english word is accepted too."
+    "description": "screens/settings_screen.dart: the word typed to confirm wiping Kryfo. one lowercase word, easy to type on a phone keyboard in this language. the english word is accepted too."
   },
-  "settingsWipeKryfo2": "Wipe kryfo",
+  "settingsWipeKryfo2": "Wipe Kryfo",
   "@settingsWipeKryfo2": {
     "description": "screens/settings_screen.dart"
   },
@@ -6297,7 +6297,7 @@
   "@settingsShiftsYourPitchBefore": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsWhyKryfo": "Why kryfo",
+  "settingsWhyKryfo": "Why Kryfo",
   "@settingsWhyKryfo": {
     "description": "screens/settings_screen.dart"
   },
@@ -6373,7 +6373,7 @@
   "@settingsDangerZone": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsWipeKryfoFromThis": "Wipe kryfo from this phone",
+  "settingsWipeKryfoFromThis": "Wipe Kryfo from this phone",
   "@settingsWipeKryfoFromThis": {
     "description": "screens/settings_screen.dart"
   },
@@ -6860,7 +6860,7 @@
   "@wallpaperKeepIt": {
     "description": "screens/wallpaper_sheet.dart"
   },
-  "whyKryfoWhyKryfo": "Why kryfo",
+  "whyKryfoWhyKryfo": "Why Kryfo",
   "@whyKryfoWhyKryfo": {
     "description": "screens/why_kryfo_screen.dart"
   },
@@ -6896,7 +6896,7 @@
   "@whyKryfoNothingLeaks": {
     "description": "screens/why_kryfo_screen.dart"
   },
-  "whyKryfoNoReadReceiptsOr": "No read receipts or typing tells handed to anyone, no contact list uploaded. Metadata is what most apps leak - kryfo is built not to.",
+  "whyKryfoNoReadReceiptsOr": "No read receipts or typing tells handed to anyone, no contact list uploaded. Metadata is what most apps leak - Kryfo is built not to.",
   "@whyKryfoNoReadReceiptsOr": {
     "description": "screens/why_kryfo_screen.dart"
   },
@@ -7537,7 +7537,7 @@
   "@bootFailedThisIsAFault": {
     "description": "widgets/boot_failed.dart"
   },
-  "kryfoLinkTextThatLinkIsNot": "That link is not one kryfo can read",
+  "kryfoLinkTextThatLinkIsNot": "That link is not one Kryfo can read",
   "@kryfoLinkTextThatLinkIsNot": {
     "description": "widgets/kryfo_link_text.dart"
   },
@@ -7576,7 +7576,7 @@
       }
     }
   },
-  "kryfoLinkTextKryfoLink": "kryfo link",
+  "kryfoLinkTextKryfoLink": "Kryfo link",
   "@kryfoLinkTextKryfoLink": {
     "description": "widgets/kryfo_link_text.dart"
   },
@@ -7623,7 +7623,7 @@
   "@kryfoLinkTextJoin2": {
     "description": "widgets/kryfo_link_text.dart"
   },
-  "kryfoLinkTextYouJoinUnderA": "You join under a key made for this room. Nobody in it sees your kryfo id.",
+  "kryfoLinkTextYouJoinUnderA": "You join under a key made for this room. Nobody in it sees your Kryfo id.",
   "@kryfoLinkTextYouJoinUnderA": {
     "description": "widgets/kryfo_link_text.dart"
   },
@@ -7754,7 +7754,7 @@
   "@motionTellingTheNetworkYou": {
     "description": "widgets/motion.dart"
   },
-  "motionYourIpIsHidden": "Your ip is hidden. Only people with your kryfo can reach you.",
+  "motionYourIpIsHidden": "Your ip is hidden. Only people with your Kryfo can reach you.",
   "@motionYourIpIsHidden": {
     "description": "widgets/motion.dart"
   },
@@ -7795,7 +7795,7 @@
   "@motion3Hops": {
     "description": "widgets/motion.dart"
   },
-  "movedStripThisKryfoHasMoved": "This kryfo has moved to another device. Nothing sent from here reaches anyone.",
+  "movedStripThisKryfoHasMoved": "This Kryfo has moved to another device. Nothing sent from here reaches anyone.",
   "@movedStripThisKryfoHasMoved": {
     "description": "widgets/moved_strip.dart"
   },
@@ -7855,7 +7855,7 @@
   "@pairCodePanelTheyTapAddChoose": {
     "description": "widgets/pair_code_panel.dart"
   },
-  "pairCodePanelTheyOpenKryfoTap": "They open kryfo, tap add, choose pairing code and type these six digits. Make a new one for the next person.",
+  "pairCodePanelTheyOpenKryfoTap": "They open Kryfo, tap add, choose pairing code and type these six digits. Make a new one for the next person.",
   "@pairCodePanelTheyOpenKryfoTap": {
     "description": "widgets/pair_code_panel.dart"
   },
@@ -8253,7 +8253,7 @@
   },
   "bridgesSaved": "{count, plural, one{{count} bridge} other{{count} bridges}}",
   "@bridgesSaved": {
-    "description": "screens/bridges_screen.dart: after saving, how many bridge lines kryfo took",
+    "description": "screens/bridges_screen.dart: after saving, how many bridge lines Kryfo took",
     "placeholders": {
       "count": {
         "type": "int",
@@ -8281,7 +8281,7 @@
   },
   "languageMatchPhone": "Match phone",
   "@languageMatchPhone": {
-    "description": "widgets/language_sheet.dart: the first choice: kryfo uses the phone's language when it has it"
+    "description": "widgets/language_sheet.dart: the first choice: Kryfo uses the phone's language when it has it"
   },
   "languageMatchPhoneValue": "Match phone ({language})",
   "@languageMatchPhoneValue": {
@@ -8305,9 +8305,9 @@
       }
     }
   },
-  "androidServiceTitle": "kryfo is on",
+  "androidServiceTitle": "Kryfo is on",
   "@androidServiceTitle": {
-    "description": "android: the title of the notification that stays while kryfo keeps its connection open. kryfo is lowercase on purpose."
+    "description": "android: the title of the notification that stays while Kryfo keeps its connection open. Kryfo is lowercase on purpose."
   },
   "androidServiceText": "your encrypted line stays open so messages arrive",
   "@androidServiceText": {
@@ -8317,7 +8317,7 @@
   "@androidChannelName": {
     "description": "android: the name of that notification's channel in the phone's settings"
   },
-  "androidChannelDescription": "keeps kryfo connected so encrypted messages arrive while it is closed. turning this off stops delivery.",
+  "androidChannelDescription": "keeps Kryfo connected so encrypted messages arrive while it is closed. turning this off stops delivery.",
   "@androidChannelDescription": {
     "description": "android: the channel's description in the phone's settings"
   },
@@ -8339,7 +8339,7 @@
   },
   "videoViewerOpenElsewhere": "Open in another app",
   "@videoViewerOpenElsewhere": {
-    "description": "widgets/video_viewer.dart: hands the video to another app when kryfo cannot play it"
+    "description": "widgets/video_viewer.dart: hands the video to another app when Kryfo cannot play it"
   },
   "photoKnowsLookedFor": "Looked for",
   "@photoKnowsLookedFor": {
@@ -8840,7 +8840,7 @@
   "@flowDecoyTitle": {
     "description": "first page of the decoy PIN setup"
   },
-  "flowDecoy1": "Opens an empty Kryfo, as if just installed. It holds up to a quick look through your phone. It does not hide how much space Kryfo uses, and it will not fool someone who knows your three words, who tries to message it, or who copies the phone.",
+  "flowDecoy1": "Opens an empty Kryfo, as if just installed. It holds up to a quick look, not to someone who knows your three words, messages you, or copies the phone. It doesn't hide how much space Kryfo uses.",
   "@flowDecoy1": {
     "description": "decoy PIN setup, what it does and does not do"
   },
@@ -8848,7 +8848,7 @@
   "@flowDecoyFinger": {
     "description": "decoy PIN setup"
   },
-  "flowDecoyDigits": "Use as many digits as your PIN. The dots can be counted.",
+  "flowDecoyDigits": "Use the same number of digits as your PIN, because anyone watching can count the dots.",
   "@flowDecoyDigits": {
     "description": "decoy PIN setup; also under the pad when choosing it"
   },

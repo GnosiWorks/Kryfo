@@ -71,9 +71,26 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
     super.initState();
     _watchHold();
     lockState.addListener(_onLock);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_fingerReady) lockState.tryBiometric();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _fingerWhenInFront());
+  }
+
+  // the prompt only while the app is in front. the pad goes up as the app
+  // leaves, in a frame drawn in the background, and a prompt asked for
+  // there would go to a stopped screen and not be there on the way back
+  AppLifecycleListener? _toFront;
+  void _fingerWhenInFront() {
+    if (!mounted || !_fingerReady) return;
+    if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+      lockState.tryBiometric();
+      return;
+    }
+    _toFront ??= AppLifecycleListener(
+      onResume: () {
+        _toFront?.dispose();
+        _toFront = null;
+        if (mounted && _fingerReady) lockState.tryBiometric();
+      },
+    );
   }
 
   // fingerprint is on, but a finger added since (or an update) put it to
@@ -89,6 +106,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
   void dispose() {
     lockState.removeListener(_onLock);
     _shake.dispose();
+    _toFront?.dispose();
     _breath.dispose();
     _holdTick?.cancel();
     super.dispose();

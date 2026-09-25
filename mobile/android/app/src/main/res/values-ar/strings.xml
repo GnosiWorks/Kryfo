@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- written by tool/arb_android.py from lib/l10n/app_ar.arb -->
 <resources>
-    <string name="service_title">يعمل kryfo</string>
+    <string name="service_title">يعمل Kryfo</string>
     <string name="service_text">يبقى خطّك المشفّر مفتوحًا لتصل الرسائل</string>
     <string name="channel_name">البقاء متصلًا</string>
-    <string name="channel_description">يُبقي kryfo متصلًا لتصل الرسائل المشفّرة وهو مغلق. إيقاف هذا يوقف التوصيل.</string>
+    <string name="channel_description">يُبقي Kryfo متصلًا لتصل الرسائل المشفّرة وهو مغلق. إيقاف هذا يوقف التوصيل.</string>
 </resources>

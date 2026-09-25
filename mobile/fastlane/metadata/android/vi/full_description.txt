@@ -21,6 +21,6 @@ tính năng:
 * xóa sạch khẩn cấp, gỡ bỏ mọi thứ, kể cả tệp đa phương tiện trong bộ nhớ
 * không phân tích, không đo lường từ xa, không quảng cáo
 
-kinh phí: không quảng cáo, không nhà đầu tư. kryfo sống nhờ những gì người
+kinh phí: không quảng cáo, không nhà đầu tư. Kryfo sống nhờ những gì người
 ủng hộ đóng góp. việc ủng hộ là tùy chọn và ẩn danh, và mọi tính năng đều
 hoạt động như nhau dù bạn có ủng hộ hay không.

@@ -457,7 +457,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
                   scale: 0.72 + 0.28 * eased,
                   child: KryfoAvatar(
                     seed: widget.appState.sessionId.isEmpty
-                        ? 'kryfo'
+                        ? 'Kryfo'
                         : widget.appState.sessionId,
                     size: 56,
                   ),

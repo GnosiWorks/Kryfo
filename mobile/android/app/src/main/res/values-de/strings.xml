@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- written by tool/arb_android.py from lib/l10n/app_de.arb -->
 <resources>
-    <string name="service_title">kryfo ist an</string>
+    <string name="service_title">Kryfo ist an</string>
     <string name="service_text">deine verschlüsselte Leitung bleibt offen, damit Nachrichten ankommen</string>
     <string name="channel_name">verbunden bleiben</string>
-    <string name="channel_description">hält kryfo verbunden, damit verschlüsselte Nachrichten ankommen, während es geschlossen ist. wenn du das ausschaltest, stoppt die Zustellung.</string>
+    <string name="channel_description">hält Kryfo verbunden, damit verschlüsselte Nachrichten ankommen, während es geschlossen ist. wenn du das ausschaltest, stoppt die Zustellung.</string>
 </resources>

@@ -2,6 +2,7 @@
 // one-time fade + slide-up entrance for list items. delay scales with index
 // (capped) so a list assembles gracefully instead of popping in at once.
 import 'package:flutter/material.dart';
+import '../lock_guard.dart' show entranceDone;
 
 class StaggerIn extends StatefulWidget {
   final int index;
@@ -13,11 +14,14 @@ class StaggerIn extends StatefulWidget {
 }
 
 class _StaggerInState extends State<StaggerIn> {
-  double _t = 0;
+  // made under the lock after the app was first shown: no entrance at the
+  // reveal (lock_guard.dart, entranceDone)
+  late double _t = entranceDone ? 1 : 0;
 
   @override
   void initState() {
     super.initState();
+    if (_t == 1) return;
     final delay = (widget.index * 45).clamp(0, 400);
     Future.delayed(Duration(milliseconds: delay), () {
       if (mounted) setState(() => _t = 1);

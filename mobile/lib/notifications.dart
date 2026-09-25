@@ -42,7 +42,7 @@ Future<void> initNotifications({void Function(String? payload)? onTap}) async {
   // and nothing is asked.
   unawaited(
     lockGuard
-        .unlocked()
+        .anyUnlock()
         .then(
           (_) => const MethodChannel(
             'halo/platform',
@@ -113,7 +113,7 @@ Future<void> showMessageNotification({
   if (await quietNow()) return;
   final hidden = await loadHideNotifContent();
   if (hidden) {
-    title = 'kryfo';
+    title = 'Kryfo';
     body = l10n.notificationsNewMessage;
   }
   final details = AndroidNotificationDetails(

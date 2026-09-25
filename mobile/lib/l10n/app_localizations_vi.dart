@@ -55,11 +55,11 @@ class AppLocalizationsVi extends AppLocalizations {
       'Cụm mật khẩu đó không mở được tệp này';
 
   @override
-  String get backupThatFileIsNot => 'Tệp đó không phải bản sao lưu kryfo';
+  String get backupThatFileIsNot => 'Tệp đó không phải bản sao lưu Kryfo';
 
   @override
   String get backupThisBackupIsFrom =>
-      'Bản sao lưu này đến từ một bản kryfo mới hơn. Hãy cập nhật ứng dụng rồi thử lại';
+      'Bản sao lưu này đến từ một bản Kryfo mới hơn. Hãy cập nhật ứng dụng rồi thử lại';
 
   @override
   String get backupThisFileIsDamaged => 'Tệp này bị hỏng và không thể đọc được';
@@ -72,11 +72,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get contactCardScanItOrType =>
-      'Quét mã, hoặc nhập ba từ vào kryfo.\nNgoài ba từ đó, thẻ này không biết gì về bạn.';
+      'Quét mã, hoặc nhập ba từ vào Kryfo.\nNgoài ba từ đó, thẻ này không biết gì về bạn.';
 
   @override
   String contactCardMessageMeOnKryfo(Object haloId) {
-    return 'Nhắn tôi trên kryfo · $haloId';
+    return 'Nhắn tôi trên Kryfo · $haloId';
   }
 
   @override
@@ -399,7 +399,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get appTimedMessagesAreNot =>
-      'Tin nhắn tự hủy không được xóa. Hãy khởi động lại kryfo';
+      'Tin nhắn tự hủy không được xóa. Hãy khởi động lại Kryfo';
 
   @override
   String get appVoiceMessage2 => 'tin nhắn thoại';
@@ -450,7 +450,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appScanTheirCode => 'Quét mã của họ';
 
   @override
-  String get appAKryfoLinkA => 'Liên kết kryfo, liên kết phòng hoặc @wren';
+  String get appAKryfoLinkA => 'Liên kết Kryfo, liên kết phòng hoặc @wren';
 
   @override
   String get appAddThem => 'Thêm họ';
@@ -493,7 +493,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appCopyUri => 'Sao chép uri';
 
   @override
-  String get appAddAKryfo => 'Thêm một kryfo';
+  String get appAddAKryfo => 'Thêm một Kryfo';
 
   @override
   String get appScanQr => 'Quét QR';
@@ -556,7 +556,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get appThePinWillBe =>
-      'Mã PIN sẽ bị gỡ bỏ. Bất kỳ ai có điện thoại của bạn cũng sẽ thấy kryfo khi họ mở nó.';
+      'Mã PIN sẽ bị gỡ bỏ. Bất kỳ ai có điện thoại của bạn cũng sẽ thấy Kryfo khi họ mở nó.';
 
   @override
   String get appDisable => 'Tắt';
@@ -596,7 +596,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get appTheFirstConnectionTakes =>
-      'Lần kết nối đầu tiên mất một hai phút trong lúc tor dựng một tuyến đường riêng tư. Sau đó tuyến này được lưu lại, nên những lần mở kryfo sau sẽ nhanh hơn nhiều.';
+      'Lần kết nối đầu tiên mất một hai phút trong lúc tor dựng một tuyến đường riêng tư. Sau đó tuyến này được lưu lại, nên những lần mở Kryfo sau sẽ nhanh hơn nhiều.';
 
   @override
   String get appRelayAndFastModes =>
@@ -686,11 +686,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get miuiAutostartAlreadyAllowedToRun => 'Đã được phép chạy nền';
 
   @override
-  String get miuiAutostartLetKryfoRunIn => 'Cho phép kryfo chạy nền';
+  String get miuiAutostartLetKryfoRunIn => 'Cho phép Kryfo chạy nền';
 
   @override
   String get miuiAutostartYourPhonePausesApps =>
-      'Điện thoại của bạn tạm dừng các ứng dụng để tiết kiệm pin. Nếu không có ngoại lệ, kryfo không thể nhận tin nhắn khi đang đóng.';
+      'Điện thoại của bạn tạm dừng các ứng dụng để tiết kiệm pin. Nếu không có ngoại lệ, Kryfo không thể nhận tin nhắn khi đang đóng.';
 
   @override
   String get commonAllow => 'Cho phép';
@@ -700,7 +700,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get miuiAutostartXiaomiTurnsOffBackground =>
-      'Xiaomi mặc định tắt các ứng dụng chạy nền. Không có tự khởi động, kryfo không thể chuyển tin nhắn khi ứng dụng đang đóng. Ở màn hình tiếp theo, hãy tìm kryfo trong danh sách và bật công tắc lên.';
+      'Xiaomi mặc định tắt các ứng dụng chạy nền. Không có tự khởi động, Kryfo không thể chuyển tin nhắn khi ứng dụng đang đóng. Ở màn hình tiếp theo, hãy tìm Kryfo trong danh sách và bật công tắc lên.';
 
   @override
   String get miuiAutostartOpenSettings => 'Mở cài đặt';
@@ -954,14 +954,14 @@ class AppLocalizationsVi extends AppLocalizations {
       'Đã lưu bản sao lưu · hãy giữ kỹ cụm mật khẩu';
 
   @override
-  String get backupKryfoBackup => 'Bản sao lưu kryfo';
+  String get backupKryfoBackup => 'Bản sao lưu Kryfo';
 
   @override
   String get backupYourEncryptedKryfoBackup =>
-      'Bản sao lưu kryfo được mã hóa của bạn. Hãy giữ an toàn cả tệp này VÀ cụm mật khẩu - bạn cần cả hai để khôi phục.';
+      'Bản sao lưu Kryfo được mã hóa của bạn. Hãy giữ an toàn cả tệp này VÀ cụm mật khẩu - bạn cần cả hai để khôi phục.';
 
   @override
-  String get backupBackUpKryfo => 'Sao lưu kryfo';
+  String get backupBackUpKryfo => 'Sao lưu Kryfo';
 
   @override
   String get backupBackUp => 'Sao lưu';
@@ -1067,7 +1067,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesGotABridgeLine =>
-      'Có dòng cầu nối từ người bạn tin tưởng, hoặc từ bridges.torproject.org? Dán vào đây. Chỉ nhận dòng obfs4, kryfo chưa hiểu các loại khác.';
+      'Có dòng cầu nối từ người bạn tin tưởng, hoặc từ bridges.torproject.org? Dán vào đây. Chỉ nhận dòng obfs4, Kryfo chưa hiểu các loại khác.';
 
   @override
   String get bridgesPasteFromClipboard => 'Dán từ bộ nhớ tạm';
@@ -2120,7 +2120,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get donateSupport => 'Ủng hộ';
 
   @override
-  String get donateKeepKryfo => 'Giữ kryfo *độc lập*';
+  String get donateKeepKryfo => 'Giữ Kryfo *độc lập*';
 
   @override
   String get donateNoAdsNoInvestors =>
@@ -2232,7 +2232,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get donateThankYouForKeeping =>
-      'Cảm ơn bạn đã giúp kryfo giữ được sự độc lập.';
+      'Cảm ơn bạn đã giúp Kryfo giữ được sự độc lập.';
 
   @override
   String donateVerifiedOnChainYou(String tier) {
@@ -2827,11 +2827,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeKryfoWillCheckIn => 'Kryfo sẽ kiểm tra mỗi 15 phút';
 
   @override
-  String get homeYourPhoneKeepsStopping => 'Điện thoại của bạn cứ dừng kryfo';
+  String get homeYourPhoneKeepsStopping => 'Điện thoại của bạn cứ dừng Kryfo';
 
   @override
   String get homeItHasClosedKryfo =>
-      'Hôm nay nó đã đóng kryfo ba lần, nên tin nhắn đến muộn hoặc phải chờ. Kiểm tra định kỳ không bị ảnh hưởng: kryfo thức dậy mỗi 15 phút thay vì luôn giữ kết nối.';
+      'Hôm nay nó đã đóng Kryfo ba lần, nên tin nhắn đến muộn hoặc phải chờ. Kiểm tra định kỳ không bị ảnh hưởng: Kryfo thức dậy mỗi 15 phút thay vì luôn giữ kết nối.';
 
   @override
   String get homeSwitchToCheckIns => 'Chuyển sang kiểm tra định kỳ';
@@ -2844,11 +2844,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get homeAndroidIsBlockingThem =>
-      'Android đang chặn thông báo, nên không có gì đến được với bạn khi kryfo đang đóng. Tin nhắn vẫn đến khi bạn mở ứng dụng.';
+      'Android đang chặn thông báo, nên không có gì đến được với bạn khi Kryfo đang đóng. Tin nhắn vẫn đến khi bạn mở ứng dụng.';
 
   @override
   String get homeCouldnTOpenIt =>
-      'Không mở được. Hãy tìm kryfo trong cài đặt điện thoại';
+      'Không mở được. Hãy tìm Kryfo trong cài đặt điện thoại';
 
   @override
   String get homeTurnThemOn => 'Bật thông báo';
@@ -2897,7 +2897,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeSwitchedToRelay => 'Đã chuyển sang Relay';
 
   @override
-  String get homeUseOurRelay => 'Dùng relay của kryfo';
+  String get homeUseOurRelay => 'Dùng relay của Kryfo';
 
   @override
   String get homeBridges => 'Cầu nối';
@@ -2988,7 +2988,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get commonRetry => 'Thử lại';
 
   @override
-  String get homeNoKryfosYet => 'Chưa có kryfo nào.';
+  String get homeNoKryfosYet => 'Chưa có Kryfo nào.';
 
   @override
   String get homeScanTheirCodeSend =>
@@ -3444,7 +3444,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get modesOneSealedConnectionTo =>
-      'Một kết nối được mã hóa kín tới relay riêng của kryfo, như một vpn không có gì để ghi nhật ký. Tin gửi đi đến nơi trong khoảng một giây, và chế độ này hoạt động cả ở nơi tor bị chặn.';
+      'Một kết nối được mã hóa kín tới relay riêng của Kryfo, như một vpn không có gì để ghi nhật ký. Tin gửi đi đến nơi trong khoảng một giây, và chế độ này hoạt động cả ở nơi tor bị chặn.';
 
   @override
   String get modesQuick => 'nhanh';
@@ -3524,7 +3524,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get movedEverythingKryfoHoldsHere =>
-      'Mọi thứ kryfo lưu ở đây sẽ bị xóa: tin nhắn, liên hệ, khóa. Thiết bị kia vẫn giữ tất cả. Không thể hoàn tác việc này.';
+      'Mọi thứ Kryfo lưu ở đây sẽ bị xóa: tin nhắn, liên hệ, khóa. Thiết bị kia vẫn giữ tất cả. Không thể hoàn tác việc này.';
 
   @override
   String get movedWipeIt => 'Xóa sạch';
@@ -3548,7 +3548,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get movedReopenKryfo => 'Mở lại kryfo';
+  String get movedReopenKryfo => 'Mở lại Kryfo';
 
   @override
   String get movedThisKryfoHasMoved => 'Kryfo này đã chuyển đi';
@@ -3577,18 +3577,18 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'thêm tôi trên kryfo. ID của tôi là $myId\n\nchạm để thêm tôi:\n$uri\n\nkryfo là ứng dụng nhắn tin riêng tư. không cần số điện thoại, không cần email.';
+    return 'Thêm tôi trên Kryfo. ID của tôi là $myId\n\nChạm để thêm tôi:\n$uri\n\nKryfo là ứng dụng nhắn tin riêng tư. Không cần số điện thoại, không cần email.';
   }
 
   @override
-  String get myKryfoAddMeOnKryfo2 => 'Thêm tôi trên kryfo';
+  String get myKryfoAddMeOnKryfo2 => 'Thêm tôi trên Kryfo';
 
   @override
   String get myKryfoAddSomeone => 'Thêm người';
 
   @override
   String get myKryfoKryfoDoesnTScan =>
-      'kryfo không quét danh bạ của bạn, đó chính là mục đích.';
+      'Kryfo không quét danh bạ của bạn, đó chính là mục đích.';
 
   @override
   String get myKryfoIfThisLinkEnds =>
@@ -3596,7 +3596,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get myKryfoAlreadyShareAFriend =>
-      'Đã có bạn chung trên kryfo? Người đó có thể giới thiệu hai bạn từ cuộc trò chuyện của họ, và bạn không cần gửi yêu cầu.';
+      'Đã có bạn chung trên Kryfo? Người đó có thể giới thiệu hai bạn từ cuộc trò chuyện của họ, và bạn không cần gửi yêu cầu.';
 
   @override
   String get myKryfoHandleCopied => 'Đã sao chép tên người dùng';
@@ -3894,7 +3894,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get onboardingAndroidNeedsAVisible =>
-      'Android cần một thông báo hiển thị khi ứng dụng lắng nghe ở chế độ nền. Nhờ vậy tin nhắn đến được với bạn khi kryfo đang đóng.';
+      'Android cần một thông báo hiển thị khi ứng dụng lắng nghe ở chế độ nền. Nhờ vậy tin nhắn đến được với bạn khi Kryfo đang đóng.';
 
   @override
   String get onboardingSilentAndAtThe => 'Im lặng, và nằm cuối bảng thông báo';
@@ -4115,7 +4115,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pinsNeedsAPinFirst => 'Cần đặt mã PIN trước';
 
   @override
-  String get pinsSet => 'Đặt';
+  String get pinsSet => 'Đã đặt';
 
   @override
   String get pinsChangeWipePin => 'Đổi mã PIN xóa sạch';
@@ -4145,7 +4145,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileChangeYourFace => 'Đổi khuôn mặt';
 
   @override
-  String get profileKryfoId => 'ID kryfo';
+  String get profileKryfoId => 'ID Kryfo';
 
   @override
   String get profileOnionAddress => 'địa chỉ onion';
@@ -4180,7 +4180,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileShareConnect => 'chia sẻ & kết nối';
 
   @override
-  String get profileMyKryfoCode => 'Mã kryfo của tôi';
+  String get profileMyKryfoCode => 'Mã Kryfo của tôi';
 
   @override
   String get profileAddContact => 'Thêm liên hệ';
@@ -4189,14 +4189,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileGiveAgain => 'Ủng hộ thêm';
 
   @override
-  String get profileSupportKryfo => 'Ủng hộ kryfo';
+  String get profileSupportKryfo => 'Ủng hộ Kryfo';
 
   @override
   String get profileKryfoRunsOnWhat =>
       'Kryfo sống nhờ những gì mọi người đóng góp';
 
   @override
-  String get profileKeepKryfoIndependent => 'Giữ kryfo độc lập';
+  String get profileKeepKryfoIndependent => 'Giữ Kryfo độc lập';
 
   @override
   String get qrLink => 'Liên kết';
@@ -4406,7 +4406,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get requestsDecline => 'Từ chối';
 
   @override
-  String get restoreThatFileIsNot => 'Tệp đó không phải bản sao lưu kryfo';
+  String get restoreThatFileIsNot => 'Tệp đó không phải bản sao lưu Kryfo';
 
   @override
   String get restoreThisFileIsDamaged =>
@@ -4452,7 +4452,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get restoreReopenKryfo => 'Mở lại kryfo';
+  String get restoreReopenKryfo => 'Mở lại Kryfo';
 
   @override
   String get restoreTheRestoreDidNot =>
@@ -4462,7 +4462,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get restoreThisIdentity => 'danh tính này';
 
   @override
-  String get restoreMoveYourKryfoHere => 'Chuyển kryfo của bạn sang đây';
+  String get restoreMoveYourKryfoHere => 'Chuyển Kryfo của bạn sang đây';
 
   @override
   String restoreThisBackupIsRestoring(Object name) {
@@ -4528,7 +4528,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get restoreIfThePhoneThis =>
-      'Nếu điện thoại tạo ra tệp này vẫn đang được dùng, hãy ngừng dùng kryfo trên đó trước khi tiếp tục. Hai điện thoại dùng chung một kryfo sẽ mất tin nhắn trên cả hai.';
+      'Nếu điện thoại tạo ra tệp này vẫn đang được dùng, hãy ngừng dùng Kryfo trên đó trước khi tiếp tục. Hai điện thoại dùng chung một Kryfo sẽ mất tin nhắn trên cả hai.';
 
   @override
   String get restoreNotificationsNeedSettingUp =>
@@ -4704,17 +4704,17 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get scanThatSNotA =>
-      'đó không phải mã QR kryfo · tiếp tục hướng máy ảnh';
+      'đó không phải mã QR Kryfo · tiếp tục hướng máy ảnh';
 
   @override
-  String get scanScanAKryfoQr => 'Quét mã QR kryfo';
+  String get scanScanAKryfoQr => 'Quét mã QR Kryfo';
 
   @override
   String get scanFlash => 'Đèn flash';
 
   @override
   String get scanPointAtAKryfo =>
-      'Hướng vào mã QR kryfo · không có gì rời khỏi điện thoại của bạn';
+      'Hướng vào mã QR Kryfo · không có gì rời khỏi điện thoại của bạn';
 
   @override
   String get seenWhatWeCanSee => 'Chúng tôi thấy được gì';
@@ -4763,7 +4763,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get seenYourIpAddress => 'Địa chỉ IP của bạn';
 
   @override
-  String get seenOurRelay => 'relay của kryfo';
+  String get seenOurRelay => 'relay của Kryfo';
 
   @override
   String get seenEveryRelay => 'mọi relay';
@@ -4844,7 +4844,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get seenFast => 'Nhanh';
 
   @override
-  String get settingsWipeKryfo => 'Xóa sạch kryfo?';
+  String get settingsWipeKryfo => 'Xóa sạch Kryfo?';
 
   @override
   String get settingsIdentityMessagesContactsAnd =>
@@ -4866,7 +4866,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsWipeWord => 'xóa';
 
   @override
-  String get settingsWipeKryfo2 => 'Xóa sạch kryfo';
+  String get settingsWipeKryfo2 => 'Xóa sạch Kryfo';
 
   @override
   String get settingsYourProtections => 'Lớp bảo vệ của bạn';
@@ -5001,10 +5001,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Đổi cao độ giọng bạn trước khi tin nhắn thoại được gửi đi';
 
   @override
-  String get settingsWhyKryfo => 'Vì sao chọn kryfo';
+  String get settingsWhyKryfo => 'Vì sao chọn Kryfo';
 
   @override
-  String get settingsHowItProtectsYou => 'Cách kryfo bảo vệ bạn';
+  String get settingsHowItProtectsYou => 'Cách Kryfo bảo vệ bạn';
 
   @override
   String get settingsResetMyInviteLink => 'Đặt lại liên kết mời';
@@ -5063,7 +5063,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsDangerZone => 'Vùng nguy hiểm';
 
   @override
-  String get settingsWipeKryfoFromThis => 'Xóa sạch kryfo khỏi điện thoại này';
+  String get settingsWipeKryfoFromThis => 'Xóa sạch Kryfo khỏi điện thoại này';
 
   @override
   String get shieldCheckedOnThisPhone =>
@@ -5238,7 +5238,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get transportReachable => 'liên lạc được';
 
   @override
-  String get transportOurRelayOnion => 'relay của kryfo (onion)';
+  String get transportOurRelayOnion => 'relay của Kryfo (onion)';
 
   @override
   String get transportNever2 => 'chưa bao giờ';
@@ -5423,7 +5423,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get wallpaperKeepIt => 'Giữ lại';
 
   @override
-  String get whyKryfoWhyKryfo => 'Vì sao chọn kryfo';
+  String get whyKryfoWhyKryfo => 'Vì sao chọn Kryfo';
 
   @override
   String get whyKryfoKryfoKreeFoGreek =>
@@ -5456,7 +5456,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get whyKryfoNoReadReceiptsOr =>
-      'Không trao cho ai thông báo đã đọc hay dấu hiệu đang gõ, không tải danh bạ lên. Siêu dữ liệu là thứ hầu hết ứng dụng để lộ - kryfo được xây dựng để không như vậy.';
+      'Không trao cho ai thông báo đã đọc hay dấu hiệu đang gõ, không tải danh bạ lên. Siêu dữ liệu là thứ hầu hết ứng dụng để lộ - Kryfo được xây dựng để không như vậy.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Xác minh đúng là họ';
@@ -5970,7 +5970,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get kryfoLinkTextKryfoLink => 'liên kết kryfo';
+  String get kryfoLinkTextKryfoLink => 'liên kết Kryfo';
 
   @override
   String kryfoLinkTextAdd2(Object who) {
@@ -6008,7 +6008,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get kryfoLinkTextYouJoinUnderA =>
-      'Bạn tham gia bằng một khóa tạo riêng cho phòng này. Không ai trong phòng thấy ID kryfo của bạn.';
+      'Bạn tham gia bằng một khóa tạo riêng cho phòng này. Không ai trong phòng thấy ID Kryfo của bạn.';
 
   @override
   String get linkStubFetchedOverTorBy => 'Tải qua tor · bởi thiết bị của bạn';
@@ -6108,7 +6108,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get motionYourIpIsHidden =>
-      'IP của bạn được ẩn. Chỉ những người có kryfo của bạn mới liên lạc được với bạn.';
+      'IP của bạn được ẩn. Chỉ những người có Kryfo của bạn mới liên lạc được với bạn.';
 
   @override
   String get motionBuilding2 => 'đang dựng';
@@ -6183,7 +6183,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pairCodePanelTheyOpenKryfoTap =>
-      'Họ mở kryfo, chạm Thêm, chọn Mã ghép nối rồi nhập sáu chữ số này. Hãy tạo mã mới cho người tiếp theo.';
+      'Họ mở Kryfo, chạm Thêm, chọn Mã ghép nối rồi nhập sáu chữ số này. Hãy tạo mã mới cho người tiếp theo.';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -6520,7 +6520,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get androidServiceTitle => 'kryfo đang bật';
+  String get androidServiceTitle => 'Kryfo đang bật';
 
   @override
   String get androidServiceText =>
@@ -6531,7 +6531,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get androidChannelDescription =>
-      'giữ kryfo kết nối để tin nhắn được mã hóa vẫn đến khi ứng dụng đang đóng. tắt mục này sẽ dừng việc nhận tin.';
+      'giữ Kryfo kết nối để tin nhắn được mã hóa vẫn đến khi ứng dụng đang đóng. tắt mục này sẽ dừng việc nhận tin.';
 
   @override
   String get videoViewerPlay => 'Phát';
@@ -6932,7 +6932,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get flowDecoy1 =>
-      'Mở một Kryfo trống, như vừa mới cài. Nó chịu được một lần xem lướt điện thoại của bạn. Nó không che giấu dung lượng Kryfo đang dùng, và sẽ không qua mắt được người biết ba từ của bạn, người thử nhắn tin cho nó, hay người sao chép điện thoại.';
+      'Mở một Kryfo trống, như vừa mới cài. Nó chịu được một cái nhìn lướt qua, nhưng không qua mắt được người biết ba từ của bạn, người nhắn tin cho bạn, hay người sao chép điện thoại. Nó không che giấu dung lượng Kryfo đang dùng.';
 
   @override
   String get flowDecoyFinger =>
@@ -6940,7 +6940,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get flowDecoyDigits =>
-      'Dùng số chữ số bằng với mã PIN của bạn. Các dấu chấm có thể đếm được.';
+      'Dùng cùng số chữ số với mã PIN của bạn, vì ai đang nhìn cũng có thể đếm các dấu chấm.';
 
   @override
   String get flowDecoyShade =>

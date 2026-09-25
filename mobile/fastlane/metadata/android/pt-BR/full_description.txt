@@ -20,6 +20,6 @@ recursos:
 * apagamento de pânico que remove tudo, inclusive a mídia gravada no aparelho
 * sem análise de uso, sem telemetria, sem anúncios
 
-apoio: sem anúncios, sem investidores. o kryfo se mantém com as doações de quem
+apoio: sem anúncios, sem investidores. o Kryfo se mantém com as doações de quem
 apoia. apoiar é opcional e anônimo, e todos os recursos funcionam igual de
 qualquer jeito.

@@ -20,6 +20,8 @@ class LockGuard {
   int _unkeyed = 0;
   // work waiting to open a system dialog once the lock lifts
   final List<Completer<void>> _waiting = [];
+  // the same, for what may come after a decoy unlock too
+  final List<Completer<void>> _anyWaiting = [];
   final Set<VoidCallback> _closers = {};
 
   // done now, or once the lock lifts. a key keeps one of a kind: the same
@@ -45,8 +47,25 @@ class LockGuard {
     return false;
   }
 
+  // done once the lock lifts, whatever it opened: for what shows nothing
+  // of either session, like android's notification permission dialog
+  Future<void> anyUnlock() {
+    if (!isLocked()) return Future.value();
+    final done = Completer<void>();
+    _anyWaiting.add(done);
+    return done.future;
+  }
+
+  void _liftedAny() {
+    for (final w in _anyWaiting) {
+      w.complete();
+    }
+    _anyWaiting.clear();
+  }
+
   // the lock lifted: what waited starts now, in the order it came
   void lifted() {
+    _liftedAny();
     for (final w in _waiting) {
       w.complete();
     }
@@ -87,6 +106,7 @@ class LockGuard {
   // a decoy unlock: what waited for the everyday app never happens, and
   // work waiting for a dialog gives up rather than open it in the decoy
   void dropHeld() {
+    _liftedAny();
     _held.clear();
     for (final w in _waiting) {
       w.completeError(const LockDropped());
@@ -114,6 +134,15 @@ class LockDropped implements Exception {
 final lockGuard = LockGuard(
   isLocked: () => !lockState.loaded || lockState.locked,
 );
+
+// the app has been shown once since the process started
+bool appRevealed = false;
+
+// a first-build animation made now would play when the lock lifts. under
+// the lock, after the first time the app was shown (a session switch builds
+// a new home there), it starts finished: a decoy's home comes up the way the
+// everyday one does, still. before the first reveal both play it.
+bool get entranceDone => appRevealed && lockGuard.isLocked();
 
 // a screen is being looked at: its route is on top and no lock is over it
 bool onScreen(BuildContext context) =>

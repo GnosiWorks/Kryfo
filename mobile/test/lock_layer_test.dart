@@ -64,62 +64,80 @@ class _App {
   final WidgetTester tester;
   final lock = _Lock();
   late final guard = LockGuard(isLocked: () => !lock.loaded || lock.locked);
-  final nav = GlobalKey<NavigatorState>();
+  var nav = GlobalKey<NavigatorState>();
   final shot = GlobalKey();
   int taps = 0;
   int pads = 0;
   int padTaps = 0;
+  int keys = 0;
+  bool quiet = false;
+  final scroll = ScrollController();
+  final homeFocus = FocusNode();
   late BuildContext home;
 
   NavigatorState get n => nav.currentState!;
 
-  Future<void> pump() async {
-    await tester.pumpWidget(
-      RepaintBoundary(
-        key: shot,
-        child: haloAppShell(
-          navigatorKey: nav,
-          lock: (navigator) => LockLayer(
-            app: navigator,
-            lock: lock,
-            loaded: () => lock.loaded,
-            locked: () => lock.locked,
-            pad: (_) => _Pad(this),
-            onLockUp: () {
-              guard.locking();
-              haloClearToasts();
-            },
-            onLifted: guard.lifted,
-          ),
-          home: Builder(
-            builder: (c) {
-              home = c;
-              return Scaffold(
-                body: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => taps++,
-                  // the whole screen is the app's to tap
-                  child: const Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Hero(
-                        tag: 'avatar',
-                        child: SizedBox(
-                          width: 40,
-                          height: 40,
-                          child: ColoredBox(color: Color(0xFFFF0000)),
-                        ),
-                      ),
-                      Text('secret home'),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
+  Widget tree() => RepaintBoundary(
+    key: shot,
+    child: haloAppShell(
+      navigatorKey: nav,
+      lock: (navigator) => LockGate(
+        app: navigator,
+        lock: lock,
+        loaded: () => lock.loaded,
+        locked: () => lock.locked,
+        load: () async {},
+        leaving: () => lock.set(locked: true),
+        returned: () {},
+        guard: guard,
+        quiet: () => quiet,
+        pad: (_) => _Pad(this),
       ),
-    );
+      home: Builder(
+        builder: (c) {
+          home = c;
+          return Scaffold(
+            body: Focus(
+              focusNode: homeFocus,
+              onKeyEvent: (_, e) {
+                if (e is KeyDownEvent) keys++;
+                return KeyEventResult.handled;
+              },
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => taps++,
+                child: ListView(
+                  controller: scroll,
+                  children: [
+                    const Hero(
+                      tag: 'avatar',
+                      child: SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: ColoredBox(color: Color(0xFFFF0000)),
+                      ),
+                    ),
+                    const Text('secret home'),
+                    const SizedBox(height: 3000),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    ),
+  );
+
+  Future<void> pump() async {
+    await tester.pumpWidget(tree());
+    await tester.pump();
+  }
+
+  // a session switch: the app gets a new root navigator
+  Future<void> swapNavigator() async {
+    nav = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(tree());
     await tester.pump();
   }
 
@@ -252,11 +270,8 @@ void main() {
     showHaloToast(a.home, 'a toast');
     await same('a toast');
     // and a whole new root navigator, as a session switch makes
-    a.n.pushAndRemoveUntil(
-      MaterialPageRoute<void>(builder: (_) => _page('replaced')),
-      (_) => false,
-    );
-    await same('everything replaced');
+    await a.swapNavigator();
+    await same('a session switch');
   });
 
   testWidgets('taps, keys and scrolls never reach the app under the lock', (
@@ -264,6 +279,11 @@ void main() {
   ) async {
     final a = _App(tester);
     await a.pump();
+    // the app takes all three while open
+    a.homeFocus.requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyA);
+    expect(a.keys, 1);
     await a.lockUp();
     final size = tester.view.physicalSize / tester.view.devicePixelRatio;
     for (var x = 5.0; x < size.width; x += size.width / 7) {
@@ -272,14 +292,29 @@ void main() {
         await tester.dragFrom(Offset(x, y), const Offset(0, -80));
       }
     }
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    for (final k in [
+      LogicalKeyboardKey.keyA,
+      LogicalKeyboardKey.enter,
+      LogicalKeyboardKey.arrowDown,
+      LogicalKeyboardKey.tab,
+    ]) {
+      await tester.sendKeyEvent(k);
+    }
     await tester.pump();
     expect(a.taps, 0);
+    expect(a.keys, 1);
+    expect(a.scroll.offset, 0);
     // the pad itself does take them
     expect(a.padTaps, greaterThan(0));
     await a.unlock();
     await tester.tapAt(Offset(size.width / 2, size.height / 2));
     expect(a.taps, 1);
+    await tester.dragFrom(
+      Offset(size.width / 2, size.height / 2),
+      const Offset(0, -200),
+    );
+    await tester.pumpAndSettle();
+    expect(a.scroll.offset, greaterThan(0));
   });
 
   testWidgets('a finger already on the app lets go when the lock goes up', (
@@ -402,19 +437,29 @@ void main() {
     expect(a.pads, 1);
   });
 
-  testWidgets('a toast from just before the lock is gone after it, and one '
-      'asked for under it waits for it', (tester) async {
+  testWidgets('a toast from just before the lock is gone after it', (
+    tester,
+  ) async {
     final a = _App(tester);
     await a.pump();
     showHaloToast(a.home, 'before');
     await tester.pump();
     await a.lockUp();
+    await a.unlock();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('before'), findsNothing);
+  });
+
+  testWidgets('a toast asked for under the lock waits for it', (tester) async {
+    final a = _App(tester);
+    await a.pump();
+    await a.lockUp();
     haloWhenOpen = (act) => a.guard.afterUnlock(act);
     showHaloToast(a.home, 'during');
     await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('during', skipOffstage: false), findsNothing);
     await a.unlock();
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('before'), findsNothing);
     expect(find.text('during'), findsOneWidget);
     await tester.pumpAndSettle(const Duration(seconds: 5));
   });
@@ -433,5 +478,71 @@ void main() {
     a.guard.closeOnLock(() => recording = false);
     await tester.pump();
     expect(recording, isFalse);
+  });
+
+  testWidgets('leaving puts the lock up at once, and coming back finds the '
+      'same pad', (tester) async {
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final a = _App(tester);
+    await a.pump();
+    expect(find.byType(_Pad), findsNothing);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+    // a pulled-down shade or a permission prompt is not leaving
+    expect(a.lock.locked, isFalse);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    expect(a.lock.locked, isTrue);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(find.byType(_Pad), findsOneWidget);
+    expect(a.pads, 1);
+    expect(find.text('secret home'), findsNothing);
+  });
+
+  testWidgets('a decoy unlock drops what waited for the everyday app', (
+    tester,
+  ) async {
+    final a = _App(tester);
+    await a.pump();
+    await a.lockUp();
+    var opened = false;
+    await a.guard.afterUnlock(() async => opened = true, key: 'chat:x');
+    a.quiet = true;
+    await a.unlock();
+    expect(opened, isFalse);
+    // while an everyday unlock lets it happen
+    a.quiet = false;
+    await a.lockUp();
+    await a.guard.afterUnlock(() async => opened = true, key: 'chat:y');
+    await a.unlock();
+    expect(opened, isTrue);
+  });
+
+  testWidgets('a session switch under the lock: the pad stays, the other '
+      "session's screens go, and flights still work after", (tester) async {
+    final a = _App(tester);
+    await a.pump();
+    a.n.push(MaterialPageRoute<void>(builder: (_) => _page('a chat')));
+    await tester.pumpAndSettle();
+    await a.lockUp();
+    expect(a.pads, 1);
+    await a.swapNavigator();
+    await tester.pumpAndSettle();
+    expect(a.pads, 1, reason: 'the pad keeps what was typed');
+    expect(find.byType(_Pad), findsOneWidget);
+    await a.unlock();
+    await tester.pumpAndSettle();
+    expect(find.text('a chat', skipOffstage: false), findsNothing);
+    expect(find.text('secret home'), findsOneWidget);
+    a.n.push(MaterialPageRoute<void>(builder: (_) => _page('after')));
+    await tester.pumpAndSettle();
+    expect(find.text('after'), findsOneWidget);
+    a.n.pop();
+    await tester.pumpAndSettle();
+    expect(find.text('secret home'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

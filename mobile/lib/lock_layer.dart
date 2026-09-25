@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
+import 'lock_guard.dart';
 import 'theme.dart';
 
 class LockLayer extends StatefulWidget {
@@ -198,6 +199,104 @@ class _LockLayerState extends State<LockLayer>
       ),
     );
   }
+}
+
+// the lock as the app runs it: read at the start, up when the app is left,
+// and what goes with each edge. main.dart hands it the app's own state; the
+// tests hand it stand-ins and so test this same wiring.
+class LockGate extends StatefulWidget {
+  const LockGate({
+    super.key,
+    required this.app,
+    required this.lock,
+    required this.loaded,
+    required this.locked,
+    required this.load,
+    required this.leaving,
+    required this.returned,
+    required this.guard,
+    required this.quiet,
+    required this.pad,
+    this.inFront,
+    this.localesChanged,
+    this.revealed,
+  });
+
+  final Widget app;
+  final Listenable lock;
+  final bool Function() loaded;
+  final bool Function() locked;
+  final Future<void> Function() load;
+  final VoidCallback leaving;
+  final VoidCallback returned;
+  final LockGuard guard;
+  // the session on screen is a decoy's
+  final bool Function() quiet;
+  final WidgetBuilder pad;
+  final ValueChanged<bool>? inFront;
+  final VoidCallback? localesChanged;
+  // the app is shown: before what waited for it happens
+  final VoidCallback? revealed;
+
+  @override
+  State<LockGate> createState() => _LockGateState();
+}
+
+class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    widget.load();
+    // the lifecycle only reports changes, and a fresh start in front is not
+    // one. a process the job started builds this too, with nobody looking.
+    if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+      widget.inFront?.call(true);
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeLocales(List<Locale>? locales) => widget.localesChanged?.call();
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // paused and hidden mean the user left. inactive also fires for a
+    // permission prompt, a screenshot toolbar or a pulled-down shade, and
+    // locking behind those put a pin between someone and the camera they
+    // just allowed.
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      widget.leaving();
+      widget.inFront?.call(false);
+    } else if (state == AppLifecycleState.resumed) {
+      widget.returned();
+      widget.inFront?.call(true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => LockLayer(
+    app: widget.app,
+    lock: widget.lock,
+    loaded: widget.loaded,
+    locked: widget.locked,
+    pad: widget.pad,
+    onLockUp: () {
+      widget.guard.locking();
+      haloClearToasts();
+    },
+    onLifted: () {
+      widget.revealed?.call();
+      // what waited happens in an everyday session and is dropped in a decoy
+      widget.quiet() ? widget.guard.dropHeld() : widget.guard.lifted();
+    },
+  );
 }
 
 // back, while the lock is up, goes nowhere. android sends it to dart only

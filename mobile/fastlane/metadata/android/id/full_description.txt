@@ -21,6 +21,6 @@ fitur:
 * hapus total darurat yang menghapus semuanya, termasuk media yang tersimpan di perangkat
 * tanpa analitik, tanpa telemetri, tanpa iklan
 
-pendanaan: tanpa iklan, tanpa investor. kryfo hidup dari pemberian para
+pendanaan: tanpa iklan, tanpa investor. Kryfo hidup dari pemberian para
 penyokong. sokongan bersifat opsional dan anonim, dan setiap fitur tetap
 bekerja sama, menyokong atau tidak.

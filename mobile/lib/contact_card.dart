@@ -48,7 +48,7 @@ class ContactCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'kryfo',
+            'Kryfo',
             style: HaloType.serif(
               size: 30,
               color: const Color(0xFFF8BC5C),
@@ -180,8 +180,8 @@ Future<void> shareContactVcf({
   final vcf =
       'BEGIN:VCARD\r\n'
       'VERSION:3.0\r\n'
-      'FN:$haloId (kryfo)\r\n'
-      'NOTE:message me on kryfo: $uri\r\n'
+      'FN:$haloId (Kryfo)\r\n'
+      'NOTE:message me on Kryfo: $uri\r\n'
       'URL:$uri\r\n'
       'END:VCARD\r\n';
   final dir = await getTemporaryDirectory();

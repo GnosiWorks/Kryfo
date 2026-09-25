@@ -55,11 +55,11 @@ class AppLocalizationsPt extends AppLocalizations {
       'Essa frase-senha não abre este arquivo';
 
   @override
-  String get backupThatFileIsNot => 'Esse arquivo não é um backup do kryfo';
+  String get backupThatFileIsNot => 'Esse arquivo não é um backup do Kryfo';
 
   @override
   String get backupThisBackupIsFrom =>
-      'Este backup é de um kryfo mais novo. Atualize o app e tente de novo';
+      'Este backup é de um Kryfo mais novo. Atualize o app e tente de novo';
 
   @override
   String get backupThisFileIsDamaged =>
@@ -73,11 +73,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get contactCardScanItOrType =>
-      'Escaneie ou digite as três palavras no kryfo.\nEste cartão não sabe mais nada sobre você.';
+      'Escaneie ou digite as três palavras no Kryfo.\nEste cartão não sabe mais nada sobre você.';
 
   @override
   String contactCardMessageMeOnKryfo(Object haloId) {
-    return 'Fale comigo no kryfo · $haloId';
+    return 'Fale comigo no Kryfo · $haloId';
   }
 
   @override
@@ -409,7 +409,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get appTimedMessagesAreNot =>
-      'As mensagens temporárias não estão sumindo. Reinicie o kryfo';
+      'As mensagens temporárias não estão sumindo. Reinicie o Kryfo';
 
   @override
   String get appVoiceMessage2 => 'mensagem de voz';
@@ -460,7 +460,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get appScanTheirCode => 'Escanear o código';
 
   @override
-  String get appAKryfoLinkA => 'Um link do kryfo, um link de sala ou @wren';
+  String get appAKryfoLinkA => 'Um link do Kryfo, um link de sala ou @wren';
 
   @override
   String get appAddThem => 'Adicionar';
@@ -494,7 +494,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get appTapStartListeningFirst => 'Toque em Começar a escutar primeiro';
 
   @override
-  String get appYourKryfo => 'Seu kryfo';
+  String get appYourKryfo => 'Seu Kryfo';
 
   @override
   String get appUriCopied => 'Uri copiada';
@@ -503,7 +503,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get appCopyUri => 'Copiar uri';
 
   @override
-  String get appAddAKryfo => 'Adicionar um kryfo';
+  String get appAddAKryfo => 'Adicionar um Kryfo';
 
   @override
   String get appScanQr => 'Escanear QR';
@@ -524,7 +524,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get appDev => 'Dev';
 
   @override
-  String get appYourKryfo2 => 'Seu kryfo:';
+  String get appYourKryfo2 => 'Seu Kryfo:';
 
   @override
   String get appRestoredFromDisk => 'Restaurado do disco';
@@ -566,7 +566,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get appThePinWillBe =>
-      'O PIN será removido. Qualquer pessoa com seu celular vai ver o kryfo ao abri-lo.';
+      'O PIN será removido. Qualquer pessoa com seu celular vai ver o Kryfo ao abri-lo.';
 
   @override
   String get appDisable => 'Desativar';
@@ -606,7 +606,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get appTheFirstConnectionTakes =>
-      'A primeira conexão leva um ou dois minutos enquanto o tor monta uma rota privada. Depois disso ela fica em cache, então abrir o kryfo mais tarde é bem mais rápido.';
+      'A primeira conexão leva um ou dois minutos enquanto o tor monta uma rota privada. Depois disso ela fica em cache, então abrir o Kryfo mais tarde é bem mais rápido.';
 
   @override
   String get appRelayAndFastModes =>
@@ -698,11 +698,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get miuiAutostartLetKryfoRunIn =>
-      'Deixe o kryfo rodar em segundo plano';
+      'Deixe o Kryfo rodar em segundo plano';
 
   @override
   String get miuiAutostartYourPhonePausesApps =>
-      'Seu celular pausa apps para economizar bateria. Sem uma exceção, o kryfo não consegue receber mensagens enquanto está fechado.';
+      'Seu celular pausa apps para economizar bateria. Sem uma exceção, o Kryfo não consegue receber mensagens enquanto está fechado.';
 
   @override
   String get commonAllow => 'Permitir';
@@ -712,7 +712,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get miuiAutostartXiaomiTurnsOffBackground =>
-      'A Xiaomi desliga apps em segundo plano por padrão. Sem o início automático, o kryfo não consegue entregar mensagens quando o app está fechado. Na próxima tela, encontre o kryfo na lista e ative a opção.';
+      'A Xiaomi desliga apps em segundo plano por padrão. Sem o início automático, o Kryfo não consegue entregar mensagens quando o app está fechado. Na próxima tela, encontre o Kryfo na lista e ative a opção.';
 
   @override
   String get miuiAutostartOpenSettings => 'Abrir configurações';
@@ -972,14 +972,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'Backup salvo · guarde bem a frase-senha';
 
   @override
-  String get backupKryfoBackup => 'Backup do kryfo';
+  String get backupKryfoBackup => 'Backup do Kryfo';
 
   @override
   String get backupYourEncryptedKryfoBackup =>
-      'Seu backup criptografado do kryfo. Guarde bem este arquivo E a sua frase-senha - você precisa dos dois para restaurar.';
+      'Seu backup criptografado do Kryfo. Guarde bem este arquivo E a sua frase-senha - você precisa dos dois para restaurar.';
 
   @override
-  String get backupBackUpKryfo => 'Fazer backup do kryfo';
+  String get backupBackUpKryfo => 'Fazer backup do Kryfo';
 
   @override
   String get backupBackUp => 'Fazer backup';
@@ -1086,7 +1086,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get bridgesGotABridgeLine =>
-      'Recebeu uma linha de ponte de alguém de confiança ou do bridges.torproject.org? Cole aqui. Só linhas obfs4, o kryfo ainda não fala as outras.';
+      'Recebeu uma linha de ponte de alguém de confiança ou do bridges.torproject.org? Cole aqui. Só linhas obfs4, o Kryfo ainda não fala as outras.';
 
   @override
   String get bridgesPasteFromClipboard => 'Colar da área de transferência';
@@ -2149,7 +2149,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get donateSupport => 'Apoiar';
 
   @override
-  String get donateKeepKryfo => 'Mantenha o kryfo *independente*';
+  String get donateKeepKryfo => 'Mantenha o Kryfo *independente*';
 
   @override
   String get donateNoAdsNoInvestors =>
@@ -2260,7 +2260,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get donateThankYouForKeeping =>
-      'Obrigado por manter o kryfo independente.';
+      'Obrigado por manter o Kryfo independente.';
 
   @override
   String donateVerifiedOnChainYou(String tier) {
@@ -2308,7 +2308,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get gettingMessagesKryfoLooksForMessages =>
-      'O kryfo procura mensagens a cada 15 minutos. Economiza bateria, mas as mensagens podem atrasar.';
+      'O Kryfo procura mensagens a cada 15 minutos. Economiza bateria, mas as mensagens podem atrasar.';
 
   @override
   String get gettingMessagesOnTheLockScreen => 'Na tela de bloqueio';
@@ -2322,11 +2322,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get gettingMessagesShowsMessageTextIn =>
-      'Mostra o texto das mensagens nas notificações, mesmo com o kryfo bloqueado.';
+      'Mostra o texto das mensagens nas notificações, mesmo com o Kryfo bloqueado.';
 
   @override
   String get gettingMessagesWhenThePhoneSits =>
-      'Quando o celular fica parado, o Android espaça mais as consultas. A linha acima mostra a última de verdade. Enquanto o kryfo está aberto, ele fica conectado.';
+      'Quando o celular fica parado, o Android espaça mais as consultas. A linha acima mostra a última de verdade. Enquanto o Kryfo está aberto, ele fica conectado.';
 
   @override
   String get groupChatJumpToTheNewest => 'Ir para a mais recente';
@@ -2799,7 +2799,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get commonSettings => 'Configurações';
 
   @override
-  String get homeYourKryfo => 'Seu kryfo';
+  String get homeYourKryfo => 'Seu Kryfo';
 
   @override
   String homeDateWeekday(Object weekday) {
@@ -2840,7 +2840,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get homeKryfoIsOffline => 'O kryfo está offline';
+  String get homeKryfoIsOffline => 'O Kryfo está offline';
 
   @override
   String homeTorHasNotBeen(Object howLong) {
@@ -2858,14 +2858,14 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get homeKryfoWillCheckIn =>
-      'O kryfo vai fazer uma consulta a cada 15 minutos';
+      'O Kryfo vai fazer uma consulta a cada 15 minutos';
 
   @override
-  String get homeYourPhoneKeepsStopping => 'Seu celular fica parando o kryfo';
+  String get homeYourPhoneKeepsStopping => 'Seu celular fica parando o Kryfo';
 
   @override
   String get homeItHasClosedKryfo =>
-      'Ele fechou o kryfo três vezes hoje, então as mensagens atrasaram ou ficaram esperando. As consultas resistem a isso: o kryfo acorda a cada 15 minutos em vez de ficar conectado.';
+      'Ele fechou o Kryfo três vezes hoje, então as mensagens atrasaram ou ficaram esperando. As consultas resistem a isso: o Kryfo acorda a cada 15 minutos em vez de ficar conectado.';
 
   @override
   String get homeSwitchToCheckIns => 'Mudar para consultas';
@@ -2878,11 +2878,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get homeAndroidIsBlockingThem =>
-      'O Android está bloqueando as notificações, então nada chega até você enquanto o kryfo está fechado. As mensagens ainda chegam quando você abre o app.';
+      'O Android está bloqueando as notificações, então nada chega até você enquanto o Kryfo está fechado. As mensagens ainda chegam quando você abre o app.';
 
   @override
   String get homeCouldnTOpenIt =>
-      'Não deu para abrir. Procure o kryfo nas configurações do celular';
+      'Não deu para abrir. Procure o Kryfo nas configurações do celular';
 
   @override
   String get homeTurnThemOn => 'Ativar';
@@ -3022,7 +3022,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get commonRetry => 'Reenviar';
 
   @override
-  String get homeNoKryfosYet => 'Nenhum kryfo ainda.';
+  String get homeNoKryfosYet => 'Nenhum Kryfo ainda.';
 
   @override
   String get homeScanTheirCodeSend =>
@@ -3483,7 +3483,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get modesOneSealedConnectionTo =>
-      'Uma conexão lacrada com o retransmissor do próprio kryfo, como uma VPN sem nada para registrar. Os envios chegam em cerca de um segundo, e funciona onde o tor está bloqueado.';
+      'Uma conexão lacrada com o retransmissor do próprio Kryfo, como uma VPN sem nada para registrar. Os envios chegam em cerca de um segundo, e funciona onde o tor está bloqueado.';
 
   @override
   String get modesQuick => 'ágil';
@@ -3562,7 +3562,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get movedEverythingKryfoHoldsHere =>
-      'Tudo o que o kryfo guarda aqui vai embora: as mensagens, os contatos, as chaves. O outro aparelho fica com tudo isso. Isso não pode ser desfeito.';
+      'Tudo o que o Kryfo guarda aqui vai embora: as mensagens, os contatos, as chaves. O outro aparelho fica com tudo isso. Isso não pode ser desfeito.';
 
   @override
   String get movedWipeIt => 'Apagar';
@@ -3582,14 +3582,14 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String movedKryfoWillCloseNow(Object myId) {
-    return 'O kryfo vai fechar agora. Toque no ícone para abrir de novo como $myId.';
+    return 'O Kryfo vai fechar agora. Toque no ícone para abrir de novo como $myId.';
   }
 
   @override
-  String get movedReopenKryfo => 'Reabrir o kryfo';
+  String get movedReopenKryfo => 'Reabrir o Kryfo';
 
   @override
-  String get movedThisKryfoHasMoved => 'Este kryfo se mudou';
+  String get movedThisKryfoHasMoved => 'Este Kryfo se mudou';
 
   @override
   String movedIsNowOnAnother(Object myId) {
@@ -3614,18 +3614,18 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'me adicione no kryfo. meu id é $myId\n\ntoque para me adicionar:\n$uri\n\no kryfo é um mensageiro privado. sem número de telefone, sem e-mail.';
+    return 'Me adicione no Kryfo. Meu ID é $myId\n\nToque para me adicionar:\n$uri\n\nO Kryfo é um mensageiro privado. Sem número de telefone, sem e-mail.';
   }
 
   @override
-  String get myKryfoAddMeOnKryfo2 => 'Me adicione no kryfo';
+  String get myKryfoAddMeOnKryfo2 => 'Me adicione no Kryfo';
 
   @override
   String get myKryfoAddSomeone => 'Adicionar alguém';
 
   @override
   String get myKryfoKryfoDoesnTScan =>
-      'o kryfo não lê seus contatos, e é essa a ideia.';
+      'o Kryfo não lê seus contatos, e é essa a ideia.';
 
   @override
   String get myKryfoIfThisLinkEnds =>
@@ -3633,7 +3633,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get myKryfoAlreadyShareAFriend =>
-      'Já têm alguém em comum no kryfo? Essa pessoa pode apresentar vocês pela conversa dela, e vocês pulam o pedido.';
+      'Já têm alguém em comum no Kryfo? Essa pessoa pode apresentar vocês pela conversa dela, e vocês pulam o pedido.';
 
   @override
   String get myKryfoHandleCopied => 'Nome de usuário copiado';
@@ -3795,7 +3795,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get onboardingTheFirstConnectionTakes =>
-      '*A primeira conexão leva um minuto.* O kryfo monta uma rota privada antes de enviar. Depois fica rápido.';
+      '*A primeira conexão leva um minuto.* O Kryfo monta uma rota privada antes de enviar. Depois fica rápido.';
 
   @override
   String get onboardingBegin => 'Começar';
@@ -3804,7 +3804,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get onboardingHaveABackupRestore => 'Tem um backup? Restaurar →';
 
   @override
-  String get onboardingKryfoIsOpenSource => 'O kryfo tem código aberto';
+  String get onboardingKryfoIsOpenSource => 'O Kryfo tem código aberto';
 
   @override
   String get onboardingYourKryfoId => 'SEU ID DO KRYFO';
@@ -3918,7 +3918,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
-      'O kryfo monta uma rota privada antes de enviar qualquer coisa. Enquanto você estiver offline, as mensagens esperam e chegam quando você voltar.';
+      'O Kryfo monta uma rota privada antes de enviar qualquer coisa. Enquanto você estiver offline, as mensagens esperam e chegam quando você voltar.';
 
   @override
   String get onboardingYourIdentityLivesOn =>
@@ -3932,7 +3932,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get onboardingAndroidNeedsAVisible =>
-      'O Android exige uma notificação visível enquanto um app escuta em segundo plano. É assim que as mensagens chegam quando o kryfo está fechado.';
+      'O Android exige uma notificação visível enquanto um app escuta em segundo plano. É assim que as mensagens chegam quando o Kryfo está fechado.';
 
   @override
   String get onboardingSilentAndAtThe =>
@@ -4185,7 +4185,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get profileChangeYourFace => 'Mudar seu rosto';
 
   @override
-  String get profileKryfoId => 'id do kryfo';
+  String get profileKryfoId => 'id do Kryfo';
 
   @override
   String get profileOnionAddress => 'endereço onion';
@@ -4220,7 +4220,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get profileShareConnect => 'compartilhar e conectar';
 
   @override
-  String get profileMyKryfoCode => 'Meu código do kryfo';
+  String get profileMyKryfoCode => 'Meu código do Kryfo';
 
   @override
   String get profileAddContact => 'Adicionar contato';
@@ -4229,13 +4229,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get profileGiveAgain => 'Doar de novo';
 
   @override
-  String get profileSupportKryfo => 'Apoiar o kryfo';
+  String get profileSupportKryfo => 'Apoiar o Kryfo';
 
   @override
-  String get profileKryfoRunsOnWhat => 'O kryfo vive do que as pessoas doam';
+  String get profileKryfoRunsOnWhat => 'O Kryfo vive do que as pessoas doam';
 
   @override
-  String get profileKeepKryfoIndependent => 'Mantenha o kryfo independente';
+  String get profileKeepKryfoIndependent => 'Mantenha o Kryfo independente';
 
   @override
   String get qrLink => 'Link';
@@ -4445,7 +4445,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get requestsDecline => 'Recusar';
 
   @override
-  String get restoreThatFileIsNot => 'Esse arquivo não é um backup do kryfo';
+  String get restoreThatFileIsNot => 'Esse arquivo não é um backup do Kryfo';
 
   @override
   String get restoreThisFileIsDamaged =>
@@ -4486,11 +4486,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String restoreKryfoWillCloseNow(Object haloId) {
-    return 'O kryfo vai fechar agora. Toque no ícone para abrir de novo como $haloId.';
+    return 'O Kryfo vai fechar agora. Toque no ícone para abrir de novo como $haloId.';
   }
 
   @override
-  String get restoreReopenKryfo => 'Reabrir o kryfo';
+  String get restoreReopenKryfo => 'Reabrir o Kryfo';
 
   @override
   String get restoreTheRestoreDidNot =>
@@ -4500,7 +4500,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get restoreThisIdentity => 'esta identidade';
 
   @override
-  String get restoreMoveYourKryfoHere => 'Traga seu kryfo para cá';
+  String get restoreMoveYourKryfoHere => 'Traga seu Kryfo para cá';
 
   @override
   String restoreThisBackupIsRestoring(Object name) {
@@ -4566,7 +4566,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get restoreIfThePhoneThis =>
-      'Se o celular de onde veio este arquivo ainda estiver em uso, pare de usar o kryfo nele antes de continuar. Dois celulares com o mesmo kryfo perdem mensagens nos dois.';
+      'Se o celular de onde veio este arquivo ainda estiver em uso, pare de usar o Kryfo nele antes de continuar. Dois celulares com o mesmo Kryfo perdem mensagens nos dois.';
 
   @override
   String get restoreNotificationsNeedSettingUp =>
@@ -4743,17 +4743,17 @@ class AppLocalizationsPt extends AppLocalizations {
   String get savedPhoto2 => 'Foto';
 
   @override
-  String get scanThatSNotA => 'isso não é um QR do kryfo · continue apontando';
+  String get scanThatSNotA => 'isso não é um QR do Kryfo · continue apontando';
 
   @override
-  String get scanScanAKryfoQr => 'Escaneie um QR do kryfo';
+  String get scanScanAKryfoQr => 'Escaneie um QR do Kryfo';
 
   @override
   String get scanFlash => 'Lanterna';
 
   @override
   String get scanPointAtAKryfo =>
-      'Aponte para um QR do kryfo · nada sai do seu celular';
+      'Aponte para um QR do Kryfo · nada sai do seu celular';
 
   @override
   String get seenWhatWeCanSee => 'O que conseguimos ver';
@@ -4816,7 +4816,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get seenKryfoDoesNotScan =>
-      'O kryfo não lê seus contatos. É essa a ideia. Aqui não existe número de telefone para vazar.';
+      'O Kryfo não lê seus contatos. É essa a ideia. Aqui não existe número de telefone para vazar.';
 
   @override
   String get seenIntroducer => 'quem apresenta';
@@ -4883,7 +4883,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get seenFast => 'Rápido';
 
   @override
-  String get settingsWipeKryfo => 'Apagar o kryfo?';
+  String get settingsWipeKryfo => 'Apagar o Kryfo?';
 
   @override
   String get settingsIdentityMessagesContactsAnd =>
@@ -4905,7 +4905,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsWipeWord => 'apagar';
 
   @override
-  String get settingsWipeKryfo2 => 'Apagar o kryfo';
+  String get settingsWipeKryfo2 => 'Apagar o Kryfo';
 
   @override
   String get settingsYourProtections => 'Suas proteções';
@@ -5040,7 +5040,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Muda o tom da sua voz antes de um áudio sair';
 
   @override
-  String get settingsWhyKryfo => 'Por que o kryfo';
+  String get settingsWhyKryfo => 'Por que o Kryfo';
 
   @override
   String get settingsHowItProtectsYou => 'Como ele protege você';
@@ -5102,7 +5102,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsDangerZone => 'Zona de perigo';
 
   @override
-  String get settingsWipeKryfoFromThis => 'Apagar o kryfo deste celular';
+  String get settingsWipeKryfoFromThis => 'Apagar o Kryfo deste celular';
 
   @override
   String get shieldCheckedOnThisPhone =>
@@ -5463,7 +5463,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get wallpaperKeepIt => 'Manter';
 
   @override
-  String get whyKryfoWhyKryfo => 'Por que o kryfo';
+  String get whyKryfoWhyKryfo => 'Por que o Kryfo';
 
   @override
   String get whyKryfoKryfoKreeFoGreek =>
@@ -5496,7 +5496,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get whyKryfoNoReadReceiptsOr =>
-      'Nenhuma confirmação de leitura ou aviso de digitação entregue a ninguém, nenhuma lista de contatos enviada. Metadados são o que a maioria dos apps vaza - o kryfo é feito para não vazar.';
+      'Nenhuma confirmação de leitura ou aviso de digitação entregue a ninguém, nenhuma lista de contatos enviada. Metadados são o que a maioria dos apps vaza - o Kryfo é feito para não vazar.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Confirme que é mesmo a pessoa';
@@ -5510,7 +5510,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get whyKryfoKryfoIsPreAlpha =>
-      'O kryfo está em pré-alfa e não passou por auditoria. A criptografia é real, mas nenhum especialista de fora a verificou ainda, então trate como um trabalho em andamento, não como algo a que você já possa confiar a sua vida.';
+      'O Kryfo está em pré-alfa e não passou por auditoria. A criptografia é real, mas nenhum especialista de fora a verificou ainda, então trate como um trabalho em andamento, não como algo a que você já possa confiar a sua vida.';
 
   @override
   String get cleanerLocation => 'Localização';
@@ -5998,7 +5998,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get bootFailedKryfoCouldNotStart => 'O kryfo não conseguiu iniciar';
+  String get bootFailedKryfoCouldNotStart => 'O Kryfo não conseguiu iniciar';
 
   @override
   String get bootFailedThisIsAFault =>
@@ -6006,7 +6006,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get kryfoLinkTextThatLinkIsNot =>
-      'Esse link não é um que o kryfo consegue ler';
+      'Esse link não é um que o Kryfo consegue ler';
 
   @override
   String kryfoLinkTextAdd(Object who) {
@@ -6030,7 +6030,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get kryfoLinkTextKryfoLink => 'link do kryfo';
+  String get kryfoLinkTextKryfoLink => 'link do Kryfo';
 
   @override
   String kryfoLinkTextAdd2(Object who) {
@@ -6068,7 +6068,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get kryfoLinkTextYouJoinUnderA =>
-      'Você entra com uma chave feita para esta sala. Ninguém nela vê o seu ID do kryfo.';
+      'Você entra com uma chave feita para esta sala. Ninguém nela vê o seu ID do Kryfo.';
 
   @override
   String get linkStubFetchedOverTorBy => 'Buscado via tor · pelo seu aparelho';
@@ -6169,7 +6169,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get motionYourIpIsHidden =>
-      'Seu IP está oculto. Só quem tem o seu kryfo consegue falar com você.';
+      'Seu IP está oculto. Só quem tem o seu Kryfo consegue falar com você.';
 
   @override
   String get motionBuilding2 => 'montando';
@@ -6199,7 +6199,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get movedStripThisKryfoHasMoved =>
-      'Este kryfo mudou para outro aparelho. Nada enviado daqui chega a ninguém.';
+      'Este Kryfo mudou para outro aparelho. Nada enviado daqui chega a ninguém.';
 
   @override
   String get navBarChats => 'Conversas';
@@ -6245,7 +6245,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get pairCodePanelTheyOpenKryfoTap =>
-      'A pessoa abre o kryfo, toca em adicionar, escolhe código de pareamento e digita estes seis dígitos. Crie um novo para a próxima pessoa.';
+      'A pessoa abre o Kryfo, toca em adicionar, escolhe código de pareamento e digita estes seis dígitos. Crie um novo para a próxima pessoa.';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -6575,7 +6575,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get languageRedrawLine =>
-      'O kryfo se redesenha no novo idioma e abre nas suas conversas.';
+      'O Kryfo se redesenha no novo idioma e abre nas suas conversas.';
 
   @override
   String languageButton(Object language) {
@@ -6583,7 +6583,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get androidServiceTitle => 'o kryfo está ativo';
+  String get androidServiceTitle => 'o Kryfo está ativo';
 
   @override
   String get androidServiceText =>
@@ -6594,7 +6594,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get androidChannelDescription =>
-      'mantém o kryfo conectado para que mensagens criptografadas cheguem enquanto ele está fechado. desativar isto interrompe a entrega.';
+      'mantém o Kryfo conectado para que mensagens criptografadas cheguem enquanto ele está fechado. desativar isto interrompe a entrega.';
 
   @override
   String get videoViewerPlay => 'Reproduzir';
@@ -7002,7 +7002,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get flowDecoy1 =>
-      'Abre um Kryfo vazio, como se acabasse de ser instalado. Aguenta uma olhada rápida no seu celular. Não esconde quanto espaço o Kryfo ocupa, e não engana quem conhece suas três palavras, quem tenta mandar mensagem para ele ou quem copia o celular.';
+      'Abre um Kryfo vazio, como se acabasse de ser instalado. Aguenta uma olhada rápida, mas não quem conhece suas três palavras, manda mensagem para você ou copia o celular. Não esconde quanto espaço o Kryfo ocupa.';
 
   @override
   String get flowDecoyFinger =>
@@ -7010,7 +7010,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get flowDecoyDigits =>
-      'Use tantos dígitos quanto o seu PIN. Os pontos podem ser contados.';
+      'Use o mesmo número de dígitos do seu PIN, porque quem estiver olhando pode contar os pontos.';
 
   @override
   String get flowDecoyShade =>

@@ -54,10 +54,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupThatPassphraseDoesNot => '这个密码短语打不开此文件';
 
   @override
-  String get backupThatFileIsNot => '这个文件不是 kryfo 备份';
+  String get backupThatFileIsNot => '这个文件不是 Kryfo 备份';
 
   @override
-  String get backupThisBackupIsFrom => '这个备份来自更新版本的 kryfo。请先更新应用，再试一次';
+  String get backupThisBackupIsFrom => '这个备份来自更新版本的 Kryfo。请先更新应用，再试一次';
 
   @override
   String get backupThisFileIsDamaged => '这个文件已损坏，无法读取';
@@ -70,11 +70,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get contactCardScanItOrType =>
-      '扫一扫，或者把这三个词输入 kryfo。\n除此之外，这张卡片对你一无所知。';
+      '扫一扫，或者把这三个词输入 Kryfo。\n除此之外，这张卡片对你一无所知。';
 
   @override
   String contactCardMessageMeOnKryfo(Object haloId) {
-    return '在 kryfo 上给我发消息 · $haloId';
+    return '在 Kryfo 上给我发消息 · $haloId';
   }
 
   @override
@@ -394,7 +394,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appStartingTor => '正在启动 tor';
 
   @override
-  String get appTimedMessagesAreNot => '限时消息没有按时清除。请重启 kryfo';
+  String get appTimedMessagesAreNot => '限时消息没有按时清除。请重启 Kryfo';
 
   @override
   String get appVoiceMessage2 => '语音消息';
@@ -477,7 +477,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appTapStartListeningFirst => '请先点“开始监听”';
 
   @override
-  String get appYourKryfo => '你的 kryfo';
+  String get appYourKryfo => '你的 Kryfo';
 
   @override
   String get appUriCopied => 'uri 已复制';
@@ -486,7 +486,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appCopyUri => '复制 uri';
 
   @override
-  String get appAddAKryfo => '添加 kryfo';
+  String get appAddAKryfo => '添加 Kryfo';
 
   @override
   String get appScanQr => '扫描 QR 码';
@@ -507,7 +507,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appDev => '开发';
 
   @override
-  String get appYourKryfo2 => '你的 kryfo：';
+  String get appYourKryfo2 => '你的 Kryfo：';
 
   @override
   String get appRestoredFromDisk => '已从磁盘恢复';
@@ -548,7 +548,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appDisableAppLock => '关闭应用锁？';
 
   @override
-  String get appThePinWillBe => 'PIN 码将被移除。任何拿到你手机的人，打开 kryfo 就能看到它。';
+  String get appThePinWillBe => 'PIN 码将被移除。任何拿到你手机的人，打开 Kryfo 就能看到它。';
 
   @override
   String get appDisable => '关闭';
@@ -584,7 +584,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appTheFirstConnectionTakes =>
-      '首次连接需要一两分钟，tor 要先建一条私密路线。之后它会被缓存，以后打开 kryfo 会快很多。';
+      '首次连接需要一两分钟，tor 要先建一条私密路线。之后它会被缓存，以后打开 Kryfo 会快很多。';
 
   @override
   String get appRelayAndFastModes =>
@@ -674,11 +674,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get miuiAutostartAlreadyAllowedToRun => '已允许在后台运行';
 
   @override
-  String get miuiAutostartLetKryfoRunIn => '允许 kryfo 在后台运行';
+  String get miuiAutostartLetKryfoRunIn => '允许 Kryfo 在后台运行';
 
   @override
   String get miuiAutostartYourPhonePausesApps =>
-      '你的手机会暂停应用来省电。不设为例外的话，kryfo 关闭时就收不到消息。';
+      '你的手机会暂停应用来省电。不设为例外的话，Kryfo 关闭时就收不到消息。';
 
   @override
   String get commonAllow => '允许';
@@ -688,7 +688,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get miuiAutostartXiaomiTurnsOffBackground =>
-      '小米默认会关闭后台应用。没有自启动，应用关闭时 kryfo 就无法投递消息。在下一个页面，从列表里找到 kryfo，打开它的开关。';
+      '小米默认会关闭后台应用。没有自启动，应用关闭时 Kryfo 就无法投递消息。在下一个页面，从列表里找到 Kryfo，打开它的开关。';
 
   @override
   String get miuiAutostartOpenSettings => '打开设置';
@@ -934,10 +934,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get backupYourEncryptedKryfoBackup =>
-      '你的加密 kryfo 备份。这个文件和你的密码短语都要保管好——恢复时两样缺一不可。';
+      '你的加密 Kryfo 备份。这个文件和你的密码短语都要保管好——恢复时两样缺一不可。';
 
   @override
-  String get backupBackUpKryfo => '备份 kryfo';
+  String get backupBackUpKryfo => '备份 Kryfo';
 
   @override
   String get backupBackUp => '备份';
@@ -1042,7 +1042,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bridgesGotABridgeLine =>
-      '从你信任的人那里，或者从 bridges.torproject.org 拿到了网桥地址？粘贴到这里。只支持 obfs4 地址，kryfo 暂时还不支持其他类型。';
+      '从你信任的人那里，或者从 bridges.torproject.org 拿到了网桥地址？粘贴到这里。只支持 obfs4 地址，Kryfo 暂时还不支持其他类型。';
 
   @override
   String get bridgesPasteFromClipboard => '从剪贴板粘贴';
@@ -1784,7 +1784,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cleanItHoldsAShort =>
-      '它在图片旁边还带着一段短视频，而 kryfo 暂时还不能清理这部分。请在相机里关掉动态照片，或者发送它的截图。';
+      '它在图片旁边还带着一段短视频，而 Kryfo 暂时还不能清理这部分。请在相机里关掉动态照片，或者发送它的截图。';
 
   @override
   String get cleanPicturesOver64Mb => '超过 64 MB 的图片不会在手机上清理。没有做任何改动。';
@@ -2053,7 +2053,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get donateSupport => '支持';
 
   @override
-  String get donateKeepKryfo => '让 kryfo 保持*独立*';
+  String get donateKeepKryfo => '让 Kryfo 保持*独立*';
 
   @override
   String get donateNoAdsNoInvestors => '没有广告，没有投资人，没有东西要卖给你。它靠支持者的捐助运转。';
@@ -2158,7 +2158,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get donatePaymentConfirmed => '付款已确认';
 
   @override
-  String get donateThankYouForKeeping => '谢谢你让 kryfo 保持独立。';
+  String get donateThankYouForKeeping => '谢谢你让 Kryfo 保持独立。';
 
   @override
   String donateVerifiedOnChainYou(String tier) {
@@ -2213,7 +2213,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gettingMessagesAGenericAlertWith => '一条通用提醒，不显示发送者和消息内容';
 
   @override
-  String get gettingMessagesShowsMessageTextIn => '在通知里显示消息内容，即使 kryfo 已锁定。';
+  String get gettingMessagesShowsMessageTextIn => '在通知里显示消息内容，即使 Kryfo 已锁定。';
 
   @override
   String get gettingMessagesWhenThePhoneSits =>
@@ -2671,7 +2671,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonSettings => '设置';
 
   @override
-  String get homeYourKryfo => '你的 kryfo';
+  String get homeYourKryfo => '你的 Kryfo';
 
   @override
   String homeDateWeekday(Object weekday) {
@@ -2730,11 +2730,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeKryfoWillCheckIn => 'Kryfo 会每 15 分钟查收一次';
 
   @override
-  String get homeYourPhoneKeepsStopping => '你的手机一再停止 kryfo';
+  String get homeYourPhoneKeepsStopping => '你的手机一再停止 Kryfo';
 
   @override
   String get homeItHasClosedKryfo =>
-      '今天它已经关掉 kryfo 三次了，所以消息晚到或一直在等。定时查收不受影响：kryfo 会每 15 分钟醒来一次，而不是一直保持连接。';
+      '今天它已经关掉 Kryfo 三次了，所以消息晚到或一直在等。定时查收不受影响：Kryfo 会每 15 分钟醒来一次，而不是一直保持连接。';
 
   @override
   String get homeSwitchToCheckIns => '切换到定时查收';
@@ -2747,10 +2747,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get homeAndroidIsBlockingThem =>
-      'Android 正在拦截通知，所以 kryfo 关闭时，什么都到不了你这里。你打开它时，消息仍会到达。';
+      'Android 正在拦截通知，所以 Kryfo 关闭时，什么都到不了你这里。你打开它时，消息仍会到达。';
 
   @override
-  String get homeCouldnTOpenIt => '打不开。请在手机设置里找到 kryfo';
+  String get homeCouldnTOpenIt => '打不开。请在手机设置里找到 Kryfo';
 
   @override
   String get homeTurnThemOn => '打开通知';
@@ -2889,7 +2889,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonRetry => '重试';
 
   @override
-  String get homeNoKryfosYet => '还没有 kryfo 联系人。';
+  String get homeNoKryfosYet => '还没有 Kryfo 联系人。';
 
   @override
   String get homeScanTheirCodeSend => '扫描对方的二维码、给对方发链接，或者输入对方给你的 @用户名。';
@@ -3151,7 +3151,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lockFileNothingWasSaved => '没有保存任何东西。';
 
   @override
-  String get lockFileTypeOneOrLet => '自己输入一个，或者让 kryfo 推荐四个词。';
+  String get lockFileTypeOneOrLet => '自己输入一个，或者让 Kryfo 推荐四个词。';
 
   @override
   String get lockFileTheAppThatHolds => '保存它的应用可能已经把它收回了。请重新选择。';
@@ -3251,7 +3251,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get lockFileAnyoneWithThePassword =>
-      '任何知道密码的人都能打开它，在 kryfo 里，或者在任何装了免费工具 age 的电脑上。忘了密码，这个文件就永远打不开了。没有人能重置它，包括我们。';
+      '任何知道密码的人都能打开它，在 Kryfo 里，或者在任何装了免费工具 age 的电脑上。忘了密码，这个文件就永远打不开了。没有人能重置它，包括我们。';
 
   @override
   String get lockFileLocked2 => '已锁定。';
@@ -3265,7 +3265,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get lockFileNoKryfoOnThe => '对方没有 kryfo？在电脑上：';
+  String get lockFileNoKryfoOnThe => '对方没有 Kryfo？在电脑上：';
 
   @override
   String get lockFileItAsksForThe => '它会要求输入密码。age 可在 age-encryption.org 免费获取';
@@ -3326,7 +3326,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get modesOneSealedConnectionTo =>
-      '一条加密连接，直通 kryfo 自己的中继，就像一个无日志可记的 VPN。消息大约一秒送达，在 tor 被封锁的地方也能用。';
+      '一条加密连接，直通 Kryfo 自己的中继，就像一个无日志可记的 VPN。消息大约一秒送达，在 tor 被封锁的地方也能用。';
 
   @override
   String get modesQuick => '快';
@@ -3428,10 +3428,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get movedReopenKryfo => '重新打开 kryfo';
+  String get movedReopenKryfo => '重新打开 Kryfo';
 
   @override
-  String get movedThisKryfoHasMoved => '这个 kryfo 已迁移';
+  String get movedThisKryfoHasMoved => '这个 Kryfo 已迁移';
 
   @override
   String movedIsNowOnAnother(Object myId) {
@@ -3455,17 +3455,17 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return '在 kryfo 上加我。我的 ID 是 $myId\n\n点这里加我：\n$uri\n\nkryfo 是一款私密通讯应用。不用手机号，不用邮箱。';
+    return '在 Kryfo 上加我。我的 ID 是 $myId\n\n点这里加我：\n$uri\n\nKryfo 是一款私密通讯应用。不用手机号，不用邮箱。';
   }
 
   @override
-  String get myKryfoAddMeOnKryfo2 => '在 kryfo 上加我';
+  String get myKryfoAddMeOnKryfo2 => '在 Kryfo 上加我';
 
   @override
   String get myKryfoAddSomeone => '添加联系人';
 
   @override
-  String get myKryfoKryfoDoesnTScan => 'kryfo 不会扫描你的通讯录，这正是关键。';
+  String get myKryfoKryfoDoesnTScan => 'Kryfo 不会扫描你的通讯录，这正是关键。';
 
   @override
   String get myKryfoIfThisLinkEnds =>
@@ -3473,7 +3473,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get myKryfoAlreadyShareAFriend =>
-      '你们在 kryfo 上已经有共同的朋友？对方可以在自己的聊天里介绍你们认识，这样就不用走请求了。';
+      '你们在 Kryfo 上已经有共同的朋友？对方可以在自己的聊天里介绍你们认识，这样就不用走请求了。';
 
   @override
   String get myKryfoHandleCopied => '用户名已复制';
@@ -3823,7 +3823,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get openLockedThePasswordIsChecked =>
-      '先校验密码。只有校验通过后，kryfo 才会问你把打开的文件放在哪里，然后直接存到那里。';
+      '先校验密码。只有校验通过后，Kryfo 才会问你把打开的文件放在哪里，然后直接存到那里。';
 
   @override
   String get openLockedOpened2 => '已打开。';
@@ -3959,7 +3959,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pinsNeedsAPinFirst => '需要先设置 PIN 码';
 
   @override
-  String get pinsSet => '设置';
+  String get pinsSet => '已设置';
 
   @override
   String get pinsChangeWipePin => '更改抹掉 PIN';
@@ -3988,7 +3988,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profileChangeYourFace => '更换你的脸';
 
   @override
-  String get profileKryfoId => 'kryfo ID';
+  String get profileKryfoId => 'Kryfo ID';
 
   @override
   String get profileOnionAddress => 'onion 地址';
@@ -4023,7 +4023,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profileShareConnect => '分享与添加';
 
   @override
-  String get profileMyKryfoCode => '我的 kryfo 二维码';
+  String get profileMyKryfoCode => '我的 Kryfo 二维码';
 
   @override
   String get profileAddContact => '添加联系人';
@@ -4032,13 +4032,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profileGiveAgain => '再次捐助';
 
   @override
-  String get profileSupportKryfo => '支持 kryfo';
+  String get profileSupportKryfo => '支持 Kryfo';
 
   @override
   String get profileKryfoRunsOnWhat => 'Kryfo 靠大家的捐助运转';
 
   @override
-  String get profileKeepKryfoIndependent => '让 kryfo 保持独立';
+  String get profileKeepKryfoIndependent => '让 Kryfo 保持独立';
 
   @override
   String get qrLink => '链接';
@@ -4235,7 +4235,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get requestsDecline => '拒绝';
 
   @override
-  String get restoreThatFileIsNot => '这个文件不是 kryfo 备份';
+  String get restoreThatFileIsNot => '这个文件不是 Kryfo 备份';
 
   @override
   String get restoreThisFileIsDamaged => '这个文件已损坏，无法读取';
@@ -4278,7 +4278,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get restoreReopenKryfo => '重新打开 kryfo';
+  String get restoreReopenKryfo => '重新打开 Kryfo';
 
   @override
   String get restoreTheRestoreDidNot => '恢复没有完成。没有做任何改动';
@@ -4287,7 +4287,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get restoreThisIdentity => '这个身份';
 
   @override
-  String get restoreMoveYourKryfoHere => '把你的 kryfo 迁移到这里';
+  String get restoreMoveYourKryfoHere => '把你的 Kryfo 迁移到这里';
 
   @override
   String restoreThisBackupIsRestoring(Object name) {
@@ -4348,7 +4348,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get restoreIfThePhoneThis =>
-      '如果这个文件来自的那部手机还在使用，请先在那部手机上停用 kryfo，再继续。两部手机共用一个 kryfo，两边都会丢消息。';
+      '如果这个文件来自的那部手机还在使用，请先在那部手机上停用 Kryfo，再继续。两部手机共用一个 Kryfo，两边都会丢消息。';
 
   @override
   String get restoreNotificationsNeedSettingUp => '通知需要在这台设备上重新设置。';
@@ -4520,16 +4520,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get savedPhoto2 => '照片';
 
   @override
-  String get scanThatSNotA => '这不是 kryfo QR 码 · 继续对准';
+  String get scanThatSNotA => '这不是 Kryfo QR 码 · 继续对准';
 
   @override
-  String get scanScanAKryfoQr => '扫描 kryfo QR 码';
+  String get scanScanAKryfoQr => '扫描 Kryfo QR 码';
 
   @override
   String get scanFlash => '闪光灯';
 
   @override
-  String get scanPointAtAKryfo => '对准 kryfo QR 码 · 什么都不会离开你的手机';
+  String get scanPointAtAKryfo => '对准 Kryfo QR 码 · 什么都不会离开你的手机';
 
   @override
   String get seenWhatWeCanSee => '我们能看到什么';
@@ -4657,7 +4657,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get seenFast => '快速';
 
   @override
-  String get settingsWipeKryfo => '抹掉 kryfo？';
+  String get settingsWipeKryfo => '抹掉 Kryfo？';
 
   @override
   String get settingsIdentityMessagesContactsAnd =>
@@ -4678,7 +4678,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsWipeWord => '抹掉';
 
   @override
-  String get settingsWipeKryfo2 => '抹掉 kryfo';
+  String get settingsWipeKryfo2 => '抹掉 Kryfo';
 
   @override
   String get settingsYourProtections => '你的保护';
@@ -4808,7 +4808,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsShiftsYourPitchBefore => '语音发出前改变你的音调';
 
   @override
-  String get settingsWhyKryfo => '为什么选 kryfo';
+  String get settingsWhyKryfo => '为什么选 Kryfo';
 
   @override
   String get settingsHowItProtectsYou => '它如何保护你';
@@ -4868,7 +4868,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsDangerZone => '危险区';
 
   @override
-  String get settingsWipeKryfoFromThis => '从这部手机上抹掉 kryfo';
+  String get settingsWipeKryfoFromThis => '从这部手机上抹掉 Kryfo';
 
   @override
   String get shieldCheckedOnThisPhone => '已在这部手机上检查。没有向任何地方发送任何东西。';
@@ -4880,7 +4880,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get toolsCleanAPhotoOr => '清理照片或视频';
 
   @override
-  String get toolsOrShareOneTo => '或者从相册分享到 kryfo';
+  String get toolsOrShareOneTo => '或者从相册分享到 Kryfo';
 
   @override
   String get toolsMakeAPrivateQr => '生成私密 QR 码';
@@ -4911,7 +4911,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get toolsEverythingHereHappensOn =>
-      '这里的一切都在这部手机上完成。不上传任何东西，别人也不需要用 kryfo。';
+      '这里的一切都在这部手机上完成。不上传任何东西，别人也不需要用 Kryfo。';
 
   @override
   String get toolsWhatDoesThisPhoto => '这张照片知道些什么？';
@@ -5219,7 +5219,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get wallpaperKeepIt => '保留';
 
   @override
-  String get whyKryfoWhyKryfo => '为什么选 kryfo';
+  String get whyKryfoWhyKryfo => '为什么选 Kryfo';
 
   @override
   String get whyKryfoKryfoKreeFoGreek =>
@@ -5250,7 +5250,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get whyKryfoNoReadReceiptsOr =>
-      '不会把已读回执或“正在输入”提示交给任何人，也不上传联系人列表。元数据是大多数应用泄露的东西——kryfo 的设计就是不泄露它。';
+      '不会把已读回执或“正在输入”提示交给任何人，也不上传联系人列表。元数据是大多数应用泄露的东西——Kryfo 的设计就是不泄露它。';
 
   @override
   String get whyKryfoVerifyItIsReally => '确认真的是对方';
@@ -5376,7 +5376,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get photoStoryNotAKindKryfo => '这不是 kryfo 能读取的类型。';
+  String get photoStoryNotAKindKryfo => '这不是 Kryfo 能读取的类型。';
 
   @override
   String get photoStorySoItWillNot => '所以它不会去猜。';
@@ -5408,11 +5408,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get photoStoryAndroidBlanksItWhen =>
-      '用这种方式选择照片时，Android 会把它清空。从相册分享到 kryfo 通常能保留它。你相册里的那张可能仍然带着它。';
+      '用这种方式选择照片时，Android 会把它清空。从相册分享到 Kryfo 通常能保留它。你相册里的那张可能仍然带着它。';
 
   @override
   String get photoStoryLocationBlankedByAndroid =>
-      '位置：在 kryfo 看到之前已被 Android 清空';
+      '位置：在 Kryfo 看到之前已被 Android 清空';
 
   @override
   String photoStoryF(Object r) {
@@ -5728,7 +5728,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bootFailedThisIsAFault => '这是这台设备上的故障，不是网络问题。与 tor 无关。';
 
   @override
-  String get kryfoLinkTextThatLinkIsNot => '这个链接 kryfo 读不了';
+  String get kryfoLinkTextThatLinkIsNot => '这个链接 Kryfo 读不了';
 
   @override
   String kryfoLinkTextAdd(Object who) {
@@ -5752,7 +5752,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get kryfoLinkTextKryfoLink => 'kryfo 链接';
+  String get kryfoLinkTextKryfoLink => 'Kryfo 链接';
 
   @override
   String kryfoLinkTextAdd2(Object who) {
@@ -5790,7 +5790,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get kryfoLinkTextYouJoinUnderA =>
-      '你用专为这个聊天室生成的密钥加入。里面的任何人都看不到你的 kryfo ID。';
+      '你用专为这个聊天室生成的密钥加入。里面的任何人都看不到你的 Kryfo ID。';
 
   @override
   String get linkStubFetchedOverTorBy => '经由 tor 获取 · 由你的设备';
@@ -5883,7 +5883,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get motionTellingTheNetworkYou => '告诉网络你在线——但不透露你在哪里。';
 
   @override
-  String get motionYourIpIsHidden => '你的 IP 已隐藏。只有知道你 kryfo 的人才能联系到你。';
+  String get motionYourIpIsHidden => '你的 IP 已隐藏。只有知道你 Kryfo 的人才能联系到你。';
 
   @override
   String get motionBuilding2 => '构建中';
@@ -5913,7 +5913,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get movedStripThisKryfoHasMoved =>
-      '这个 kryfo 已迁移到另一台设备。从这里发出的任何东西都送不到任何人。';
+      '这个 Kryfo 已迁移到另一台设备。从这里发出的任何东西都送不到任何人。';
 
   @override
   String get navBarChats => '聊天';
@@ -5955,7 +5955,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pairCodePanelTheyOpenKryfoTap =>
-      '对方打开 kryfo，点“添加”，选择“配对码”，输入这六位数字。下一个人需要你再生成一个新的。';
+      '对方打开 Kryfo，点“添加”，选择“配对码”，输入这六位数字。下一个人需要你再生成一个新的。';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -6287,7 +6287,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get androidServiceTitle => 'kryfo 已开启';
+  String get androidServiceTitle => 'Kryfo 已开启';
 
   @override
   String get androidServiceText => '你的加密线路保持连接，好让消息送达';
@@ -6297,7 +6297,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get androidChannelDescription =>
-      '让 kryfo 保持连接，这样它关闭时加密消息也能送达。关掉这个就会停止投递。';
+      '让 Kryfo 保持连接，这样它关闭时加密消息也能送达。关掉这个就会停止投递。';
 
   @override
   String get videoViewerPlay => '播放';
@@ -6686,13 +6686,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get flowDecoy1 =>
-      '打开一个空的 Kryfo，就像刚装好一样。它经得住别人快速翻看你的手机。它不会隐藏 Kryfo 占用了多少空间，也骗不过知道你的三个词的人、想给它发消息的人，或者复制手机的人。';
+      '打开一个空的 Kryfo，就像刚装好一样。它经得住快速翻看，但骗不过知道你的三个词、给你发消息或者复制手机的人。它不会隐藏 Kryfo 占用了多少空间。';
 
   @override
   String get flowDecoyFinger => '你的指纹会打开真正的 Kryfo。如果有人可能逼你用指纹，请关闭指纹解锁。';
 
   @override
-  String get flowDecoyDigits => '位数要和你的 PIN 码一样多。圆点是能数出来的。';
+  String get flowDecoyDigits => '位数要和你的 PIN 码一样，因为旁边看着的人能数出圆点。';
 
   @override
   String get flowDecoyShade => '已经在通知栏里的通知已经被看到了。伪装打开期间，不会出现新的通知。';
@@ -6776,10 +6776,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get backupThatPassphraseDoesNot => '這組密碼短語打不開這個檔案';
 
   @override
-  String get backupThatFileIsNot => '這個檔案不是 kryfo 備份';
+  String get backupThatFileIsNot => '這個檔案不是 Kryfo 備份';
 
   @override
-  String get backupThisBackupIsFrom => '這份備份來自較新版的 kryfo。請先更新應用程式，再試一次';
+  String get backupThisBackupIsFrom => '這份備份來自較新版的 Kryfo。請先更新應用程式，再試一次';
 
   @override
   String get backupThisFileIsDamaged => '這個檔案已損毀，無法讀取';
@@ -6792,11 +6792,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get contactCardScanItOrType =>
-      '掃描它，或在 kryfo 裡輸入這三個詞。\n除此之外，這張卡片對你一無所知。';
+      '掃描它，或在 Kryfo 裡輸入這三個詞。\n除此之外，這張卡片對你一無所知。';
 
   @override
   String contactCardMessageMeOnKryfo(Object haloId) {
-    return '在 kryfo 傳訊息給我 · $haloId';
+    return '在 Kryfo 傳訊息給我 · $haloId';
   }
 
   @override
@@ -7116,7 +7116,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get appStartingTor => '正在啟動 Tor';
 
   @override
-  String get appTimedMessagesAreNot => '限時訊息沒有被清除。請重新啟動 kryfo';
+  String get appTimedMessagesAreNot => '限時訊息沒有被清除。請重新啟動 Kryfo';
 
   @override
   String get appVoiceMessage2 => '語音訊息';
@@ -7199,7 +7199,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get appTapStartListeningFirst => '請先點「開始監聽」';
 
   @override
-  String get appYourKryfo => '你的 kryfo';
+  String get appYourKryfo => '你的 Kryfo';
 
   @override
   String get appUriCopied => '已複製 uri';
@@ -7208,7 +7208,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get appCopyUri => '複製 uri';
 
   @override
-  String get appAddAKryfo => '新增 kryfo';
+  String get appAddAKryfo => '新增 Kryfo';
 
   @override
   String get appScanQr => '掃描 QR 碼';
@@ -7229,7 +7229,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get appDev => '開發';
 
   @override
-  String get appYourKryfo2 => '你的 kryfo：';
+  String get appYourKryfo2 => '你的 Kryfo：';
 
   @override
   String get appRestoredFromDisk => '已從儲存空間還原';
@@ -7270,7 +7270,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get appDisableAppLock => '要停用應用程式鎖嗎？';
 
   @override
-  String get appThePinWillBe => 'PIN 碼將被移除。任何拿到你手機的人，一打開 kryfo 就能看到裡面的內容。';
+  String get appThePinWillBe => 'PIN 碼將被移除。任何拿到你手機的人，一打開 Kryfo 就能看到裡面的內容。';
 
   @override
   String get appDisable => '停用';
@@ -7306,7 +7306,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get appTheFirstConnectionTakes =>
-      '第一次連線需要一、兩分鐘，讓 tor 建立一條私密路線。之後路線會被快取，下次開啟 kryfo 就快多了。';
+      '第一次連線需要一、兩分鐘，讓 tor 建立一條私密路線。之後路線會被快取，下次開啟 Kryfo 就快多了。';
 
   @override
   String get appRelayAndFastModes =>
@@ -7396,11 +7396,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get miuiAutostartAlreadyAllowedToRun => '已允許在背景執行';
 
   @override
-  String get miuiAutostartLetKryfoRunIn => '讓 kryfo 在背景執行';
+  String get miuiAutostartLetKryfoRunIn => '讓 Kryfo 在背景執行';
 
   @override
   String get miuiAutostartYourPhonePausesApps =>
-      '你的手機會暫停應用程式來省電。如果不設為例外，kryfo 關閉時就無法接收訊息。';
+      '你的手機會暫停應用程式來省電。如果不設為例外，Kryfo 關閉時就無法接收訊息。';
 
   @override
   String get commonAllow => '允許';
@@ -7410,7 +7410,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get miuiAutostartXiaomiTurnsOffBackground =>
-      '小米預設會關閉背景應用程式。沒有開啟自動啟動，kryfo 在應用程式關閉時就無法傳遞訊息。請在下一個畫面的清單中找到 kryfo，然後打開開關。';
+      '小米預設會關閉背景應用程式。沒有開啟自動啟動，Kryfo 在應用程式關閉時就無法傳遞訊息。請在下一個畫面的清單中找到 Kryfo，然後打開開關。';
 
   @override
   String get miuiAutostartOpenSettings => '開啟設定';
@@ -7656,10 +7656,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get backupYourEncryptedKryfoBackup =>
-      '你的 kryfo 加密備份。這個檔案和密碼短語都要妥善保管，兩個都有才能還原。';
+      '你的 Kryfo 加密備份。這個檔案和密碼短語都要妥善保管，兩個都有才能還原。';
 
   @override
-  String get backupBackUpKryfo => '備份 kryfo';
+  String get backupBackUpKryfo => '備份 Kryfo';
 
   @override
   String get backupBackUp => '備份';
@@ -7764,7 +7764,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesGotABridgeLine =>
-      '從你信任的人或 bridges.torproject.org 拿到了橋接設定？貼在這裡。目前只支援 obfs4，kryfo 還不支援其他類型。';
+      '從你信任的人或 bridges.torproject.org 拿到了橋接設定？貼在這裡。目前只支援 obfs4，Kryfo 還不支援其他類型。';
 
   @override
   String get bridgesPasteFromClipboard => '從剪貼簿貼上';
@@ -8774,7 +8774,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get donateSupport => '支持';
 
   @override
-  String get donateKeepKryfo => '讓 kryfo 保持*獨立*';
+  String get donateKeepKryfo => '讓 Kryfo 保持*獨立*';
 
   @override
   String get donateNoAdsNoInvestors => '沒有廣告，沒有投資人，也沒有要賣的東西。全靠支持者的捐助運作。';
@@ -8879,7 +8879,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get donatePaymentConfirmed => '付款已確認';
 
   @override
-  String get donateThankYouForKeeping => '謝謝你讓 kryfo 保持獨立。';
+  String get donateThankYouForKeeping => '謝謝你讓 Kryfo 保持獨立。';
 
   @override
   String donateVerifiedOnChainYou(String tier) {
@@ -9394,7 +9394,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get commonSettings => '設定';
 
   @override
-  String get homeYourKryfo => '你的 kryfo';
+  String get homeYourKryfo => '你的 Kryfo';
 
   @override
   String homeDateWeekday(Object weekday) {
@@ -9453,11 +9453,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeKryfoWillCheckIn => 'Kryfo 會每 15 分鐘查收一次';
 
   @override
-  String get homeYourPhoneKeepsStopping => '你的手機一直在停止 kryfo';
+  String get homeYourPhoneKeepsStopping => '你的手機一直在停止 Kryfo';
 
   @override
   String get homeItHasClosedKryfo =>
-      '它今天已經關掉 kryfo 三次，所以訊息延遲了或卡住了。定時查收不受影響：kryfo 會每 15 分鐘醒來一次，而不是一直保持連線。';
+      '它今天已經關掉 Kryfo 三次，所以訊息延遲了或卡住了。定時查收不受影響：Kryfo 會每 15 分鐘醒來一次，而不是一直保持連線。';
 
   @override
   String get homeSwitchToCheckIns => '改用定時查收';
@@ -9470,10 +9470,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get homeAndroidIsBlockingThem =>
-      'Android 正在阻擋通知，所以 kryfo 關閉時，你什麼都不會收到。打開 kryfo 時訊息還是會送達。';
+      'Android 正在阻擋通知，所以 Kryfo 關閉時，你什麼都不會收到。打開 Kryfo 時訊息還是會送達。';
 
   @override
-  String get homeCouldnTOpenIt => '無法開啟。請在手機設定中尋找 kryfo';
+  String get homeCouldnTOpenIt => '無法開啟。請在手機設定中尋找 Kryfo';
 
   @override
   String get homeTurnThemOn => '開啟通知';
@@ -9612,7 +9612,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get commonRetry => '重試';
 
   @override
-  String get homeNoKryfosYet => '還沒有 kryfo 聯絡人。';
+  String get homeNoKryfosYet => '還沒有 Kryfo 聯絡人。';
 
   @override
   String get homeScanTheirCodeSend => '掃描對方的 QR 碼、傳連結給對方，或輸入對方給你的 @使用者名稱。';
@@ -10049,7 +10049,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get modesOneSealedConnectionTo =>
-      '一條密封連線，直通 kryfo 自己的中繼，就像一個沒有東西可記錄的 VPN。訊息大約一秒送達，在 tor 被封鎖的地方也能用。';
+      '一條密封連線，直通 Kryfo 自己的中繼，就像一個沒有東西可記錄的 VPN。訊息大約一秒送達，在 tor 被封鎖的地方也能用。';
 
   @override
   String get modesQuick => '較快';
@@ -10151,10 +10151,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get movedReopenKryfo => '重新開啟 kryfo';
+  String get movedReopenKryfo => '重新開啟 Kryfo';
 
   @override
-  String get movedThisKryfoHasMoved => '這個 kryfo 已經搬走了';
+  String get movedThisKryfoHasMoved => '這個 Kryfo 已經搬走了';
 
   @override
   String movedIsNowOnAnother(Object myId) {
@@ -10178,17 +10178,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return '在 kryfo 上加我。我的 ID 是 $myId\n\n點這裡加我：\n$uri\n\nkryfo 是一款私密通訊軟體。不需要手機號碼，也不需要電子郵件。';
+    return '在 Kryfo 上加我。我的 ID 是 $myId\n\n點這裡加我：\n$uri\n\nKryfo 是一款私密通訊軟體。不需要手機號碼，也不需要電子郵件。';
   }
 
   @override
-  String get myKryfoAddMeOnKryfo2 => '在 kryfo 上加我';
+  String get myKryfoAddMeOnKryfo2 => '在 Kryfo 上加我';
 
   @override
   String get myKryfoAddSomeone => '新增聯絡人';
 
   @override
-  String get myKryfoKryfoDoesnTScan => 'kryfo 不會掃描你的通訊錄，這正是重點。';
+  String get myKryfoKryfoDoesnTScan => 'Kryfo 不會掃描你的通訊錄，這正是重點。';
 
   @override
   String get myKryfoIfThisLinkEnds =>
@@ -10196,7 +10196,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get myKryfoAlreadyShareAFriend =>
-      '你們在 kryfo 上有共同的朋友嗎？對方可以在聊天中介紹你們認識，你們就不用送出請求。';
+      '你們在 Kryfo 上有共同的朋友嗎？對方可以在聊天中介紹你們認識，你們就不用送出請求。';
 
   @override
   String get myKryfoHandleCopied => '已複製使用者名稱';
@@ -10711,7 +10711,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get profileChangeYourFace => '更換你的臉';
 
   @override
-  String get profileKryfoId => 'kryfo ID';
+  String get profileKryfoId => 'Kryfo ID';
 
   @override
   String get profileOnionAddress => 'onion 位址';
@@ -10746,7 +10746,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get profileShareConnect => '分享與聯繫';
 
   @override
-  String get profileMyKryfoCode => '我的 kryfo QR 碼';
+  String get profileMyKryfoCode => '我的 Kryfo QR 碼';
 
   @override
   String get profileAddContact => '新增聯絡人';
@@ -10755,13 +10755,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get profileGiveAgain => '再捐一次';
 
   @override
-  String get profileSupportKryfo => '支持 kryfo';
+  String get profileSupportKryfo => '支持 Kryfo';
 
   @override
   String get profileKryfoRunsOnWhat => 'Kryfo 靠大家的捐助運作';
 
   @override
-  String get profileKeepKryfoIndependent => '讓 kryfo 保持獨立';
+  String get profileKeepKryfoIndependent => '讓 Kryfo 保持獨立';
 
   @override
   String get qrLink => '連結';
@@ -10957,7 +10957,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get requestsDecline => '拒絕';
 
   @override
-  String get restoreThatFileIsNot => '這個檔案不是 kryfo 備份';
+  String get restoreThatFileIsNot => '這個檔案不是 Kryfo 備份';
 
   @override
   String get restoreThisFileIsDamaged => '這個檔案已損毀，無法讀取';
@@ -11000,7 +11000,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get restoreReopenKryfo => '重新開啟 kryfo';
+  String get restoreReopenKryfo => '重新開啟 Kryfo';
 
   @override
   String get restoreTheRestoreDidNot => '還原沒有完成。沒有做任何變更';
@@ -11009,7 +11009,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get restoreThisIdentity => '這個身分';
 
   @override
-  String get restoreMoveYourKryfoHere => '把你的 kryfo 搬到這裡';
+  String get restoreMoveYourKryfoHere => '把你的 Kryfo 搬到這裡';
 
   @override
   String restoreThisBackupIsRestoring(Object name) {
@@ -11070,7 +11070,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get restoreIfThePhoneThis =>
-      '如果這個檔案原本所在的手機還在使用，請先在那支手機上停止使用 kryfo，再繼續。兩支手機共用一個 kryfo，兩邊都會遺失訊息。';
+      '如果這個檔案原本所在的手機還在使用，請先在那支手機上停止使用 Kryfo，再繼續。兩支手機共用一個 Kryfo，兩邊都會遺失訊息。';
 
   @override
   String get restoreNotificationsNeedSettingUp => '需要在這台裝置上重新設定通知。';
@@ -11242,16 +11242,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get savedPhoto2 => '照片';
 
   @override
-  String get scanThatSNotA => '這不是 kryfo QR 碼 · 請繼續對準';
+  String get scanThatSNotA => '這不是 Kryfo QR 碼 · 請繼續對準';
 
   @override
-  String get scanScanAKryfoQr => '掃描 kryfo QR 碼';
+  String get scanScanAKryfoQr => '掃描 Kryfo QR 碼';
 
   @override
   String get scanFlash => '閃光燈';
 
   @override
-  String get scanPointAtAKryfo => '對準 kryfo QR 碼 · 不會有任何東西離開你的手機';
+  String get scanPointAtAKryfo => '對準 Kryfo QR 碼 · 不會有任何東西離開你的手機';
 
   @override
   String get seenWhatWeCanSee => '我們看得到什麼';
@@ -11379,7 +11379,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get seenFast => '快速';
 
   @override
-  String get settingsWipeKryfo => '要清除 kryfo 嗎？';
+  String get settingsWipeKryfo => '要清除 Kryfo 嗎？';
 
   @override
   String get settingsIdentityMessagesContactsAnd =>
@@ -11400,7 +11400,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsWipeWord => '清除';
 
   @override
-  String get settingsWipeKryfo2 => '清除 kryfo';
+  String get settingsWipeKryfo2 => '清除 Kryfo';
 
   @override
   String get settingsYourProtections => '你的防護';
@@ -11530,7 +11530,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsShiftsYourPitchBefore => '在語音送出前改變你的音調';
 
   @override
-  String get settingsWhyKryfo => '為什麼選 kryfo';
+  String get settingsWhyKryfo => '為什麼選 Kryfo';
 
   @override
   String get settingsHowItProtectsYou => '它如何保護你';
@@ -11590,7 +11590,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsDangerZone => '危險區域';
 
   @override
-  String get settingsWipeKryfoFromThis => '從這支手機清除 kryfo';
+  String get settingsWipeKryfoFromThis => '從這支手機清除 Kryfo';
 
   @override
   String get shieldCheckedOnThisPhone => '在這支手機上檢查。沒有傳送任何東西到任何地方。';
@@ -11941,7 +11941,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get wallpaperKeepIt => '保留';
 
   @override
-  String get whyKryfoWhyKryfo => '為什麼選 kryfo';
+  String get whyKryfoWhyKryfo => '為什麼選 Kryfo';
 
   @override
   String get whyKryfoKryfoKreeFoGreek =>
@@ -11972,7 +11972,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get whyKryfoNoReadReceiptsOr =>
-      '不會把已讀回條或正在輸入的提示交給任何人，也不會上傳聯絡人清單。中繼資料是大多數應用程式會外洩的東西，而 kryfo 的設計就是不外洩。';
+      '不會把已讀回條或正在輸入的提示交給任何人，也不會上傳聯絡人清單。中繼資料是大多數應用程式會外洩的東西，而 Kryfo 的設計就是不外洩。';
 
   @override
   String get whyKryfoVerifyItIsReally => '確認真的是對方';
@@ -12450,7 +12450,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bootFailedThisIsAFault => '這是這台裝置上的故障，不是網路問題。和 Tor 無關。';
 
   @override
-  String get kryfoLinkTextThatLinkIsNot => '這個連結不是 kryfo 能讀取的';
+  String get kryfoLinkTextThatLinkIsNot => '這個連結不是 Kryfo 能讀取的';
 
   @override
   String kryfoLinkTextAdd(Object who) {
@@ -12474,7 +12474,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get kryfoLinkTextKryfoLink => 'kryfo 連結';
+  String get kryfoLinkTextKryfoLink => 'Kryfo 連結';
 
   @override
   String kryfoLinkTextAdd2(Object who) {
@@ -12512,7 +12512,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get kryfoLinkTextYouJoinUnderA =>
-      '你會用專為這個聊天室產生的金鑰加入。裡面沒有人看得到你的 kryfo ID。';
+      '你會用專為這個聊天室產生的金鑰加入。裡面沒有人看得到你的 Kryfo ID。';
 
   @override
   String get linkStubFetchedOverTorBy => '經由 tor 擷取 · 由你的裝置';
@@ -12605,7 +12605,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get motionTellingTheNetworkYou => '告訴網路你上線了，但不透露你在哪裡。';
 
   @override
-  String get motionYourIpIsHidden => '你的 IP 已隱藏。只有拿到你 kryfo 的人才能聯絡你。';
+  String get motionYourIpIsHidden => '你的 IP 已隱藏。只有拿到你 Kryfo 的人才能聯絡你。';
 
   @override
   String get motionBuilding2 => '建立中';
@@ -12635,7 +12635,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get movedStripThisKryfoHasMoved =>
-      '這個 kryfo 已經搬到另一台裝置。從這裡傳送的任何內容都不會送達任何人。';
+      '這個 Kryfo 已經搬到另一台裝置。從這裡傳送的任何內容都不會送達任何人。';
 
   @override
   String get navBarChats => '聊天';
@@ -12677,7 +12677,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pairCodePanelTheyOpenKryfoTap =>
-      '對方開啟 kryfo，點「新增」，選擇「配對碼」，再輸入這六位數字。下一個人請再產生一組新的。';
+      '對方開啟 Kryfo，點「新增」，選擇「配對碼」，再輸入這六位數字。下一個人請再產生一組新的。';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -13009,7 +13009,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get androidServiceTitle => 'kryfo 運作中';
+  String get androidServiceTitle => 'Kryfo 運作中';
 
   @override
   String get androidServiceText => '你的加密線路保持開啟，讓訊息能送達';
@@ -13019,7 +13019,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get androidChannelDescription =>
-      '讓 kryfo 保持連線，在它關閉時也能收到加密訊息。關閉這項設定會停止傳遞訊息。';
+      '讓 Kryfo 保持連線，在它關閉時也能收到加密訊息。關閉這項設定會停止傳遞訊息。';
 
   @override
   String get videoViewerPlay => '播放';
@@ -13408,13 +13408,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get flowDecoy1 =>
-      '開啟一個空的 Kryfo，就像剛安裝好一樣。它經得起別人快速翻看你的手機。它不會隱藏 Kryfo 佔用多少空間，也騙不過知道你的三個詞的人、想傳訊息給它的人，或複製手機的人。';
+      '開啟一個空的 Kryfo，就像剛安裝好一樣。它經得起快速翻看，但騙不過知道你的三個詞、傳訊息給你或複製手機的人。它不會隱藏 Kryfo 佔用多少空間。';
 
   @override
   String get flowDecoyFinger => '你的指紋會開啟真正的 Kryfo。如果有人可能逼你用指紋，請關閉指紋解鎖。';
 
   @override
-  String get flowDecoyDigits => '位數要跟你的 PIN 碼一樣多。圓點是數得出來的。';
+  String get flowDecoyDigits => '位數要跟你的 PIN 碼一樣，因為旁邊看著的人數得出圓點。';
 
   @override
   String get flowDecoyShade => '已經在通知欄裡的通知已經被看到了。偽裝開啟期間，不會出現新的通知。';

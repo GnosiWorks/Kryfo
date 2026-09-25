@@ -216,13 +216,13 @@ abstract class AppLocalizations {
   /// backup.dart
   ///
   /// In en, this message translates to:
-  /// **'That file is not a kryfo backup'**
+  /// **'That file is not a Kryfo backup'**
   String get backupThatFileIsNot;
 
   /// backup.dart
   ///
   /// In en, this message translates to:
-  /// **'This backup is from a newer kryfo. Update the app, then try again'**
+  /// **'This backup is from a newer Kryfo. Update the app, then try again'**
   String get backupThisBackupIsFrom;
 
   /// backup.dart
@@ -246,13 +246,13 @@ abstract class AppLocalizations {
   /// contact_card.dart
   ///
   /// In en, this message translates to:
-  /// **'Scan it, or type the three words into kryfo.\nThis card knows nothing about you beyond that.'**
+  /// **'Scan it, or type the three words into Kryfo.\nThis card knows nothing about you beyond that.'**
   String get contactCardScanItOrType;
 
   /// contact_card.dart
   ///
   /// In en, this message translates to:
-  /// **'Message me on kryfo · {haloId}'**
+  /// **'Message me on Kryfo · {haloId}'**
   String contactCardMessageMeOnKryfo(Object haloId);
 
   /// contact_status.dart
@@ -543,7 +543,7 @@ abstract class AppLocalizations {
   /// **'ok, capped'**
   String get appOkCapped;
 
-  /// main.dart: the last check-in on the transport screen. push: a unifiedpush helper woke kryfo. job: the fifteen-minute background job.
+  /// main.dart: the last check-in on the transport screen. push: a unifiedpush helper woke Kryfo. job: the fifteen-minute background job.
   ///
   /// In en, this message translates to:
   /// **'{why, select, push{{how}, {secs}s, by push} other{{how}, {secs}s, by job}}'**
@@ -606,7 +606,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'Timed messages are not clearing. Restart kryfo'**
+  /// **'Timed messages are not clearing. Restart Kryfo'**
   String get appTimedMessagesAreNot;
 
   /// main.dart
@@ -690,7 +690,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'A kryfo link, a room link or @wren'**
+  /// **'A Kryfo link, a room link or @wren'**
   String get appAKryfoLinkA;
 
   /// main.dart
@@ -756,7 +756,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'Your kryfo'**
+  /// **'Your Kryfo'**
   String get appYourKryfo;
 
   /// main.dart
@@ -774,7 +774,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'Add a kryfo'**
+  /// **'Add a Kryfo'**
   String get appAddAKryfo;
 
   /// main.dart
@@ -816,7 +816,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'Your kryfo:'**
+  /// **'Your Kryfo:'**
   String get appYourKryfo2;
 
   /// main.dart
@@ -894,7 +894,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'The PIN will be removed. Anyone with your phone will see kryfo when they open it.'**
+  /// **'The PIN will be removed. Anyone with your phone will see Kryfo when they open it.'**
   String get appThePinWillBe;
 
   /// main.dart
@@ -960,7 +960,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'The first connection takes a minute or two while tor builds a private route. After that it is cached, so opening kryfo later is much faster.'**
+  /// **'The first connection takes a minute or two while tor builds a private route. After that it is cached, so opening Kryfo later is much faster.'**
   String get appTheFirstConnectionTakes;
 
   /// main.dart
@@ -1110,13 +1110,13 @@ abstract class AppLocalizations {
   /// miui_autostart.dart
   ///
   /// In en, this message translates to:
-  /// **'Let kryfo run in the background'**
+  /// **'Let Kryfo run in the background'**
   String get miuiAutostartLetKryfoRunIn;
 
   /// miui_autostart.dart
   ///
   /// In en, this message translates to:
-  /// **'Your phone pauses apps to save battery. Without an exception, kryfo cannot receive messages while it is closed.'**
+  /// **'Your phone pauses apps to save battery. Without an exception, Kryfo cannot receive messages while it is closed.'**
   String get miuiAutostartYourPhonePausesApps;
 
   /// miui_autostart.dart
@@ -1134,7 +1134,7 @@ abstract class AppLocalizations {
   /// miui_autostart.dart
   ///
   /// In en, this message translates to:
-  /// **'Xiaomi turns off background apps by default. Without autostart, kryfo cannot deliver messages when the app is closed. On the next screen, find kryfo in the list and turn the toggle on.'**
+  /// **'Xiaomi turns off background apps by default. Without autostart, Kryfo cannot deliver messages when the app is closed. On the next screen, find Kryfo in the list and turn the toggle on.'**
   String get miuiAutostartXiaomiTurnsOffBackground;
 
   /// miui_autostart.dart
@@ -1500,13 +1500,13 @@ abstract class AppLocalizations {
   /// screens/backup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Your encrypted kryfo backup. Keep both this file AND your passphrase safe - you need both to restore.'**
+  /// **'Your encrypted Kryfo backup. Keep both this file AND your passphrase safe - you need both to restore.'**
   String get backupYourEncryptedKryfoBackup;
 
   /// screens/backup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Back up kryfo'**
+  /// **'Back up Kryfo'**
   String get backupBackUpKryfo;
 
   /// screens/backup_screen.dart
@@ -1698,7 +1698,7 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Got a bridge line from someone you trust, or from bridges.torproject.org? Paste it here. Obfs4 lines only, kryfo does not speak the others yet.'**
+  /// **'Got a bridge line from someone you trust, or from bridges.torproject.org? Paste it here. Obfs4 lines only, Kryfo does not speak the others yet.'**
   String get bridgesGotABridgeLine;
 
   /// screens/bridges_screen.dart
@@ -3420,7 +3420,7 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Keep kryfo *independent*'**
+  /// **'Keep Kryfo *independent*'**
   String get donateKeepKryfo;
 
   /// screens/donate_screen.dart
@@ -3600,7 +3600,7 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Thank you for keeping kryfo independent.'**
+  /// **'Thank you for keeping Kryfo independent.'**
   String get donateThankYouForKeeping;
 
   /// screens/donate_screen.dart. tier is the supporter tier
@@ -4464,7 +4464,7 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Your kryfo'**
+  /// **'Your Kryfo'**
   String get homeYourKryfo;
 
   /// screens/home_screen.dart: the first line of the date at the top of home, the weekday. the second line is the day and month.
@@ -4530,13 +4530,13 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Your phone keeps stopping kryfo'**
+  /// **'Your phone keeps stopping Kryfo'**
   String get homeYourPhoneKeepsStopping;
 
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'It has closed kryfo three times today, so messages were late or waited. Check-ins survive that: kryfo wakes every 15 minutes instead of staying connected.'**
+  /// **'It has closed Kryfo three times today, so messages were late or waited. Check-ins survive that: Kryfo wakes every 15 minutes instead of staying connected.'**
   String get homeItHasClosedKryfo;
 
   /// screens/home_screen.dart
@@ -4560,13 +4560,13 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Android is blocking them, so nothing reaches you while kryfo is closed. Messages still arrive when you open it.'**
+  /// **'Android is blocking them, so nothing reaches you while Kryfo is closed. Messages still arrive when you open it.'**
   String get homeAndroidIsBlockingThem;
 
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t open it. Look for kryfo in phone settings'**
+  /// **'Couldn\'t open it. Look for Kryfo in phone settings'**
   String get homeCouldnTOpenIt;
 
   /// screens/home_screen.dart
@@ -4722,7 +4722,7 @@ abstract class AppLocalizations {
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'No kryfos yet.'**
+  /// **'No Kryfos yet.'**
   String get homeNoKryfosYet;
 
   /// screens/home_screen.dart
@@ -5424,7 +5424,7 @@ abstract class AppLocalizations {
   /// screens/modes_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'One sealed connection to kryfo\'s own relay, like a vpn with nothing to log. Sends land in about a second, and it works where tor is blocked.'**
+  /// **'One sealed connection to Kryfo\'s own relay, like a vpn with nothing to log. Sends land in about a second, and it works where tor is blocked.'**
   String get modesOneSealedConnectionTo;
 
   /// screens/modes_screen.dart
@@ -5568,7 +5568,7 @@ abstract class AppLocalizations {
   /// screens/moved_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Everything kryfo holds here goes: the messages, the contacts, the keys. The other device keeps all of it. This cannot be undone.'**
+  /// **'Everything Kryfo holds here goes: the messages, the contacts, the keys. The other device keeps all of it. This cannot be undone.'**
   String get movedEverythingKryfoHoldsHere;
 
   /// screens/moved_screen.dart
@@ -5610,13 +5610,13 @@ abstract class AppLocalizations {
   /// screens/moved_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Reopen kryfo'**
+  /// **'Reopen Kryfo'**
   String get movedReopenKryfo;
 
   /// screens/moved_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'This kryfo has moved'**
+  /// **'This Kryfo has moved'**
   String get movedThisKryfoHasMoved;
 
   /// screens/moved_screen.dart
@@ -5658,13 +5658,13 @@ abstract class AppLocalizations {
   /// screens/my_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'add me on kryfo. my id is {myId}\n\ntap to add me:\n{uri}\n\nkryfo is a private messenger. no phone number, no email.'**
+  /// **'Add me on Kryfo. My ID is {myId}\n\nTap to add me:\n{uri}\n\nKryfo is a private messenger. No phone number, no email.'**
   String myKryfoAddMeOnKryfo(Object myId, Object uri);
 
   /// screens/my_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Add me on kryfo'**
+  /// **'Add me on Kryfo'**
   String get myKryfoAddMeOnKryfo2;
 
   /// screens/my_kryfo_screen.dart
@@ -5676,7 +5676,7 @@ abstract class AppLocalizations {
   /// screens/my_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'kryfo doesn\'t scan your contacts, that\'s the point.'**
+  /// **'Kryfo doesn\'t scan your contacts, that\'s the point.'**
   String get myKryfoKryfoDoesnTScan;
 
   /// screens/my_kryfo_screen.dart
@@ -5688,7 +5688,7 @@ abstract class AppLocalizations {
   /// screens/my_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Already share a friend on kryfo? They can introduce you both from their chat, and you skip the request.'**
+  /// **'Already share a friend on Kryfo? They can introduce you both from their chat, and you skip the request.'**
   String get myKryfoAlreadyShareAFriend;
 
   /// screens/my_kryfo_screen.dart
@@ -6198,7 +6198,7 @@ abstract class AppLocalizations {
   /// screens/onboarding_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Android needs a visible notification while an app listens in the background. That is how messages reach you when kryfo is closed.'**
+  /// **'Android needs a visible notification while an app listens in the background. That is how messages reach you when Kryfo is closed.'**
   String get onboardingAndroidNeedsAVisible;
 
   /// screens/onboarding_screen.dart
@@ -6654,7 +6654,7 @@ abstract class AppLocalizations {
   /// screens/profile_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'kryfo id'**
+  /// **'Kryfo id'**
   String get profileKryfoId;
 
   /// screens/profile_screen.dart
@@ -6708,7 +6708,7 @@ abstract class AppLocalizations {
   /// screens/profile_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'My kryfo code'**
+  /// **'My Kryfo code'**
   String get profileMyKryfoCode;
 
   /// screens/profile_screen.dart
@@ -6726,7 +6726,7 @@ abstract class AppLocalizations {
   /// screens/profile_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Support kryfo'**
+  /// **'Support Kryfo'**
   String get profileSupportKryfo;
 
   /// screens/profile_screen.dart
@@ -6738,7 +6738,7 @@ abstract class AppLocalizations {
   /// screens/profile_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Keep kryfo independent'**
+  /// **'Keep Kryfo independent'**
   String get profileKeepKryfoIndependent;
 
   /// screens/qr_screen.dart
@@ -7122,7 +7122,7 @@ abstract class AppLocalizations {
   /// screens/restore_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'That file is not a kryfo backup'**
+  /// **'That file is not a Kryfo backup'**
   String get restoreThatFileIsNot;
 
   /// screens/restore_screen.dart
@@ -7194,7 +7194,7 @@ abstract class AppLocalizations {
   /// screens/restore_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Reopen kryfo'**
+  /// **'Reopen Kryfo'**
   String get restoreReopenKryfo;
 
   /// screens/restore_screen.dart
@@ -7212,7 +7212,7 @@ abstract class AppLocalizations {
   /// screens/restore_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Move your kryfo here'**
+  /// **'Move your Kryfo here'**
   String get restoreMoveYourKryfoHere;
 
   /// screens/restore_screen.dart
@@ -7296,7 +7296,7 @@ abstract class AppLocalizations {
   /// screens/restore_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'If the phone this file came from is still in use, stop using kryfo on it before you carry on. Two phones on one kryfo lose messages on both.'**
+  /// **'If the phone this file came from is still in use, stop using Kryfo on it before you carry on. Two phones on one Kryfo lose messages on both.'**
   String get restoreIfThePhoneThis;
 
   /// screens/restore_screen.dart
@@ -7590,13 +7590,13 @@ abstract class AppLocalizations {
   /// screens/scan_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'that\'s not a kryfo qr · keep pointing'**
+  /// **'that\'s not a Kryfo qr · keep pointing'**
   String get scanThatSNotA;
 
   /// screens/scan_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Scan a kryfo qr'**
+  /// **'Scan a Kryfo qr'**
   String get scanScanAKryfoQr;
 
   /// screens/scan_screen.dart
@@ -7608,7 +7608,7 @@ abstract class AppLocalizations {
   /// screens/scan_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Point at a kryfo qr · nothing leaves your phone'**
+  /// **'Point at a Kryfo qr · nothing leaves your phone'**
   String get scanPointAtAKryfo;
 
   /// screens/seen_screen.dart
@@ -7842,7 +7842,7 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Wipe kryfo?'**
+  /// **'Wipe Kryfo?'**
   String get settingsWipeKryfo;
 
   /// screens/settings_screen.dart
@@ -7869,7 +7869,7 @@ abstract class AppLocalizations {
   /// **'The last step. Nothing survives it.'**
   String get settingsTheLastStepNothing;
 
-  /// screens/settings_screen.dart: the word typed to confirm wiping kryfo. one lowercase word, easy to type on a phone keyboard in this language. the english word is accepted too.
+  /// screens/settings_screen.dart: the word typed to confirm wiping Kryfo. one lowercase word, easy to type on a phone keyboard in this language. the english word is accepted too.
   ///
   /// In en, this message translates to:
   /// **'wipe'**
@@ -7878,7 +7878,7 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Wipe kryfo'**
+  /// **'Wipe Kryfo'**
   String get settingsWipeKryfo2;
 
   /// screens/settings_screen.dart
@@ -8130,7 +8130,7 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Why kryfo'**
+  /// **'Why Kryfo'**
   String get settingsWhyKryfo;
 
   /// screens/settings_screen.dart
@@ -8244,7 +8244,7 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Wipe kryfo from this phone'**
+  /// **'Wipe Kryfo from this phone'**
   String get settingsWipeKryfoFromThis;
 
   /// screens/shield_sheet.dart
@@ -8784,7 +8784,7 @@ abstract class AppLocalizations {
   /// screens/why_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Why kryfo'**
+  /// **'Why Kryfo'**
   String get whyKryfoWhyKryfo;
 
   /// screens/why_kryfo_screen.dart
@@ -8838,7 +8838,7 @@ abstract class AppLocalizations {
   /// screens/why_kryfo_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'No read receipts or typing tells handed to anyone, no contact list uploaded. Metadata is what most apps leak - kryfo is built not to.'**
+  /// **'No read receipts or typing tells handed to anyone, no contact list uploaded. Metadata is what most apps leak - Kryfo is built not to.'**
   String get whyKryfoNoReadReceiptsOr;
 
   /// screens/why_kryfo_screen.dart
@@ -9534,7 +9534,7 @@ abstract class AppLocalizations {
   /// widgets/kryfo_link_text.dart
   ///
   /// In en, this message translates to:
-  /// **'That link is not one kryfo can read'**
+  /// **'That link is not one Kryfo can read'**
   String get kryfoLinkTextThatLinkIsNot;
 
   /// widgets/kryfo_link_text.dart
@@ -9570,7 +9570,7 @@ abstract class AppLocalizations {
   /// widgets/kryfo_link_text.dart
   ///
   /// In en, this message translates to:
-  /// **'kryfo link'**
+  /// **'Kryfo link'**
   String get kryfoLinkTextKryfoLink;
 
   /// widgets/kryfo_link_text.dart
@@ -9612,7 +9612,7 @@ abstract class AppLocalizations {
   /// widgets/kryfo_link_text.dart
   ///
   /// In en, this message translates to:
-  /// **'You join under a key made for this room. Nobody in it sees your kryfo id.'**
+  /// **'You join under a key made for this room. Nobody in it sees your Kryfo id.'**
   String get kryfoLinkTextYouJoinUnderA;
 
   /// widgets/link_stub.dart
@@ -9786,7 +9786,7 @@ abstract class AppLocalizations {
   /// widgets/motion.dart
   ///
   /// In en, this message translates to:
-  /// **'Your ip is hidden. Only people with your kryfo can reach you.'**
+  /// **'Your ip is hidden. Only people with your Kryfo can reach you.'**
   String get motionYourIpIsHidden;
 
   /// widgets/motion.dart
@@ -9840,7 +9840,7 @@ abstract class AppLocalizations {
   /// widgets/moved_strip.dart
   ///
   /// In en, this message translates to:
-  /// **'This kryfo has moved to another device. Nothing sent from here reaches anyone.'**
+  /// **'This Kryfo has moved to another device. Nothing sent from here reaches anyone.'**
   String get movedStripThisKryfoHasMoved;
 
   /// widgets/nav_bar.dart
@@ -9918,7 +9918,7 @@ abstract class AppLocalizations {
   /// widgets/pair_code_panel.dart
   ///
   /// In en, this message translates to:
-  /// **'They open kryfo, tap add, choose pairing code and type these six digits. Make a new one for the next person.'**
+  /// **'They open Kryfo, tap add, choose pairing code and type these six digits. Make a new one for the next person.'**
   String get pairCodePanelTheyOpenKryfoTap;
 
   /// widgets/pins.dart
@@ -10419,7 +10419,7 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get confirmSheetCancel;
 
-  /// screens/bridges_screen.dart: after saving, how many bridge lines kryfo took
+  /// screens/bridges_screen.dart: after saving, how many bridge lines Kryfo took
   ///
   /// In en, this message translates to:
   /// **'{count, plural, one{{count} bridge} other{{count} bridges}}'**
@@ -10437,7 +10437,7 @@ abstract class AppLocalizations {
   /// **'Language'**
   String get languageTitle;
 
-  /// widgets/language_sheet.dart: the first choice: kryfo uses the phone's language when it has it
+  /// widgets/language_sheet.dart: the first choice: Kryfo uses the phone's language when it has it
   ///
   /// In en, this message translates to:
   /// **'Match phone'**
@@ -10461,10 +10461,10 @@ abstract class AppLocalizations {
   /// **'Language: {language}'**
   String languageButton(Object language);
 
-  /// android: the title of the notification that stays while kryfo keeps its connection open. kryfo is lowercase on purpose.
+  /// android: the title of the notification that stays while Kryfo keeps its connection open. Kryfo is lowercase on purpose.
   ///
   /// In en, this message translates to:
-  /// **'kryfo is on'**
+  /// **'Kryfo is on'**
   String get androidServiceTitle;
 
   /// android: the text of that notification
@@ -10482,7 +10482,7 @@ abstract class AppLocalizations {
   /// android: the channel's description in the phone's settings
   ///
   /// In en, this message translates to:
-  /// **'keeps kryfo connected so encrypted messages arrive while it is closed. turning this off stops delivery.'**
+  /// **'keeps Kryfo connected so encrypted messages arrive while it is closed. turning this off stops delivery.'**
   String get androidChannelDescription;
 
   /// widgets/video_viewer.dart: the play button on a video, and what a screen reader says for it
@@ -10509,7 +10509,7 @@ abstract class AppLocalizations {
   /// **'This phone can\'t play this video here.'**
   String get videoViewerCannotPlay;
 
-  /// widgets/video_viewer.dart: hands the video to another app when kryfo cannot play it
+  /// widgets/video_viewer.dart: hands the video to another app when Kryfo cannot play it
   ///
   /// In en, this message translates to:
   /// **'Open in another app'**
@@ -11172,7 +11172,7 @@ abstract class AppLocalizations {
   /// decoy PIN setup, what it does and does not do
   ///
   /// In en, this message translates to:
-  /// **'Opens an empty Kryfo, as if just installed. It holds up to a quick look through your phone. It does not hide how much space Kryfo uses, and it will not fool someone who knows your three words, who tries to message it, or who copies the phone.'**
+  /// **'Opens an empty Kryfo, as if just installed. It holds up to a quick look, not to someone who knows your three words, messages you, or copies the phone. It doesn\'t hide how much space Kryfo uses.'**
   String get flowDecoy1;
 
   /// decoy PIN setup
@@ -11184,7 +11184,7 @@ abstract class AppLocalizations {
   /// decoy PIN setup; also under the pad when choosing it
   ///
   /// In en, this message translates to:
-  /// **'Use as many digits as your PIN. The dots can be counted.'**
+  /// **'Use the same number of digits as your PIN, because anyone watching can count the dots.'**
   String get flowDecoyDigits;
 
   /// decoy PIN setup

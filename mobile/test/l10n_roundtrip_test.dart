@@ -25,10 +25,10 @@ void main() {
       l.backupThatPassphraseDoesNot,
       "That passphrase does not open this file",
     );
-    expect(l.backupThatFileIsNot, "That file is not a kryfo backup");
+    expect(l.backupThatFileIsNot, "That file is not a Kryfo backup");
     expect(
       l.backupThisBackupIsFrom,
-      "This backup is from a newer kryfo. Update the app, then try again",
+      "This backup is from a newer Kryfo. Update the app, then try again",
     );
     expect(
       l.backupThisFileIsDamaged,
@@ -38,11 +38,11 @@ void main() {
     expect(l.contactCardMessageMeOn, "Message me on");
     expect(
       l.contactCardScanItOrType,
-      "Scan it, or type the three words into kryfo.\nThis card knows nothing about you beyond that.",
+      "Scan it, or type the three words into Kryfo.\nThis card knows nothing about you beyond that.",
     );
     expect(
       l.contactCardMessageMeOnKryfo("<haloId>"),
-      "Message me on kryfo · <haloId>",
+      "Message me on Kryfo · <haloId>",
     );
     expect(l.contactStatusBlocked, "blocked");
     expect(l.contactStatusKeysVerifiedInPerson, "Keys verified in person");
@@ -264,7 +264,7 @@ void main() {
     expect(l.appStartingTor, "starting Tor");
     expect(
       l.appTimedMessagesAreNot,
-      "Timed messages are not clearing. Restart kryfo",
+      "Timed messages are not clearing. Restart Kryfo",
     );
     expect(l.appVoiceMessage2, "voice message");
     expect(l.appYou("<body>"), "you: <body>");
@@ -288,7 +288,7 @@ void main() {
       "Scan their code, or paste what they gave you: a link, an @handle, or a room link.",
     );
     expect(l.appScanTheirCode, "Scan their code");
-    expect(l.appAKryfoLinkA, "A kryfo link, a room link or @wren");
+    expect(l.appAKryfoLinkA, "A Kryfo link, a room link or @wren");
     expect(l.appAddThem, "Add them");
     expect(l.appEveryWayToAdd, "Every way to add someone");
     expect(
@@ -302,17 +302,17 @@ void main() {
     expect(l.appScanOrImportA, "scan or import a peer first");
     expect(l.appEncryptingSending30s, "Encrypting + sending (~30s)...");
     expect(l.appTapStartListeningFirst, "Tap start listening first");
-    expect(l.appYourKryfo, "Your kryfo");
+    expect(l.appYourKryfo, "Your Kryfo");
     expect(l.appUriCopied, "Uri copied");
     expect(l.appCopyUri, "Copy uri");
-    expect(l.appAddAKryfo, "Add a kryfo");
+    expect(l.appAddAKryfo, "Add a Kryfo");
     expect(l.appScanQr, "Scan qr");
     expect(l.appPairingCode, "Pairing code");
     expect(l.appOrPaste, "- or paste -");
     expect(l.commonCancel, "Cancel");
     expect(l.appImport, "Import");
     expect(l.appDev, "Dev");
-    expect(l.appYourKryfo2, "Your kryfo:");
+    expect(l.appYourKryfo2, "Your Kryfo:");
     expect(l.appRestoredFromDisk, "Restored from disk");
     expect(l.appStartListening, "Start listening");
     expect(l.appListening, "listening");
@@ -327,7 +327,7 @@ void main() {
     expect(l.appDisableAppLock, "Disable app lock?");
     expect(
       l.appThePinWillBe,
-      "The PIN will be removed. Anyone with your phone will see kryfo when they open it.",
+      "The PIN will be removed. Anyone with your phone will see Kryfo when they open it.",
     );
     expect(l.appDisable, "Disable");
     expect(l.appAppLockOn, "App lock · on →");
@@ -344,7 +344,7 @@ void main() {
     expect(l.appTorIsOffTurn, "Tor is off. Turn it on to connect privately.");
     expect(
       l.appTheFirstConnectionTakes,
-      "The first connection takes a minute or two while tor builds a private route. After that it is cached, so opening kryfo later is much faster.",
+      "The first connection takes a minute or two while tor builds a private route. After that it is cached, so opening Kryfo later is much faster.",
     );
     expect(
       l.appRelayAndFastModes,
@@ -382,16 +382,16 @@ void main() {
       l.miuiAutostartAlreadyAllowedToRun,
       "Already allowed to run in the background",
     );
-    expect(l.miuiAutostartLetKryfoRunIn, "Let kryfo run in the background");
+    expect(l.miuiAutostartLetKryfoRunIn, "Let Kryfo run in the background");
     expect(
       l.miuiAutostartYourPhonePausesApps,
-      "Your phone pauses apps to save battery. Without an exception, kryfo cannot receive messages while it is closed.",
+      "Your phone pauses apps to save battery. Without an exception, Kryfo cannot receive messages while it is closed.",
     );
     expect(l.commonAllow, "Allow");
     expect(l.commonSkip, "Skip");
     expect(
       l.miuiAutostartXiaomiTurnsOffBackground,
-      "Xiaomi turns off background apps by default. Without autostart, kryfo cannot deliver messages when the app is closed. On the next screen, find kryfo in the list and turn the toggle on.",
+      "Xiaomi turns off background apps by default. Without autostart, Kryfo cannot deliver messages when the app is closed. On the next screen, find Kryfo in the list and turn the toggle on.",
     );
     expect(l.miuiAutostartOpenSettings, "Open settings");
     expect(
@@ -515,9 +515,9 @@ void main() {
     expect(l.backupKryfoBackup, "Kryfo backup");
     expect(
       l.backupYourEncryptedKryfoBackup,
-      "Your encrypted kryfo backup. Keep both this file AND your passphrase safe - you need both to restore.",
+      "Your encrypted Kryfo backup. Keep both this file AND your passphrase safe - you need both to restore.",
     );
-    expect(l.backupBackUpKryfo, "Back up kryfo");
+    expect(l.backupBackUpKryfo, "Back up Kryfo");
     expect(l.backupBackUp, "Back up");
     expect(
       l.backupACopyToKeep,
@@ -572,7 +572,7 @@ void main() {
     expect(l.bridgesDepends, "depends");
     expect(
       l.bridgesGotABridgeLine,
-      "Got a bridge line from someone you trust, or from bridges.torproject.org? Paste it here. Obfs4 lines only, kryfo does not speak the others yet.",
+      "Got a bridge line from someone you trust, or from bridges.torproject.org? Paste it here. Obfs4 lines only, Kryfo does not speak the others yet.",
     );
     expect(l.bridgesPasteFromClipboard, "Paste from clipboard");
     expect(l.bridgesUseBridges, "Use bridges");
@@ -1043,7 +1043,7 @@ void main() {
       "Your earlier bitcoin payment was seen · supporter badge unlocked",
     );
     expect(l.donateSupport, "Support");
-    expect(l.donateKeepKryfo, "Keep kryfo *independent*");
+    expect(l.donateKeepKryfo, "Keep Kryfo *independent*");
     expect(
       l.donateNoAdsNoInvestors,
       "No ads, no investors, nothing to sell. It runs on what backers give.",
@@ -1114,7 +1114,7 @@ void main() {
     expect(l.donatePaymentConfirmed, "Payment confirmed");
     expect(
       l.donateThankYouForKeeping,
-      "Thank you for keeping kryfo independent.",
+      "Thank you for keeping Kryfo independent.",
     );
     expect(
       l.donateVerifiedOnChainYou("supporter"),
@@ -1352,7 +1352,7 @@ void main() {
     expect(l.handleForgetItOnThis, "Forget it on this phone");
     expect(l.homeAddAContact, "Add a contact");
     expect(l.commonSettings, "Settings");
-    expect(l.homeYourKryfo, "Your kryfo");
+    expect(l.homeYourKryfo, "Your Kryfo");
     expect(l.homeDateWeekday("<weekday>"), "<weekday>,");
     expect(l.homeAnHour, "an hour");
     expect(l.homeHours(0), "0 hours");
@@ -1372,21 +1372,21 @@ void main() {
     expect(l.homeReconnect, "Reconnect");
     expect(l.homeWhatIsWrong, "What is wrong");
     expect(l.homeKryfoWillCheckIn, "Kryfo will check in every 15 minutes");
-    expect(l.homeYourPhoneKeepsStopping, "Your phone keeps stopping kryfo");
+    expect(l.homeYourPhoneKeepsStopping, "Your phone keeps stopping Kryfo");
     expect(
       l.homeItHasClosedKryfo,
-      "It has closed kryfo three times today, so messages were late or waited. Check-ins survive that: kryfo wakes every 15 minutes instead of staying connected.",
+      "It has closed Kryfo three times today, so messages were late or waited. Check-ins survive that: Kryfo wakes every 15 minutes instead of staying connected.",
     );
     expect(l.homeSwitchToCheckIns, "Switch to check-ins");
     expect(l.homeNotNow, "Not now");
     expect(l.homeNotificationsAreOff, "Notifications are off");
     expect(
       l.homeAndroidIsBlockingThem,
-      "Android is blocking them, so nothing reaches you while kryfo is closed. Messages still arrive when you open it.",
+      "Android is blocking them, so nothing reaches you while Kryfo is closed. Messages still arrive when you open it.",
     );
     expect(
       l.homeCouldnTOpenIt,
-      "Couldn't open it. Look for kryfo in phone settings",
+      "Couldn't open it. Look for Kryfo in phone settings",
     );
     expect(l.homeTurnThemOn, "Turn them on");
     expect(l.homeLeaveThemOff, "Leave them off");
@@ -1497,7 +1497,7 @@ void main() {
     expect(l.homeWaitingSendingNow(2), "2 waiting · sending now");
     expect(l.homeWaitingSendingNow(5), "5 waiting · sending now");
     expect(l.commonRetry, "Retry");
-    expect(l.homeNoKryfosYet, "No kryfos yet.");
+    expect(l.homeNoKryfosYet, "No Kryfos yet.");
     expect(
       l.homeScanTheirCodeSend,
       "Scan their code, send them a link, or type the @handle they gave you.",
@@ -1784,7 +1784,7 @@ void main() {
     expect(l.modesRelay, "Relay");
     expect(
       l.modesOneSealedConnectionTo,
-      "One sealed connection to kryfo's own relay, like a vpn with nothing to log. Sends land in about a second, and it works where tor is blocked.",
+      "One sealed connection to Kryfo's own relay, like a vpn with nothing to log. Sends land in about a second, and it works where tor is blocked.",
     );
     expect(l.modesQuick, "quick");
     expect(l.modesRelayOnly, "Relay only");
@@ -1823,7 +1823,7 @@ void main() {
     expect(l.movedWipeThisPhone, "Wipe Kryfo from this phone?");
     expect(
       l.movedEverythingKryfoHoldsHere,
-      "Everything kryfo holds here goes: the messages, the contacts, the keys. The other device keeps all of it. This cannot be undone.",
+      "Everything Kryfo holds here goes: the messages, the contacts, the keys. The other device keeps all of it. This cannot be undone.",
     );
     expect(l.movedWipeIt, "Wipe it");
     expect(l.movedNotMovingAfterAll, "Not moving after all?");
@@ -1837,8 +1837,8 @@ void main() {
       l.movedKryfoWillCloseNow("<myId>"),
       "Kryfo will close now. Tap the icon to reopen as <myId>.",
     );
-    expect(l.movedReopenKryfo, "Reopen kryfo");
-    expect(l.movedThisKryfoHasMoved, "This kryfo has moved");
+    expect(l.movedReopenKryfo, "Reopen Kryfo");
+    expect(l.movedThisKryfoHasMoved, "This Kryfo has moved");
     expect(
       l.movedIsNowOnAnother("<myId>"),
       "<myId> is now on another device. This phone can still show what was here, but nothing new will arrive on it, and anything you send from here won't reach anyone.",
@@ -1850,13 +1850,13 @@ void main() {
     expect(l.myKryfoInviteCopiedClearsIn, "Invite copied · clears in 60s");
     expect(
       l.myKryfoAddMeOnKryfo("<myId>", "<uri>"),
-      "add me on kryfo. my id is <myId>\n\ntap to add me:\n<uri>\n\nkryfo is a private messenger. no phone number, no email.",
+      "Add me on Kryfo. My ID is <myId>\n\nTap to add me:\n<uri>\n\nKryfo is a private messenger. No phone number, no email.",
     );
-    expect(l.myKryfoAddMeOnKryfo2, "Add me on kryfo");
+    expect(l.myKryfoAddMeOnKryfo2, "Add me on Kryfo");
     expect(l.myKryfoAddSomeone, "Add someone");
     expect(
       l.myKryfoKryfoDoesnTScan,
-      "kryfo doesn't scan your contacts, that's the point.",
+      "Kryfo doesn't scan your contacts, that's the point.",
     );
     expect(
       l.myKryfoIfThisLinkEnds,
@@ -1864,7 +1864,7 @@ void main() {
     );
     expect(
       l.myKryfoAlreadyShareAFriend,
-      "Already share a friend on kryfo? They can introduce you both from their chat, and you skip the request.",
+      "Already share a friend on Kryfo? They can introduce you both from their chat, and you skip the request.",
     );
     expect(l.myKryfoHandleCopied, "Handle copied");
     expect(l.myKryfoTheyReHereWith, "they're here with me");
@@ -2048,7 +2048,7 @@ void main() {
     expect(l.onboardingOneQuiet, "One quiet *notification*.");
     expect(
       l.onboardingAndroidNeedsAVisible,
-      "Android needs a visible notification while an app listens in the background. That is how messages reach you when kryfo is closed.",
+      "Android needs a visible notification while an app listens in the background. That is how messages reach you when Kryfo is closed.",
     );
     expect(
       l.onboardingSilentAndAtThe,
@@ -2167,7 +2167,7 @@ void main() {
     expect(l.profileCopied("<what>"), "<what> copied");
     expect(l.profileProfile, "Profile");
     expect(l.profileChangeYourFace, "Change your face");
-    expect(l.profileKryfoId, "kryfo id");
+    expect(l.profileKryfoId, "Kryfo id");
     expect(l.profileOnionAddress, "onion address");
     expect(l.profileSupporterBadge, "Supporter badge");
     expect(
@@ -2182,12 +2182,12 @@ void main() {
     expect(l.profileLetContactsSeeIt, "Let contacts see it");
     expect(l.profileOffByDefault, "off by default");
     expect(l.profileShareConnect, "share & connect");
-    expect(l.profileMyKryfoCode, "My kryfo code");
+    expect(l.profileMyKryfoCode, "My Kryfo code");
     expect(l.profileAddContact, "Add contact");
     expect(l.profileGiveAgain, "Give again");
-    expect(l.profileSupportKryfo, "Support kryfo");
+    expect(l.profileSupportKryfo, "Support Kryfo");
     expect(l.profileKryfoRunsOnWhat, "Kryfo runs on what people give");
-    expect(l.profileKeepKryfoIndependent, "Keep kryfo independent");
+    expect(l.profileKeepKryfoIndependent, "Keep Kryfo independent");
     expect(l.qrLink, "Link");
     expect(l.qrYourLinkAsTyped, "YOUR LINK AS TYPED · NO TRACKING REDIRECT");
     expect(l.qrText, "Text");
@@ -2281,7 +2281,7 @@ void main() {
     );
     expect(l.commonAccept, "Accept");
     expect(l.requestsDecline, "Decline");
-    expect(l.restoreThatFileIsNot, "That file is not a kryfo backup");
+    expect(l.restoreThatFileIsNot, "That file is not a Kryfo backup");
     expect(
       l.restoreThisFileIsDamaged,
       "This file is damaged and cannot be read",
@@ -2311,13 +2311,13 @@ void main() {
       l.restoreKryfoWillCloseNow("<haloId>"),
       "Kryfo will close now. Tap the icon to reopen as <haloId>.",
     );
-    expect(l.restoreReopenKryfo, "Reopen kryfo");
+    expect(l.restoreReopenKryfo, "Reopen Kryfo");
     expect(
       l.restoreTheRestoreDidNot,
       "The restore did not finish. Nothing was changed",
     );
     expect(l.restoreThisIdentity, "this identity");
-    expect(l.restoreMoveYourKryfoHere, "Move your kryfo here");
+    expect(l.restoreMoveYourKryfoHere, "Move your Kryfo here");
     expect(
       l.restoreThisBackupIsRestoring("<name>"),
       "This backup is <name>. Restoring it moves that identity to this device.",
@@ -2378,7 +2378,7 @@ void main() {
     );
     expect(
       l.restoreIfThePhoneThis,
-      "If the phone this file came from is still in use, stop using kryfo on it before you carry on. Two phones on one kryfo lose messages on both.",
+      "If the phone this file came from is still in use, stop using Kryfo on it before you carry on. Two phones on one Kryfo lose messages on both.",
     );
     expect(
       l.restoreNotificationsNeedSettingUp,
@@ -2455,12 +2455,12 @@ void main() {
     );
     expect(l.savedViewInChat, "View in chat");
     expect(l.savedPhoto2, "Photo");
-    expect(l.scanThatSNotA, "that's not a kryfo qr · keep pointing");
-    expect(l.scanScanAKryfoQr, "Scan a kryfo qr");
+    expect(l.scanThatSNotA, "that's not a Kryfo qr · keep pointing");
+    expect(l.scanScanAKryfoQr, "Scan a Kryfo qr");
     expect(l.scanFlash, "Flash");
     expect(
       l.scanPointAtAKryfo,
-      "Point at a kryfo qr · nothing leaves your phone",
+      "Point at a Kryfo qr · nothing leaves your phone",
     );
     expect(l.seenWhatWeCanSee, "What we can see");
     expect(
@@ -2539,7 +2539,7 @@ void main() {
     expect(l.seenOnion, "Onion");
     expect(l.seenRelay, "Relay");
     expect(l.seenFast, "Fast");
-    expect(l.settingsWipeKryfo, "Wipe kryfo?");
+    expect(l.settingsWipeKryfo, "Wipe Kryfo?");
     expect(
       l.settingsIdentityMessagesContactsAnd,
       "Identity, messages, contacts and settings on this phone. Gone for good unless you have a backup.",
@@ -2548,7 +2548,7 @@ void main() {
     expect(l.settingsTypeWipeToConfirm("<word>"), "type '<word>' to confirm");
     expect(l.settingsTheLastStepNothing, "The last step. Nothing survives it.");
     expect(l.settingsWipeWord, "wipe");
-    expect(l.settingsWipeKryfo2, "Wipe kryfo");
+    expect(l.settingsWipeKryfo2, "Wipe Kryfo");
     expect(l.settingsYourProtections, "Your protections");
     expect(l.settingsTorRouting, "Tor routing");
     expect(l.settingsConnecting, "Connecting");
@@ -2611,7 +2611,7 @@ void main() {
       l.settingsShiftsYourPitchBefore,
       "Shifts your pitch before a voice note leaves",
     );
-    expect(l.settingsWhyKryfo, "Why kryfo");
+    expect(l.settingsWhyKryfo, "Why Kryfo");
     expect(l.settingsHowItProtectsYou, "How it protects you");
     expect(l.settingsResetMyInviteLink, "Reset my invite link");
     expect(
@@ -2642,7 +2642,7 @@ void main() {
       "Not independently audited. Pre-alpha - good for testing, not yet for high-stakes use.",
     );
     expect(l.settingsDangerZone, "Danger zone");
-    expect(l.settingsWipeKryfoFromThis, "Wipe kryfo from this phone");
+    expect(l.settingsWipeKryfoFromThis, "Wipe Kryfo from this phone");
     expect(
       l.shieldCheckedOnThisPhone,
       "Checked on this phone. Nothing was sent anywhere.",
@@ -2774,7 +2774,7 @@ void main() {
     expect(l.wallpaperYourPhoto, "your photo");
     expect(l.wallpaperFromYourPhotos, "From your photos");
     expect(l.wallpaperKeepIt, "Keep it");
-    expect(l.whyKryfoWhyKryfo, "Why kryfo");
+    expect(l.whyKryfoWhyKryfo, "Why Kryfo");
     expect(
       l.whyKryfoKryfoKreeFoGreek,
       "Kryfo · KREE-fo · greek for hidden.\nA quiet place to talk, built so no one is watching.",
@@ -2797,7 +2797,7 @@ void main() {
     expect(l.whyKryfoNothingLeaks, "nothing leaks");
     expect(
       l.whyKryfoNoReadReceiptsOr,
-      "No read receipts or typing tells handed to anyone, no contact list uploaded. Metadata is what most apps leak - kryfo is built not to.",
+      "No read receipts or typing tells handed to anyone, no contact list uploaded. Metadata is what most apps leak - Kryfo is built not to.",
     );
     expect(l.whyKryfoVerifyItIsReally, "Verify it is really them");
     expect(
@@ -3040,7 +3040,7 @@ void main() {
       l.bootFailedThisIsAFault,
       "This is a fault on this device, not the network. Tor is not involved.",
     );
-    expect(l.kryfoLinkTextThatLinkIsNot, "That link is not one kryfo can read");
+    expect(l.kryfoLinkTextThatLinkIsNot, "That link is not one Kryfo can read");
     expect(l.kryfoLinkTextAdd("<who>"), "Add <who>?");
     expect(
       l.kryfoLinkTextThisIsAnInvite("<who>"),
@@ -3049,7 +3049,7 @@ void main() {
     expect(l.kryfoLinkTextAddThem, "Add them");
     expect(l.kryfoLinkTextNotNow, "Not now");
     expect(l.kryfoLinkTextJoin("<roomName>"), "Join <roomName>");
-    expect(l.kryfoLinkTextKryfoLink, "kryfo link");
+    expect(l.kryfoLinkTextKryfoLink, "Kryfo link");
     expect(l.kryfoLinkTextAdd2("<who>"), "Add <who>");
     expect(l.kryfoLinkTextBurnerRoom, "BURNER ROOM");
     expect(l.kryfoLinkTextThisRoomHasClosed, "This room has closed");
@@ -3073,7 +3073,7 @@ void main() {
     expect(l.kryfoLinkTextJoin2, "Join");
     expect(
       l.kryfoLinkTextYouJoinUnderA,
-      "You join under a key made for this room. Nobody in it sees your kryfo id.",
+      "You join under a key made for this room. Nobody in it sees your Kryfo id.",
     );
     expect(l.linkStubFetchedOverTorBy, "Fetched over tor · by your device");
     expect(
@@ -3120,7 +3120,7 @@ void main() {
     );
     expect(
       l.motionYourIpIsHidden,
-      "Your ip is hidden. Only people with your kryfo can reach you.",
+      "Your ip is hidden. Only people with your Kryfo can reach you.",
     );
     expect(l.motionBuilding2, "building");
     expect(l.motionOpen, "open");
@@ -3132,7 +3132,7 @@ void main() {
     expect(l.motion3Hops, "3 hops");
     expect(
       l.movedStripThisKryfoHasMoved,
-      "This kryfo has moved to another device. Nothing sent from here reaches anyone.",
+      "This Kryfo has moved to another device. Nothing sent from here reaches anyone.",
     );
     expect(l.navBarChats, "Chats");
     expect(l.navBarTools, "Tools");
@@ -3154,7 +3154,7 @@ void main() {
     );
     expect(
       l.pairCodePanelTheyOpenKryfoTap,
-      "They open kryfo, tap add, choose pairing code and type these six digits. Make a new one for the next person.",
+      "They open Kryfo, tap add, choose pairing code and type these six digits. Make a new one for the next person.",
     );
     expect(l.pinsPinnedMessages("<count>"), "Pinned messages · <count>");
     expect(l.pinsPinnedMessages2, "Pinned messages");
@@ -3318,7 +3318,7 @@ void main() {
       "Kryfo redraws in the new language and opens on your chats.",
     );
     expect(l.languageButton("<language>"), "Language: <language>");
-    expect(l.androidServiceTitle, "kryfo is on");
+    expect(l.androidServiceTitle, "Kryfo is on");
     expect(
       l.androidServiceText,
       "your encrypted line stays open so messages arrive",
@@ -3326,7 +3326,7 @@ void main() {
     expect(l.androidChannelName, "staying connected");
     expect(
       l.androidChannelDescription,
-      "keeps kryfo connected so encrypted messages arrive while it is closed. turning this off stops delivery.",
+      "keeps Kryfo connected so encrypted messages arrive while it is closed. turning this off stops delivery.",
     );
     expect(l.videoViewerPlay, "Play");
     expect(l.videoViewerPause, "Pause");

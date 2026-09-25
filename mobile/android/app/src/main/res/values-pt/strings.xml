@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- written by tool/arb_android.py from lib/l10n/app_pt.arb -->
 <resources>
-    <string name="service_title">o kryfo está ativo</string>
+    <string name="service_title">o Kryfo está ativo</string>
     <string name="service_text">sua linha criptografada fica aberta para as mensagens chegarem</string>
     <string name="channel_name">mantendo a conexão</string>
-    <string name="channel_description">mantém o kryfo conectado para que mensagens criptografadas cheguem enquanto ele está fechado. desativar isto interrompe a entrega.</string>
+    <string name="channel_description">mantém o Kryfo conectado para que mensagens criptografadas cheguem enquanto ele está fechado. desativar isto interrompe a entrega.</string>
 </resources>
