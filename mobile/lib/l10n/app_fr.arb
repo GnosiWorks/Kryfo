@@ -922,7 +922,7 @@
   "movedIMNotMoving": "Finalement, je ne pars pas",
   "myKryfoAHandleIs3": "Un pseudo fait de 3 à 20 lettres, chiffres ou _",
   "myKryfoInviteCopiedClearsIn": "Invitation copiée · effacée dans 60 s",
-  "myKryfoAddMeOnKryfo": "Ajoutez-moi sur Kryfo. Mon ID Kryfo est {myId}\n\nTouchez pour m’ajouter :\n{uri}\n\nKryfo est une messagerie privée. Pas de numéro de téléphone, pas d’e-mail.",
+  "myKryfoAddMeOnKryfo": "Ajoutez-moi sur Kryfo. Mon ID Kryfo est {myId}\n\nTouchez pour m’ajouter :\n{uri}\n\nKryfo est une messagerie privée. Pas de numéro de téléphone, pas d’e-mail.",
   "myKryfoAddMeOnKryfo2": "Ajoutez-moi sur Kryfo",
   "myKryfoAddSomeone": "Ajouter quelqu’un",
   "myKryfoKryfoDoesnTScan": "Kryfo ne scanne pas vos contacts, c’est tout l’intérêt.",

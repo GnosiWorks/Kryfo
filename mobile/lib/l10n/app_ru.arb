@@ -1079,7 +1079,7 @@
   "pinsUnlockWithFingerprint": "Разблокировка отпечатком",
   "pinsWipePin": "PIN для стирания",
   "pinsNeedsAPinFirst": "Сначала нужен PIN-код",
-  "pinsSet": "Задан",
+  "pinsSet": "Задано",
   "pinsChangeWipePin": "Сменить PIN для стирания",
   "pinsSetAWipePin": "Задать PIN для стирания",
   "pinsRemove": "Удалить",

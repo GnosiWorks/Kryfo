@@ -7006,7 +7006,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get flowDecoy1 =>
-      'Abre un Kryfo vacío, como recién instalado. Aguanta un vistazo rápido, pero no a quien conozca tus tres palabras, te escriba o copie el teléfono. No oculta cuánto espacio ocupa Kryfo.';
+      'Abre un Kryfo vacío, como recién instalado. Resiste un vistazo rápido, pero no a quien conozca tus tres palabras, te escriba o copie el teléfono. No oculta cuánto espacio ocupa Kryfo.';
 
   @override
   String get flowDecoyFinger =>

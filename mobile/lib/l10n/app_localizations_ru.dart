@@ -4212,7 +4212,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pinsNeedsAPinFirst => 'Сначала нужен PIN-код';
 
   @override
-  String get pinsSet => 'Задан';
+  String get pinsSet => 'Задано';
 
   @override
   String get pinsChangeWipePin => 'Сменить PIN для стирания';

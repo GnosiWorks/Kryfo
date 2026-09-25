@@ -3601,7 +3601,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'مرا در Kryfo اضافه کنید. شناسه‌ی من ⁨$myId⁩ است\n\nبرای افزودن من بزنید:\n⁨$uri⁩\n\nKryfo یک پیام‌رسان خصوصی است. بدون شماره تلفن، بدون ایمیل.';
+    return 'مرا در Kryfo اضافه کنید. شناسه‌ی من ⁨$myId⁩ است\n\nبرای افزودن من بزنید:\n⁨$uri⁩\n\nبرنامه‌ی Kryfo یک پیام‌رسان خصوصی است. بدون شماره تلفن، بدون ایمیل.';
   }
 
   @override

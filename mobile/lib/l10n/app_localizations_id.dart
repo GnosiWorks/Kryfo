@@ -4122,7 +4122,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get pinsNeedsAPinFirst => 'Perlu PIN dulu';
 
   @override
-  String get pinsSet => 'Diatur';
+  String get pinsSet => 'Sudah dibuat';
 
   @override
   String get pinsChangeWipePin => 'Ganti PIN penghapus';

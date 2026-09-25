@@ -1079,7 +1079,7 @@
   "pinsUnlockWithFingerprint": "Parmak iziyle kilidi aç",
   "pinsWipePin": "Silme PIN’i",
   "pinsNeedsAPinFirst": "Önce PIN gerekir",
-  "pinsSet": "Ayarlı",
+  "pinsSet": "Belirlendi",
   "pinsChangeWipePin": "Silme PIN’ini değiştir",
   "pinsSetAWipePin": "Silme PIN’i belirle",
   "pinsRemove": "Kaldır",

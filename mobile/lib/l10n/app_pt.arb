@@ -1841,7 +1841,7 @@
   "flowWipeDone": "PIN de apagamento definido",
   "flowWipeDoneLine": "Nada na tela de bloqueio mostra que ele existe.",
   "flowDecoyTitle": "Um PIN de disfarce",
-  "flowDecoy1": "Abre um Kryfo vazio, como se acabasse de ser instalado. Aguenta uma olhada rápida, mas não quem conhece suas três palavras, manda mensagem para você ou copia o celular. Não esconde quanto espaço o Kryfo ocupa.",
+  "flowDecoy1": "Abre um Kryfo vazio, como se acabasse de ser instalado. Resiste a uma olhada rápida, mas não a quem conhece suas três palavras, manda mensagem para você ou copia o celular. Não esconde quanto espaço o Kryfo ocupa.",
   "flowDecoyFinger": "Sua digital abre seu Kryfo de verdade. Se alguém puder obrigar você a usá-la, desative a digital.",
   "flowDecoyDigits": "Use o mesmo número de dígitos do seu PIN, porque quem estiver olhando pode contar os pontos.",
   "flowDecoyShade": "As notificações que já estão na barra já foram vistas. Enquanto o disfarce estiver aberto, nenhuma nova aparece.",

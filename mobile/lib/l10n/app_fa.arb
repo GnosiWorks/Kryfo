@@ -922,7 +922,7 @@
   "movedIMNotMoving": "منصرف شدم، منتقل نمی‌شوم",
   "myKryfoAHandleIs3": "نام کاربری ۳ تا ۲۰ حرف انگلیسی، رقم یا _ است",
   "myKryfoInviteCopiedClearsIn": "دعوت کپی شد · ۶۰ ثانیه‌ی دیگر از بریده‌دان حذف می‌شود",
-  "myKryfoAddMeOnKryfo": "مرا در Kryfo اضافه کنید. شناسه‌ی من ⁨{myId}⁩ است\n\nبرای افزودن من بزنید:\n⁨{uri}⁩\n\nKryfo یک پیام‌رسان خصوصی است. بدون شماره تلفن، بدون ایمیل.",
+  "myKryfoAddMeOnKryfo": "مرا در Kryfo اضافه کنید. شناسه‌ی من ⁨{myId}⁩ است\n\nبرای افزودن من بزنید:\n⁨{uri}⁩\n\nبرنامه‌ی Kryfo یک پیام‌رسان خصوصی است. بدون شماره تلفن، بدون ایمیل.",
   "myKryfoAddMeOnKryfo2": "مرا در Kryfo اضافه کنید",
   "myKryfoAddSomeone": "افزودن یک نفر",
   "myKryfoKryfoDoesnTScan": "Kryfo مخاطبان شما را اسکن نمی‌کند، نکته همین است.",

@@ -3623,7 +3623,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Ajoutez-moi sur Kryfo. Mon ID Kryfo est $myId\n\nTouchez pour m’ajouter :\n$uri\n\nKryfo est une messagerie privée. Pas de numéro de téléphone, pas d’e-mail.';
+    return 'Ajoutez-moi sur Kryfo. Mon ID Kryfo est $myId\n\nTouchez pour m’ajouter :\n$uri\n\nKryfo est une messagerie privée. Pas de numéro de téléphone, pas d’e-mail.';
   }
 
   @override

@@ -4212,7 +4212,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pinsNeedsAPinFirst => 'يلزم رمز PIN أولًا';
 
   @override
-  String get pinsSet => 'مُعيَّن';
+  String get pinsSet => 'تم التعيين';
 
   @override
   String get pinsChangeWipePin => 'تغيير رمز PIN للمسح';

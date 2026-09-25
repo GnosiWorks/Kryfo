@@ -1079,7 +1079,7 @@
   "pinsUnlockWithFingerprint": "فتح القفل بالبصمة",
   "pinsWipePin": "رمز PIN للمسح",
   "pinsNeedsAPinFirst": "يلزم رمز PIN أولًا",
-  "pinsSet": "مُعيَّن",
+  "pinsSet": "تم التعيين",
   "pinsChangeWipePin": "تغيير رمز PIN للمسح",
   "pinsSetAWipePin": "تعيين رمز PIN للمسح",
   "pinsRemove": "إزالة",

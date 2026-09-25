@@ -4147,7 +4147,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pinsNeedsAPinFirst => 'Önce PIN gerekir';
 
   @override
-  String get pinsSet => 'Ayarlı';
+  String get pinsSet => 'Belirlendi';
 
   @override
   String get pinsChangeWipePin => 'Silme PIN’ini değiştir';
