@@ -2,6 +2,30 @@
 
 All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.4.0] - 2026-09-25
+
+### Added
+- polls in groups and rooms. ask a question with two to twelve answers, one to pick or several. votes arrive like reactions and the bars glide to their new share; you can change your vote, see who voted for what, and whoever asked can close the poll with its final count. a poll in a timed chat burns like any other message.
+- search across all your chats, from the bar at the top of home or a pull down on the list: names first, then messages by chat with the words lit, and photos, videos, files and links on their own. a tap opens the chat at the message. the index is kept inside the encrypted database, older history fills in the background, and a timed message leaves it when it burns. nothing you search for leaves the phone.
+- being found by your handle is a choice of its own: "show me in search" on the handle screen, off unless you turn it on, with an optional name. people search asks the registry over tor, and only when you type @ or tap to look. this needs the registry's update, which is not live yet; until it is, both say they could not reach it.
+- the language sheet: every language by its own name, with its name in the one kryfo is in.
+
+### Changed
+- a message that goes, by its timer, by unsend, or deleted by the other side, burns away and its row folds shut, so the rest of the chat closes the gap instead of jumping.
+- messages that pop up at the top of the screen drop in and can be flicked away.
+- words keep their own direction: english in the arabic app ends in its own question mark, persian in the english app starts on the right, in messages, polls, search and while you type.
+
+### Fixed
+- in search, a person could only be opened by tapping their picture.
+- sheets with the keyboard up slid under the status bar.
+- adding someone by a handle nobody has, and the errors from claiming a handle, were shown in english whatever the language.
+- a few buttons were written in lowercase.
+
+## [0.3.1] - 2026-09-25
+
+### Security
+- a security fix. update when you can.
+
 ## [0.3.0] - 2026-09-24
 
 0.2.11 and 0.2.12 were never released, so this is everything since 0.2.10.

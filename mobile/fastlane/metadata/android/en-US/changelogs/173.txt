@@ -1,0 +1,5 @@
+New: polls in groups and rooms. Search across all your chats, done on your phone. Being found by your handle is now a separate choice, off unless you turn it on.
+
+Better: a message that goes burns away and the chat closes the gap smoothly. Words keep their own direction in Arabic and Persian.
+
+Security: the fix from 0.3.1 is in too.

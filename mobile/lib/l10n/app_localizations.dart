@@ -8232,7 +8232,7 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'0.3.0 · alpha'**
+  /// **'0.4.0 · alpha'**
   String get settings030Alpha;
 
   /// screens/settings_screen.dart
