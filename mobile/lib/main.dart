@@ -69,6 +69,7 @@ import 'mentions.dart';
 import 'handle_lookup.dart';
 import 'widgets/sheet_handle.dart';
 import 'widgets/halo_sheet.dart';
+import 'bidi_safe.dart';
 import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
 import 'l10n/app_locale.dart';
@@ -2224,7 +2225,9 @@ class HaloDb {
     await db.insert('messages', {
       'peer_id': peerId,
       'direction': direction,
-      'plaintext': plaintext,
+      // your own words too (a pasted caption, a forward): no direction
+      // controls reach the screen from here (bidi_safe.dart)
+      'plaintext': unmarked(plaintext),
       'sent_at': DateTime.now().millisecondsSinceEpoch,
       'burn_at': burnAt,
       'burn_secs': burnSecs,
@@ -2233,7 +2236,7 @@ class HaloDb {
       'group_id': groupId,
       'media_path': mediaPath,
       'file_path': filePath,
-      'file_name': fileName,
+      'file_name': fileName == null ? null : unmarked(fileName),
       'voice_disguised': voiceDisguised ? 1 : 0,
       'preview': preview,
       'saved': saved ? 1 : 0,
@@ -2980,7 +2983,7 @@ class HaloDb {
     final db = await open();
     await db.update(
       'messages',
-      {'plaintext': newText, 'edited': 1},
+      {'plaintext': unmarked(newText), 'edited': 1},
       where: 'msg_uid = ?',
       whereArgs: [msgUid],
     );
