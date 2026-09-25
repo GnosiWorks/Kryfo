@@ -1545,7 +1545,7 @@
   "@cameraTakeAPhoto": {
     "description": "screens/camera_screen.dart"
   },
-  "cameraKeepACopy": "keep a copy",
+  "cameraKeepACopy": "Keep a copy",
   "@cameraKeepACopy": {
     "description": "screens/camera_screen.dart"
   },
@@ -2820,7 +2820,7 @@
       }
     }
   },
-  "donateOpenWallet": "open wallet",
+  "donateOpenWallet": "Open wallet",
   "@donateOpenWallet": {
     "description": "screens/donate_screen.dart"
   },
@@ -2865,7 +2865,7 @@
       }
     }
   },
-  "donateWearMyBadge": "wear my badge",
+  "donateWearMyBadge": "Wear my badge",
   "@donateWearMyBadge": {
     "description": "screens/donate_screen.dart"
   },
@@ -5205,7 +5205,7 @@
   "@pinsSetAWipePin": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsRemove": "remove",
+  "pinsRemove": "Remove",
   "@pinsRemove": {
     "description": "screens/pins_screen.dart"
   },
@@ -8075,7 +8075,7 @@
   "@cameraVideo": {
     "description": "screens/camera_screen.dart"
   },
-  "cameraRetake": "retake",
+  "cameraRetake": "Retake",
   "@cameraRetake": {
     "description": "screens/camera_screen.dart"
   },
@@ -8087,7 +8087,7 @@
   "@donateAddress": {
     "description": "screens/donate_screen.dart"
   },
-  "donateCopy": "copy",
+  "donateCopy": "Copy",
   "@donateCopy": {
     "description": "screens/donate_screen.dart"
   },
@@ -8107,15 +8107,15 @@
   "@donateTierGuardian": {
     "description": "screens/donate_screen.dart"
   },
-  "chatBlock": "block",
+  "chatBlock": "Block",
   "@chatBlock": {
     "description": "screens/chat_screen.dart"
   },
-  "chatDecline": "decline",
+  "chatDecline": "Decline",
   "@chatDecline": {
     "description": "screens/chat_screen.dart"
   },
-  "chatAccept": "accept",
+  "chatAccept": "Accept",
   "@chatAccept": {
     "description": "screens/chat_screen.dart"
   },
@@ -8139,7 +8139,7 @@
   "@restoreAttachments": {
     "description": "screens/restore_screen.dart"
   },
-  "shieldBlock": "block",
+  "shieldBlock": "Block",
   "@shieldBlock": {
     "description": "screens/shield_sheet.dart"
   },
@@ -8147,7 +8147,7 @@
   "@shieldDelete": {
     "description": "screens/shield_sheet.dart"
   },
-  "shieldIgnore": "ignore",
+  "shieldIgnore": "Ignore",
   "@shieldIgnore": {
     "description": "screens/shield_sheet.dart"
   },

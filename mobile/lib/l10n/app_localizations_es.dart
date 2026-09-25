@@ -1234,7 +1234,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cameraTakeAPhoto => 'Tomar una foto';
 
   @override
-  String get cameraKeepACopy => 'guardar una copia';
+  String get cameraKeepACopy => 'Guardar una copia';
 
   @override
   String get cameraUseThis => 'Usar';
@@ -2236,7 +2236,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get donateOpenWallet => 'abrir billetera';
+  String get donateOpenWallet => 'Abrir billetera';
 
   @override
   String get donateThisScreenUpdatesItself =>
@@ -2282,7 +2282,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get donateWearMyBadge => 'llevar mi insignia';
+  String get donateWearMyBadge => 'Llevar mi insignia';
 
   @override
   String get donateJustGladToHelp => 'Solo quiero ayudar';
@@ -4189,7 +4189,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get pinsSetAWipePin => 'Elegir un PIN de borrado';
 
   @override
-  String get pinsRemove => 'quitar';
+  String get pinsRemove => 'Quitar';
 
   @override
   String get pinsRemoveTheWipePin => '¿Quitar el PIN de borrado?';
@@ -6408,7 +6408,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cameraVideo => 'video';
 
   @override
-  String get cameraRetake => 'repetir';
+  String get cameraRetake => 'Repetir';
 
   @override
   String get seenIntroductions => 'presentaciones';
@@ -6417,7 +6417,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get donateAddress => 'dirección';
 
   @override
-  String get donateCopy => 'copiar';
+  String get donateCopy => 'Copiar';
 
   @override
   String get donateDone => 'Listo';
@@ -6432,13 +6432,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get donateTierGuardian => 'guardián';
 
   @override
-  String get chatBlock => 'bloquear';
+  String get chatBlock => 'Bloquear';
 
   @override
-  String get chatDecline => 'rechazar';
+  String get chatDecline => 'Rechazar';
 
   @override
-  String get chatAccept => 'aceptar';
+  String get chatAccept => 'Aceptar';
 
   @override
   String get bridgesConnecting => 'conectando';
@@ -6456,13 +6456,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get restoreAttachments => 'adjuntos';
 
   @override
-  String get shieldBlock => 'bloquear';
+  String get shieldBlock => 'Bloquear';
 
   @override
   String get shieldDelete => 'Eliminar';
 
   @override
-  String get shieldIgnore => 'ignorar';
+  String get shieldIgnore => 'Ignorar';
 
   @override
   String get profileIdentity => 'identidad';

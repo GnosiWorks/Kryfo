@@ -1216,7 +1216,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get cameraTakeAPhoto => 'Ambil foto';
 
   @override
-  String get cameraKeepACopy => 'simpan salinan';
+  String get cameraKeepACopy => 'Simpan salinan';
 
   @override
   String get cameraUseThis => 'Pakai ini';
@@ -2209,7 +2209,7 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get donateOpenWallet => 'buka dompet';
+  String get donateOpenWallet => 'Buka dompet';
 
   @override
   String get donateThisScreenUpdatesItself =>
@@ -2255,7 +2255,7 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get donateWearMyBadge => 'pakai lencanaku';
+  String get donateWearMyBadge => 'Pakai lencanaku';
 
   @override
   String get donateJustGladToHelp => 'Senang bisa membantu';
@@ -4150,7 +4150,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get pinsSetAWipePin => 'Buat PIN penghapus';
 
   @override
-  String get pinsRemove => 'hapus';
+  String get pinsRemove => 'Hapus';
 
   @override
   String get pinsRemoveTheWipePin => 'Hapus PIN penghapus?';
@@ -6355,7 +6355,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get cameraVideo => 'video';
 
   @override
-  String get cameraRetake => 'ulangi';
+  String get cameraRetake => 'Ulangi';
 
   @override
   String get seenIntroductions => 'perkenalan';
@@ -6364,7 +6364,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get donateAddress => 'alamat';
 
   @override
-  String get donateCopy => 'salin';
+  String get donateCopy => 'Salin';
 
   @override
   String get donateDone => 'Selesai';
@@ -6379,13 +6379,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get donateTierGuardian => 'penjaga';
 
   @override
-  String get chatBlock => 'blokir';
+  String get chatBlock => 'Blokir';
 
   @override
-  String get chatDecline => 'tolak';
+  String get chatDecline => 'Tolak';
 
   @override
-  String get chatAccept => 'terima';
+  String get chatAccept => 'Terima';
 
   @override
   String get bridgesConnecting => 'menghubungkan';
@@ -6403,13 +6403,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get restoreAttachments => 'lampiran';
 
   @override
-  String get shieldBlock => 'blokir';
+  String get shieldBlock => 'Blokir';
 
   @override
   String get shieldDelete => 'Hapus';
 
   @override
-  String get shieldIgnore => 'abaikan';
+  String get shieldIgnore => 'Abaikan';
 
   @override
   String get profileIdentity => 'identitas';

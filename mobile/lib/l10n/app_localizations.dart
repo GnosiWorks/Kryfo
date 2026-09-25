@@ -1944,7 +1944,7 @@ abstract class AppLocalizations {
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'keep a copy'**
+  /// **'Keep a copy'**
   String get cameraKeepACopy;
 
   /// screens/camera_screen.dart
@@ -3552,7 +3552,7 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'open wallet'**
+  /// **'Open wallet'**
   String get donateOpenWallet;
 
   /// screens/donate_screen.dart
@@ -3612,7 +3612,7 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'wear my badge'**
+  /// **'Wear my badge'**
   String get donateWearMyBadge;
 
   /// screens/donate_screen.dart
@@ -6654,7 +6654,7 @@ abstract class AppLocalizations {
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'remove'**
+  /// **'Remove'**
   String get pinsRemove;
 
   /// screens/pins_screen.dart
@@ -10158,7 +10158,7 @@ abstract class AppLocalizations {
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'retake'**
+  /// **'Retake'**
   String get cameraRetake;
 
   /// screens/seen_screen.dart
@@ -10176,7 +10176,7 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'copy'**
+  /// **'Copy'**
   String get donateCopy;
 
   /// screens/donate_screen.dart
@@ -10206,19 +10206,19 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'block'**
+  /// **'Block'**
   String get chatBlock;
 
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'decline'**
+  /// **'Decline'**
   String get chatDecline;
 
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'accept'**
+  /// **'Accept'**
   String get chatAccept;
 
   /// screens/bridges_screen.dart
@@ -10254,7 +10254,7 @@ abstract class AppLocalizations {
   /// screens/shield_sheet.dart
   ///
   /// In en, this message translates to:
-  /// **'block'**
+  /// **'Block'**
   String get shieldBlock;
 
   /// screens/shield_sheet.dart
@@ -10266,7 +10266,7 @@ abstract class AppLocalizations {
   /// screens/shield_sheet.dart
   ///
   /// In en, this message translates to:
-  /// **'ignore'**
+  /// **'Ignore'**
   String get shieldIgnore;
 
   /// screens/profile_screen.dart

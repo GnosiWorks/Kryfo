@@ -2281,7 +2281,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get donateWearMyBadge => 'mein Abzeichen zeigen';
+  String get donateWearMyBadge => 'Mein Abzeichen zeigen';
 
   @override
   String get donateJustGladToHelp => 'Ich helfe einfach gern';
@@ -4204,7 +4204,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pinsSetAWipePin => 'Lösch-PIN festlegen';
 
   @override
-  String get pinsRemove => 'entfernen';
+  String get pinsRemove => 'Entfernen';
 
   @override
   String get pinsRemoveTheWipePin => 'Lösch-PIN entfernen?';
@@ -6426,7 +6426,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get cameraVideo => 'Video';
 
   @override
-  String get cameraRetake => 'neu aufnehmen';
+  String get cameraRetake => 'Neu aufnehmen';
 
   @override
   String get seenIntroductions => 'Vorstellungen';
@@ -6435,7 +6435,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get donateAddress => 'Adresse';
 
   @override
-  String get donateCopy => 'kopieren';
+  String get donateCopy => 'Kopieren';
 
   @override
   String get donateDone => 'Fertig';
@@ -6450,13 +6450,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get donateTierGuardian => 'Hüter';
 
   @override
-  String get chatBlock => 'blockieren';
+  String get chatBlock => 'Blockieren';
 
   @override
-  String get chatDecline => 'ablehnen';
+  String get chatDecline => 'Ablehnen';
 
   @override
-  String get chatAccept => 'annehmen';
+  String get chatAccept => 'Annehmen';
 
   @override
   String get bridgesConnecting => 'verbinde';
@@ -6474,13 +6474,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get restoreAttachments => 'Anhänge';
 
   @override
-  String get shieldBlock => 'blockieren';
+  String get shieldBlock => 'Blockieren';
 
   @override
   String get shieldDelete => 'Löschen';
 
   @override
-  String get shieldIgnore => 'ignorieren';
+  String get shieldIgnore => 'Ignorieren';
 
   @override
   String get profileIdentity => 'Identität';

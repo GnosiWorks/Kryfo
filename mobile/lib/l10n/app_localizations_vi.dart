@@ -1215,7 +1215,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get cameraTakeAPhoto => 'Chụp ảnh';
 
   @override
-  String get cameraKeepACopy => 'giữ một bản';
+  String get cameraKeepACopy => 'Giữ một bản';
 
   @override
   String get cameraUseThis => 'Dùng bản này';
@@ -2204,7 +2204,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get donateOpenWallet => 'mở ví';
+  String get donateOpenWallet => 'Mở ví';
 
   @override
   String get donateThisScreenUpdatesItself =>
@@ -2250,7 +2250,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get donateWearMyBadge => 'đeo huy hiệu của tôi';
+  String get donateWearMyBadge => 'Đeo huy hiệu của tôi';
 
   @override
   String get donateJustGladToHelp => 'Vui vì giúp được';
@@ -4144,7 +4144,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pinsSetAWipePin => 'Đặt mã PIN xóa sạch';
 
   @override
-  String get pinsRemove => 'gỡ bỏ';
+  String get pinsRemove => 'Gỡ bỏ';
 
   @override
   String get pinsRemoveTheWipePin => 'Gỡ mã PIN xóa sạch?';
@@ -6342,7 +6342,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get cameraVideo => 'video';
 
   @override
-  String get cameraRetake => 'chụp lại';
+  String get cameraRetake => 'Chụp lại';
 
   @override
   String get seenIntroductions => 'lời giới thiệu';
@@ -6351,7 +6351,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get donateAddress => 'địa chỉ';
 
   @override
-  String get donateCopy => 'sao chép';
+  String get donateCopy => 'Sao chép';
 
   @override
   String get donateDone => 'Xong';
@@ -6366,13 +6366,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get donateTierGuardian => 'người bảo hộ';
 
   @override
-  String get chatBlock => 'chặn';
+  String get chatBlock => 'Chặn';
 
   @override
-  String get chatDecline => 'từ chối';
+  String get chatDecline => 'Từ chối';
 
   @override
-  String get chatAccept => 'chấp nhận';
+  String get chatAccept => 'Chấp nhận';
 
   @override
   String get bridgesConnecting => 'đang kết nối';
@@ -6390,13 +6390,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get restoreAttachments => 'tệp đính kèm';
 
   @override
-  String get shieldBlock => 'chặn';
+  String get shieldBlock => 'Chặn';
 
   @override
   String get shieldDelete => 'Xóa';
 
   @override
-  String get shieldIgnore => 'bỏ qua';
+  String get shieldIgnore => 'Bỏ qua';
 
   @override
   String get profileIdentity => 'danh tính';

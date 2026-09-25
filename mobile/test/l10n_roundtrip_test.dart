@@ -632,7 +632,7 @@ void main() {
     expect(l.cameraStopRecording, "Stop recording");
     expect(l.cameraStartRecording, "Start recording");
     expect(l.cameraTakeAPhoto, "Take a photo");
-    expect(l.cameraKeepACopy, "keep a copy");
+    expect(l.cameraKeepACopy, "Keep a copy");
     expect(l.cameraUseThis, "Use this");
     expect(l.chatB("<bytes>"), "<bytes> b");
     expect(l.chatKb("<bytes>"), "<bytes> kb");
@@ -1098,7 +1098,7 @@ void main() {
       l.donateSendExactlyThisAmount("<fmtLeft>"),
       "Send exactly this amount · expires in <fmtLeft>",
     );
-    expect(l.donateOpenWallet, "open wallet");
+    expect(l.donateOpenWallet, "Open wallet");
     expect(
       l.donateThisScreenUpdatesItself,
       "This screen updates itself the moment your payment is seen.\nKeep it open - nothing is stored, nothing identifies you.",
@@ -1132,7 +1132,7 @@ void main() {
       l.donateVerifiedOnChainYou("other"),
       "verified on-chain - you're a supporter now. No one can take that off you.",
     );
-    expect(l.donateWearMyBadge, "wear my badge");
+    expect(l.donateWearMyBadge, "Wear my badge");
     expect(l.donateJustGladToHelp, "Just glad to help");
     expect(l.gettingMessagesGettingMessages, "Getting messages");
     expect(
@@ -2164,7 +2164,7 @@ void main() {
     expect(l.pinsTheSecondPinWipes, "The second pin wipes everything.");
     expect(l.pinsChangeWipePin, "Change wipe pin");
     expect(l.pinsSetAWipePin, "Set a wipe pin");
-    expect(l.pinsRemove, "remove");
+    expect(l.pinsRemove, "Remove");
     expect(l.pinsRemoveTheWipePin, "Remove the wipe pin?");
     expect(
       l.pinsTheLockScreenKeeps,
@@ -3246,25 +3246,25 @@ void main() {
     expect(l.cameraFlash, "flash");
     expect(l.cameraPhoto, "photo");
     expect(l.cameraVideo, "video");
-    expect(l.cameraRetake, "retake");
+    expect(l.cameraRetake, "Retake");
     expect(l.seenIntroductions, "introductions");
     expect(l.donateAddress, "address");
-    expect(l.donateCopy, "copy");
+    expect(l.donateCopy, "Copy");
     expect(l.donateDone, "Done");
     expect(l.donateTierSupporter, "supporter");
     expect(l.donateTierPatron, "patron");
     expect(l.donateTierGuardian, "guardian");
-    expect(l.chatBlock, "block");
-    expect(l.chatDecline, "decline");
-    expect(l.chatAccept, "accept");
+    expect(l.chatBlock, "Block");
+    expect(l.chatDecline, "Decline");
+    expect(l.chatAccept, "Accept");
     expect(l.bridgesConnecting, "connecting");
     expect(l.restoreMade, "made");
     expect(l.restoreContacts, "contacts");
     expect(l.restoreMessages, "messages");
     expect(l.restoreAttachments, "attachments");
-    expect(l.shieldBlock, "block");
+    expect(l.shieldBlock, "Block");
     expect(l.shieldDelete, "Delete");
-    expect(l.shieldIgnore, "ignore");
+    expect(l.shieldIgnore, "Ignore");
     expect(l.profileIdentity, "identity");
     expect(l.avatarPickerShape, "Shape");
     expect(l.avatarPickerColour, "Colour");

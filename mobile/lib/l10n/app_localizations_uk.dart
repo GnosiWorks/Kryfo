@@ -1256,7 +1256,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get cameraTakeAPhoto => 'Зробити фото';
 
   @override
-  String get cameraKeepACopy => 'зберегти копію';
+  String get cameraKeepACopy => 'Зберегти копію';
 
   @override
   String get cameraUseThis => 'Використати';
@@ -2263,7 +2263,7 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get donateOpenWallet => 'відкрити гаманець';
+  String get donateOpenWallet => 'Відкрити гаманець';
 
   @override
   String get donateThisScreenUpdatesItself =>
@@ -2309,7 +2309,7 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get donateWearMyBadge => 'носити значок';
+  String get donateWearMyBadge => 'Носити значок';
 
   @override
   String get donateJustGladToHelp => 'Просто хочу допомогти';
@@ -4229,7 +4229,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get pinsSetAWipePin => 'Задати PIN для стирання';
 
   @override
-  String get pinsRemove => 'прибрати';
+  String get pinsRemove => 'Прибрати';
 
   @override
   String get pinsRemoveTheWipePin => 'Прибрати PIN для стирання?';
@@ -6469,7 +6469,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get cameraVideo => 'відео';
 
   @override
-  String get cameraRetake => 'перезняти';
+  String get cameraRetake => 'Перезняти';
 
   @override
   String get seenIntroductions => 'знайомства';
@@ -6478,7 +6478,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get donateAddress => 'адреса';
 
   @override
-  String get donateCopy => 'копіювати';
+  String get donateCopy => 'Копіювати';
 
   @override
   String get donateDone => 'Готово';
@@ -6493,13 +6493,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String get donateTierGuardian => 'хранитель';
 
   @override
-  String get chatBlock => 'заблокувати';
+  String get chatBlock => 'Заблокувати';
 
   @override
-  String get chatDecline => 'відхилити';
+  String get chatDecline => 'Відхилити';
 
   @override
-  String get chatAccept => 'прийняти';
+  String get chatAccept => 'Прийняти';
 
   @override
   String get bridgesConnecting => 'підключення';
@@ -6517,13 +6517,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String get restoreAttachments => 'вкладення';
 
   @override
-  String get shieldBlock => 'заблокувати';
+  String get shieldBlock => 'Заблокувати';
 
   @override
   String get shieldDelete => 'Видалити';
 
   @override
-  String get shieldIgnore => 'ігнорувати';
+  String get shieldIgnore => 'Ігнорувати';
 
   @override
   String get profileIdentity => 'ідентичність';

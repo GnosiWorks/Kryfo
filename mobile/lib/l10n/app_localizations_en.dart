@@ -1225,7 +1225,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cameraTakeAPhoto => 'Take a photo';
 
   @override
-  String get cameraKeepACopy => 'keep a copy';
+  String get cameraKeepACopy => 'Keep a copy';
 
   @override
   String get cameraUseThis => 'Use this';
@@ -2209,7 +2209,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get donateOpenWallet => 'open wallet';
+  String get donateOpenWallet => 'Open wallet';
 
   @override
   String get donateThisScreenUpdatesItself =>
@@ -2254,7 +2254,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get donateWearMyBadge => 'wear my badge';
+  String get donateWearMyBadge => 'Wear my badge';
 
   @override
   String get donateJustGladToHelp => 'Just glad to help';
@@ -4147,7 +4147,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinsSetAWipePin => 'Set a wipe pin';
 
   @override
-  String get pinsRemove => 'remove';
+  String get pinsRemove => 'Remove';
 
   @override
   String get pinsRemoveTheWipePin => 'Remove the wipe pin?';
@@ -6347,7 +6347,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cameraVideo => 'video';
 
   @override
-  String get cameraRetake => 'retake';
+  String get cameraRetake => 'Retake';
 
   @override
   String get seenIntroductions => 'introductions';
@@ -6356,7 +6356,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get donateAddress => 'address';
 
   @override
-  String get donateCopy => 'copy';
+  String get donateCopy => 'Copy';
 
   @override
   String get donateDone => 'Done';
@@ -6371,13 +6371,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get donateTierGuardian => 'guardian';
 
   @override
-  String get chatBlock => 'block';
+  String get chatBlock => 'Block';
 
   @override
-  String get chatDecline => 'decline';
+  String get chatDecline => 'Decline';
 
   @override
-  String get chatAccept => 'accept';
+  String get chatAccept => 'Accept';
 
   @override
   String get bridgesConnecting => 'connecting';
@@ -6395,13 +6395,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restoreAttachments => 'attachments';
 
   @override
-  String get shieldBlock => 'block';
+  String get shieldBlock => 'Block';
 
   @override
   String get shieldDelete => 'Delete';
 
   @override
-  String get shieldIgnore => 'ignore';
+  String get shieldIgnore => 'Ignore';
 
   @override
   String get profileIdentity => 'identity';

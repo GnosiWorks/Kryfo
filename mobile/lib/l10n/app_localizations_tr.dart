@@ -1231,7 +1231,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cameraTakeAPhoto => 'Fotoğraf çek';
 
   @override
-  String get cameraKeepACopy => 'kopya sakla';
+  String get cameraKeepACopy => 'Kopya sakla';
 
   @override
   String get cameraUseThis => 'Bunu kullan';
@@ -2217,7 +2217,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get donateOpenWallet => 'cüzdanı aç';
+  String get donateOpenWallet => 'Cüzdanı aç';
 
   @override
   String get donateThisScreenUpdatesItself =>
@@ -2262,7 +2262,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get donateWearMyBadge => 'rozetimi tak';
+  String get donateWearMyBadge => 'Rozetimi tak';
 
   @override
   String get donateJustGladToHelp => 'Yardım etmek yeter';
@@ -4176,7 +4176,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pinsSetAWipePin => 'Silme PIN’i belirle';
 
   @override
-  String get pinsRemove => 'kaldır';
+  String get pinsRemove => 'Kaldır';
 
   @override
   String get pinsRemoveTheWipePin => 'Silme PIN’i kaldırılsın mı?';
@@ -6382,7 +6382,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cameraVideo => 'video';
 
   @override
-  String get cameraRetake => 'yeniden çek';
+  String get cameraRetake => 'Yeniden çek';
 
   @override
   String get seenIntroductions => 'tanıştırmalar';
@@ -6391,7 +6391,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get donateAddress => 'adres';
 
   @override
-  String get donateCopy => 'kopyala';
+  String get donateCopy => 'Kopyala';
 
   @override
   String get donateDone => 'Bitti';
@@ -6406,13 +6406,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get donateTierGuardian => 'koruyucu';
 
   @override
-  String get chatBlock => 'engelle';
+  String get chatBlock => 'Engelle';
 
   @override
-  String get chatDecline => 'reddet';
+  String get chatDecline => 'Reddet';
 
   @override
-  String get chatAccept => 'kabul et';
+  String get chatAccept => 'Kabul et';
 
   @override
   String get bridgesConnecting => 'bağlanıyor';
@@ -6430,13 +6430,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get restoreAttachments => 'ekler';
 
   @override
-  String get shieldBlock => 'engelle';
+  String get shieldBlock => 'Engelle';
 
   @override
   String get shieldDelete => 'Sil';
 
   @override
-  String get shieldIgnore => 'yok say';
+  String get shieldIgnore => 'Yok say';
 
   @override
   String get profileIdentity => 'kimlik';
