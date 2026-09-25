@@ -109,7 +109,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   bool _isAdmin = false;
   bool _sending = false;
   _GMsg? _replyTo;
-  OverlayEntry? _menuEntry;
+  // takes the open message menu away, if there is one
+  VoidCallback? _menuClose;
   // the bubble under an open menu: hidden in the list, drawn lifted above
   // the blur
   String? _liftedUid;
@@ -1686,10 +1687,19 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (mounted) setState(() => _liftedUid = target.msgUid);
     late OverlayEntry entry;
     VoidCallback? unguard;
-    void dismiss() {
+    // not entry.mounted: an entry closed before its first frame is not
+    // mounted yet and has to go all the same
+    var gone = false;
+    void close() {
+      if (gone) return;
+      gone = true;
       unguard?.call();
-      if (entry.mounted) entry.remove();
-      _menuEntry = null;
+      entry.remove();
+      if (identical(_menuClose, close)) _menuClose = null;
+    }
+
+    void dismiss() {
+      close();
       if (mounted) setState(() => _liftedUid = null);
     }
 
@@ -1808,7 +1818,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       },
     );
     overlay.insert(entry);
-    _menuEntry = entry;
+    _menuClose = close;
     // the lock closes it, with what it shows
     unguard = lockGuard.closeOnLock(dismiss);
   }
@@ -2426,8 +2436,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     } else {
       _draftPerGroup[widget.groupId] = draft;
     }
-    if (_menuEntry?.mounted ?? false) _menuEntry!.remove();
-    _menuEntry = null;
+    _menuClose?.call();
     _searchCtrl.dispose();
     _scrollCtrl.removeListener(_onGroupScroll);
     _scrollCtrl.removeListener(_updateSticky);

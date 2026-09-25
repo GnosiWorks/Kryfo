@@ -4,6 +4,7 @@
 // backed), so brute force on a stolen unlocked device still needs the
 // keystore-protected blob.
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
@@ -73,16 +74,20 @@ class LockState extends ChangeNotifier {
       // say so in the debug log
       dlog('lock: storage read failed: $e');
     }
-    _locked = _enabled;
-    _loaded = true;
     try {
       final auth = LocalAuthentication();
-      final canCheck = await auth.canCheckBiometrics;
-      final available = await auth.getAvailableBiometrics();
+      // the app waits under its cover for this, so it may not hang
+      const most = Duration(seconds: 3);
+      final canCheck = await auth.canCheckBiometrics.timeout(most);
+      final available = await auth.getAvailableBiometrics().timeout(most);
       _bioSupported = canCheck && available.isNotEmpty;
     } catch (_) {
       _bioSupported = false;
     }
+    // read and told in one step, after the probe: until then the app stays
+    // under its cover, and the lock screen knows about the fingerprint
+    _locked = _enabled;
+    _loaded = true;
     notifyListeners();
   }
 

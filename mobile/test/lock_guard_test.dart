@@ -201,6 +201,22 @@ void main() {
     expect(find.text('pin'), findsOneWidget);
   });
 
+  testWidgets('a toast asked for just before the lock goes up never shows', (
+    tester,
+  ) async {
+    final h = _Harness(tester);
+    await h.pump();
+    // shown with the app open, then the lock goes up before its first frame
+    showHaloToast(h.inside, 'joined the room');
+    haloClearToasts();
+    await h.lockUp();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('joined the room'), findsNothing);
+    await h.unlock();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('joined the room'), findsNothing);
+  });
+
   testWidgets('a toast waits for the lock and never shows on the pin pad', (
     tester,
   ) async {
