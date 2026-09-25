@@ -3309,10 +3309,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lockSetupThoseWereDifferentFrom => '两次不一样。从头再来。';
 
   @override
-  String get lockSetupTheSameFourDigits => '同样的四位数字';
+  String get lockSetupTheSameFourDigits => '再输入一次同样的数字';
 
   @override
-  String get lockSetupFourDigitsAnythingYou => '四位数字，选一个你记得住的';
+  String get lockSetupFourDigitsAnythingYou => '四位或更多数字，选一个你记得住的';
 
   @override
   String get modesOnion => 'Onion';
@@ -3874,7 +3874,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get panicSetupSetAWipePin => '设置抹掉 PIN';
 
   @override
-  String get panicSetupTheSameFourDigits => '同样的四位数字';
+  String get panicSetupTheSameFourDigits => '再输入一次同样的数字';
 
   @override
   String get panicSetupTheSecondPinWipes => '第二个 PIN 码会抹掉一切。';
@@ -3946,7 +3946,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonOff => '关';
 
   @override
-  String get pinsOpensKryfoFourDigits => '用来打开 kryfo。四位数字，每次切到前台时都会要求输入。';
+  String get pinsOpensKryfoFourDigits => '用来打开 kryfo。每次切到前台时都会要求输入。';
 
   @override
   String get pinsChangePin => '更改 PIN 码';
@@ -6630,6 +6630,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => '这个用户名已被占用';
+
+  @override
+  String get pinPickDifferent => '请换一个 PIN 码';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -9938,10 +9941,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get lockSetupThoseWereDifferentFrom => '兩次不一樣。從頭再來。';
 
   @override
-  String get lockSetupTheSameFourDigits => '同樣的四位數字';
+  String get lockSetupTheSameFourDigits => '再輸入一次同樣的數字';
 
   @override
-  String get lockSetupFourDigitsAnythingYou => '四位數字，選一組你記得住的';
+  String get lockSetupFourDigitsAnythingYou => '四位或更多數字，選一組你記得住的';
 
   @override
   String get modesOnion => 'Onion';
@@ -10503,7 +10506,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get panicSetupSetAWipePin => '設定清除 PIN';
 
   @override
-  String get panicSetupTheSameFourDigits => '同樣的四位數字';
+  String get panicSetupTheSameFourDigits => '再輸入一次同樣的數字';
 
   @override
   String get panicSetupTheSecondPinWipes => '第二組 PIN 碼會清除一切。';
@@ -10575,7 +10578,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get commonOff => '關閉';
 
   @override
-  String get pinsOpensKryfoFourDigits => '用來開啟 kryfo。四位數字，每次 kryfo 回到前景時都會詢問。';
+  String get pinsOpensKryfoFourDigits => '用來開啟 kryfo。每次 kryfo 回到前景時都會詢問。';
 
   @override
   String get pinsChangePin => '變更 PIN 碼';
@@ -13258,4 +13261,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get handleThatHandleIsTaken => '這個使用者名稱已被使用';
+
+  @override
+  String get pinPickDifferent => '請換一組 PIN 碼';
 }

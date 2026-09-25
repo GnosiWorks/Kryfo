@@ -878,8 +878,8 @@
   "lockSetupOnceMore": "یک بار دیگر",
   "lockSetupSetAPin": "تعیین PIN",
   "lockSetupThoseWereDifferentFrom": "یکی نبودند. از اول.",
-  "lockSetupTheSameFourDigits": "همان چهار رقم",
-  "lockSetupFourDigitsAnythingYou": "چهار رقم، هر چه یادتان بماند",
+  "lockSetupTheSameFourDigits": "همان رقم‌ها را دوباره",
+  "lockSetupFourDigitsAnythingYou": "چهار رقم یا بیشتر، هر چه یادتان بماند",
   "modesOnion": "Onion",
   "modesFullOnionRoutingThree": "مسیریابی کامل onion، سه گام. هر پیام دو تا پنج ثانیه طول می‌کشد. هیچ‌کس نمی‌بیند با چه کسی حرف می‌زنید.",
   "modesSlower": "کندتر",
@@ -1053,7 +1053,7 @@
   "panicSetupThatIsYourReal": "این PIN اصلی شماست. یکی دیگر انتخاب کنید.",
   "panicSetupOnceMore": "یک بار دیگر",
   "panicSetupSetAWipePin": "تعیین PIN پاک‌سازی",
-  "panicSetupTheSameFourDigits": "همان چهار رقم",
+  "panicSetupTheSameFourDigits": "همان رقم‌ها را دوباره",
   "panicSetupTheSecondPinWipes": "PIN دوم همه‌چیز را پاک می‌کند.",
   "photoKnowsEverythingInside": "همه‌چیزِ درونش",
   "photoKnowsVideo": "ویدیو",
@@ -1075,7 +1075,7 @@
   "pinsYourPin": "PIN شما",
   "commonOn": "روشن",
   "commonOff": "خاموش",
-  "pinsOpensKryfoFourDigits": "Kryfo را باز می‌کند. چهار رقم که هر بار kryfo به جلو می‌آید پرسیده می‌شود.",
+  "pinsOpensKryfoFourDigits": "Kryfo را باز می‌کند. هر بار kryfo به جلو می‌آید پرسیده می‌شود.",
   "pinsChangePin": "تغییر PIN",
   "pinsSetAPin": "تعیین PIN",
   "pinsTurnOff": "خاموش کردن",
@@ -1823,5 +1823,6 @@
   "peopleFingerprintLine": "بررسی کنید با آنچه طرف مقابل در برنامه‌اش می‌بیند یکی باشد.",
   "peopleAdding": "در حال افزودن…",
   "handleNobodyHasClaimed": "هیچ‌کس ⁦{handle}⁩ را ثبت نکرده است",
-  "handleThatHandleIsTaken": "این نام کاربری قبلاً گرفته شده"
+  "handleThatHandleIsTaken": "این نام کاربری قبلاً گرفته شده",
+  "pinPickDifferent": "PIN دیگری انتخاب کنید"
 }

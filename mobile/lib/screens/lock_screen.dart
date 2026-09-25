@@ -71,12 +71,19 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  Future<void> _onDigit(String d) async {
-    if (_busy || _pin.length >= 4) return;
+  void _onDigit(String d) {
+    if (_busy || _pin.length >= kPinMax) return;
     setState(() => _pin += d);
-    if (_pin.length == 4) {
-      setState(() => _busy = true);
-      final result = await lockState.verifyPin(_pin);
+  }
+
+  Future<void> _submit() async {
+    if (_busy || _pin.length < kPinMin) return;
+    setState(() => _busy = true);
+    {
+      final typed = _pin;
+      // the digits leave the screen's hands as soon as they are handed on
+      setState(() => _pin = '*' * typed.length);
+      final result = await lockState.verifyPin(typed);
       if (result == PinResult.panic) {
         // silent wipe - the screen stays as if processing, then kryfo
         // exits. to the coercer it looks like the app crashed.
@@ -214,7 +221,13 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
                       ),
                     ),
                   const Spacer(flex: 2),
-                  PinPad(onDigit: _onDigit, onBack: _back, enabled: !_busy),
+                  PinPad(
+                    onDigit: _onDigit,
+                    onBack: _back,
+                    onEnter: _submit,
+                    canEnter: _pin.length >= kPinMin,
+                    enabled: !_busy,
+                  ),
                   const SizedBox(height: 22),
                 ],
               ),

@@ -878,8 +878,8 @@
   "lockSetupOnceMore": "Sekali lagi",
   "lockSetupSetAPin": "Buat PIN",
   "lockSetupThoseWereDifferentFrom": "Tadi berbeda. Ulangi dari awal.",
-  "lockSetupTheSameFourDigits": "Empat angka yang sama",
-  "lockSetupFourDigitsAnythingYou": "Empat angka, apa saja yang bisa kamu ingat",
+  "lockSetupTheSameFourDigits": "Angka yang sama sekali lagi",
+  "lockSetupFourDigitsAnythingYou": "Empat angka atau lebih, apa saja yang bisa kamu ingat",
   "modesOnion": "Onion",
   "modesFullOnionRoutingThree": "Perutean onion penuh, tiga lompatan. Satu pesan butuh dua sampai lima detik. Tidak ada yang melihat dengan siapa kamu bicara.",
   "modesSlower": "lebih lambat",
@@ -1053,7 +1053,7 @@
   "panicSetupThatIsYourReal": "Itu PIN aslimu. Pilih yang lain.",
   "panicSetupOnceMore": "Sekali lagi",
   "panicSetupSetAWipePin": "Buat PIN penghapus",
-  "panicSetupTheSameFourDigits": "Empat angka yang sama",
+  "panicSetupTheSameFourDigits": "Angka yang sama sekali lagi",
   "panicSetupTheSecondPinWipes": "PIN kedua menghapus total semuanya.",
   "photoKnowsEverythingInside": "Semua isinya",
   "photoKnowsVideo": "Video",
@@ -1075,7 +1075,7 @@
   "pinsYourPin": "PIN-mu",
   "commonOn": "Aktif",
   "commonOff": "Mati",
-  "pinsOpensKryfoFourDigits": "Membuka kryfo. Empat angka, diminta setiap kryfo kembali ke depan.",
+  "pinsOpensKryfoFourDigits": "Membuka kryfo. Diminta setiap kryfo kembali ke depan.",
   "pinsChangePin": "Ganti PIN",
   "pinsSetAPin": "Buat PIN",
   "pinsTurnOff": "Matikan",
@@ -1823,5 +1823,6 @@
   "peopleFingerprintLine": "Periksa apakah cocok dengan yang mereka lihat di aplikasinya.",
   "peopleAdding": "Menambahkan…",
   "handleNobodyHasClaimed": "Belum ada yang mengklaim {handle}",
-  "handleThatHandleIsTaken": "Nama pengguna itu sudah dipakai"
+  "handleThatHandleIsTaken": "Nama pengguna itu sudah dipakai",
+  "pinPickDifferent": "Pilih PIN lain"
 }

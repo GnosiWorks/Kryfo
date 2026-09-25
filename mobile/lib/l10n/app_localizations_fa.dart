@@ -3451,10 +3451,11 @@ class AppLocalizationsFa extends AppLocalizations {
   String get lockSetupThoseWereDifferentFrom => 'یکی نبودند. از اول.';
 
   @override
-  String get lockSetupTheSameFourDigits => 'همان چهار رقم';
+  String get lockSetupTheSameFourDigits => 'همان رقم‌ها را دوباره';
 
   @override
-  String get lockSetupFourDigitsAnythingYou => 'چهار رقم، هر چه یادتان بماند';
+  String get lockSetupFourDigitsAnythingYou =>
+      'چهار رقم یا بیشتر، هر چه یادتان بماند';
 
   @override
   String get modesOnion => 'Onion';
@@ -4052,7 +4053,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get panicSetupSetAWipePin => 'تعیین PIN پاک‌سازی';
 
   @override
-  String get panicSetupTheSameFourDigits => 'همان چهار رقم';
+  String get panicSetupTheSameFourDigits => 'همان رقم‌ها را دوباره';
 
   @override
   String get panicSetupTheSecondPinWipes => 'PIN دوم همه‌چیز را پاک می‌کند.';
@@ -4127,7 +4128,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get pinsOpensKryfoFourDigits =>
-      'Kryfo را باز می‌کند. چهار رقم که هر بار kryfo به جلو می‌آید پرسیده می‌شود.';
+      'Kryfo را باز می‌کند. هر بار kryfo به جلو می‌آید پرسیده می‌شود.';
 
   @override
   String get pinsChangePin => 'تغییر PIN';
@@ -6905,4 +6906,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'این نام کاربری قبلاً گرفته شده';
+
+  @override
+  String get pinPickDifferent => 'PIN دیگری انتخاب کنید';
 }

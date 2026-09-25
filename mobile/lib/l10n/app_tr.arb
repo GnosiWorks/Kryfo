@@ -878,8 +878,8 @@
   "lockSetupOnceMore": "Bir kez daha",
   "lockSetupSetAPin": "PIN belirle",
   "lockSetupThoseWereDifferentFrom": "İkisi farklıydı. Baştan alalım.",
-  "lockSetupTheSameFourDigits": "Aynı dört rakam",
-  "lockSetupFourDigitsAnythingYou": "Dört rakam, hatırlayacağın herhangi bir şey",
+  "lockSetupTheSameFourDigits": "Aynı rakamları bir kez daha",
+  "lockSetupFourDigitsAnythingYou": "Dört rakam veya daha fazlası, hatırlayacağın herhangi bir şey",
   "modesOnion": "Onion",
   "modesFullOnionRoutingThree": "Tam onion yönlendirme, üç atlama. Bir mesaj iki ila beş saniye sürer. Kiminle konuştuğunu kimse görmez.",
   "modesSlower": "daha yavaş",
@@ -1053,7 +1053,7 @@
   "panicSetupThatIsYourReal": "Bu senin gerçek PIN’in. Başka bir tane seç.",
   "panicSetupOnceMore": "Bir kez daha",
   "panicSetupSetAWipePin": "Silme PIN’i belirle",
-  "panicSetupTheSameFourDigits": "Aynı dört rakam",
+  "panicSetupTheSameFourDigits": "Aynı rakamları bir kez daha",
   "panicSetupTheSecondPinWipes": "İkinci PIN her şeyi siler.",
   "photoKnowsEverythingInside": "İçindeki her şey",
   "photoKnowsVideo": "Video",
@@ -1075,7 +1075,7 @@
   "pinsYourPin": "PIN kodun",
   "commonOn": "Açık",
   "commonOff": "Kapalı",
-  "pinsOpensKryfoFourDigits": "Kryfo’yu açar. Dört rakam; uygulama öne geldiğinde sorulur.",
+  "pinsOpensKryfoFourDigits": "Kryfo’yu açar. Uygulama öne geldiğinde sorulur.",
   "pinsChangePin": "PIN’i değiştir",
   "pinsSetAPin": "PIN belirle",
   "pinsTurnOff": "Kapat",
@@ -1823,5 +1823,6 @@
   "peopleFingerprintLine": "Karşı tarafın uygulamasında gördüğüyle aynı olduğunu kontrol et.",
   "peopleAdding": "Ekleniyor…",
   "handleNobodyHasClaimed": "{handle} adını kimse almamış",
-  "handleThatHandleIsTaken": "Bu kullanıcı adı zaten alınmış"
+  "handleThatHandleIsTaken": "Bu kullanıcı adı zaten alınmış",
+  "pinPickDifferent": "Başka bir PIN seç"
 }

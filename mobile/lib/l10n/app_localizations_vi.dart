@@ -3427,11 +3427,11 @@ class AppLocalizationsVi extends AppLocalizations {
       'Hai lần nhập khác nhau. Làm lại từ đầu nhé.';
 
   @override
-  String get lockSetupTheSameFourDigits => 'Đúng bốn số vừa rồi';
+  String get lockSetupTheSameFourDigits => 'Nhập lại đúng các chữ số đó';
 
   @override
   String get lockSetupFourDigitsAnythingYou =>
-      'Bốn chữ số, bất cứ số nào bạn sẽ nhớ được';
+      'Bốn chữ số trở lên, bất cứ số nào bạn sẽ nhớ được';
 
   @override
   String get modesOnion => 'Onion';
@@ -4028,7 +4028,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get panicSetupSetAWipePin => 'Đặt mã PIN xóa sạch';
 
   @override
-  String get panicSetupTheSameFourDigits => 'Đúng bốn số vừa rồi';
+  String get panicSetupTheSameFourDigits => 'Nhập lại đúng các chữ số đó';
 
   @override
   String get panicSetupTheSecondPinWipes => 'Mã PIN thứ hai xóa sạch mọi thứ.';
@@ -4104,7 +4104,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pinsOpensKryfoFourDigits =>
-      'Mở kryfo. Bốn chữ số, được hỏi mỗi khi kryfo quay lại màn hình.';
+      'Mở kryfo. Được hỏi mỗi khi kryfo quay lại màn hình.';
 
   @override
   String get pinsChangePin => 'Đổi mã PIN';
@@ -6874,4 +6874,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'Tên người dùng này đã có người dùng';
+
+  @override
+  String get pinPickDifferent => 'Hãy chọn mã PIN khác';
 }

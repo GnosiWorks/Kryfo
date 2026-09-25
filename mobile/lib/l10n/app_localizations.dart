@@ -5358,7 +5358,7 @@ abstract class AppLocalizations {
   /// screens/lock_setup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The pin still works whenever you want it. This is just faster.'**
+  /// **'The PIN still works whenever you want it. This is just faster.'**
   String get lockSetupThePinStillWorks;
 
   /// screens/lock_setup_screen.dart
@@ -5370,7 +5370,7 @@ abstract class AppLocalizations {
   /// screens/lock_setup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Pin only'**
+  /// **'PIN only'**
   String get lockSetupPinOnly;
 
   /// screens/lock_setup_screen.dart
@@ -5382,7 +5382,7 @@ abstract class AppLocalizations {
   /// screens/lock_setup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Set a pin'**
+  /// **'Set a PIN'**
   String get lockSetupSetAPin;
 
   /// screens/lock_setup_screen.dart
@@ -5394,13 +5394,13 @@ abstract class AppLocalizations {
   /// screens/lock_setup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The same four digits'**
+  /// **'The same digits again'**
   String get lockSetupTheSameFourDigits;
 
   /// screens/lock_setup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Four digits, anything you will remember'**
+  /// **'Four digits or more, anything you will remember'**
   String get lockSetupFourDigitsAnythingYou;
 
   /// screens/modes_screen.dart
@@ -6438,13 +6438,13 @@ abstract class AppLocalizations {
   /// screens/panic_setup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Set a wipe pin'**
+  /// **'Set a wipe PIN'**
   String get panicSetupSetAWipePin;
 
   /// screens/panic_setup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The same four digits'**
+  /// **'The same digits again'**
   String get panicSetupTheSameFourDigits;
 
   /// screens/panic_setup_screen.dart
@@ -6558,7 +6558,7 @@ abstract class AppLocalizations {
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Your pin'**
+  /// **'Your PIN'**
   String get pinsYourPin;
 
   /// screens/pins_screen.dart, screens/settings_screen.dart
@@ -6576,19 +6576,19 @@ abstract class AppLocalizations {
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Opens kryfo. Four digits, asked for when it comes to the front.'**
+  /// **'Opens kryfo. Asked for when it comes to the front.'**
   String get pinsOpensKryfoFourDigits;
 
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Change pin'**
+  /// **'Change PIN'**
   String get pinsChangePin;
 
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Set a pin'**
+  /// **'Set a PIN'**
   String get pinsSetAPin;
 
   /// screens/pins_screen.dart
@@ -6606,7 +6606,7 @@ abstract class AppLocalizations {
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The pin goes, and the wipe pin with it. Anyone holding your phone opens kryfo as you.'**
+  /// **'The PIN goes, and the wipe PIN with it. Anyone holding your phone opens kryfo as you.'**
   String get pinsThePinGoesAnd;
 
   /// screens/pins_screen.dart
@@ -6618,13 +6618,13 @@ abstract class AppLocalizations {
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Wipe pin'**
+  /// **'Wipe PIN'**
   String get pinsWipePin;
 
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Needs a pin first'**
+  /// **'Needs a PIN first'**
   String get pinsNeedsAPinFirst;
 
   /// screens/pins_screen.dart
@@ -6642,13 +6642,13 @@ abstract class AppLocalizations {
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Change wipe pin'**
+  /// **'Change wipe PIN'**
   String get pinsChangeWipePin;
 
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Set a wipe pin'**
+  /// **'Set a wipe PIN'**
   String get pinsSetAWipePin;
 
   /// screens/pins_screen.dart
@@ -6660,13 +6660,13 @@ abstract class AppLocalizations {
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Remove the wipe pin?'**
+  /// **'Remove the wipe PIN?'**
   String get pinsRemoveTheWipePin;
 
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The lock screen keeps your pin. The wipe pin stops doing anything.'**
+  /// **'The lock screen keeps your PIN. The wipe PIN stops doing anything.'**
   String get pinsTheLockScreenKeeps;
 
   /// screens/profile_screen.dart
@@ -8124,7 +8124,7 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Pin · wipe pin'**
+  /// **'PIN · wipe PIN'**
   String get settingsPinWipePin;
 
   /// screens/settings_screen.dart
@@ -11066,6 +11066,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'That handle is taken'**
   String get handleThatHandleIsTaken;
+
+  /// setting a PIN that is already in use; never says which one it matched
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a different PIN'**
+  String get pinPickDifferent;
 }
 
 class _AppLocalizationsDelegate

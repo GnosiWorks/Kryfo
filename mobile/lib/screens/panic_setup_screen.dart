@@ -50,13 +50,16 @@ class _PanicSetupScreenState extends State<PanicSetupScreen>
   // ignored so a backspace cannot shorten the pin being kept
   bool _hold = false;
 
-  Future<void> _onDigit(String d) async {
-    if (_hold || _pin.length >= 4) return;
+  void _onDigit(String d) {
+    if (_hold || _pin.length >= kPinMax) return;
     setState(() {
       _pin += d;
       _error = null;
     });
-    if (_pin.length != 4) return;
+  }
+
+  Future<void> _submit() async {
+    if (_hold || _pin.length < kPinMin) return;
     if (!_confirming) {
       setState(() => _hold = true);
       await Future.delayed(const Duration(milliseconds: 220));
@@ -75,7 +78,7 @@ class _PanicSetupScreenState extends State<PanicSetupScreen>
     }
     final ok = await lockState.setupPanicPin(_pin);
     if (!ok) {
-      await _fail(l10n.panicSetupThatIsYourReal);
+      await _fail(l10n.pinPickDifferent);
       return;
     }
     HapticFeedback.mediumImpact();
@@ -142,7 +145,13 @@ class _PanicSetupScreenState extends State<PanicSetupScreen>
               shake: _shake,
             ),
             const Spacer(flex: 3),
-            PinPad(onDigit: _onDigit, onBack: _back, enabled: !_hold),
+            PinPad(
+              onDigit: _onDigit,
+              onBack: _back,
+              onEnter: _submit,
+              canEnter: _pin.length >= kPinMin,
+              enabled: !_hold,
+            ),
             const SizedBox(height: 22),
           ],
         ),

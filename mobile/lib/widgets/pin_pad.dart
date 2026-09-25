@@ -1,13 +1,21 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the pin pad and the four dots, shared by the lock screen and both setup
-// screens so they feel like one thing. round keys that press, dots that
-// land with a small overshoot, a shake when a pin is wrong.
+// the pin pad and its dots, shared by the lock screen and the setup screens
+// so they feel like one thing. round keys that press, dots that land with a
+// small overshoot, a shake when a pin is wrong. a pin is 4 to 12 digits and
+// goes in with the enter key, never on its own: when it goes in must not say
+// how long it is.
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/l10n.dart';
 import '../theme.dart';
+
+/// the shortest and the longest pin
+const kPinMin = 4;
+const kPinMax = 12;
 
 class PinDots extends StatelessWidget {
   final int filled;
@@ -25,12 +33,15 @@ class PinDots extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // four places to start with, then one more for each digit past four
+    final places = math.max(kPinMin, filled).clamp(kPinMin, kPinMax);
+    final gap = places > 8 ? 5.0 : 11.0;
     final row = Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(4, (i) {
+      children: List.generate(places, (i) {
         final on = i < filled;
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 11),
+          padding: EdgeInsets.symmetric(horizontal: gap),
           child: SizedBox(
             width: 16,
             height: 16,
@@ -90,11 +101,16 @@ class PinDots extends StatelessWidget {
 class PinPad extends StatelessWidget {
   final void Function(String) onDigit;
   final VoidCallback onBack;
+  // the enter key; dimmed and silent until [canEnter]
+  final VoidCallback? onEnter;
+  final bool canEnter;
   final bool enabled;
   const PinPad({
     super.key,
     required this.onDigit,
     required this.onBack,
+    this.onEnter,
+    this.canEnter = false,
     this.enabled = true,
   });
 
@@ -113,7 +129,19 @@ class PinPad extends StatelessWidget {
         row([d('4'), d('5'), d('6')]),
         row([d('7'), d('8'), d('9')]),
         row([
-          const SizedBox(width: 92, height: 72),
+          if (onEnter == null)
+            const SizedBox(width: 92, height: 72)
+          else
+            AnimatedOpacity(
+              opacity: canEnter ? 1 : 0.35,
+              duration: const Duration(milliseconds: 160),
+              child: _Key(
+                icon: Icons.check_rounded,
+                semantic: l10n.commonDone,
+                strong: canEnter,
+                onTap: enabled && canEnter ? onEnter : null,
+              ),
+            ),
           d('0'),
           _Key(icon: Icons.backspace_outlined, onTap: enabled ? onBack : null),
         ]),
@@ -126,7 +154,17 @@ class _Key extends StatefulWidget {
   final String? label;
   final IconData? icon;
   final VoidCallback? onTap;
-  const _Key({this.label, this.icon, this.onTap});
+  // what a screen reader says for an icon key
+  final String? semantic;
+  // the enter key once a pin can go in: amber
+  final bool strong;
+  const _Key({
+    this.label,
+    this.icon,
+    this.onTap,
+    this.semantic,
+    this.strong = false,
+  });
   @override
   State<_Key> createState() => _KeyState();
 }
@@ -178,7 +216,14 @@ class _KeyState extends State<_Key> {
                       ),
               ),
               child: bare
-                  ? Icon(widget.icon, size: 22, color: HaloColors.text2)
+                  ? Icon(
+                      widget.icon,
+                      size: widget.strong ? 26 : 22,
+                      color: widget.strong
+                          ? HaloColors.amber
+                          : HaloColors.text2,
+                      semanticLabel: widget.semantic,
+                    )
                   : Text(
                       widget.label!,
                       style: HaloType.serif(

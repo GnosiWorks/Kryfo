@@ -3531,10 +3531,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lockSetupThoseWereDifferentFrom => 'لم يتطابقا. من البداية.';
 
   @override
-  String get lockSetupTheSameFourDigits => 'الأرقام الأربعة نفسها';
+  String get lockSetupTheSameFourDigits => 'الأرقام نفسها مرة أخرى';
 
   @override
-  String get lockSetupFourDigitsAnythingYou => 'أربعة أرقام، أي شيء ستتذكره';
+  String get lockSetupFourDigitsAnythingYou =>
+      'أربعة أرقام أو أكثر، أي شيء ستتذكره';
 
   @override
   String get modesOnion => 'Onion';
@@ -4123,7 +4124,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get panicSetupSetAWipePin => 'تعيين رمز PIN للمسح';
 
   @override
-  String get panicSetupTheSameFourDigits => 'الأرقام الأربعة نفسها';
+  String get panicSetupTheSameFourDigits => 'الأرقام نفسها مرة أخرى';
 
   @override
   String get panicSetupTheSecondPinWipes => 'رمز PIN الثاني يمسح كل شيء.';
@@ -4198,7 +4199,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pinsOpensKryfoFourDigits =>
-      'يفتح kryfo. أربعة أرقام، تُطلب حين يعود التطبيق إلى الواجهة.';
+      'يفتح kryfo. يُطلب حين يعود التطبيق إلى الواجهة.';
 
   @override
   String get pinsChangePin => 'تغيير رمز PIN';
@@ -7011,4 +7012,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'اسم المستخدم هذا محجوز بالفعل';
+
+  @override
+  String get pinPickDifferent => 'اختر رمز PIN آخر';
 }

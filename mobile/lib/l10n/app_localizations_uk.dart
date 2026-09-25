@@ -3511,11 +3511,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get lockSetupThoseWereDifferentFrom => 'Коди не збіглися. Спочатку.';
 
   @override
-  String get lockSetupTheSameFourDigits => 'Ті самі чотири цифри';
+  String get lockSetupTheSameFourDigits => 'Ті самі цифри ще раз';
 
   @override
   String get lockSetupFourDigitsAnythingYou =>
-      'Чотири цифри, які ти запам’ятаєш';
+      'Чотири цифри або більше, які ти запам’ятаєш';
 
   @override
   String get modesOnion => 'Onion';
@@ -4113,7 +4113,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get panicSetupSetAWipePin => 'Задати PIN для стирання';
 
   @override
-  String get panicSetupTheSameFourDigits => 'Ті самі чотири цифри';
+  String get panicSetupTheSameFourDigits => 'Ті самі цифри ще раз';
 
   @override
   String get panicSetupTheSecondPinWipes => 'Другий PIN-код стирає все.';
@@ -4189,7 +4189,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get pinsOpensKryfoFourDigits =>
-      'Відкриває kryfo. Чотири цифри - kryfo просить їх щоразу, коли виходить на передній план.';
+      'Відкриває kryfo. kryfo просить його щоразу, коли виходить на передній план.';
 
   @override
   String get pinsChangePin => 'Змінити PIN-код';
@@ -7013,4 +7013,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'Це ім’я користувача вже зайняте';
+
+  @override
+  String get pinPickDifferent => 'Вибери інший PIN-код';
 }

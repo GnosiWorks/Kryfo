@@ -878,8 +878,8 @@
   "lockSetupOnceMore": "Thêm lần nữa",
   "lockSetupSetAPin": "Đặt mã PIN",
   "lockSetupThoseWereDifferentFrom": "Hai lần nhập khác nhau. Làm lại từ đầu nhé.",
-  "lockSetupTheSameFourDigits": "Đúng bốn số vừa rồi",
-  "lockSetupFourDigitsAnythingYou": "Bốn chữ số, bất cứ số nào bạn sẽ nhớ được",
+  "lockSetupTheSameFourDigits": "Nhập lại đúng các chữ số đó",
+  "lockSetupFourDigitsAnythingYou": "Bốn chữ số trở lên, bất cứ số nào bạn sẽ nhớ được",
   "modesOnion": "Onion",
   "modesFullOnionRoutingThree": "Định tuyến onion đầy đủ, ba chặng. Mỗi tin nhắn mất từ hai đến năm giây. Không ai thấy bạn nói chuyện với ai.",
   "modesSlower": "chậm hơn",
@@ -1053,7 +1053,7 @@
   "panicSetupThatIsYourReal": "Đó là mã PIN thật của bạn. Hãy chọn mã khác.",
   "panicSetupOnceMore": "Thêm lần nữa",
   "panicSetupSetAWipePin": "Đặt mã PIN xóa sạch",
-  "panicSetupTheSameFourDigits": "Đúng bốn số vừa rồi",
+  "panicSetupTheSameFourDigits": "Nhập lại đúng các chữ số đó",
   "panicSetupTheSecondPinWipes": "Mã PIN thứ hai xóa sạch mọi thứ.",
   "photoKnowsEverythingInside": "Mọi thứ bên trong",
   "photoKnowsVideo": "Video",
@@ -1075,7 +1075,7 @@
   "pinsYourPin": "Mã PIN của bạn",
   "commonOn": "Bật",
   "commonOff": "Tắt",
-  "pinsOpensKryfoFourDigits": "Mở kryfo. Bốn chữ số, được hỏi mỗi khi kryfo quay lại màn hình.",
+  "pinsOpensKryfoFourDigits": "Mở kryfo. Được hỏi mỗi khi kryfo quay lại màn hình.",
   "pinsChangePin": "Đổi mã PIN",
   "pinsSetAPin": "Đặt mã PIN",
   "pinsTurnOff": "Tắt",
@@ -1823,5 +1823,6 @@
   "peopleFingerprintLine": "Hãy kiểm tra nó khớp với những gì người kia thấy trong ứng dụng.",
   "peopleAdding": "Đang thêm…",
   "handleNobodyHasClaimed": "Chưa ai đăng ký {handle}",
-  "handleThatHandleIsTaken": "Tên người dùng này đã có người dùng"
+  "handleThatHandleIsTaken": "Tên người dùng này đã có người dùng",
+  "pinPickDifferent": "Hãy chọn mã PIN khác"
 }

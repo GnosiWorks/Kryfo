@@ -878,8 +878,8 @@
   "lockSetupOnceMore": "Otra vez",
   "lockSetupSetAPin": "Elegir un PIN",
   "lockSetupThoseWereDifferentFrom": "No coinciden. Desde el principio.",
-  "lockSetupTheSameFourDigits": "Los mismos cuatro dígitos",
-  "lockSetupFourDigitsAnythingYou": "Cuatro dígitos que vayas a recordar",
+  "lockSetupTheSameFourDigits": "Los mismos dígitos otra vez",
+  "lockSetupFourDigitsAnythingYou": "Cuatro dígitos o más que vayas a recordar",
   "modesOnion": "Onion",
   "modesFullOnionRoutingThree": "Enrutamiento onion completo, tres saltos. Un mensaje tarda de dos a cinco segundos. Nadie ve con quién hablas.",
   "modesSlower": "más lento",
@@ -1053,7 +1053,7 @@
   "panicSetupThatIsYourReal": "Ese es tu PIN real. Elige otro.",
   "panicSetupOnceMore": "Otra vez",
   "panicSetupSetAWipePin": "Elegir un PIN de borrado",
-  "panicSetupTheSameFourDigits": "Los mismos cuatro dígitos",
+  "panicSetupTheSameFourDigits": "Los mismos dígitos otra vez",
   "panicSetupTheSecondPinWipes": "El segundo PIN lo borra todo.",
   "photoKnowsEverythingInside": "Todo lo que contiene",
   "photoKnowsVideo": "Video",
@@ -1075,7 +1075,7 @@
   "pinsYourPin": "Tu PIN",
   "commonOn": "Activado",
   "commonOff": "Desactivado",
-  "pinsOpensKryfoFourDigits": "Abre kryfo. Cuatro dígitos, se piden cada vez que vuelve a primer plano.",
+  "pinsOpensKryfoFourDigits": "Abre kryfo. Se pide cada vez que vuelve a primer plano.",
   "pinsChangePin": "Cambiar PIN",
   "pinsSetAPin": "Elegir un PIN",
   "pinsTurnOff": "Desactivar",
@@ -1823,5 +1823,6 @@
   "peopleFingerprintLine": "Comprueba que coincide con lo que ve la otra persona en su app.",
   "peopleAdding": "Añadiendo…",
   "handleNobodyHasClaimed": "Nadie ha reservado {handle}",
-  "handleThatHandleIsTaken": "Ese nombre de usuario ya está en uso"
+  "handleThatHandleIsTaken": "Ese nombre de usuario ya está en uso",
+  "pinPickDifferent": "Elige otro PIN"
 }

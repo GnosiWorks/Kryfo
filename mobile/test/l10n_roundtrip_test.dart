@@ -1761,20 +1761,20 @@ void main() {
     expect(l.lockSetupUnlockWithFingerprint, "Unlock with fingerprint?");
     expect(
       l.lockSetupThePinStillWorks,
-      "The pin still works whenever you want it. This is just faster.",
+      "The PIN still works whenever you want it. This is just faster.",
     );
     expect(l.lockSetupUseFingerprint, "Use fingerprint");
-    expect(l.lockSetupPinOnly, "Pin only");
+    expect(l.lockSetupPinOnly, "PIN only");
     expect(l.lockSetupOnceMore, "Once more");
-    expect(l.lockSetupSetAPin, "Set a pin");
+    expect(l.lockSetupSetAPin, "Set a PIN");
     expect(
       l.lockSetupThoseWereDifferentFrom,
       "Those were different. From the top.",
     );
-    expect(l.lockSetupTheSameFourDigits, "The same four digits");
+    expect(l.lockSetupTheSameFourDigits, "The same digits again");
     expect(
       l.lockSetupFourDigitsAnythingYou,
-      "Four digits, anything you will remember",
+      "Four digits or more, anything you will remember",
     );
     expect(l.modesOnion, "Onion");
     expect(
@@ -2110,8 +2110,8 @@ void main() {
     );
     expect(l.panicSetupThatIsYourReal, "That is your real pin. Pick another.");
     expect(l.panicSetupOnceMore, "Once more");
-    expect(l.panicSetupSetAWipePin, "Set a wipe pin");
-    expect(l.panicSetupTheSameFourDigits, "The same four digits");
+    expect(l.panicSetupSetAWipePin, "Set a wipe PIN");
+    expect(l.panicSetupTheSameFourDigits, "The same digits again");
     expect(l.panicSetupTheSecondPinWipes, "The second pin wipes everything.");
     expect(l.photoKnowsEverythingInside, "Everything inside");
     expect(l.photoKnowsVideo, "Video");
@@ -2142,33 +2142,33 @@ void main() {
     expect(l.photoKnowsShowEverything("<title>"), "<title>. Show everything");
     expect(l.pinsAppLock, "App lock");
     expect(l.pinsTwoPins, "Two pins");
-    expect(l.pinsYourPin, "Your pin");
+    expect(l.pinsYourPin, "Your PIN");
     expect(l.commonOn, "On");
     expect(l.commonOff, "Off");
     expect(
       l.pinsOpensKryfoFourDigits,
-      "Opens kryfo. Four digits, asked for when it comes to the front.",
+      "Opens kryfo. Asked for when it comes to the front.",
     );
-    expect(l.pinsChangePin, "Change pin");
-    expect(l.pinsSetAPin, "Set a pin");
+    expect(l.pinsChangePin, "Change PIN");
+    expect(l.pinsSetAPin, "Set a PIN");
     expect(l.pinsTurnOff, "Turn off");
     expect(l.pinsTurnOffTheApp, "Turn off the app lock?");
     expect(
       l.pinsThePinGoesAnd,
-      "The pin goes, and the wipe pin with it. Anyone holding your phone opens kryfo as you.",
+      "The PIN goes, and the wipe PIN with it. Anyone holding your phone opens kryfo as you.",
     );
     expect(l.pinsUnlockWithFingerprint, "Unlock with fingerprint");
-    expect(l.pinsWipePin, "Wipe pin");
-    expect(l.pinsNeedsAPinFirst, "Needs a pin first");
+    expect(l.pinsWipePin, "Wipe PIN");
+    expect(l.pinsNeedsAPinFirst, "Needs a PIN first");
     expect(l.pinsSet, "Set");
     expect(l.pinsTheSecondPinWipes, "The second pin wipes everything.");
-    expect(l.pinsChangeWipePin, "Change wipe pin");
-    expect(l.pinsSetAWipePin, "Set a wipe pin");
+    expect(l.pinsChangeWipePin, "Change wipe PIN");
+    expect(l.pinsSetAWipePin, "Set a wipe PIN");
     expect(l.pinsRemove, "Remove");
-    expect(l.pinsRemoveTheWipePin, "Remove the wipe pin?");
+    expect(l.pinsRemoveTheWipePin, "Remove the wipe PIN?");
     expect(
       l.pinsTheLockScreenKeeps,
-      "The lock screen keeps your pin. The wipe pin stops doing anything.",
+      "The lock screen keeps your PIN. The wipe PIN stops doing anything.",
     );
     expect(l.profileCopied("<what>"), "<what> copied");
     expect(l.profileProfile, "Profile");
@@ -2607,7 +2607,7 @@ void main() {
     expect(l.settingsSameProtectionBrighter, "Same protection, brighter");
     expect(l.settingsAppLock2, "App lock");
     expect(l.settingsYourPinAndA, "Your pin, and a wipe pin");
-    expect(l.settingsPinWipePin, "Pin · wipe pin");
+    expect(l.settingsPinWipePin, "PIN · wipe PIN");
     expect(l.settingsBackUpIdentity, "Back up identity");
     expect(l.settingsEncryptedFile, "Encrypted file");
     expect(l.settingsRestoreFromBackup, "Restore from backup");

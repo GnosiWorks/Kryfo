@@ -878,8 +878,8 @@
   "lockSetupOnceMore": "Ще раз",
   "lockSetupSetAPin": "Задати PIN-код",
   "lockSetupThoseWereDifferentFrom": "Коди не збіглися. Спочатку.",
-  "lockSetupTheSameFourDigits": "Ті самі чотири цифри",
-  "lockSetupFourDigitsAnythingYou": "Чотири цифри, які ти запам’ятаєш",
+  "lockSetupTheSameFourDigits": "Ті самі цифри ще раз",
+  "lockSetupFourDigitsAnythingYou": "Чотири цифри або більше, які ти запам’ятаєш",
   "modesOnion": "Onion",
   "modesFullOnionRoutingThree": "Повна onion-маршрутизація, три вузли. Повідомлення йде від двох до п’яти секунд. Ніхто не бачить, з ким ти спілкуєшся.",
   "modesSlower": "повільніше",
@@ -1053,7 +1053,7 @@
   "panicSetupThatIsYourReal": "Це твій справжній PIN-код. Обери інший.",
   "panicSetupOnceMore": "Ще раз",
   "panicSetupSetAWipePin": "Задати PIN для стирання",
-  "panicSetupTheSameFourDigits": "Ті самі чотири цифри",
+  "panicSetupTheSameFourDigits": "Ті самі цифри ще раз",
   "panicSetupTheSecondPinWipes": "Другий PIN-код стирає все.",
   "photoKnowsEverythingInside": "Усе, що всередині",
   "photoKnowsVideo": "Відео",
@@ -1075,7 +1075,7 @@
   "pinsYourPin": "Твій PIN-код",
   "commonOn": "Увімкнено",
   "commonOff": "Вимкнено",
-  "pinsOpensKryfoFourDigits": "Відкриває kryfo. Чотири цифри - kryfo просить їх щоразу, коли виходить на передній план.",
+  "pinsOpensKryfoFourDigits": "Відкриває kryfo. kryfo просить його щоразу, коли виходить на передній план.",
   "pinsChangePin": "Змінити PIN-код",
   "pinsSetAPin": "Задати PIN-код",
   "pinsTurnOff": "Вимкнути",
@@ -1823,5 +1823,6 @@
   "peopleFingerprintLine": "Перевір, що він збігається з тим, що бачить співрозмовник у своєму застосунку.",
   "peopleAdding": "Додаю…",
   "handleNobodyHasClaimed": "Ніхто не зайняв {handle}",
-  "handleThatHandleIsTaken": "Це ім’я користувача вже зайняте"
+  "handleThatHandleIsTaken": "Це ім’я користувача вже зайняте",
+  "pinPickDifferent": "Вибери інший PIN-код"
 }

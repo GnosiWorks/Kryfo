@@ -3472,11 +3472,12 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les deux diffèrent. On recommence.';
 
   @override
-  String get lockSetupTheSameFourDigits => 'Les quatre mêmes chiffres';
+  String get lockSetupTheSameFourDigits =>
+      'Les mêmes chiffres, encore une fois';
 
   @override
   String get lockSetupFourDigitsAnythingYou =>
-      'Quatre chiffres dont vous vous souviendrez';
+      'Quatre chiffres ou plus, dont vous vous souviendrez';
 
   @override
   String get modesOnion => 'Onion';
@@ -4078,7 +4079,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get panicSetupSetAWipePin => 'Code d’effacement';
 
   @override
-  String get panicSetupTheSameFourDigits => 'Les quatre mêmes chiffres';
+  String get panicSetupTheSameFourDigits =>
+      'Les mêmes chiffres, encore une fois';
 
   @override
   String get panicSetupTheSecondPinWipes => 'Le second code efface tout.';
@@ -4153,7 +4155,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pinsOpensKryfoFourDigits =>
-      'Ouvre kryfo. Quatre chiffres, demandés quand il revient au premier plan.';
+      'Ouvre kryfo. Demandé quand il revient au premier plan.';
 
   @override
   String get pinsChangePin => 'Changer le code PIN';
@@ -6956,4 +6958,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'Ce pseudo est déjà pris';
+
+  @override
+  String get pinPickDifferent => 'Choisissez un autre code PIN';
 }

@@ -3522,11 +3522,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get lockSetupThoseWereDifferentFrom => 'Не совпало. Давай сначала.';
 
   @override
-  String get lockSetupTheSameFourDigits => 'Те же четыре цифры';
+  String get lockSetupTheSameFourDigits => 'Те же цифры ещё раз';
 
   @override
   String get lockSetupFourDigitsAnythingYou =>
-      'Четыре цифры — любые, которые запомнишь';
+      'Четыре цифры или больше — любые, которые запомнишь';
 
   @override
   String get modesOnion => 'Onion';
@@ -4125,7 +4125,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get panicSetupSetAWipePin => 'Задай PIN для стирания';
 
   @override
-  String get panicSetupTheSameFourDigits => 'Те же четыре цифры';
+  String get panicSetupTheSameFourDigits => 'Те же цифры ещё раз';
 
   @override
   String get panicSetupTheSecondPinWipes => 'Второй PIN-код стирает всё.';
@@ -4201,7 +4201,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pinsOpensKryfoFourDigits =>
-      'Открывает kryfo. Четыре цифры — их спрашивают, когда приложение выходит на передний план.';
+      'Открывает kryfo. Его спрашивают, когда приложение выходит на передний план.';
 
   @override
   String get pinsChangePin => 'Сменить PIN-код';
@@ -7018,4 +7018,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'Это имя пользователя уже занято';
+
+  @override
+  String get pinPickDifferent => 'Выбери другой PIN-код';
 }

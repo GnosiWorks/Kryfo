@@ -3414,30 +3414,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lockSetupThePinStillWorks =>
-      'The pin still works whenever you want it. This is just faster.';
+      'The PIN still works whenever you want it. This is just faster.';
 
   @override
   String get lockSetupUseFingerprint => 'Use fingerprint';
 
   @override
-  String get lockSetupPinOnly => 'Pin only';
+  String get lockSetupPinOnly => 'PIN only';
 
   @override
   String get lockSetupOnceMore => 'Once more';
 
   @override
-  String get lockSetupSetAPin => 'Set a pin';
+  String get lockSetupSetAPin => 'Set a PIN';
 
   @override
   String get lockSetupThoseWereDifferentFrom =>
       'Those were different. From the top.';
 
   @override
-  String get lockSetupTheSameFourDigits => 'The same four digits';
+  String get lockSetupTheSameFourDigits => 'The same digits again';
 
   @override
   String get lockSetupFourDigitsAnythingYou =>
-      'Four digits, anything you will remember';
+      'Four digits or more, anything you will remember';
 
   @override
   String get modesOnion => 'Onion';
@@ -4028,10 +4028,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get panicSetupOnceMore => 'Once more';
 
   @override
-  String get panicSetupSetAWipePin => 'Set a wipe pin';
+  String get panicSetupSetAWipePin => 'Set a wipe PIN';
 
   @override
-  String get panicSetupTheSameFourDigits => 'The same four digits';
+  String get panicSetupTheSameFourDigits => 'The same digits again';
 
   @override
   String get panicSetupTheSecondPinWipes => 'The second pin wipes everything.';
@@ -4097,7 +4097,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinsTwoPins => 'Two pins';
 
   @override
-  String get pinsYourPin => 'Your pin';
+  String get pinsYourPin => 'Your PIN';
 
   @override
   String get commonOn => 'On';
@@ -4107,13 +4107,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pinsOpensKryfoFourDigits =>
-      'Opens kryfo. Four digits, asked for when it comes to the front.';
+      'Opens kryfo. Asked for when it comes to the front.';
 
   @override
-  String get pinsChangePin => 'Change pin';
+  String get pinsChangePin => 'Change PIN';
 
   @override
-  String get pinsSetAPin => 'Set a pin';
+  String get pinsSetAPin => 'Set a PIN';
 
   @override
   String get pinsTurnOff => 'Turn off';
@@ -4123,16 +4123,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'The pin goes, and the wipe pin with it. Anyone holding your phone opens kryfo as you.';
+      'The PIN goes, and the wipe PIN with it. Anyone holding your phone opens kryfo as you.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Unlock with fingerprint';
 
   @override
-  String get pinsWipePin => 'Wipe pin';
+  String get pinsWipePin => 'Wipe PIN';
 
   @override
-  String get pinsNeedsAPinFirst => 'Needs a pin first';
+  String get pinsNeedsAPinFirst => 'Needs a PIN first';
 
   @override
   String get pinsSet => 'Set';
@@ -4141,20 +4141,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinsTheSecondPinWipes => 'The second pin wipes everything.';
 
   @override
-  String get pinsChangeWipePin => 'Change wipe pin';
+  String get pinsChangeWipePin => 'Change wipe PIN';
 
   @override
-  String get pinsSetAWipePin => 'Set a wipe pin';
+  String get pinsSetAWipePin => 'Set a wipe PIN';
 
   @override
   String get pinsRemove => 'Remove';
 
   @override
-  String get pinsRemoveTheWipePin => 'Remove the wipe pin?';
+  String get pinsRemoveTheWipePin => 'Remove the wipe PIN?';
 
   @override
   String get pinsTheLockScreenKeeps =>
-      'The lock screen keeps your pin. The wipe pin stops doing anything.';
+      'The lock screen keeps your PIN. The wipe PIN stops doing anything.';
 
   @override
   String profileCopied(Object what) {
@@ -4997,7 +4997,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsYourPinAndA => 'Your pin, and a wipe pin';
 
   @override
-  String get settingsPinWipePin => 'Pin · wipe pin';
+  String get settingsPinWipePin => 'PIN · wipe PIN';
 
   @override
   String get settingsBackUpIdentity => 'Back up identity';
@@ -6882,4 +6882,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'That handle is taken';
+
+  @override
+  String get pinPickDifferent => 'Pick a different PIN';
 }

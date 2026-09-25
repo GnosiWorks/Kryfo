@@ -878,8 +878,8 @@
   "lockSetupOnceMore": "再输一次",
   "lockSetupSetAPin": "设置 PIN 码",
   "lockSetupThoseWereDifferentFrom": "两次不一样。从头再来。",
-  "lockSetupTheSameFourDigits": "同样的四位数字",
-  "lockSetupFourDigitsAnythingYou": "四位数字，选一个你记得住的",
+  "lockSetupTheSameFourDigits": "再输入一次同样的数字",
+  "lockSetupFourDigitsAnythingYou": "四位或更多数字，选一个你记得住的",
   "modesOnion": "Onion",
   "modesFullOnionRoutingThree": "完整的 onion 路由，3 跳。一条消息需要两到五秒。没有人看得到你在和谁聊天。",
   "modesSlower": "较慢",
@@ -1053,7 +1053,7 @@
   "panicSetupThatIsYourReal": "这是你真正的 PIN 码。请换一个。",
   "panicSetupOnceMore": "再输一次",
   "panicSetupSetAWipePin": "设置抹掉 PIN",
-  "panicSetupTheSameFourDigits": "同样的四位数字",
+  "panicSetupTheSameFourDigits": "再输入一次同样的数字",
   "panicSetupTheSecondPinWipes": "第二个 PIN 码会抹掉一切。",
   "photoKnowsEverythingInside": "里面的一切",
   "photoKnowsVideo": "视频",
@@ -1075,7 +1075,7 @@
   "pinsYourPin": "你的 PIN 码",
   "commonOn": "开",
   "commonOff": "关",
-  "pinsOpensKryfoFourDigits": "用来打开 kryfo。四位数字，每次切到前台时都会要求输入。",
+  "pinsOpensKryfoFourDigits": "用来打开 kryfo。每次切到前台时都会要求输入。",
   "pinsChangePin": "更改 PIN 码",
   "pinsSetAPin": "设置 PIN 码",
   "pinsTurnOff": "关闭",
@@ -1823,5 +1823,6 @@
   "peopleFingerprintLine": "请核对是否与对方应用里显示的一致。",
   "peopleAdding": "正在添加…",
   "handleNobodyHasClaimed": "没有人认领 {handle}",
-  "handleThatHandleIsTaken": "这个用户名已被占用"
+  "handleThatHandleIsTaken": "这个用户名已被占用",
+  "pinPickDifferent": "请换一个 PIN 码"
 }

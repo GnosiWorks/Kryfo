@@ -878,8 +878,8 @@
   "lockSetupOnceMore": "Encore une fois",
   "lockSetupSetAPin": "Créer un code PIN",
   "lockSetupThoseWereDifferentFrom": "Les deux diffèrent. On recommence.",
-  "lockSetupTheSameFourDigits": "Les quatre mêmes chiffres",
-  "lockSetupFourDigitsAnythingYou": "Quatre chiffres dont vous vous souviendrez",
+  "lockSetupTheSameFourDigits": "Les mêmes chiffres, encore une fois",
+  "lockSetupFourDigitsAnythingYou": "Quatre chiffres ou plus, dont vous vous souviendrez",
   "modesOnion": "Onion",
   "modesFullOnionRoutingThree": "Routage onion complet, trois sauts. Un message met deux à cinq secondes. Personne ne voit à qui vous parlez.",
   "modesSlower": "plus lent",
@@ -1053,7 +1053,7 @@
   "panicSetupThatIsYourReal": "C’est votre vrai code PIN. Choisissez-en un autre.",
   "panicSetupOnceMore": "Encore une fois",
   "panicSetupSetAWipePin": "Code d’effacement",
-  "panicSetupTheSameFourDigits": "Les quatre mêmes chiffres",
+  "panicSetupTheSameFourDigits": "Les mêmes chiffres, encore une fois",
   "panicSetupTheSecondPinWipes": "Le second code efface tout.",
   "photoKnowsEverythingInside": "Tout ce qu’il y a dedans",
   "photoKnowsVideo": "Vidéo",
@@ -1075,7 +1075,7 @@
   "pinsYourPin": "Votre code PIN",
   "commonOn": "Activé",
   "commonOff": "Désactivé",
-  "pinsOpensKryfoFourDigits": "Ouvre kryfo. Quatre chiffres, demandés quand il revient au premier plan.",
+  "pinsOpensKryfoFourDigits": "Ouvre kryfo. Demandé quand il revient au premier plan.",
   "pinsChangePin": "Changer le code PIN",
   "pinsSetAPin": "Créer un code PIN",
   "pinsTurnOff": "Désactiver",
@@ -1823,5 +1823,6 @@
   "peopleFingerprintLine": "Vérifiez qu’elle correspond à ce qu’ils voient dans leur appli.",
   "peopleAdding": "Ajout…",
   "handleNobodyHasClaimed": "Personne n’a réservé {handle}",
-  "handleThatHandleIsTaken": "Ce pseudo est déjà pris"
+  "handleThatHandleIsTaken": "Ce pseudo est déjà pris",
+  "pinPickDifferent": "Choisissez un autre code PIN"
 }

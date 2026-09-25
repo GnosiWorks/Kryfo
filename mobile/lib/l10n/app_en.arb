@@ -4289,7 +4289,7 @@
   "@lockSetupUnlockWithFingerprint": {
     "description": "screens/lock_setup_screen.dart"
   },
-  "lockSetupThePinStillWorks": "The pin still works whenever you want it. This is just faster.",
+  "lockSetupThePinStillWorks": "The PIN still works whenever you want it. This is just faster.",
   "@lockSetupThePinStillWorks": {
     "description": "screens/lock_setup_screen.dart"
   },
@@ -4297,7 +4297,7 @@
   "@lockSetupUseFingerprint": {
     "description": "screens/lock_setup_screen.dart"
   },
-  "lockSetupPinOnly": "Pin only",
+  "lockSetupPinOnly": "PIN only",
   "@lockSetupPinOnly": {
     "description": "screens/lock_setup_screen.dart"
   },
@@ -4305,7 +4305,7 @@
   "@lockSetupOnceMore": {
     "description": "screens/lock_setup_screen.dart"
   },
-  "lockSetupSetAPin": "Set a pin",
+  "lockSetupSetAPin": "Set a PIN",
   "@lockSetupSetAPin": {
     "description": "screens/lock_setup_screen.dart"
   },
@@ -4313,11 +4313,11 @@
   "@lockSetupThoseWereDifferentFrom": {
     "description": "screens/lock_setup_screen.dart"
   },
-  "lockSetupTheSameFourDigits": "The same four digits",
+  "lockSetupTheSameFourDigits": "The same digits again",
   "@lockSetupTheSameFourDigits": {
     "description": "screens/lock_setup_screen.dart"
   },
-  "lockSetupFourDigitsAnythingYou": "Four digits, anything you will remember",
+  "lockSetupFourDigitsAnythingYou": "Four digits or more, anything you will remember",
   "@lockSetupFourDigitsAnythingYou": {
     "description": "screens/lock_setup_screen.dart"
   },
@@ -5043,11 +5043,11 @@
   "@panicSetupOnceMore": {
     "description": "screens/panic_setup_screen.dart"
   },
-  "panicSetupSetAWipePin": "Set a wipe pin",
+  "panicSetupSetAWipePin": "Set a wipe PIN",
   "@panicSetupSetAWipePin": {
     "description": "screens/panic_setup_screen.dart"
   },
-  "panicSetupTheSameFourDigits": "The same four digits",
+  "panicSetupTheSameFourDigits": "The same digits again",
   "@panicSetupTheSameFourDigits": {
     "description": "screens/panic_setup_screen.dart"
   },
@@ -5141,7 +5141,7 @@
   "@pinsTwoPins": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsYourPin": "Your pin",
+  "pinsYourPin": "Your PIN",
   "@pinsYourPin": {
     "description": "screens/pins_screen.dart"
   },
@@ -5153,15 +5153,15 @@
   "@commonOff": {
     "description": "screens/pins_screen.dart, screens/settings_screen.dart"
   },
-  "pinsOpensKryfoFourDigits": "Opens kryfo. Four digits, asked for when it comes to the front.",
+  "pinsOpensKryfoFourDigits": "Opens kryfo. Asked for when it comes to the front.",
   "@pinsOpensKryfoFourDigits": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsChangePin": "Change pin",
+  "pinsChangePin": "Change PIN",
   "@pinsChangePin": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsSetAPin": "Set a pin",
+  "pinsSetAPin": "Set a PIN",
   "@pinsSetAPin": {
     "description": "screens/pins_screen.dart"
   },
@@ -5173,7 +5173,7 @@
   "@pinsTurnOffTheApp": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsThePinGoesAnd": "The pin goes, and the wipe pin with it. Anyone holding your phone opens kryfo as you.",
+  "pinsThePinGoesAnd": "The PIN goes, and the wipe PIN with it. Anyone holding your phone opens kryfo as you.",
   "@pinsThePinGoesAnd": {
     "description": "screens/pins_screen.dart"
   },
@@ -5181,11 +5181,11 @@
   "@pinsUnlockWithFingerprint": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsWipePin": "Wipe pin",
+  "pinsWipePin": "Wipe PIN",
   "@pinsWipePin": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsNeedsAPinFirst": "Needs a pin first",
+  "pinsNeedsAPinFirst": "Needs a PIN first",
   "@pinsNeedsAPinFirst": {
     "description": "screens/pins_screen.dart"
   },
@@ -5197,11 +5197,11 @@
   "@pinsTheSecondPinWipes": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsChangeWipePin": "Change wipe pin",
+  "pinsChangeWipePin": "Change wipe PIN",
   "@pinsChangeWipePin": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsSetAWipePin": "Set a wipe pin",
+  "pinsSetAWipePin": "Set a wipe PIN",
   "@pinsSetAWipePin": {
     "description": "screens/pins_screen.dart"
   },
@@ -5209,11 +5209,11 @@
   "@pinsRemove": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsRemoveTheWipePin": "Remove the wipe pin?",
+  "pinsRemoveTheWipePin": "Remove the wipe PIN?",
   "@pinsRemoveTheWipePin": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsTheLockScreenKeeps": "The lock screen keeps your pin. The wipe pin stops doing anything.",
+  "pinsTheLockScreenKeeps": "The lock screen keeps your PIN. The wipe PIN stops doing anything.",
   "@pinsTheLockScreenKeeps": {
     "description": "screens/pins_screen.dart"
   },
@@ -6293,7 +6293,7 @@
   "@settingsYourPinAndA": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsPinWipePin": "Pin · wipe pin",
+  "settingsPinWipePin": "PIN · wipe PIN",
   "@settingsPinWipePin": {
     "description": "screens/settings_screen.dart"
   },
@@ -8771,5 +8771,9 @@
   "handleThatHandleIsTaken": "That handle is taken",
   "@handleThatHandleIsTaken": {
     "description": "toast: the registry refused a claim because someone else holds the handle"
+  },
+  "pinPickDifferent": "Pick a different PIN",
+  "@pinPickDifferent": {
+    "description": "setting a PIN that is already in use; never says which one it matched"
   }
 }

@@ -878,8 +878,8 @@
   "lockSetupOnceMore": "再一次",
   "lockSetupSetAPin": "設定 PIN 碼",
   "lockSetupThoseWereDifferentFrom": "兩次不一樣。從頭再來。",
-  "lockSetupTheSameFourDigits": "同樣的四位數字",
-  "lockSetupFourDigitsAnythingYou": "四位數字，選一組你記得住的",
+  "lockSetupTheSameFourDigits": "再輸入一次同樣的數字",
+  "lockSetupFourDigitsAnythingYou": "四位或更多數字，選一組你記得住的",
   "modesOnion": "Onion",
   "modesFullOnionRoutingThree": "完整的 onion 路由，3 跳。一則訊息需要兩到五秒。沒有人看得到你在和誰聊天。",
   "modesSlower": "較慢",
@@ -1053,7 +1053,7 @@
   "panicSetupThatIsYourReal": "這是你真正的 PIN 碼。請換一個。",
   "panicSetupOnceMore": "再一次",
   "panicSetupSetAWipePin": "設定清除 PIN",
-  "panicSetupTheSameFourDigits": "同樣的四位數字",
+  "panicSetupTheSameFourDigits": "再輸入一次同樣的數字",
   "panicSetupTheSecondPinWipes": "第二組 PIN 碼會清除一切。",
   "photoKnowsEverythingInside": "裡面的一切",
   "photoKnowsVideo": "影片",
@@ -1075,7 +1075,7 @@
   "pinsYourPin": "你的 PIN 碼",
   "commonOn": "開啟",
   "commonOff": "關閉",
-  "pinsOpensKryfoFourDigits": "用來開啟 kryfo。四位數字，每次 kryfo 回到前景時都會詢問。",
+  "pinsOpensKryfoFourDigits": "用來開啟 kryfo。每次 kryfo 回到前景時都會詢問。",
   "pinsChangePin": "變更 PIN 碼",
   "pinsSetAPin": "設定 PIN 碼",
   "pinsTurnOff": "關閉",
@@ -1823,5 +1823,6 @@
   "peopleFingerprintLine": "請核對是否與對方應用程式裡顯示的一致。",
   "peopleAdding": "正在新增…",
   "handleNobodyHasClaimed": "沒有人認領 {handle}",
-  "handleThatHandleIsTaken": "這個使用者名稱已被使用"
+  "handleThatHandleIsTaken": "這個使用者名稱已被使用",
+  "pinPickDifferent": "請換一組 PIN 碼"
 }

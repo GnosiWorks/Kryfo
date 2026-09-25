@@ -280,6 +280,19 @@ class MainActivity : FlutterFragmentActivity() {
                     "bootedAtMs" -> result.success(
                         System.currentTimeMillis() - android.os.SystemClock.elapsedRealtime()
                     )
+                    // the pin hold runs on these: time since boot, which a
+                    // change of date does not move, and which boot this is
+                    "uptimeMs" -> result.success(SystemClock.elapsedRealtime())
+                    "bootCount" -> result.success(
+                        try {
+                            android.provider.Settings.Global.getInt(
+                                contentResolver,
+                                android.provider.Settings.Global.BOOT_COUNT,
+                            )
+                        } catch (e: Exception) {
+                            -1
+                        }
+                    )
                     // the delivery mode changed. dart has written the new
                     // mode before calling, so this only has to act on it.
                     "applyDeliveryMode" -> {

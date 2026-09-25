@@ -3457,11 +3457,11 @@ class AppLocalizationsTr extends AppLocalizations {
       'İkisi farklıydı. Baştan alalım.';
 
   @override
-  String get lockSetupTheSameFourDigits => 'Aynı dört rakam';
+  String get lockSetupTheSameFourDigits => 'Aynı rakamları bir kez daha';
 
   @override
   String get lockSetupFourDigitsAnythingYou =>
-      'Dört rakam, hatırlayacağın herhangi bir şey';
+      'Dört rakam veya daha fazlası, hatırlayacağın herhangi bir şey';
 
   @override
   String get modesOnion => 'Onion';
@@ -4061,7 +4061,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get panicSetupSetAWipePin => 'Silme PIN’i belirle';
 
   @override
-  String get panicSetupTheSameFourDigits => 'Aynı dört rakam';
+  String get panicSetupTheSameFourDigits => 'Aynı rakamları bir kez daha';
 
   @override
   String get panicSetupTheSecondPinWipes => 'İkinci PIN her şeyi siler.';
@@ -4136,7 +4136,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pinsOpensKryfoFourDigits =>
-      'Kryfo’yu açar. Dört rakam; uygulama öne geldiğinde sorulur.';
+      'Kryfo’yu açar. Uygulama öne geldiğinde sorulur.';
 
   @override
   String get pinsChangePin => 'PIN’i değiştir';
@@ -6920,4 +6920,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'Bu kullanıcı adı zaten alınmış';
+
+  @override
+  String get pinPickDifferent => 'Başka bir PIN seç';
 }

@@ -878,8 +878,8 @@
   "lockSetupOnceMore": "Noch einmal",
   "lockSetupSetAPin": "PIN festlegen",
   "lockSetupThoseWereDifferentFrom": "Die waren verschieden. Noch mal von vorn.",
-  "lockSetupTheSameFourDigits": "Dieselben vier Ziffern",
-  "lockSetupFourDigitsAnythingYou": "Vier Ziffern, die du dir merken kannst",
+  "lockSetupTheSameFourDigits": "Dieselben Ziffern noch einmal",
+  "lockSetupFourDigitsAnythingYou": "Vier Ziffern oder mehr, die du dir merken kannst",
   "modesOnion": "Onion",
   "modesFullOnionRoutingThree": "Volles Onion-Routing, drei Stationen. Eine Nachricht braucht zwei bis fünf Sekunden. Niemand sieht, mit wem du sprichst.",
   "modesSlower": "langsamer",
@@ -1053,7 +1053,7 @@
   "panicSetupThatIsYourReal": "Das ist deine echte PIN. Wähle eine andere.",
   "panicSetupOnceMore": "Noch einmal",
   "panicSetupSetAWipePin": "Lösch-PIN festlegen",
-  "panicSetupTheSameFourDigits": "Dieselben vier Ziffern",
+  "panicSetupTheSameFourDigits": "Dieselben Ziffern noch einmal",
   "panicSetupTheSecondPinWipes": "Die zweite PIN löscht alles.",
   "photoKnowsEverythingInside": "Alles, was drin ist",
   "photoKnowsVideo": "Video",
@@ -1075,7 +1075,7 @@
   "pinsYourPin": "Deine PIN",
   "commonOn": "An",
   "commonOff": "Aus",
-  "pinsOpensKryfoFourDigits": "Öffnet kryfo. Vier Ziffern, abgefragt, wenn es in den Vordergrund kommt.",
+  "pinsOpensKryfoFourDigits": "Öffnet kryfo. Wird abgefragt, wenn es in den Vordergrund kommt.",
   "pinsChangePin": "PIN ändern",
   "pinsSetAPin": "PIN festlegen",
   "pinsTurnOff": "Ausschalten",
@@ -1823,5 +1823,6 @@
   "peopleFingerprintLine": "Prüf, ob er mit dem in ihrer App übereinstimmt.",
   "peopleAdding": "Wird hinzugefügt…",
   "handleNobodyHasClaimed": "Niemand hat {handle} gesichert",
-  "handleThatHandleIsTaken": "Dieser Benutzername ist schon vergeben"
+  "handleThatHandleIsTaken": "Dieser Benutzername ist schon vergeben",
+  "pinPickDifferent": "Wähl eine andere PIN"
 }

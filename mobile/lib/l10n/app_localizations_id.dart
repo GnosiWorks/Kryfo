@@ -3432,11 +3432,11 @@ class AppLocalizationsId extends AppLocalizations {
       'Tadi berbeda. Ulangi dari awal.';
 
   @override
-  String get lockSetupTheSameFourDigits => 'Empat angka yang sama';
+  String get lockSetupTheSameFourDigits => 'Angka yang sama sekali lagi';
 
   @override
   String get lockSetupFourDigitsAnythingYou =>
-      'Empat angka, apa saja yang bisa kamu ingat';
+      'Empat angka atau lebih, apa saja yang bisa kamu ingat';
 
   @override
   String get modesOnion => 'Onion';
@@ -4034,7 +4034,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get panicSetupSetAWipePin => 'Buat PIN penghapus';
 
   @override
-  String get panicSetupTheSameFourDigits => 'Empat angka yang sama';
+  String get panicSetupTheSameFourDigits => 'Angka yang sama sekali lagi';
 
   @override
   String get panicSetupTheSecondPinWipes =>
@@ -4110,7 +4110,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get pinsOpensKryfoFourDigits =>
-      'Membuka kryfo. Empat angka, diminta setiap kryfo kembali ke depan.';
+      'Membuka kryfo. Diminta setiap kryfo kembali ke depan.';
 
   @override
   String get pinsChangePin => 'Ganti PIN';
@@ -6888,4 +6888,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'Nama pengguna itu sudah dipakai';
+
+  @override
+  String get pinPickDifferent => 'Pilih PIN lain';
 }
