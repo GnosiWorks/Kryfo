@@ -17,7 +17,6 @@ import 'package:share_plus/share_plus.dart';
 
 import 'theme.dart';
 import 'l10n/l10n.dart';
-import 'lock_guard.dart' show lockGuard;
 
 class ContactCard extends StatelessWidget {
   final String haloId;
@@ -150,8 +149,6 @@ Future<void> shareContactCard({
     final file = File('${dir.path}/kryfo-$haloId.png');
     await file.writeAsBytes(bytes.buffer.asUint8List(), flush: true);
 
-    // the share sheet never opens over the pin pad
-    await lockGuard.unlocked();
     await lockState.hold(
       () => SharePlus.instance.share(
         ShareParams(

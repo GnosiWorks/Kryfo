@@ -193,6 +193,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
     currentChatPeer = 'group:${widget.groupId}';
     WidgetsBinding.instance.addObserver(this);
+    lockState.addListener(_lockLifted);
     // a room is never in the app switcher and never screenshotted. the flag
     // is set the moment we know it is a room and cleared on the way out.
     db.getGroup(widget.groupId).then((g) async {
@@ -2494,6 +2495,22 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     await appState.unsendInGroup(widget.groupId, m.msgUid!);
   }
 
+  // the lock lifted with this group on top: it is the one being read again
+  void _lockLifted() {
+    if (!mounted || !lockState.loaded || lockState.locked) return;
+    // inactive too: a fingerprint unlock lifts it under the system prompt
+    final life = WidgetsBinding.instance.lifecycleState;
+    if (life != AppLifecycleState.resumed &&
+        life != AppLifecycleState.inactive) {
+      return;
+    }
+    if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
+    final me = 'group:${widget.groupId}';
+    if (currentChatPeer == me) return;
+    currentChatPeer = me;
+    db.clearGroupUnread(widget.groupId).then((_) => appState.refreshGroups());
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // backgrounded with the group open: drop the "open" marker so incoming
@@ -2563,6 +2580,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     _stickyLabel.dispose();
     _stickyShown.dispose();
     WidgetsBinding.instance.removeObserver(this);
+    lockState.removeListener(_lockLifted);
     if (currentChatPeer == 'group:${widget.groupId}') currentChatPeer = null;
     appState.removeListener(_onAppStateChanged);
     _burnTick?.cancel();
