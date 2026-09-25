@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../widgets/burn_fade.dart';
 import '../widgets/press_scale.dart';
 import '../main.dart';
 import '../theme.dart';
@@ -63,9 +65,17 @@ class _SavedScreenState extends State<SavedScreen> {
     );
   }
 
+  // unsaved rows fade and fold (FadeFold) before the list reloads
+  final Set<String> _leaving = {};
+
   Future<void> _unsave(String uid) async {
+    if (!_leaving.add(uid)) return;
+    HapticFeedback.selectionClick();
+    setState(() {});
     await db.setSaved(uid, false);
+    await Future.delayed(FadeFold.gone);
     await _load();
+    _leaving.remove(uid);
   }
 
   String _preview(Map<String, Object?> r) {
@@ -121,8 +131,13 @@ class _SavedScreenState extends State<SavedScreen> {
             : ListView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                 itemCount: _rows.length,
-                itemBuilder: (_, i) =>
-                    StaggerIn(index: i, child: _card(_rows[i])),
+                itemBuilder: (_, i) => StaggerIn(
+                  index: i,
+                  child: FadeFold(
+                    leaving: _leaving.contains(_rows[i]['msg_uid']),
+                    child: _card(_rows[i]),
+                  ),
+                ),
               ),
       ),
     );

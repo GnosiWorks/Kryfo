@@ -4644,11 +4644,11 @@
   "@newGroupNewGroup": {
     "description": "screens/new_group_screen.dart"
   },
-  "newGroupCreating": "creating...",
+  "newGroupCreating": "Creating…",
   "@newGroupCreating": {
     "description": "screens/new_group_screen.dart"
   },
-  "newGroupCreate": "create",
+  "newGroupCreate": "Create",
   "@newGroupCreate": {
     "description": "screens/new_group_screen.dart"
   },
@@ -8059,7 +8059,7 @@
   "@notificationsChannelName": {
     "description": "notifications.dart"
   },
-  "cameraClose": "close",
+  "cameraClose": "Close",
   "@cameraClose": {
     "description": "screens/camera_screen.dart"
   },
@@ -8091,7 +8091,7 @@
   "@donateCopy": {
     "description": "screens/donate_screen.dart"
   },
-  "donateDone": "done",
+  "donateDone": "Done",
   "@donateDone": {
     "description": "screens/donate_screen.dart"
   },
@@ -8143,7 +8143,7 @@
   "@shieldBlock": {
     "description": "screens/shield_sheet.dart"
   },
-  "shieldDelete": "delete",
+  "shieldDelete": "Delete",
   "@shieldDelete": {
     "description": "screens/shield_sheet.dart"
   },
@@ -8263,15 +8263,15 @@
   "@wallpaperPatterns": {
     "description": "screens/wallpaper_sheet.dart"
   },
-  "confirmSheetKeep": "keep",
+  "confirmSheetKeep": "Keep",
   "@confirmSheetKeep": {
     "description": "widgets/confirm_sheet.dart"
   },
-  "confirmSheetSave": "save",
+  "confirmSheetSave": "Save",
   "@confirmSheetSave": {
     "description": "widgets/confirm_sheet.dart"
   },
-  "confirmSheetCancel": "cancel",
+  "confirmSheetCancel": "Cancel",
   "@confirmSheetCancel": {
     "description": "widgets/confirm_sheet.dart"
   },

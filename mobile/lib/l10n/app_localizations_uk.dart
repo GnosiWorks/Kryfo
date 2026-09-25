@@ -3774,10 +3774,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get newGroupNewGroup => 'Нова група';
 
   @override
-  String get newGroupCreating => 'створення...';
+  String get newGroupCreating => 'Створення…';
 
   @override
-  String get newGroupCreate => 'створити';
+  String get newGroupCreate => 'Створити';
 
   @override
   String get newGroupGroupName => 'Назва групи';
@@ -6457,7 +6457,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get notificationsChannelName => 'повідомлення';
 
   @override
-  String get cameraClose => 'закрити';
+  String get cameraClose => 'Закрити';
 
   @override
   String get cameraFlash => 'спалах';
@@ -6481,7 +6481,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get donateCopy => 'копіювати';
 
   @override
-  String get donateDone => 'готово';
+  String get donateDone => 'Готово';
 
   @override
   String get donateTierSupporter => 'прихильник';
@@ -6520,7 +6520,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get shieldBlock => 'заблокувати';
 
   @override
-  String get shieldDelete => 'видалити';
+  String get shieldDelete => 'Видалити';
 
   @override
   String get shieldIgnore => 'ігнорувати';
@@ -6610,13 +6610,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String get wallpaperPatterns => 'візерунки';
 
   @override
-  String get confirmSheetKeep => 'залишити';
+  String get confirmSheetKeep => 'Залишити';
 
   @override
-  String get confirmSheetSave => 'зберегти';
+  String get confirmSheetSave => 'Зберегти';
 
   @override
-  String get confirmSheetCancel => 'скасувати';
+  String get confirmSheetCancel => 'Скасувати';
 
   @override
   String bridgesSaved(int count) {

@@ -3785,10 +3785,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get newGroupNewGroup => 'Новая группа';
 
   @override
-  String get newGroupCreating => 'создаём...';
+  String get newGroupCreating => 'Создаём…';
 
   @override
-  String get newGroupCreate => 'создать';
+  String get newGroupCreate => 'Создать';
 
   @override
   String get newGroupGroupName => 'Название группы';
@@ -6461,7 +6461,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notificationsChannelName => 'сообщения';
 
   @override
-  String get cameraClose => 'закрыть';
+  String get cameraClose => 'Закрыть';
 
   @override
   String get cameraFlash => 'вспышка';
@@ -6485,7 +6485,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get donateCopy => 'копировать';
 
   @override
-  String get donateDone => 'готово';
+  String get donateDone => 'Готово';
 
   @override
   String get donateTierSupporter => 'сторонник';
@@ -6524,7 +6524,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get shieldBlock => 'заблокировать';
 
   @override
-  String get shieldDelete => 'удалить';
+  String get shieldDelete => 'Удалить';
 
   @override
   String get shieldIgnore => 'игнорировать';
@@ -6614,13 +6614,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get wallpaperPatterns => 'узоры';
 
   @override
-  String get confirmSheetKeep => 'оставить';
+  String get confirmSheetKeep => 'Оставить';
 
   @override
-  String get confirmSheetSave => 'сохранить';
+  String get confirmSheetSave => 'Сохранить';
 
   @override
-  String get confirmSheetCancel => 'отмена';
+  String get confirmSheetCancel => 'Отмена';
 
   @override
   String bridgesSaved(int count) {

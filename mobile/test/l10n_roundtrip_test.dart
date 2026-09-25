@@ -1920,8 +1920,8 @@ void main() {
     );
     expect(l.newGroupCouldNotCreate, "Could not create");
     expect(l.newGroupNewGroup, "New group");
-    expect(l.newGroupCreating, "creating...");
-    expect(l.newGroupCreate, "create");
+    expect(l.newGroupCreating, "Creating…");
+    expect(l.newGroupCreate, "Create");
     expect(l.newGroupGroupName, "Group name");
     expect(l.newGroupMembers, "Members");
     expect(l.newGroupPickAtLeastOne, "Pick at least one");
@@ -3242,7 +3242,7 @@ void main() {
     expect(l.videoBubbleKb("<b>"), "<b> KB");
     expect(l.videoBubbleVideo, "Video");
     expect(l.notificationsChannelName, "messages");
-    expect(l.cameraClose, "close");
+    expect(l.cameraClose, "Close");
     expect(l.cameraFlash, "flash");
     expect(l.cameraPhoto, "photo");
     expect(l.cameraVideo, "video");
@@ -3250,7 +3250,7 @@ void main() {
     expect(l.seenIntroductions, "introductions");
     expect(l.donateAddress, "address");
     expect(l.donateCopy, "copy");
-    expect(l.donateDone, "done");
+    expect(l.donateDone, "Done");
     expect(l.donateTierSupporter, "supporter");
     expect(l.donateTierPatron, "patron");
     expect(l.donateTierGuardian, "guardian");
@@ -3263,7 +3263,7 @@ void main() {
     expect(l.restoreMessages, "messages");
     expect(l.restoreAttachments, "attachments");
     expect(l.shieldBlock, "block");
-    expect(l.shieldDelete, "delete");
+    expect(l.shieldDelete, "Delete");
     expect(l.shieldIgnore, "ignore");
     expect(l.profileIdentity, "identity");
     expect(l.avatarPickerShape, "Shape");
@@ -3293,9 +3293,9 @@ void main() {
     expect(l.settingsAbout, "About");
     expect(l.wallpaperGradients, "gradients");
     expect(l.wallpaperPatterns, "patterns");
-    expect(l.confirmSheetKeep, "keep");
-    expect(l.confirmSheetSave, "save");
-    expect(l.confirmSheetCancel, "cancel");
+    expect(l.confirmSheetKeep, "Keep");
+    expect(l.confirmSheetSave, "Save");
+    expect(l.confirmSheetCancel, "Cancel");
     expect(l.bridgesSaved(0), "0 bridges");
     expect(l.bridgesSaved(1), "1 bridge");
     expect(l.bridgesSaved(2), "2 bridges");

@@ -3690,10 +3690,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get newGroupNewGroup => 'Nhóm mới';
 
   @override
-  String get newGroupCreating => 'đang tạo...';
+  String get newGroupCreating => 'Đang tạo…';
 
   @override
-  String get newGroupCreate => 'tạo';
+  String get newGroupCreate => 'Tạo';
 
   @override
   String get newGroupGroupName => 'Tên nhóm';
@@ -6330,7 +6330,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notificationsChannelName => 'tin nhắn';
 
   @override
-  String get cameraClose => 'đóng';
+  String get cameraClose => 'Đóng';
 
   @override
   String get cameraFlash => 'đèn flash';
@@ -6354,7 +6354,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get donateCopy => 'sao chép';
 
   @override
-  String get donateDone => 'xong';
+  String get donateDone => 'Xong';
 
   @override
   String get donateTierSupporter => 'người ủng hộ';
@@ -6393,7 +6393,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get shieldBlock => 'chặn';
 
   @override
-  String get shieldDelete => 'xóa';
+  String get shieldDelete => 'Xóa';
 
   @override
   String get shieldIgnore => 'bỏ qua';
@@ -6483,13 +6483,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get wallpaperPatterns => 'họa tiết';
 
   @override
-  String get confirmSheetKeep => 'giữ';
+  String get confirmSheetKeep => 'Giữ';
 
   @override
-  String get confirmSheetSave => 'lưu';
+  String get confirmSheetSave => 'Lưu';
 
   @override
-  String get confirmSheetCancel => 'hủy';
+  String get confirmSheetCancel => 'Hủy';
 
   @override
   String bridgesSaved(int count) {

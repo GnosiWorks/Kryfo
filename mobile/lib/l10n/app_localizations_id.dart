@@ -3694,10 +3694,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get newGroupNewGroup => 'Grup baru';
 
   @override
-  String get newGroupCreating => 'membuat...';
+  String get newGroupCreating => 'Membuat…';
 
   @override
-  String get newGroupCreate => 'buat';
+  String get newGroupCreate => 'Buat';
 
   @override
   String get newGroupGroupName => 'Nama grup';
@@ -6343,7 +6343,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get notificationsChannelName => 'pesan';
 
   @override
-  String get cameraClose => 'tutup';
+  String get cameraClose => 'Tutup';
 
   @override
   String get cameraFlash => 'lampu kilat';
@@ -6367,7 +6367,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get donateCopy => 'salin';
 
   @override
-  String get donateDone => 'selesai';
+  String get donateDone => 'Selesai';
 
   @override
   String get donateTierSupporter => 'pendukung';
@@ -6406,7 +6406,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get shieldBlock => 'blokir';
 
   @override
-  String get shieldDelete => 'hapus';
+  String get shieldDelete => 'Hapus';
 
   @override
   String get shieldIgnore => 'abaikan';
@@ -6496,13 +6496,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get wallpaperPatterns => 'pola';
 
   @override
-  String get confirmSheetKeep => 'biarkan';
+  String get confirmSheetKeep => 'Biarkan';
 
   @override
-  String get confirmSheetSave => 'simpan';
+  String get confirmSheetSave => 'Simpan';
 
   @override
-  String get confirmSheetCancel => 'batal';
+  String get confirmSheetCancel => 'Batal';
 
   @override
   String bridgesSaved(int count) {

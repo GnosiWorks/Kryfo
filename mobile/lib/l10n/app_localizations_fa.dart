@@ -3713,7 +3713,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get newGroupNewGroup => 'گروه جدید';
 
   @override
-  String get newGroupCreating => 'در حال ساختن...';
+  String get newGroupCreating => 'در حال ساختن…';
 
   @override
   String get newGroupCreate => 'ساختن';

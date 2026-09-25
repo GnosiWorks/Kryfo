@@ -3720,10 +3720,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get newGroupNewGroup => 'Yeni grup';
 
   @override
-  String get newGroupCreating => 'oluşturuluyor...';
+  String get newGroupCreating => 'Oluşturuluyor…';
 
   @override
-  String get newGroupCreate => 'oluştur';
+  String get newGroupCreate => 'Oluştur';
 
   @override
   String get newGroupGroupName => 'Grup adı';
@@ -6370,7 +6370,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get notificationsChannelName => 'mesajlar';
 
   @override
-  String get cameraClose => 'kapat';
+  String get cameraClose => 'Kapat';
 
   @override
   String get cameraFlash => 'flaş';
@@ -6394,7 +6394,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get donateCopy => 'kopyala';
 
   @override
-  String get donateDone => 'bitti';
+  String get donateDone => 'Bitti';
 
   @override
   String get donateTierSupporter => 'destekçi';
@@ -6433,7 +6433,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shieldBlock => 'engelle';
 
   @override
-  String get shieldDelete => 'sil';
+  String get shieldDelete => 'Sil';
 
   @override
   String get shieldIgnore => 'yok say';
@@ -6523,13 +6523,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get wallpaperPatterns => 'desenler';
 
   @override
-  String get confirmSheetKeep => 'kalsın';
+  String get confirmSheetKeep => 'Kalsın';
 
   @override
-  String get confirmSheetSave => 'kaydet';
+  String get confirmSheetSave => 'Kaydet';
 
   @override
-  String get confirmSheetCancel => 'iptal';
+  String get confirmSheetCancel => 'İptal';
 
   @override
   String bridgesSaved(int count) {

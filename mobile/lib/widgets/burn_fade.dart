@@ -12,45 +12,106 @@ class BurnFade extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!active) return child;
+    if (MediaQuery.of(context).disableAnimations) {
+      return _stillFade(child);
+    }
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 520),
+      duration: kBurnDissolve,
       curve: Curves.easeIn,
-      builder: (context, t, _) {
-        return Stack(
-          clipBehavior: Clip.none,
-          children: [
-            ShaderMask(
-              blendMode: BlendMode.dstIn,
-              shaderCallback: (rect) {
-                final line = 1 - t;
-                return LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: const [
-                    Colors.white,
-                    Colors.white,
-                    Colors.transparent,
-                    Colors.transparent,
-                  ],
-                  stops: [
-                    0.0,
-                    (line - 0.16).clamp(0.0, 1.0),
-                    (line + 0.02).clamp(0.0, 1.0),
-                    1.0,
-                  ],
-                ).createShader(rect);
-              },
-              child: child,
-            ),
-            Positioned.fill(
-              child: IgnorePointer(
-                child: CustomPaint(painter: EmberPainter(t)),
-              ),
-            ),
+      builder: (context, t, _) => _burning(t, child),
+    );
+  }
+}
+
+const kBurnDissolve = Duration(milliseconds: 520);
+const _kFold = Duration(milliseconds: 240);
+
+/// how long a leaving row needs on screen: the burn, then the fold. a row
+/// taken out of the list sooner cuts the animation off.
+const kLeaveGone = Duration(milliseconds: 800);
+
+// the child burning from the bottom up at t, the embers over it
+Widget _burning(double t, Widget child) => Stack(
+  clipBehavior: Clip.none,
+  children: [
+    ShaderMask(
+      blendMode: BlendMode.dstIn,
+      shaderCallback: (rect) {
+        final line = 1 - t;
+        return LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: const [
+            Colors.white,
+            Colors.white,
+            Colors.transparent,
+            Colors.transparent,
           ],
+          stops: [
+            0.0,
+            (line - 0.16).clamp(0.0, 1.0),
+            (line + 0.02).clamp(0.0, 1.0),
+            1.0,
+          ],
+        ).createShader(rect);
+      },
+      child: child,
+    ),
+    Positioned.fill(
+      child: IgnorePointer(child: CustomPaint(painter: EmberPainter(t))),
+    ),
+  ],
+);
+
+// reduced motion: no fire and no fold, a short plain fade
+Widget _stillFade(Widget child) => TweenAnimationBuilder<double>(
+  tween: Tween(begin: 1.0, end: 0.0),
+  duration: const Duration(milliseconds: 160),
+  builder: (_, o, c) => Opacity(opacity: o, child: c),
+  child: child,
+);
+
+/// every way a message leaves a chat: its timer, unsend, a stopped send, a
+/// delete from the other side. the bubble burns itself (BurnFade, like a
+/// timed message); this is its row, which waits [after] for the burn and
+/// then folds shut, fading whatever else is on it (a name, a face), so the
+/// messages around it glide together instead of jumping.
+class LeaveFold extends StatelessWidget {
+  final bool leaving;
+  final Duration after;
+  final Widget child;
+  const LeaveFold({
+    super.key,
+    required this.leaving,
+    this.after = kBurnDissolve,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final still = MediaQuery.of(context).disableAnimations;
+    final total = still ? const Duration(milliseconds: 160) : after + _kFold;
+    final wait = still ? 0.0 : after.inMicroseconds / total.inMicroseconds;
+    // the same widgets above the child whether it is leaving or not: a
+    // change of shape here rebuilds the bubble from nothing, and its burn
+    // starts over mid-fold (the whole bubble came back for a frame)
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: leaving ? 1.0 : 0.0),
+      duration: total,
+      builder: (context, t, child) {
+        final f = wait >= 1 ? 0.0 : ((t - wait) / (1 - wait)).clamp(0.0, 1.0);
+        return ClipRect(
+          // clipped only once it folds: the embers rise above the bubble
+          clipBehavior: f > 0 && !still ? Clip.hardEdge : Clip.none,
+          child: Align(
+            alignment: Alignment.topCenter,
+            heightFactor: still ? 1.0 : 1 - Curves.easeInOutCubic.transform(f),
+            child: Opacity(opacity: 1 - f, child: child),
+          ),
         );
       },
+      child: child,
     );
   }
 }
@@ -153,4 +214,34 @@ class EmberPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant EmberPainter old) => old.t != t;
+}
+
+/// a row that goes without being destroyed (unsaved, moved away): it fades
+/// as it folds shut, so what is under it slides up instead of jumping
+class FadeFold extends StatelessWidget {
+  final bool leaving;
+  final Widget child;
+  const FadeFold({super.key, required this.leaving, required this.child});
+
+  /// how long the row needs before it can be taken out of the list
+  static const gone = Duration(milliseconds: 300);
+
+  @override
+  Widget build(BuildContext context) {
+    final still = MediaQuery.of(context).disableAnimations;
+    // one shape whether leaving or not, so nothing under it is rebuilt
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: leaving ? 1.0 : 0.0),
+      duration: Duration(milliseconds: still ? 160 : 280),
+      builder: (_, t, c) => ClipRect(
+        clipBehavior: t > 0 ? Clip.hardEdge : Clip.none,
+        child: Align(
+          alignment: Alignment.topCenter,
+          heightFactor: still ? 1.0 : 1 - Curves.easeInOutCubic.transform(t),
+          child: Opacity(opacity: (1 - t * 1.6).clamp(0.0, 1.0), child: c),
+        ),
+      ),
+      child: child,
+    );
+  }
 }

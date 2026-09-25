@@ -5856,13 +5856,13 @@ abstract class AppLocalizations {
   /// screens/new_group_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'creating...'**
+  /// **'Creating…'**
   String get newGroupCreating;
 
   /// screens/new_group_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'create'**
+  /// **'Create'**
   String get newGroupCreate;
 
   /// screens/new_group_screen.dart
@@ -10134,7 +10134,7 @@ abstract class AppLocalizations {
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'close'**
+  /// **'Close'**
   String get cameraClose;
 
   /// screens/camera_screen.dart
@@ -10182,7 +10182,7 @@ abstract class AppLocalizations {
   /// screens/donate_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'done'**
+  /// **'Done'**
   String get donateDone;
 
   /// screens/donate_screen.dart
@@ -10260,7 +10260,7 @@ abstract class AppLocalizations {
   /// screens/shield_sheet.dart
   ///
   /// In en, this message translates to:
-  /// **'delete'**
+  /// **'Delete'**
   String get shieldDelete;
 
   /// screens/shield_sheet.dart
@@ -10440,19 +10440,19 @@ abstract class AppLocalizations {
   /// widgets/confirm_sheet.dart
   ///
   /// In en, this message translates to:
-  /// **'keep'**
+  /// **'Keep'**
   String get confirmSheetKeep;
 
   /// widgets/confirm_sheet.dart
   ///
   /// In en, this message translates to:
-  /// **'save'**
+  /// **'Save'**
   String get confirmSheetSave;
 
   /// widgets/confirm_sheet.dart
   ///
   /// In en, this message translates to:
-  /// **'cancel'**
+  /// **'Cancel'**
   String get confirmSheetCancel;
 
   /// screens/bridges_screen.dart: after saving, how many bridge lines kryfo took

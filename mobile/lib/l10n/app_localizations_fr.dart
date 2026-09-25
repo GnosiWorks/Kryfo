@@ -3735,10 +3735,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get newGroupNewGroup => 'Nouveau groupe';
 
   @override
-  String get newGroupCreating => 'création...';
+  String get newGroupCreating => 'Création…';
 
   @override
-  String get newGroupCreate => 'créer';
+  String get newGroupCreate => 'Créer';
 
   @override
   String get newGroupGroupName => 'Nom du groupe';
@@ -6407,7 +6407,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get notificationsChannelName => 'messages';
 
   @override
-  String get cameraClose => 'fermer';
+  String get cameraClose => 'Fermer';
 
   @override
   String get cameraFlash => 'flash';
@@ -6431,7 +6431,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get donateCopy => 'copier';
 
   @override
-  String get donateDone => 'terminé';
+  String get donateDone => 'Terminé';
 
   @override
   String get donateTierSupporter => 'soutien';
@@ -6470,7 +6470,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get shieldBlock => 'bloquer';
 
   @override
-  String get shieldDelete => 'supprimer';
+  String get shieldDelete => 'Supprimer';
 
   @override
   String get shieldIgnore => 'ignorer';
@@ -6560,13 +6560,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get wallpaperPatterns => 'motifs';
 
   @override
-  String get confirmSheetKeep => 'garder';
+  String get confirmSheetKeep => 'Garder';
 
   @override
-  String get confirmSheetSave => 'enregistrer';
+  String get confirmSheetSave => 'Enregistrer';
 
   @override
-  String get confirmSheetCancel => 'annuler';
+  String get confirmSheetCancel => 'Annuler';
 
   @override
   String bridgesSaved(int count) {

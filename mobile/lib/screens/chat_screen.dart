@@ -149,6 +149,8 @@ class _Msg {
   bool edited;
   bool pinned;
   bool removing = false;
+  // it burned on its own timer: leaving, only its row still has to fold
+  bool burnedAway = false;
   String? mediaPath;
   String? filePath;
   String? fileName;
@@ -562,6 +564,42 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   final Map<String, _Msg> _byUid = {};
 
+  // a reload rebuilds every row from the database. a message already
+  // leaving keeps its own row, so the burn and fold carry on; one that is
+  // gone from the database since (the other side unsent it, its timer ran
+  // out) stays a moment longer and leaves the same way instead of popping
+  // out and making the rest jump.
+  void _keepLeaving(List<_Msg> before) {
+    final old = {
+      for (final m in before)
+        if (m.msgUid != null) m.msgUid!: m,
+    };
+    final present = <String>{};
+    for (var i = 0; i < _messages.length; i++) {
+      final uid = _messages[i].msgUid;
+      if (uid == null) continue;
+      present.add(uid);
+      final o = old[uid];
+      if (o != null && o.removing) _messages[i] = o;
+    }
+    final oldest = _messages.isEmpty ? null : _messages.first.when;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final o in before) {
+      final uid = o.msgUid;
+      if (uid == null || present.contains(uid) || o.sending) continue;
+      // older than the page now loaded: scrolled out, not gone
+      if (oldest != null && o.when.isBefore(oldest)) continue;
+      if (!o.removing) {
+        o.removing = true;
+        o.burnedAway = o.burnAt != null && o.burnAt! <= now;
+        Future.delayed(kLeaveGone, () {
+          if (mounted) setState(() => _messages.remove(o));
+        });
+      }
+      _messages.add(o);
+    }
+  }
+
   bool _loaded = false;
   Atmo _atmosphere = Atmo.none;
   // a photo of their own behind this chat. lives in the app's folder, so
@@ -774,9 +812,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (expired != null) {
         for (final m in expired) {
           m.removing = true;
-          // wait for the full _BurnFade dissolve (520ms) before pulling the
-          // row, else the animation cuts off and the message pops away.
-          Future.delayed(const Duration(milliseconds: 560), () async {
+          m.burnedAway = true;
+          // the bubble burned on its own; its row folds (LeaveFold) before
+          // it is pulled, else the messages around it jump
+          Future.delayed(kLeaveGone, () async {
             if (mounted) setState(() => _messages.remove(m));
             if (m.msgUid != null) await db.deleteMessage(m.msgUid!);
             // the home row was previewing what just burned
@@ -1705,7 +1744,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     cancelMediaSend(uid);
     mediaProgressEnd(uid);
     if (mounted) setState(() => m.removing = true);
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(kLeaveGone);
     await db.deleteMessage(uid);
     if (mounted) setState(() => _messages.remove(m));
     unawaited(appState.refreshContacts());
@@ -1770,9 +1809,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     FocusManager.instance.primaryFocus?.unfocus();
     if (confirm != true) return;
     if (mounted) setState(() => m.removing = true);
-    // let the burn dissolve finish before the row is pulled (was 300ms, cut the
-    // 520ms _BurnFade short and looked janky).
-    await Future.delayed(const Duration(milliseconds: 560));
+    // it burns, then its row folds (LeaveFold); pulled sooner, it pops
+    await Future.delayed(kLeaveGone);
     await db.deleteMessage(m.msgUid!);
     if (mounted) setState(() => _messages.remove(m));
     // the home row was still previewing the message just unsent
@@ -2160,11 +2198,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
     unawaited(_refreshPinCount());
     setState(() {
+      final before = List<_Msg>.of(_messages);
+      final wasLoaded = _loaded;
       _loaded = true;
       _forgetDayKeys();
       _messages
         ..clear()
         ..addAll(loaded);
+      if (wasLoaded) _keepLeaving(before);
       _normaliseMessages();
       if (loaded.isNotEmpty) {
         final last = loaded.last.when;
@@ -3603,10 +3644,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         children: [
           if (showDate) _dateDivider(m.when, m.msgUid ?? 'r${m.rowid}'),
           if (ix == _firstUnreadIndex) _newMessagesDivider(),
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 1.0, end: m.removing ? 0.0 : 1.0),
-            duration: const Duration(milliseconds: 280),
-            curve: Curves.easeOut,
+          LeaveFold(
+            leaving: m.removing,
+            // a timed bubble has burned already; any other burns now
+            after: m.burnedAway ? Duration.zero : kBurnDissolve,
             child: SwipeToReply(
               onReply: () {
                 HapticFeedback.selectionClick();
@@ -3622,67 +3663,53 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               },
               child: SizedBox(
                 width: double.infinity,
-                child: AnimatedScale(
-                  scale: m.removing ? 0.92 : 1.0,
+                child: AnimatedOpacity(
+                  opacity: (m.msgUid != null && m.msgUid == _liftedUid)
+                      ? 0.0
+                      : 1.0,
                   duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeIn,
-                  child: AnimatedOpacity(
-                    opacity:
-                        (m.removing ||
-                            (m.msgUid != null && m.msgUid == _liftedUid))
-                        ? 0.0
-                        : 1.0,
-                    duration: const Duration(milliseconds: 300),
-                    child: _Bubble(
-                      key: isMatch ? _matchKeys[i] : null,
-                      msg: m,
-                      linkTitle: m.preview?['title'],
-                      linkBySender: m.preview?['by'] == 'sender',
-                      firstInGroup: firstInGroup,
-                      lastInGroup: lastInGroup,
-                      revealed: m.msgUid != null && m.msgUid == _revealedUid,
-                      onReveal: m.msgUid == null
-                          ? null
-                          : () => setState(
-                              () => _revealedUid = _revealedUid == m.msgUid
-                                  ? null
-                                  : m.msgUid,
-                            ),
-                      onRetry: (m) {
-                        m.autoRetries = 0;
-                        m.gaveUp = false;
-                        _retryAny(m);
-                      },
-                      onLongPress: (ctx) => _showEmojiPickerAt(ctx, m),
-                      secure: m.secure,
-                      quotedText: quoted,
-                      onQuoteTap: m.replyTo == null
-                          ? null
-                          : () {
-                              for (final x in _messages) {
-                                if (x.msgUid != null && x.msgUid == m.replyTo) {
-                                  _scrollToMessage(x);
-                                  break;
-                                }
+                  child: _Bubble(
+                    key: isMatch ? _matchKeys[i] : null,
+                    msg: m,
+                    linkTitle: m.preview?['title'],
+                    linkBySender: m.preview?['by'] == 'sender',
+                    firstInGroup: firstInGroup,
+                    lastInGroup: lastInGroup,
+                    revealed: m.msgUid != null && m.msgUid == _revealedUid,
+                    onReveal: m.msgUid == null
+                        ? null
+                        : () => setState(
+                            () => _revealedUid = _revealedUid == m.msgUid
+                                ? null
+                                : m.msgUid,
+                          ),
+                    onRetry: (m) {
+                      m.autoRetries = 0;
+                      m.gaveUp = false;
+                      _retryAny(m);
+                    },
+                    onLongPress: (ctx) => _showEmojiPickerAt(ctx, m),
+                    secure: m.secure,
+                    quotedText: quoted,
+                    onQuoteTap: m.replyTo == null
+                        ? null
+                        : () {
+                            for (final x in _messages) {
+                              if (x.msgUid != null && x.msgUid == m.replyTo) {
+                                _scrollToMessage(x);
+                                break;
                               }
-                            },
-                      quotedAuthor: quotedAuthor,
-                      query: searchActive ? _query : '',
-                      isCurrentMatch: isCurrent,
-                      dimmed: dimmed,
-                      ripple:
-                          m.msgUid != null &&
-                          (m.msgUid == _rippleUid || identical(m, _replyFlash)),
-                    ),
+                            }
+                          },
+                    quotedAuthor: quotedAuthor,
+                    query: searchActive ? _query : '',
+                    isCurrentMatch: isCurrent,
+                    dimmed: dimmed,
+                    ripple:
+                        m.msgUid != null &&
+                        (m.msgUid == _rippleUid || identical(m, _replyFlash)),
                   ),
                 ),
-              ),
-            ),
-            builder: (_, f, child) => ClipRect(
-              child: Align(
-                alignment: Alignment.topCenter,
-                heightFactor: f,
-                child: child,
               ),
             ),
           ),
@@ -6008,7 +6035,7 @@ class _Bubble extends StatelessWidget {
                   clipBehavior: Clip.none,
                   children: [
                     BurnFade(
-                      active: isExpiring,
+                      active: isExpiring || msg.removing,
                       child: Container(
                         constraints: BoxConstraints(
                           maxWidth: MediaQuery.of(context).size.width * 0.78,

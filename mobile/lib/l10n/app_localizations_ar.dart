@@ -3790,7 +3790,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get newGroupNewGroup => 'مجموعة جديدة';
 
   @override
-  String get newGroupCreating => 'جارٍ الإنشاء...';
+  String get newGroupCreating => 'جارٍ الإنشاء…';
 
   @override
   String get newGroupCreate => 'إنشاء';

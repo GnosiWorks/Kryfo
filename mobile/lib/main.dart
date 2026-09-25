@@ -9014,6 +9014,8 @@ final appState = AppState();
 void main() async {
   dlog('LAUNCH main');
   WidgetsFlutterBinding.ensureInitialized();
+  // toasts live in the root overlay, over every route and sheet
+  haloToastOverlay = () => rootNavKey.currentState?.overlay;
   unawaited(_sweepPlaintextLeftovers());
   // not awaited: this is a platform call, and with no activity attached it
   // never answers. awaiting it is how main() stopped on its second line in

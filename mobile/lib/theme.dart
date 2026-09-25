@@ -278,47 +278,169 @@ Future<void> copySensitive(String value) async {
   });
 }
 
-// set on the MaterialApp so a toast never depends on the screen that asked
-// for it still being alive.
+// the app's scaffold messenger, set on the MaterialApp. toasts no longer go
+// through it (they are kryfo's own, in the root overlay, below).
 final GlobalKey<ScaffoldMessengerState> haloMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
+/// the root overlay, set by the app at start. a toast lives there, over
+/// every route and sheet, so it never depends on the screen that asked for
+/// it still being alive
+OverlayState? Function()? haloToastOverlay;
+
+OverlayEntry? _toastEntry;
+final _toastKeys = <OverlayEntry, GlobalKey<_ToastState>>{};
+
+/// a short line at the top of the screen: it drops in with a small spring,
+/// stays three and a half seconds, and goes up and out; a tap or a flick
+/// up sends it sooner. a new one takes the place of the one showing.
 void showHaloToast(BuildContext context, String message) {
-  ScaffoldMessengerState? messenger = haloMessengerKey.currentState;
-  if (messenger == null) {
+  var overlay = haloToastOverlay?.call();
+  if (overlay == null) {
     try {
-      messenger = ScaffoldMessenger.of(context);
+      overlay = Overlay.maybeOf(context, rootOverlay: true);
     } catch (_) {
       return;
     }
   }
-  messenger.clearSnackBars();
-  messenger.showSnackBar(
-    SnackBar(
-      content: Text(
-        message,
-        style: HaloType.sans(size: 13, color: HaloColors.text),
-      ),
-      backgroundColor: HaloColors.surface2,
-      behavior: SnackBarBehavior.floating,
-      elevation: 0,
-      duration: const Duration(milliseconds: 3500),
-      margin: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        bottom:
-            MediaQueryData.fromView(
-              WidgetsBinding.instance.platformDispatcher.views.first,
-            ).size.height -
-            170,
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: HaloColors.amber.withValues(alpha: 0.4),
-          width: 0.5,
-        ),
-      ),
+  if (overlay == null) return;
+  final prev = _toastEntry;
+  if (prev != null) {
+    final shown = _toastKeys[prev]?.currentState;
+    if (shown != null) {
+      shown.leave();
+    } else {
+      if (prev.mounted) prev.remove();
+      _toastKeys.remove(prev);
+    }
+  }
+  final key = GlobalKey<_ToastState>();
+  late final OverlayEntry entry;
+  entry = OverlayEntry(
+    builder: (_) => _Toast(
+      key: key,
+      message: message,
+      onGone: () {
+        if (entry.mounted) entry.remove();
+        _toastKeys.remove(entry);
+        if (identical(_toastEntry, entry)) _toastEntry = null;
+      },
     ),
   );
+  _toastKeys[entry] = key;
+  _toastEntry = entry;
+  overlay.insert(entry);
+}
+
+class _Toast extends StatefulWidget {
+  final String message;
+  final VoidCallback onGone;
+  const _Toast({super.key, required this.message, required this.onGone});
+  @override
+  State<_Toast> createState() => _ToastState();
+}
+
+class _ToastState extends State<_Toast> with SingleTickerProviderStateMixin {
+  late final _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 280),
+    reverseDuration: const Duration(milliseconds: 180),
+  );
+  Timer? _timer;
+  bool _leaving = false;
+  double _drag = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _c.forward();
+    _timer = Timer(const Duration(milliseconds: 3500), leave);
+  }
+
+  void leave() {
+    if (_leaving || !mounted) return;
+    _leaving = true;
+    _timer?.cancel();
+    _c.reverse().whenComplete(widget.onGone);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    final still = mq.disableAnimations;
+    return Positioned(
+      left: 16,
+      right: 16,
+      top: mq.padding.top + 58,
+      child: AnimatedBuilder(
+        animation: _c,
+        builder: (_, child) {
+          final t = _c.value;
+          if (still) return Opacity(opacity: t, child: child);
+          // in: a drop with a little overshoot. out: up and gone
+          final e = _leaving
+              ? Curves.easeIn.transform(t)
+              : Curves.easeOutBack.transform(t);
+          return Opacity(
+            opacity: t.clamp(0.0, 1.0),
+            child: Transform.translate(
+              offset: Offset(0, (1 - e) * -14 + _drag),
+              child: Transform.scale(scale: 0.96 + 0.04 * e, child: child),
+            ),
+          );
+        },
+        child: GestureDetector(
+          onTap: leave,
+          onVerticalDragUpdate: (d) =>
+              setState(() => _drag = (_drag + d.delta.dy).clamp(-80.0, 0.0)),
+          onVerticalDragEnd: (d) {
+            if (_drag < -24 || d.velocity.pixelsPerSecond.dy < -300) {
+              leave();
+            } else {
+              setState(() => _drag = 0);
+            }
+          },
+          child: Semantics(
+            container: true,
+            liveRegion: true,
+            child: Material(
+              type: MaterialType.transparency,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                decoration: BoxDecoration(
+                  color: HaloColors.surface2,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: HaloColors.amber.withValues(alpha: 0.4),
+                    width: 0.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: HaloColors.ink.withValues(alpha: 0.35),
+                      blurRadius: 18,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  widget.message,
+                  style: HaloType.sans(size: 13, color: HaloColors.text),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
