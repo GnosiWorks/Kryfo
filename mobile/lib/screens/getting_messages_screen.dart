@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 
 import '../delivery_mode.dart';
 import '../lock_state.dart';
-import '../main.dart' show appState;
+import '../main.dart' show appState, session;
 import '../miui_autostart.dart';
 import '../notifications.dart';
 import '../theme.dart';
@@ -39,7 +39,7 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
     // no .then() without a catch: this used to be the only thing standing
     // between the old screen and a blank page, and a throw here left it
     // blank for good.
-    loadHideNotifContent()
+    loadHideNotifContent(session.container)
         .then((v) {
           if (mounted) setState(() => _hidePreview = v);
         })
@@ -198,7 +198,7 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
                       value: _hidePreview,
                       onChanged: (v) {
                         setState(() => _hidePreview = v);
-                        setHideNotifContent(v);
+                        setHideNotifContent(v, session.container);
                       },
                     ),
                   ],

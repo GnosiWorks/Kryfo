@@ -280,7 +280,7 @@
   "@introBudgetInAFewMinutes": {
     "description": "intro_budget.dart"
   },
-  "lockStateUnlockKryfo": "Unlock kryfo",
+  "lockStateUnlockKryfo": "Unlock Kryfo",
   "@lockStateUnlockKryfo": {
     "description": "lock_state.dart"
   },
@@ -698,7 +698,7 @@
   "@appDisableAppLock": {
     "description": "main.dart"
   },
-  "appThePinWillBe": "The pin will be removed. Anyone with your phone will see kryfo when they open it.",
+  "appThePinWillBe": "The PIN will be removed. Anyone with your phone will see kryfo when they open it.",
   "@appThePinWillBe": {
     "description": "main.dart"
   },
@@ -4273,7 +4273,7 @@
   "@lockNotIt": {
     "description": "screens/lock_screen.dart"
   },
-  "lockYourPin": "Your pin",
+  "lockYourPin": "Your PIN",
   "@lockYourPin": {
     "description": "screens/lock_screen.dart"
   },
@@ -4281,15 +4281,11 @@
   "@lockUseFingerprint": {
     "description": "screens/lock_screen.dart"
   },
-  "lockSetupThatIsYourWipe": "That is your wipe pin. Pick another.",
-  "@lockSetupThatIsYourWipe": {
-    "description": "screens/lock_setup_screen.dart"
-  },
   "lockSetupUnlockWithFingerprint": "Unlock with fingerprint?",
   "@lockSetupUnlockWithFingerprint": {
     "description": "screens/lock_setup_screen.dart"
   },
-  "lockSetupThePinStillWorks": "The pin still works whenever you want it. This is just faster.",
+  "lockSetupThePinStillWorks": "The PIN still works whenever you want it. This is just faster.",
   "@lockSetupThePinStillWorks": {
     "description": "screens/lock_setup_screen.dart"
   },
@@ -4297,7 +4293,7 @@
   "@lockSetupUseFingerprint": {
     "description": "screens/lock_setup_screen.dart"
   },
-  "lockSetupPinOnly": "Pin only",
+  "lockSetupPinOnly": "PIN only",
   "@lockSetupPinOnly": {
     "description": "screens/lock_setup_screen.dart"
   },
@@ -4305,7 +4301,7 @@
   "@lockSetupOnceMore": {
     "description": "screens/lock_setup_screen.dart"
   },
-  "lockSetupSetAPin": "Set a pin",
+  "lockSetupSetAPin": "Set a PIN",
   "@lockSetupSetAPin": {
     "description": "screens/lock_setup_screen.dart"
   },
@@ -4313,11 +4309,11 @@
   "@lockSetupThoseWereDifferentFrom": {
     "description": "screens/lock_setup_screen.dart"
   },
-  "lockSetupTheSameFourDigits": "The same four digits",
+  "lockSetupTheSameFourDigits": "The same digits again",
   "@lockSetupTheSameFourDigits": {
     "description": "screens/lock_setup_screen.dart"
   },
-  "lockSetupFourDigitsAnythingYou": "Four digits, anything you will remember",
+  "lockSetupFourDigitsAnythingYou": "Four digits or more, anything you will remember",
   "@lockSetupFourDigitsAnythingYou": {
     "description": "screens/lock_setup_screen.dart"
   },
@@ -5035,24 +5031,12 @@
   "@panicSetupThoseWereDifferentFrom": {
     "description": "screens/panic_setup_screen.dart"
   },
-  "panicSetupThatIsYourReal": "That is your real pin. Pick another.",
-  "@panicSetupThatIsYourReal": {
-    "description": "screens/panic_setup_screen.dart"
-  },
   "panicSetupOnceMore": "Once more",
   "@panicSetupOnceMore": {
     "description": "screens/panic_setup_screen.dart"
   },
-  "panicSetupSetAWipePin": "Set a wipe pin",
-  "@panicSetupSetAWipePin": {
-    "description": "screens/panic_setup_screen.dart"
-  },
-  "panicSetupTheSameFourDigits": "The same four digits",
+  "panicSetupTheSameFourDigits": "The same digits again",
   "@panicSetupTheSameFourDigits": {
-    "description": "screens/panic_setup_screen.dart"
-  },
-  "panicSetupTheSecondPinWipes": "The second pin wipes everything.",
-  "@panicSetupTheSecondPinWipes": {
     "description": "screens/panic_setup_screen.dart"
   },
   "photoKnowsEverythingInside": "Everything inside",
@@ -5137,11 +5121,7 @@
   "@pinsAppLock": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsTwoPins": "Two pins",
-  "@pinsTwoPins": {
-    "description": "screens/pins_screen.dart"
-  },
-  "pinsYourPin": "Your pin",
+  "pinsYourPin": "Your PIN",
   "@pinsYourPin": {
     "description": "screens/pins_screen.dart"
   },
@@ -5153,15 +5133,15 @@
   "@commonOff": {
     "description": "screens/pins_screen.dart, screens/settings_screen.dart"
   },
-  "pinsOpensKryfoFourDigits": "Opens kryfo. Four digits, asked for when it comes to the front.",
+  "pinsOpensKryfoFourDigits": "Opens Kryfo. Asked for when it comes to the front.",
   "@pinsOpensKryfoFourDigits": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsChangePin": "Change pin",
+  "pinsChangePin": "Change PIN",
   "@pinsChangePin": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsSetAPin": "Set a pin",
+  "pinsSetAPin": "Set a PIN",
   "@pinsSetAPin": {
     "description": "screens/pins_screen.dart"
   },
@@ -5173,7 +5153,7 @@
   "@pinsTurnOffTheApp": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsThePinGoesAnd": "The pin goes, and the wipe pin with it. Anyone holding your phone opens kryfo as you.",
+  "pinsThePinGoesAnd": "The PIN goes, and the wipe PIN with it. Anyone holding your phone opens Kryfo as you.",
   "@pinsThePinGoesAnd": {
     "description": "screens/pins_screen.dart"
   },
@@ -5181,11 +5161,11 @@
   "@pinsUnlockWithFingerprint": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsWipePin": "Wipe pin",
+  "pinsWipePin": "Wipe PIN",
   "@pinsWipePin": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsNeedsAPinFirst": "Needs a pin first",
+  "pinsNeedsAPinFirst": "Needs a PIN first",
   "@pinsNeedsAPinFirst": {
     "description": "screens/pins_screen.dart"
   },
@@ -5193,15 +5173,11 @@
   "@pinsSet": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsTheSecondPinWipes": "The second pin wipes everything.",
-  "@pinsTheSecondPinWipes": {
-    "description": "screens/pins_screen.dart"
-  },
-  "pinsChangeWipePin": "Change wipe pin",
+  "pinsChangeWipePin": "Change wipe PIN",
   "@pinsChangeWipePin": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsSetAWipePin": "Set a wipe pin",
+  "pinsSetAWipePin": "Set a wipe PIN",
   "@pinsSetAWipePin": {
     "description": "screens/pins_screen.dart"
   },
@@ -5209,11 +5185,11 @@
   "@pinsRemove": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsRemoveTheWipePin": "Remove the wipe pin?",
+  "pinsRemoveTheWipePin": "Remove the wipe PIN?",
   "@pinsRemoveTheWipePin": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsTheLockScreenKeeps": "The lock screen keeps your pin. The wipe pin stops doing anything.",
+  "pinsTheLockScreenKeeps": "The lock screen keeps your PIN. The wipe PIN stops doing anything.",
   "@pinsTheLockScreenKeeps": {
     "description": "screens/pins_screen.dart"
   },
@@ -5970,7 +5946,7 @@
   "@seenEveryMessengerClaimsPrivacy": {
     "description": "screens/seen_screen.dart"
   },
-  "seenHonestAboutTheLast": "Honest about the last rows: that is what the app lock, the wipe pin and encrypted storage are for, and no tool saves you from someone holding your open phone. The full threat model lives in THREAT_MODEL.md in the repo, written against LINDDUN. The code is open, so none of this has to be taken on trust.",
+  "seenHonestAboutTheLast": "Honest about the last rows: that is what the app lock, the wipe PIN and encrypted storage are for, and no tool saves you from someone holding your open phone. The full threat model lives in THREAT_MODEL.md in the repo, written against LINDDUN. The code is open, so none of this has to be taken on trust.",
   "@seenHonestAboutTheLast": {
     "description": "screens/seen_screen.dart"
   },
@@ -6090,7 +6066,7 @@
   "@seenASeizedUnlockedPhone": {
     "description": "screens/seen_screen.dart"
   },
-  "seenIfSomeoneHoldsYour": "If someone holds your phone open, they read your messages. The app lock, wipe pin and encrypted storage help before that point, not after it.",
+  "seenIfSomeoneHoldsYour": "If someone holds your phone open, they read your messages. The app lock, wipe PIN and encrypted storage help before that point, not after it.",
   "@seenIfSomeoneHoldsYour": {
     "description": "screens/seen_screen.dart"
   },
@@ -6289,11 +6265,11 @@
   "@settingsAppLock2": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsYourPinAndA": "Your pin, and a wipe pin",
+  "settingsYourPinAndA": "Your PIN and Advanced protection",
   "@settingsYourPinAndA": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsPinWipePin": "Pin · wipe pin",
+  "settingsPinWipePin": "PIN · wipe PIN",
   "@settingsPinWipePin": {
     "description": "screens/settings_screen.dart"
   },
@@ -8771,5 +8747,145 @@
   "handleThatHandleIsTaken": "That handle is taken",
   "@handleThatHandleIsTaken": {
     "description": "toast: the registry refused a claim because someone else holds the handle"
+  },
+  "pinPickDifferent": "Pick a different PIN",
+  "@pinPickDifferent": {
+    "description": "setting a PIN that is already in use; never says which one it matched"
+  },
+  "settingsKeptOnWhileLock": "Kept on while the app lock is on.",
+  "@settingsKeptOnWhileLock": {
+    "description": "hint under Block screenshots when the app lock forces it on"
+  },
+  "lockFingerAfterPin": "Type your PIN once to use your fingerprint again.",
+  "@lockFingerAfterPin": {
+    "description": "lock screen, in place of the fingerprint button while fingerprint unlock waits for the PIN (a finger was added, or after an update)"
+  },
+  "pinsAdvanced": "Advanced protection",
+  "@pinsAdvanced": {
+    "description": "App lock: a section that opens to the wipe PIN and the decoy PIN"
+  },
+  "pinsAdvancedLine": "For when someone makes you unlock your phone.",
+  "@pinsAdvancedLine": {
+    "description": "App lock: one line under Advanced protection"
+  },
+  "pinsWipeLine": "Typed on the lock screen, it wipes Kryfo from this phone.",
+  "@pinsWipeLine": {
+    "description": "App lock: one line on the wipe PIN row"
+  },
+  "pinsDecoyPin": "Decoy PIN",
+  "@pinsDecoyPin": {
+    "description": "App lock: a PIN that opens an empty Kryfo"
+  },
+  "pinsDecoyLine": "Opens an empty Kryfo, as if just installed.",
+  "@pinsDecoyLine": {
+    "description": "App lock: one line on the decoy PIN row"
+  },
+  "pinsSetADecoyPin": "Set a decoy PIN",
+  "@pinsSetADecoyPin": {
+    "description": "button"
+  },
+  "pinsChangeDecoyPin": "Change decoy PIN",
+  "@pinsChangeDecoyPin": {
+    "description": "button"
+  },
+  "pinsRemoveTheDecoyPin": "Remove the decoy PIN?",
+  "@pinsRemoveTheDecoyPin": {
+    "description": "confirm sheet title"
+  },
+  "pinsTheDecoyGoes": "The empty Kryfo it opens goes with it.",
+  "@pinsTheDecoyGoes": {
+    "description": "confirm sheet line when removing the decoy PIN"
+  },
+  "pinsTurnOffWithDecoy": "Every PIN goes, the decoy and its Kryfo with them. Anyone holding your phone opens Kryfo as you.",
+  "@pinsTurnOffWithDecoy": {
+    "description": "confirm sheet line when turning the app lock off while a decoy PIN is set"
+  },
+  "pinsHowThisWorks": "How this works",
+  "@pinsHowThisWorks": {
+    "description": "App lock: opens a sheet explaining the extra PINs"
+  },
+  "flowEnterYourPin": "Enter your PIN",
+  "@flowEnterYourPin": {
+    "description": "first step of setting an extra PIN"
+  },
+  "flowEnterYourPinLine": "The one that opens Kryfo.",
+  "@flowEnterYourPinLine": {
+    "description": "under Enter your PIN"
+  },
+  "flowWipeTitle": "A wipe PIN",
+  "@flowWipeTitle": {
+    "description": "first page of the wipe PIN setup"
+  },
+  "flowWipe1": "Typed on the lock screen instead of your PIN, it wipes Kryfo from this phone and closes it. To whoever is watching, the app just stopped.",
+  "@flowWipe1": {
+    "description": "wipe PIN setup, first line"
+  },
+  "flowWipe2": "It takes every chat and your identity with it, and the decoy if you have one.",
+  "@flowWipe2": {
+    "description": "wipe PIN setup, second line"
+  },
+  "flowWipeChoose": "Choose a wipe PIN",
+  "@flowWipeChoose": {
+    "description": "wipe PIN setup, the pad"
+  },
+  "flowWipeDone": "Wipe PIN set",
+  "@flowWipeDone": {
+    "description": "wipe PIN setup, the end"
+  },
+  "flowWipeDoneLine": "Nothing on the lock screen shows it is there.",
+  "@flowWipeDoneLine": {
+    "description": "wipe PIN setup, the end"
+  },
+  "flowDecoyTitle": "A decoy PIN",
+  "@flowDecoyTitle": {
+    "description": "first page of the decoy PIN setup"
+  },
+  "flowDecoy1": "Opens an empty Kryfo, as if just installed. It holds up to a quick look through your phone. It does not hide how much space Kryfo uses, and it will not fool someone who knows your three words, who tries to message it, or who copies the phone.",
+  "@flowDecoy1": {
+    "description": "decoy PIN setup, what it does and does not do"
+  },
+  "flowDecoyFinger": "Your fingerprint opens your real Kryfo. If someone could make you use it, turn fingerprint off.",
+  "@flowDecoyFinger": {
+    "description": "decoy PIN setup"
+  },
+  "flowDecoyDigits": "Use as many digits as your PIN. The dots can be counted.",
+  "@flowDecoyDigits": {
+    "description": "decoy PIN setup; also under the pad when choosing it"
+  },
+  "flowDecoyShade": "Notifications already in the shade were already seen. While the decoy is open, no new ones show.",
+  "@flowDecoyShade": {
+    "description": "decoy PIN setup"
+  },
+  "flowDecoyChoose": "Choose a decoy PIN",
+  "@flowDecoyChoose": {
+    "description": "decoy PIN setup, the pad"
+  },
+  "flowDecoyDone": "Decoy PIN set",
+  "@flowDecoyDone": {
+    "description": "decoy PIN setup, the end"
+  },
+  "flowDecoyDoneLine": "Type it on the lock screen to open the empty Kryfo. To leave it, switch away and enter your PIN.",
+  "@flowDecoyDoneLine": {
+    "description": "decoy PIN setup, the end"
+  },
+  "flowLaw": "In some countries, refusing to unlock a phone or hiding data from officials is an offence in itself. Know the law where you travel.",
+  "@flowLaw": {
+    "description": "in every explanation of the extra PINs; decided wording"
+  },
+  "howWipe": "Typed on the lock screen, the wipe PIN wipes every chat, your identity and any decoy, then closes Kryfo. It works even while the pad is held after wrong tries.",
+  "@howWipe": {
+    "description": "How this works sheet"
+  },
+  "howDecoy": "The decoy PIN opens a second, empty Kryfo with three words of its own. Messages to your real Kryfo keep arriving underneath, silently. To leave the decoy, switch away and enter your PIN.",
+  "@howDecoy": {
+    "description": "How this works sheet"
+  },
+  "howLimits": "A quick look, not a lab. A copy of the phone made with forensic tools can show that Kryfo holds more than it shows, and a short PIN can be guessed offline.",
+  "@howLimits": {
+    "description": "How this works sheet: the limits, stated honestly"
+  },
+  "flowNotSet": "Could not set it. Try again.",
+  "@flowNotSet": {
+    "description": "setting an extra PIN failed for a reason other than a clash"
   }
 }

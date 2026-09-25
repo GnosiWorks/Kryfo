@@ -7,7 +7,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../main.dart';
+import '../main.dart' hide live;
 import '../miui_autostart.dart' show forceShowBackgroundPrompt;
 import '../theme.dart';
 import '../widgets/motion.dart';

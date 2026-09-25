@@ -14,7 +14,17 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
-import 'main.dart' show TwoArgFn, TwoArgFnDart, appState, db, engine, shredFile;
+import 'container.dart';
+import 'main.dart'
+    show
+        TwoArgFn,
+        TwoArgFnDart,
+        appState,
+        live,
+        session,
+        sessionQuiet,
+        engine,
+        shredFile;
 import 'dlog.dart';
 import 'dart:typed_data';
 import 'backup_stream.dart';
@@ -418,6 +428,9 @@ Future<void> createBackupFile(
   void Function(int done, int total)? onProgress,
 }) async {
   if (passphrase.length < 6) throw BackupError('passphrase too short');
+  if (sessionQuiet) {
+    return _createQuietBackup(passphrase, outPath, onProgress: onProgress);
+  }
   final docs = await getApplicationDocumentsDirectory();
   final edPriv = engine.myEdPrivkey();
   final xPriv = engine.myXPrivkey();
@@ -426,7 +439,7 @@ Future<void> createBackupFile(
   if (dbPassphrase == null) throw BackupError('db passphrase missing');
   // fold the write-ahead log in first, or the last minutes are not in
   // the file that gets copied
-  await db.checkpoint();
+  await live.checkpoint();
   final prefs = await SharedPreferences.getInstance();
   final prefsMap = <String, dynamic>{};
   for (final k in ['onboarding.complete']) {
@@ -486,6 +499,109 @@ Future<void> createBackupFile(
     port.close();
   }
 }
+
+// a backup made in a decoy session is the decoy's own: its database, key,
+// identity, onion key and files, under the names an everyday install uses,
+// so it restores anywhere as the empty account it is. it is never a move,
+// and nothing of the everyday container is read
+Future<void> _createQuietBackup(
+  String passphrase,
+  String outPath, {
+  void Function(int done, int total)? onProgress,
+}) async {
+  final c = session.container;
+  final docs = await getApplicationDocumentsDirectory();
+  final raw = await session.open();
+  final saved = await session.loadIdentity();
+  final onion = await raw.query(
+    'signal_meta',
+    where: 'k = ?',
+    whereArgs: ['onion_key'],
+    limit: 1,
+  );
+  final dbKey = await _secureStorage.read(key: c.keyName);
+  if (saved == null || onion.isEmpty || dbKey == null) {
+    throw BackupError('identity not loaded');
+  }
+  await session.checkpoint();
+  final stage = Directory(
+    p.join((await getApplicationSupportDirectory()).path, 'backup_stage'),
+  );
+  if (await stage.exists()) await stage.delete(recursive: true);
+  await stage.create(recursive: true);
+  try {
+    await File(await c.dbPath()).copy(p.join(stage.path, 'halo.db'));
+    await File(
+      p.join(stage.path, 'onion.key'),
+    ).writeAsBytes(_hex(onion.first['v'] as String), flush: true);
+    for (final folder in ['media', 'wallpapers']) {
+      final from = Directory(p.join(docs.path, '$folder${c.suffix}'));
+      if (!await from.exists()) continue;
+      await for (final e in from.list(recursive: true, followLinks: false)) {
+        if (e is! File) continue;
+        final rel = p.relative(e.path, from: from.path);
+        final to = File(p.join(stage.path, folder, rel));
+        await to.parent.create(recursive: true);
+        await e.copy(to.path);
+      }
+    }
+    final files = await _filesToCarry(stage);
+    final manifest = <String, dynamic>{
+      'v': 2,
+      'ts': DateTime.now().millisecondsSinceEpoch,
+      'haloId': appState.sessionId,
+      'moved': false,
+      'edPriv': saved['ed_priv'],
+      'xPriv': saved['x_priv'],
+      'dbPassphrase': dbKey,
+      'prefs': <String, dynamic>{},
+      'secure': <String, String>{},
+      'onboardingDone': '1',
+      'chunk': kBackupChunk,
+      'files': [for (final f in files) f.toJson()],
+    };
+    final salt = Uint8List(16);
+    final rnd = Random.secure();
+    for (var i = 0; i < 16; i++) {
+      salt[i] = rnd.nextInt(256);
+    }
+    final port = ReceivePort();
+    final sub = port.listen((m) {
+      if (m is List && m.length == 2) {
+        onProgress?.call(m[0] as int, m[1] as int);
+      }
+    });
+    try {
+      final err = await _runJob(
+        _exportJob,
+        _Job(
+          passphrase: passphrase,
+          salt: salt,
+          path: outPath,
+          root: stage.path,
+          manifest: manifest,
+          tell: port.sendPort,
+        ),
+      );
+      if (err is String && err.isNotEmpty) throw BackupError(err);
+    } finally {
+      await sub.cancel();
+      port.close();
+    }
+  } finally {
+    try {
+      await shredFile(p.join(stage.path, 'onion.key'));
+    } catch (_) {}
+    try {
+      await stage.delete(recursive: true);
+    } catch (_) {}
+  }
+}
+
+Uint8List _hex(String s) => Uint8List.fromList([
+  for (var i = 0; i + 1 < s.length; i += 2)
+    int.parse(s.substring(i, i + 2), radix: 16),
+]);
 
 // what crosses into a worker isolate: plain values and a SendPort, nothing
 // else. the job runs as a top-level function and the closure handed to
@@ -614,6 +730,56 @@ Future<Object?> _restoreJob(_Job j) async {
   }
 }
 
+// a restore made in a decoy session: the files move from their staging
+// place onto the decoy's names, its key is the backup's, and its onion key
+// waits in onion_d.key for the next start to take in. no engine call: the
+// engine carries the everyday identity
+Future<void> _landInDecoy(
+  String from,
+  String docs,
+  Map<String, dynamic> manifest,
+) async {
+  final c = HaloContainer.decoy;
+  await session.close();
+  final dbPath = await c.dbPath();
+  for (final f in [dbPath, '$dbPath-wal', '$dbPath-shm', '$dbPath-journal']) {
+    try {
+      await File(f).delete();
+    } catch (_) {}
+  }
+  for (final folder in ['media', 'wallpapers']) {
+    final d = Directory(p.join(docs, '$folder${c.suffix}'));
+    if (await d.exists()) await d.delete(recursive: true);
+  }
+  for (final f in manifest['files'] as List) {
+    final name = (f as Map<String, dynamic>)['name'] as String;
+    final src = File(p.join(from, name));
+    final String dest;
+    if (name == 'halo.db') {
+      dest = dbPath;
+    } else if (name == 'onion.key') {
+      dest = p.join(docs, 'onion${c.suffix}.key');
+    } else {
+      final slash = name.indexOf('/');
+      dest = p.join(
+        docs,
+        '${name.substring(0, slash)}${c.suffix}',
+        name.substring(slash + 1),
+      );
+    }
+    await File(dest).parent.create(recursive: true);
+    await src.rename(dest);
+  }
+  await _secureStorage.write(
+    key: c.keyName,
+    value: manifest['dbPassphrase'] as String,
+  );
+  try {
+    await Directory(from).delete(recursive: true);
+  } catch (_) {}
+  dlog('backup: restored into the decoy');
+}
+
 RestoreError _classify(Object e) {
   if (e is RestoreError) return e;
   if (e is BackupLocked) {
@@ -701,7 +867,13 @@ Future<void> restoreBackupFile(
   }
   final salt = await backupSalt(path);
   final docs = await getApplicationDocumentsDirectory();
-  final root = docs.path;
+  // in a decoy session everything lands in the decoy's container, and the
+  // everyday one is not touched
+  final quiet = sessionQuiet;
+  final root = quiet
+      ? p.join((await getApplicationSupportDirectory()).path, 'restore_d')
+      : docs.path;
+  if (quiet) await Directory(root).create(recursive: true);
   final port = ReceivePort();
   final sub = port.listen((m) {
     if (m is List && m.length == 2) {
@@ -728,6 +900,7 @@ Future<void> restoreBackupFile(
     await sub.cancel();
     port.close();
   }
+  if (quiet) return _landInDecoy(root, docs.path, manifest);
   await _secureStorage.write(
     key: _kDbPassphrase,
     value: manifest['dbPassphrase'] as String,

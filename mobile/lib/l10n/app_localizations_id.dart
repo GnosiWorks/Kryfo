@@ -241,7 +241,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get introBudgetInAFewMinutes => 'beberapa menit lagi';
 
   @override
-  String get lockStateUnlockKryfo => 'Buka kunci kryfo';
+  String get lockStateUnlockKryfo => 'Buka kunci Kryfo';
 
   @override
   String get appInvalidUri => 'uri tidak valid';
@@ -3406,9 +3406,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get lockUseFingerprint => 'Pakai sidik jari';
 
   @override
-  String get lockSetupThatIsYourWipe => 'Itu PIN penghapusmu. Pilih yang lain.';
-
-  @override
   String get lockSetupUnlockWithFingerprint => 'Buka kunci dengan sidik jari?';
 
   @override
@@ -3432,11 +3429,11 @@ class AppLocalizationsId extends AppLocalizations {
       'Tadi berbeda. Ulangi dari awal.';
 
   @override
-  String get lockSetupTheSameFourDigits => 'Empat angka yang sama';
+  String get lockSetupTheSameFourDigits => 'Angka yang sama sekali lagi';
 
   @override
   String get lockSetupFourDigitsAnythingYou =>
-      'Empat angka, apa saja yang bisa kamu ingat';
+      'Empat angka atau lebih, apa saja yang bisa kamu ingat';
 
   @override
   String get modesOnion => 'Onion';
@@ -4025,20 +4022,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Tadi berbeda. Ulangi dari awal.';
 
   @override
-  String get panicSetupThatIsYourReal => 'Itu PIN aslimu. Pilih yang lain.';
-
-  @override
   String get panicSetupOnceMore => 'Sekali lagi';
 
   @override
-  String get panicSetupSetAWipePin => 'Buat PIN penghapus';
-
-  @override
-  String get panicSetupTheSameFourDigits => 'Empat angka yang sama';
-
-  @override
-  String get panicSetupTheSecondPinWipes =>
-      'PIN kedua menghapus total semuanya.';
+  String get panicSetupTheSameFourDigits => 'Angka yang sama sekali lagi';
 
   @override
   String get photoKnowsEverythingInside => 'Semua isinya';
@@ -4097,9 +4084,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get pinsAppLock => 'Kunci aplikasi';
 
   @override
-  String get pinsTwoPins => 'Dua PIN';
-
-  @override
   String get pinsYourPin => 'PIN-mu';
 
   @override
@@ -4110,7 +4094,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get pinsOpensKryfoFourDigits =>
-      'Membuka kryfo. Empat angka, diminta setiap kryfo kembali ke depan.';
+      'Membuka Kryfo. Diminta setiap Kryfo kembali ke depan.';
 
   @override
   String get pinsChangePin => 'Ganti PIN';
@@ -4126,7 +4110,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'PIN dihapus, begitu juga PIN penghapus. Siapa pun yang memegang ponselmu langsung masuk ke kryfo sebagai dirimu.';
+      'PIN dihapus, begitu juga PIN penghapus. Siapa pun yang memegang ponselmu langsung masuk ke Kryfo sebagai dirimu.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Buka kunci dengan sidik jari';
@@ -4139,9 +4123,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get pinsSet => 'Buat';
-
-  @override
-  String get pinsTheSecondPinWipes => 'PIN kedua menghapus total semuanya.';
 
   @override
   String get pinsChangeWipePin => 'Ganti PIN penghapus';
@@ -5004,7 +4985,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsAppLock2 => 'Kunci aplikasi';
 
   @override
-  String get settingsYourPinAndA => 'PIN-mu, dan PIN penghapus';
+  String get settingsYourPinAndA => 'PIN-mu dan perlindungan lanjutan';
 
   @override
   String get settingsPinWipePin => 'PIN · PIN penghapus';
@@ -6888,4 +6869,126 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'Nama pengguna itu sudah dipakai';
+
+  @override
+  String get pinPickDifferent => 'Pilih PIN lain';
+
+  @override
+  String get settingsKeptOnWhileLock =>
+      'Tetap aktif selama kunci aplikasi aktif.';
+
+  @override
+  String get lockFingerAfterPin =>
+      'Ketik PIN sekali untuk memakai sidik jari lagi.';
+
+  @override
+  String get pinsAdvanced => 'Perlindungan lanjutan';
+
+  @override
+  String get pinsAdvancedLine =>
+      'Untuk saat seseorang memaksamu membuka kunci ponsel.';
+
+  @override
+  String get pinsWipeLine =>
+      'Jika diketik di layar kunci, PIN ini menghapus Kryfo dari ponsel ini.';
+
+  @override
+  String get pinsDecoyPin => 'PIN umpan';
+
+  @override
+  String get pinsDecoyLine => 'Membuka Kryfo kosong, seperti baru dipasang.';
+
+  @override
+  String get pinsSetADecoyPin => 'Buat PIN umpan';
+
+  @override
+  String get pinsChangeDecoyPin => 'Ganti PIN umpan';
+
+  @override
+  String get pinsRemoveTheDecoyPin => 'Hapus PIN umpan?';
+
+  @override
+  String get pinsTheDecoyGoes => 'Kryfo kosong yang dibukanya ikut hilang.';
+
+  @override
+  String get pinsTurnOffWithDecoy =>
+      'Semua PIN hilang, termasuk umpan dan Kryfo-nya. Siapa pun yang memegang ponselmu langsung masuk ke Kryfo sebagai dirimu.';
+
+  @override
+  String get pinsHowThisWorks => 'Cara kerjanya';
+
+  @override
+  String get flowEnterYourPin => 'Masukkan PIN-mu';
+
+  @override
+  String get flowEnterYourPinLine => 'PIN yang membuka Kryfo.';
+
+  @override
+  String get flowWipeTitle => 'PIN penghapus';
+
+  @override
+  String get flowWipe1 =>
+      'Jika diketik di layar kunci sebagai ganti PIN-mu, PIN ini menghapus Kryfo dari ponsel ini lalu menutupnya. Bagi yang melihat, aplikasinya seperti berhenti begitu saja.';
+
+  @override
+  String get flowWipe2 =>
+      'Semua chat dan identitasmu ikut terhapus, begitu juga umpan jika kamu punya.';
+
+  @override
+  String get flowWipeChoose => 'Pilih PIN penghapus';
+
+  @override
+  String get flowWipeDone => 'PIN penghapus sudah dibuat';
+
+  @override
+  String get flowWipeDoneLine =>
+      'Tak ada apa pun di layar kunci yang menunjukkan PIN ini ada.';
+
+  @override
+  String get flowDecoyTitle => 'PIN umpan';
+
+  @override
+  String get flowDecoy1 =>
+      'Membuka Kryfo kosong, seperti baru dipasang. Tahan terhadap pemeriksaan sekilas pada ponselmu. PIN ini tidak menyembunyikan seberapa besar ruang yang dipakai Kryfo, dan tidak akan mengelabui orang yang tahu tiga katamu, yang mencoba mengirim pesan ke sana, atau yang menyalin ponselmu.';
+
+  @override
+  String get flowDecoyFinger =>
+      'Sidik jarimu membuka Kryfo-mu yang asli. Jika seseorang bisa memaksamu memakainya, matikan sidik jari.';
+
+  @override
+  String get flowDecoyDigits =>
+      'Pakai jumlah angka yang sama dengan PIN-mu. Titik-titiknya bisa dihitung.';
+
+  @override
+  String get flowDecoyShade =>
+      'Notifikasi yang sudah ada di panel sudah terlihat. Selama umpan terbuka, tidak ada notifikasi baru yang muncul.';
+
+  @override
+  String get flowDecoyChoose => 'Pilih PIN umpan';
+
+  @override
+  String get flowDecoyDone => 'PIN umpan sudah dibuat';
+
+  @override
+  String get flowDecoyDoneLine =>
+      'Ketik di layar kunci untuk membuka Kryfo kosong. Untuk keluar, beralih ke aplikasi lain lalu masukkan PIN-mu.';
+
+  @override
+  String get flowLaw =>
+      'Di beberapa negara, menolak membuka kunci ponsel atau menyembunyikan data dari petugas sudah merupakan pelanggaran hukum. Kenali hukum di tempat tujuanmu.';
+
+  @override
+  String get howWipe =>
+      'Jika diketik di layar kunci, PIN penghapus menghapus semua chat, identitasmu, dan umpan mana pun, lalu menutup Kryfo. PIN ini tetap bekerja meski papan angka sedang ditahan setelah salah coba.';
+
+  @override
+  String get howDecoy =>
+      'PIN umpan membuka Kryfo kedua yang kosong dengan tiga kata sendiri. Pesan ke Kryfo-mu yang asli tetap masuk di bawahnya tanpa suara. Untuk keluar dari umpan, beralih ke aplikasi lain lalu masukkan PIN-mu.';
+
+  @override
+  String get howLimits =>
+      'Sekilas lihat, bukan laboratorium. Salinan ponsel yang dibuat dengan alat forensik bisa menunjukkan bahwa Kryfo menyimpan lebih dari yang ditampilkannya, dan PIN pendek bisa ditebak secara offline.';
+
+  @override
+  String get flowNotSet => 'Gagal dibuat. Coba lagi.';
 }

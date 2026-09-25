@@ -9,7 +9,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../main.dart';
+import '../main.dart' hide live;
 import '../theme.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/pair_code_panel.dart';
@@ -156,7 +156,11 @@ class _JoinSideState extends State<_JoinSide> {
     // the other side may not have pressed share yet, so give it a few goes
     // rather than failing on the first empty answer.
     for (var attempt = 0; attempt < 3; attempt++) {
-      final res = await engine.pairCodeFetch(code);
+      // a quiet session never reaches the relays: it answers as unreachable
+      // ones would
+      final res = sessionQuiet
+          ? 'error: no relays accepted'
+          : await engine.pairCodeFetch(code);
       if (!mounted) return;
       if (res.startsWith('kryfo://')) {
         final status = await handleHaloUri(res);

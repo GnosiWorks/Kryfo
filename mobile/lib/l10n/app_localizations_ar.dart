@@ -261,7 +261,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get introBudgetInAFewMinutes => 'بعد دقائق';
 
   @override
-  String get lockStateUnlockKryfo => 'فتح قفل kryfo';
+  String get lockStateUnlockKryfo => 'فتح قفل Kryfo';
 
   @override
   String get appInvalidUri => 'رابط غير صالح';
@@ -3506,9 +3506,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lockUseFingerprint => 'استخدام البصمة';
 
   @override
-  String get lockSetupThatIsYourWipe => 'هذا رمز PIN للمسح. اختر غيره.';
-
-  @override
   String get lockSetupUnlockWithFingerprint => 'فتح القفل بالبصمة؟';
 
   @override
@@ -3531,10 +3528,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lockSetupThoseWereDifferentFrom => 'لم يتطابقا. من البداية.';
 
   @override
-  String get lockSetupTheSameFourDigits => 'الأرقام الأربعة نفسها';
+  String get lockSetupTheSameFourDigits => 'الأرقام نفسها مرة أخرى';
 
   @override
-  String get lockSetupFourDigitsAnythingYou => 'أربعة أرقام، أي شيء ستتذكره';
+  String get lockSetupFourDigitsAnythingYou =>
+      'أربعة أرقام أو أكثر، أي شيء ستتذكره';
 
   @override
   String get modesOnion => 'Onion';
@@ -4114,19 +4112,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get panicSetupThoseWereDifferentFrom => 'لم يتطابقا. من البداية.';
 
   @override
-  String get panicSetupThatIsYourReal => 'هذا رمز PIN الحقيقي. اختر غيره.';
-
-  @override
   String get panicSetupOnceMore => 'مرة أخرى';
 
   @override
-  String get panicSetupSetAWipePin => 'تعيين رمز PIN للمسح';
-
-  @override
-  String get panicSetupTheSameFourDigits => 'الأرقام الأربعة نفسها';
-
-  @override
-  String get panicSetupTheSecondPinWipes => 'رمز PIN الثاني يمسح كل شيء.';
+  String get panicSetupTheSameFourDigits => 'الأرقام نفسها مرة أخرى';
 
   @override
   String get photoKnowsEverythingInside => 'كل ما في داخله';
@@ -4185,9 +4174,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pinsAppLock => 'قفل التطبيق';
 
   @override
-  String get pinsTwoPins => 'رمزا PIN';
-
-  @override
   String get pinsYourPin => 'رمز PIN';
 
   @override
@@ -4198,7 +4184,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pinsOpensKryfoFourDigits =>
-      'يفتح kryfo. أربعة أرقام، تُطلب حين يعود التطبيق إلى الواجهة.';
+      'يفتح Kryfo. يُطلب حين يعود التطبيق إلى الواجهة.';
 
   @override
   String get pinsChangePin => 'تغيير رمز PIN';
@@ -4214,7 +4200,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'يُزال رمز PIN، ومعه رمز PIN للمسح. وكل من يمسك هاتفك يفتح kryfo باسمك.';
+      'يُزال رمز PIN، ومعه رمز PIN للمسح. وكل من يمسك هاتفك يفتح Kryfo باسمك.';
 
   @override
   String get pinsUnlockWithFingerprint => 'فتح القفل بالبصمة';
@@ -4227,9 +4213,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pinsSet => 'تعيين';
-
-  @override
-  String get pinsTheSecondPinWipes => 'رمز PIN الثاني يمسح كل شيء.';
 
   @override
   String get pinsChangeWipePin => 'تغيير رمز PIN للمسح';
@@ -5074,7 +5057,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsAppLock2 => 'قفل التطبيق';
 
   @override
-  String get settingsYourPinAndA => 'رمز PIN، ورمز PIN للمسح';
+  String get settingsYourPinAndA => 'رمز PIN والحماية المتقدمة';
 
   @override
   String get settingsPinWipePin => 'PIN · PIN للمسح';
@@ -7011,4 +6994,124 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'اسم المستخدم هذا محجوز بالفعل';
+
+  @override
+  String get pinPickDifferent => 'اختر رمز PIN آخر';
+
+  @override
+  String get settingsKeptOnWhileLock =>
+      'يبقى مفعّلًا ما دام قفل التطبيق مفعّلًا.';
+
+  @override
+  String get lockFingerAfterPin =>
+      'أدخل رمز PIN مرة واحدة لاستخدام بصمتك من جديد.';
+
+  @override
+  String get pinsAdvanced => 'حماية متقدمة';
+
+  @override
+  String get pinsAdvancedLine => 'لحين يجبرك أحد على فتح قفل هاتفك.';
+
+  @override
+  String get pinsWipeLine =>
+      'إن كُتب على شاشة القفل، يمسح Kryfo من هذا الهاتف.';
+
+  @override
+  String get pinsDecoyPin => 'رمز PIN للتمويه';
+
+  @override
+  String get pinsDecoyLine => 'يفتح Kryfo فارغًا، كأنه مثبت للتو.';
+
+  @override
+  String get pinsSetADecoyPin => 'تعيين رمز PIN للتمويه';
+
+  @override
+  String get pinsChangeDecoyPin => 'تغيير رمز PIN للتمويه';
+
+  @override
+  String get pinsRemoveTheDecoyPin => 'إزالة رمز PIN للتمويه؟';
+
+  @override
+  String get pinsTheDecoyGoes => 'يزول معه Kryfo الفارغ الذي يفتحه.';
+
+  @override
+  String get pinsTurnOffWithDecoy =>
+      'تُزال كل رموز PIN، ومعها رمز التمويه وما يفتحه من Kryfo. وكل من يمسك هاتفك يفتح Kryfo باسمك.';
+
+  @override
+  String get pinsHowThisWorks => 'كيف يعمل هذا';
+
+  @override
+  String get flowEnterYourPin => 'أدخل رمز PIN';
+
+  @override
+  String get flowEnterYourPinLine => 'الرمز الذي يفتح Kryfo.';
+
+  @override
+  String get flowWipeTitle => 'رمز PIN للمسح';
+
+  @override
+  String get flowWipe1 =>
+      'إن كُتب على شاشة القفل بدل رمز PIN الخاص بك، يمسح Kryfo من هذا الهاتف ويغلقه. ولمن يراقب، يبدو أن التطبيق توقف فحسب.';
+
+  @override
+  String get flowWipe2 =>
+      'تذهب معه كل محادثة وهويتك، ومعهما التمويه إن كان لديك.';
+
+  @override
+  String get flowWipeChoose => 'اختر رمز PIN للمسح';
+
+  @override
+  String get flowWipeDone => 'تم تعيين رمز PIN للمسح';
+
+  @override
+  String get flowWipeDoneLine => 'لا شيء على شاشة القفل يدل على وجوده.';
+
+  @override
+  String get flowDecoyTitle => 'رمز PIN للتمويه';
+
+  @override
+  String get flowDecoy1 =>
+      'يفتح Kryfo فارغًا، كأنه مثبت للتو. يصمد أمام نظرة سريعة على هاتفك. لا يخفي المساحة التي يشغلها Kryfo، ولن يخدع من يعرف كلماتك الثلاث، أو من يحاول مراسلته، أو من ينسخ الهاتف.';
+
+  @override
+  String get flowDecoyFinger =>
+      'بصمتك تفتح Kryfo الحقيقي. إن كان أحد قادرًا على إجبارك على استخدامها، فأوقف فتح القفل بالبصمة.';
+
+  @override
+  String get flowDecoyDigits =>
+      'استخدم عدد الأرقام نفسه الذي في رمز PIN الخاص بك. فالنقاط يمكن عدّها.';
+
+  @override
+  String get flowDecoyShade =>
+      'الإشعارات الموجودة في لوحة الإشعارات قد شوهدت بالفعل. وما دام التمويه مفتوحًا، لا يظهر أي إشعار جديد.';
+
+  @override
+  String get flowDecoyChoose => 'اختر رمز PIN للتمويه';
+
+  @override
+  String get flowDecoyDone => 'تم تعيين رمز PIN للتمويه';
+
+  @override
+  String get flowDecoyDoneLine =>
+      'اكتبه على شاشة القفل لفتح Kryfo الفارغ. وللخروج منه، انتقل إلى تطبيق آخر ثم أدخل رمز PIN الخاص بك.';
+
+  @override
+  String get flowLaw =>
+      'في بعض الدول، يُعدّ رفض فتح قفل الهاتف أو إخفاء البيانات عن المسؤولين جريمة في حد ذاته. اعرف القانون حيث تسافر.';
+
+  @override
+  String get howWipe =>
+      'إن كُتب رمز PIN للمسح على شاشة القفل، يمسح كل محادثة وهويتك وأي تمويه، ثم يغلق Kryfo. ويعمل حتى أثناء إيقاف لوحة الأرقام بعد محاولات خاطئة.';
+
+  @override
+  String get howDecoy =>
+      'يفتح رمز PIN للتمويه نسخة ثانية فارغة من Kryfo بكلماتها الثلاث الخاصة. وتواصل الرسائل إلى Kryfo الحقيقي الوصول في الخلفية بصمت. وللخروج من التمويه، انتقل إلى تطبيق آخر ثم أدخل رمز PIN الخاص بك.';
+
+  @override
+  String get howLimits =>
+      'نظرة سريعة، لا مختبر. قد تُظهر نسخة من الهاتف مأخوذة بأدوات جنائية أن Kryfo يحوي أكثر مما يعرضه، ويمكن تخمين رمز PIN القصير دون اتصال.';
+
+  @override
+  String get flowNotSet => 'تعذّر التعيين. حاول مرة أخرى.';
 }

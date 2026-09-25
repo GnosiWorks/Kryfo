@@ -10,7 +10,6 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../picked.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/confirm_sheet.dart';
@@ -39,7 +38,7 @@ import 'package:flutter/services.dart';
 import '../main.dart'
     show
         appState,
-        db,
+        session,
         currentChatPeer,
         newMsgUid,
         torStrictGetOnIsolate,
@@ -197,7 +196,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     lockState.addListener(_lockLifted);
     // a room is never in the app switcher and never screenshotted. the flag
     // is set the moment we know it is a room and cleared on the way out.
-    db.getGroup(widget.groupId).then((g) async {
+    session.getGroup(widget.groupId).then((g) async {
       if (!mounted || g == null || g['room_pub'] == null) return;
       setState(() {
         _roomExpiresAt = g['expires_at'] as int?;
@@ -212,7 +211,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         if (link != null && mounted) await showRoomLinkSheet(context, link);
       }
     });
-    db.clearGroupUnread(widget.groupId).then((_) => appState.refreshGroups());
+    session
+        .clearGroupUnread(widget.groupId)
+        .then((_) => appState.refreshGroups());
     unawaited(clearNotificationsFor('group:${widget.groupId}'));
     // restore a draft left behind last time this group was open.
     _msgCtrl.text = _draftPerGroup[widget.groupId] ?? '';
@@ -263,7 +264,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           // animation is cut off and the messages around it jump
           Future.delayed(kLeaveGone, () {
             if (mounted) setState(() => _messages.remove(m));
-            if (m.msgUid != null) db.deleteMessage(m.msgUid!);
+            if (m.msgUid != null) session.deleteMessage(m.msgUid!);
           });
         }
         HapticFeedback.lightImpact();
@@ -405,8 +406,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     _loadingOlder = true;
     try {
       final oldestRowid = _messages.isEmpty ? null : _messages.first.rowid;
-      _blocked = await db.blockedIds();
-      final rows0 = await db.groupMessagesPage(
+      _blocked = await session.blockedIds();
+      final rows0 = await session.groupMessagesPage(
         widget.groupId,
         beforeRowid: oldestRowid,
         limit: _pageSize + 1,
@@ -427,8 +428,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           .where((u) => u != null && u.isNotEmpty)
           .cast<String>()
           .toList();
-      final reactions = await db.loadReactionsFor(uids);
-      final votes = await db.pollVotesFor(uids);
+      final reactions = await session.loadReactionsFor(uids);
+      final votes = await session.pollVotesFor(uids);
       if (!mounted) return;
       final nickById = <String, String>{};
       for (final c in appState.contacts) {
@@ -514,10 +515,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     try {
       _dayKeys.clear();
       _dayMsOf.clear();
-      db.getGroupAtmosphere(widget.groupId).then((a) {
+      session.getGroupAtmosphere(widget.groupId).then((a) {
         if (mounted) setState(() => _atmosphere = atmoFromName(a));
       });
-      final g = await db.getGroup(widget.groupId);
+      final g = await session.getGroup(widget.groupId);
       // a room that ended while this was open is gone, so is the screen.
       // only when it is the one in front: leaving from the info screen
       // already pops both, and a third pop would close the app.
@@ -528,7 +529,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         }
         return;
       }
-      final members = await db.getGroupMembers(widget.groupId);
+      final members = await session.getGroupMembers(widget.groupId);
       _me = await appState.meIn(widget.groupId);
       // keep whatever window the user has expanded to - a mid-scroll reaction
       // used to collapse the list back to one page and yank the view.
@@ -537,10 +538,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           _pagedOut ||
           _messages.length > _pageSize ||
           (widget.jumpToUid != null && !_didJump);
-      _blocked = await db.blockedIds();
+      _blocked = await session.blockedIds();
       final rows0 = wantAll
-          ? await db.loadGroupMessages(widget.groupId)
-          : await db.groupMessagesPage(widget.groupId, limit: _pageSize + 1);
+          ? await session.loadGroupMessages(widget.groupId)
+          : await session.groupMessagesPage(
+              widget.groupId,
+              limit: _pageSize + 1,
+            );
       if (!wantAll) {
         _hasMore = rows0.length > _pageSize;
         if (_hasMore) rows0.removeAt(0);
@@ -553,8 +557,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           .where((u) => u != null && u.isNotEmpty)
           .cast<String>()
           .toList();
-      final reactions = await db.loadReactionsFor(uids);
-      final votes = await db.pollVotesFor(uids);
+      final reactions = await session.loadReactionsFor(uids);
+      final votes = await session.pollVotesFor(uids);
       // local nickname is the display source of truth. fall back to the 3-word
       // id when we have no nickname for that member.
       final nickById = <String, String>{};
@@ -566,7 +570,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       }
       _mentionable = [
         for (final id in members)
-          if (id != appState.myId)
+          if (id != appState.sessionId)
             MentionCandidate(id: id, name: nickById[id], avatar: faceById[id]),
       ];
       if (!mounted) return;
@@ -716,8 +720,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     };
     final next = <String, ShieldFlag>{};
     for (final id in senders) {
-      if (await db.isAccepted(id)) continue;
-      final f = ShieldFlag.fromRow(await db.shieldFor(id));
+      if (await session.isAccepted(id)) continue;
+      final f = ShieldFlag.fromRow(await session.shieldFor(id));
       if (f != null) next[id] = f;
     }
     if (!mounted) return;
@@ -793,7 +797,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         ? 0
         : _messages.map((m) => m.rowid).reduce((a, b) => a > b ? a : b);
     final rows = _withoutBlocked(
-      await db.groupMessagesAfter(widget.groupId, lastRowid),
+      await session.groupMessagesAfter(widget.groupId, lastRowid),
     );
     if (!mounted) return;
     final have = _messages.map((m) => m.msgUid).toSet();
@@ -825,8 +829,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         .where((u) => u != null && u.isNotEmpty)
         .cast<String>()
         .toList();
-    final reactions = await db.loadReactionsFor(uids);
-    final votes = await db.pollVotesFor(uids);
+    final reactions = await session.loadReactionsFor(uids);
+    final votes = await session.pollVotesFor(uids);
     if (!mounted) return;
     final fresh = <_GMsg>[];
     for (final r in brandNew) {
@@ -1087,7 +1091,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         ? _pendingPreview
         : null;
     final optimistic = _GMsg(
-      sender: appState.myId,
+      sender: appState.sessionId,
       direction: 'out',
       text: text,
       when: DateTime.now(),
@@ -1293,7 +1297,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // the screen from reloading, votes and all
     final optimistic =
         _GMsg(
-            sender: appState.myId,
+            sender: appState.sessionId,
             direction: 'out',
             text: d.question,
             when: DateTime.now(),
@@ -1406,14 +1410,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   Future<void> _sendGroupImage(Uint8List bytes, String caption) async {
     final uid = newMsgUid();
-    final dir = await getApplicationDocumentsDirectory();
-    final mediaDir = Directory('${dir.path}/media');
-    if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
+    final mediaDir = await session.container.mediaDir();
     final f = File('${mediaDir.path}/$uid.jpg');
     await f.writeAsBytes(bytes);
     final burn = _ghost ? _burnSeconds : null;
     final m = _GMsg(
-      sender: appState.myId,
+      sender: appState.sessionId,
       direction: 'out',
       text: caption,
       when: DateTime.now(),
@@ -1429,8 +1431,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
     _scrollToEnd();
     HapticFeedback.lightImpact();
-    await db.saveMessage(
-      appState.myId,
+    await session.saveMessage(
+      appState.sessionId,
       'out',
       caption,
       groupId: widget.groupId,
@@ -1455,14 +1457,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     var bytes = await src.readAsBytes();
     if (_disguise) bytes = disguiseWav(bytes);
     final uid = newMsgUid();
-    final dir = await getApplicationDocumentsDirectory();
-    final mediaDir = Directory('${dir.path}/media');
-    if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
+    final mediaDir = await session.container.mediaDir();
     final dest = File('${mediaDir.path}/vn_$uid.wav');
     await dest.writeAsBytes(bytes);
     final burn = _ghost ? _burnSeconds : null;
     final m = _GMsg(
-      sender: appState.myId,
+      sender: appState.sessionId,
       direction: 'out',
       text: '',
       when: DateTime.now(),
@@ -1480,8 +1480,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
     _scrollToEnd();
     HapticFeedback.lightImpact();
-    await db.saveMessage(
-      appState.myId,
+    await session.saveMessage(
+      appState.sessionId,
       'out',
       '',
       groupId: widget.groupId,
@@ -1561,9 +1561,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       return;
     }
     final uid = newMsgUid();
-    final dir = await getApplicationDocumentsDirectory();
-    final mediaDir = Directory('${dir.path}/media');
-    if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
+    final mediaDir = await session.container.mediaDir();
     final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
     final dest = File('${mediaDir.path}/f_${uid}_$safe');
     await File(src).copy(dest.path);
@@ -1599,7 +1597,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
     final burn = _ghost ? _burnSeconds : null;
     final m = _GMsg(
-      sender: appState.myId,
+      sender: appState.sessionId,
       direction: 'out',
       text: '',
       when: DateTime.now(),
@@ -1616,8 +1614,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
     _scrollToEnd();
     HapticFeedback.lightImpact();
-    await db.saveMessage(
-      appState.myId,
+    await session.saveMessage(
+      appState.sessionId,
       'out',
       '',
       groupId: widget.groupId,
@@ -1665,7 +1663,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     mediaProgressEnd(uid);
     if (mounted) setState(() => m.removing = true);
     await Future.delayed(kLeaveGone);
-    await db.deleteMessage(uid);
+    await session.deleteMessage(uid);
     if (mounted) setState(() => _messages.remove(m));
     unawaited(appState.unsendInGroup(widget.groupId, uid));
   }
@@ -1676,11 +1674,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (m.msgUid != null) mediaProgressEnd(m.msgUid!);
     final ok = result == 'ok';
     final uid = m.msgUid;
-    if (ok && uid != null) await db.markSent(uid);
+    if (ok && uid != null) await session.markSent(uid);
     int? ba;
     if (ok && m.burnSecs != null && uid != null) {
       ba = DateTime.now().millisecondsSinceEpoch + m.burnSecs! * 1000;
-      await db.setMsgBurnAt(uid, ba);
+      await session.setMsgBurnAt(uid, ba);
     }
     if (!mounted) return;
     // re-find the on-screen object; a reload may have replaced m.
@@ -2172,7 +2170,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // read from the database: a pin far up the thread is still a pin when
   // only the last page is loaded
   Future<List<PinEntry>> _loadPins() async {
-    final rows = await db.pinnedIn(groupId: widget.groupId);
+    final rows = await session.pinnedIn(groupId: widget.groupId);
     final nickById = <String, String>{};
     final faceById = <String, int?>{};
     for (final c in appState.contacts) {
@@ -2190,7 +2188,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             author: out
                 ? l10n.groupChatYou2
                 : (_senderLabel(nickById, peer) ?? peer),
-            authorSeed: out ? appState.myId : peer,
+            authorSeed: out ? appState.sessionId : peer,
             face: out ? appState.myAvatar : faceById[peer],
             when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
             text: (r['plaintext'] as String?) ?? '',
@@ -2203,7 +2201,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   int _pinCount = 0;
   Future<void> _refreshPinCount() async {
-    final n = (await db.pinnedIn(groupId: widget.groupId)).length;
+    final n = (await session.pinnedIn(groupId: widget.groupId)).length;
     if (mounted && n != _pinCount) setState(() => _pinCount = n);
   }
 
@@ -2232,7 +2230,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
     // ours first, so the list and the count are right at once; telling the
     // members is a send to each over tor and is not waited for
-    await db.setPinned(uid, on);
+    await session.setPinned(uid, on);
     unawaited(appState.pinInGroup(widget.groupId, uid, on));
     await _refreshPinCount();
   }
@@ -2240,7 +2238,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   Future<void> _togglePinGroup(_GMsg m) async {
     if (m.msgUid == null) return;
     if (!m.pinned) {
-      final count = (await db.pinnedIn(groupId: widget.groupId)).length;
+      final count = (await session.pinnedIn(groupId: widget.groupId)).length;
       if (count >= kMaxPins) {
         if (mounted) {
           showHaloToast(context, l10n.groupChatThisChatHasPins(kMaxPins));
@@ -2269,7 +2267,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (m.msgUid == null) return;
     final next = !m.saved;
     setState(() => m.saved = next);
-    await db.setSaved(m.msgUid!, next);
+    await session.setSaved(m.msgUid!, next);
     if (mounted) {
       showHaloToast(
         context,
@@ -2347,7 +2345,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       ),
     );
     if (haloId == null || !mounted) return;
-    final row = await db.getContact(haloId);
+    final row = await session.getContact(haloId);
     if (row == null || !mounted) return;
     Navigator.of(context).push(
       haloRoute(
@@ -2518,7 +2516,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final me = 'group:${widget.groupId}';
     if (currentChatPeer == me) return;
     currentChatPeer = me;
-    db.clearGroupUnread(widget.groupId).then((_) => appState.refreshGroups());
+    session
+        .clearGroupUnread(widget.groupId)
+        .then((_) => appState.refreshGroups());
   }
 
   @override
@@ -2540,7 +2540,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         return;
       }
       currentChatPeer = 'group:${widget.groupId}';
-      db.clearGroupUnread(widget.groupId).then((_) => appState.refreshGroups());
+      session
+          .clearGroupUnread(widget.groupId)
+          .then((_) => appState.refreshGroups());
     }
   }
 
@@ -2560,7 +2562,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (_left) return;
     _left = true;
     if (_isRoom) appState.forceSecure(false);
-    if (_isRoom && _roomBanner) db.markRoomSeen(widget.groupId);
+    if (_isRoom && _roomBanner) session.markRoomSeen(widget.groupId);
   }
 
   @override

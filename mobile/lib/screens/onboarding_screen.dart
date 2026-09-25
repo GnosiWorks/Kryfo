@@ -309,7 +309,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
   }
 
   List<String> get _words {
-    final id = widget.appState.myId;
+    final id = widget.appState.sessionId;
     if (id.isEmpty) return ['...', '...', '...'];
     return id.split('-').take(3).toList();
   }
@@ -456,9 +456,9 @@ class _IdentityScreenState extends State<_IdentityScreen>
                 child: Transform.scale(
                   scale: 0.72 + 0.28 * eased,
                   child: KryfoAvatar(
-                    seed: widget.appState.myId.isEmpty
+                    seed: widget.appState.sessionId.isEmpty
                         ? 'kryfo'
-                        : widget.appState.myId,
+                        : widget.appState.sessionId,
                     size: 56,
                   ),
                 ),

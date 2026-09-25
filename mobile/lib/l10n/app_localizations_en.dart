@@ -245,7 +245,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get introBudgetInAFewMinutes => 'in a few minutes';
 
   @override
-  String get lockStateUnlockKryfo => 'Unlock kryfo';
+  String get lockStateUnlockKryfo => 'Unlock Kryfo';
 
   @override
   String get appInvalidUri => 'invalid uri';
@@ -564,7 +564,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appThePinWillBe =>
-      'The pin will be removed. Anyone with your phone will see kryfo when they open it.';
+      'The PIN will be removed. Anyone with your phone will see kryfo when they open it.';
 
   @override
   String get appDisable => 'Disable';
@@ -3401,43 +3401,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lockNotIt => 'Not it';
 
   @override
-  String get lockYourPin => 'Your pin';
+  String get lockYourPin => 'Your PIN';
 
   @override
   String get lockUseFingerprint => 'Use fingerprint';
-
-  @override
-  String get lockSetupThatIsYourWipe => 'That is your wipe pin. Pick another.';
 
   @override
   String get lockSetupUnlockWithFingerprint => 'Unlock with fingerprint?';
 
   @override
   String get lockSetupThePinStillWorks =>
-      'The pin still works whenever you want it. This is just faster.';
+      'The PIN still works whenever you want it. This is just faster.';
 
   @override
   String get lockSetupUseFingerprint => 'Use fingerprint';
 
   @override
-  String get lockSetupPinOnly => 'Pin only';
+  String get lockSetupPinOnly => 'PIN only';
 
   @override
   String get lockSetupOnceMore => 'Once more';
 
   @override
-  String get lockSetupSetAPin => 'Set a pin';
+  String get lockSetupSetAPin => 'Set a PIN';
 
   @override
   String get lockSetupThoseWereDifferentFrom =>
       'Those were different. From the top.';
 
   @override
-  String get lockSetupTheSameFourDigits => 'The same four digits';
+  String get lockSetupTheSameFourDigits => 'The same digits again';
 
   @override
   String get lockSetupFourDigitsAnythingYou =>
-      'Four digits, anything you will remember';
+      'Four digits or more, anything you will remember';
 
   @override
   String get modesOnion => 'Onion';
@@ -4022,19 +4019,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Those were different. From the top.';
 
   @override
-  String get panicSetupThatIsYourReal => 'That is your real pin. Pick another.';
-
-  @override
   String get panicSetupOnceMore => 'Once more';
 
   @override
-  String get panicSetupSetAWipePin => 'Set a wipe pin';
-
-  @override
-  String get panicSetupTheSameFourDigits => 'The same four digits';
-
-  @override
-  String get panicSetupTheSecondPinWipes => 'The second pin wipes everything.';
+  String get panicSetupTheSameFourDigits => 'The same digits again';
 
   @override
   String get photoKnowsEverythingInside => 'Everything inside';
@@ -4094,10 +4082,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinsAppLock => 'App lock';
 
   @override
-  String get pinsTwoPins => 'Two pins';
-
-  @override
-  String get pinsYourPin => 'Your pin';
+  String get pinsYourPin => 'Your PIN';
 
   @override
   String get commonOn => 'On';
@@ -4107,13 +4092,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pinsOpensKryfoFourDigits =>
-      'Opens kryfo. Four digits, asked for when it comes to the front.';
+      'Opens Kryfo. Asked for when it comes to the front.';
 
   @override
-  String get pinsChangePin => 'Change pin';
+  String get pinsChangePin => 'Change PIN';
 
   @override
-  String get pinsSetAPin => 'Set a pin';
+  String get pinsSetAPin => 'Set a PIN';
 
   @override
   String get pinsTurnOff => 'Turn off';
@@ -4123,38 +4108,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'The pin goes, and the wipe pin with it. Anyone holding your phone opens kryfo as you.';
+      'The PIN goes, and the wipe PIN with it. Anyone holding your phone opens Kryfo as you.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Unlock with fingerprint';
 
   @override
-  String get pinsWipePin => 'Wipe pin';
+  String get pinsWipePin => 'Wipe PIN';
 
   @override
-  String get pinsNeedsAPinFirst => 'Needs a pin first';
+  String get pinsNeedsAPinFirst => 'Needs a PIN first';
 
   @override
   String get pinsSet => 'Set';
 
   @override
-  String get pinsTheSecondPinWipes => 'The second pin wipes everything.';
+  String get pinsChangeWipePin => 'Change wipe PIN';
 
   @override
-  String get pinsChangeWipePin => 'Change wipe pin';
-
-  @override
-  String get pinsSetAWipePin => 'Set a wipe pin';
+  String get pinsSetAWipePin => 'Set a wipe PIN';
 
   @override
   String get pinsRemove => 'Remove';
 
   @override
-  String get pinsRemoveTheWipePin => 'Remove the wipe pin?';
+  String get pinsRemoveTheWipePin => 'Remove the wipe PIN?';
 
   @override
   String get pinsTheLockScreenKeeps =>
-      'The lock screen keeps your pin. The wipe pin stops doing anything.';
+      'The lock screen keeps your PIN. The wipe PIN stops doing anything.';
 
   @override
   String profileCopied(Object what) {
@@ -4743,7 +4725,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seenHonestAboutTheLast =>
-      'Honest about the last rows: that is what the app lock, the wipe pin and encrypted storage are for, and no tool saves you from someone holding your open phone. The full threat model lives in THREAT_MODEL.md in the repo, written against LINDDUN. The code is open, so none of this has to be taken on trust.';
+      'Honest about the last rows: that is what the app lock, the wipe PIN and encrypted storage are for, and no tool saves you from someone holding your open phone. The full threat model lives in THREAT_MODEL.md in the repo, written against LINDDUN. The code is open, so none of this has to be taken on trust.';
 
   @override
   String get seenHidden => 'hidden';
@@ -4843,7 +4825,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seenIfSomeoneHoldsYour =>
-      'If someone holds your phone open, they read your messages. The app lock, wipe pin and encrypted storage help before that point, not after it.';
+      'If someone holds your phone open, they read your messages. The app lock, wipe PIN and encrypted storage help before that point, not after it.';
 
   @override
   String get seenTheCryptoItself => 'The crypto itself';
@@ -4994,10 +4976,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAppLock2 => 'App lock';
 
   @override
-  String get settingsYourPinAndA => 'Your pin, and a wipe pin';
+  String get settingsYourPinAndA => 'Your PIN and Advanced protection';
 
   @override
-  String get settingsPinWipePin => 'Pin · wipe pin';
+  String get settingsPinWipePin => 'PIN · wipe PIN';
 
   @override
   String get settingsBackUpIdentity => 'Back up identity';
@@ -6882,4 +6864,125 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'That handle is taken';
+
+  @override
+  String get pinPickDifferent => 'Pick a different PIN';
+
+  @override
+  String get settingsKeptOnWhileLock => 'Kept on while the app lock is on.';
+
+  @override
+  String get lockFingerAfterPin =>
+      'Type your PIN once to use your fingerprint again.';
+
+  @override
+  String get pinsAdvanced => 'Advanced protection';
+
+  @override
+  String get pinsAdvancedLine =>
+      'For when someone makes you unlock your phone.';
+
+  @override
+  String get pinsWipeLine =>
+      'Typed on the lock screen, it wipes Kryfo from this phone.';
+
+  @override
+  String get pinsDecoyPin => 'Decoy PIN';
+
+  @override
+  String get pinsDecoyLine => 'Opens an empty Kryfo, as if just installed.';
+
+  @override
+  String get pinsSetADecoyPin => 'Set a decoy PIN';
+
+  @override
+  String get pinsChangeDecoyPin => 'Change decoy PIN';
+
+  @override
+  String get pinsRemoveTheDecoyPin => 'Remove the decoy PIN?';
+
+  @override
+  String get pinsTheDecoyGoes => 'The empty Kryfo it opens goes with it.';
+
+  @override
+  String get pinsTurnOffWithDecoy =>
+      'Every PIN goes, the decoy and its Kryfo with them. Anyone holding your phone opens Kryfo as you.';
+
+  @override
+  String get pinsHowThisWorks => 'How this works';
+
+  @override
+  String get flowEnterYourPin => 'Enter your PIN';
+
+  @override
+  String get flowEnterYourPinLine => 'The one that opens Kryfo.';
+
+  @override
+  String get flowWipeTitle => 'A wipe PIN';
+
+  @override
+  String get flowWipe1 =>
+      'Typed on the lock screen instead of your PIN, it wipes Kryfo from this phone and closes it. To whoever is watching, the app just stopped.';
+
+  @override
+  String get flowWipe2 =>
+      'It takes every chat and your identity with it, and the decoy if you have one.';
+
+  @override
+  String get flowWipeChoose => 'Choose a wipe PIN';
+
+  @override
+  String get flowWipeDone => 'Wipe PIN set';
+
+  @override
+  String get flowWipeDoneLine =>
+      'Nothing on the lock screen shows it is there.';
+
+  @override
+  String get flowDecoyTitle => 'A decoy PIN';
+
+  @override
+  String get flowDecoy1 =>
+      'Opens an empty Kryfo, as if just installed. It holds up to a quick look through your phone. It does not hide how much space Kryfo uses, and it will not fool someone who knows your three words, who tries to message it, or who copies the phone.';
+
+  @override
+  String get flowDecoyFinger =>
+      'Your fingerprint opens your real Kryfo. If someone could make you use it, turn fingerprint off.';
+
+  @override
+  String get flowDecoyDigits =>
+      'Use as many digits as your PIN. The dots can be counted.';
+
+  @override
+  String get flowDecoyShade =>
+      'Notifications already in the shade were already seen. While the decoy is open, no new ones show.';
+
+  @override
+  String get flowDecoyChoose => 'Choose a decoy PIN';
+
+  @override
+  String get flowDecoyDone => 'Decoy PIN set';
+
+  @override
+  String get flowDecoyDoneLine =>
+      'Type it on the lock screen to open the empty Kryfo. To leave it, switch away and enter your PIN.';
+
+  @override
+  String get flowLaw =>
+      'In some countries, refusing to unlock a phone or hiding data from officials is an offence in itself. Know the law where you travel.';
+
+  @override
+  String get howWipe =>
+      'Typed on the lock screen, the wipe PIN wipes every chat, your identity and any decoy, then closes Kryfo. It works even while the pad is held after wrong tries.';
+
+  @override
+  String get howDecoy =>
+      'The decoy PIN opens a second, empty Kryfo with three words of its own. Messages to your real Kryfo keep arriving underneath, silently. To leave the decoy, switch away and enter your PIN.';
+
+  @override
+  String get howLimits =>
+      'A quick look, not a lab. A copy of the phone made with forensic tools can show that Kryfo holds more than it shows, and a short PIN can be guessed offline.';
+
+  @override
+  String get flowNotSet => 'Could not set it. Try again.';
 }

@@ -4,14 +4,21 @@
 // accepted.
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'container.dart';
+
 const _acceptKey = 'kryfo.intro.accept';
 
-Future<bool> loadAcceptIntros() async {
+Future<bool> loadAcceptIntros([
+  HaloContainer c = HaloContainer.everyday,
+]) async {
   final prefs = await SharedPreferences.getInstance();
-  return prefs.getBool(_acceptKey) ?? true;
+  return prefs.getBool(c.key(_acceptKey)) ?? true;
 }
 
-Future<void> saveAcceptIntros(bool on) async {
+Future<void> saveAcceptIntros(
+  bool on, [
+  HaloContainer c = HaloContainer.everyday,
+]) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setBool(_acceptKey, on);
+  await prefs.setBool(c.key(_acceptKey), on);
 }

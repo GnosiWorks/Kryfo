@@ -135,6 +135,41 @@ void main() {
     expect(now, isTrue);
   });
 
+  test('a decoy unlock drops what waited, and a dialog gives up', () async {
+    var locked = true;
+    final g = LockGuard(isLocked: () => locked);
+    final done = <String>[];
+    await g.afterUnlock(() async => done.add('tap'), key: 'chat:a');
+    Object? gaveUp;
+    unawaited(g.unlocked().catchError((Object e) => gaveUp = e));
+    locked = false;
+    g.dropHeld();
+    await Future<void>.delayed(Duration.zero);
+    expect(gaveUp, isA<LockDropped>());
+    // and nothing of it comes back on a later everyday unlock
+    g.lifted();
+    await Future<void>.delayed(Duration.zero);
+    expect(done, isEmpty);
+  });
+
+  testWidgets('a session change under the lock takes out every screen '
+      'between home and the lock', (tester) async {
+    final h = _Harness(tester);
+    await h.pump();
+    h.push('chat');
+    await tester.pumpAndSettle();
+    h.push('photo');
+    await tester.pumpAndSettle();
+    await h.lockUp();
+    h.g.dropUnderLock();
+    await tester.pumpAndSettle();
+    expect(h.g.lock!.isCurrent, isTrue);
+    await h.unlock();
+    expect(find.text('chat'), findsNothing);
+    expect(find.text('photo'), findsNothing);
+    expect(find.text('home'), findsOneWidget);
+  });
+
   testWidgets('a screen pushed while locked waits under the lock', (
     tester,
   ) async {

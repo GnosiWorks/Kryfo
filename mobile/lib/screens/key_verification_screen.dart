@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/press_scale.dart';
-import '../main.dart' show db, appState;
+import '../main.dart' show session, appState;
 import '../l10n/l10n.dart';
 
 // safety number for a contact: a 60-digit code derived from both X25519
@@ -57,19 +57,19 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
   @override
   void initState() {
     super.initState();
-    db.isVerified(widget.peerHaloId).then((v) {
+    session.isVerified(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _verified = v);
     });
   }
 
   Future<void> _toggle() async {
     final next = !_verified;
-    await db.setVerified(widget.peerHaloId, next);
+    await session.setVerified(widget.peerHaloId, next);
     // the new key is already trusted and the session already re-established on
     // the inbound message (deliver-and-warn). verifying here just clears the
     // banner - no identity/session teardown, which would break sending.
-    if (next && await db.keyChanged(widget.peerHaloId)) {
-      await db.clearKeyChanged(widget.peerHaloId);
+    if (next && await session.keyChanged(widget.peerHaloId)) {
+      await session.clearKeyChanged(widget.peerHaloId);
     }
     await appState.refreshContacts();
     if (next) HapticFeedback.mediumImpact();

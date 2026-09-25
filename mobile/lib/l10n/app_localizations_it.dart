@@ -246,7 +246,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get introBudgetInAFewMinutes => 'tra qualche minuto';
 
   @override
-  String get lockStateUnlockKryfo => 'Sblocca kryfo';
+  String get lockStateUnlockKryfo => 'Sblocca Kryfo';
 
   @override
   String get appInvalidUri => 'uri non valido';
@@ -3449,10 +3449,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get lockUseFingerprint => 'Usa l\'impronta';
 
   @override
-  String get lockSetupThatIsYourWipe =>
-      'Questo è il tuo PIN di cancellazione. Scegline un altro.';
-
-  @override
   String get lockSetupUnlockWithFingerprint => 'Sbloccare con l\'impronta?';
 
   @override
@@ -3475,11 +3471,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get lockSetupThoseWereDifferentFrom => 'Erano diversi. Da capo.';
 
   @override
-  String get lockSetupTheSameFourDigits => 'Le stesse quattro cifre';
+  String get lockSetupTheSameFourDigits => 'Le stesse cifre, di nuovo';
 
   @override
   String get lockSetupFourDigitsAnythingYou =>
-      'Quattro cifre, quelle che vuoi, purché le ricordi';
+      'Quattro cifre o più, quelle che vuoi, purché le ricordi';
 
   @override
   String get modesOnion => 'Onion';
@@ -4068,20 +4064,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get panicSetupThoseWereDifferentFrom => 'Erano diversi. Da capo.';
 
   @override
-  String get panicSetupThatIsYourReal =>
-      'Questo è il tuo vero PIN. Scegline un altro.';
-
-  @override
   String get panicSetupOnceMore => 'Ancora una volta';
 
   @override
-  String get panicSetupSetAWipePin => 'Imposta un PIN di cancellazione';
-
-  @override
-  String get panicSetupTheSameFourDigits => 'Le stesse quattro cifre';
-
-  @override
-  String get panicSetupTheSecondPinWipes => 'Il secondo PIN cancella tutto.';
+  String get panicSetupTheSameFourDigits => 'Le stesse cifre, di nuovo';
 
   @override
   String get photoKnowsEverythingInside => 'Tutto quello che contiene';
@@ -4141,9 +4127,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get pinsAppLock => 'Blocco app';
 
   @override
-  String get pinsTwoPins => 'Due PIN';
-
-  @override
   String get pinsYourPin => 'Il tuo PIN';
 
   @override
@@ -4154,7 +4137,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get pinsOpensKryfoFourDigits =>
-      'Apre kryfo. Quattro cifre, richieste quando torna in primo piano.';
+      'Apre Kryfo. Richiesto quando torna in primo piano.';
 
   @override
   String get pinsChangePin => 'Cambia PIN';
@@ -4170,7 +4153,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'Il PIN viene rimosso, e con lui il PIN di cancellazione. Chiunque abbia in mano il tuo telefono apre kryfo al posto tuo.';
+      'Il PIN viene rimosso, e con lui il PIN di cancellazione. Chiunque abbia in mano il tuo telefono apre Kryfo al posto tuo.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Sblocca con l\'impronta';
@@ -4183,9 +4166,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get pinsSet => 'Imposta';
-
-  @override
-  String get pinsTheSecondPinWipes => 'Il secondo PIN cancella tutto.';
 
   @override
   String get pinsChangeWipePin => 'Cambia PIN di cancellazione';
@@ -5050,7 +5030,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsAppLock2 => 'Blocco app';
 
   @override
-  String get settingsYourPinAndA => 'Il tuo PIN e un PIN di cancellazione';
+  String get settingsYourPinAndA => 'Il tuo PIN e la protezione avanzata';
 
   @override
   String get settingsPinWipePin => 'PIN · PIN di cancellazione';
@@ -6958,4 +6938,126 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'Quel nome utente è già preso';
+
+  @override
+  String get pinPickDifferent => 'Scegli un altro PIN';
+
+  @override
+  String get settingsKeptOnWhileLock =>
+      'Resta attivo finché il blocco app è attivo.';
+
+  @override
+  String get lockFingerAfterPin =>
+      'Digita il PIN una volta per usare di nuovo l\'impronta.';
+
+  @override
+  String get pinsAdvanced => 'Protezione avanzata';
+
+  @override
+  String get pinsAdvancedLine =>
+      'Per quando qualcuno ti costringe a sbloccare il telefono.';
+
+  @override
+  String get pinsWipeLine =>
+      'Digitato nella schermata di blocco, cancella Kryfo da questo telefono.';
+
+  @override
+  String get pinsDecoyPin => 'PIN esca';
+
+  @override
+  String get pinsDecoyLine => 'Apre un Kryfo vuoto, come appena installato.';
+
+  @override
+  String get pinsSetADecoyPin => 'Imposta un PIN esca';
+
+  @override
+  String get pinsChangeDecoyPin => 'Cambia PIN esca';
+
+  @override
+  String get pinsRemoveTheDecoyPin => 'Rimuovere il PIN esca?';
+
+  @override
+  String get pinsTheDecoyGoes => 'Il Kryfo vuoto che apre se ne va con lui.';
+
+  @override
+  String get pinsTurnOffWithDecoy =>
+      'Tutti i PIN vengono rimossi, l\'esca e il suo Kryfo con loro. Chiunque abbia in mano il tuo telefono apre Kryfo al posto tuo.';
+
+  @override
+  String get pinsHowThisWorks => 'Come funziona';
+
+  @override
+  String get flowEnterYourPin => 'Inserisci il tuo PIN';
+
+  @override
+  String get flowEnterYourPinLine => 'Quello che apre Kryfo.';
+
+  @override
+  String get flowWipeTitle => 'Un PIN di cancellazione';
+
+  @override
+  String get flowWipe1 =>
+      'Digitato nella schermata di blocco al posto del tuo PIN, cancella Kryfo da questo telefono e lo chiude. Per chi guarda, l\'app si è semplicemente fermata.';
+
+  @override
+  String get flowWipe2 =>
+      'Porta con sé ogni chat e la tua identità, e l\'esca se ce l\'hai.';
+
+  @override
+  String get flowWipeChoose => 'Scegli un PIN di cancellazione';
+
+  @override
+  String get flowWipeDone => 'PIN di cancellazione impostato';
+
+  @override
+  String get flowWipeDoneLine =>
+      'Nulla nella schermata di blocco mostra che esiste.';
+
+  @override
+  String get flowDecoyTitle => 'Un PIN esca';
+
+  @override
+  String get flowDecoy1 =>
+      'Apre un Kryfo vuoto, come appena installato. Regge a un\'occhiata veloce al tuo telefono. Non nasconde quanto spazio occupa Kryfo, e non inganna chi conosce le tue tre parole, chi prova a scrivergli o chi copia il telefono.';
+
+  @override
+  String get flowDecoyFinger =>
+      'La tua impronta apre il tuo vero Kryfo. Se qualcuno potesse costringerti a usarla, disattiva l\'impronta.';
+
+  @override
+  String get flowDecoyDigits =>
+      'Usa tante cifre quante il tuo PIN. I puntini si possono contare.';
+
+  @override
+  String get flowDecoyShade =>
+      'Le notifiche già nella tendina sono già state viste. Finché l\'esca è aperta, non ne compaiono di nuove.';
+
+  @override
+  String get flowDecoyChoose => 'Scegli un PIN esca';
+
+  @override
+  String get flowDecoyDone => 'PIN esca impostato';
+
+  @override
+  String get flowDecoyDoneLine =>
+      'Digitalo nella schermata di blocco per aprire il Kryfo vuoto. Per uscirne, passa a un\'altra app e inserisci il tuo PIN.';
+
+  @override
+  String get flowLaw =>
+      'In alcuni paesi rifiutarsi di sbloccare un telefono o nascondere dati alle autorità è di per sé un reato. Informati sulla legge dei posti in cui viaggi.';
+
+  @override
+  String get howWipe =>
+      'Digitato nella schermata di blocco, il PIN di cancellazione cancella ogni chat, la tua identità e ogni esca, poi chiude Kryfo. Funziona anche mentre il tastierino è bloccato dopo tentativi sbagliati.';
+
+  @override
+  String get howDecoy =>
+      'Il PIN esca apre un secondo Kryfo, vuoto, con tre parole sue. I messaggi al tuo vero Kryfo continuano ad arrivare sotto, in silenzio. Per uscire dall\'esca, passa a un\'altra app e inserisci il tuo PIN.';
+
+  @override
+  String get howLimits =>
+      'Un\'occhiata veloce, non un laboratorio. Una copia del telefono fatta con strumenti forensi può mostrare che Kryfo contiene più di quanto mostra, e un PIN corto si può indovinare offline.';
+
+  @override
+  String get flowNotSet => 'Non è stato possibile impostarlo. Riprova.';
 }

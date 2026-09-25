@@ -39,13 +39,16 @@ class _LockSetupScreenState extends State<LockSetupScreen>
   // ignored so a backspace cannot shorten the pin being kept
   bool _hold = false;
 
-  Future<void> _onDigit(String d) async {
-    if (_hold || _pin.length >= 4) return;
+  void _onDigit(String d) {
+    if (_hold || _pin.length >= kPinMax) return;
     setState(() {
       _pin += d;
       _mismatch = false;
     });
-    if (_pin.length != 4) return;
+  }
+
+  Future<void> _submit() async {
+    if (_hold || _pin.length < kPinMin) return;
     if (!_confirming) {
       setState(() => _hold = true);
       await Future.delayed(const Duration(milliseconds: 220));
@@ -74,7 +77,7 @@ class _LockSetupScreenState extends State<LockSetupScreen>
     if (!ok) {
       HapticFeedback.heavyImpact();
       if (!mounted) return;
-      showHaloToast(context, l10n.lockSetupThatIsYourWipe);
+      showHaloToast(context, l10n.pinPickDifferent);
       setState(() {
         _first = '';
         _pin = '';
@@ -208,7 +211,13 @@ class _LockSetupScreenState extends State<LockSetupScreen>
               shake: _shake,
             ),
             const Spacer(flex: 3),
-            PinPad(onDigit: _onDigit, onBack: _back, enabled: !_hold),
+            PinPad(
+              onDigit: _onDigit,
+              onBack: _back,
+              onEnter: _submit,
+              canEnter: _pin.length >= kPinMin,
+              enabled: !_hold,
+            ),
             const SizedBox(height: 22),
           ],
         ),

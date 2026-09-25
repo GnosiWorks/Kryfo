@@ -3,14 +3,21 @@
 // ever shows.
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'container.dart';
+
 const _onKey = 'kryfo.scamshield.on';
 
-Future<bool> loadScamShieldOn() async {
+Future<bool> loadScamShieldOn([
+  HaloContainer c = HaloContainer.everyday,
+]) async {
   final prefs = await SharedPreferences.getInstance();
-  return prefs.getBool(_onKey) ?? true;
+  return prefs.getBool(c.key(_onKey)) ?? true;
 }
 
-Future<void> saveScamShieldOn(bool on) async {
+Future<void> saveScamShieldOn(
+  bool on, [
+  HaloContainer c = HaloContainer.everyday,
+]) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setBool(_onKey, on);
+  await prefs.setBool(c.key(_onKey), on);
 }

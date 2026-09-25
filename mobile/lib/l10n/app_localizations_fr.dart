@@ -245,7 +245,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get introBudgetInAFewMinutes => 'dans quelques minutes';
 
   @override
-  String get lockStateUnlockKryfo => 'Déverrouiller kryfo';
+  String get lockStateUnlockKryfo => 'Déverrouiller Kryfo';
 
   @override
   String get appInvalidUri => 'uri invalide';
@@ -3445,10 +3445,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get lockUseFingerprint => 'Utiliser l’empreinte';
 
   @override
-  String get lockSetupThatIsYourWipe =>
-      'C’est votre code d’effacement. Choisissez-en un autre.';
-
-  @override
   String get lockSetupUnlockWithFingerprint => 'Déverrouiller par empreinte ?';
 
   @override
@@ -3472,11 +3468,12 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les deux diffèrent. On recommence.';
 
   @override
-  String get lockSetupTheSameFourDigits => 'Les quatre mêmes chiffres';
+  String get lockSetupTheSameFourDigits =>
+      'Les mêmes chiffres, encore une fois';
 
   @override
   String get lockSetupFourDigitsAnythingYou =>
-      'Quatre chiffres dont vous vous souviendrez';
+      'Quatre chiffres ou plus, dont vous vous souviendrez';
 
   @override
   String get modesOnion => 'Onion';
@@ -4068,20 +4065,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les deux diffèrent. On recommence.';
 
   @override
-  String get panicSetupThatIsYourReal =>
-      'C’est votre vrai code PIN. Choisissez-en un autre.';
-
-  @override
   String get panicSetupOnceMore => 'Encore une fois';
 
   @override
-  String get panicSetupSetAWipePin => 'Code d’effacement';
-
-  @override
-  String get panicSetupTheSameFourDigits => 'Les quatre mêmes chiffres';
-
-  @override
-  String get panicSetupTheSecondPinWipes => 'Le second code efface tout.';
+  String get panicSetupTheSameFourDigits =>
+      'Les mêmes chiffres, encore une fois';
 
   @override
   String get photoKnowsEverythingInside => 'Tout ce qu’il y a dedans';
@@ -4140,9 +4128,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pinsAppLock => 'Verrouillage';
 
   @override
-  String get pinsTwoPins => 'Deux codes';
-
-  @override
   String get pinsYourPin => 'Votre code PIN';
 
   @override
@@ -4153,7 +4138,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pinsOpensKryfoFourDigits =>
-      'Ouvre kryfo. Quatre chiffres, demandés quand il revient au premier plan.';
+      'Ouvre Kryfo. Demandé quand il revient au premier plan.';
 
   @override
   String get pinsChangePin => 'Changer le code PIN';
@@ -4169,7 +4154,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'Le code PIN disparaît, et le code d’effacement avec lui. Quiconque tient votre téléphone ouvre kryfo comme si c’était vous.';
+      'Le code PIN disparaît, et le code d’effacement avec lui. Quiconque tient votre téléphone ouvre Kryfo comme si c’était vous.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Déverrouiller par empreinte';
@@ -4182,9 +4167,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pinsSet => 'Défini';
-
-  @override
-  String get pinsTheSecondPinWipes => 'Le second code efface tout.';
 
   @override
   String get pinsChangeWipePin => 'Changer le code d’effacement';
@@ -5048,7 +5030,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsAppLock2 => 'Verrouillage';
 
   @override
-  String get settingsYourPinAndA => 'Votre code PIN, et un code d’effacement';
+  String get settingsYourPinAndA => 'Votre code PIN et la protection avancée';
 
   @override
   String get settingsPinWipePin => 'Code PIN · code d’effacement';
@@ -6956,4 +6938,127 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'Ce pseudo est déjà pris';
+
+  @override
+  String get pinPickDifferent => 'Choisissez un autre code PIN';
+
+  @override
+  String get settingsKeptOnWhileLock =>
+      'Reste activé tant que le verrouillage est activé.';
+
+  @override
+  String get lockFingerAfterPin =>
+      'Saisissez votre code PIN une fois pour réutiliser votre empreinte.';
+
+  @override
+  String get pinsAdvanced => 'Protection avancée';
+
+  @override
+  String get pinsAdvancedLine =>
+      'Pour le cas où quelqu’un vous force à déverrouiller votre téléphone.';
+
+  @override
+  String get pinsWipeLine =>
+      'Tapé sur l’écran de verrouillage, il efface Kryfo de ce téléphone.';
+
+  @override
+  String get pinsDecoyPin => 'Code leurre';
+
+  @override
+  String get pinsDecoyLine => 'Ouvre un Kryfo vide, comme tout juste installé.';
+
+  @override
+  String get pinsSetADecoyPin => 'Définir un code leurre';
+
+  @override
+  String get pinsChangeDecoyPin => 'Changer le code leurre';
+
+  @override
+  String get pinsRemoveTheDecoyPin => 'Supprimer le code leurre ?';
+
+  @override
+  String get pinsTheDecoyGoes =>
+      'Le Kryfo vide qu’il ouvre disparaît avec lui.';
+
+  @override
+  String get pinsTurnOffWithDecoy =>
+      'Tous les codes disparaissent, le leurre et son Kryfo avec eux. Quiconque tient votre téléphone ouvre Kryfo comme si c’était vous.';
+
+  @override
+  String get pinsHowThisWorks => 'Comment ça marche';
+
+  @override
+  String get flowEnterYourPin => 'Saisissez votre code PIN';
+
+  @override
+  String get flowEnterYourPinLine => 'Celui qui ouvre Kryfo.';
+
+  @override
+  String get flowWipeTitle => 'Un code d’effacement';
+
+  @override
+  String get flowWipe1 =>
+      'Tapé sur l’écran de verrouillage à la place de votre code PIN, il efface Kryfo de ce téléphone et le ferme. Pour qui regarde, l’app s’est simplement arrêtée.';
+
+  @override
+  String get flowWipe2 =>
+      'Il emporte chaque discussion et votre identité, et le leurre si vous en avez un.';
+
+  @override
+  String get flowWipeChoose => 'Choisissez un code d’effacement';
+
+  @override
+  String get flowWipeDone => 'Code d’effacement défini';
+
+  @override
+  String get flowWipeDoneLine =>
+      'Rien sur l’écran de verrouillage ne montre qu’il existe.';
+
+  @override
+  String get flowDecoyTitle => 'Un code leurre';
+
+  @override
+  String get flowDecoy1 =>
+      'Ouvre un Kryfo vide, comme tout juste installé. Il résiste à un coup d’œil rapide dans votre téléphone. Il ne cache pas la place qu’occupe Kryfo, et il ne trompera pas quelqu’un qui connaît vos trois mots, qui essaie de lui écrire ou qui copie le téléphone.';
+
+  @override
+  String get flowDecoyFinger =>
+      'Votre empreinte ouvre votre vrai Kryfo. Si quelqu’un pouvait vous forcer à l’utiliser, désactivez l’empreinte.';
+
+  @override
+  String get flowDecoyDigits =>
+      'Utilisez autant de chiffres que votre code PIN. Les points se comptent.';
+
+  @override
+  String get flowDecoyShade =>
+      'Les notifications déjà dans le volet ont déjà été vues. Tant que le leurre est ouvert, aucune nouvelle ne s’affiche.';
+
+  @override
+  String get flowDecoyChoose => 'Choisissez un code leurre';
+
+  @override
+  String get flowDecoyDone => 'Code leurre défini';
+
+  @override
+  String get flowDecoyDoneLine =>
+      'Tapez-le sur l’écran de verrouillage pour ouvrir le Kryfo vide. Pour en sortir, passez à une autre app et saisissez votre code PIN.';
+
+  @override
+  String get flowLaw =>
+      'Dans certains pays, refuser de déverrouiller un téléphone ou cacher des données aux autorités est en soi une infraction. Renseignez-vous sur la loi là où vous voyagez.';
+
+  @override
+  String get howWipe =>
+      'Tapé sur l’écran de verrouillage, le code d’effacement efface chaque discussion, votre identité et tout leurre, puis ferme Kryfo. Il fonctionne même quand le clavier est bloqué après des erreurs.';
+
+  @override
+  String get howDecoy =>
+      'Le code leurre ouvre un second Kryfo, vide, avec ses propres trois mots. Les messages pour votre vrai Kryfo continuent d’arriver en dessous, sans bruit. Pour quitter le leurre, passez à une autre app et saisissez votre code PIN.';
+
+  @override
+  String get howLimits =>
+      'Un coup d’œil, pas un labo. Une copie du téléphone faite avec des outils d’investigation peut montrer que Kryfo contient plus qu’il ne montre, et un code court peut être deviné hors ligne.';
+
+  @override
+  String get flowNotSet => 'Impossible de le définir. Réessayez.';
 }

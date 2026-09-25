@@ -17,7 +17,7 @@ import '../handle_search.dart';
 import '../l10n/dates.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
-import '../main.dart';
+import '../main.dart' hide live;
 import '../polls.dart';
 import '../rooms.dart';
 import '../search.dart';
@@ -241,7 +241,7 @@ class _SearchScreenState extends State<SearchScreen> {
       return;
     }
     final sw = Stopwatch()..start();
-    final rows = await db.searchMessages(match, kind);
+    final rows = await session.searchMessages(match, kind);
     if (!mounted || my != _stamp) return;
     // names: chats and contacts whose name holds what was typed
     final names = <_Name>[];
@@ -325,7 +325,7 @@ class _SearchScreenState extends State<SearchScreen> {
       return;
     }
     if (peer == null) return;
-    final rows = await db.contacts();
+    final rows = await session.contacts();
     final row = rows.where((r) => r['halo_id'] == peer).firstOrNull;
     if (row == null || !mounted) return;
     await Navigator.of(context).push(

@@ -4,7 +4,7 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../main.dart' show appState, db;
+import '../main.dart' show appState, session;
 import '../atmosphere.dart' show Atmo, atmoFromName;
 import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -44,8 +44,8 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   }
 
   Future<void> _load() async {
-    final g = await db.getGroup(widget.groupId);
-    final members = await db.getGroupMembers(widget.groupId);
+    final g = await session.getGroup(widget.groupId);
+    final members = await session.getGroupMembers(widget.groupId);
     if (!mounted) return;
     setState(() {
       _name = (g?['name'] as String?) ?? l10n.groupInfoGroup;
@@ -113,16 +113,18 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   }
 
   Future<void> _pickAtmosphere() async {
-    final current = atmoFromName(await db.getGroupAtmosphere(widget.groupId));
+    final current = atmoFromName(
+      await session.getGroupAtmosphere(widget.groupId),
+    );
     if (!mounted) return;
     final picked = await showWallpaperSheet(context, current);
     if (picked is! Atmo) return;
     HapticFeedback.selectionClick();
-    await db.setGroupAtmosphere(widget.groupId, picked.name);
+    await session.setGroupAtmosphere(widget.groupId, picked.name);
   }
 
   Future<void> _openSharedMedia() async {
-    final rows = await db.loadGroupMessages(widget.groupId);
+    final rows = await session.loadGroupMessages(widget.groupId);
     final paths = <String>[];
     for (final r in rows) {
       final mp = r['media_path'] as String?;
@@ -146,7 +148,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       yes: l10n.groupInfoClear,
     );
     if (ok == true) {
-      await db.clearGroupConversation(widget.groupId);
+      await session.clearGroupConversation(widget.groupId);
       if (!mounted) return;
       showHaloToast(context, l10n.groupInfoConversationCleared);
     }
@@ -178,7 +180,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
         body: Center(child: CircularProgressIndicator(color: HaloColors.amber)),
       );
     }
-    final myId = appState.myId;
+    final myId = appState.sessionId;
     return Scaffold(
       backgroundColor: HaloColors.surface,
       body: SafeArea(

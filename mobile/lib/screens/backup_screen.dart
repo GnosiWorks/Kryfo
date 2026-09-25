@@ -10,7 +10,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../backup.dart';
-import '../main.dart';
+import '../main.dart' hide live;
 import '../theme.dart';
 import '../widgets/fit_column.dart';
 import '../widgets/stagger_in.dart';

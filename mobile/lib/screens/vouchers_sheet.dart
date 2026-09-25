@@ -2,7 +2,7 @@
 // who vouched for this person: face, our name for them, the note they left,
 // when. only vouchers we hold as accepted contacts ever get here.
 import 'package:flutter/material.dart';
-import '../main.dart' show db;
+import '../main.dart' show session;
 import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/halo_sheet.dart';
@@ -11,7 +11,7 @@ import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 
 Future<void> showVouchersSheet(BuildContext context, String haloId) async {
-  final rows = await db.vouchesFor(haloId);
+  final rows = await session.vouchesFor(haloId);
   if (!context.mounted || rows.isEmpty) return;
   await showHaloSheet<void>(
     context,

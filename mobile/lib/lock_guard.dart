@@ -5,6 +5,8 @@
 // popped or removed while locked, a new one goes straight back on top. and
 // what the app has open above its routes or running in the background (a
 // message menu, a recorder, a voice note, the camera) closes as it goes up.
+// a decoy unlock drops what waited instead, and a session changing under
+// the lock takes out every screen between home and the lock.
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
@@ -23,6 +25,10 @@ class LockGuard extends NavigatorObserver {
 
   final Map<Object, Future<void> Function()> _held = {};
   int _unkeyed = 0;
+  // the root navigator's routes, bottom first
+  final List<Route<dynamic>> _routes = [];
+  // work waiting to open a system dialog once the lock lifts
+  final List<Completer<void>> _waiting = [];
   final Set<VoidCallback> _closers = {};
 
   // done now, or once the lock lifts. a key keeps one of a kind: the same
@@ -50,6 +56,10 @@ class LockGuard extends NavigatorObserver {
 
   // the lock lifted: what waited starts now, in the order it came
   void lifted() {
+    for (final w in _waiting) {
+      w.complete();
+    }
+    _waiting.clear();
     if (_held.isEmpty) return;
     final held = Map.of(_held);
     _held.clear();
@@ -80,8 +90,29 @@ class LockGuard extends NavigatorObserver {
   Future<void> unlocked() {
     if (!isLocked()) return Future.value();
     final done = Completer<void>();
-    _held[_unkeyed++] = () async => done.complete();
+    _waiting.add(done);
     return done.future;
+  }
+
+  // a decoy unlock: what waited for the everyday app never happens, and
+  // work waiting for a dialog gives up rather than open it in the decoy
+  void dropHeld() {
+    _held.clear();
+    for (final w in _waiting) {
+      w.completeError(const LockDropped());
+    }
+    _waiting.clear();
+  }
+
+  // the session changed under the lock: every screen between home and the
+  // lock goes, so none of the other session's is there when it lifts
+  void dropUnderLock() {
+    final l = lock;
+    if (l == null) return;
+    for (final r in List.of(_routes)) {
+      if (r == l || r.isFirst || !r.isActive) continue;
+      r.navigator?.removeRoute(r);
+    }
   }
 
   // the lock is going up
@@ -105,6 +136,7 @@ class LockGuard extends NavigatorObserver {
 
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _routes.add(route);
     final l = lock;
     if (l == null || route == l || !isLocked()) return;
     // the new screen stays where it is, under a lock put back on top
@@ -114,16 +146,32 @@ class LockGuard extends NavigatorObserver {
   }
 
   @override
-  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
-      _lost(route);
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _routes.remove(route);
+    _lost(route);
+  }
 
   @override
-  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) =>
-      _lost(route);
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _routes.remove(route);
+    _lost(route);
+  }
 
   @override
-  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) =>
-      _lost(oldRoute);
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    final i = oldRoute == null ? -1 : _routes.indexOf(oldRoute);
+    if (i >= 0) {
+      newRoute == null ? _routes.removeAt(i) : _routes[i] = newRoute;
+    } else if (newRoute != null) {
+      _routes.add(newRoute);
+    }
+    _lost(oldRoute);
+  }
+}
+
+// what a wait for the lock ends with when a decoy unlock drops it
+class LockDropped implements Exception {
+  const LockDropped();
 }
 
 // the app's one guard. a lock that has not been read yet counts as up

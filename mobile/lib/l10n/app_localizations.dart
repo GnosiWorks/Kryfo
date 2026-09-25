@@ -444,7 +444,7 @@ abstract class AppLocalizations {
   /// lock_state.dart
   ///
   /// In en, this message translates to:
-  /// **'Unlock kryfo'**
+  /// **'Unlock Kryfo'**
   String get lockStateUnlockKryfo;
 
   /// main.dart
@@ -894,7 +894,7 @@ abstract class AppLocalizations {
   /// main.dart
   ///
   /// In en, this message translates to:
-  /// **'The pin will be removed. Anyone with your phone will see kryfo when they open it.'**
+  /// **'The PIN will be removed. Anyone with your phone will see kryfo when they open it.'**
   String get appThePinWillBe;
 
   /// main.dart
@@ -5334,7 +5334,7 @@ abstract class AppLocalizations {
   /// screens/lock_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Your pin'**
+  /// **'Your PIN'**
   String get lockYourPin;
 
   /// screens/lock_screen.dart
@@ -5346,19 +5346,13 @@ abstract class AppLocalizations {
   /// screens/lock_setup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'That is your wipe pin. Pick another.'**
-  String get lockSetupThatIsYourWipe;
-
-  /// screens/lock_setup_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Unlock with fingerprint?'**
   String get lockSetupUnlockWithFingerprint;
 
   /// screens/lock_setup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The pin still works whenever you want it. This is just faster.'**
+  /// **'The PIN still works whenever you want it. This is just faster.'**
   String get lockSetupThePinStillWorks;
 
   /// screens/lock_setup_screen.dart
@@ -5370,7 +5364,7 @@ abstract class AppLocalizations {
   /// screens/lock_setup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Pin only'**
+  /// **'PIN only'**
   String get lockSetupPinOnly;
 
   /// screens/lock_setup_screen.dart
@@ -5382,7 +5376,7 @@ abstract class AppLocalizations {
   /// screens/lock_setup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Set a pin'**
+  /// **'Set a PIN'**
   String get lockSetupSetAPin;
 
   /// screens/lock_setup_screen.dart
@@ -5394,13 +5388,13 @@ abstract class AppLocalizations {
   /// screens/lock_setup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The same four digits'**
+  /// **'The same digits again'**
   String get lockSetupTheSameFourDigits;
 
   /// screens/lock_setup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Four digits, anything you will remember'**
+  /// **'Four digits or more, anything you will remember'**
   String get lockSetupFourDigitsAnythingYou;
 
   /// screens/modes_screen.dart
@@ -6426,32 +6420,14 @@ abstract class AppLocalizations {
   /// screens/panic_setup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'That is your real pin. Pick another.'**
-  String get panicSetupThatIsYourReal;
-
-  /// screens/panic_setup_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Once more'**
   String get panicSetupOnceMore;
 
   /// screens/panic_setup_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Set a wipe pin'**
-  String get panicSetupSetAWipePin;
-
-  /// screens/panic_setup_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'The same four digits'**
+  /// **'The same digits again'**
   String get panicSetupTheSameFourDigits;
-
-  /// screens/panic_setup_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'The second pin wipes everything.'**
-  String get panicSetupTheSecondPinWipes;
 
   /// screens/photo_knows_screen.dart
   ///
@@ -6552,13 +6528,7 @@ abstract class AppLocalizations {
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Two pins'**
-  String get pinsTwoPins;
-
-  /// screens/pins_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Your pin'**
+  /// **'Your PIN'**
   String get pinsYourPin;
 
   /// screens/pins_screen.dart, screens/settings_screen.dart
@@ -6576,19 +6546,19 @@ abstract class AppLocalizations {
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Opens kryfo. Four digits, asked for when it comes to the front.'**
+  /// **'Opens Kryfo. Asked for when it comes to the front.'**
   String get pinsOpensKryfoFourDigits;
 
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Change pin'**
+  /// **'Change PIN'**
   String get pinsChangePin;
 
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Set a pin'**
+  /// **'Set a PIN'**
   String get pinsSetAPin;
 
   /// screens/pins_screen.dart
@@ -6606,7 +6576,7 @@ abstract class AppLocalizations {
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The pin goes, and the wipe pin with it. Anyone holding your phone opens kryfo as you.'**
+  /// **'The PIN goes, and the wipe PIN with it. Anyone holding your phone opens Kryfo as you.'**
   String get pinsThePinGoesAnd;
 
   /// screens/pins_screen.dart
@@ -6618,13 +6588,13 @@ abstract class AppLocalizations {
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Wipe pin'**
+  /// **'Wipe PIN'**
   String get pinsWipePin;
 
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Needs a pin first'**
+  /// **'Needs a PIN first'**
   String get pinsNeedsAPinFirst;
 
   /// screens/pins_screen.dart
@@ -6636,19 +6606,13 @@ abstract class AppLocalizations {
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The second pin wipes everything.'**
-  String get pinsTheSecondPinWipes;
-
-  /// screens/pins_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Change wipe pin'**
+  /// **'Change wipe PIN'**
   String get pinsChangeWipePin;
 
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Set a wipe pin'**
+  /// **'Set a wipe PIN'**
   String get pinsSetAWipePin;
 
   /// screens/pins_screen.dart
@@ -6660,13 +6624,13 @@ abstract class AppLocalizations {
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Remove the wipe pin?'**
+  /// **'Remove the wipe PIN?'**
   String get pinsRemoveTheWipePin;
 
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The lock screen keeps your pin. The wipe pin stops doing anything.'**
+  /// **'The lock screen keeps your PIN. The wipe PIN stops doing anything.'**
   String get pinsTheLockScreenKeeps;
 
   /// screens/profile_screen.dart
@@ -7662,7 +7626,7 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Honest about the last rows: that is what the app lock, the wipe pin and encrypted storage are for, and no tool saves you from someone holding your open phone. The full threat model lives in THREAT_MODEL.md in the repo, written against LINDDUN. The code is open, so none of this has to be taken on trust.'**
+  /// **'Honest about the last rows: that is what the app lock, the wipe PIN and encrypted storage are for, and no tool saves you from someone holding your open phone. The full threat model lives in THREAT_MODEL.md in the repo, written against LINDDUN. The code is open, so none of this has to be taken on trust.'**
   String get seenHonestAboutTheLast;
 
   /// screens/seen_screen.dart
@@ -7842,7 +7806,7 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'If someone holds your phone open, they read your messages. The app lock, wipe pin and encrypted storage help before that point, not after it.'**
+  /// **'If someone holds your phone open, they read your messages. The app lock, wipe PIN and encrypted storage help before that point, not after it.'**
   String get seenIfSomeoneHoldsYour;
 
   /// screens/seen_screen.dart
@@ -8118,13 +8082,13 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Your pin, and a wipe pin'**
+  /// **'Your PIN and Advanced protection'**
   String get settingsYourPinAndA;
 
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Pin · wipe pin'**
+  /// **'PIN · wipe PIN'**
   String get settingsPinWipePin;
 
   /// screens/settings_screen.dart
@@ -11066,6 +11030,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'That handle is taken'**
   String get handleThatHandleIsTaken;
+
+  /// setting a PIN that is already in use; never says which one it matched
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a different PIN'**
+  String get pinPickDifferent;
+
+  /// hint under Block screenshots when the app lock forces it on
+  ///
+  /// In en, this message translates to:
+  /// **'Kept on while the app lock is on.'**
+  String get settingsKeptOnWhileLock;
+
+  /// lock screen, in place of the fingerprint button while fingerprint unlock waits for the PIN (a finger was added, or after an update)
+  ///
+  /// In en, this message translates to:
+  /// **'Type your PIN once to use your fingerprint again.'**
+  String get lockFingerAfterPin;
+
+  /// App lock: a section that opens to the wipe PIN and the decoy PIN
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced protection'**
+  String get pinsAdvanced;
+
+  /// App lock: one line under Advanced protection
+  ///
+  /// In en, this message translates to:
+  /// **'For when someone makes you unlock your phone.'**
+  String get pinsAdvancedLine;
+
+  /// App lock: one line on the wipe PIN row
+  ///
+  /// In en, this message translates to:
+  /// **'Typed on the lock screen, it wipes Kryfo from this phone.'**
+  String get pinsWipeLine;
+
+  /// App lock: a PIN that opens an empty Kryfo
+  ///
+  /// In en, this message translates to:
+  /// **'Decoy PIN'**
+  String get pinsDecoyPin;
+
+  /// App lock: one line on the decoy PIN row
+  ///
+  /// In en, this message translates to:
+  /// **'Opens an empty Kryfo, as if just installed.'**
+  String get pinsDecoyLine;
+
+  /// button
+  ///
+  /// In en, this message translates to:
+  /// **'Set a decoy PIN'**
+  String get pinsSetADecoyPin;
+
+  /// button
+  ///
+  /// In en, this message translates to:
+  /// **'Change decoy PIN'**
+  String get pinsChangeDecoyPin;
+
+  /// confirm sheet title
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the decoy PIN?'**
+  String get pinsRemoveTheDecoyPin;
+
+  /// confirm sheet line when removing the decoy PIN
+  ///
+  /// In en, this message translates to:
+  /// **'The empty Kryfo it opens goes with it.'**
+  String get pinsTheDecoyGoes;
+
+  /// confirm sheet line when turning the app lock off while a decoy PIN is set
+  ///
+  /// In en, this message translates to:
+  /// **'Every PIN goes, the decoy and its Kryfo with them. Anyone holding your phone opens Kryfo as you.'**
+  String get pinsTurnOffWithDecoy;
+
+  /// App lock: opens a sheet explaining the extra PINs
+  ///
+  /// In en, this message translates to:
+  /// **'How this works'**
+  String get pinsHowThisWorks;
+
+  /// first step of setting an extra PIN
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your PIN'**
+  String get flowEnterYourPin;
+
+  /// under Enter your PIN
+  ///
+  /// In en, this message translates to:
+  /// **'The one that opens Kryfo.'**
+  String get flowEnterYourPinLine;
+
+  /// first page of the wipe PIN setup
+  ///
+  /// In en, this message translates to:
+  /// **'A wipe PIN'**
+  String get flowWipeTitle;
+
+  /// wipe PIN setup, first line
+  ///
+  /// In en, this message translates to:
+  /// **'Typed on the lock screen instead of your PIN, it wipes Kryfo from this phone and closes it. To whoever is watching, the app just stopped.'**
+  String get flowWipe1;
+
+  /// wipe PIN setup, second line
+  ///
+  /// In en, this message translates to:
+  /// **'It takes every chat and your identity with it, and the decoy if you have one.'**
+  String get flowWipe2;
+
+  /// wipe PIN setup, the pad
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a wipe PIN'**
+  String get flowWipeChoose;
+
+  /// wipe PIN setup, the end
+  ///
+  /// In en, this message translates to:
+  /// **'Wipe PIN set'**
+  String get flowWipeDone;
+
+  /// wipe PIN setup, the end
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing on the lock screen shows it is there.'**
+  String get flowWipeDoneLine;
+
+  /// first page of the decoy PIN setup
+  ///
+  /// In en, this message translates to:
+  /// **'A decoy PIN'**
+  String get flowDecoyTitle;
+
+  /// decoy PIN setup, what it does and does not do
+  ///
+  /// In en, this message translates to:
+  /// **'Opens an empty Kryfo, as if just installed. It holds up to a quick look through your phone. It does not hide how much space Kryfo uses, and it will not fool someone who knows your three words, who tries to message it, or who copies the phone.'**
+  String get flowDecoy1;
+
+  /// decoy PIN setup
+  ///
+  /// In en, this message translates to:
+  /// **'Your fingerprint opens your real Kryfo. If someone could make you use it, turn fingerprint off.'**
+  String get flowDecoyFinger;
+
+  /// decoy PIN setup; also under the pad when choosing it
+  ///
+  /// In en, this message translates to:
+  /// **'Use as many digits as your PIN. The dots can be counted.'**
+  String get flowDecoyDigits;
+
+  /// decoy PIN setup
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications already in the shade were already seen. While the decoy is open, no new ones show.'**
+  String get flowDecoyShade;
+
+  /// decoy PIN setup, the pad
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a decoy PIN'**
+  String get flowDecoyChoose;
+
+  /// decoy PIN setup, the end
+  ///
+  /// In en, this message translates to:
+  /// **'Decoy PIN set'**
+  String get flowDecoyDone;
+
+  /// decoy PIN setup, the end
+  ///
+  /// In en, this message translates to:
+  /// **'Type it on the lock screen to open the empty Kryfo. To leave it, switch away and enter your PIN.'**
+  String get flowDecoyDoneLine;
+
+  /// in every explanation of the extra PINs; decided wording
+  ///
+  /// In en, this message translates to:
+  /// **'In some countries, refusing to unlock a phone or hiding data from officials is an offence in itself. Know the law where you travel.'**
+  String get flowLaw;
+
+  /// How this works sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Typed on the lock screen, the wipe PIN wipes every chat, your identity and any decoy, then closes Kryfo. It works even while the pad is held after wrong tries.'**
+  String get howWipe;
+
+  /// How this works sheet
+  ///
+  /// In en, this message translates to:
+  /// **'The decoy PIN opens a second, empty Kryfo with three words of its own. Messages to your real Kryfo keep arriving underneath, silently. To leave the decoy, switch away and enter your PIN.'**
+  String get howDecoy;
+
+  /// How this works sheet: the limits, stated honestly
+  ///
+  /// In en, this message translates to:
+  /// **'A quick look, not a lab. A copy of the phone made with forensic tools can show that Kryfo holds more than it shows, and a short PIN can be guessed offline.'**
+  String get howLimits;
+
+  /// setting an extra PIN failed for a reason other than a clash
+  ///
+  /// In en, this message translates to:
+  /// **'Could not set it. Try again.'**
+  String get flowNotSet;
 }
 
 class _AppLocalizationsDelegate

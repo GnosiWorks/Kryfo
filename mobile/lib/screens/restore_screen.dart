@@ -168,7 +168,7 @@ class _RestoreScreenState extends State<RestoreScreen> {
     // again, and the public page keeps handing out an invite no one holds.
     // so it goes back first, while the key is still here.
     final mine = appState.myHandle;
-    final sameIdentity = s.haloId == appState.myId;
+    final sameIdentity = s.haloId == appState.sessionId;
     if (mine != null && !sameIdentity) {
       setState(() {
         _busy = true;

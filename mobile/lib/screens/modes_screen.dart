@@ -6,7 +6,7 @@
 
 import 'package:flutter/material.dart';
 import '../theme.dart';
-import '../main.dart';
+import '../main.dart' hide live;
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import 'package:flutter/services.dart';

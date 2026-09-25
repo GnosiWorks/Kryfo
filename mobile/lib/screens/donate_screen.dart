@@ -14,7 +14,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../address_text.dart';
-import '../main.dart' show appState;
+import '../main.dart' show appState, session;
 import 'modes_screen.dart';
 import 'package:flutter/services.dart';
 import '../l10n/l10n.dart';
@@ -85,7 +85,7 @@ class _DonateScreenState extends State<DonateScreen> {
     // an invoice the screen gave up on last time may have been honoured
     // since. ask once, quietly, and say so if it was.
     if (appState.sendMode == 'private') {
-      settleOpenInvoice().then((t) {
+      settleOpenInvoice(session.container).then((t) {
         if (t != null && mounted) {
           HapticFeedback.mediumImpact();
           showHaloToast(
@@ -660,7 +660,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
       _inv = inv;
       _phase = _Phase.invoice;
     });
-    await saveOpenInvoice(inv.id, widget.tier);
+    await saveOpenInvoice(inv.id, widget.tier, session.container);
     _secsLeft = 15 * 60;
     _tick?.cancel();
     _tick = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -712,13 +712,13 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
       case ReceiptState.paid:
         _poll?.cancel();
         _tick?.cancel();
-        await clearOpenInvoice();
+        await clearOpenInvoice(session.container);
         // signature already verified inside fetchReceipt. grant the tier and
         // keep the receipt so the badge stays provable without the network.
         if (widget.tier != SupporterTier.none) {
-          await saveSupporterTier(widget.tier);
+          await saveSupporterTier(widget.tier, session.container);
           if (r.payload != null && r.sig != null) {
-            await saveBadgeReceipt(r.payload!, r.sig!);
+            await saveBadgeReceipt(r.payload!, r.sig!, session.container);
           }
         }
         if (!mounted) return;
@@ -727,7 +727,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
       case ReceiptState.expired:
         // the service itself says so: nothing left to wait for
         _poll?.cancel();
-        await clearOpenInvoice();
+        await clearOpenInvoice(session.container);
         if (mounted) setState(() => _phase = _Phase.expired);
         break;
       default:
@@ -1207,7 +1207,7 @@ class _ConfirmedViewState extends State<_ConfirmedView>
   }
 
   Future<void> _choose(bool show) async {
-    if (show) await saveShowBadgeSelf(true);
+    if (show) await saveShowBadgeSelf(true, session.container);
     if (!mounted) return;
     Navigator.of(context).popUntil((r) => r.isFirst);
   }

@@ -6,7 +6,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../main.dart' show appState, engine, buildHaloUriV3;
+import '../main.dart' show appState, engine, sessionQuiet;
 import '../theme.dart';
 import 'motion.dart' show BreathDot;
 import '../l10n/l10n.dart';
@@ -44,7 +44,7 @@ class _PairCodePanelState extends State<PairCodePanel> {
     // stand in front of.
     final r = Random.secure();
     final code = List.generate(6, (_) => r.nextInt(10)).join();
-    if (appState.myOnion.isEmpty) {
+    if (appState.sessionOnion.isEmpty) {
       if (mounted) {
         setState(() {
           _busy = false;
@@ -53,12 +53,12 @@ class _PairCodePanelState extends State<PairCodePanel> {
       }
       return;
     }
-    final uri = await buildHaloUriV3(
-      appState.myId,
-      appState.myOnion,
-      appState.fcCounter,
-    );
-    final res = await engine.pairCodePublish(code, uri);
+    final uri = await appState.sessionInvite();
+    // a quiet session never reaches the relays: it answers as unreachable
+    // ones would
+    final res = sessionQuiet
+        ? 'error: no relays accepted'
+        : await engine.pairCodePublish(code, uri);
     if (!mounted) return;
     if (res.startsWith('error')) {
       setState(() {

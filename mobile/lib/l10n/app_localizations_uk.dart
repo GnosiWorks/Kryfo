@@ -253,7 +253,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get introBudgetInAFewMinutes => 'через кілька хвилин';
 
   @override
-  String get lockStateUnlockKryfo => 'Розблокувати kryfo';
+  String get lockStateUnlockKryfo => 'Розблокувати Kryfo';
 
   @override
   String get appInvalidUri => 'недійсний uri';
@@ -3485,10 +3485,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get lockUseFingerprint => 'Використати відбиток';
 
   @override
-  String get lockSetupThatIsYourWipe =>
-      'Це твій PIN для стирання. Обери інший.';
-
-  @override
   String get lockSetupUnlockWithFingerprint => 'Розблоковувати відбитком?';
 
   @override
@@ -3511,11 +3507,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get lockSetupThoseWereDifferentFrom => 'Коди не збіглися. Спочатку.';
 
   @override
-  String get lockSetupTheSameFourDigits => 'Ті самі чотири цифри';
+  String get lockSetupTheSameFourDigits => 'Ті самі цифри ще раз';
 
   @override
   String get lockSetupFourDigitsAnythingYou =>
-      'Чотири цифри, які ти запам’ятаєш';
+      'Чотири цифри або більше, які ти запам’ятаєш';
 
   @override
   String get modesOnion => 'Onion';
@@ -4103,20 +4099,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get panicSetupThoseWereDifferentFrom => 'Коди не збіглися. Спочатку.';
 
   @override
-  String get panicSetupThatIsYourReal =>
-      'Це твій справжній PIN-код. Обери інший.';
-
-  @override
   String get panicSetupOnceMore => 'Ще раз';
 
   @override
-  String get panicSetupSetAWipePin => 'Задати PIN для стирання';
-
-  @override
-  String get panicSetupTheSameFourDigits => 'Ті самі чотири цифри';
-
-  @override
-  String get panicSetupTheSecondPinWipes => 'Другий PIN-код стирає все.';
+  String get panicSetupTheSameFourDigits => 'Ті самі цифри ще раз';
 
   @override
   String get photoKnowsEverythingInside => 'Усе, що всередині';
@@ -4176,9 +4162,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get pinsAppLock => 'Блокування kryfo';
 
   @override
-  String get pinsTwoPins => 'Два PIN-коди';
-
-  @override
   String get pinsYourPin => 'Твій PIN-код';
 
   @override
@@ -4189,7 +4172,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get pinsOpensKryfoFourDigits =>
-      'Відкриває kryfo. Чотири цифри - kryfo просить їх щоразу, коли виходить на передній план.';
+      'Відкриває Kryfo. Kryfo просить його щоразу, коли виходить на передній план.';
 
   @override
   String get pinsChangePin => 'Змінити PIN-код';
@@ -4205,7 +4188,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'PIN-код зникне, а разом із ним і PIN для стирання. Будь-хто з твоїм телефоном у руках відкриє kryfo від твого імені.';
+      'PIN-код зникне, а разом із ним і PIN для стирання. Будь-хто з твоїм телефоном у руках відкриє Kryfo від твого імені.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Розблокування відбитком';
@@ -4218,9 +4201,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get pinsSet => 'Задано';
-
-  @override
-  String get pinsTheSecondPinWipes => 'Другий PIN-код стирає все.';
 
   @override
   String get pinsChangeWipePin => 'Змінити PIN для стирання';
@@ -5082,7 +5062,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsAppLock2 => 'Блокування kryfo';
 
   @override
-  String get settingsYourPinAndA => 'Твій PIN-код і PIN для стирання';
+  String get settingsYourPinAndA => 'Твій PIN-код і додатковий захист';
 
   @override
   String get settingsPinWipePin => 'PIN · PIN для стирання';
@@ -7013,4 +6993,128 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => 'Це ім’я користувача вже зайняте';
+
+  @override
+  String get pinPickDifferent => 'Вибери інший PIN-код';
+
+  @override
+  String get settingsKeptOnWhileLock =>
+      'Лишається увімкненим, доки увімкнене блокування kryfo.';
+
+  @override
+  String get lockFingerAfterPin =>
+      'Введи PIN-код один раз, щоб знову входити за відбитком.';
+
+  @override
+  String get pinsAdvanced => 'Додатковий захист';
+
+  @override
+  String get pinsAdvancedLine =>
+      'На випадок, якщо тебе змусять розблокувати телефон.';
+
+  @override
+  String get pinsWipeLine =>
+      'Якщо ввести його на екрані блокування, він зітре Kryfo з цього телефона.';
+
+  @override
+  String get pinsDecoyPin => 'PIN-приманка';
+
+  @override
+  String get pinsDecoyLine =>
+      'Відкриває порожній Kryfo, наче його щойно встановили.';
+
+  @override
+  String get pinsSetADecoyPin => 'Задати PIN-приманку';
+
+  @override
+  String get pinsChangeDecoyPin => 'Змінити PIN-приманку';
+
+  @override
+  String get pinsRemoveTheDecoyPin => 'Видалити PIN-приманку?';
+
+  @override
+  String get pinsTheDecoyGoes =>
+      'Порожній Kryfo, який вона відкриває, зникне разом із нею.';
+
+  @override
+  String get pinsTurnOffWithDecoy =>
+      'Усі PIN-коди зникнуть, приманка та її Kryfo разом із ними. Будь-хто з твоїм телефоном у руках відкриє Kryfo від твого імені.';
+
+  @override
+  String get pinsHowThisWorks => 'Як це працює';
+
+  @override
+  String get flowEnterYourPin => 'Введи свій PIN-код';
+
+  @override
+  String get flowEnterYourPinLine => 'Той, яким відкривається Kryfo.';
+
+  @override
+  String get flowWipeTitle => 'PIN для стирання';
+
+  @override
+  String get flowWipe1 =>
+      'Якщо ввести його на екрані блокування замість твого PIN-коду, він зітре Kryfo з цього телефона й закриє його. Для того, хто дивиться, застосунок просто зупинився.';
+
+  @override
+  String get flowWipe2 =>
+      'Разом із ним зникнуть усі чати й твоя особа, а якщо є приманка, то й вона.';
+
+  @override
+  String get flowWipeChoose => 'Вибери PIN для стирання';
+
+  @override
+  String get flowWipeDone => 'PIN для стирання задано';
+
+  @override
+  String get flowWipeDoneLine =>
+      'На екрані блокування ніщо не видає, що він є.';
+
+  @override
+  String get flowDecoyTitle => 'PIN-приманка';
+
+  @override
+  String get flowDecoy1 =>
+      'Відкриває порожній Kryfo, наче його щойно встановили. Він витримає побіжний перегляд твого телефона. Він не приховує, скільки місця займає Kryfo, і не обдурить того, хто знає твої три слова, намагається йому написати або копіює телефон.';
+
+  @override
+  String get flowDecoyFinger =>
+      'Твій відбиток відкриває справжній Kryfo. Якщо тебе можуть змусити прикласти палець, вимкни вхід відбитком.';
+
+  @override
+  String get flowDecoyDigits =>
+      'Візьми стільки ж цифр, скільки у твоєму PIN-коді. Крапки можна порахувати.';
+
+  @override
+  String get flowDecoyShade =>
+      'Сповіщення, що вже є в шторці, вже бачили. Поки відкрита приманка, нові не з’являються.';
+
+  @override
+  String get flowDecoyChoose => 'Вибери PIN-приманку';
+
+  @override
+  String get flowDecoyDone => 'PIN-приманку задано';
+
+  @override
+  String get flowDecoyDoneLine =>
+      'Введи її на екрані блокування, щоб відкрити порожній Kryfo. Щоб вийти, перемкнися на інший застосунок і введи свій PIN-код.';
+
+  @override
+  String get flowLaw =>
+      'У деяких країнах відмова розблокувати телефон або приховування даних від влади вже саме собою правопорушення. Знай закони тих місць, куди їдеш.';
+
+  @override
+  String get howWipe =>
+      'Якщо ввести PIN для стирання на екрані блокування, він зітре всі чати, твою особу й будь-яку приманку, а потім закриє Kryfo. Він працює, навіть коли клавіатуру заблоковано після хибних спроб.';
+
+  @override
+  String get howDecoy =>
+      'PIN-приманка відкриває другий, порожній Kryfo з власними трьома словами. Повідомлення для справжнього Kryfo далі тихо надходять під ним. Щоб вийти з приманки, перемкнися на інший застосунок і введи свій PIN-код.';
+
+  @override
+  String get howLimits =>
+      'Побіжний погляд, а не лабораторія. Копія телефона, знята криміналістичними інструментами, може показати, що в Kryfo більше, ніж видно, а короткий PIN-код можна підібрати офлайн.';
+
+  @override
+  String get flowNotSet => 'Не вдалося задати. Спробуй ще раз.';
 }

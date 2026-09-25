@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'dlog.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'l10n/l10n.dart';
+import 'container.dart';
+import 'lock_state.dart' show quietNow;
 
 final FlutterLocalNotificationsPlugin notifPlugin =
     FlutterLocalNotificationsPlugin();
@@ -63,14 +65,19 @@ Future<void> nameNotificationChannel() async {
 
 const _hideContentKey = 'notif_hide_content';
 
-Future<bool> loadHideNotifContent() async {
+Future<bool> loadHideNotifContent([
+  HaloContainer c = HaloContainer.everyday,
+]) async {
   final prefs = await SharedPreferences.getInstance();
-  return prefs.getBool(_hideContentKey) ?? true;
+  return prefs.getBool(c.key(_hideContentKey)) ?? true;
 }
 
-Future<void> setHideNotifContent(bool v) async {
+Future<void> setHideNotifContent(
+  bool v, [
+  HaloContainer c = HaloContainer.everyday,
+]) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setBool(_hideContentKey, v);
+  await prefs.setBool(c.key(_hideContentKey), v);
 }
 
 // ids by chat, so opening the chat by hand takes its notifications down.
@@ -92,6 +99,8 @@ Future<void> showMessageNotification({
   required String body,
   String? payload,
 }) async {
+  // a decoy session is open: no notification at all
+  if (await quietNow()) return;
   final hidden = await loadHideNotifContent();
   if (hidden) {
     title = 'kryfo';

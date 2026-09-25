@@ -238,7 +238,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get introBudgetInAFewMinutes => '几分钟后';
 
   @override
-  String get lockStateUnlockKryfo => '解锁 kryfo';
+  String get lockStateUnlockKryfo => '解锁 Kryfo';
 
   @override
   String get appInvalidUri => 'uri 无效';
@@ -3285,9 +3285,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lockUseFingerprint => '使用指纹';
 
   @override
-  String get lockSetupThatIsYourWipe => '这是你的抹掉 PIN。请换一个。';
-
-  @override
   String get lockSetupUnlockWithFingerprint => '用指纹解锁？';
 
   @override
@@ -3309,10 +3306,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lockSetupThoseWereDifferentFrom => '两次不一样。从头再来。';
 
   @override
-  String get lockSetupTheSameFourDigits => '同样的四位数字';
+  String get lockSetupTheSameFourDigits => '再输入一次同样的数字';
 
   @override
-  String get lockSetupFourDigitsAnythingYou => '四位数字，选一个你记得住的';
+  String get lockSetupFourDigitsAnythingYou => '四位或更多数字，选一个你记得住的';
 
   @override
   String get modesOnion => 'Onion';
@@ -3865,19 +3862,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get panicSetupThoseWereDifferentFrom => '两次不一样。从头再来。';
 
   @override
-  String get panicSetupThatIsYourReal => '这是你真正的 PIN 码。请换一个。';
-
-  @override
   String get panicSetupOnceMore => '再输一次';
 
   @override
-  String get panicSetupSetAWipePin => '设置抹掉 PIN';
-
-  @override
-  String get panicSetupTheSameFourDigits => '同样的四位数字';
-
-  @override
-  String get panicSetupTheSecondPinWipes => '第二个 PIN 码会抹掉一切。';
+  String get panicSetupTheSameFourDigits => '再输入一次同样的数字';
 
   @override
   String get photoKnowsEverythingInside => '里面的一切';
@@ -3934,9 +3922,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pinsAppLock => '应用锁';
 
   @override
-  String get pinsTwoPins => '两个 PIN 码';
-
-  @override
   String get pinsYourPin => '你的 PIN 码';
 
   @override
@@ -3946,7 +3931,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonOff => '关';
 
   @override
-  String get pinsOpensKryfoFourDigits => '用来打开 kryfo。四位数字，每次切到前台时都会要求输入。';
+  String get pinsOpensKryfoFourDigits => '用来打开 Kryfo。每次切到前台时都会要求输入。';
 
   @override
   String get pinsChangePin => '更改 PIN 码';
@@ -3962,7 +3947,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'PIN 码会被移除，抹掉 PIN 也一起移除。任何拿着你手机的人都能以你的身份打开 kryfo。';
+      'PIN 码会被移除，抹掉 PIN 也一起移除。任何拿着你手机的人都能以你的身份打开 Kryfo。';
 
   @override
   String get pinsUnlockWithFingerprint => '用指纹解锁';
@@ -3975,9 +3960,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pinsSet => '设置';
-
-  @override
-  String get pinsTheSecondPinWipes => '第二个 PIN 码会抹掉一切。';
 
   @override
   String get pinsChangeWipePin => '更改抹掉 PIN';
@@ -4802,7 +4784,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsAppLock2 => '应用锁';
 
   @override
-  String get settingsYourPinAndA => '你的 PIN 码，以及一个抹掉 PIN';
+  String get settingsYourPinAndA => '你的 PIN 码和高级保护';
 
   @override
   String get settingsPinWipePin => 'PIN 码 · 抹掉 PIN';
@@ -6630,6 +6612,118 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get handleThatHandleIsTaken => '这个用户名已被占用';
+
+  @override
+  String get pinPickDifferent => '请换一个 PIN 码';
+
+  @override
+  String get settingsKeptOnWhileLock => '应用锁开启时保持开启。';
+
+  @override
+  String get lockFingerAfterPin => '输入一次 PIN 码，即可再次使用指纹。';
+
+  @override
+  String get pinsAdvanced => '高级保护';
+
+  @override
+  String get pinsAdvancedLine => '用于有人逼你解锁手机的时候。';
+
+  @override
+  String get pinsWipeLine => '在锁屏上输入它，会从这部手机上抹掉 Kryfo。';
+
+  @override
+  String get pinsDecoyPin => '伪装 PIN';
+
+  @override
+  String get pinsDecoyLine => '打开一个空的 Kryfo，就像刚装好一样。';
+
+  @override
+  String get pinsSetADecoyPin => '设置伪装 PIN';
+
+  @override
+  String get pinsChangeDecoyPin => '更改伪装 PIN';
+
+  @override
+  String get pinsRemoveTheDecoyPin => '要移除伪装 PIN 吗？';
+
+  @override
+  String get pinsTheDecoyGoes => '它打开的那个空 Kryfo 也会一起消失。';
+
+  @override
+  String get pinsTurnOffWithDecoy =>
+      '所有 PIN 都会被移除，伪装 PIN 和它的 Kryfo 也一样。任何拿着你手机的人都能以你的身份打开 Kryfo。';
+
+  @override
+  String get pinsHowThisWorks => '工作原理';
+
+  @override
+  String get flowEnterYourPin => '输入你的 PIN 码';
+
+  @override
+  String get flowEnterYourPinLine => '就是打开 Kryfo 的那个。';
+
+  @override
+  String get flowWipeTitle => '抹掉 PIN';
+
+  @override
+  String get flowWipe1 =>
+      '在锁屏上代替你的 PIN 码输入，它会从这部手机上抹掉 Kryfo 并关闭应用。在旁人看来，应用只是停止了。';
+
+  @override
+  String get flowWipe2 => '所有聊天和你的身份都会一起抹掉，有伪装的话也一样。';
+
+  @override
+  String get flowWipeChoose => '选择一个抹掉 PIN';
+
+  @override
+  String get flowWipeDone => '抹掉 PIN 已设置';
+
+  @override
+  String get flowWipeDoneLine => '锁屏上没有任何迹象显示它的存在。';
+
+  @override
+  String get flowDecoyTitle => '伪装 PIN';
+
+  @override
+  String get flowDecoy1 =>
+      '打开一个空的 Kryfo，就像刚装好一样。它经得住别人快速翻看你的手机。它不会隐藏 Kryfo 占用了多少空间，也骗不过知道你的三个词的人、想给它发消息的人，或者复制手机的人。';
+
+  @override
+  String get flowDecoyFinger => '你的指纹会打开真正的 Kryfo。如果有人可能逼你用指纹，请关闭指纹解锁。';
+
+  @override
+  String get flowDecoyDigits => '位数要和你的 PIN 码一样多。圆点是能数出来的。';
+
+  @override
+  String get flowDecoyShade => '已经在通知栏里的通知已经被看到了。伪装打开期间，不会出现新的通知。';
+
+  @override
+  String get flowDecoyChoose => '选择一个伪装 PIN';
+
+  @override
+  String get flowDecoyDone => '伪装 PIN 已设置';
+
+  @override
+  String get flowDecoyDoneLine =>
+      '在锁屏上输入它，就能打开那个空的 Kryfo。要离开，切到别的应用，再输入你的 PIN 码。';
+
+  @override
+  String get flowLaw => '在有些国家，拒绝解锁手机或向官方隐藏数据本身就是违法的。出行前了解当地的法律。';
+
+  @override
+  String get howWipe =>
+      '在锁屏上输入抹掉 PIN，会抹掉所有聊天、你的身份和任何伪装，然后关闭 Kryfo。即使输错多次后键盘被暂停，它也照样有效。';
+
+  @override
+  String get howDecoy =>
+      '伪装 PIN 会打开第二个空的 Kryfo，它有自己的三个词。发给你真正 Kryfo 的消息照样在底下悄悄到达。要离开伪装，切到别的应用，再输入你的 PIN 码。';
+
+  @override
+  String get howLimits =>
+      '经得住快速翻看，挡不住实验室。用取证工具复制的手机副本可能显示 Kryfo 存的比它显示的多，而且较短的 PIN 码可以离线猜出来。';
+
+  @override
+  String get flowNotSet => '没能设置成功，请再试一次。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -6866,7 +6960,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get introBudgetInAFewMinutes => '幾分鐘後';
 
   @override
-  String get lockStateUnlockKryfo => '解鎖 kryfo';
+  String get lockStateUnlockKryfo => '解鎖 Kryfo';
 
   @override
   String get appInvalidUri => '無效的 uri';
@@ -9914,9 +10008,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get lockUseFingerprint => '使用指紋';
 
   @override
-  String get lockSetupThatIsYourWipe => '這是你的清除 PIN。請換一個。';
-
-  @override
   String get lockSetupUnlockWithFingerprint => '要用指紋解鎖嗎？';
 
   @override
@@ -9938,10 +10029,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get lockSetupThoseWereDifferentFrom => '兩次不一樣。從頭再來。';
 
   @override
-  String get lockSetupTheSameFourDigits => '同樣的四位數字';
+  String get lockSetupTheSameFourDigits => '再輸入一次同樣的數字';
 
   @override
-  String get lockSetupFourDigitsAnythingYou => '四位數字，選一組你記得住的';
+  String get lockSetupFourDigitsAnythingYou => '四位或更多數字，選一組你記得住的';
 
   @override
   String get modesOnion => 'Onion';
@@ -10494,19 +10585,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get panicSetupThoseWereDifferentFrom => '兩次不一樣。從頭再來。';
 
   @override
-  String get panicSetupThatIsYourReal => '這是你真正的 PIN 碼。請換一個。';
-
-  @override
   String get panicSetupOnceMore => '再一次';
 
   @override
-  String get panicSetupSetAWipePin => '設定清除 PIN';
-
-  @override
-  String get panicSetupTheSameFourDigits => '同樣的四位數字';
-
-  @override
-  String get panicSetupTheSecondPinWipes => '第二組 PIN 碼會清除一切。';
+  String get panicSetupTheSameFourDigits => '再輸入一次同樣的數字';
 
   @override
   String get photoKnowsEverythingInside => '裡面的一切';
@@ -10563,9 +10645,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pinsAppLock => '應用程式鎖';
 
   @override
-  String get pinsTwoPins => '兩組 PIN 碼';
-
-  @override
   String get pinsYourPin => '你的 PIN 碼';
 
   @override
@@ -10575,7 +10654,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get commonOff => '關閉';
 
   @override
-  String get pinsOpensKryfoFourDigits => '用來開啟 kryfo。四位數字，每次 kryfo 回到前景時都會詢問。';
+  String get pinsOpensKryfoFourDigits => '用來開啟 Kryfo。每次 Kryfo 回到前景時都會詢問。';
 
   @override
   String get pinsChangePin => '變更 PIN 碼';
@@ -10591,7 +10670,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pinsThePinGoesAnd =>
-      'PIN 碼會被移除，清除 PIN 也會一起移除。任何拿著你手機的人，都能以你的身分開啟 kryfo。';
+      'PIN 碼會被移除，清除 PIN 也會一起移除。任何拿著你手機的人，都能以你的身分開啟 Kryfo。';
 
   @override
   String get pinsUnlockWithFingerprint => '用指紋解鎖';
@@ -10604,9 +10683,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pinsSet => '已設定';
-
-  @override
-  String get pinsTheSecondPinWipes => '第二組 PIN 碼會清除一切。';
 
   @override
   String get pinsChangeWipePin => '變更清除 PIN';
@@ -11430,7 +11506,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsAppLock2 => '應用程式鎖';
 
   @override
-  String get settingsYourPinAndA => '你的 PIN 碼，加上清除 PIN';
+  String get settingsYourPinAndA => '你的 PIN 碼和進階保護';
 
   @override
   String get settingsPinWipePin => 'PIN 碼 · 清除 PIN';
@@ -13258,4 +13334,116 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get handleThatHandleIsTaken => '這個使用者名稱已被使用';
+
+  @override
+  String get pinPickDifferent => '請換一組 PIN 碼';
+
+  @override
+  String get settingsKeptOnWhileLock => '應用程式鎖開啟時保持開啟。';
+
+  @override
+  String get lockFingerAfterPin => '輸入一次 PIN 碼，即可再次使用指紋。';
+
+  @override
+  String get pinsAdvanced => '進階保護';
+
+  @override
+  String get pinsAdvancedLine => '用於有人逼你解鎖手機的時候。';
+
+  @override
+  String get pinsWipeLine => '在鎖定畫面輸入它，會從這支手機上清除 Kryfo。';
+
+  @override
+  String get pinsDecoyPin => '偽裝 PIN';
+
+  @override
+  String get pinsDecoyLine => '開啟一個空的 Kryfo，就像剛安裝好一樣。';
+
+  @override
+  String get pinsSetADecoyPin => '設定偽裝 PIN';
+
+  @override
+  String get pinsChangeDecoyPin => '變更偽裝 PIN';
+
+  @override
+  String get pinsRemoveTheDecoyPin => '要移除偽裝 PIN 嗎？';
+
+  @override
+  String get pinsTheDecoyGoes => '它開啟的那個空 Kryfo 也會一起消失。';
+
+  @override
+  String get pinsTurnOffWithDecoy =>
+      '所有 PIN 都會被移除，偽裝 PIN 和它的 Kryfo 也一樣。任何拿著你手機的人，都能以你的身分開啟 Kryfo。';
+
+  @override
+  String get pinsHowThisWorks => '運作方式';
+
+  @override
+  String get flowEnterYourPin => '輸入你的 PIN 碼';
+
+  @override
+  String get flowEnterYourPinLine => '就是開啟 Kryfo 的那一組。';
+
+  @override
+  String get flowWipeTitle => '清除 PIN';
+
+  @override
+  String get flowWipe1 =>
+      '在鎖定畫面代替你的 PIN 碼輸入，它會從這支手機上清除 Kryfo 並關閉應用程式。在旁人看來，應用程式只是停止了。';
+
+  @override
+  String get flowWipe2 => '所有聊天和你的身分都會一起清除，有偽裝的話也一樣。';
+
+  @override
+  String get flowWipeChoose => '選擇一組清除 PIN';
+
+  @override
+  String get flowWipeDone => '已設定清除 PIN';
+
+  @override
+  String get flowWipeDoneLine => '鎖定畫面上沒有任何跡象顯示它的存在。';
+
+  @override
+  String get flowDecoyTitle => '偽裝 PIN';
+
+  @override
+  String get flowDecoy1 =>
+      '開啟一個空的 Kryfo，就像剛安裝好一樣。它經得起別人快速翻看你的手機。它不會隱藏 Kryfo 佔用多少空間，也騙不過知道你的三個詞的人、想傳訊息給它的人，或複製手機的人。';
+
+  @override
+  String get flowDecoyFinger => '你的指紋會開啟真正的 Kryfo。如果有人可能逼你用指紋，請關閉指紋解鎖。';
+
+  @override
+  String get flowDecoyDigits => '位數要跟你的 PIN 碼一樣多。圓點是數得出來的。';
+
+  @override
+  String get flowDecoyShade => '已經在通知欄裡的通知已經被看到了。偽裝開啟期間，不會出現新的通知。';
+
+  @override
+  String get flowDecoyChoose => '選擇一組偽裝 PIN';
+
+  @override
+  String get flowDecoyDone => '已設定偽裝 PIN';
+
+  @override
+  String get flowDecoyDoneLine =>
+      '在鎖定畫面輸入它，就能開啟那個空的 Kryfo。要離開，切換到別的應用程式，再輸入你的 PIN 碼。';
+
+  @override
+  String get flowLaw => '在有些國家，拒絕解鎖手機或向官方隱藏資料本身就是違法的。出門前先了解當地的法律。';
+
+  @override
+  String get howWipe =>
+      '在鎖定畫面輸入清除 PIN，會清除所有聊天、你的身分和任何偽裝，然後關閉 Kryfo。即使多次輸錯後鍵盤暫停，它也照樣有效。';
+
+  @override
+  String get howDecoy =>
+      '偽裝 PIN 會開啟第二個空的 Kryfo，它有自己的三個詞。傳給你真正 Kryfo 的訊息照樣在底下悄悄送達。要離開偽裝，切換到別的應用程式，再輸入你的 PIN 碼。';
+
+  @override
+  String get howLimits =>
+      '經得起快速翻看，擋不住實驗室。用鑑識工具複製的手機副本可能顯示 Kryfo 存的比它顯示的多，而且較短的 PIN 碼可以離線猜出來。';
+
+  @override
+  String get flowNotSet => '沒能設定成功，請再試一次。';
 }

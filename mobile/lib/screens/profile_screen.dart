@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
 import 'avatar_picker_screen.dart';
-import '../main.dart' show appState, showAddContact;
+import '../main.dart' show appState, session, showAddContact;
 import '../supporter.dart';
 import '../widgets/kryfo_avatar.dart';
 import 'settings_screen.dart';
@@ -54,9 +54,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Future<void> _loadBadge() async {
-    final t = await loadSupporterTier();
-    final self = await loadShowBadgeSelf();
-    final share = await loadShareBadge();
+    final t = await loadSupporterTier(session.container);
+    final self = await loadShowBadgeSelf(session.container);
+    final share = await loadShareBadge(session.container);
     if (!mounted) return;
     setState(() {
       _tier = t;
@@ -93,7 +93,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    final id = appState.myId;
+    final id = appState.sessionId;
     final hasBadge = _tier != SupporterTier.none;
 
     return Scaffold(
@@ -237,18 +237,20 @@ class _ProfileScreenState extends State<ProfileScreen>
                           ],
                         ),
                       ),
-                      if (appState.myOnion.isNotEmpty) ...[
+                      if (appState.sessionOnion.isNotEmpty) ...[
                         const SizedBox(height: 12),
                         Divider(color: HaloColors.line, height: 1),
                         const SizedBox(height: 12),
                         _PressRow(
-                          onTap: () =>
-                              _copy(appState.myOnion, l10n.profileOnionAddress),
+                          onTap: () => _copy(
+                            appState.sessionOnion,
+                            l10n.profileOnionAddress,
+                          ),
                           child: Row(
                             children: [
                               Expanded(
                                 child: Text(
-                                  appState.myOnion,
+                                  appState.sessionOnion,
                                   style: HaloType.mono(
                                     size: 10,
                                     color: HaloColors.text2,
@@ -307,7 +309,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           l10n.profileOnMyOwnScreens,
                           _showSelf,
                           (v) async {
-                            await saveShowBadgeSelf(v);
+                            await saveShowBadgeSelf(v, session.container);
                             setState(() => _showSelf = v);
                           },
                         ),
@@ -317,7 +319,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           l10n.profileOffByDefault,
                           _share,
                           (v) async {
-                            await saveShareBadge(v);
+                            await saveShareBadge(v, session.container);
                             setState(() => _share = v);
                           },
                         ),

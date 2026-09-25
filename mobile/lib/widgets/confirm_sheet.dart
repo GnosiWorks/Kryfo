@@ -68,18 +68,40 @@ Widget _primary(String label, VoidCallback? onTap, {bool rose = false}) {
   );
 }
 
-Widget _quiet(String label, VoidCallback onTap) => GestureDetector(
-  onTap: onTap,
-  behavior: HitTestBehavior.opaque,
-  child: Padding(
-    padding: const EdgeInsets.symmetric(vertical: 10),
-    child: Center(
-      child: Text(
-        label,
-        style: HaloType.sans(size: 13, color: HaloColors.text2),
+Widget _quiet(String label, VoidCallback onTap, {Color? color}) =>
+    GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Center(
+          child: Text(
+            label,
+            style: HaloType.sans(size: 13, color: color ?? HaloColors.text2),
+          ),
+        ),
       ),
-    ),
-  ),
+    );
+
+// something already set: change it, or take it away. 'change', 'remove',
+// or null when dismissed
+Future<String?> showChangeOrRemoveSheet(
+  BuildContext context, {
+  required String title,
+  required String line,
+  required String change,
+  required String remove,
+}) => showHaloSheet<String>(
+  context,
+  builder: (ctx) => _frame(ctx, [
+    _title(title),
+    const SizedBox(height: 8),
+    _line(line),
+    const SizedBox(height: 16),
+    _primary(change, () => Navigator.pop(ctx, 'change')),
+    const SizedBox(height: 6),
+    _quiet(remove, () => Navigator.pop(ctx, 'remove'), color: HaloColors.rose),
+  ]),
 );
 
 // a question with one consequential answer. rose when it destroys something.

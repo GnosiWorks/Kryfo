@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../contact_status.dart';
-import '../main.dart' show appState, db, engine;
+import '../main.dart' show appState, session;
 import '../theme.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/halo_sheet.dart';
@@ -58,10 +58,10 @@ class _ContactScreenState extends State<ContactScreen> {
 
   Future<void> _load() async {
     final results = await Future.wait([
-      db.getContact(widget.haloId),
-      db.vouchesFor(widget.haloId),
-      db.mediaFor(widget.haloId),
-      db.firstMessageAt(widget.haloId),
+      session.getContact(widget.haloId),
+      session.vouchesFor(widget.haloId),
+      session.mediaFor(widget.haloId),
+      session.firstMessageAt(widget.haloId),
     ]);
     final c = results[0] as Map<String, Object?>?;
     final since = results[3] as int?;
@@ -170,7 +170,7 @@ class _ContactScreenState extends State<ContactScreen> {
     );
     if (v == null) return;
     final t = v.trim();
-    await db.setNickname(widget.haloId, t.isEmpty ? null : t);
+    await session.setNickname(widget.haloId, t.isEmpty ? null : t);
     await appState.refreshContacts();
     HapticFeedback.selectionClick();
     await _load();
@@ -229,7 +229,7 @@ class _ContactScreenState extends State<ContactScreen> {
                         KeyVerificationScreen(
                           peerHaloId: widget.haloId,
                           peerName: _name,
-                          myXpub: engine.myXPubkey(),
+                          myXpub: appState.sessionXPub,
                           peerXpub: widget.peerXPub,
                         ),
                       ),
@@ -372,7 +372,7 @@ class _ContactScreenState extends State<ContactScreen> {
             label: pinned ? l10n.contactUnpin : l10n.contactPinToTop,
             onTap: () async {
               HapticFeedback.selectionClick();
-              await db.setContactPinned(widget.haloId, !pinned);
+              await session.setContactPinned(widget.haloId, !pinned);
               await appState.refreshContacts();
               _load();
             },

@@ -12,8 +12,7 @@ import 'package:share_plus/share_plus.dart';
 import '../contact_card.dart';
 import '../dlog.dart';
 import '../handle_lookup.dart' show handleFromInput;
-import '../main.dart'
-    show appState, buildHaloUriV3, handleHaloUri, handleHaloUriAdded;
+import '../main.dart' show appState, handleHaloUri, handleHaloUriAdded;
 import '../theme.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -52,17 +51,13 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
   }
 
   void _onState() {
-    if (_uri == null && appState.myOnion.isNotEmpty) _load();
+    if (_uri == null && appState.sessionOnion.isNotEmpty) _load();
     if (mounted) setState(() {});
   }
 
   Future<void> _load() async {
-    if (appState.myOnion.isEmpty) return;
-    final uri = await buildHaloUriV3(
-      appState.myId,
-      appState.myOnion,
-      appState.fcCounter,
-    );
+    if (appState.sessionOnion.isEmpty) return;
+    final uri = await appState.sessionInvite();
     // debug builds only: a second device on the desk can import it off
     // logcat instead of scanning a screen
     dlog('invite: $uri');
@@ -127,7 +122,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
     lockState.hold(
       () => SharePlus.instance.share(
         ShareParams(
-          text: l10n.myKryfoAddMeOnKryfo(appState.myId, '$_uri'),
+          text: l10n.myKryfoAddMeOnKryfo(appState.sessionId, '$_uri'),
           subject: l10n.myKryfoAddMeOnKryfo2,
         ),
       ),
@@ -136,7 +131,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final id = appState.myId;
+    final id = appState.sessionId;
     final handle = appState.myHandle;
     return Scaffold(
       backgroundColor: HaloColors.surface,
@@ -223,14 +218,14 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
                 HapticFeedback.selectionClick();
                 await shareContactCard(
                   context: context,
-                  haloId: appState.myId,
+                  haloId: appState.sessionId,
                   uri: _uri!,
                 );
               },
               onFile: () async {
                 if (_uri == null) return;
                 HapticFeedback.selectionClick();
-                await shareContactVcf(haloId: appState.myId, uri: _uri!);
+                await shareContactVcf(haloId: appState.sessionId, uri: _uri!);
               },
             ),
             Padding(
