@@ -105,6 +105,8 @@ typedef FourArgFnDart =
     );
 typedef CounterFn = Pointer<Utf8> Function(Int32);
 typedef CounterFnDart = Pointer<Utf8> Function(int);
+typedef StrCounterFn = Pointer<Utf8> Function(Pointer<Utf8>, Int32);
+typedef StrCounterFnDart = Pointer<Utf8> Function(Pointer<Utf8>, int);
 
 class HaloEngine {
   late final DynamicLibrary _lib;
@@ -506,6 +508,51 @@ class HaloEngine {
       if (idx < 0) return (peer: '', cipher: line);
       return (peer: line.substring(0, idx), cipher: line.substring(idx + 1));
     }).toList();
+  }
+
+  // the decoy's identity: pure engine calls that touch no engine state and
+  // log nothing (engine/quiet.go)
+  late final CStrFnDart _quietNew = _lib.lookupFunction<CStrFn, CStrFnDart>(
+    'HaloQuietIdentity',
+  );
+  late final ThreeArgFnDart _quietDescribe = _lib
+      .lookupFunction<ThreeArgFn, ThreeArgFnDart>('HaloQuietDescribe');
+  late final StrCounterFnDart _quietFc = _lib
+      .lookupFunction<StrCounterFn, StrCounterFnDart>(
+        'HaloQuietFirstContactPk',
+      );
+
+  // {ed_priv, x_priv, onion_key, id, ed_pub, x_pub, onion}, or null
+  Map<String, dynamic>? quietIdentity() => _quietJson(_quietNew());
+
+  Map<String, dynamic>? quietDescribe(String ed, String x, String onion) {
+    final a = ed.toNativeUtf8(), b = x.toNativeUtf8(), c = onion.toNativeUtf8();
+    try {
+      return _quietJson(_quietDescribe(a, b, c));
+    } finally {
+      calloc.free(a);
+      calloc.free(b);
+      calloc.free(c);
+    }
+  }
+
+  String quietFirstContactPk(String xPriv, int counter) {
+    final a = xPriv.toNativeUtf8();
+    try {
+      return _quietFc(a, counter).toDartString();
+    } finally {
+      calloc.free(a);
+    }
+  }
+
+  Map<String, dynamic>? _quietJson(Pointer<Utf8> p) {
+    final s = p.toDartString();
+    if (s.startsWith('error')) return null;
+    try {
+      return jsonDecode(s) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
   }
 
   String restoreIdentity(String edPriv, String xPriv) {
@@ -956,6 +1003,13 @@ class HaloDb {
     try {
       await _db?.execute('PRAGMA wal_checkpoint(TRUNCATE)');
     } catch (_) {}
+  }
+
+  // before its files go
+  Future<void> close() async {
+    final d = _db;
+    _db = null;
+    await d?.close();
   }
 
   Future<Database> open() async {
@@ -3906,23 +3960,22 @@ Future<void> _signalTables(Database db) async {
   );
 }
 
-Future<String> makePreKeyBundleB64() async {
-  final spk = await signalSession.signedPreKeyStore.loadSignedPreKey(1);
+Future<String> makePreKeyBundleB64([SignalSession? of]) async {
+  final ss = of ?? signalSession;
+  final spk = await ss.signedPreKeyStore.loadSignedPreKey(1);
   // the kept invite prekey, never the lowest one-time key: that one was
   // gone after the first person used the invite, and a handle's published
   // invite is static, so everyone after the first was dropped unread
-  final pk = await signalSession.preKeyStore.loadPreKey(invitePreKeyId);
+  final pk = await ss.preKeyStore.loadPreKey(invitePreKeyId);
   final bundle = {
-    'registrationId': signalSession.registrationId,
+    'registrationId': ss.registrationId,
     'deviceId': 1,
     'preKeyId': pk.id,
     'preKeyPublic': base64Encode(pk.getKeyPair().publicKey.serialize()),
     'signedPreKeyId': spk.id,
     'signedPreKeyPublic': base64Encode(spk.getKeyPair().publicKey.serialize()),
     'signedPreKeySignature': base64Encode(spk.signature),
-    'identityKey': base64Encode(
-      signalSession.identityKeyPair.getPublicKey().serialize(),
-    ),
+    'identityKey': base64Encode(ss.identityKeyPair.getPublicKey().serialize()),
   };
   return base64Encode(utf8.encode(jsonEncode(bundle)));
 }
@@ -4411,6 +4464,73 @@ HaloDb get session => _session;
 // a quiet session sends nothing: what is typed in it stays queued
 bool get sessionQuiet => _session.container.quiet;
 
+// what comes from outside while the lock is up - a notification tap, a
+// link - waits for it to lift, then happens in an everyday session and is
+// dropped in a decoy one
+final List<Future<void> Function()> _heldWhileLocked = [];
+
+Future<void> afterUnlock(Future<void> Function() act) async {
+  if (lockState.locked) {
+    _heldWhileLocked.add(act);
+    return;
+  }
+  await act();
+}
+
+void _releaseHeld() {
+  final held = List.of(_heldWhileLocked);
+  _heldWhileLocked.clear();
+  if (sessionQuiet) return;
+  for (final act in held) {
+    unawaited(act());
+  }
+}
+
+// the root navigator's routes, bottom first. nothing may sit above the
+// lock: a screen pushed while it is up goes before it paints, and a session
+// changing under it takes out every screen between home and the lock
+class RouteBook extends NavigatorObserver {
+  final List<Route<dynamic>> routes = [];
+  Route<dynamic>? lock;
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    routes.add(route);
+    final l = lock;
+    if (l != null && route != l && lockState.locked) {
+      scheduleMicrotask(() {
+        if (route.isActive) route.navigator?.removeRoute(route);
+      });
+    }
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      routes.remove(route);
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      routes.remove(route);
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    final i = oldRoute == null ? -1 : routes.indexOf(oldRoute);
+    if (newRoute == null) return;
+    i >= 0 ? routes[i] = newRoute : routes.add(newRoute);
+  }
+
+  void dropUnderLock() {
+    final l = lock;
+    if (l == null) return;
+    for (final r in List.of(routes)) {
+      if (r == l || r.isFirst || !r.isActive) continue;
+      r.navigator?.removeRoute(r);
+    }
+  }
+}
+
+final rootRoutes = RouteBook();
+
 // opens a room on the root navigator, a beat later: whoever asked for the
 // join is a sheet or a screen about to close itself, and a room pushed
 // before that close would be the thing that got closed.
@@ -4433,7 +4553,10 @@ void _sayLinkResult(String result) {
 // (both warm - onDidReceiveNotificationResponse - and cold starts
 // via getNotificationAppLaunchDetails). reads contact details from
 // the db and pushes the route on the root navigator.
-Future<void> openChatForHalo(String? haloId) async {
+Future<void> openChatForHalo(String? haloId) =>
+    afterUnlock(() => _openChatFor(haloId));
+
+Future<void> _openChatFor(String? haloId) async {
   if (haloId == null || haloId.isEmpty) return;
   final nav = rootNavKey.currentState;
   if (nav == null) return;
@@ -4999,39 +5122,47 @@ class AppState extends ChangeNotifier {
   String _sendMode = 'private';
   String get sendMode => _sendMode;
 
+  // the open session's own, like everything a screen sets for an identity
   Future<void> saveGhostPref(bool on, int secs) async {
     const s = FlutterSecureStorage();
-    await s.write(key: 'ghost_on', value: on ? '1' : '0');
-    await s.write(key: 'ghost_secs', value: '$secs');
+    final c = session.container;
+    await s.write(key: c.key('ghost_on'), value: on ? '1' : '0');
+    await s.write(key: c.key('ghost_secs'), value: '$secs');
   }
 
   Future<(bool, int)> loadGhostPref() async {
     const s = FlutterSecureStorage();
-    final on = (await s.read(key: 'ghost_on')) == '1';
-    final secs = int.tryParse(await s.read(key: 'ghost_secs') ?? '') ?? 300;
+    final c = session.container;
+    final on = (await s.read(key: c.key('ghost_on'))) == '1';
+    final secs =
+        int.tryParse(await s.read(key: c.key('ghost_secs')) ?? '') ?? 300;
     return (on, secs);
   }
 
   Future<bool> loadDisguisePref() async {
     const s = FlutterSecureStorage();
-    return (await s.read(key: 'disguise_on')) == '1';
+    return (await s.read(key: session.container.key('disguise_on'))) == '1';
   }
 
   Future<void> saveDisguisePref(bool on) async {
     const s = FlutterSecureStorage();
-    await s.write(key: 'disguise_on', value: on ? '1' : '0');
+    await s.write(
+      key: session.container.key('disguise_on'),
+      value: on ? '1' : '0',
+    );
   }
 
   // the handle we claimed, if any. local only - the registry is the source
   // of truth and this is just so the screen knows what to show.
   String? _myHandle;
-  String? get myHandle => _myHandle;
+  String? get myHandle => sessionQuiet ? null : _myHandle;
 
   // the avatar someone picked, or null for the one their id produces. local
   // only - it is drawn from a number on every device that has the number, and
   // what they picked for themselves is nobody else's business.
   int? _myAvatar;
-  int? get myAvatar => _myAvatar;
+  int? _quietAvatar;
+  int? get myAvatar => sessionQuiet ? _quietAvatar : _myAvatar;
 
   Future<void> loadMyAvatar() async {
     final v = await const FlutterSecureStorage().read(key: 'my_avatar');
@@ -5040,12 +5171,13 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> setMyAvatar(int? v) async {
-    _myAvatar = v;
+    sessionQuiet ? _quietAvatar = v : _myAvatar = v;
     final st = const FlutterSecureStorage();
+    final k = session.container.key('my_avatar');
     if (v == null) {
-      await st.delete(key: 'my_avatar');
+      await st.delete(key: k);
     } else {
-      await st.write(key: 'my_avatar', value: '$v');
+      await st.write(key: k, value: '$v');
     }
     notifyListeners();
   }
@@ -5062,8 +5194,8 @@ class AppState extends ChangeNotifier {
   // only handles whose owner asked, under a name they chose. off until then.
   bool _handleListed = false;
   String _handleName = '';
-  bool get handleListed => _handleListed;
-  String get handleName => _handleName;
+  bool get handleListed => !sessionQuiet && _handleListed;
+  String get handleName => sessionQuiet ? '' : _handleName;
 
   Future<String> setHandleListing(bool on, {String name = ''}) async {
     final h = _myHandle;
@@ -5206,28 +5338,28 @@ class AppState extends ChangeNotifier {
   // written once a minute, so after a kill the transport screen can still
   // say when this phone last listened. that is how a person tells asleep
   // from killed from listening without adb.
-  int lastListenAt = 0;
-  int lastDrainAt = 0;
+  int _lastListenAt = 0;
+  int _lastDrainAt = 0;
   int _beatWritten = 0;
   // every stretch of five minutes or more with no heartbeat, newest last,
   // as "from-to" pairs. a night's sleep shows up here as its gaps, and a
   // kill shows up as the gap between the last beat and the next boot
-  final List<String> gaps = [];
+  final List<String> _gaps = [];
   // how many times the fifteen-minute job knocked, and when it last did
-  int jobRuns = 0;
-  int lastJobAt = 0;
+  int _jobRuns = 0;
+  int _lastJobAt = 0;
 
   void _beat() {
     final now = DateTime.now().millisecondsSinceEpoch;
-    if (lastListenAt > 0 && now - lastListenAt > 5 * 60 * 1000) {
-      gaps.add('$lastListenAt-$now');
-      while (gaps.length > 24) {
-        gaps.removeAt(0);
+    if (_lastListenAt > 0 && now - _lastListenAt > 5 * 60 * 1000) {
+      _gaps.add('$_lastListenAt-$now');
+      while (_gaps.length > 24) {
+        _gaps.removeAt(0);
       }
-      dlog('heartbeat: gap of ${(now - lastListenAt) ~/ 60000}m');
+      dlog('heartbeat: gap of ${(now - _lastListenAt) ~/ 60000}m');
       unawaited(_writeBeat());
     }
-    lastListenAt = now;
+    _lastListenAt = now;
     if (now - _beatWritten > 60000) {
       _beatWritten = now;
       unawaited(_writeBeat());
@@ -5235,24 +5367,24 @@ class AppState extends ChangeNotifier {
   }
 
   void noteJobRun() {
-    jobRuns++;
-    lastJobAt = DateTime.now().millisecondsSinceEpoch;
+    _jobRuns++;
+    _lastJobAt = DateTime.now().millisecondsSinceEpoch;
     unawaited(_writeBeat());
   }
 
   void _noteDrain() {
-    lastDrainAt = DateTime.now().millisecondsSinceEpoch;
+    _lastDrainAt = DateTime.now().millisecondsSinceEpoch;
     unawaited(_writeBeat());
   }
 
   Future<void> _writeBeat() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('hb.listen', lastListenAt);
-      await prefs.setInt('hb.drain', lastDrainAt);
-      await prefs.setStringList('hb.gaps', gaps);
-      await prefs.setInt('hb.jobs', jobRuns);
-      await prefs.setInt('hb.jobAt', lastJobAt);
+      await prefs.setInt('hb.listen', _lastListenAt);
+      await prefs.setInt('hb.drain', _lastDrainAt);
+      await prefs.setStringList('hb.gaps', _gaps);
+      await prefs.setInt('hb.jobs', _jobRuns);
+      await prefs.setInt('hb.jobAt', _lastJobAt);
     } catch (_) {}
   }
 
@@ -5275,21 +5407,21 @@ class AppState extends ChangeNotifier {
   Future<void> loadHeartbeat() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      lastListenAt = prefs.getInt('hb.listen') ?? 0;
-      lastDrainAt = prefs.getInt('hb.drain') ?? 0;
-      gaps
+      _lastListenAt = prefs.getInt('hb.listen') ?? 0;
+      _lastDrainAt = prefs.getInt('hb.drain') ?? 0;
+      _gaps
         ..clear()
         ..addAll(prefs.getStringList('hb.gaps') ?? const []);
-      jobRuns = prefs.getInt('hb.jobs') ?? 0;
-      lastJobAt = prefs.getInt('hb.jobAt') ?? 0;
+      _jobRuns = prefs.getInt('hb.jobs') ?? 0;
+      _lastJobAt = prefs.getInt('hb.jobAt') ?? 0;
     } catch (_) {}
   }
 
   // wipes the night's record so a new test starts clean
   Future<void> clearHeartbeatHistory() async {
-    gaps.clear();
-    jobRuns = 0;
-    lastJobAt = 0;
+    _gaps.clear();
+    _jobRuns = 0;
+    _lastJobAt = 0;
     await _writeBeat();
   }
 
@@ -5308,22 +5440,46 @@ class AppState extends ChangeNotifier {
   bool get checkingIn => _checking;
   bool _inFront = false;
   Timer? _sleepTimer;
-  int lastCheckAt = 0;
-  int lastWakeAt = 0;
+  int _lastCheckAt = 0;
+  int _lastWakeAt = 0;
   // how the last check-in ended, for the transport screen. a check-in that
   // gave up is the thing a person needs to see, and it used to leave no
   // trace at all: the line just said there had never been one.
-  String lastCheckHow = '';
+  String _lastCheckHow = '';
   // "relay.example 4.1s · other.example 30.0s dropped"
-  String lastCheckRelays = '';
-  int lastCheckTriedAt = 0;
+  String _lastCheckRelays = '';
+  int _lastCheckTriedAt = 0;
+
+  // what the screens are shown of all that: everything, or in a decoy
+  // session only what happened since it opened, as a Kryfo just set up
+  // would show
+  int _quietSince = 0;
+  int _quietJobs = 0;
+  int _since(int at) => sessionQuiet && at < _quietSince ? 0 : at;
+  int get lastListenAt => _since(_lastListenAt);
+  int get lastDrainAt => _since(_lastDrainAt);
+  int get lastJobAt => _since(_lastJobAt);
+  int get lastCheckAt => _since(_lastCheckAt);
+  int get lastWakeAt => _since(_lastWakeAt);
+  int get lastCheckTriedAt => _since(_lastCheckTriedAt);
+  int get jobRuns => sessionQuiet ? max(0, _jobRuns - _quietJobs) : _jobRuns;
+  String get lastCheckHow =>
+      _since(_lastCheckTriedAt) == 0 && sessionQuiet ? '' : _lastCheckHow;
+  String get lastCheckRelays =>
+      _since(_lastCheckTriedAt) == 0 && sessionQuiet ? '' : _lastCheckRelays;
+  List<String> get gaps => sessionQuiet
+      ? [
+          for (final g in _gaps)
+            if ((int.tryParse(g.split('-').first) ?? 0) >= _quietSince) g,
+        ]
+      : _gaps;
 
   // the nudge. nothing vendor-specific is read: while kryfo is supposed to
   // be staying connected it writes the time every few minutes, and a start
   // that finds that time long past, on a phone that was not switched off in
   // between, was a kill. three in a day and the card is offered, once ever.
   bool _nudgeDue = false;
-  bool get nudgeDue => _nudgeDue;
+  bool get nudgeDue => !sessionQuiet && _nudgeDue;
   Timer? _beatTimer;
 
   Future<void> _judgeLastRun() async {
@@ -5381,11 +5537,11 @@ class AppState extends ChangeNotifier {
   Future<void> _loadDeliveryTimes() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      lastCheckAt = prefs.getInt(kLastCheckKey) ?? 0;
-      lastWakeAt = prefs.getInt(kLastWakeKey) ?? 0;
-      lastCheckHow = prefs.getString(kLastCheckHowKey) ?? '';
-      lastCheckRelays = prefs.getString(kLastCheckRelaysKey) ?? '';
-      lastCheckTriedAt = prefs.getInt(kLastCheckTriedKey) ?? 0;
+      _lastCheckAt = prefs.getInt(kLastCheckKey) ?? 0;
+      _lastWakeAt = prefs.getInt(kLastWakeKey) ?? 0;
+      _lastCheckHow = prefs.getString(kLastCheckHowKey) ?? '';
+      _lastCheckRelays = prefs.getString(kLastCheckRelaysKey) ?? '';
+      _lastCheckTriedAt = prefs.getInt(kLastCheckTriedKey) ?? 0;
     } catch (_) {}
   }
 
@@ -5543,7 +5699,7 @@ class AppState extends ChangeNotifier {
     if (_checking) return 0;
     _checking = true;
     final started = DateTime.now();
-    final drainBefore = lastDrainAt;
+    final drainBefore = _lastDrainAt;
     final wasHeld = _torHeld;
     var how = 'started';
     try {
@@ -5602,7 +5758,7 @@ class AppState extends ChangeNotifier {
         }
         await Future.delayed(const Duration(seconds: 1));
       }
-      lastCheckRelays = _relayCatchupData();
+      _lastCheckRelays = _relayCatchupData();
       // what came in is drained by the one-second poll. let it finish, and
       // let receipts and slice requests that answer it get out.
       await Future.delayed(const Duration(seconds: 3));
@@ -5611,30 +5767,30 @@ class AppState extends ChangeNotifier {
         await Future.delayed(const Duration(seconds: 1));
       }
       how = 'ok$tail';
-      lastCheckAt = DateTime.now().millisecondsSinceEpoch;
-      if (why == 'push') lastWakeAt = lastCheckAt;
+      _lastCheckAt = DateTime.now().millisecondsSinceEpoch;
+      if (why == 'push') _lastWakeAt = _lastCheckAt;
       try {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setInt(kLastCheckKey, lastCheckAt);
-        if (why == 'push') await prefs.setInt(kLastWakeKey, lastWakeAt);
+        await prefs.setInt(kLastCheckKey, _lastCheckAt);
+        if (why == 'push') await prefs.setInt(kLastWakeKey, _lastWakeAt);
       } catch (_) {}
       dlog(
         'checkin($why): done in ${DateTime.now().difference(started).inSeconds}s',
       );
-      return lastDrainAt != drainBefore ? 1 : 0;
+      return _lastDrainAt != drainBefore ? 1 : 0;
     } finally {
       _checking = false;
-      lastCheckHow = jsonEncode({
+      _lastCheckHow = jsonEncode({
         'how': how,
         'secs': DateTime.now().difference(started).inSeconds,
         'why': why,
       });
-      lastCheckTriedAt = DateTime.now().millisecondsSinceEpoch;
+      _lastCheckTriedAt = DateTime.now().millisecondsSinceEpoch;
       try {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(kLastCheckHowKey, lastCheckHow);
-        await prefs.setString(kLastCheckRelaysKey, lastCheckRelays);
-        await prefs.setInt(kLastCheckTriedKey, lastCheckTriedAt);
+        await prefs.setString(kLastCheckHowKey, _lastCheckHow);
+        await prefs.setString(kLastCheckRelaysKey, _lastCheckRelays);
+        await prefs.setInt(kLastCheckTriedKey, _lastCheckTriedAt);
       } catch (_) {}
       // only put it back to sleep if it was asleep: a check-in that ran
       // while the person had the app open leaves tor alone
@@ -5654,7 +5810,7 @@ class AppState extends ChangeNotifier {
     if (_deliveryMode != DeliveryMode.always && (_torHeld || !_inFront)) {
       return checkIn();
     }
-    final before = lastDrainAt;
+    final before = _lastDrainAt;
     try {
       engine.nostrKick();
     } catch (e) {
@@ -5662,10 +5818,10 @@ class AppState extends ChangeNotifier {
     }
     for (var i = 0; i < 20; i++) {
       await Future.delayed(const Duration(seconds: 1));
-      if (lastDrainAt != before && i >= 3) break;
+      if (_lastDrainAt != before && i >= 3) break;
     }
-    dlog('drainNow: drained=${lastDrainAt != before}');
-    return lastDrainAt != before ? 1 : 0;
+    dlog('drainNow: drained=${_lastDrainAt != before}');
+    return _lastDrainAt != before ? 1 : 0;
   }
 
   // three facts from the platform, null when no activity is attached
@@ -5686,6 +5842,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<Map<String, dynamic>?> lastExit() async {
+    if (sessionQuiet) return null;
     try {
       final r = await _platformChannel.invokeMethod<Map>('lastExit');
       return r?.map((k, v) => MapEntry(k.toString(), v));
@@ -5835,7 +5992,7 @@ class AppState extends ChangeNotifier {
   // the screen went on saying "you are @name" over a page that pointed at
   // someone else's invite, or at nobody's.
   bool _handleForeign = false;
-  bool get handleForeign => _handleForeign;
+  bool get handleForeign => !sessionQuiet && _handleForeign;
 
   Future<void> _repointHandle() async {
     final h = _myHandle;
@@ -6621,7 +6778,8 @@ class AppState extends ChangeNotifier {
   // dead by failing is the silent failure this app has spent weeks
   // removing. while set the engine never starts, so nothing here can
   // advance a ratchet the other device now owns.
-  bool movedAway = false;
+  bool _movedAway = false;
+  bool get movedAway => !sessionQuiet && _movedAway;
   // the person chose to keep reading what was here. this session only.
   bool movedReadOnly = false;
   late AppLinks _appLinks;
@@ -6640,6 +6798,166 @@ class AppState extends ChangeNotifier {
   Future<String> sessionInvite() async => sessionQuiet
       ? (_quiet?.invite ?? '')
       : buildHaloUriV3(myId, myOnion, fcCounter);
+
+  // the decoy container: opened at start when the list names it, its
+  // identity and invite built then, so a decoy unlock only changes what the
+  // screens read
+  HaloDb? _decoyDb;
+  QuietIdentity? _decoyId;
+  final Completer<void> _containersOpen = Completer<void>();
+  Future<void> get containersReady => _containersOpen.future;
+  // for the everyday session's own App lock screen
+  bool get hasDecoy => !sessionQuiet && _decoyDb != null;
+  // bumped when the screens change session: home starts over
+  int sessionRev = 0;
+
+  Future<void> _openContainers() async {
+    try {
+      final listed = await listedContainers();
+      await sweepContainers(listed);
+      if (listed.contains(HaloContainer.decoy.id)) {
+        final d = HaloDb(HaloContainer.decoy);
+        final q = await _quietOf(d);
+        if (q != null) {
+          _decoyDb = d;
+          _decoyId = q;
+        } else {
+          await d.close();
+        }
+      }
+    } catch (e) {
+      dlog('containers: not opened ($e)');
+    } finally {
+      decoyReady = _decoyDb != null;
+      if (!_containersOpen.isCompleted) _containersOpen.complete();
+    }
+  }
+
+  // what the decoy's identity shows, from its own keys, with an invite on
+  // its own signal store. nothing here touches the engine's identity
+  Future<QuietIdentity?> _quietOf(HaloDb d) async {
+    final raw = await d.open();
+    final saved = await d.loadIdentity();
+    final rows = await raw.query(
+      'signal_meta',
+      where: 'k = ?',
+      whereArgs: ['onion_key'],
+      limit: 1,
+    );
+    if (saved == null || rows.isEmpty) return null;
+    final x = saved['x_priv']!;
+    final q = engine.quietDescribe(
+      saved['ed_priv']!,
+      x,
+      rows.first['v'] as String,
+    );
+    if (q == null) return null;
+    final ss = SignalSession();
+    final xb = _hexDecode(x);
+    await ss.bootstrap(
+      database: raw,
+      xPubBytes: _hexDecode(q['x_pub'] as String),
+      xPrivBytes: xb,
+    );
+    _zeroBytes(xb);
+    final id = q['id'] as String;
+    final onion = q['onion'] as String;
+    final bundle = await makePreKeyBundleB64(ss);
+    final fc = engine.quietFirstContactPk(x, 0);
+    return QuietIdentity(
+      id: id,
+      edPub: q['ed_pub'] as String,
+      xPub: q['x_pub'] as String,
+      onion: onion,
+      invite: fc.startsWith('error')
+          ? 'kryfo://share?id=$id&onion=$onion&v=2&bundle=$bundle'
+          : 'kryfo://share?id=$id&onion=$onion&v=3&bundle=$bundle&fc=$fc',
+    );
+  }
+
+  // from the everyday session: a decoy that exists gets the new pin on its
+  // own entry. otherwise a new container with an identity of its own,
+  // registered nowhere, listed, and its pin entry written last. false when
+  // the pin is in use: the screen says pick a different one
+  Future<bool> setDecoyPin(String pin) async {
+    if (sessionQuiet) return false;
+    if (_decoyDb != null) return lockState.setupDecoyPin(pin);
+    final q = engine.quietIdentity();
+    if (q == null) return false;
+    final d = HaloDb(HaloContainer.decoy);
+    try {
+      final raw = await d.open();
+      await d.saveIdentity(
+        q['id'] as String,
+        q['ed_priv'] as String,
+        q['x_priv'] as String,
+      );
+      await raw.insert('signal_meta', {
+        'k': 'onion_key',
+        'v': q['onion_key'] as String,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      await listContainer(HaloContainer.decoy, true);
+      final id = await _quietOf(d);
+      if (id == null || !await lockState.setupDecoyPin(pin)) {
+        await _dropDecoyFiles(d);
+        return false;
+      }
+      _decoyDb = d;
+      _decoyId = id;
+      decoyReady = true;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      dlog('decoy: not made ($e)');
+      await _dropDecoyFiles(d);
+      return false;
+    }
+  }
+
+  // the pin entries first, then the list, then the files
+  Future<void> removeDecoy() async {
+    if (sessionQuiet) return;
+    await lockState.clearDecoyPins();
+    decoyReady = false;
+    final d = _decoyDb ?? HaloDb(HaloContainer.decoy);
+    _decoyDb = null;
+    _decoyId = null;
+    await _dropDecoyFiles(d);
+    notifyListeners();
+  }
+
+  Future<void> _dropDecoyFiles(HaloDb d) async {
+    await listContainer(HaloContainer.decoy, false);
+    await d.close();
+    await HaloContainer.decoy.wipeFiles();
+  }
+
+  // an unlock's outcome, under the lock screen before it lifts: the screens
+  // get the session the pin opened, and every screen of the other one goes
+  Future<void> sessionFor(PinResult r) async {
+    final decoy = r == PinResult.decoy;
+    final want = decoy ? _decoyDb : live;
+    if (want == null) return;
+    // what was already in the shade was already seen; nothing more comes
+    if (decoy) unawaited(notifPlugin.cancelAll());
+    if (identical(_session, want)) return;
+    _session = want;
+    _quiet = decoy ? _decoyId : null;
+    if (decoy) {
+      _quietSince = DateTime.now().millisecondsSinceEpoch;
+      _quietJobs = _jobRuns;
+      final a = await const FlutterSecureStorage().read(
+        key: HaloContainer.decoy.key('my_avatar'),
+      );
+      _quietAvatar = a == null ? null : int.tryParse(a);
+    }
+    rootRoutes.dropUnderLock();
+    sessionRev++;
+    await refreshContacts();
+    await refreshGroups();
+    notifyListeners();
+  }
+
   String myOnion = '';
   List<GroupPreview> groups = [];
   String myXPub = '';
@@ -7036,6 +7354,7 @@ class AppState extends ChangeNotifier {
     // that android's anr watchdog fired on weak phones during cold start.
     await Future.delayed(const Duration(milliseconds: 16));
     dlog('LAUNCH boot after yield');
+    unawaited(_openContainers());
     final docsDir = await getApplicationDocumentsDirectory();
     final saved = await live.loadIdentity();
     dlog('LAUNCH identity loaded');
@@ -7055,14 +7374,15 @@ class AppState extends ChangeNotifier {
     // store, which boots after the home paints. both handlers wait for it,
     // or a link tapped with kryfo closed was dropped with nothing shown
     _appLinks.uriLinkStream.listen((uri) async {
-      if (uri.scheme == 'kryfo') {
+      if (uri.scheme != 'kryfo') return;
+      await afterUnlock(() async {
         await _signalReady.future;
         final result = await handleHaloUri(uri.toString());
         dlog('deep link: $result');
         _sayLinkResult(result);
         await refreshContacts();
         notifyListeners();
-      }
+      });
     });
     // the stream only fires while we're already running. a link tapped with
     // kryfo closed cold-starts the app and would otherwise be dropped.
@@ -7071,12 +7391,14 @@ class AppState extends ChangeNotifier {
           .getInitialLink()
           .then((uri) async {
             if (uri == null || uri.scheme != 'kryfo') return;
-            await _signalReady.future;
-            final result = await handleHaloUri(uri.toString());
-            dlog('deep link (cold start): $result');
-            _sayLinkResult(result);
-            await refreshContacts();
-            notifyListeners();
+            await afterUnlock(() async {
+              await _signalReady.future;
+              final result = await handleHaloUri(uri.toString());
+              dlog('deep link (cold start): $result');
+              _sayLinkResult(result);
+              await refreshContacts();
+              notifyListeners();
+            });
           })
           .catchError((Object e) {
             dlog('deep link (cold start) failed: $e');
@@ -7092,7 +7414,7 @@ class AppState extends ChangeNotifier {
     onboardingComplete =
         (await const FlutterSecureStorage().read(key: 'onboarding_done')) ==
         'true';
-    movedAway =
+    _movedAway =
         (await SharedPreferences.getInstance()).getInt('moved.at') != null;
     // let the onion linger a beat before the home appears
     if (onboardingComplete) {
@@ -7104,7 +7426,7 @@ class AppState extends ChangeNotifier {
     notifyListeners();
     // moved away: home can show what was here, and that is all. no tor,
     // no relays, no outbox. see movedAway.
-    if (movedAway) {
+    if (_movedAway) {
       bootPhase = '';
       if (!_signalReady.isCompleted) _signalReady.complete();
       _booting = false;
@@ -9144,9 +9466,11 @@ class AppState extends ChangeNotifier {
   // the export that moved this identity writes the mark; the moved screen
   // clears it when the person says they are not moving after all
   Future<void> markMoved() async {
+    // a decoy is never moved
+    if (sessionQuiet) return;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('moved.at', DateTime.now().millisecondsSinceEpoch);
-    movedAway = true;
+    _movedAway = true;
     notifyListeners();
   }
 
@@ -9158,9 +9482,11 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> unmarkMoved() async {
+    // a decoy is never moved
+    if (sessionQuiet) return;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('moved.at');
-    movedAway = false;
+    _movedAway = false;
     movedReadOnly = false;
     notifyListeners();
   }
@@ -9182,6 +9508,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // toasts live in the root overlay, over every route and sheet
   haloToastOverlay = () => rootNavKey.currentState?.overlay;
+  // an unlock opens its session under the lock screen, before it lifts
+  lockState.onOutcome = appState.sessionFor;
+  lockState.sessionsReady = appState.containersReady;
   unawaited(_sweepPlaintextLeftovers());
   // not awaited: this is a platform call, and with no activity attached it
   // never answers. awaiting it is how main() stopped on its second line in
@@ -9274,6 +9603,7 @@ class HaloApp extends StatelessWidget {
       listenable: Listenable.merge([themeRevision, localeRevision]),
       builder: (context, _) => MaterialApp(
         navigatorKey: rootNavKey,
+        navigatorObservers: [rootRoutes],
         scaffoldMessengerKey: haloMessengerKey,
         title: 'Kryfo',
         theme: buildHaloTheme(),
@@ -9370,7 +9700,8 @@ class _RootShellState extends State<RootShell> {
       );
     }
     return HomeScreen(
-      haloId: appState.myId,
+      key: ValueKey(appState.sessionRev),
+      haloId: appState.sessionId,
       contacts: appState.contacts,
       pendingCount: appState.pendingCount,
       groups: appState.groups
@@ -10341,15 +10672,18 @@ class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
             FadeTransition(opacity: a, child: child),
       );
       _lockRoute = r;
+      rootRoutes.lock = r;
       nav.push(r);
     } else if (!locked && _lockRoute != null) {
       final r = _lockRoute!;
       _lockRoute = null;
+      rootRoutes.lock = null;
       if (r.isCurrent) {
         nav.pop();
       } else if (r.isActive) {
         nav.removeRoute(r);
       }
+      _releaseHeld();
     }
   }
 

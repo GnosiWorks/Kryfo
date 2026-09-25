@@ -19,6 +19,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 
+import 'container.dart';
 import 'dlog.dart';
 import 'l10n/l10n.dart';
 import 'notifications.dart';
@@ -44,9 +45,21 @@ class PinKind {
   static const vault = 4;
 }
 
-// the everyday container's id inside the sealed records, until containers
-// have their own ids (step 1, piece 4)
-const everydayContainer = '00000000000000000000000000000001';
+// the everyday container's id inside the sealed records
+final everydayContainer = HaloContainer.everyday.id;
+
+// a decoy session is open: nothing of kryfo's may show. read from storage
+// every time, so a process the job starts honours it too. an unreadable
+// value counts as quiet: a missed notification over one in a decoy
+Future<bool> quietNow([LockStore? store]) async {
+  try {
+    final s = await (store ?? SecureLockStore()).read('halo.lock.state');
+    if (s == null) return false;
+    return (jsonDecode(s) as Map<String, dynamic>)['q'] == true;
+  } catch (_) {
+    return true;
+  }
+}
 
 // secure storage, behind a seam so a test can count what is read and written
 abstract class LockStore {
@@ -416,6 +429,13 @@ class LockState extends ChangeNotifier {
   final PinEngine _engine;
   final LockClock _clock;
   final LockBio _bio;
+  // the session an unlock opens is built here, under the lock screen, before
+  // it lifts: the everyday one, or the decoy's
+  Future<void> Function(PinResult)? onOutcome;
+  // the containers are open and a decoy session could be built: a check
+  // waits for it (the same wait whatever is typed), so a decoy pin typed
+  // in the first second after a cold start is not taken for a wrong one
+  Future<void>? sessionsReady;
   // the fingerprint key is gone or was invalidated by a new finger: no
   // finger opens kryfo until the pin has been typed once
   bool _bioStale = false;
@@ -551,6 +571,10 @@ class LockState extends ChangeNotifier {
 
   // one pin, one check, one write, one moment to show it
   Future<PinResult> verifyPin(String pin) async {
+    final ready = sessionsReady;
+    if (ready != null) {
+      await ready.timeout(const Duration(seconds: 8), onTimeout: () {});
+    }
     final t0 = DateTime.now();
     final uptime = await _clock.uptimeMs();
     final boot = await _clock.bootCount();
@@ -584,6 +608,13 @@ class LockState extends ChangeNotifier {
     }
     await _store.write(_kState, next.encode());
     _counters = next;
+    if (result == PinResult.normal || result == PinResult.decoy) {
+      try {
+        await onOutcome?.call(result);
+      } catch (e) {
+        dlog('lock: session not opened: $e');
+      }
+    }
 
     final left = revealAfter - DateTime.now().difference(t0);
     if (left > Duration.zero) await Future.delayed(left);
@@ -647,6 +678,26 @@ class LockState extends ChangeNotifier {
   Future<bool> setupPin(String pin) =>
       _setup(pin, PinSlot.app, PinKind.everyday);
 
+  // the decoy's pin opens the decoy container. its entry is written last
+  // when a decoy is made, and cleared first when one is removed
+  Future<bool> setupDecoyPin(String pin) => _setup(
+    pin,
+    PinSlot.decoy,
+    PinKind.decoy,
+    container: HaloContainer.decoy.id,
+  );
+
+  Future<void> clearDecoyPins() async {
+    var t = _table;
+    if (t == null) return;
+    for (final i in [PinSlot.decoy, PinSlot.decoyWipe, PinSlot.decoyDecoy]) {
+      t = await _engine.clear(t!, i);
+    }
+    await _store.write(_kTable, t!);
+    _table = t;
+    notifyListeners();
+  }
+
   Future<bool> setupPanicPin(String pin) async {
     final ok = await _setup(pin, PinSlot.wipe, PinKind.wipe);
     if (ok) {
@@ -660,7 +711,12 @@ class LockState extends ChangeNotifier {
     return ok;
   }
 
-  Future<bool> _setup(String pin, int slot, int kind) async {
+  Future<bool> _setup(
+    String pin,
+    int slot,
+    int kind, {
+    String? container,
+  }) async {
     final wasOn = _enabled;
     final table = await _ensureTable();
     // a pin changed in place may equal the one it replaces: leave that
@@ -679,7 +735,7 @@ class LockState extends ChangeNotifier {
         legacy,
         slot,
         kind,
-        everydayContainer,
+        container ?? everydayContainer,
       );
       final t = jsonEncode(out['t']);
       await _store.write(_kTable, t);
@@ -772,6 +828,11 @@ class LockState extends ChangeNotifier {
     if (r != 'ok') return false;
     _counters = const LockCounters();
     await _store.write(_kState, _counters.encode());
+    try {
+      await onOutcome?.call(PinResult.normal);
+    } catch (e) {
+      dlog('lock: session not opened: $e');
+    }
     _locked = false;
     notifyListeners();
     return true;

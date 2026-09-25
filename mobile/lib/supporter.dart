@@ -5,6 +5,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'badge_client.dart' show fetchReceipt, ReceiptState;
+import 'container.dart';
 import 'l10n/l10n.dart';
 
 enum SupporterTier { none, supporter, patron, guardian }
@@ -64,51 +65,70 @@ String tierLabel(SupporterTier t) => switch (t) {
   SupporterTier.none => '',
 };
 
-Future<SupporterTier> loadSupporterTier() async {
+Future<SupporterTier> loadSupporterTier([
+  HaloContainer c = HaloContainer.everyday,
+]) async {
   final prefs = await SharedPreferences.getInstance();
-  return _parseTier(prefs.getString(_tierKey));
+  return _parseTier(prefs.getString(c.key(_tierKey)));
 }
 
-Future<void> saveSupporterTier(SupporterTier t) async {
+Future<void> saveSupporterTier(
+  SupporterTier t, [
+  HaloContainer c = HaloContainer.everyday,
+]) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setString(_tierKey, t.name);
+  await prefs.setString(c.key(_tierKey), t.name);
 }
 
 // the signed receipt from the bitcoin path. keeping it means the badge stays
 // provable offline for good - the alternative was trusting a bare string in
 // prefs, which proves nothing.
-Future<void> saveBadgeReceipt(String payload, String sig) async {
+Future<void> saveBadgeReceipt(
+  String payload,
+  String sig, [
+  HaloContainer c = HaloContainer.everyday,
+]) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setString(_receiptPayloadKey, payload);
-  await prefs.setString(_receiptSigKey, sig);
+  await prefs.setString(c.key(_receiptPayloadKey), payload);
+  await prefs.setString(c.key(_receiptSigKey), sig);
 }
 
-Future<void> clearBadgeReceipt() async {
+Future<void> clearBadgeReceipt([
+  HaloContainer c = HaloContainer.everyday,
+]) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.remove(_receiptPayloadKey);
-  await prefs.remove(_receiptSigKey);
+  await prefs.remove(c.key(_receiptPayloadKey));
+  await prefs.remove(c.key(_receiptSigKey));
 }
 
 // show the badge on my own screens (me header, profile)
-Future<bool> loadShowBadgeSelf() async {
+Future<bool> loadShowBadgeSelf([
+  HaloContainer c = HaloContainer.everyday,
+]) async {
   final prefs = await SharedPreferences.getInstance();
-  return prefs.getBool(_showSelfKey) ?? false;
+  return prefs.getBool(c.key(_showSelfKey)) ?? false;
 }
 
-Future<void> saveShowBadgeSelf(bool on) async {
+Future<void> saveShowBadgeSelf(
+  bool on, [
+  HaloContainer c = HaloContainer.everyday,
+]) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setBool(_showSelfKey, on);
+  await prefs.setBool(c.key(_showSelfKey), on);
 }
 
 // let contacts see it (rides in the envelope only if true). off by default.
-Future<bool> loadShareBadge() async {
+Future<bool> loadShareBadge([HaloContainer c = HaloContainer.everyday]) async {
   final prefs = await SharedPreferences.getInstance();
-  return prefs.getBool(_shareKey) ?? false;
+  return prefs.getBool(c.key(_shareKey)) ?? false;
 }
 
-Future<void> saveShareBadge(bool on) async {
+Future<void> saveShareBadge(
+  bool on, [
+  HaloContainer c = HaloContainer.everyday,
+]) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setBool(_shareKey, on);
+  await prefs.setBool(c.key(_shareKey), on);
 }
 
 // the bitcoin invoice we last opened and never saw settle. the invoice
@@ -118,41 +138,49 @@ Future<void> saveShareBadge(bool on) async {
 // opens, and forgotten once the service answers either way.
 const _openInvoiceKey = 'badge_open_invoice';
 
-Future<void> saveOpenInvoice(String id, SupporterTier tier) async {
+Future<void> saveOpenInvoice(
+  String id,
+  SupporterTier tier, [
+  HaloContainer c = HaloContainer.everyday,
+]) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setString(_openInvoiceKey, '$id|${tier.name}');
+  await prefs.setString(c.key(_openInvoiceKey), '$id|${tier.name}');
 }
 
-Future<void> clearOpenInvoice() async {
+Future<void> clearOpenInvoice([
+  HaloContainer c = HaloContainer.everyday,
+]) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.remove(_openInvoiceKey);
+  await prefs.remove(c.key(_openInvoiceKey));
 }
 
 // ask once about the remembered invoice. returns the tier if it turned out
 // paid (and grants it), null otherwise. leaves the record alone while the
 // service still says pending or cannot be reached.
-Future<SupporterTier?> settleOpenInvoice() async {
+Future<SupporterTier?> settleOpenInvoice([
+  HaloContainer c = HaloContainer.everyday,
+]) async {
   final prefs = await SharedPreferences.getInstance();
-  final raw = prefs.getString(_openInvoiceKey);
+  final raw = prefs.getString(c.key(_openInvoiceKey));
   if (raw == null) return null;
   final parts = raw.split('|');
   if (parts.length != 2) {
-    await prefs.remove(_openInvoiceKey);
+    await prefs.remove(c.key(_openInvoiceKey));
     return null;
   }
   final tier = _parseTier(parts[1]);
   final r = await fetchReceipt(parts[0]);
   switch (r.state) {
     case ReceiptState.paid:
-      await prefs.remove(_openInvoiceKey);
+      await prefs.remove(c.key(_openInvoiceKey));
       if (tier == SupporterTier.none) return null;
-      await saveSupporterTier(tier);
+      await saveSupporterTier(tier, c);
       if (r.payload != null && r.sig != null) {
-        await saveBadgeReceipt(r.payload!, r.sig!);
+        await saveBadgeReceipt(r.payload!, r.sig!, c);
       }
       return tier;
     case ReceiptState.expired:
-      await prefs.remove(_openInvoiceKey);
+      await prefs.remove(c.key(_openInvoiceKey));
       return null;
     default:
       return null;

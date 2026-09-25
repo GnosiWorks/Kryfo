@@ -5,7 +5,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../main.dart' show appState;
+import '../main.dart' show appState, session;
 import '../lock_state.dart';
 import '../intro_prefs.dart';
 import '../scam_prefs.dart';
@@ -114,16 +114,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    loadHideNotifContent().then((v) {
+    loadHideNotifContent(session.container).then((v) {
       if (mounted) setState(() => _hidePreview = v);
     });
     appState.loadDisguisePref().then((d) {
       if (mounted) setState(() => _disguise = d);
     });
-    loadAcceptIntros().then((v) {
+    loadAcceptIntros(session.container).then((v) {
       if (mounted) setState(() => _acceptIntros = v);
     });
-    loadScamShieldOn().then((v) {
+    loadScamShieldOn(session.container).then((v) {
       if (mounted) setState(() => _shieldOn = v);
     });
   }
@@ -273,7 +273,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   await Navigator.of(
                     context,
                   ).push(haloRoute(const GettingMessagesScreen()));
-                  final v = await loadHideNotifContent();
+                  final v = await loadHideNotifContent(session.container);
                   if (mounted) {
                     setState(() => _hidePreview = v);
                   }
@@ -306,7 +306,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 value: _acceptIntros ? l10n.commonOn : l10n.commonOff,
                 onTap: () async {
                   setState(() => _acceptIntros = !_acceptIntros);
-                  await saveAcceptIntros(_acceptIntros);
+                  await saveAcceptIntros(_acceptIntros, session.container);
                 },
               ),
               HaloRow(
@@ -316,7 +316,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 value: _shieldOn ? l10n.commonOn : l10n.commonOff,
                 onTap: () async {
                   setState(() => _shieldOn = !_shieldOn);
-                  await saveScamShieldOn(_shieldOn);
+                  await saveScamShieldOn(_shieldOn, session.container);
                 },
               ),
             ],
