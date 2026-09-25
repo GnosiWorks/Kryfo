@@ -81,6 +81,7 @@ import '../widgets/poll_card.dart';
 import '../widgets/stroke_icon.dart';
 import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
+import '../lock_guard.dart' show lockGuard;
 
 final Map<String, String> _draftPerGroup = {};
 
@@ -1814,7 +1815,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     HapticFeedback.selectionClick();
     if (mounted) setState(() => _liftedUid = target.msgUid);
     late OverlayEntry entry;
+    VoidCallback? unguard;
     void dismiss() {
+      unguard?.call();
       if (entry.mounted) entry.remove();
       _menuEntry = null;
       if (mounted) setState(() => _liftedUid = null);
@@ -1936,6 +1939,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     );
     overlay.insert(entry);
     _menuEntry = entry;
+    // the lock closes it, with what it shows
+    unguard = lockGuard.closeOnLock(dismiss);
   }
 
   bool _sameDay(DateTime a, DateTime b) =>

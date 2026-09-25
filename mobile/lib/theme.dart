@@ -294,9 +294,34 @@ final _toastKeys = <OverlayEntry, GlobalKey<_ToastState>>{};
 /// a short line at the top of the screen: it drops in with a small spring,
 /// stays three and a half seconds, and goes up and out; a tap or a flick
 /// up sends it sooner. a new one takes the place of the one showing.
+/// the app lock's say, set at start: a toast shown while it is up waits
+/// for it to lift
+Future<void> Function(Future<void> Function() act)? haloWhenOpen;
+
 void showHaloToast(BuildContext context, String message) {
+  final later = haloWhenOpen;
+  if (later == null) {
+    _showHaloToast(context, message);
+  } else {
+    unawaited(later(() async => _showHaloToast(context, message)));
+  }
+}
+
+/// the lock is going up: no toast stays on screen
+void haloClearToasts() {
+  final e = _toastEntry;
+  _toastEntry = null;
+  if (e != null) {
+    if (e.mounted) e.remove();
+    _toastKeys.remove(e);
+  }
+  haloMessengerKey.currentState?.clearSnackBars();
+}
+
+void _showHaloToast(BuildContext context, String message) {
   var overlay = haloToastOverlay?.call();
   if (overlay == null) {
+    if (!context.mounted) return;
     try {
       overlay = Overlay.maybeOf(context, rootOverlay: true);
     } catch (_) {

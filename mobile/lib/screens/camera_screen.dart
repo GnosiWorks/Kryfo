@@ -20,6 +20,7 @@ import '../widgets/press_scale.dart';
 import '../widgets/decode_px.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
+import '../lock_guard.dart' show lockGuard;
 
 class CaptureResult {
   final Uint8List? photo; // stripped jpeg bytes
@@ -79,7 +80,17 @@ class _CameraScreenState extends State<CameraScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _unguard = lockGuard.closeOnLock(_closeForLock);
     _setup();
+  }
+
+  // the lock closes the camera: it never runs under the pin pad
+  VoidCallback? _unguard;
+  void _closeForLock() {
+    _unguard = null;
+    final r = ModalRoute.of(context);
+    if (mounted && r != null && r.isActive)
+      Navigator.of(context).removeRoute(r);
   }
 
   Future<void> _setup() async {
@@ -157,6 +168,7 @@ class _CameraScreenState extends State<CameraScreen>
 
   @override
   void dispose() {
+    _unguard?.call();
     WidgetsBinding.instance.removeObserver(this);
     _cam?.dispose();
     // a clip that was never used is shredded on the way out

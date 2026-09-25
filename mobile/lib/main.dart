@@ -4399,7 +4399,7 @@ void _sayLinkResult(String result) {
 // reads contact details from the db and pushes the route on the root
 // navigator.
 Future<void> openChatForHalo(String? haloId) =>
-    lockGuard.afterUnlock(() => _openChatFor(haloId));
+    lockGuard.afterUnlock(() => _openChatFor(haloId), key: 'chat:$haloId');
 
 Future<void> _openChatFor(String? haloId) async {
   if (haloId == null || haloId.isEmpty) return;
@@ -4429,9 +4429,6 @@ Future<void> _openChatFor(String? haloId) async {
 String? currentChatPeer;
 
 final GlobalKey<NavigatorState> rootNavKey = GlobalKey<NavigatorState>();
-
-// what comes from outside while the app lock is up waits for the unlock
-final lockGuard = LockGuard(isLocked: () => lockState.locked);
 
 int _msgUidCounter = 0;
 // stable cross-device message id. used by reactions + replies + group
@@ -6988,7 +6985,7 @@ class AppState extends ChangeNotifier {
     // or a link tapped with kryfo closed was dropped with nothing shown
     _appLinks.uriLinkStream.listen((uri) async {
       if (uri.scheme != 'kryfo') return;
-      await lockGuard.afterUnlock(() async {
+      await lockGuard.afterUnlock(key: 'link:$uri', () async {
         await _signalReady.future;
         final result = await handleHaloUri(uri.toString());
         dlog('deep link: $result');
@@ -7004,7 +7001,7 @@ class AppState extends ChangeNotifier {
           .getInitialLink()
           .then((uri) async {
             if (uri == null || uri.scheme != 'kryfo') return;
-            await lockGuard.afterUnlock(() async {
+            await lockGuard.afterUnlock(key: 'link:$uri', () async {
               await _signalReady.future;
               final result = await handleHaloUri(uri.toString());
               dlog('deep link (cold start): $result');
@@ -9028,6 +9025,8 @@ final appState = AppState();
 void main() async {
   dlog('LAUNCH main');
   WidgetsFlutterBinding.ensureInitialized();
+  // a toast shown while the lock is up waits for it to lift
+  haloWhenOpen = (act) => lockGuard.afterUnlock(act);
   // toasts live in the root overlay, over every route and sheet
   haloToastOverlay = () => rootNavKey.currentState?.overlay;
   unawaited(_sweepPlaintextLeftovers());
@@ -10154,6 +10153,11 @@ class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     lockState.addListener(_sync);
+    // the lock's route went while locked: a new one goes up at once
+    lockGuard.onLockLost = () {
+      _lockRoute = null;
+      _sync();
+    };
     lockState.load();
     // the lifecycle only reports changes, and a fresh start in front is not
     // one. a process the job started builds this too, with nobody looking.
@@ -10179,13 +10183,20 @@ class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
     if (locked && _lockRoute == null) {
       // a composer left focused would keep its keyboard up under the pin
       FocusManager.instance.primaryFocus?.unfocus();
+      // what is open above the routes or running goes first: menus,
+      // recorders, a voice note, the camera, a toast
+      lockGuard.locking();
+      haloClearToasts();
       final r = PageRouteBuilder<void>(
         opaque: true,
         settings: const RouteSettings(name: 'lock'),
         transitionDuration: Duration.zero,
         reverseTransitionDuration: const Duration(milliseconds: 220),
-        pageBuilder: (_, _, _) =>
-            const PopScope(canPop: false, child: LockScreen()),
+        // its own messenger: nothing meant for the app's screens is shown
+        // on the pin pad
+        pageBuilder: (_, _, _) => const ScaffoldMessenger(
+          child: PopScope(canPop: false, child: LockScreen()),
+        ),
         transitionsBuilder: (_, a, _, child) =>
             FadeTransition(opacity: a, child: child),
       );
@@ -10201,8 +10212,8 @@ class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
       } else if (r.isActive) {
         nav.removeRoute(r);
       }
-      lockGuard.lifted();
     }
+    if (lockState.loaded && !lockState.locked) lockGuard.lifted();
   }
 
   @override
