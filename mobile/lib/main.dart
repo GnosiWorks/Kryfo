@@ -6979,8 +6979,6 @@ class AppState extends ChangeNotifier {
     final decoy = r == PinResult.decoy;
     final want = decoy ? _decoyDb : live;
     if (want == null) return;
-    // what was already in the shade was already seen; nothing more comes
-    if (decoy) unawaited(notifPlugin.cancelAll());
     lockState.inDecoy = decoy;
     if (identical(_session, want)) return;
     // no reads here: what home shows of the other session was read ahead,
@@ -7003,12 +7001,23 @@ class AppState extends ChangeNotifier {
     rootRoutes.dropUnderLock();
     sessionRev++;
     notifyListeners();
-    // read again for real once the lock is gone, off the clock
+    // once the lock is gone, off the clock: what was already in the shade
+    // was already seen and goes, and the lists are read again for real. a
+    // call into android here would hold the main thread, and dart with it,
+    // and the decoy would show later than the everyday app does
     unawaited(
-      Future.delayed(const Duration(milliseconds: 700), () async {
-        await refreshContacts();
-        await refreshGroups();
-      }),
+      Future.delayed(
+        lockState.revealAfter + const Duration(milliseconds: 300),
+        () async {
+          if (decoy) {
+            try {
+              await notifPlugin.cancelAll();
+            } catch (_) {}
+          }
+          await refreshContacts();
+          await refreshGroups();
+        },
+      ),
     );
   }
 
@@ -7606,6 +7615,10 @@ class AppState extends ChangeNotifier {
     await loadHeartbeat();
     startMemoryLog();
     await initNotifications(onTap: openChatForHalo);
+    // the first call into android's notification service after a start is
+    // slow, a tenth of a second or more. every start pays it here, on every
+    // phone, so nothing later pays it where it could be timed
+    unawaited(notifPlugin.cancel(id: 0x7ffffffe).catchError((_) {}));
 
     // periodic sweep: delete messages whose burn_at has passed. a sweep
     // that keeps failing means burned messages are staying, which the
