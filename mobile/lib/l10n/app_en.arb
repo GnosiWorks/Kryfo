@@ -280,7 +280,7 @@
   "@introBudgetInAFewMinutes": {
     "description": "intro_budget.dart"
   },
-  "lockStateUnlockKryfo": "Unlock kryfo",
+  "lockStateUnlockKryfo": "Unlock Kryfo",
   "@lockStateUnlockKryfo": {
     "description": "lock_state.dart"
   },
@@ -5133,7 +5133,7 @@
   "@commonOff": {
     "description": "screens/pins_screen.dart, screens/settings_screen.dart"
   },
-  "pinsOpensKryfoFourDigits": "Opens kryfo. Asked for when it comes to the front.",
+  "pinsOpensKryfoFourDigits": "Opens Kryfo. Asked for when it comes to the front.",
   "@pinsOpensKryfoFourDigits": {
     "description": "screens/pins_screen.dart"
   },
@@ -5153,7 +5153,7 @@
   "@pinsTurnOffTheApp": {
     "description": "screens/pins_screen.dart"
   },
-  "pinsThePinGoesAnd": "The PIN goes, and the wipe PIN with it. Anyone holding your phone opens kryfo as you.",
+  "pinsThePinGoesAnd": "The PIN goes, and the wipe PIN with it. Anyone holding your phone opens Kryfo as you.",
   "@pinsThePinGoesAnd": {
     "description": "screens/pins_screen.dart"
   },

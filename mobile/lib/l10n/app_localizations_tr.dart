@@ -4135,7 +4135,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'PIN kaldırılır, silme PIN’i de onunla birlikte. Telefonun kimin elindeyse kryfo’yu senmiş gibi açar.';
+      'PIN kaldırılır, silme PIN’i de onunla birlikte. Telefonun kimin elindeyse Kryfo’yu senmiş gibi açar.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Parmak iziyle kilidi aç';

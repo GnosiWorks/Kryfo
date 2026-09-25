@@ -96,7 +96,7 @@ void main() {
     expect(l.introBudgetInHours(2), "in 2 hours");
     expect(l.introBudgetInHours(5), "in 5 hours");
     expect(l.introBudgetInAFewMinutes, "in a few minutes");
-    expect(l.lockStateUnlockKryfo, "Unlock kryfo");
+    expect(l.lockStateUnlockKryfo, "Unlock Kryfo");
     expect(l.appInvalidUri, "invalid uri");
     expect(l.appBundleError("<e>"), "Bundle error: <e>");
     expect(l.appAlreadySaved("<parsed>"), "Already saved: <parsed>");
@@ -2142,7 +2142,7 @@ void main() {
     expect(l.commonOff, "Off");
     expect(
       l.pinsOpensKryfoFourDigits,
-      "Opens kryfo. Asked for when it comes to the front.",
+      "Opens Kryfo. Asked for when it comes to the front.",
     );
     expect(l.pinsChangePin, "Change PIN");
     expect(l.pinsSetAPin, "Set a PIN");
@@ -2150,7 +2150,7 @@ void main() {
     expect(l.pinsTurnOffTheApp, "Turn off the app lock?");
     expect(
       l.pinsThePinGoesAnd,
-      "The PIN goes, and the wipe PIN with it. Anyone holding your phone opens kryfo as you.",
+      "The PIN goes, and the wipe PIN with it. Anyone holding your phone opens Kryfo as you.",
     );
     expect(l.pinsUnlockWithFingerprint, "Unlock with fingerprint");
     expect(l.pinsWipePin, "Wipe PIN");

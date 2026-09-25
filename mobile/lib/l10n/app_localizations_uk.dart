@@ -253,7 +253,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get introBudgetInAFewMinutes => 'через кілька хвилин';
 
   @override
-  String get lockStateUnlockKryfo => 'Розблокувати kryfo';
+  String get lockStateUnlockKryfo => 'Розблокувати Kryfo';
 
   @override
   String get appInvalidUri => 'недійсний uri';
@@ -4172,7 +4172,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get pinsOpensKryfoFourDigits =>
-      'Відкриває kryfo. kryfo просить його щоразу, коли виходить на передній план.';
+      'Відкриває Kryfo. Kryfo просить його щоразу, коли виходить на передній план.';
 
   @override
   String get pinsChangePin => 'Змінити PIN-код';
@@ -4188,7 +4188,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'PIN-код зникне, а разом із ним і PIN для стирання. Будь-хто з твоїм телефоном у руках відкриє kryfo від твого імені.';
+      'PIN-код зникне, а разом із ним і PIN для стирання. Будь-хто з твоїм телефоном у руках відкриє Kryfo від твого імені.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Розблокування відбитком';

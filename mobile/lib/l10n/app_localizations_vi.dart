@@ -240,7 +240,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get introBudgetInAFewMinutes => 'sau vài phút';
 
   @override
-  String get lockStateUnlockKryfo => 'Mở khóa kryfo';
+  String get lockStateUnlockKryfo => 'Mở khóa Kryfo';
 
   @override
   String get appInvalidUri => 'uri không hợp lệ';
@@ -4087,7 +4087,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pinsOpensKryfoFourDigits =>
-      'Mở kryfo. Được hỏi mỗi khi kryfo quay lại màn hình.';
+      'Mở Kryfo. Được hỏi mỗi khi Kryfo quay lại màn hình.';
 
   @override
   String get pinsChangePin => 'Đổi mã PIN';
@@ -4103,7 +4103,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'Mã PIN sẽ bị gỡ, kéo theo cả mã PIN xóa sạch. Bất kỳ ai cầm điện thoại của bạn đều mở được kryfo với tư cách là bạn.';
+      'Mã PIN sẽ bị gỡ, kéo theo cả mã PIN xóa sạch. Bất kỳ ai cầm điện thoại của bạn đều mở được Kryfo với tư cách là bạn.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Mở khóa bằng vân tay';

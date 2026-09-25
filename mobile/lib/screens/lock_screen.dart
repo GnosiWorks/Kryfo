@@ -194,7 +194,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
                 children: [
                   const Spacer(flex: 3),
                   Text(
-                    'kryfo',
+                    'Kryfo',
                     style: HaloType.serif(
                       size: 40,
                       color: HaloColors.amber,

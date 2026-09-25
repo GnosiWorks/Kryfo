@@ -238,7 +238,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get introBudgetInAFewMinutes => '几分钟后';
 
   @override
-  String get lockStateUnlockKryfo => '解锁 kryfo';
+  String get lockStateUnlockKryfo => '解锁 Kryfo';
 
   @override
   String get appInvalidUri => 'uri 无效';
@@ -3931,7 +3931,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonOff => '关';
 
   @override
-  String get pinsOpensKryfoFourDigits => '用来打开 kryfo。每次切到前台时都会要求输入。';
+  String get pinsOpensKryfoFourDigits => '用来打开 Kryfo。每次切到前台时都会要求输入。';
 
   @override
   String get pinsChangePin => '更改 PIN 码';
@@ -3947,7 +3947,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'PIN 码会被移除，抹掉 PIN 也一起移除。任何拿着你手机的人都能以你的身份打开 kryfo。';
+      'PIN 码会被移除，抹掉 PIN 也一起移除。任何拿着你手机的人都能以你的身份打开 Kryfo。';
 
   @override
   String get pinsUnlockWithFingerprint => '用指纹解锁';
@@ -6960,7 +6960,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get introBudgetInAFewMinutes => '幾分鐘後';
 
   @override
-  String get lockStateUnlockKryfo => '解鎖 kryfo';
+  String get lockStateUnlockKryfo => '解鎖 Kryfo';
 
   @override
   String get appInvalidUri => '無效的 uri';
@@ -10654,7 +10654,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get commonOff => '關閉';
 
   @override
-  String get pinsOpensKryfoFourDigits => '用來開啟 kryfo。每次 kryfo 回到前景時都會詢問。';
+  String get pinsOpensKryfoFourDigits => '用來開啟 Kryfo。每次 Kryfo 回到前景時都會詢問。';
 
   @override
   String get pinsChangePin => '變更 PIN 碼';
@@ -10670,7 +10670,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pinsThePinGoesAnd =>
-      'PIN 碼會被移除，清除 PIN 也會一起移除。任何拿著你手機的人，都能以你的身分開啟 kryfo。';
+      'PIN 碼會被移除，清除 PIN 也會一起移除。任何拿著你手機的人，都能以你的身分開啟 Kryfo。';
 
   @override
   String get pinsUnlockWithFingerprint => '用指紋解鎖';

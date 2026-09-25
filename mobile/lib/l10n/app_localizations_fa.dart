@@ -245,7 +245,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get introBudgetInAFewMinutes => 'چند دقیقه‌ی دیگر';
 
   @override
-  String get lockStateUnlockKryfo => 'باز کردن قفل kryfo';
+  String get lockStateUnlockKryfo => 'باز کردن قفل Kryfo';
 
   @override
   String get appInvalidUri => 'نشانی نامعتبر';
@@ -4111,7 +4111,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get pinsOpensKryfoFourDigits =>
-      'Kryfo را باز می‌کند. هر بار kryfo به جلو می‌آید پرسیده می‌شود.';
+      'Kryfo را باز می‌کند. هر بار Kryfo به جلو می‌آید پرسیده می‌شود.';
 
   @override
   String get pinsChangePin => 'تغییر PIN';
@@ -4127,7 +4127,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'PIN حذف می‌شود، و PIN پاک‌سازی هم با آن. هر کس گوشی شما را در دست داشته باشد، kryfo را به‌عنوان شما باز می‌کند.';
+      'PIN حذف می‌شود، و PIN پاک‌سازی هم با آن. هر کس گوشی شما را در دست داشته باشد، Kryfo را به‌عنوان شما باز می‌کند.';
 
   @override
   String get pinsUnlockWithFingerprint => 'باز کردن قفل با اثر انگشت';

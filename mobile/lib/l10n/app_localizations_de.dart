@@ -4147,7 +4147,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pinsOpensKryfoFourDigits =>
-      'Öffnet kryfo. Wird abgefragt, wenn es in den Vordergrund kommt.';
+      'Öffnet Kryfo. Wird abgefragt, wenn es in den Vordergrund kommt.';
 
   @override
   String get pinsChangePin => 'PIN ändern';
@@ -4163,7 +4163,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'Die PIN wird entfernt, und die Lösch-PIN mit ihr. Wer dein Handy in der Hand hat, öffnet kryfo als du.';
+      'Die PIN wird entfernt, und die Lösch-PIN mit ihr. Wer dein Handy in der Hand hat, öffnet Kryfo als du.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Mit Fingerabdruck entsperren';

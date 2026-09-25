@@ -241,7 +241,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get introBudgetInAFewMinutes => 'beberapa menit lagi';
 
   @override
-  String get lockStateUnlockKryfo => 'Buka kunci kryfo';
+  String get lockStateUnlockKryfo => 'Buka kunci Kryfo';
 
   @override
   String get appInvalidUri => 'uri tidak valid';
@@ -4094,7 +4094,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get pinsOpensKryfoFourDigits =>
-      'Membuka kryfo. Diminta setiap kryfo kembali ke depan.';
+      'Membuka Kryfo. Diminta setiap Kryfo kembali ke depan.';
 
   @override
   String get pinsChangePin => 'Ganti PIN';
@@ -4110,7 +4110,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get pinsThePinGoesAnd =>
-      'PIN dihapus, begitu juga PIN penghapus. Siapa pun yang memegang ponselmu langsung masuk ke kryfo sebagai dirimu.';
+      'PIN dihapus, begitu juga PIN penghapus. Siapa pun yang memegang ponselmu langsung masuk ke Kryfo sebagai dirimu.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Buka kunci dengan sidik jari';

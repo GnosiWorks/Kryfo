@@ -1075,7 +1075,7 @@
   "pinsSetAPin": "PIN belirle",
   "pinsTurnOff": "Kapat",
   "pinsTurnOffTheApp": "Uygulama kilidi kapatılsın mı?",
-  "pinsThePinGoesAnd": "PIN kaldırılır, silme PIN’i de onunla birlikte. Telefonun kimin elindeyse kryfo’yu senmiş gibi açar.",
+  "pinsThePinGoesAnd": "PIN kaldırılır, silme PIN’i de onunla birlikte. Telefonun kimin elindeyse Kryfo’yu senmiş gibi açar.",
   "pinsUnlockWithFingerprint": "Parmak iziyle kilidi aç",
   "pinsWipePin": "Silme PIN’i",
   "pinsNeedsAPinFirst": "Önce PIN gerekir",

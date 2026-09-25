@@ -444,7 +444,7 @@ abstract class AppLocalizations {
   /// lock_state.dart
   ///
   /// In en, this message translates to:
-  /// **'Unlock kryfo'**
+  /// **'Unlock Kryfo'**
   String get lockStateUnlockKryfo;
 
   /// main.dart
@@ -6546,7 +6546,7 @@ abstract class AppLocalizations {
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Opens kryfo. Asked for when it comes to the front.'**
+  /// **'Opens Kryfo. Asked for when it comes to the front.'**
   String get pinsOpensKryfoFourDigits;
 
   /// screens/pins_screen.dart
@@ -6576,7 +6576,7 @@ abstract class AppLocalizations {
   /// screens/pins_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The PIN goes, and the wipe PIN with it. Anyone holding your phone opens kryfo as you.'**
+  /// **'The PIN goes, and the wipe PIN with it. Anyone holding your phone opens Kryfo as you.'**
   String get pinsThePinGoesAnd;
 
   /// screens/pins_screen.dart
