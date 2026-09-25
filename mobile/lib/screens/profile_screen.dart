@@ -93,7 +93,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    final id = appState.myId;
+    final id = appState.sessionId;
     final hasBadge = _tier != SupporterTier.none;
 
     return Scaffold(
@@ -237,18 +237,20 @@ class _ProfileScreenState extends State<ProfileScreen>
                           ],
                         ),
                       ),
-                      if (appState.myOnion.isNotEmpty) ...[
+                      if (appState.sessionOnion.isNotEmpty) ...[
                         const SizedBox(height: 12),
                         Divider(color: HaloColors.line, height: 1),
                         const SizedBox(height: 12),
                         _PressRow(
-                          onTap: () =>
-                              _copy(appState.myOnion, l10n.profileOnionAddress),
+                          onTap: () => _copy(
+                            appState.sessionOnion,
+                            l10n.profileOnionAddress,
+                          ),
                           child: Row(
                             children: [
                               Expanded(
                                 child: Text(
-                                  appState.myOnion,
+                                  appState.sessionOnion,
                                   style: HaloType.mono(
                                     size: 10,
                                     color: HaloColors.text2,

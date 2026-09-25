@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../widgets/burn_fade.dart';
 import '../widgets/press_scale.dart';
-import '../main.dart';
+import '../main.dart' hide live;
 import '../theme.dart';
 import 'chat_screen.dart';
 import '../widgets/motion.dart' show haloRoute;
@@ -31,8 +31,8 @@ class _SavedScreenState extends State<SavedScreen> {
   }
 
   Future<void> _load() async {
-    final rows = await db.savedMessages();
-    final cs = await db.contacts();
+    final rows = await session.savedMessages();
+    final cs = await session.contacts();
     final names = <String, String>{};
     for (final c in cs) {
       final id = c['halo_id'] as String;
@@ -47,7 +47,7 @@ class _SavedScreenState extends State<SavedScreen> {
   }
 
   Future<void> _open(String peerId, String? uid) async {
-    final rows = await db.contacts();
+    final rows = await session.contacts();
     final match = rows.where((r) => r['halo_id'] == peerId).toList();
     if (match.isEmpty || !mounted) return;
     final r = match.first;
@@ -72,7 +72,7 @@ class _SavedScreenState extends State<SavedScreen> {
     if (!_leaving.add(uid)) return;
     HapticFeedback.selectionClick();
     setState(() {});
-    await db.setSaved(uid, false);
+    await session.setSaved(uid, false);
     await Future.delayed(FadeFold.gone);
     await _load();
     _leaving.remove(uid);

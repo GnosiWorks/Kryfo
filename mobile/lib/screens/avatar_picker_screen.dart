@@ -67,7 +67,7 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
 
   @override
   Widget build(BuildContext context) {
-    final id = appState.myId;
+    final id = appState.sessionId;
     return ListView(
       padding: widget.padding,
       children: staggerAll([

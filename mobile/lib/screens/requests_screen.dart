@@ -6,7 +6,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../main.dart' show db, appState;
+import '../main.dart' show session, appState;
 import '../theme.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -50,20 +50,20 @@ class _RequestsScreenState extends State<RequestsScreen> {
   }
 
   Future<void> _load() async {
-    final rows = await db.pendingRequests();
+    final rows = await session.pendingRequests();
     final previews = <String, String>{};
     final introducers = <String, _Introducer>{};
     final flags = <String, ShieldFlag>{};
     final clean = <String>{};
     for (final r in rows) {
       final id = r['halo_id'] as String;
-      final shieldRow = await db.shieldFor(id);
+      final shieldRow = await session.shieldFor(id);
       final flag = ShieldFlag.fromRow(shieldRow);
       if (flag != null) flags[id] = flag;
       // the shield ran and found nothing: worth a line here, since this is
       // the screen where a stranger is judged
       if (flag == null && ShieldFlag.cleanRow(shieldRow)) clean.add(id);
-      final msgs = await db.messagesFor(id);
+      final msgs = await session.messagesFor(id);
       if (msgs.isNotEmpty) {
         final last = msgs.last;
         final text = (last['plaintext'] as String?) ?? '';
@@ -73,7 +73,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
       }
       // an introduced row names the friends who vouched. only vouchers we
       // still hold as contacts come back, so a deleted one just drops off.
-      final vs = await db.vouchesFor(id);
+      final vs = await session.vouchesFor(id);
       if (vs.isNotEmpty) {
         final first = vs.first;
         introducers[id] = _Introducer(
@@ -134,7 +134,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
   Future<void> _accept(String id) async {
     if (!_answering.add(id)) return;
     HapticFeedback.selectionClick();
-    await db.acceptRequest(id);
+    await session.acceptRequest(id);
     await appState.afterAccept(id);
     _answering.remove(id);
     if (mounted) showHaloToast(context, l10n.requestsAccepted);
@@ -144,7 +144,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
   Future<void> _decline(String id) async {
     if (!_answering.add(id)) return;
     HapticFeedback.selectionClick();
-    await db.declineRequest(id);
+    await session.declineRequest(id);
     _answering.remove(id);
     await appState.refreshContacts();
     await _load();
@@ -160,9 +160,9 @@ class _RequestsScreenState extends State<RequestsScreen> {
     if (!ok || !mounted || !_answering.add(id)) return;
     // the sheet says their messages go: decline drops them, block shuts
     // the door
-    await db.declineRequest(id);
+    await session.declineRequest(id);
     await appState.block(id);
-    await db.clearUnread(id);
+    await session.clearUnread(id);
     _answering.remove(id);
     await appState.refreshContacts();
     await _load();

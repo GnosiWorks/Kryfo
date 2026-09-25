@@ -9,7 +9,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../main.dart';
+import '../main.dart' hide live;
 import '../theme.dart';
 import '../widgets/motion.dart';
 import '../widgets/stagger_in.dart';

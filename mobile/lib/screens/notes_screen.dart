@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/breathing_ring.dart';
-import '../main.dart';
+import '../main.dart' hide live;
 import '../theme.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
@@ -38,7 +38,7 @@ class _NotesScreenState extends State<NotesScreen> {
   }
 
   Future<void> _load() async {
-    final rows = await db.messagesFor(kNotesPeerId);
+    final rows = await session.messagesFor(kNotesPeerId);
     if (!mounted) return;
     setState(() => _notes = rows);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -51,7 +51,7 @@ class _NotesScreenState extends State<NotesScreen> {
   Future<void> _save() async {
     final text = _input.text.trim();
     if (text.isEmpty) return;
-    await db.saveMessage(kNotesPeerId, 'in', text);
+    await session.saveMessage(kNotesPeerId, 'in', text);
     _input.clear();
     await _load();
   }

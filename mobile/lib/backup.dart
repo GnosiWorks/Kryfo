@@ -14,7 +14,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
-import 'main.dart' show TwoArgFn, TwoArgFnDart, appState, db, engine, shredFile;
+import 'main.dart'
+    show TwoArgFn, TwoArgFnDart, appState, live, engine, shredFile;
 import 'dlog.dart';
 import 'dart:typed_data';
 import 'backup_stream.dart';
@@ -426,7 +427,7 @@ Future<void> createBackupFile(
   if (dbPassphrase == null) throw BackupError('db passphrase missing');
   // fold the write-ahead log in first, or the last minutes are not in
   // the file that gets copied
-  await db.checkpoint();
+  await live.checkpoint();
   final prefs = await SharedPreferences.getInstance();
   final prefsMap = <String, dynamic>{};
   for (final k in ['onboarding.complete']) {

@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
-import '../main.dart' show db, appState;
+import '../main.dart' show session, appState;
 import '../theme.dart';
 import '../widgets/notice_banner.dart';
 import '../widgets/halo_sheet.dart';
@@ -63,9 +63,9 @@ Future<ShieldChoice?> showShieldSheet(
     case ShieldChoice.block:
       await appState.block(haloId);
     case ShieldChoice.delete:
-      await db.declineRequest(haloId);
+      await session.declineRequest(haloId);
     case ShieldChoice.ignore:
-      await db.dismissShield(haloId);
+      await session.dismissShield(haloId);
   }
   await appState.refreshContacts();
   return choice;

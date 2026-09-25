@@ -15,7 +15,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'notifications.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -42,6 +41,7 @@ import 'screens/modes_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/my_kryfo_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'container.dart';
 import 'lock_state.dart';
 import 'screens/lock_screen.dart';
 import 'screens/lock_setup_screen.dart';
@@ -927,28 +927,26 @@ Future<String> torGetB64OnIsolate(String url) {
 }
 
 class HaloDb {
+  HaloDb([this.container = HaloContainer.everyday]);
+
+  // whose database this is: its file, and where its key sits
+  final HaloContainer container;
+
   static const _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
-  static const _passphraseKey = 'halo.db.passphrase';
 
   Database? _db;
 
+  // 32 bytes from the platform csprng. the old version derived the key from
+  // the launch timestamp - brute-forceable offline down to the microsecond
+  // the app first opened.
   Future<String> _passphrase() async {
-    var pw = await _storage.read(key: _passphraseKey);
+    var pw = await _storage.read(key: container.keyName);
     if (pw != null) return pw;
-    pw = _randomPassphrase();
-    await _storage.write(key: _passphraseKey, value: pw);
+    pw = container.newKey();
+    await _storage.write(key: container.keyName, value: pw);
     return pw;
-  }
-
-  String _randomPassphrase() {
-    // 32 bytes from the platform csprng, hex. the old version derived the
-    // key from the launch timestamp - brute-forceable offline down to the
-    // microsecond the app first opened.
-    final rnd = Random.secure();
-    final bytes = List<int>.generate(32, (_) => rnd.nextInt(256));
-    return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
   }
 
   // folds the write-ahead log into the file before it is copied. a
@@ -962,8 +960,7 @@ class HaloDb {
 
   Future<Database> open() async {
     if (_db != null) return _db!;
-    final dir = await getApplicationDocumentsDirectory();
-    final path = p.join(dir.path, 'halo.db');
+    final path = await container.dbPath();
     final pw = await _passphrase();
     _db = await openDatabase(
       path,
@@ -4081,7 +4078,7 @@ Future<String?> signalDecrypt(
     // (targeted decrypt). trial-decrypt callers pass flagKeyChange:false so a
     // normal no-match against the wrong contact never sets the flag.
     if (flagKeyChange) {
-      await db.setKeyChanged(peerId, true);
+      await live.setKeyChanged(peerId, true);
       appState.keyChanged();
     }
     return null;
@@ -4114,6 +4111,8 @@ Future<(String, bool)> handleHaloUriAdded(String raw) async {
   // and carry on as if that had been pasted
   final h = handleFromInput(raw);
   if (h != null) {
+    // a quiet session never reaches the registry
+    if (sessionQuiet) return (l10n.handleRegistryFailed, false);
     final r = await resolveHandle(h, _torGetJsonOnIsolate);
     // the lookup answers in fixed english words; the person reads their own
     if (r.startsWith('error:')) {
@@ -4146,14 +4145,26 @@ Future<(String, bool)> handleHaloUriAdded(String raw) async {
   final parsed = parseHaloUri(raw);
   if (parsed == null) return (l10n.appInvalidUri, false);
   if (parsed['v'] == '2' || parsed['v'] == '3') {
-    final already = await db.getContact(parsed['id']!) != null;
-    try {
-      await processPeerBundle(parsed['id']!, parsed['bundle']!);
-    } catch (e) {
-      return (l10n.appBundleError(e), false);
+    final already = await session.getContact(parsed['id']!) != null;
+    // a quiet session keeps the contact on this phone and nothing more: the
+    // session with them would live in the everyday identity's store
+    if (!sessionQuiet) {
+      try {
+        await processPeerBundle(parsed['id']!, parsed['bundle']!);
+      } catch (e) {
+        return (l10n.appBundleError(e), false);
+      }
     }
-    await db.upsertContact(parsed['id']!, parsed['onion']!, '');
-    await db.setPeerBundle(parsed['id']!, parsed['bundle']!);
+    await session.upsertContact(parsed['id']!, parsed['onion']!, '');
+    await session.setPeerBundle(parsed['id']!, parsed['bundle']!);
+    if (sessionQuiet) {
+      return (
+        already
+            ? l10n.appAlreadySaved('${parsed['id']}')
+            : l10n.appAddedYouCanMessage('${parsed['id']}'),
+        true,
+      );
+    }
     final fc = parsed['fc'];
     dlog(
       fc == null || fc.isEmpty
@@ -4171,8 +4182,12 @@ Future<(String, bool)> handleHaloUriAdded(String raw) async {
       true,
     );
   } else {
-    await db.upsertContact(parsed['id']!, parsed['onion']!, parsed['xpub']!);
-    await appState.subscribePeer(parsed['id']!);
+    await session.upsertContact(
+      parsed['id']!,
+      parsed['onion']!,
+      parsed['xpub']!,
+    );
+    if (!sessionQuiet) await appState.subscribePeer(parsed['id']!);
     return (l10n.appPeerImportedV1('${parsed['id']}'), false);
   }
 }
@@ -4260,17 +4275,13 @@ String _safeLeaf(String s) => s.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
 
 // where a received file lands: media/f_<uid>_<name>
 Future<File> receivedFileFor(String uid, String name) async {
-  final dir = await getApplicationDocumentsDirectory();
-  final mediaDir = Directory('${dir.path}/media');
-  if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
+  final mediaDir = await live.container.mediaDir();
   return File('${mediaDir.path}/f_${uid}_${_safeLeaf(name)}');
 }
 
 // where a received picture lands: media/<uid>.jpg
 Future<File> receivedImageFor(String name) async {
-  final dir = await getApplicationDocumentsDirectory();
-  final mediaDir = Directory('${dir.path}/media');
-  if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
+  final mediaDir = await live.container.mediaDir();
   return File('${mediaDir.path}/${_safeLeaf(name)}.jpg');
 }
 
@@ -4372,7 +4383,33 @@ Map<String, String>? parseHaloUri(String raw) {
 // shared singletons + state
 
 final engine = HaloEngine();
-final db = HaloDb();
+
+// the decoy's identity, read from its own database when a decoy session
+// opens. made at setup and registered nowhere
+class QuietIdentity {
+  const QuietIdentity({
+    required this.id,
+    required this.edPub,
+    required this.xPub,
+    required this.onion,
+    required this.invite,
+  });
+  final String id;
+  final String edPub;
+  final String xPub;
+  final String onion;
+  final String invite;
+}
+
+// the everyday container's database. what arrives lands here whichever
+// session is open; screens never touch it, they ask the session
+final live = HaloDb();
+HaloDb _session = live;
+// the database the screens read and write: the everyday one, or the
+// decoy's while a decoy session is open
+HaloDb get session => _session;
+// a quiet session sends nothing: what is typed in it stays queued
+bool get sessionQuiet => _session.container.quiet;
 
 // opens a room on the root navigator, a beat later: whoever asked for the
 // join is a sheet or a screen about to close itself, and a room pushed
@@ -4380,7 +4417,7 @@ final db = HaloDb();
 void openRoomSoon(String groupId) {
   Future.delayed(const Duration(milliseconds: 450), () async {
     final nav = rootNavKey.currentState;
-    if (nav == null || !await db.groupExists(groupId)) return;
+    if (nav == null || !await session.groupExists(groupId)) return;
     nav.push(haloRoute(GroupChatScreen(groupId: groupId)));
   });
 }
@@ -4400,7 +4437,7 @@ Future<void> openChatForHalo(String? haloId) async {
   if (haloId == null || haloId.isEmpty) return;
   final nav = rootNavKey.currentState;
   if (nav == null) return;
-  final rows = await db.contacts();
+  final rows = await session.contacts();
   final matches = rows.where((r) => r['halo_id'] == haloId).toList();
   if (matches.isEmpty) return;
   final row = matches.first;
@@ -4490,11 +4527,13 @@ class AppState extends ChangeNotifier {
   // reads this so it can say "2 waiting" instead of just "offline".
   int _queued = 0;
   final Map<String, int> _queuedPerPeer = <String, int>{};
-  int get queued => _queued;
+  // counted off the everyday outbox, so a quiet session shows none of it
+  int get queued => sessionQuiet ? 0 : _queued;
   int _parked = 0;
   // of those, how many wait on a peer who has not added us back yet
-  int get parkedQueued => _parked;
-  int queuedFor(String haloId) => _queuedPerPeer[haloId] ?? 0;
+  int get parkedQueued => sessionQuiet ? 0 : _parked;
+  int queuedFor(String haloId) =>
+      sessionQuiet ? 0 : _queuedPerPeer[haloId] ?? 0;
   Timer? _outboxTimer;
   bool _outboxWasReady = false;
 
@@ -4523,15 +4562,15 @@ class AppState extends ChangeNotifier {
     _asking = true;
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
-      for (final w in await db.mediaWants()) {
+      for (final w in await live.mediaWants()) {
         final mid = w['media_id'] as String;
         final peer = w['peer_id'] as String;
         final total = (w['total'] as num).toInt();
-        if (await db.messageExists(mid)) {
-          await db.dropMediaWant(mid);
+        if (await live.messageExists(mid)) {
+          await live.dropMediaWant(mid);
           continue;
         }
-        final have = await db.heldSlices(mid);
+        final have = await live.heldSlices(mid);
         final ask = shouldAskNow(
           now: now,
           lastSliceAt: (w['last_at'] as num).toInt(),
@@ -4542,7 +4581,7 @@ class AppState extends ChangeNotifier {
           total: total,
         );
         if (!ask) continue;
-        if (await db.isBlocked(peer)) continue;
+        if (await live.isBlocked(peer)) continue;
         final missing = missingSlices(have, total);
         if (missing.isEmpty) continue;
         dlog('NEED $mid: asking for ${missing.length} of $total');
@@ -4553,7 +4592,7 @@ class AppState extends ChangeNotifier {
             sender: _mySender(),
           );
           await _sendOneEnvelope(peer, wrapped);
-          await db.markMediaAsked(mid);
+          await live.markMediaAsked(mid);
         } catch (e) {
           dlog('NEED $mid: ask failed: $e');
         }
@@ -4570,7 +4609,7 @@ class AppState extends ChangeNotifier {
   // read off this phone, so it is answered only for a row we sent, to the
   // one person it was sent to, a bounded number of times.
   Future<void> _answerNeed(String from, NeedFrame need) async {
-    final row = await db.sentMediaRow(need.mediaId);
+    final row = await live.sentMediaRow(need.mediaId);
     final now = DateTime.now().millisecondsSinceEpoch;
     final ok =
         row != null &&
@@ -4612,7 +4651,7 @@ class AppState extends ChangeNotifier {
     // count first, wire or no wire: the strip and the rows say what is
     // waiting whether or not anything can move yet. the old order counted
     // only once the route was up, so an offline phone said nothing waited.
-    final rows = await db.unsentOutbox();
+    final rows = await live.unsentOutbox();
     final perPeer = <String, int>{};
     final paired = <String, bool>{};
     var parked = 0;
@@ -4625,7 +4664,7 @@ class AppState extends ChangeNotifier {
       // not on the wire. the strip says which.
       final g = r['group_id'] as String?;
       if (to != null && (g == null || g.isEmpty)) {
-        paired[to] ??= await db.isBackPaired(to);
+        paired[to] ??= await live.isBackPaired(to);
         if (!paired[to]!) parked++;
       }
     }
@@ -4657,9 +4696,9 @@ class AppState extends ChangeNotifier {
       return;
     }
     // anything that landed since the last sweep stops costing us bookkeeping.
-    final live = {for (final r in rows) r['msg_uid'] as String?};
-    _outboxTries.removeWhere((k, _) => !live.contains(k));
-    _outboxNextAt.removeWhere((k, _) => !live.contains(k));
+    final waiting = {for (final r in rows) r['msg_uid'] as String?};
+    _outboxTries.removeWhere((k, _) => !waiting.contains(k));
+    _outboxNextAt.removeWhere((k, _) => !waiting.contains(k));
     for (final r in rows) {
       final uid = r['msg_uid'] as String?;
       if (uid == null || _outboxInflight.contains(uid)) continue;
@@ -4692,7 +4731,7 @@ class AppState extends ChangeNotifier {
   // the moment it is made; this is for the ones that did not get through.
   final Set<String> _editsInflight = {};
   Future<void> _drainEdits() async {
-    final rows = await db.unsentEdits();
+    final rows = await live.unsentEdits();
     for (final r in rows) {
       final uid = r['msg_uid'] as String;
       final age = DateTime.now().millisecondsSinceEpoch - (r['at'] as int);
@@ -4710,7 +4749,7 @@ class AppState extends ChangeNotifier {
 
   final Set<String> _pinsInflight = {};
   Future<void> _drainPins() async {
-    for (final r in await db.unsentPins()) {
+    for (final r in await live.unsentPins()) {
       final uid = r['msg_uid'] as String;
       final age = DateTime.now().millisecondsSinceEpoch - (r['at'] as int);
       if (age < 45000 || _pinsInflight.contains(uid)) continue;
@@ -4728,9 +4767,11 @@ class AppState extends ChangeNotifier {
   // pin or unpin in a 1:1 chat, for both of us. ours is written first; the
   // frame queues like an edit does, so it survives tor being down.
   Future<void> pinInChat(String peer, String uid, bool pinned) async {
-    await db.setPinned(uid, pinned);
-    await db.queuePin(uid, peer, pinned);
+    await session.setPinned(uid, pinned);
+    await session.queuePin(uid, peer, pinned);
     notifyListeners();
+    // a quiet session keeps it queued here: nothing leaves
+    if (sessionQuiet) return;
     _pinsInflight.add(uid);
     unawaited(
       _sendPin(peer, uid, pinned).whenComplete(() => _pinsInflight.remove(uid)),
@@ -4745,7 +4786,7 @@ class AppState extends ChangeNotifier {
         sender: _mySender(),
       );
       final ok = await _sendOneEnvelope(peer, wrapped);
-      if (ok) await db.dropPin(uid, pinned);
+      if (ok) await live.dropPin(uid, pinned);
       return ok;
     } catch (e) {
       dlog('pin: $uid still stuck ($e)');
@@ -4763,7 +4804,7 @@ class AppState extends ChangeNotifier {
         sender: _mySender(),
       );
       final ok = await _sendOneEnvelope(peer, wrapped);
-      if (ok) await db.dropEdit(uid);
+      if (ok) await live.dropEdit(uid);
       return ok;
     } catch (e) {
       dlog('edit: $uid still stuck ($e)');
@@ -4814,7 +4855,7 @@ class AppState extends ChangeNotifier {
       // far side will drop.
       var row = r;
       if (groupId == null &&
-          redeliveryNeedsPow(r, backPaired: await db.isBackPaired(peer))) {
+          redeliveryNeedsPow(r, backPaired: await live.isBackPaired(peer))) {
         powBusy.value = DateTime.now();
         final int nonce;
         try {
@@ -4822,7 +4863,7 @@ class AppState extends ChangeNotifier {
         } finally {
           powBusy.value = null;
         }
-        await db.setPowNonce(uid, nonce);
+        await live.setPowNonce(uid, nonce);
         row = {...r, 'pow_nonce': nonce};
       }
       final wrapped = await wrapRedelivery(
@@ -4831,13 +4872,13 @@ class AppState extends ChangeNotifier {
         badge: await sharedBadge(),
       );
       if (groupId != null) {
-        final members = await db.getGroupMembers(groupId);
+        final members = await live.getGroupMembers(groupId);
         final results = await Future.wait([
           for (final m in members)
             if (m != myId) _sendGroupEnvelope(groupId, m, wrapped),
         ]);
         if (results.any((ok) => ok)) {
-          await db.markSent(uid);
+          await live.markSent(uid);
           notifyListeners();
         }
         return;
@@ -4845,7 +4886,7 @@ class AppState extends ChangeNotifier {
       final ok = await _sendOneEnvelope(peer, wrapped);
       if (ok) {
         dlog('OUTBOX: redelivered $uid');
-        await db.markSent(uid);
+        await live.markSent(uid);
         await _lightBurn(r, uid);
         // an open chat reloads and drops the waiting line
         _bumpChatRev(peer);
@@ -4861,7 +4902,7 @@ class AppState extends ChangeNotifier {
   Future<void> _lightBurn(Map<String, Object?> r, String uid) async {
     final secs = (r['burn_secs'] as num?)?.toInt();
     if (secs == null || r['burn_at'] != null) return;
-    await db.setMsgBurnAt(
+    await live.setMsgBurnAt(
       uid,
       DateTime.now().millisecondsSinceEpoch + secs * 1000,
     );
@@ -4894,7 +4935,7 @@ class AppState extends ChangeNotifier {
     }
     if (res == 'ok') {
       dlog('OUTBOX: group media redelivered $uid');
-      await db.markSent(uid);
+      await live.markSent(uid);
       await _lightBurn(r, uid);
       notifyListeners();
     } else {
@@ -4912,9 +4953,9 @@ class AppState extends ChangeNotifier {
   }) async {
     final f = File(path);
     if (!await f.exists()) return;
-    final contact = await db.getContact(peer);
+    final contact = await live.getContact(peer);
     if (contact == null) return;
-    final backPaired = await db.isBackPaired(peer);
+    final backPaired = await live.isBackPaired(peer);
     final fileName = isFile ? r['file_name'] as String? : null;
     final res = await sendChunkedMediaTo(
       peerId: peer,
@@ -4939,7 +4980,7 @@ class AppState extends ChangeNotifier {
     }
     if (res == 'ok') {
       dlog('OUTBOX: media redelivered $uid');
-      await db.markSent(uid);
+      await live.markSent(uid);
       await _lightBurn(r, uid);
       _bumpChatRev(peer);
       notifyListeners();
@@ -5026,7 +5067,7 @@ class AppState extends ChangeNotifier {
 
   Future<String> setHandleListing(bool on, {String name = ''}) async {
     final h = _myHandle;
-    if (h == null) return 'error: no handle';
+    if (h == null || sessionQuiet) return 'error: no handle';
     final n = on ? name.trim() : '';
     final r = await engine.handleListing(h, on, n);
     if (r != 'ok') return r;
@@ -5819,6 +5860,8 @@ class AppState extends ChangeNotifier {
   Future<void> checkHandle() => _repointHandle();
 
   Future<void> resetInviteAddress() async {
+    // the everyday invite's key and address: never from a quiet session
+    if (sessionQuiet) return;
     // the key first: moving only the relay address left every old link
     // able to open a session and dial the onion directly, which made the
     // promise on the button a lie
@@ -5873,7 +5916,7 @@ class AppState extends ChangeNotifier {
   Future<void> _fillSearch() async {
     try {
       while (!haloWiping) {
-        final p = await db.fillSearchIndex();
+        final p = await live.fillSearchIndex();
         searchFill.value = p;
         if (p.at >= p.to) break;
         await Future.delayed(const Duration(milliseconds: 60));
@@ -5913,14 +5956,14 @@ class AppState extends ChangeNotifier {
     // that flag lifts the sender-side cap, and a receipt lifting it let a
     // stranger write past the two the other side will keep.
     if (env.deliveredUid != null) {
-      await db.markDelivered(env.deliveredUid!);
+      await live.markDelivered(env.deliveredUid!);
       _bumpChatRev(senderHaloId);
       notifyListeners();
       return;
     }
     if (proofOfEngagement(env)) {
-      final was = await db.isBackPaired(senderHaloId);
-      await db.markBackPaired(senderHaloId);
+      final was = await live.isBackPaired(senderHaloId);
+      await live.markBackPaired(senderHaloId);
       if (!was) {
         // the door just opened: rows parked for them go now, not when the
         // backoff runs out
@@ -5929,7 +5972,7 @@ class AppState extends ChangeNotifier {
         unawaited(drainOutbox());
       }
     }
-    if (await db.isBlocked(senderHaloId)) return;
+    if (await live.isBlocked(senderHaloId)) return;
     // 1) group control
     if (env.groupControl != null) {
       await _applyGroupControl(senderHaloId, env);
@@ -5949,7 +5992,7 @@ class AppState extends ChangeNotifier {
     // the row lives in: the frame names a uid and nothing else, and it rides
     // in above the stranger gate like an edit does.
     if (env.pin != null) {
-      final where = await db.chatOf(env.pin!.targetUid);
+      final where = await live.chatOf(env.pin!.targetUid);
       final ok = pinAllowed(
         rowPeer: where?.$1,
         rowGroup: where?.$2,
@@ -5957,7 +6000,7 @@ class AppState extends ChangeNotifier {
         frameGroup: env.groupId,
         members: where?.$2 == null
             ? const []
-            : await db.getGroupMembers(where!.$2!),
+            : await live.getGroupMembers(where!.$2!),
       );
       if (!ok) {
         dlog('pin: dropped, sender is not in that chat');
@@ -5966,14 +6009,14 @@ class AppState extends ChangeNotifier {
       // the sender counts before it pins, but that is their word. held
       // here too, or a member could fill the list from afar.
       if (env.pin!.pinned) {
-        final held = await db.pinnedIn(peerId: where!.$1, groupId: where.$2);
+        final held = await live.pinnedIn(peerId: where!.$1, groupId: where.$2);
         if (held.length >= kMaxPins &&
             !held.any((r) => r['msg_uid'] == env.pin!.targetUid)) {
           dlog('pin: dropped, that chat is full');
           return;
         }
       }
-      await db.setPinned(env.pin!.targetUid, env.pin!.pinned);
+      await live.setPinned(env.pin!.targetUid, env.pin!.pinned);
       notifyListeners();
       return;
     }
@@ -5991,7 +6034,7 @@ class AppState extends ChangeNotifier {
       final r = env.reaction!;
       // same hole pins had: the frame names a uid and nothing else, so only
       // someone in the chat that row lives in gets to react to it
-      final where = await db.chatOf(r.targetUid);
+      final where = await live.chatOf(r.targetUid);
       final ok = pinAllowed(
         rowPeer: where?.$1,
         rowGroup: where?.$2,
@@ -5999,16 +6042,16 @@ class AppState extends ChangeNotifier {
         frameGroup: env.groupId,
         members: where?.$2 == null
             ? const []
-            : await db.getGroupMembers(where!.$2!),
+            : await live.getGroupMembers(where!.$2!),
       );
       if (!ok || r.emoji.length > 32) {
         dlog('reaction: dropped');
         return;
       }
       if (r.emoji.isEmpty) {
-        await db.removeReaction(r.targetUid, senderHaloId);
+        await live.removeReaction(r.targetUid, senderHaloId);
       } else {
-        await db.addReaction(r.targetUid, senderHaloId, r.emoji);
+        await live.addReaction(r.targetUid, senderHaloId, r.emoji);
       }
       return;
     }
@@ -6016,8 +6059,8 @@ class AppState extends ChangeNotifier {
     if (env.edit != null) {
       // only the author. these frames ride in above the stranger gate, so
       // anyone who can reach us could rewrite any row by uid otherwise.
-      if (await db.isTheirs(env.edit!.targetUid, senderHaloId)) {
-        await db.editMessage(env.edit!.targetUid, env.edit!.newText);
+      if (await live.isTheirs(env.edit!.targetUid, senderHaloId)) {
+        await live.editMessage(env.edit!.targetUid, env.edit!.newText);
         notifyListeners();
       }
       return;
@@ -6026,14 +6069,14 @@ class AppState extends ChangeNotifier {
     if (env.unsend != null) {
       // a row that exists must be theirs. a half-file with no row yet has
       // nothing to protect, and its sender stopping it is the point.
-      if (await db.messageExists(env.unsend!) &&
-          !await db.isTheirs(env.unsend!, senderHaloId)) {
+      if (await live.messageExists(env.unsend!) &&
+          !await live.isTheirs(env.unsend!, senderHaloId)) {
         return;
       }
-      await db.deleteMessage(env.unsend!);
+      await live.deleteMessage(env.unsend!);
       // a recall mid-transfer would otherwise leave a half-filled buffer and
       // a progress bar that never completes. drop both.
-      if (await db.dropMediaChunks(env.unsend!) > 0) {
+      if (await live.dropMediaChunks(env.unsend!) > 0) {
         incomingMediaDone(env.groupId != null ? env.groupId! : senderHaloId);
       }
       // refresh so it vanishes live if the peer's looking at the chat now,
@@ -6043,7 +6086,7 @@ class AppState extends ChangeNotifier {
     }
     // 3) data message - could be 1:1 or group
     final isGroup = env.groupId != null;
-    if (isGroup && !await db.groupExists(env.groupId!)) {
+    if (isGroup && !await live.groupExists(env.groupId!)) {
       // unknown group - drop. prevents random senders from injecting rows
       // into groups we never joined.
       dlog('dropping group msg for unknown group ${env.groupId}');
@@ -6053,15 +6096,15 @@ class AppState extends ChangeNotifier {
     // turning it off propagates. control frames and preview patches never
     // get here with a fresh row, so they can't wipe it.
     if (env.preview == null && env.msgUid != null) {
-      await db.setContactBadge(senderHaloId, env.supporterBadge);
+      await live.setContactBadge(senderHaloId, env.supporterBadge);
     }
     // roster self-heal: if the admin rode their full member list on this
     // message and our copy drifted, reconcile. only trust it from the real
     // admin so a member can't rewrite membership by spoofing a roster.
     if (isGroup && env.roster != null) {
-      final adminId = await db.groupAdminId(env.groupId!);
+      final adminId = await live.groupAdminId(env.groupId!);
       if (adminId != null && senderHaloId == adminId) {
-        await db.syncGroupMembers(env.groupId!, env.roster!);
+        await live.syncGroupMembers(env.groupId!, env.roster!);
         await _subscribeRoomMembers(env.groupId!);
         // create contact stubs for self-healed members so we can actually
         // encrypt to them - ids alone aren't enough, we need their keys.
@@ -6071,7 +6114,7 @@ class AppState extends ChangeNotifier {
             final o = p['o'];
             final x = p['x'];
             if (h != null && o != null && x != null && h != myId) {
-              await db.upsertContactStub(h, o, x);
+              await live.upsertContactStub(h, o, x);
             }
           }
           await refreshContacts();
@@ -6081,8 +6124,8 @@ class AppState extends ChangeNotifier {
     // stranger lock + proof-of-work gate (1:1 only, unaccepted senders).
     // a sender a friend introduced is not a stranger: no pow, no cap. they
     // still land in requests and still need an accept to get a reply.
-    if (!isGroup && !await db.isAccepted(senderHaloId)) {
-      final vouched = await db.isVouched(senderHaloId);
+    if (!isGroup && !await live.isAccepted(senderHaloId)) {
+      final vouched = await live.isVouched(senderHaloId);
       // pow: only the back-pair message (true first contact) must carry a
       // valid nonce - that's the one lane a cold stranger can arrive on. a
       // whisper through an existing session already paid pow once, and a
@@ -6099,7 +6142,7 @@ class AppState extends ChangeNotifier {
       }
       // 2-message cap: a stranger gets 2 into requests, then the chat is locked
       // until we accept them. drop past the cap - no receipt.
-      final have = vouched ? 0 : await db.countMessagesFrom(senderHaloId);
+      final have = vouched ? 0 : await live.countMessagesFrom(senderHaloId);
       if (strangerCapHolds(accepted: false, vouched: vouched, have: have)) {
         dlog('stranger lock: holding from $senderHaloId (cap hit)');
         throw const CapHeld();
@@ -6131,17 +6174,17 @@ class AppState extends ChangeNotifier {
       // again. buffering it began a second copy that could never finish,
       // and a banner counting towards nothing for a day. one receipt per
       // pass, on the first slice, so the sender learns it can stop.
-      if (await db.messageExists(mid)) {
+      if (await live.messageExists(mid)) {
         if (!isGroup && (env.chunkIndex ?? 0) == 0 && senderHaloId != myId) {
           unawaited(_sendDeliveryReceipt(senderHaloId, mid));
         }
-        unawaited(db.dropMediaWant(mid));
+        unawaited(live.dropMediaWant(mid));
         return;
       }
       // slices land on disk as they arrive, so closing the app mid-transfer
       // no longer throws the partial away. the count is over rows, which is
       // what makes a restart resume instead of start over.
-      final have = await db.putMediaChunk(
+      final have = await live.putMediaChunk(
         mid,
         env.chunkIndex ?? 0,
         slice,
@@ -6150,9 +6193,9 @@ class AppState extends ChangeNotifier {
             ? env.burnSeconds
             : null,
       );
-      chunkBurn = await db.mediaChunkBurn(mid) ?? chunkBurn;
+      chunkBurn = await live.mediaChunkBurn(mid) ?? chunkBurn;
       if (have < total && !isGroup && senderHaloId != myId) {
-        await db.noteMediaWant(mid, senderHaloId, total, env.canResend);
+        await live.noteMediaWant(mid, senderHaloId, total, env.canResend);
       }
       if (have < total) {
         // still waiting on more pieces - surface how far along we are. a
@@ -6174,7 +6217,7 @@ class AppState extends ChangeNotifier {
           final path = await saveSlices(
             out,
             total,
-            (i) => db.mediaChunkSlice(mid, i),
+            (i) => live.mediaChunkSlice(mid, i),
           );
           if (fileName != null) {
             filePath = path;
@@ -6186,8 +6229,8 @@ class AppState extends ChangeNotifier {
           unsaved = true;
         }
       }
-      await db.dropMediaChunks(mid);
-      unawaited(db.dropMediaWant(mid));
+      await live.dropMediaChunks(mid);
+      unawaited(live.dropMediaWant(mid));
       incomingMediaDone(progressKey);
       if (env.pvImg) return;
       // the slice in this envelope is on disk now; nothing below should
@@ -6228,7 +6271,8 @@ class AppState extends ChangeNotifier {
     // in claims the uid; any twin takes the update path instead of inserting.
     final uid = env.msgUid;
     if (uid != null) {
-      final known = _inflightUids.contains(uid) || await db.messageExists(uid);
+      final known =
+          _inflightUids.contains(uid) || await live.messageExists(uid);
       // a preview-only frame from an older client carries nothing we draw:
       // a sender never gets to put a title or an image on this screen
       final previewOnly =
@@ -6256,10 +6300,10 @@ class AppState extends ChangeNotifier {
     // rows refund the 2-message cap and can vanish before the request is even
     // seen. burn only counts once they're accepted.
     // a deleted (parked) peer writing again surfaces as a fresh request.
-    if (!isGroup) await db.unparkIfArchived(senderHaloId);
-    final senderAccepted = await db.isAccepted(senderHaloId);
+    if (!isGroup) await live.unparkIfArchived(senderHaloId);
+    final senderAccepted = await live.isAccepted(senderHaloId);
     final burnOk = isGroup || senderAccepted;
-    await db.saveMessage(
+    await live.saveMessage(
       senderHaloId,
       'in',
       bodyText,
@@ -6289,7 +6333,7 @@ class AppState extends ChangeNotifier {
     // remember the face they picked. cheap, and it arrives with every
     // message so it stays current if they change it.
     if (env.senderAvatar != null) {
-      await db.setContactAvatar(senderHaloId, env.senderAvatar);
+      await live.setContactAvatar(senderHaloId, env.senderAvatar);
     }
     // scam shield: a stranger's opener, once, on this phone only. in a
     // group that is any member you never added.
@@ -6316,19 +6360,19 @@ class AppState extends ChangeNotifier {
     // prefixes the sender. payload uses "group:<id>" so tap-to-open can
     // route to the right screen.
     if (!isGroup && currentChatPeer != senderHaloId) {
-      await db.bumpUnread(senderHaloId);
+      await live.bumpUnread(senderHaloId);
     } else if (!isGroup && currentChatPeer == senderHaloId) {
       // already reading this chat - clear any stale badge instead of leaving it.
-      await db.clearUnread(senderHaloId);
+      await live.clearUnread(senderHaloId);
     } else if (isGroup && env.groupId != null) {
       final openGroup = 'group:${env.groupId}';
       if (currentChatPeer != openGroup) {
-        await db.bumpGroupUnread(env.groupId!);
+        await live.bumpGroupUnread(env.groupId!);
         if (mentionsMe(env.message, myId)) {
-          await db.setGroupMentioned(env.groupId!);
+          await live.setGroupMentioned(env.groupId!);
         }
       } else {
-        await db.clearGroupUnread(env.groupId!);
+        await live.clearGroupUnread(env.groupId!);
       }
     }
     // a message landed: rebuild the contact list so the home shows the
@@ -6340,7 +6384,7 @@ class AppState extends ChangeNotifier {
     final String notifPayload;
     final bool suppress;
     if (isGroup) {
-      final g = await db.getGroup(env.groupId!);
+      final g = await live.getGroup(env.groupId!);
       notifTitle = (g?['name'] as String?) ?? l10n.appGroup2;
       final gBody = env.poll != null && PollSpec.parse(env.poll) != null
           ? l10n.pollPreview(env.message)
@@ -6362,7 +6406,7 @@ class AppState extends ChangeNotifier {
       notifBody = l10n.appSomeoneYouHaveNot;
       notifPayload = senderHaloId;
       suppress =
-          currentChatPeer == senderHaloId || await db.isMuted(senderHaloId);
+          currentChatPeer == senderHaloId || await live.isMuted(senderHaloId);
     } else {
       notifTitle = senderHaloId;
       notifBody = env.message.isNotEmpty
@@ -6370,7 +6414,7 @@ class AppState extends ChangeNotifier {
           : (fileName ?? (mediaPath != null ? l10n.appPhoto : env.message));
       notifPayload = senderHaloId;
       suppress =
-          currentChatPeer == senderHaloId || await db.isMuted(senderHaloId);
+          currentChatPeer == senderHaloId || await live.isMuted(senderHaloId);
     }
     if (!suppress) {
       await showMessageNotification(
@@ -6400,9 +6444,9 @@ class AppState extends ChangeNotifier {
   }) async {
     try {
       if (!await loadScamShieldOn()) return;
-      if (await db.countMessagesFrom(senderHaloId) != 1) return;
-      if (await db.shieldFor(senderHaloId) != null) return;
-      final rows = await db.contacts();
+      if (await live.countMessagesFrom(senderHaloId) != 1) return;
+      if (await live.shieldFor(senderHaloId) != null) return;
+      final rows = await live.contacts();
       final contacts = [
         for (final c in rows)
           ShieldContact(
@@ -6429,11 +6473,11 @@ class AppState extends ChangeNotifier {
       // a group: you chose to be there, so a clean line is clutter.
       if (!r.flagged) {
         if (group) return;
-        await db.setShield(senderHaloId, '', const []);
+        await live.setShield(senderHaloId, '', const []);
         notifyListeners();
         return;
       }
-      await db.setShield(senderHaloId, jsonEncode(r.lead!.toJson()), [
+      await live.setShield(senderHaloId, jsonEncode(r.lead!.toJson()), [
         for (final h in r.hits) h.toJson(),
       ]);
       _shieldRev++;
@@ -6449,20 +6493,20 @@ class AppState extends ChangeNotifier {
   // trust is ours alone: a card from anyone we have not accepted is dropped
   // unread, and so is one that names us or the sender.
   Future<void> _applyIntro(String senderHaloId, IntroFrame card) async {
-    if (!await db.isAccepted(senderHaloId)) return;
+    if (!await live.isAccepted(senderHaloId)) return;
     if (!await loadAcceptIntros()) {
       dlog('intro: dropped, introductions are off');
       return;
     }
     final h = card.haloId;
     if (h == myId || h == senderHaloId) return;
-    final existing = await db.getContact(h);
+    final existing = await live.getContact(h);
     if (existing != null && (existing['accepted'] as int? ?? 0) == 1) return;
-    await db.upsertContactStub(h, card.onion, card.xPub);
+    await live.upsertContactStub(h, card.onion, card.xPub);
     // the note is the introducer's one line about them. it lives on the
     // vouch, so two introducers can each say their piece.
-    await db.addVouch(h, senderHaloId, card.note);
-    if (card.avatar != null) await db.setContactAvatar(h, card.avatar);
+    await live.addVouch(h, senderHaloId, card.note);
+    if (card.avatar != null) await live.setContactAvatar(h, card.avatar);
     if (card.fc != null && card.fc!.isNotEmpty) {
       await rememberPeerFc(h, card.fc!);
     }
@@ -6492,18 +6536,18 @@ class AppState extends ChangeNotifier {
         if (gc.members == null || gc.name == null) return;
         // a room roster is only the creator's to send
         final isRoom = await _roomOf(groupId) != null;
-        if (isRoom && senderHaloId != await db.groupAdminId(groupId)) {
+        if (isRoom && senderHaloId != await live.groupAdminId(groupId)) {
           return;
         }
         // a group from someone we never let in is a stranger's message
         // with a roster attached. rooms are ours: we opened the link.
         if (!isRoom &&
-            !await db.isAccepted(senderHaloId) &&
-            !await db.isVouched(senderHaloId)) {
+            !await live.isAccepted(senderHaloId) &&
+            !await live.isVouched(senderHaloId)) {
           return;
         }
-        if (!await db.groupExists(groupId)) {
-          await db.createGroup(
+        if (!await live.groupExists(groupId)) {
+          await live.createGroup(
             groupId,
             gc.name!,
             gc.members!,
@@ -6513,8 +6557,8 @@ class AppState extends ChangeNotifier {
         } else {
           // already in the group - reconcile the member list so a re-add or
           // membership change syncs instead of leaving a stale count.
-          await db.syncGroupMembers(groupId, gc.members!);
-          await db.renameGroup(groupId, gc.name!);
+          await live.syncGroupMembers(groupId, gc.members!);
+          await live.renameGroup(groupId, gc.name!);
         }
         // auto-create contact stubs for unknown participants so we can
         // immediately send to them.
@@ -6524,7 +6568,7 @@ class AppState extends ChangeNotifier {
             final o = p['o'];
             final x = p['x'];
             if (h != null && o != null && x != null && h != myId) {
-              await db.upsertContactStub(h, o, x);
+              await live.upsertContactStub(h, o, x);
             }
           }
         }
@@ -6534,7 +6578,7 @@ class AppState extends ChangeNotifier {
       case 'add':
         if (gc.members == null) return;
         for (final h in gc.members!) {
-          await db.addGroupMember(groupId, h);
+          await live.addGroupMember(groupId, h);
         }
         if (gc.participants != null) {
           for (final p in gc.participants!) {
@@ -6542,7 +6586,7 @@ class AppState extends ChangeNotifier {
             final o = p['o'];
             final x = p['x'];
             if (h != null && o != null && x != null && h != myId) {
-              await db.upsertContactStub(h, o, x);
+              await live.upsertContactStub(h, o, x);
             }
           }
         }
@@ -6552,20 +6596,20 @@ class AppState extends ChangeNotifier {
       case 'remove':
         if (gc.members == null) return;
         for (final h in gc.members!) {
-          await db.removeGroupMember(groupId, h);
+          await live.removeGroupMember(groupId, h);
           // removed person drops the whole group locally so it leaves
           // their list and they stop multicasting into it.
-          if (h == myId) await db.deleteGroup(groupId);
+          if (h == myId) await live.deleteGroup(groupId);
         }
         await refreshGroups();
         break;
       case 'rename':
         if (gc.name == null) return;
-        await db.renameGroup(groupId, gc.name!);
+        await live.renameGroup(groupId, gc.name!);
         await refreshGroups();
         break;
       case 'leave':
-        await db.removeGroupMember(groupId, senderHaloId);
+        await live.removeGroupMember(groupId, senderHaloId);
         await refreshGroups();
         break;
     }
@@ -6582,6 +6626,20 @@ class AppState extends ChangeNotifier {
   bool movedReadOnly = false;
   late AppLinks _appLinks;
   String myId = '';
+  // who the screens show and write as: the everyday identity, or the
+  // decoy's own while a decoy session is open. the decoy's never goes
+  // online, so it is only ever shown
+  QuietIdentity? _quiet;
+  String get sessionId => sessionQuiet ? (_quiet?.id ?? '') : myId;
+  String get sessionOnion => sessionQuiet ? (_quiet?.onion ?? '') : myOnion;
+  String get sessionXPub =>
+      sessionQuiet ? (_quiet?.xPub ?? '') : engine.myXPubkey();
+  String get sessionEdPub =>
+      sessionQuiet ? (_quiet?.edPub ?? '') : engine.myEdPubkey();
+  // the link and QR code that say who you are
+  Future<String> sessionInvite() async => sessionQuiet
+      ? (_quiet?.invite ?? '')
+      : buildHaloUriV3(myId, myOnion, fcCounter);
   String myOnion = '';
   List<GroupPreview> groups = [];
   String myXPub = '';
@@ -6819,7 +6877,7 @@ class AppState extends ChangeNotifier {
     _decryptFails[h] = tries;
     if (tries >= 3) {
       _decryptFails.remove(h);
-      unawaited(db.markSeenLong(h));
+      unawaited(live.markSeenLong(h));
       dlog('$lane: buried undecryptable after $tries tries');
     } else if (_decryptFails.length > 512) {
       _decryptFails.clear();
@@ -6864,7 +6922,7 @@ class AppState extends ChangeNotifier {
       await signalSession.sessionStore.deleteSession(tempAddr);
       // persist contact + nostr sub. a stranger who back-paired to us lands
       // unaccepted - their message waits in requests until we accept.
-      await db.upsertContact(
+      await live.upsertContact(
         h,
         env.senderOnion ?? '',
         env.senderXPub ?? '',
@@ -6979,14 +7037,14 @@ class AppState extends ChangeNotifier {
     await Future.delayed(const Duration(milliseconds: 16));
     dlog('LAUNCH boot after yield');
     final docsDir = await getApplicationDocumentsDirectory();
-    final saved = await db.loadIdentity();
+    final saved = await live.loadIdentity();
     dlog('LAUNCH identity loaded');
     if (saved != null) {
       myId = engine.restoreIdentity(saved['ed_priv']!, saved['x_priv']!);
       restored = true;
     } else {
       myId = engine.generateIdentity();
-      await db.saveIdentity(myId, engine.myEdPrivkey(), engine.myXPrivkey());
+      await live.saveIdentity(myId, engine.myEdPrivkey(), engine.myXPrivkey());
     }
     myXPub = engine.myXPubkey();
     dlog('BOOT identity +${bsw.elapsedMilliseconds}ms');
@@ -7066,7 +7124,7 @@ class AppState extends ChangeNotifier {
     startOutboxDrain();
     await _loadBridges();
     // drop week-old partial transfers nobody ever completed.
-    unawaited(db.sweepMediaChunks());
+    unawaited(live.sweepMediaChunks());
     _deliveryMode = await loadDeliveryMode();
     // in front means resumed, not that a view exists: android hands every
     // engine an implicit view, window or not, so the old test called each
@@ -7183,8 +7241,8 @@ class AppState extends ChangeNotifier {
     Timer.periodic(const Duration(seconds: 5), (_) async {
       if (haloWiping) return;
       try {
-        final gone = await db.purgeExpired();
-        if (++sweeps % 12 == 0) await db.purgeStrayVotes();
+        final gone = await live.purgeExpired();
+        if (++sweeps % 12 == 0) await live.purgeStrayVotes();
         sweepFails = 0;
         // a row whose newest message just burned needs a new preview
         if (gone > 0) {
@@ -7227,11 +7285,11 @@ class AppState extends ChangeNotifier {
       // second message rides the pair address, and without this it waited
       // on the relay until we accepted them.
       final rows = bootSubscribeRows(
-        accepted: await db.contacts(),
-        vouchedPending: await db.vouchedPending(),
+        accepted: await live.contacts(),
+        vouchedPending: await live.vouchedPending(),
         pendingRequests: [
-          ...await db.pendingRequests(),
-          ...await db.parkedRequests(),
+          ...await live.pendingRequests(),
+          ...await live.parkedRequests(),
         ],
       );
       final fresh = <String, String>{};
@@ -7246,7 +7304,7 @@ class AppState extends ChangeNotifier {
         if (xPub == null || xPub.isEmpty) {
           xPub = await signalSession.peerXPubHex(haloId);
           if (xPub != null && xPub.isNotEmpty) {
-            await db.setContactXPub(haloId, xPub);
+            await live.setContactXPub(haloId, xPub);
           }
         }
         if (xPub == null || xPub.isEmpty) continue;
@@ -7284,7 +7342,7 @@ class AppState extends ChangeNotifier {
           // the first copy consumes the one-time prekey; a duplicate would
           // crash on it, so skip anything we've already handled.
           final h = sha256.convert(utf8.encode(cipher)).toString();
-          if (await db.alreadySeen(h)) continue;
+          if (await live.alreadySeen(h)) continue;
           if (cipher.startsWith('{')) {
             // ctl frames only ride the authenticated relay lane. raw json
             // in the onion inbox is junk - bury it without trial decrypts.
@@ -7300,7 +7358,7 @@ class AppState extends ChangeNotifier {
                 await _applyIncomingPayload(c.haloId, env);
               } on CapHeld {
                 // no relay to replay from: kept here, opened on accept
-                await db.holdCipher(c.haloId, cipher);
+                await live.holdCipher(c.haloId, cipher);
               }
               notifyListeners();
               handled = true;
@@ -7310,7 +7368,7 @@ class AppState extends ChangeNotifier {
           if (!handled) {
             // request contacts sit outside the accepted list - try them before
             // treating this as a brand new stranger.
-            for (final r in await db.pendingRequests()) {
+            for (final r in await live.pendingRequests()) {
               final id = r['halo_id'] as String;
               final plain = await signalDecrypt(id, cipher);
               if (plain != null) {
@@ -7318,7 +7376,7 @@ class AppState extends ChangeNotifier {
                 try {
                   await _applyIncomingPayload(id, env);
                 } on CapHeld {
-                  await db.holdCipher(id, cipher);
+                  await live.holdCipher(id, cipher);
                 }
                 notifyListeners();
                 handled = true;
@@ -7340,7 +7398,7 @@ class AppState extends ChangeNotifier {
               final plain = await signalDecrypt(addr, cipher);
               if (plain != null) {
                 final env = unwrapMessage(plain);
-                await db.upsertContact(
+                await live.upsertContact(
                   addr,
                   env.senderOnion ?? '',
                   env.senderXPub ?? '',
@@ -7355,7 +7413,7 @@ class AppState extends ChangeNotifier {
                   // session, so an honest re-add still lands.
                   await _applyIncomingPayload(addr, env, fromBackPair: true);
                 } on CapHeld {
-                  await db.holdCipher(addr, cipher);
+                  await live.holdCipher(addr, cipher);
                 }
                 await refreshContacts();
                 notifyListeners();
@@ -7376,7 +7434,7 @@ class AppState extends ChangeNotifier {
           // and the message is filed. an unhandled cipher stays un-seen so a
           // later pass (or the relay replay) can still land it.
           if (handled) {
-            await db.markSeen(h);
+            await live.markSeen(h);
           } else {
             _strikeUndecryptable(h, 'drain');
           }
@@ -7400,7 +7458,7 @@ class AppState extends ChangeNotifier {
         for (final m in msgs) {
           // dedup: skip a message we've already handled (see direct-onion note).
           final h = sha256.convert(utf8.encode(m.cipher)).toString();
-          if (await db.alreadySeen(h)) continue;
+          if (await live.alreadySeen(h)) continue;
           // a room frame: opened by the room key already, never signal
           if (m.peer.startsWith('room:') || m.peer.startsWith('roomfc:')) {
             try {
@@ -7408,7 +7466,7 @@ class AppState extends ChangeNotifier {
             } catch (e) {
               dlog('room frame: $e');
             }
-            await db.markSeen(h);
+            await live.markSeen(h);
             notifyListeners();
             continue;
           }
@@ -7446,7 +7504,7 @@ class AppState extends ChangeNotifier {
             }
           }
           if (wrapped == null) {
-            for (final r in await db.pendingRequests()) {
+            for (final r in await live.pendingRequests()) {
               final id = r['halo_id'] as String;
               final p = await signalDecrypt(id, m.cipher);
               if (p != null) {
@@ -7474,7 +7532,7 @@ class AppState extends ChangeNotifier {
                 haloId = addr;
                 if (!fcLane) _xPubToHaloId[m.peer] = addr;
                 final env0 = unwrapMessage(p);
-                await db.upsertContact(
+                await live.upsertContact(
                   addr,
                   env0.senderOnion ?? '',
                   env0.senderXPub ?? '',
@@ -7497,7 +7555,7 @@ class AppState extends ChangeNotifier {
               );
               if (paired != null) {
                 if (!fcLane) _xPubToHaloId[m.peer] = paired;
-                await db.markSeen(h);
+                await live.markSeen(h);
                 landed = true;
               }
             }
@@ -7511,7 +7569,7 @@ class AppState extends ChangeNotifier {
             // not seen: it stays on the relay and lands once we accept them
             continue;
           }
-          await db.markSeen(h);
+          await live.markSeen(h);
           notifyListeners();
         }
       } finally {
@@ -7562,7 +7620,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> _bootSignal() async {
     try {
-      final database = await db.open();
+      final database = await live.open();
       final xpb = _hexDecode(engine.myXPrivkey());
       await signalSession.bootstrap(
         database: database,
@@ -7591,7 +7649,7 @@ class AppState extends ChangeNotifier {
     // holds a live session and their next message is a plain whisper, which
     // back-pair (prekey-only) can't rebuild. keeping the session lets it
     // decrypt, find no contact, and land in requests like a new stranger.
-    await db.deleteConversation(haloId);
+    await session.deleteConversation(haloId);
     // keep _xPubToHaloId: the row and subscription both survive so they can
     // still reach us - they just land in requests instead of a live chat.
     await refreshContacts();
@@ -7599,37 +7657,42 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> archive(String haloId) async {
-    await db.setArchived(haloId, true);
+    await session.setArchived(haloId, true);
     await refreshContacts();
   }
 
   Future<void> unarchive(String haloId) async {
-    await db.setArchived(haloId, false);
+    await session.setArchived(haloId, false);
     await refreshContacts();
   }
 
   Future<void> mute(String haloId) async {
-    await db.setMuted(haloId, true);
+    await session.setMuted(haloId, true);
     await refreshContacts();
   }
 
   Future<void> unmute(String haloId) async {
-    await db.setMuted(haloId, false);
+    await session.setMuted(haloId, false);
     await refreshContacts();
   }
 
   Future<void> block(String haloId) async {
-    await db.setBlocked(haloId, true);
-    await db.dropHeld(haloId);
+    await session.setBlocked(haloId, true);
+    await session.dropHeld(haloId);
     await refreshContacts();
   }
 
   // what every accept does, from the chat or the requests list: listen for
   // them, tell them they are in, and open what the onion lane held back
   Future<void> afterAccept(String haloId) async {
+    // a quiet session has no one waiting and answers no one
+    if (sessionQuiet) {
+      await refreshContacts();
+      return;
+    }
     unawaited(subscribePeer(haloId));
     unawaited(sendAcceptAck(haloId));
-    for (final cipher in await db.takeHeld(haloId)) {
+    for (final cipher in await session.takeHeld(haloId)) {
       try {
         final plain = await signalDecrypt(haloId, cipher);
         if (plain == null) continue;
@@ -7644,12 +7707,12 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> unblock(String haloId) async {
-    await db.setBlocked(haloId, false);
+    await session.setBlocked(haloId, false);
     await refreshContacts();
   }
 
   Future<List<({String haloId, String? nickname})>> blockedContacts() async {
-    final rows = await db.contacts();
+    final rows = await session.contacts();
     return [
       for (final r in rows)
         if ((r['blocked'] as int? ?? 0) == 1)
@@ -7658,8 +7721,8 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> refreshContacts() async {
-    final rows = await db.contacts();
-    final lasts = await db.lastMessages();
+    final rows = await session.contacts();
+    final lasts = await session.lastMessages();
     final list = <ContactPreview>[];
     for (final r in rows) {
       final haloId = r['halo_id'] as String;
@@ -7716,18 +7779,18 @@ class AppState extends ChangeNotifier {
       return (b.when ?? DateTime(0)).compareTo(a.when ?? DateTime(0));
     });
     contacts = list;
-    pendingCount = await db.pendingRequestCount();
+    pendingCount = await session.pendingRequestCount();
     notifyListeners();
   }
 
   // ---- groups ----
 
   Future<void> refreshGroups() async {
-    final rows = await db.loadGroups();
+    final rows = await session.loadGroups();
     final list = <GroupPreview>[];
     for (final r in rows) {
       final gid = r['group_id'] as String;
-      final members = await db.getGroupMembers(gid);
+      final members = await session.getGroupMembers(gid);
       list.add(
         GroupPreview(
           groupId: gid,
@@ -7805,7 +7868,7 @@ class AppState extends ChangeNotifier {
   // prekey bundle. returns false if we never kept a bundle (paired by a path
   // that didn't save one) - caller then surfaces the original failure.
   Future<bool> _healSession(String memberId) async {
-    final c = await db.getContact(memberId);
+    final c = await live.getContact(memberId);
     final bundle = c?['peer_bundle'] as String?;
     if (bundle == null || bundle.isEmpty) return false;
     try {
@@ -7832,7 +7895,7 @@ class AppState extends ChangeNotifier {
     _pruneHeal();
     _bundleCtlSentAt[key] = now;
     try {
-      final contact = await db.getContact(memberId);
+      final contact = await live.getContact(memberId);
       if (contact == null) return;
       final xpub = contact['xpub'] as String? ?? '';
       if (xpub.isEmpty) return;
@@ -7862,7 +7925,7 @@ class AppState extends ChangeNotifier {
       final bundle = j['bundle'] as String?;
       final want = j['want'] == true;
       if (from == null || bundle == null) return;
-      final contact = await db.getContact(from);
+      final contact = await live.getContact(from);
       if (contact == null) return;
       if ((contact['xpub'] as String? ?? '') != peerXPub) {
         dlog('bundle ctl: xpub mismatch for $from, dropped');
@@ -7877,7 +7940,7 @@ class AppState extends ChangeNotifier {
         dlog('bundle ctl: identity mismatch for $from, dropped');
         return;
       }
-      await db.setPeerBundle(from, bundle);
+      await live.setPeerBundle(from, bundle);
       if (want || _healPending.remove(from) != null) {
         await signalSession.sessionStore.deleteSession(addr);
         await processPeerBundle(from, bundle);
@@ -7887,7 +7950,7 @@ class AppState extends ChangeNotifier {
     } catch (e) {
       dlog('bundle ctl handle failed: $e');
     } finally {
-      await db.markSeen(h);
+      await live.markSeen(h);
     }
   }
 
@@ -7899,7 +7962,7 @@ class AppState extends ChangeNotifier {
     // retry either. if this send fails the message is marked failed and the
     // user gets tap-to-retry, which is the right place for a human decision.
     try {
-      final contact = await db.getContact(memberId);
+      final contact = await live.getContact(memberId);
       if (contact == null) {
         dlog('send: no contact for $memberId');
         return false;
@@ -7914,7 +7977,7 @@ class AppState extends ChangeNotifier {
           contact['peer_bundle'] == null) {
         // an introduced peer whose bundle swap never landed: ask again, the
         // user's tap-to-retry goes through once it does.
-        if (await db.isVouched(memberId)) {
+        if (await live.isVouched(memberId)) {
           _wantHeal(memberId);
           unawaited(_sendBundleCtl(memberId, want: true));
         }
@@ -7938,7 +8001,7 @@ class AppState extends ChangeNotifier {
         }
         cipher = await signalEncrypt(memberId, wrapped);
       }
-      final backPaired = await db.isBackPaired(memberId);
+      final backPaired = await live.isBackPaired(memberId);
       final xpub = contact['xpub'] as String;
       final onion = contact['onion'] as String;
 
@@ -8015,7 +8078,7 @@ class AppState extends ChangeNotifier {
   // one contact's card, ready to hand to another. the row is the source:
   // v2 pairings keep the xpub in the signal store, so fall back to that.
   Future<IntroFrame?> _introCardFor(String haloId, String note) async {
-    final c = await db.getContact(haloId);
+    final c = await live.getContact(haloId);
     if (c == null || (c['accepted'] as int? ?? 0) != 1) return null;
     var x = (c['xpub'] as String?) ?? '';
     if (x.isEmpty) x = await signalSession.peerXPubHex(haloId) ?? '';
@@ -8038,6 +8101,8 @@ class AppState extends ChangeNotifier {
     String second, {
     String note = '',
   }) async {
+    // a quiet session sends nothing, and knows no one to introduce
+    if (sessionQuiet) return (toFirst: false, toSecond: false);
     final n = note.trim();
     final cardOfFirst = await _introCardFor(first, n);
     final cardOfSecond = await _introCardFor(second, n);
@@ -8064,9 +8129,10 @@ class AppState extends ChangeNotifier {
 
   // what a group row says about being a room, or null for a plain group
   Future<({String priv, String pub, int expiresAt})?> _roomOf(
-    String groupId,
-  ) async {
-    final g = await db.getGroup(groupId);
+    String groupId, [
+    HaloDb? on,
+  ]) async {
+    final g = await (on ?? live).getGroup(groupId);
     final priv = g?['room_priv'] as String?;
     final pub = g?['room_pub'] as String?;
     if (priv == null || pub == null) return null;
@@ -8151,7 +8217,7 @@ class AppState extends ChangeNotifier {
     final fc = engine.roomFcPk(k.priv);
     if (fc.startsWith('error')) throw StateError(fc);
     final groupId = newMsgUid();
-    await db.createRoom(
+    await session.createRoom(
       groupId: groupId,
       name: name.trim().isEmpty ? 'room' : name.trim(),
       priv: k.priv,
@@ -8162,15 +8228,18 @@ class AppState extends ChangeNotifier {
       cap: cap,
       members: [k.pub],
     );
-    engine.roomSubscribeFcBg(k.priv);
-    _roomSubs[k.pub] = {};
-    _armRoomTimer();
+    // a quiet session keeps the room on this phone: nobody is listened for
+    if (!sessionQuiet) {
+      engine.roomSubscribeFcBg(k.priv);
+      _roomSubs[k.pub] = {};
+      _armRoomTimer();
+    }
     await refreshGroups();
     return groupId;
   }
 
   Future<RoomLink?> roomLinkFor(String groupId) async {
-    final g = await db.getGroup(groupId);
+    final g = await session.getGroup(groupId);
     if (g == null || g['room_pub'] == null) return null;
     return RoomLink(
       roomId: groupId,
@@ -8188,12 +8257,12 @@ class AppState extends ChangeNotifier {
   Future<String> joinRoom(RoomLink link) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     if (link.expiresAt <= now) return l10n.appThisRoomHasAlready;
-    if (await db.groupExists(link.roomId)) {
+    if (await session.groupExists(link.roomId)) {
       return l10n.appYouAreAlreadyIn;
     }
     final k = engine.roomKeygen();
     if (k == null) return l10n.appCouldNotMakeA;
-    await db.createRoom(
+    await session.createRoom(
       groupId: link.roomId,
       name: link.name,
       priv: k.priv,
@@ -8204,6 +8273,11 @@ class AppState extends ChangeNotifier {
       cap: link.cap,
       members: [link.creatorPub, k.pub],
     );
+    // a quiet session keeps the room on this phone: the hello never leaves
+    if (sessionQuiet) {
+      await refreshGroups();
+      return l10n.appJoinedButTheCreator(link.name);
+    }
     _roomSubs[k.pub] = {};
     await _subscribeRoomMembers(link.roomId);
     _armRoomTimer();
@@ -8237,7 +8311,7 @@ class AppState extends ChangeNotifier {
     final room = await _roomOf(groupId);
     if (room == null) return;
     final have = _roomSubs.putIfAbsent(room.pub, () => {});
-    for (final m in await db.getGroupMembers(groupId)) {
+    for (final m in await live.getGroupMembers(groupId)) {
       if (m == room.pub || have.contains(m)) continue;
       have.add(m);
       engine.roomSubscribeBg(room.priv, m);
@@ -8248,7 +8322,7 @@ class AppState extends ChangeNotifier {
   // live room, only under the cap. then everyone gets the new roster and
   // subscribes to the newcomer off it.
   Future<void> _roomJoin(String roomPub, UnwrappedMessage env) async {
-    final g = await db.roomByPub(roomPub);
+    final g = await live.roomByPub(roomPub);
     if (g == null || env.groupId != g['group_id']) return;
     if ((g['is_admin'] as int? ?? 0) != 1) return;
     if ((g['expires_at'] as int) <= DateTime.now().millisecondsSinceEpoch) {
@@ -8257,17 +8331,17 @@ class AppState extends ChangeNotifier {
     final who = env.senderHaloId;
     if (who == null || !looksLikeRoomKey(who) || who == roomPub) return;
     final groupId = g['group_id'] as String;
-    final members = await db.getGroupMembers(groupId);
+    final members = await live.getGroupMembers(groupId);
     final cap = g['member_cap'] as int?;
     if (!members.contains(who)) {
       if (cap != null && members.length >= cap) {
         dlog('room: full, ignoring join');
         return;
       }
-      await db.addGroupMember(groupId, who);
+      await live.addGroupMember(groupId, who);
     }
     await _subscribeRoomMembers(groupId);
-    final all = await db.getGroupMembers(groupId);
+    final all = await live.getGroupMembers(groupId);
     await _sendControlToGroup(
       groupId,
       GroupControl(type: 'create', name: g['name'] as String, members: all),
@@ -8283,7 +8357,7 @@ class AppState extends ChangeNotifier {
     final parts = tag.split(':');
     if (parts.length < 2) return;
     final roomPub = parts[1];
-    final g = await db.roomByPub(roomPub);
+    final g = await live.roomByPub(roomPub);
     if (g == null) return;
     final groupId = g['group_id'] as String;
     if ((g['expires_at'] as int) <= DateTime.now().millisecondsSinceEpoch) {
@@ -8299,7 +8373,7 @@ class AppState extends ChangeNotifier {
     if (parts.length < 3) return;
     final from = parts[2];
     if (env.senderHaloId != from) return;
-    if (!(await db.getGroupMembers(groupId)).contains(from)) {
+    if (!(await live.getGroupMembers(groupId)).contains(from)) {
       dlog('room: frame from a key not in the roster, dropped');
       return;
     }
@@ -8315,19 +8389,24 @@ class AppState extends ChangeNotifier {
   // subscriptions. the wipe goes through the same shred the burn timer
   // uses. a gone room is not a notification, just a line in the list for
   // a moment if someone is looking.
-  Future<void> _destroyRoom(String groupId, {bool expired = false}) async {
-    final g = await db.getGroup(groupId);
+  Future<void> _destroyRoom(
+    String groupId, {
+    bool expired = false,
+    HaloDb? on,
+  }) async {
+    final d = on ?? live;
+    final g = await d.getGroup(groupId);
     if (g == null) return;
     final pub = g['room_pub'] as String?;
-    if (pub != null) {
+    if (pub != null && !d.container.quiet) {
       engine.roomUnsubscribeBg(pub);
       _roomSubs.remove(pub);
     }
-    for (final path in await db.groupFilePaths(groupId)) {
+    for (final path in await d.groupFilePaths(groupId)) {
       await shredFile(path);
     }
-    await db.deleteGroupMessages(groupId);
-    await db.deleteGroup(groupId);
+    await d.deleteGroupMessages(groupId);
+    await d.deleteGroup(groupId);
     if (expired) {
       expiredRoomName = g['name'] as String?;
       Timer(const Duration(seconds: 6), () {
@@ -8340,6 +8419,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> leaveRoom(String groupId) async {
+    if (sessionQuiet) return _destroyRoom(groupId, on: session);
     try {
       await _sendControlToGroup(groupId, const GroupControl(type: 'leave'));
     } catch (e) {
@@ -8350,7 +8430,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> _sweepRooms() async {
     final now = DateTime.now().millisecondsSinceEpoch;
-    for (final g in await db.expiredRooms(now)) {
+    for (final g in await live.expiredRooms(now)) {
       await _destroyRoom(g['group_id'] as String, expired: true);
     }
   }
@@ -8366,7 +8446,7 @@ class AppState extends ChangeNotifier {
   // on boot: drop what ended while we were away, then listen to what lives
   Future<void> _subscribeRooms() async {
     await _sweepRooms();
-    final rooms = await db.rooms();
+    final rooms = await live.rooms();
     for (final g in rooms) {
       final gid = g['group_id'] as String;
       final priv = g['room_priv'] as String;
@@ -8386,7 +8466,7 @@ class AppState extends ChangeNotifier {
       groupControl: gc,
       sender: _mySender(),
     );
-    final members = await db.getGroupMembers(groupId);
+    final members = await live.getGroupMembers(groupId);
     await Future.wait([
       for (final memberId in members)
         if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
@@ -8407,7 +8487,7 @@ class AppState extends ChangeNotifier {
   }) async {
     // a retry of a poll passes only its uid: the options come off the row
     if (poll == null && msgUid != null) {
-      poll = (await db.pollRow(msgUid))?.spec;
+      poll = (await session.pollRow(msgUid))?.spec;
     }
     msgUid ??= newMsgUid();
     final burnAt = (burnSeconds != null && burnSeconds > 0)
@@ -8417,9 +8497,9 @@ class AppState extends ChangeNotifier {
     // peer_id = self so we render it as outgoing. a RETRY passes the same
     // uid - inserting again duplicated the row and blew up every uid-keyed
     // widget key. one row per uid, ever.
-    if (!await db.messageExists(msgUid)) {
-      await db.saveMessage(
-        myId,
+    if (!await session.messageExists(msgUid)) {
+      await session.saveMessage(
+        sessionId,
         'out',
         plain,
         groupId: groupId,
@@ -8433,10 +8513,15 @@ class AppState extends ChangeNotifier {
         poll: poll?.toRow(),
       );
     }
-    final members = await db.getGroupMembers(groupId);
+    // a quiet session keeps the row here, unsent: nothing leaves
+    if (sessionQuiet) {
+      notifyListeners();
+      return false;
+    }
+    final members = await session.getGroupMembers(groupId);
     // if we are the group admin, ride the full roster on the message so any
     // member whose list drifted self-heals the moment they receive it.
-    final adminId = await db.groupAdminId(groupId);
+    final adminId = await session.groupAdminId(groupId);
     final amAdmin = adminId == myId;
     // ride the member key bundles too, not just ids - a self-healed member the
     // receiver had no contact for would otherwise throw InvalidKeyException on
@@ -8463,7 +8548,7 @@ class AppState extends ChangeNotifier {
     final anyOk = results.any((ok) => ok);
     // the tick is earned, not assumed: only a delivery to at least one
     // member flips the row to sent.
-    if (anyOk) await db.markSent(msgUid);
+    if (anyOk) await session.markSent(msgUid);
     notifyListeners();
     return anyOk;
   }
@@ -8485,6 +8570,11 @@ class AppState extends ChangeNotifier {
     // drainer picks up any row older than 45 s, and a video to a group is
     // still leaving long after that: both then sent the whole file.
     if (!mediaInflight.add(msgUid)) return 'busy';
+    // a quiet session keeps the row here, unsent: nothing leaves
+    if (sessionQuiet) {
+      mediaInflight.remove(msgUid);
+      return 'error: quiet';
+    }
     try {
       return await _sendMediaToGroupInner(
         groupId,
@@ -8525,8 +8615,8 @@ class AppState extends ChangeNotifier {
       return 'error: read';
     }
     if (total > 1) mediaProgressStart(msgUid, chatKey: groupId);
-    final members = await db.getGroupMembers(groupId);
-    final adminId = await db.groupAdminId(groupId);
+    final members = await live.getGroupMembers(groupId);
+    final adminId = await live.groupAdminId(groupId);
     final amAdmin = adminId == myId;
     final rosterParts = amAdmin ? await _buildParticipants(members) : null;
     Future<bool> sendChunk(int i) async {
@@ -8608,15 +8698,20 @@ class AppState extends ChangeNotifier {
     String targetMsgUid,
     bool pinned,
   ) async {
-    await db.setPinned(targetMsgUid, pinned);
+    await session.setPinned(targetMsgUid, pinned);
     notifyListeners();
+    // a quiet session keeps it on this phone: nothing leaves
+    if (sessionQuiet) {
+      notifyListeners();
+      return;
+    }
     final wrapped = await wrapMessage(
       '',
       groupId: groupId,
       pin: PinFrame(targetUid: targetMsgUid, pinned: pinned),
       sender: _mySender(),
     );
-    final members = await db.getGroupMembers(groupId);
+    final members = await session.getGroupMembers(groupId);
     await Future.wait([
       for (final memberId in members)
         if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
@@ -8630,19 +8725,24 @@ class AppState extends ChangeNotifier {
     String emoji,
   ) async {
     if (emoji.isEmpty) {
-      await db.removeReaction(targetMsgUid, '');
+      await session.removeReaction(targetMsgUid, '');
     } else {
-      await db.addReaction(targetMsgUid, '', emoji);
+      await session.addReaction(targetMsgUid, '', emoji);
     }
     // show it instantly - don't wait on the tor multicast to update the ui.
     notifyListeners();
+    // a quiet session keeps it on this phone: nothing leaves
+    if (sessionQuiet) {
+      notifyListeners();
+      return;
+    }
     final wrapped = await wrapMessage(
       '',
       groupId: groupId,
       reaction: ReactionFrame(targetUid: targetMsgUid, emoji: emoji),
       sender: _mySender(),
     );
-    final members = await db.getGroupMembers(groupId);
+    final members = await session.getGroupMembers(groupId);
     // fan out in the background; the reaction is already on screen.
     unawaited(
       Future.wait([
@@ -8658,7 +8758,7 @@ class AppState extends ChangeNotifier {
   // kryfo id: a vote, or the final count a close carries, would otherwise
   // put the real id in front of the room.
   Future<String> meIn(String groupId) async =>
-      (await _roomOf(groupId))?.pub ?? myId;
+      (await _roomOf(groupId, session))?.pub ?? sessionId;
 
   // a vote goes out like a reaction: shown here at once, then to every
   // member. choosing nothing takes the vote back.
@@ -8667,24 +8767,29 @@ class AppState extends ChangeNotifier {
     String pollUid,
     List<int> choices,
   ) async {
-    final row = await db.pollRow(pollUid);
+    final row = await session.pollRow(pollUid);
     if (row == null || row.spec.closed || row.groupId != groupId) return;
     final me = await meIn(groupId);
     final picks = cleanChoices(choices, row.spec);
     final seq = nextVoteSeq(
-      await db.pollVoteSeq(pollUid, me),
+      await session.pollVoteSeq(pollUid, me),
       DateTime.now().millisecondsSinceEpoch,
     );
-    await db.putPollVote(pollUid, me, groupId, picks, seq);
+    await session.putPollVote(pollUid, me, groupId, picks, seq);
     _bumpChatRev('group:$groupId');
     notifyListeners();
+    // a quiet session keeps it on this phone: nothing leaves
+    if (sessionQuiet) {
+      notifyListeners();
+      return;
+    }
     final wrapped = await wrapMessage(
       '',
       groupId: groupId,
       vote: VoteFrame(pollUid: pollUid, choices: picks, seq: seq),
       sender: _mySender(),
     );
-    final members = await db.getGroupMembers(groupId);
+    final members = await session.getGroupMembers(groupId);
     unawaited(
       Future.wait([
         for (final m in members)
@@ -8696,19 +8801,24 @@ class AppState extends ChangeNotifier {
   // only the poll's creator closes it. the close carries the votes as this
   // phone holds them, and every member takes those as the final result.
   Future<void> closePoll(String groupId, String pollUid) async {
-    final row = await db.pollRow(pollUid);
+    final row = await session.pollRow(pollUid);
     if (row == null || !row.mine || row.spec.closed || row.groupId != groupId) {
       return;
     }
-    final held = (await db.pollVotesFor([pollUid]))[pollUid] ?? const {};
+    final held = (await session.pollVotesFor([pollUid]))[pollUid] ?? const {};
     final finals = <String, List<int>>{};
     for (final e in held.entries) {
       final picks = cleanChoices(e.value.choices, row.spec);
       if (picks.isNotEmpty) finals[e.key] = picks;
     }
-    await db.closePollRow(pollUid, row.spec, finals, groupId);
+    await session.closePollRow(pollUid, row.spec, finals, groupId);
     _bumpChatRev('group:$groupId');
     notifyListeners();
+    // a quiet session keeps it on this phone: nothing leaves
+    if (sessionQuiet) {
+      notifyListeners();
+      return;
+    }
     final wrapped = await wrapMessage(
       '',
       groupId: groupId,
@@ -8716,7 +8826,7 @@ class AppState extends ChangeNotifier {
       sender: _mySender(),
     );
     final me = await meIn(groupId);
-    final members = await db.getGroupMembers(groupId);
+    final members = await session.getGroupMembers(groupId);
     await Future.wait([
       for (final m in members)
         if (m != myId && m != me) _sendGroupEnvelope(groupId, m, wrapped),
@@ -8729,12 +8839,12 @@ class AppState extends ChangeNotifier {
   Future<void> _applyVote(String sender, UnwrappedMessage env) async {
     final v = env.vote!;
     final gid = env.groupId;
-    if (gid == null || !await db.groupExists(gid)) return;
-    final row = await db.pollRow(v.pollUid);
+    if (gid == null || !await live.groupExists(gid)) return;
+    final row = await live.pollRow(v.pollUid);
     final fate = voteFate(
-      member: (await db.getGroupMembers(gid)).contains(sender),
+      member: (await live.getGroupMembers(gid)).contains(sender),
       pollHere: row != null,
-      pollGone: row == null && await db.pollGone(v.pollUid),
+      pollGone: row == null && await live.pollGone(v.pollUid),
       sameChat: row?.groupId == gid,
       closed: row?.spec.closed ?? false,
     );
@@ -8746,10 +8856,10 @@ class AppState extends ChangeNotifier {
           for (final c in v.choices)
             if (c is int && c >= 0 && c < kPollMaxOptions) c,
         }.toList()..sort();
-        await db.putPollVote(v.pollUid, sender, gid, raw, v.seq);
+        await live.putPollVote(v.pollUid, sender, gid, raw, v.seq);
       case VoteFate.count:
         final picks = cleanChoices(v.choices, row!.spec);
-        if (await db.putPollVote(v.pollUid, sender, gid, picks, v.seq)) {
+        if (await live.putPollVote(v.pollUid, sender, gid, picks, v.seq)) {
           notifyListeners();
         }
     }
@@ -8757,17 +8867,17 @@ class AppState extends ChangeNotifier {
 
   Future<void> _applyPollClose(String sender, UnwrappedMessage env) async {
     final c = env.pollClose!;
-    final row = await db.pollRow(c.pollUid);
+    final row = await live.pollRow(c.pollUid);
     if (!closeAccepted(
       pollHere: row != null,
-      fromCreator: row != null && await db.isTheirs(c.pollUid, sender),
+      fromCreator: row != null && await live.isTheirs(c.pollUid, sender),
       sameChat: row?.groupId == env.groupId,
       closed: row?.spec.closed ?? false,
     )) {
       dlog('poll close: dropped');
       return;
     }
-    await db.closePollRow(
+    await live.closePollRow(
       c.pollUid,
       row!.spec,
       cleanFinal(c.finalVotes, row.spec),
@@ -8779,14 +8889,19 @@ class AppState extends ChangeNotifier {
   // recall a group message everywhere: delete locally, tell every member.
   // receiver handles 'un' group-agnostically (deletes by uid).
   Future<void> unsendInGroup(String groupId, String targetMsgUid) async {
-    await db.deleteMessage(targetMsgUid);
+    await session.deleteMessage(targetMsgUid);
+    // a quiet session keeps it on this phone: nothing leaves
+    if (sessionQuiet) {
+      notifyListeners();
+      return;
+    }
     final wrapped = await wrapMessage(
       '',
       groupId: groupId,
       unsend: targetMsgUid,
       sender: _mySender(),
     );
-    final members = await db.getGroupMembers(groupId);
+    final members = await session.getGroupMembers(groupId);
     await Future.wait([
       for (final memberId in members)
         if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
@@ -8800,14 +8915,19 @@ class AppState extends ChangeNotifier {
     String targetMsgUid,
     String newText,
   ) async {
-    await db.editMessage(targetMsgUid, newText);
+    await session.editMessage(targetMsgUid, newText);
+    // a quiet session keeps it on this phone: nothing leaves
+    if (sessionQuiet) {
+      notifyListeners();
+      return;
+    }
     final wrapped = await wrapMessage(
       '',
       groupId: groupId,
       edit: EditFrame(targetUid: targetMsgUid, newText: newText),
       sender: _mySender(),
     );
-    final members = await db.getGroupMembers(groupId);
+    final members = await session.getGroupMembers(groupId);
     await Future.wait([
       for (final memberId in members)
         if (memberId != myId) _sendGroupEnvelope(groupId, memberId, wrapped),
@@ -8830,7 +8950,7 @@ class AppState extends ChangeNotifier {
       if (h == myId) {
         out.add({'h': myId, 'o': myOnion, 'x': engine.myXPubkey()});
       } else {
-        final c = await db.getContact(h);
+        final c = await session.getContact(h);
         if (c != null) {
           out.add({
             'h': h,
@@ -8855,11 +8975,22 @@ class AppState extends ChangeNotifier {
     List<String> memberHaloIds,
   ) async {
     final groupId = newMsgUid();
-    final full = [myId, ...memberHaloIds];
+    final full = [sessionId, ...memberHaloIds];
     if (full.length > kGroupMemberCap) {
       throw StateError('a group can hold up to $kGroupMemberCap people.');
     }
-    await db.createGroup(groupId, name, full, isAdmin: true, adminId: myId);
+    await session.createGroup(
+      groupId,
+      name,
+      full,
+      isAdmin: true,
+      adminId: sessionId,
+    );
+    // a quiet session keeps it on this phone: nothing leaves
+    if (sessionQuiet) {
+      await refreshGroups();
+      return groupId;
+    }
     final participants = await _buildParticipants(full);
     final gc = GroupControl(
       type: 'create',
@@ -8879,15 +9010,20 @@ class AppState extends ChangeNotifier {
     String groupId,
     List<String> newHaloIds,
   ) async {
-    final group = await db.getGroup(groupId);
+    final group = await session.getGroup(groupId);
     if (group == null) return;
     if ((group['is_admin'] as int? ?? 0) != 1) return;
-    final existingMembers = await db.getGroupMembers(groupId);
+    final existingMembers = await session.getGroupMembers(groupId);
     if (existingMembers.length + newHaloIds.length > kGroupMemberCap) {
       throw StateError('a group can hold up to $kGroupMemberCap people.');
     }
     for (final h in newHaloIds) {
-      await db.addGroupMember(groupId, h);
+      await session.addGroupMember(groupId, h);
+    }
+    // a quiet session keeps it on this phone: nothing leaves
+    if (sessionQuiet) {
+      await refreshGroups();
+      return;
     }
     final newParticipants = await _buildParticipants(newHaloIds);
     final addGc = GroupControl(
@@ -8905,7 +9041,7 @@ class AppState extends ChangeNotifier {
       );
       await _sendGroupEnvelope(groupId, memberId, wrapped);
     }
-    final allMembers = await db.getGroupMembers(groupId);
+    final allMembers = await session.getGroupMembers(groupId);
     final allParticipants = await _buildParticipants(allMembers);
     final createGc = GroupControl(
       type: 'create',
@@ -8931,12 +9067,17 @@ class AppState extends ChangeNotifier {
     String groupId,
     List<String> removedHaloIds,
   ) async {
-    final group = await db.getGroup(groupId);
+    final group = await session.getGroup(groupId);
     if (group == null) return;
     if ((group['is_admin'] as int? ?? 0) != 1) return;
-    final allMembers = await db.getGroupMembers(groupId);
+    final allMembers = await session.getGroupMembers(groupId);
     for (final h in removedHaloIds) {
-      await db.removeGroupMember(groupId, h);
+      await session.removeGroupMember(groupId, h);
+    }
+    // a quiet session keeps it on this phone: nothing leaves
+    if (sessionQuiet) {
+      await refreshGroups();
+      return;
     }
     final gc = GroupControl(type: 'remove', members: removedHaloIds);
     for (final memberId in allMembers) {
@@ -8953,28 +9094,32 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> renameGroupAndAnnounce(String groupId, String newName) async {
-    final group = await db.getGroup(groupId);
+    final group = await session.getGroup(groupId);
     if (group == null) return;
     if ((group['is_admin'] as int? ?? 0) != 1) return;
-    await db.renameGroup(groupId, newName);
+    await session.renameGroup(groupId, newName);
     final gc = GroupControl(type: 'rename', name: newName);
-    await _sendControlToGroup(groupId, gc);
+    // a quiet session keeps it on this phone: nothing leaves
+    if (!sessionQuiet) await _sendControlToGroup(groupId, gc);
     await refreshGroups();
   }
 
   // anyone can leave. tells the remaining members so they can drop us from
   // their copies. caller deletes the group locally.
   Future<void> leaveGroupAndAnnounce(String groupId) async {
-    if (await _roomOf(groupId) != null) return leaveRoom(groupId);
+    if (await _roomOf(groupId, session) != null) return leaveRoom(groupId);
     final gc = GroupControl(type: 'leave');
-    await _sendControlToGroup(groupId, gc);
-    await db.deleteGroup(groupId);
+    // a quiet session keeps it on this phone: nothing leaves
+    if (!sessionQuiet) await _sendControlToGroup(groupId, gc);
+    await session.deleteGroup(groupId);
     await refreshGroups();
   }
 
+  // the engine's own identity, which only the everyday container holds
   Future<void> regenerateIdentity() async {
+    if (sessionQuiet) return;
     myId = engine.generateIdentity();
-    await db.saveIdentity(myId, engine.myEdPrivkey(), engine.myXPrivkey());
+    await live.saveIdentity(myId, engine.myEdPrivkey(), engine.myXPrivkey());
     myXPub = engine.myXPubkey();
     restored = false;
     notifyListeners();
@@ -8984,11 +9129,11 @@ class AppState extends ChangeNotifier {
     // the row xpub is set by v1 pairing and is there before any session
     // exists; v2 bundle pairing leaves it empty and puts the key in the
     // signal store instead. try both, backfill the row when we learn it.
-    var xPub = await db.contactXPub(haloId);
+    var xPub = await live.contactXPub(haloId);
     if (xPub == null || xPub.isEmpty) {
       xPub = await signalSession.peerXPubHex(haloId);
       if (xPub != null && xPub.isNotEmpty) {
-        await db.setContactXPub(haloId, xPub);
+        await live.setContactXPub(haloId, xPub);
       }
     }
     if (xPub == null || xPub.isEmpty) return;
@@ -9251,7 +9396,7 @@ class _RootShellState extends State<RootShell> {
       onOpenDev: () => _open(const DevScreen()),
       onOpenSettingsDirect: () => _open(SettingsScreen()),
       onOpenChat: (id) async {
-        final rows = await db.contacts();
+        final rows = await session.contacts();
         final matches = rows.where((r) => r['halo_id'] == id).toList();
         if (matches.isEmpty || !context.mounted) return;
         final row = matches.first;
@@ -9540,7 +9685,7 @@ class _DevScreenState extends State<DevScreen> {
   }
 
   Future<void> _loadLastPeer() async {
-    final rows = await db.contacts();
+    final rows = await session.contacts();
     if (rows.isEmpty) return;
     setState(() {
       _peerId = rows.first['halo_id'] as String;
@@ -9579,7 +9724,7 @@ class _DevScreenState extends State<DevScreen> {
       for (final r in msgs) {
         final plain = engine.decryptFrom(_peerXPub, r);
         if (!plain.startsWith('error')) {
-          db.saveMessage(_peerId, 'in', plain);
+          session.saveMessage(_peerId, 'in', plain);
         }
         setState(() {});
       }
@@ -9600,7 +9745,7 @@ class _DevScreenState extends State<DevScreen> {
     }
     final result = await Future(() => engine.sendTo(_peerOnion, cipher));
     if (result == 'ok') {
-      await db.saveMessage(_peerId, 'out', plain);
+      await session.saveMessage(_peerId, 'out', plain);
     }
     setState(() => _status = result);
   }

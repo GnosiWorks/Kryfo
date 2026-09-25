@@ -12,7 +12,7 @@ import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import 'package:share_plus/share_plus.dart';
 import '../lock_state.dart';
-import '../main.dart' show appState, db;
+import '../main.dart' show appState, session;
 import '../widgets/motion.dart';
 import '../widgets/kryfo_avatar.dart';
 import 'chat_screen.dart';
@@ -134,7 +134,7 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet>
       ),
     );
     if (who == null) return;
-    final row = await db.getContact(who);
+    final row = await session.getContact(who);
     if (row == null) return;
     nav.pop(); // the link sheet
     nav.push(

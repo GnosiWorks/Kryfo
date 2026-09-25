@@ -49,7 +49,8 @@ import '../widgets/kryfo_avatar.dart';
 import '../main.dart'
     show
         engine,
-        db,
+        session,
+        sessionQuiet,
         signalEncrypt,
         signalEncryptSerial,
         hasSessionWith,
@@ -451,7 +452,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _loadingOlder = true;
     try {
       final oldest = _messages.isEmpty ? null : _messages.first.rowid;
-      final rows = await db.messagesPage(
+      final rows = await session.messagesPage(
         widget.peerHaloId,
         beforeRowid: oldest,
         limit: _pageSize + 1,
@@ -494,7 +495,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         }
         older.add(m);
       }
-      final reactionMap = await db.loadReactionsFor(uids);
+      final reactionMap = await session.loadReactionsFor(uids);
       for (final m in older) {
         final entries = reactionMap[m.msgUid];
         if (entries == null) continue;
@@ -647,7 +648,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool _keyChanged = false;
 
   Future<void> _dismissKeyChanged() async {
-    await db.setKeyChanged(widget.peerHaloId, false);
+    await session.setKeyChanged(widget.peerHaloId, false);
     if (mounted) setState(() => _keyChanged = false);
   }
 
@@ -703,7 +704,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     appState.addListener(_onAppStateChanged);
     appState.loadSendMode();
     currentChatPeer = widget.peerHaloId;
-    db.clearUnread(widget.peerHaloId).then((_) => appState.refreshContacts());
+    session
+        .clearUnread(widget.peerHaloId)
+        .then((_) => appState.refreshContacts());
     unawaited(clearNotificationsFor(widget.peerHaloId));
     _unreadAfterMs =
         _lastReadPerPeer[widget.peerHaloId] ??
@@ -723,7 +726,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         _draftPerPeer[widget.peerHaloId] = t;
       }
     });
-    db.getContact(widget.peerHaloId).then((c) {
+    session.getContact(widget.peerHaloId).then((c) {
       if (mounted) {
         setState(() {
           _nickname = c?['nickname'] as String?;
@@ -734,7 +737,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
     _loadVouches();
     _loadShield();
-    db.getAtmosphere(widget.peerHaloId).then((a) {
+    session.getAtmosphere(widget.peerHaloId).then((a) {
       if (!mounted) return;
       setState(() {
         if (a != null && a.startsWith('image:')) {
@@ -752,39 +755,39 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         setState(() => _peerXPub = v);
       }
     });
-    db.isBackPaired(widget.peerHaloId).then((v) {
+    session.isBackPaired(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _backPaired = v);
     });
-    db.keyChanged(widget.peerHaloId).then((v) {
+    session.keyChanged(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _keyChanged = v);
     });
     _scrollCtrl.addListener(_onScrollPage);
-    db.isBlocked(widget.peerHaloId).then((v) {
+    session.isBlocked(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _blocked = v);
     });
-    db.isMuted(widget.peerHaloId).then((v) {
+    session.isMuted(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _muted = v);
     });
-    db.isVerified(widget.peerHaloId).then((v) {
+    session.isVerified(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _verified = v);
     });
-    db.getContact(widget.peerHaloId).then((c) {
+    session.getContact(widget.peerHaloId).then((c) {
       if (mounted) {
         setState(() => _peerBadge = c?['supporter_badge'] as String?);
       }
     });
     // request lock: are they an accepted contact, have they engaged, and how
     // many messages have we already sent while unaccepted.
-    db.isAccepted(widget.peerHaloId).then((v) {
+    session.isAccepted(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _accepted = v);
     });
-    db.isBackPaired(widget.peerHaloId).then((v) {
+    session.isBackPaired(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _peerEngaged = v);
     });
-    db.countMessagesTo(widget.peerHaloId).then((v) {
+    session.countMessagesTo(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _sentCount = v);
     });
-    db.countMessagesFrom(widget.peerHaloId).then((v) {
+    session.countMessagesFrom(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _recvCount = v);
     });
     _scrollCtrl.addListener(_onScroll);
@@ -817,7 +820,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           // it is pulled, else the messages around it jump
           Future.delayed(kLeaveGone, () async {
             if (mounted) setState(() => _messages.remove(m));
-            if (m.msgUid != null) await db.deleteMessage(m.msgUid!);
+            if (m.msgUid != null) await session.deleteMessage(m.msgUid!);
             // the home row was previewing what just burned
             unawaited(appState.refreshContacts());
           });
@@ -863,7 +866,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // who vouched, as we know them. only accepted contacts come back, so a
   // voucher we deleted since simply stops being named.
   Future<void> _loadVouches() async {
-    final vs = await db.vouchesFor(widget.peerHaloId);
+    final vs = await session.vouchesFor(widget.peerHaloId);
     if (!mounted) return;
     setState(() {
       _voucherNames = [
@@ -880,8 +883,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _loadShield() async {
-    if (await db.isAccepted(widget.peerHaloId)) return;
-    final row = await db.shieldFor(widget.peerHaloId);
+    if (await session.isAccepted(widget.peerHaloId)) return;
+    final row = await session.shieldFor(widget.peerHaloId);
     final f = ShieldFlag.fromRow(row);
     final clean = ShieldFlag.cleanRow(row);
     if (mounted && (f != _flag || clean != _shieldClean)) {
@@ -908,13 +911,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // in the locked chat never flipped it. re-check whenever something arrives.
   void _refreshRequestState() {
     if (_accepted && _peerEngaged && _recvCount > 0) return;
-    db.isAccepted(widget.peerHaloId).then((v) {
+    session.isAccepted(widget.peerHaloId).then((v) {
       if (mounted && v != _accepted) setState(() => _accepted = v);
     });
-    db.isBackPaired(widget.peerHaloId).then((v) {
+    session.isBackPaired(widget.peerHaloId).then((v) {
       if (mounted && v != _peerEngaged) setState(() => _peerEngaged = v);
     });
-    db.countMessagesFrom(widget.peerHaloId).then((v) {
+    session.countMessagesFrom(widget.peerHaloId).then((v) {
       if (mounted && v != _recvCount) setState(() => _recvCount = v);
     });
   }
@@ -999,7 +1002,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (pending.isEmpty) return;
     var changed = false;
     for (final m in pending) {
-      final s = await db.sendState(m.msgUid!);
+      final s = await session.sendState(m.msgUid!);
       if (s.delivered && !m.delivered) {
         m.delivered = true;
         changed = true;
@@ -1024,7 +1027,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final lastRowid = _messages.isEmpty
         ? 0
         : _messages.map((m) => m.rowid).reduce((a, b) => a > b ? a : b);
-    final rows = await db.messagesAfter(widget.peerHaloId, lastRowid);
+    final rows = await session.messagesAfter(widget.peerHaloId, lastRowid);
     if (!mounted) return;
     final have = _messages.map((m) => m.msgUid).toSet();
     // any new row we don't already hold? if not, fall back to a full reload -
@@ -1087,7 +1090,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // nobody had seen. only the open chat gets to clear.
     if (fresh.any((m) => m.direction != 'out') &&
         currentChatPeer == widget.peerHaloId) {
-      unawaited(db.clearUnread(widget.peerHaloId));
+      unawaited(session.clearUnread(widget.peerHaloId));
       unawaited(appState.refreshContacts());
     }
     _scrollToEnd();
@@ -1224,7 +1227,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (target.msgUid == null) {
       final uid = _newMsgUid();
       target.msgUid = uid;
-      await db.assignUidIfMissing(
+      await session.assignUidIfMissing(
         widget.peerHaloId,
         target.when.millisecondsSinceEpoch,
         uid,
@@ -1661,7 +1664,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // the list is read from the database, not from the rows on screen: a pin
   // far up the thread is still a pin when only the last page is loaded
   Future<List<PinEntry>> _loadPins() async {
-    final rows = await db.pinnedIn(peerId: widget.peerHaloId);
+    final rows = await session.pinnedIn(peerId: widget.peerHaloId);
     final nick = _nickname;
     final them = (nick != null && nick.isNotEmpty) ? nick : widget.peerHaloId;
     return [
@@ -1670,7 +1673,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           uid: r['msg_uid'] as String,
           author: r['direction'] == 'out' ? l10n.chatYou : them,
           authorSeed: r['direction'] == 'out'
-              ? appState.myId
+              ? appState.sessionId
               : widget.avatarSeed,
           face: r['direction'] == 'out' ? appState.myAvatar : _peerFace,
           when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
@@ -1683,7 +1686,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   int _pinCount = 0;
   Future<void> _refreshPinCount() async {
-    final n = (await db.pinnedIn(peerId: widget.peerHaloId)).length;
+    final n = (await session.pinnedIn(peerId: widget.peerHaloId)).length;
     if (mounted && n != _pinCount) setState(() => _pinCount = n);
   }
 
@@ -1724,6 +1727,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // the unsend frame on its own, the way a message would go. the other
   // side drops the row, or the half-file and its banner if it never landed.
   Future<void> _sendUnsendFrame(String uid) async {
+    if (sessionQuiet) return;
     try {
       final wrapped = await wrapMessage('', unsend: uid);
       final cipher = await signalEncryptSerial(widget.peerHaloId, wrapped);
@@ -1745,7 +1749,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     mediaProgressEnd(uid);
     if (mounted) setState(() => m.removing = true);
     await Future.delayed(kLeaveGone);
-    await db.deleteMessage(uid);
+    await session.deleteMessage(uid);
     if (mounted) setState(() => _messages.remove(m));
     unawaited(appState.refreshContacts());
     unawaited(_sendUnsendFrame(uid));
@@ -1811,7 +1815,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (mounted) setState(() => m.removing = true);
     // it burns, then its row folds (LeaveFold); pulled sooner, it pops
     await Future.delayed(kLeaveGone);
-    await db.deleteMessage(m.msgUid!);
+    await session.deleteMessage(m.msgUid!);
     if (mounted) setState(() => _messages.remove(m));
     // the home row was still previewing the message just unsent
     unawaited(appState.refreshContacts());
@@ -1821,7 +1825,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _togglePin(_Msg m) async {
     if (m.msgUid == null) return;
     if (!m.pinned) {
-      final count = (await db.pinnedIn(peerId: widget.peerHaloId)).length;
+      final count = (await session.pinnedIn(peerId: widget.peerHaloId)).length;
       if (count >= kMaxPins) {
         if (mounted) {
           showHaloToast(context, l10n.chatThisChatHasPins(kMaxPins));
@@ -1901,7 +1905,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (m.msgUid == null) {
       final uid = _newMsgUid();
       m.msgUid = uid;
-      await db.assignUidIfMissing(
+      await session.assignUidIfMissing(
         widget.peerHaloId,
         m.when.millisecondsSinceEpoch,
         uid,
@@ -1984,12 +1988,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       m.text = newText;
       m.edited = true;
     });
-    await db.editMessage(m.msgUid!, newText);
+    await session.editMessage(m.msgUid!, newText);
     // queued first, sent now: if the route is down the outbox carries it,
     // the way it carries a message. the home row shows the new text too.
-    await db.queueEdit(m.msgUid!, widget.peerHaloId, newText);
+    await session.queueEdit(m.msgUid!, widget.peerHaloId, newText);
     unawaited(appState.refreshContacts());
-    unawaited(appState.sendEdit(widget.peerHaloId, m.msgUid!, newText));
+    // a quiet session keeps the edit queued here: nothing leaves
+    if (!sessionQuiet) {
+      unawaited(appState.sendEdit(widget.peerHaloId, m.msgUid!, newText));
+    }
   }
 
   // toggle a reaction on a message. tap same emoji again to remove.
@@ -1998,7 +2005,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (m.msgUid == null) {
       final uid = _newMsgUid();
       m.msgUid = uid;
-      await db.assignUidIfMissing(
+      await session.assignUidIfMissing(
         widget.peerHaloId,
         m.when.millisecondsSinceEpoch,
         uid,
@@ -2016,10 +2023,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
     // persist locally
     if (remove) {
-      await db.removeReaction(m.msgUid!, '');
+      await session.removeReaction(m.msgUid!, '');
     } else {
-      await db.addReaction(m.msgUid!, '', emoji);
+      await session.addReaction(m.msgUid!, '', emoji);
     }
+    if (sessionQuiet) return;
     // send to peer as a reaction control envelope (empty body).
     try {
       final wrapped = await wrapMessage(
@@ -2057,20 +2065,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _loadMessagesInner() async {
-    await db.purgeExpiredBurns();
-    db.isBackPaired(widget.peerHaloId).then((v) {
+    await session.purgeExpiredBurns();
+    session.isBackPaired(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _backPaired = v);
     });
-    db.isBlocked(widget.peerHaloId).then((v) {
+    session.isBlocked(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _blocked = v);
     });
-    db.isMuted(widget.peerHaloId).then((v) {
+    session.isMuted(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _muted = v);
     });
     final wantAll = _searching || widget.jumpToUid != null || _pagedOut;
     final rows = wantAll
-        ? await db.messagesFor(widget.peerHaloId)
-        : await db.messagesPage(widget.peerHaloId, limit: _pageSize + 1);
+        ? await session.messagesFor(widget.peerHaloId)
+        : await session.messagesPage(widget.peerHaloId, limit: _pageSize + 1);
     _hasMore = !wantAll && rows.length > _pageSize;
     if (_hasMore) rows.removeAt(0);
     if (wantAll) _hasMore = false;
@@ -2112,7 +2120,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       loaded.last.rowid = (r['rowid'] as int?) ?? 0;
       if (uid != null) uids.add(uid);
     }
-    final reactionMap = await db.loadReactionsFor(uids);
+    final reactionMap = await session.loadReactionsFor(uids);
     for (final m in loaded) {
       if (m.msgUid == null) continue;
       final entries = reactionMap[m.msgUid!];
@@ -2162,7 +2170,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // publish sits at 'publishing' for good, so this never ran and the
     // pill stayed a zombie. carrying traffic is what matters here.
     final torUp = appState.torReady;
-    final backPaired = await db.isBackPaired(widget.peerHaloId);
+    final backPaired = await session.isBackPaired(widget.peerHaloId);
     for (final m in loaded) {
       // under a minute old the send future may still be running in the
       // background - marking it failed here caused dup resends.
@@ -2294,7 +2302,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final lastRowid = _messages.isEmpty
         ? 0
         : _messages.map((m) => m.rowid).reduce((a, b) => a > b ? a : b);
-    final rows = await db.messagesAfter(widget.peerHaloId, lastRowid);
+    final rows = await session.messagesAfter(widget.peerHaloId, lastRowid);
     if (!mounted || rows.isEmpty) return;
     final have = _messages.map((m) => m.msgUid).toSet();
     final brandNew = rows
@@ -2311,6 +2319,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _retry(_Msg msg) async {
     if (_sending) return;
+    // a quiet session sends nothing: it goes on waiting
+    if (sessionQuiet) {
+      setState(() {
+        msg.failed = false;
+        msg.parked = true;
+      });
+      return;
+    }
     setState(() {
       msg.failed = false;
       msg.sending = true;
@@ -2318,7 +2334,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
     // a stranger's opener rides its nonce again. without it the far side's
     // gate dropped every manual retry of a first message, quietly.
-    final nonce = msg.msgUid == null ? null : await db.powNonceOf(msg.msgUid!);
+    final nonce = msg.msgUid == null
+        ? null
+        : await session.powNonceOf(msg.msgUid!);
     final String cipher;
     try {
       final wrapped = await wrapMessage(
@@ -2332,10 +2350,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         secure: msg.secure,
         supporterBadge: await appState.sharedBadge(),
         sender: SenderInfo(
-          haloId: appState.myId,
-          edPub: engine.myEdPubkey(),
-          onion: appState.myOnion,
-          xPub: engine.myXPubkey(),
+          haloId: appState.sessionId,
+          edPub: appState.sessionEdPub,
+          onion: appState.sessionOnion,
+          xPub: appState.sessionXPub,
         ),
       );
       cipher = await signalEncrypt(widget.peerHaloId, wrapped);
@@ -2395,11 +2413,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
     sendFuture.then((result) async {
       if (result == 'ok' && msg.msgUid != null) {
-        await db.markSent(msg.msgUid!);
+        await session.markSent(msg.msgUid!);
       }
       if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
         final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
-        await db.setMsgBurnAt(msg.msgUid!, ba);
+        await session.setMsgBurnAt(msg.msgUid!, ba);
         msg.burnAt = ba;
       }
       if (!mounted) return;
@@ -2544,7 +2562,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
       return true;
     }
-    if (await db.isSent(uid)) {
+    if (await session.isSent(uid)) {
       if (mounted) {
         setState(() {
           msg.failed = false;
@@ -2736,9 +2754,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     src.delete().ignore();
     if (_disguise) bytes = disguiseWav(bytes);
     final msgUid = _newMsgUid();
-    final dir = await getApplicationDocumentsDirectory();
-    final mediaDir = Directory('${dir.path}/media');
-    if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
+    final mediaDir = await session.container.mediaDir();
     final dest = File('${mediaDir.path}/vn_$msgUid.wav');
     await dest.writeAsBytes(bytes);
     final filePath = dest.path;
@@ -2761,7 +2777,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
     _scrollToEnd();
     HapticFeedback.lightImpact();
-    await db.saveMessage(
+    await session.saveMessage(
       widget.peerHaloId,
       'out',
       '',
@@ -2961,9 +2977,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // slots a stranger gets and lock the composer for nothing
     if (_requestPending) setState(() => _sentCount++);
     final msgUid = _newMsgUid();
-    final dir = await getApplicationDocumentsDirectory();
-    final mediaDir = Directory('${dir.path}/media');
-    if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
+    final mediaDir = await session.container.mediaDir();
     final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
     final dest = File('${mediaDir.path}/f_${msgUid}_$safe');
     await File(src).copy(dest.path);
@@ -3014,7 +3028,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
     _scrollToEnd();
     HapticFeedback.lightImpact();
-    await db.saveMessage(
+    await session.saveMessage(
       widget.peerHaloId,
       'out',
       '',
@@ -3048,6 +3062,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     int? burnSeconds,
     bool secure = false,
   }) async {
+    // a quiet session keeps it here: it waits, and nothing leaves
+    if (sessionQuiet) return 'parked';
     return sendChunkedMediaTo(
       peerId: widget.peerHaloId,
       peerOnion: widget.peerOnion,
@@ -3063,10 +3079,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       burnSeconds: burnSeconds,
       secure: secure,
       sender: SenderInfo(
-        haloId: appState.myId,
-        edPub: engine.myEdPubkey(),
-        onion: appState.myOnion,
-        xPub: engine.myXPubkey(),
+        haloId: appState.sessionId,
+        edPub: appState.sessionEdPub,
+        onion: appState.sessionOnion,
+        xPub: appState.sessionXPub,
         avatar: appState.myAvatar,
       ),
     );
@@ -3077,10 +3093,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // cancelled one has no row left to finish.
     if (result == 'busy' || result == 'cancelled') return;
     if (msg.msgUid != null) mediaProgressEnd(msg.msgUid!);
-    if (result == 'ok' && msg.msgUid != null) await db.markSent(msg.msgUid!);
+    if (result == 'ok' && msg.msgUid != null)
+      await session.markSent(msg.msgUid!);
     if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
       final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
-      await db.setMsgBurnAt(msg.msgUid!, ba);
+      await session.setMsgBurnAt(msg.msgUid!, ba);
       msg.burnAt = ba;
     }
     if (!mounted) {
@@ -3150,9 +3167,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (_requestLocked) return;
     if (_requestPending) setState(() => _sentCount++);
     final msgUid = _newMsgUid();
-    final dir = await getApplicationDocumentsDirectory();
-    final mediaDir = Directory('${dir.path}/media');
-    if (!await mediaDir.exists()) await mediaDir.create(recursive: true);
+    final mediaDir = await session.container.mediaDir();
     final mediaFile = File('${mediaDir.path}/$msgUid.jpg');
     await mediaFile.writeAsBytes(bytes);
     final mediaPath = mediaFile.path;
@@ -3176,7 +3191,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
     _scrollToEnd();
     HapticFeedback.lightImpact();
-    await db.saveMessage(
+    await session.saveMessage(
       widget.peerHaloId,
       'out',
       caption,
@@ -3337,7 +3352,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     HapticFeedback.lightImpact();
 
     try {
-      await db.saveMessage(
+      await session.saveMessage(
         widget.peerHaloId,
         'out',
         text,
@@ -3362,6 +3377,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
     // the home row moves up on what you sent too, not only on what arrived
     unawaited(appState.refreshContacts());
+    // a quiet session keeps the row here, unsent. it is never sealed: the
+    // seal would move the everyday identity's session with this person on
+    if (sessionQuiet) {
+      if (!mounted) return;
+      setState(() {
+        msg.sending = false;
+        msg.parked = true;
+        _sending = false;
+      });
+      return;
+    }
     // first-contact proof-of-work: grind a nonce (~2s, off the ui thread) while
     // the peer hasn't back-paired with us. until they reply they still see us as
     // a stranger and their gate requires the pow. once _peerEngaged flips we stop.
@@ -3384,7 +3410,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         }
         powNonce = n;
         // kept on the row so a retry from the outbox carries the same nonce
-        await db.setPowNonce(msgUid, n);
+        await session.setPowNonce(msgUid, n);
       }
       final wrapped = await wrapMessage(
         text,
@@ -3396,10 +3422,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         preview: preview,
         supporterBadge: await appState.sharedBadge(),
         sender: SenderInfo(
-          haloId: appState.myId,
-          edPub: engine.myEdPubkey(),
-          onion: appState.myOnion,
-          xPub: engine.myXPubkey(),
+          haloId: appState.sessionId,
+          edPub: appState.sessionEdPub,
+          onion: appState.sessionOnion,
+          xPub: appState.sessionXPub,
         ),
       );
       final prev = _encryptGate;
@@ -3473,11 +3499,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
     sendFuture.then((result) async {
       if (result == 'ok' && msg.msgUid != null) {
-        await db.markSent(msg.msgUid!);
+        await session.markSent(msg.msgUid!);
       }
       if (result == 'ok' && msg.burnSecs != null && msg.msgUid != null) {
         final ba = DateTime.now().millisecondsSinceEpoch + msg.burnSecs! * 1000;
-        await db.setMsgBurnAt(msg.msgUid!, ba);
+        await session.setMsgBurnAt(msg.msgUid!, ba);
         msg.burnAt = ba;
       }
       if (!mounted) return;
@@ -3491,7 +3517,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           }
         });
         if (msg.burnAt != null) {
-          await db.setMsgBurnAt(msgUid, msg.burnAt!);
+          await session.setMsgBurnAt(msgUid, msg.burnAt!);
         }
       } else if (result == 'parked') {
         setState(() {
@@ -3543,7 +3569,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         return;
       }
       currentChatPeer = widget.peerHaloId;
-      db.clearUnread(widget.peerHaloId).then((_) => appState.refreshContacts());
+      session
+          .clearUnread(widget.peerHaloId)
+          .then((_) => appState.refreshContacts());
       _reconcileSending();
     }
   }
@@ -3558,7 +3586,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (stuck.isEmpty) return;
     var changed = false;
     for (final m in stuck) {
-      if (await db.isSent(m.msgUid!)) {
+      if (await session.isSent(m.msgUid!)) {
         m.sending = false;
         changed = true;
       }
@@ -3751,7 +3779,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _openMediaGallery() async {
-    final rows = await db.messagesFor(widget.peerHaloId);
+    final rows = await session.messagesFor(widget.peerHaloId);
     final paths = <String>[];
     final securePaths = <String>{};
     for (final r in rows) {
@@ -3774,7 +3802,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _chatActions() async {
-    final contact = await db.getContact(widget.peerHaloId);
+    final contact = await session.getContact(widget.peerHaloId);
     final pinned = (contact?['pinned'] as int? ?? 0) == 1;
     if (!mounted) return;
     final action = await showHaloSheet<String>(
@@ -4027,7 +4055,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       await _pickAtmosphere();
     } else if (action == 'note') {
       await _editNote();
-      final c = await db.getContact(widget.peerHaloId);
+      final c = await session.getContact(widget.peerHaloId);
       if (mounted) setState(() => _note = c?['note'] as String?);
     } else if (action == 'pin') {
       await _toggleContactPin();
@@ -4050,7 +4078,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       ),
     );
     if (!mounted) return;
-    final c = await db.getContact(widget.peerHaloId);
+    final c = await session.getContact(widget.peerHaloId);
     if (!mounted) return;
     setState(() {
       _nickname = c?['nickname'] as String?;
@@ -4062,9 +4090,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _toggleContactPin() async {
-    final contact = await db.getContact(widget.peerHaloId);
+    final contact = await session.getContact(widget.peerHaloId);
     final pinned = (contact?['pinned'] as int? ?? 0) == 1;
-    await db.setContactPinned(widget.peerHaloId, !pinned);
+    await session.setContactPinned(widget.peerHaloId, !pinned);
     await appState.refreshContacts();
     if (mounted) {
       showHaloToast(context, pinned ? l10n.chatUnpinned : l10n.chatPinnedToTop);
@@ -4072,7 +4100,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _editNote() async {
-    final contact = await db.getContact(widget.peerHaloId);
+    final contact = await session.getContact(widget.peerHaloId);
     final current = (contact?['note'] as String?) ?? '';
     final ctrl = TextEditingController(text: current);
     if (!mounted) return;
@@ -4127,7 +4155,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               alignment: AlignmentDirectional.centerEnd,
               child: GestureDetector(
                 onTap: () async {
-                  await db.setNote(widget.peerHaloId, ctrl.text.trim());
+                  await session.setNote(widget.peerHaloId, ctrl.text.trim());
                   if (!ctx.mounted) return;
                   Navigator.pop(ctx);
                   if (mounted) showHaloToast(context, l10n.chatNoteSaved);
@@ -4182,7 +4210,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
     HapticFeedback.selectionClick();
     await _dropWallpaperFile();
-    await db.setAtmosphere(widget.peerHaloId, picked.name);
+    await session.setAtmosphere(widget.peerHaloId, picked.name);
     if (!mounted) return;
     setState(() {
       _atmosphere = picked;
@@ -4214,12 +4242,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     try {
       await shredFile(x.path);
     } catch (_) {}
-    final dir = await getApplicationDocumentsDirectory();
-    final folder = Directory('${dir.path}/wallpapers');
-    if (!await folder.exists()) await folder.create(recursive: true);
+    final folder = await session.container.folder('wallpapers');
     final file = File('${folder.path}/${widget.peerHaloId}.jpg');
     await file.writeAsBytes(bytes, flush: true);
-    await db.setAtmosphere(widget.peerHaloId, 'image:${file.path}');
+    await session.setAtmosphere(widget.peerHaloId, 'image:${file.path}');
     if (!mounted) return;
     HapticFeedback.selectionClick();
     setState(() {
@@ -4284,7 +4310,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
     if (confirm != true) return;
     HapticFeedback.selectionClick();
-    await db.clearConversation(widget.peerHaloId);
+    await session.clearConversation(widget.peerHaloId);
     await appState.refreshContacts();
     if (!mounted) return;
     setState(() {
@@ -4299,7 +4325,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         KeyVerificationScreen(
           peerHaloId: widget.peerHaloId,
           peerName: _nickname ?? widget.peerHaloId,
-          myXpub: engine.myXPubkey(),
+          myXpub: appState.sessionXPub,
           peerXpub: widget.peerXPub,
         ),
       ),
@@ -4390,7 +4416,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _acceptRequestPeer() async {
     HapticFeedback.selectionClick();
-    await db.acceptRequest(widget.peerHaloId);
+    await session.acceptRequest(widget.peerHaloId);
     await appState.afterAccept(widget.peerHaloId);
     if (mounted) {
       setState(() {
@@ -4402,7 +4428,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _declineRequestPeer() async {
     HapticFeedback.selectionClick();
-    await db.declineRequest(widget.peerHaloId);
+    await session.declineRequest(widget.peerHaloId);
     await appState.refreshContacts();
     if (mounted) Navigator.pop(context);
   }
@@ -4410,7 +4436,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _blockRequestPeer() async {
     HapticFeedback.selectionClick();
     await appState.block(widget.peerHaloId);
-    await db.clearUnread(widget.peerHaloId);
+    await session.clearUnread(widget.peerHaloId);
     await appState.refreshContacts();
     if (mounted) Navigator.pop(context);
   }
@@ -4419,7 +4445,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (m.msgUid == null) return;
     final next = !m.saved;
     setState(() => m.saved = next);
-    await db.setSaved(m.msgUid!, next);
+    await session.setSaved(m.msgUid!, next);
     if (mounted) {
       showHaloToast(context, next ? l10n.chatSaved : l10n.chatRemovedFromSaved);
     }
@@ -4494,7 +4520,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       ),
     );
     if (haloId == null || !mounted) return;
-    final row = await db.getContact(haloId);
+    final row = await session.getContact(haloId);
     if (row == null || !mounted) return;
     Navigator.of(context).push(
       haloRoute(

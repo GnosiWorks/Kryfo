@@ -5,7 +5,7 @@
 // true, fix the app, not the page.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../main.dart';
+import '../main.dart' hide live;
 import '../theme.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';

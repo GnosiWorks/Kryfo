@@ -31,7 +31,7 @@ import 'notes_screen.dart';
 import 'bridges_screen.dart';
 import 'archived_screen.dart';
 import '../miui_autostart.dart';
-import '../main.dart';
+import '../main.dart' hide live;
 import '../widgets/motion.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';

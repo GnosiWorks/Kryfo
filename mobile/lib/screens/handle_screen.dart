@@ -8,7 +8,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../main.dart' show appState, engine, buildHaloUriV3;
+import '../main.dart' show appState, engine, sessionQuiet;
 import '../theme.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/halo_bar.dart';
@@ -62,7 +62,9 @@ class _HandleScreenState extends State<HandleScreen> {
     // the registry is one request away and someone types fast. wait for them
     // to stop before asking.
     _debounce = Timer(const Duration(milliseconds: 500), () async {
-      final r = await engine.handleCheck(h);
+      // a quiet session never reaches the registry: it answers as an
+      // unreachable one would
+      final r = sessionQuiet ? _unreached : await engine.handleCheck(h);
       if (!mounted) return;
       setState(() => _state = r);
     });
@@ -74,12 +76,10 @@ class _HandleScreenState extends State<HandleScreen> {
     setState(() => _busy = true);
     // same invite the qr code carries - the registry only ever holds what
     // was already public.
-    final uri = await buildHaloUriV3(
-      appState.myId,
-      appState.myOnion,
-      appState.fcCounter,
-    );
-    final r = await engine.handleClaim(h, uri, _bio.text.trim());
+    final uri = await appState.sessionInvite();
+    final r = sessionQuiet
+        ? _unreached
+        : await engine.handleClaim(h, uri, _bio.text.trim());
     if (!mounted) return;
     setState(() => _busy = false);
     if (r == 'ok') {
@@ -108,7 +108,7 @@ class _HandleScreenState extends State<HandleScreen> {
     final h = _claimed;
     if (h == null) return;
     setState(() => _busy = true);
-    final r = await engine.handleRelease(h);
+    final r = sessionQuiet ? _unreached : await engine.handleRelease(h);
     if (!mounted) return;
     setState(() => _busy = false);
     if (r == 'ok') {
@@ -124,6 +124,8 @@ class _HandleScreenState extends State<HandleScreen> {
       showHaloToast(context, _refused(r, h));
     }
   }
+
+  static const _unreached = 'error: bad answer from the registry';
 
   // the engine and the registry answer in fixed english words
   String _refused(String r, String h) {
