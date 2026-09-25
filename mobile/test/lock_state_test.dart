@@ -124,6 +124,28 @@ class FakeEngine implements PinEngine {
   }
 }
 
+class FakeBio implements LockBio {
+  String key = 'ok';
+  String answer = 'ok';
+  int enables = 0;
+  @override
+  Future<bool> ready() async => true;
+  @override
+  Future<String> state() async => key;
+  @override
+  Future<bool> enable() async {
+    enables++;
+    key = 'ok';
+    return true;
+  }
+
+  @override
+  Future<void> disable() async => key = 'none';
+  @override
+  Future<String> unlock(String title, String cancel) async =>
+      key != 'ok' ? key : answer;
+}
+
 class FakeClock implements LockClock {
   int up = 1000000;
   int boot = 7;
@@ -145,12 +167,14 @@ void main() {
   late FakeStore store;
   late FakeEngine engine;
   late FakeClock clock;
+  late FakeBio bio;
 
   Future<LockState> make({Duration reveal = Duration.zero}) async {
     final s = LockState(
       store: store,
       engine: engine,
       clock: clock,
+      bio: bio,
       revealAfter: reveal,
     );
     await s.load();
@@ -163,6 +187,7 @@ void main() {
     store = FakeStore();
     engine = FakeEngine();
     clock = FakeClock();
+    bio = FakeBio();
     store.m['halo.lock.enabled'] = 'true';
     store.m['halo.lock.table'] = table({
       PinSlot.app: ('1234', PinKind.everyday),
@@ -380,5 +405,31 @@ void main() {
     final lock = await make();
     expect(await lock.verifyPin('5555'), PinResult.invalid);
     expect(lock.locked, isTrue);
+  });
+
+  test(
+    'a finger added since fingerprint was turned on waits for the pin',
+    () async {
+      store.m['halo.lock.biometric'] = 'true';
+      bio.key = 'invalidated';
+      final lock = await make();
+      // load can only offer a finger when local_auth says the phone has one,
+      // which it cannot in a test: ask the key directly
+      expect(await bio.unlock('', ''), 'invalidated');
+      expect(await lock.tryBiometric(), isFalse);
+      expect(lock.locked, isTrue);
+      expect(await lock.verifyPin('1234'), PinResult.normal);
+      await Future<void>.delayed(Duration.zero);
+      expect(bio.enables, 1);
+      expect(lock.bioStale, isFalse);
+    },
+  );
+
+  test('turning fingerprint off throws its key away', () async {
+    final lock = await make();
+    await lock.setBiometric(true);
+    expect(bio.key, 'ok');
+    await lock.setBiometric(false);
+    expect(bio.key, 'none');
   });
 }

@@ -1824,5 +1824,7 @@
   "peopleAdding": "Додаю…",
   "handleNobodyHasClaimed": "Ніхто не зайняв {handle}",
   "handleThatHandleIsTaken": "Це ім’я користувача вже зайняте",
-  "pinPickDifferent": "Вибери інший PIN-код"
+  "pinPickDifferent": "Вибери інший PIN-код",
+  "settingsKeptOnWhileLock": "Лишається увімкненим, доки увімкнене блокування kryfo.",
+  "lockFingerAfterPin": "Введи PIN-код один раз, щоб знову входити за відбитком."
 }

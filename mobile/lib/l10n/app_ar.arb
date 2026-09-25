@@ -1824,5 +1824,7 @@
   "peopleAdding": "جارٍ الإضافة…",
   "handleNobodyHasClaimed": "لم يحجز أحد ⁦{handle}⁩",
   "handleThatHandleIsTaken": "اسم المستخدم هذا محجوز بالفعل",
-  "pinPickDifferent": "اختر رمز PIN آخر"
+  "pinPickDifferent": "اختر رمز PIN آخر",
+  "settingsKeptOnWhileLock": "يبقى مفعّلًا ما دام قفل التطبيق مفعّلًا.",
+  "lockFingerAfterPin": "أدخل رمز PIN مرة واحدة لاستخدام بصمتك من جديد."
 }

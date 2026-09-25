@@ -6885,4 +6885,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pinPickDifferent => 'Pick a different PIN';
+
+  @override
+  String get settingsKeptOnWhileLock => 'Kept on while the app lock is on.';
+
+  @override
+  String get lockFingerAfterPin =>
+      'Type your PIN once to use your fingerprint again.';
 }

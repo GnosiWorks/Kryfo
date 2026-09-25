@@ -200,6 +200,17 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
+    // the last word from dart on screenshots, kept here so the next start's
+    // first frame is covered before dart has said anything
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        if (getSharedPreferences("kryfo_window", MODE_PRIVATE).getBoolean("secure", false)) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            if (android.os.Build.VERSION.SDK_INT >= 33) setRecentsScreenshotEnabled(false)
+            secureNow = true
+        }
+        super.onCreate(savedInstanceState)
+    }
+
     private fun setSecureWindow(on: Boolean) {
         android.util.Log.i("kryfo", "setSecure on=$on was=$secureNow")
         if (on) {
@@ -207,6 +218,9 @@ class MainActivity : FlutterFragmentActivity() {
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
+        // android 13 and later keep their own picture for recents
+        if (android.os.Build.VERSION.SDK_INT >= 33) setRecentsScreenshotEnabled(!on)
+        getSharedPreferences("kryfo_window", MODE_PRIVATE).edit().putBoolean("secure", on).apply()
         val surface = findSurface(window.decorView)
         surface?.setSecure(on)
         // no surface recreate on the way off any more: it flashed the
@@ -280,6 +294,19 @@ class MainActivity : FlutterFragmentActivity() {
                     "bootedAtMs" -> result.success(
                         System.currentTimeMillis() - android.os.SystemClock.elapsedRealtime()
                     )
+                    // fingerprint unlock on a key a new finger invalidates
+                    "bioReady" -> result.success(BioKey.ready())
+                    "bioState" -> result.success(BioKey.state())
+                    "bioEnable" -> result.success(BioKey.create())
+                    "bioDisable" -> {
+                        BioKey.delete()
+                        result.success(true)
+                    }
+                    "bioUnlock" -> {
+                        val title = call.argument<String>("title") ?: "kryfo"
+                        val cancel = call.argument<String>("cancel") ?: "Cancel"
+                        BioKey.unlock(this, title, cancel) { result.success(it) }
+                    }
                     // the pin hold runs on these: time since boot, which a
                     // change of date does not move, and which boot this is
                     "uptimeMs" -> result.success(SystemClock.elapsedRealtime())

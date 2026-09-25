@@ -8775,5 +8775,13 @@
   "pinPickDifferent": "Pick a different PIN",
   "@pinPickDifferent": {
     "description": "setting a PIN that is already in use; never says which one it matched"
+  },
+  "settingsKeptOnWhileLock": "Kept on while the app lock is on.",
+  "@settingsKeptOnWhileLock": {
+    "description": "hint under Block screenshots when the app lock forces it on"
+  },
+  "lockFingerAfterPin": "Type your PIN once to use your fingerprint again.",
+  "@lockFingerAfterPin": {
+    "description": "lock screen, in place of the fingerprint button while fingerprint unlock waits for the PIN (a finger was added, or after an update)"
   }
 }

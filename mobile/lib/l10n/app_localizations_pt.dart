@@ -6944,4 +6944,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get pinPickDifferent => 'Escolha outro PIN';
+
+  @override
+  String get settingsKeptOnWhileLock =>
+      'Fica ativado enquanto o bloqueio do app estiver ativado.';
+
+  @override
+  String get lockFingerAfterPin =>
+      'Digite seu PIN uma vez para usar a digital de novo.';
 }

@@ -7016,4 +7016,12 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get pinPickDifferent => 'Вибери інший PIN-код';
+
+  @override
+  String get settingsKeptOnWhileLock =>
+      'Лишається увімкненим, доки увімкнене блокування kryfo.';
+
+  @override
+  String get lockFingerAfterPin =>
+      'Введи PIN-код один раз, щоб знову входити за відбитком.';
 }

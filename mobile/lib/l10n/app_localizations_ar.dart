@@ -7015,4 +7015,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pinPickDifferent => 'اختر رمز PIN آخر';
+
+  @override
+  String get settingsKeptOnWhileLock =>
+      'يبقى مفعّلًا ما دام قفل التطبيق مفعّلًا.';
+
+  @override
+  String get lockFingerAfterPin =>
+      'أدخل رمز PIN مرة واحدة لاستخدام بصمتك من جديد.';
 }

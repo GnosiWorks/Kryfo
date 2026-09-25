@@ -1824,5 +1824,7 @@
   "peopleAdding": "Menambahkan…",
   "handleNobodyHasClaimed": "Belum ada yang mengklaim {handle}",
   "handleThatHandleIsTaken": "Nama pengguna itu sudah dipakai",
-  "pinPickDifferent": "Pilih PIN lain"
+  "pinPickDifferent": "Pilih PIN lain",
+  "settingsKeptOnWhileLock": "Tetap aktif selama kunci aplikasi aktif.",
+  "lockFingerAfterPin": "Ketik PIN sekali untuk memakai sidik jari lagi."
 }

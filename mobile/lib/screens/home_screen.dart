@@ -10,6 +10,7 @@ import '../widgets/stagger_in.dart';
 import '../widgets/breathing_ring.dart';
 import 'requests_screen.dart';
 import 'dart:async';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'donate_screen.dart';
 import 'profile_screen.dart';
@@ -247,7 +248,9 @@ class _HomeScreenState extends State<HomeScreen> {
               child: HaloNavBar(
                 active: _tab,
                 onPick: _pick,
-                onMeLongPress: widget.onOpenDev,
+                // the developer screen is for debug builds only: it reads
+                // the everyday data and could turn the lock off without a pin
+                onMeLongPress: kDebugMode ? widget.onOpenDev : null,
               ),
             ),
           ],

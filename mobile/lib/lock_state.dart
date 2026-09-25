@@ -121,6 +121,40 @@ class PlatformLockClock implements LockClock {
   }
 }
 
+// fingerprint unlock on a key the phone throws away when a finger is added
+// (BioKey.kt). "ok", "cancel", "invalidated", "none", "error"
+abstract class LockBio {
+  Future<bool> ready();
+  Future<String> state();
+  Future<bool> enable();
+  Future<void> disable();
+  Future<String> unlock(String title, String cancel);
+}
+
+class PlatformLockBio implements LockBio {
+  static const _ch = MethodChannel('halo/platform');
+  Future<T?> _call<T>(String m, [Object? a]) async {
+    try {
+      return await _ch.invokeMethod<T>(m, a);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Future<bool> ready() async => await _call<bool>('bioReady') ?? false;
+  @override
+  Future<String> state() async => await _call<String>('bioState') ?? 'error';
+  @override
+  Future<bool> enable() async => await _call<bool>('bioEnable') ?? false;
+  @override
+  Future<void> disable() => _call<bool>('bioDisable');
+  @override
+  Future<String> unlock(String title, String cancel) async =>
+      await _call<String>('bioUnlock', {'title': title, 'cancel': cancel}) ??
+      'error';
+}
+
 class FfiPinEngine implements PinEngine {
   static DynamicLibrary _lib() => Platform.isAndroid
       ? DynamicLibrary.open('libhalo.so')
@@ -371,14 +405,21 @@ class LockState extends ChangeNotifier {
     LockStore? store,
     PinEngine? engine,
     LockClock? clock,
+    LockBio? bio,
     this.revealAfter = const Duration(milliseconds: 450),
   }) : _store = store ?? SecureLockStore(),
        _engine = engine ?? FfiPinEngine(),
-       _clock = clock ?? PlatformLockClock();
+       _clock = clock ?? PlatformLockClock(),
+       _bio = bio ?? PlatformLockBio();
 
   final LockStore _store;
   final PinEngine _engine;
   final LockClock _clock;
+  final LockBio _bio;
+  // the fingerprint key is gone or was invalidated by a new finger: no
+  // finger opens kryfo until the pin has been typed once
+  bool _bioStale = false;
+  bool get bioStale => _bioStale;
   // every outcome is shown this long after the tap at the earliest
   final Duration revealAfter;
 
@@ -477,11 +518,13 @@ class LockState extends ChangeNotifier {
     try {
       final auth = LocalAuthentication();
       _bioSupported =
+          await _bio.ready() &&
           await auth.canCheckBiometrics &&
           (await auth.getAvailableBiometrics()).isNotEmpty;
     } catch (_) {
       _bioSupported = false;
     }
+    if (_biometric) _bioStale = await _bio.state() != 'ok';
     notifyListeners();
   }
 
@@ -548,10 +591,21 @@ class LockState extends ChangeNotifier {
     if (result == PinResult.normal || result == PinResult.decoy) {
       _locked = false;
     }
+
     if (result == PinResult.invalid || result == PinResult.throttled) {
       await _refreshHoldForScreen();
     }
     notifyListeners();
+    // the pin was typed: a finger added before now may open kryfo again.
+    // after the reveal, so it adds nothing to the wait
+    if (result == PinResult.normal && _biometric && _bioStale) {
+      unawaited(
+        _bio.enable().then((ok) {
+          _bioStale = !ok;
+          notifyListeners();
+        }),
+      );
+    }
     // an everyday unlock with the old kind of pin moves it into the table,
     // after the screen has already opened
     if (result == PinResult.normal &&
@@ -694,32 +748,33 @@ class LockState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setBiometric(bool v) async {
+  Future<bool> setBiometric(bool v) async {
+    if (v && !await _bio.enable()) return false;
+    if (!v) await _bio.disable();
     await _store.write(_kBio, v ? 'true' : 'false');
     _biometric = v;
+    _bioStale = false;
     notifyListeners();
+    return true;
   }
 
   // a finger opens the everyday app and nothing else
   Future<bool> tryBiometric() async {
     if (throttleLeft > Duration.zero) return false;
-    if (!_enabled || !_biometric || !_bioSupported) return false;
-    try {
-      final ok = await LocalAuthentication().authenticate(
-        localizedReason: l10n.lockStateUnlockKryfo,
-        biometricOnly: true,
-        persistAcrossBackgrounding: true,
-      );
-      if (ok) {
-        _counters = const LockCounters();
-        await _store.write(_kState, _counters.encode());
-        _locked = false;
-        notifyListeners();
-      }
-      return ok;
-    } catch (e) {
+    if (!_enabled || !_biometric || !_bioSupported || _bioStale) return false;
+    final r = await _bio.unlock(l10n.lockStateUnlockKryfo, l10n.commonCancel);
+    if (r == 'invalidated' || r == 'none') {
+      // a finger was added since, or the key is gone: the pin first
+      _bioStale = true;
+      notifyListeners();
       return false;
     }
+    if (r != 'ok') return false;
+    _counters = const LockCounters();
+    await _store.write(_kState, _counters.encode());
+    _locked = false;
+    notifyListeners();
+    return true;
   }
 
   // set while the app itself sent the user out to a system picker, the

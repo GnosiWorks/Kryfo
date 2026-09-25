@@ -6891,4 +6891,12 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get pinPickDifferent => 'Pilih PIN lain';
+
+  @override
+  String get settingsKeptOnWhileLock =>
+      'Tetap aktif selama kunci aplikasi aktif.';
+
+  @override
+  String get lockFingerAfterPin =>
+      'Ketik PIN sekali untuk memakai sidik jari lagi.';
 }

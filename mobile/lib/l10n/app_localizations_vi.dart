@@ -6877,4 +6877,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pinPickDifferent => 'Hãy chọn mã PIN khác';
+
+  @override
+  String get settingsKeptOnWhileLock => 'Luôn bật khi khóa ứng dụng đang bật.';
+
+  @override
+  String get lockFingerAfterPin => 'Nhập mã PIN một lần để dùng lại vân tay.';
 }

@@ -6923,4 +6923,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pinPickDifferent => 'Başka bir PIN seç';
+
+  @override
+  String get settingsKeptOnWhileLock =>
+      'Uygulama kilidi açık olduğu sürece açık kalır.';
+
+  @override
+  String get lockFingerAfterPin =>
+      'Parmak izini yeniden kullanmak için PIN\'ini bir kez gir.';
 }

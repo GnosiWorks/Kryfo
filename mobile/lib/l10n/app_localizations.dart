@@ -11072,6 +11072,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pick a different PIN'**
   String get pinPickDifferent;
+
+  /// hint under Block screenshots when the app lock forces it on
+  ///
+  /// In en, this message translates to:
+  /// **'Kept on while the app lock is on.'**
+  String get settingsKeptOnWhileLock;
+
+  /// lock screen, in place of the fingerprint button while fingerprint unlock waits for the PIN (a finger was added, or after an update)
+  ///
+  /// In en, this message translates to:
+  /// **'Type your PIN once to use your fingerprint again.'**
+  String get lockFingerAfterPin;
 }
 
 class _AppLocalizationsDelegate

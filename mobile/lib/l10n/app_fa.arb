@@ -1824,5 +1824,7 @@
   "peopleAdding": "در حال افزودن…",
   "handleNobodyHasClaimed": "هیچ‌کس ⁦{handle}⁩ را ثبت نکرده است",
   "handleThatHandleIsTaken": "این نام کاربری قبلاً گرفته شده",
-  "pinPickDifferent": "PIN دیگری انتخاب کنید"
+  "pinPickDifferent": "PIN دیگری انتخاب کنید",
+  "settingsKeptOnWhileLock": "تا وقتی قفل برنامه روشن است، روشن می‌ماند.",
+  "lockFingerAfterPin": "یک بار PIN خود را وارد کنید تا دوباره بتوانید از اثر انگشت استفاده کنید."
 }

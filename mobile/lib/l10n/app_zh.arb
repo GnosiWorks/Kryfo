@@ -1824,5 +1824,7 @@
   "peopleAdding": "正在添加…",
   "handleNobodyHasClaimed": "没有人认领 {handle}",
   "handleThatHandleIsTaken": "这个用户名已被占用",
-  "pinPickDifferent": "请换一个 PIN 码"
+  "pinPickDifferent": "请换一个 PIN 码",
+  "settingsKeptOnWhileLock": "应用锁开启时保持开启。",
+  "lockFingerAfterPin": "输入一次 PIN 码，即可再次使用指纹。"
 }

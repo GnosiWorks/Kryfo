@@ -6968,4 +6968,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pinPickDifferent => 'Wähl eine andere PIN';
+
+  @override
+  String get settingsKeptOnWhileLock =>
+      'Bleibt an, solange die App-Sperre an ist.';
+
+  @override
+  String get lockFingerAfterPin =>
+      'Gib einmal deine PIN ein, dann geht der Fingerabdruck wieder.';
 }

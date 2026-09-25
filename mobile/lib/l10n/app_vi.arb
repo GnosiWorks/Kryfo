@@ -1824,5 +1824,7 @@
   "peopleAdding": "Đang thêm…",
   "handleNobodyHasClaimed": "Chưa ai đăng ký {handle}",
   "handleThatHandleIsTaken": "Tên người dùng này đã có người dùng",
-  "pinPickDifferent": "Hãy chọn mã PIN khác"
+  "pinPickDifferent": "Hãy chọn mã PIN khác",
+  "settingsKeptOnWhileLock": "Luôn bật khi khóa ứng dụng đang bật.",
+  "lockFingerAfterPin": "Nhập mã PIN một lần để dùng lại vân tay."
 }

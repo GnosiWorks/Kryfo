@@ -1824,5 +1824,7 @@
   "peopleAdding": "Ajout…",
   "handleNobodyHasClaimed": "Personne n’a réservé {handle}",
   "handleThatHandleIsTaken": "Ce pseudo est déjà pris",
-  "pinPickDifferent": "Choisissez un autre code PIN"
+  "pinPickDifferent": "Choisissez un autre code PIN",
+  "settingsKeptOnWhileLock": "Reste activé tant que le verrouillage est activé.",
+  "lockFingerAfterPin": "Saisissez votre code PIN une fois pour réutiliser votre empreinte."
 }

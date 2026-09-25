@@ -6909,4 +6909,12 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get pinPickDifferent => 'PIN دیگری انتخاب کنید';
+
+  @override
+  String get settingsKeptOnWhileLock =>
+      'تا وقتی قفل برنامه روشن است، روشن می‌ماند.';
+
+  @override
+  String get lockFingerAfterPin =>
+      'یک بار PIN خود را وارد کنید تا دوباره بتوانید از اثر انگشت استفاده کنید.';
 }

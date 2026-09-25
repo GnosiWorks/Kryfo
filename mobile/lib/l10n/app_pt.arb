@@ -1824,5 +1824,7 @@
   "peopleAdding": "Adicionando…",
   "handleNobodyHasClaimed": "Ninguém reservou {handle}",
   "handleThatHandleIsTaken": "Esse nome de usuário já está em uso",
-  "pinPickDifferent": "Escolha outro PIN"
+  "pinPickDifferent": "Escolha outro PIN",
+  "settingsKeptOnWhileLock": "Fica ativado enquanto o bloqueio do app estiver ativado.",
+  "lockFingerAfterPin": "Digite seu PIN uma vez para usar a digital de novo."
 }

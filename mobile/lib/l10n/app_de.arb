@@ -1824,5 +1824,7 @@
   "peopleAdding": "Wird hinzugefügt…",
   "handleNobodyHasClaimed": "Niemand hat {handle} gesichert",
   "handleThatHandleIsTaken": "Dieser Benutzername ist schon vergeben",
-  "pinPickDifferent": "Wähl eine andere PIN"
+  "pinPickDifferent": "Wähl eine andere PIN",
+  "settingsKeptOnWhileLock": "Bleibt an, solange die App-Sperre an ist.",
+  "lockFingerAfterPin": "Gib einmal deine PIN ein, dann geht der Fingerabdruck wieder."
 }

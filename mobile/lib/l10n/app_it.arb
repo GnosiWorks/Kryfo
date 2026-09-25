@@ -1824,5 +1824,7 @@
   "peopleAdding": "Aggiungo…",
   "handleNobodyHasClaimed": "Nessuno ha registrato {handle}",
   "handleThatHandleIsTaken": "Quel nome utente è già preso",
-  "pinPickDifferent": "Scegli un altro PIN"
+  "pinPickDifferent": "Scegli un altro PIN",
+  "settingsKeptOnWhileLock": "Resta attivo finché il blocco app è attivo.",
+  "lockFingerAfterPin": "Digita il PIN una volta per usare di nuovo l'impronta."
 }

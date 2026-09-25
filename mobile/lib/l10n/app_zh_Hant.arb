@@ -1824,5 +1824,7 @@
   "peopleAdding": "正在新增…",
   "handleNobodyHasClaimed": "沒有人認領 {handle}",
   "handleThatHandleIsTaken": "這個使用者名稱已被使用",
-  "pinPickDifferent": "請換一組 PIN 碼"
+  "pinPickDifferent": "請換一組 PIN 碼",
+  "settingsKeptOnWhileLock": "應用程式鎖開啟時保持開啟。",
+  "lockFingerAfterPin": "輸入一次 PIN 碼，即可再次使用指紋。"
 }

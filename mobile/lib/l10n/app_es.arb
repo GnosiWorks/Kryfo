@@ -1824,5 +1824,7 @@
   "peopleAdding": "Añadiendo…",
   "handleNobodyHasClaimed": "Nadie ha reservado {handle}",
   "handleThatHandleIsTaken": "Ese nombre de usuario ya está en uso",
-  "pinPickDifferent": "Elige otro PIN"
+  "pinPickDifferent": "Elige otro PIN",
+  "settingsKeptOnWhileLock": "Sigue activado mientras el bloqueo de la app esté activado.",
+  "lockFingerAfterPin": "Escribe tu PIN una vez para volver a usar tu huella."
 }

@@ -6961,4 +6961,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pinPickDifferent => 'Choisissez un autre code PIN';
+
+  @override
+  String get settingsKeptOnWhileLock =>
+      'Reste activé tant que le verrouillage est activé.';
+
+  @override
+  String get lockFingerAfterPin =>
+      'Saisissez votre code PIN une fois pour réutiliser votre empreinte.';
 }

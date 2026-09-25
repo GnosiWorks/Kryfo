@@ -1824,5 +1824,7 @@
   "peopleAdding": "Ekleniyor…",
   "handleNobodyHasClaimed": "{handle} adını kimse almamış",
   "handleThatHandleIsTaken": "Bu kullanıcı adı zaten alınmış",
-  "pinPickDifferent": "Başka bir PIN seç"
+  "pinPickDifferent": "Başka bir PIN seç",
+  "settingsKeptOnWhileLock": "Uygulama kilidi açık olduğu sürece açık kalır.",
+  "lockFingerAfterPin": "Parmak izini yeniden kullanmak için PIN'ini bir kez gir."
 }

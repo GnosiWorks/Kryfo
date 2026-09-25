@@ -6633,6 +6633,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pinPickDifferent => '请换一个 PIN 码';
+
+  @override
+  String get settingsKeptOnWhileLock => '应用锁开启时保持开启。';
+
+  @override
+  String get lockFingerAfterPin => '输入一次 PIN 码，即可再次使用指纹。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -13264,4 +13270,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pinPickDifferent => '請換一組 PIN 碼';
+
+  @override
+  String get settingsKeptOnWhileLock => '應用程式鎖開啟時保持開啟。';
+
+  @override
+  String get lockFingerAfterPin => '輸入一次 PIN 碼，即可再次使用指紋。';
 }

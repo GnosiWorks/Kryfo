@@ -7021,4 +7021,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pinPickDifferent => 'Выбери другой PIN-код';
+
+  @override
+  String get settingsKeptOnWhileLock =>
+      'Остаётся включённым, пока включена блокировка приложения.';
+
+  @override
+  String get lockFingerAfterPin =>
+      'Введи PIN-код один раз, чтобы снова входить по отпечатку.';
 }

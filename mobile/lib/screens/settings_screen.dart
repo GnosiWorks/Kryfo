@@ -181,7 +181,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     _postureLine(
                       l10n.settingsScreenshots,
-                      appState.blockScreenshotsApplied,
+                      appState.blockScreenshotsApplied ||
+                          appState.screenSecureByLock,
                       l10n.settingsBlocked2,
                       l10n.settingsAllowed,
                     ),
@@ -331,22 +332,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
               HaloRow(
                 icon: Icons.visibility_off_outlined,
                 label: l10n.settingsBlockScreenshots,
-                hint: appState.blockScreenshotsPending
+                // with an app lock the screen stays covered, whatever the
+                // switch says, and the row says so
+                hint: appState.screenSecureByLock
+                    ? l10n.settingsKeptOnWhileLock
+                    : appState.blockScreenshotsPending
                     ? l10n.settingsWholeAppHiddenFrom
                     : l10n.settingsWholeAppHiddenFromRecentsAnd,
-                value: appState.blockScreenshots
+                value: appState.screenSecureByLock
+                    ? l10n.commonOn
+                    : appState.blockScreenshots
                     ? (appState.blockScreenshotsPending
                           ? l10n.settingsOnNextStart
                           : l10n.commonOn)
                     : (appState.blockScreenshotsPending
                           ? l10n.settingsOffNextStart
                           : l10n.commonOff),
-                onTap: () async {
-                  await appState.setBlockScreenshots(
-                    !appState.blockScreenshots,
-                  );
-                  if (mounted) setState(() {});
-                },
+                onTap: appState.screenSecureByLock
+                    ? null
+                    : () async {
+                        await appState.setBlockScreenshots(
+                          !appState.blockScreenshots,
+                        );
+                        if (mounted) setState(() {});
+                      },
               ),
               HaloRow(
                 icon: Icons.light_mode_outlined,

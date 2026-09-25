@@ -1824,5 +1824,7 @@
   "peopleAdding": "Добавляю…",
   "handleNobodyHasClaimed": "Никто не занял {handle}",
   "handleThatHandleIsTaken": "Это имя пользователя уже занято",
-  "pinPickDifferent": "Выбери другой PIN-код"
+  "pinPickDifferent": "Выбери другой PIN-код",
+  "settingsKeptOnWhileLock": "Остаётся включённым, пока включена блокировка приложения.",
+  "lockFingerAfterPin": "Введи PIN-код один раз, чтобы снова входить по отпечатку."
 }

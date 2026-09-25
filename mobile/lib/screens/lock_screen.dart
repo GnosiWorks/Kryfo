@@ -56,15 +56,24 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _watchHold();
+    lockState.addListener(_onLock);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (lockState.biometric && lockState.bioSupported) {
-        lockState.tryBiometric();
-      }
+      if (_fingerReady) lockState.tryBiometric();
     });
+  }
+
+  // fingerprint is on, but a finger added since (or an update) put it to
+  // sleep until the PIN is typed once
+  bool get _fingerOn => lockState.biometric && lockState.bioSupported;
+  bool get _fingerReady => _fingerOn && !lockState.bioStale;
+
+  void _onLock() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    lockState.removeListener(_onLock);
     _shake.dispose();
     _breath.dispose();
     _holdTick?.cancel();
@@ -105,6 +114,45 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
         }
       }
     }
+  }
+
+  Widget _fingerButton() {
+    return GestureDetector(
+      key: const ValueKey('ready'),
+      onTap: () => lockState.tryBiometric(),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: HaloColors.surface2,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: HaloColors.line, width: 0.5),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.fingerprint, color: HaloColors.amber, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              l10n.lockUseFingerprint,
+              style: HaloType.sans(size: 12.5, color: HaloColors.text),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _fingerAsleep() {
+    return Padding(
+      key: const ValueKey('asleep'),
+      padding: const EdgeInsets.symmetric(horizontal: 40),
+      child: Text(
+        l10n.lockFingerAfterPin,
+        textAlign: TextAlign.center,
+        style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+      ),
+    );
   }
 
   void _back() {
@@ -183,42 +231,12 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
                     shake: _shake,
                   ),
                   const SizedBox(height: 26),
-                  if (lockState.biometric && lockState.bioSupported)
-                    GestureDetector(
-                      onTap: () => lockState.tryBiometric(),
-                      behavior: HitTestBehavior.opaque,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: HaloColors.surface2,
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                            color: HaloColors.line,
-                            width: 0.5,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.fingerprint,
-                              color: HaloColors.amber,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              l10n.lockUseFingerprint,
-                              style: HaloType.sans(
-                                size: 12.5,
-                                color: HaloColors.text,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                  if (_fingerOn)
+                    AnimatedSwitcher(
+                      duration: MediaQuery.of(context).disableAnimations
+                          ? Duration.zero
+                          : const Duration(milliseconds: 200),
+                      child: _fingerReady ? _fingerButton() : _fingerAsleep(),
                     ),
                   const Spacer(flex: 2),
                   PinPad(

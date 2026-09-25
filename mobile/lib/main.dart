@@ -5653,7 +5653,20 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // the lock turned on or off: the window follows at once
+  bool? _lockWasOn;
+  void _lockMoved() {
+    if (_lockWasOn == lockState.enabled) return;
+    _lockWasOn = lockState.enabled;
+    unawaited(_applyScreenSecure());
+    notifyListeners();
+  }
+
   Future<void> loadScreenshotPref() async {
+    if (_lockWasOn == null) {
+      _lockWasOn = lockState.enabled;
+      lockState.addListener(_lockMoved);
+    }
     _blockScreenshots =
         (await const FlutterSecureStorage().read(key: 'block_screenshots')) ==
         'true';
@@ -5829,11 +5842,16 @@ class AppState extends ChangeNotifier {
   // the way out.
   bool _secureForced = false;
   bool get secureForced => _secureForced;
+  // an app lock keeps screenshots and the recents picture off, whatever the
+  // switch says: the settings then never say one thing while the app does
+  // another
+  bool get screenSecureByLock => lockState.enabled;
+
   Future<void> forceSecure(bool on) async {
     _secureForced = on;
     try {
       await _platformChannel.invokeMethod('setSecure', {
-        'on': on || _blockScreenshotsApplied,
+        'on': on || _blockScreenshotsApplied || screenSecureByLock,
       });
     } catch (e) {
       dlog('setSecure: $e');
@@ -5843,7 +5861,7 @@ class AppState extends ChangeNotifier {
   Future<void> _applyScreenSecure() async {
     try {
       await _platformChannel.invokeMethod('setSecure', {
-        'on': _blockScreenshotsApplied || _secureForced,
+        'on': _blockScreenshotsApplied || _secureForced || screenSecureByLock,
       });
     } catch (e) {
       dlog('setSecure: $e');
