@@ -7774,7 +7774,7 @@
   "@motionBouncingThroughRelaysSo": {
     "description": "widgets/motion.dart"
   },
-  "motionTellingTheNetworkYou": "telling the network you're online — without revealing where.",
+  "motionTellingTheNetworkYou": "telling the network you're online, without revealing where.",
   "@motionTellingTheNetworkYou": {
     "description": "widgets/motion.dart"
   },
