@@ -815,6 +815,7 @@ class Node:
         self.pivot = (0.0, 0.0)
         self.frame = 0.0
         self.k = 1.0
+        self.travel = 0.0  # a lid's way down
 
     def matrix(self, vals):
         x, y, r, sx, sy = vals[0], vals[1], vals[2], vals[3], vals[4]
@@ -1932,9 +1933,6 @@ def fit_loop(p, err=0.1):
             corners.append(i)
     corners.sort()
 
-    def tan_fwd(q, i):
-        j = int(np.searchsorted(ch, ch[i] + look))
-        return unit(q[min(j, len(q) - 1)] - q[i])
     out = []
     if not corners:
         k = 4

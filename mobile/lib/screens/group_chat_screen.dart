@@ -3237,7 +3237,7 @@ class _Composer extends StatelessWidget {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 2),
+                        padding: const EdgeInsets.only(bottom: 4),
                         child: StickerButton(onTap: onStickers),
                       ),
                     ],

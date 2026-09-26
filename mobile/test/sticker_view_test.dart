@@ -131,6 +131,32 @@ void main() {
     expect(StickerView.frames, greaterThan(up + 10));
   });
 
+  testWidgets('a page pushed over it stops it until it comes back', (t) async {
+    final nav = GlobalKey<NavigatorState>();
+    await t.pumpWidget(
+      MaterialApp(
+        navigatorKey: nav,
+        home: Scaffold(
+          body: Center(child: StickerView(sticker: hi, size: 160)),
+        ),
+      ),
+    );
+    await _frames(t, 10);
+    nav.currentState!.push(
+      MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: SizedBox.expand()),
+      ),
+    );
+    await t.pumpAndSettle();
+    final covered = StickerView.frames;
+    await _frames(t, 30);
+    expect(StickerView.frames, covered);
+    nav.currentState!.pop();
+    await t.pump();
+    await _frames(t, 30);
+    expect(StickerView.frames, greaterThan(covered));
+  });
+
   testWidgets('scrolled off it stops, and picks up where it was', (t) async {
     final scroll = ScrollController();
     await t.pumpWidget(
