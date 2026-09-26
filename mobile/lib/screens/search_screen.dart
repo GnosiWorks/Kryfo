@@ -173,7 +173,7 @@ class _SearchScreenState extends State<SearchScreen> {
       _peopleAsked = q;
       _peopleBusy = true;
     });
-    final r = await searchPeople(q, _peopleFetch);
+    final r = await searchPeople(q, _peoplePost);
     if (!mounted || _peopleAsked != q) return;
     setState(() {
       _peopleBusy = false;
@@ -185,7 +185,7 @@ class _SearchScreenState extends State<SearchScreen> {
   // debug builds only: a canned answer from app_flutter/people_fixture.json,
   // so the screen can be looked at before the registry has the endpoint.
   // a release build has only the tor request.
-  Future<String> _peopleFetch(String url) async {
+  Future<String> _peoplePost(String url, String body) async {
     if (kDebugMode) {
       final dir = await getApplicationDocumentsDirectory();
       final f = File('${dir.path}/people_fixture.json');
@@ -194,7 +194,7 @@ class _SearchScreenState extends State<SearchScreen> {
         return f.readAsString();
       }
     }
-    return torStrictGetOnIsolate(url);
+    return engine.torPost(url, body);
   }
 
   void _openPerson(PublicHandle p) {

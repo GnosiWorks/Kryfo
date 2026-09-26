@@ -88,11 +88,12 @@ List<PublicHandle> parsePeople(String body) {
 /// what went wrong, so the screen can say it plainly
 enum PeopleError { none, offline, busy, unreachable }
 
-/// ask the registry. [fetch] reads a url over tor only ("error: ..." when
-/// it could not), so tests can hand in a canned answer.
+/// ask the registry. [post] sends a body to a url over tor only ("error: ..."
+/// when it could not), so tests can hand in a canned answer. the question
+/// goes in the body, never in the url: a url can end up in a proxy's log
 Future<({List<PublicHandle> people, PeopleError error})> searchPeople(
   String raw,
-  Future<String> Function(String url) fetch,
+  Future<String> Function(String url, String body) post,
 ) async {
   final q = peopleQuery(raw);
   if (q == null) {
@@ -100,9 +101,7 @@ Future<({List<PublicHandle> people, PeopleError error})> searchPeople(
   }
   final String body;
   try {
-    body = await fetch(
-      '$kHandleRegistry/handle/search?q=${Uri.encodeQueryComponent(q)}',
-    );
+    body = await post('$kHandleRegistry/handle/search', jsonEncode({'q': q}));
   } catch (_) {
     return (people: const <PublicHandle>[], error: PeopleError.unreachable);
   }

@@ -742,11 +742,20 @@ func (l *limiter) allow() bool {
 
 func searchHandler(st *store, lim *limiter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			refuseCode(w, http.StatusMethodNotAllowed, "get only")
+		// the question comes in the body, never in the url: a url can end up
+		// in a proxy's error log, a body does not
+		if r.Method != http.MethodPost || r.URL.RawQuery != "" {
+			refuseCode(w, http.StatusMethodNotAllowed, "post the question in the body")
 			return
 		}
-		q, ok := searchQuery(r.URL.Query().Get("q"))
+		var body struct {
+			Q string `json:"q"`
+		}
+		if json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<10)).Decode(&body) != nil {
+			refuseCode(w, http.StatusBadRequest, "bad request")
+			return
+		}
+		q, ok := searchQuery(body.Q)
 		if !ok {
 			refuseCode(w, http.StatusBadRequest, "at least three letters or digits, nothing else")
 			return

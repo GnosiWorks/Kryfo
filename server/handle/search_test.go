@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -93,7 +92,8 @@ type answer struct {
 
 func search(t *testing.T, c *http.Client, base, q string) answer {
 	t.Helper()
-	resp, err := c.Get(base + "/handle/search?q=" + url.QueryEscape(q))
+	b, _ := json.Marshal(map[string]string{"q": q})
+	resp, err := c.Post(base+"/handle/search", "application/json", bytes.NewReader(b))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -302,5 +302,33 @@ func TestListingMessageIsStable(t *testing.T) {
 	got := listingMsg("wren", true, 1790000000, "Wren F.")
 	if got != "kryfo-handle-list-v1:wren:1:1790000000:Wren F." {
 		t.Fatal(got)
+	}
+}
+
+func TestTheQuestionIsNeverTakenFromTheURL(t *testing.T) {
+	srv, _ := service(t, newLimiter(100, 100))
+	c, base := srv.Client(), srv.URL
+	for _, u := range []string{
+		base + "/handle/search?q=wren",
+		base + "/handle/search",
+	} {
+		resp, err := c.Get(u)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusMethodNotAllowed {
+			t.Errorf("GET %s: %d, want 405", u, resp.StatusCode)
+		}
+	}
+	// a post that also carries it in the url is refused too
+	resp, err := c.Post(base+"/handle/search?q=wren", "application/json",
+		strings.NewReader(`{"q":"wren"}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusMethodNotAllowed {
+		t.Errorf("POST with a query: %d, want 405", resp.StatusCode)
 	}
 }

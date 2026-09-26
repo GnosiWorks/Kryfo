@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // people search, the phone's side: only a question the registry would
-// take goes out, over the fetch it is handed, and the answer is read with
+// take goes out, in the body of the post it is handed, and the answer is read with
 // care. the registry's side is tested in server/handle/search_test.go.
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/handle_search.dart';
 
@@ -59,17 +61,20 @@ void main() {
   test(
     'the question goes to the registry, encoded, and errors are told apart',
     () async {
-      String? asked;
-      final ok = await searchPeople('@Wren F', (url) async {
+      String? asked, sent;
+      final ok = await searchPeople('@Wren F', (url, body) async {
         asked = url;
+        sent = body;
         return '{"results": [{"handle": "wren", "verified": true}]}';
       });
-      expect(asked, 'https://relay.kryfo.app/handle/search?q=wren+f');
+      // the question travels in the body, never in the url
+      expect(asked, 'https://relay.kryfo.app/handle/search');
+      expect(jsonDecode(sent!), {'q': 'wren f'});
       expect(ok.people.single.handle, 'wren');
       expect(ok.error, PeopleError.none);
 
       var called = false;
-      final none = await searchPeople('ab', (url) async {
+      final none = await searchPeople('ab', (url, body) async {
         called = true;
         return '';
       });
@@ -79,16 +84,19 @@ void main() {
       expect(
         (await searchPeople(
           'wren',
-          (_) async => 'error: tor: not started',
+          (_, _) async => 'error: tor: not started',
         )).error,
         PeopleError.offline,
       );
       expect(
-        (await searchPeople('wren', (_) async => 'error: status 429')).error,
+        (await searchPeople('wren', (_, _) async => 'error: status 429')).error,
         PeopleError.busy,
       );
       expect(
-        (await searchPeople('wren', (_) async => throw Exception('x'))).error,
+        (await searchPeople(
+          'wren',
+          (_, _) async => throw Exception('x'),
+        )).error,
         PeopleError.unreachable,
       );
     },
