@@ -36,8 +36,13 @@ const stickerGlyph = [
 // a clock: the recent tab
 final _clockGlyph = [svgCircle(12, 12, 8), 'M12 8v4l2.6 2.2'];
 
-// the house spring: settles in about 235 ms
+// the house spring: settles in about 235 ms. done within half a percent,
+// not the default thousandth of a unit a second, which took 600 ms more
 const _spring = SpringDescription(mass: 1, stiffness: 520, damping: 34);
+const _done = Tolerance(distance: 0.005, velocity: 0.05);
+
+SpringSimulation _springTo(double from, double to, double velocity) =>
+    SpringSimulation(_spring, from, to, velocity, tolerance: _done);
 
 const _holdFor = Duration(milliseconds: 320);
 const _gridSlots = 6;
@@ -211,9 +216,11 @@ class StickerSheetState extends State<StickerSheet>
     if (_reduce) {
       _pill.value = i.toDouble();
     } else {
-      _pill.animateWith(
-        SpringSimulation(_spring, _pill.value, i.toDouble(), _pill.velocity),
-      );
+      _pill
+          .animateWith(_springTo(_pill.value, i.toDouble(), _pill.velocity))
+          .whenCompleteOrCancel(() {
+            if (mounted && _tab == i) _pill.value = i.toDouble();
+          });
     }
   }
 
@@ -781,7 +788,9 @@ class _StickerPreviewState extends State<_StickerPreview>
         _dim.value = 0;
         _dim.animateTo(1, duration: const Duration(milliseconds: 150));
       } else {
-        _grow.animateWith(SpringSimulation(_spring, 0, 1, 0));
+        _grow.animateWith(_springTo(0, 1, 0)).whenCompleteOrCancel(() {
+          if (mounted && !_closing) _grow.value = 1;
+        });
       }
       if (_settled) _pills.forward();
     });
@@ -819,9 +828,7 @@ class _StickerPreviewState extends State<_StickerPreview>
       await _dim.animateTo(0, duration: const Duration(milliseconds: 150));
     } else {
       unawaited(_dim.animateTo(0, duration: const Duration(milliseconds: 220)));
-      await _grow.animateWith(
-        SpringSimulation(_spring, _grow.value, 0, _grow.velocity),
-      );
+      await _grow.animateWith(_springTo(_grow.value, 0, _grow.velocity));
     }
     widget.onGone();
   }
@@ -894,43 +901,45 @@ class _StickerPreviewState extends State<_StickerPreview>
             ),
           ),
         ),
-        Positioned(
-          left: 16,
-          right: 16,
-          top: target.bottom + 22,
-          child: FadeTransition(
-            opacity: _pills,
-            child: SlideTransition(
-              position: Tween(
-                begin: const Offset(0, 0.25),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(parent: _pills, curve: Curves.easeOut)),
-              child: IgnorePointer(
-                ignoring: !_settled || _closing,
-                child: Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: [
-                    _pill(
-                      l10n.commonSend,
-                      HaloColors.amber,
-                      HaloColors.onAmber,
-                      widget.onSend,
+        // the buttons come once the finger is off the glass
+        if (_settled)
+          Positioned(
+            left: 16,
+            right: 16,
+            top: target.bottom + 22,
+            child: FadeTransition(
+              opacity: _pills,
+              child: SlideTransition(
+                position: Tween(begin: const Offset(0, 0.25), end: Offset.zero)
+                    .animate(
+                      CurvedAnimation(parent: _pills, curve: Curves.easeOut),
                     ),
-                    if (_shown.recent)
+                child: IgnorePointer(
+                  ignoring: !_settled || _closing,
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
                       _pill(
-                        l10n.stickerRemoveRecent,
-                        HaloColors.surface3,
-                        HaloColors.text,
-                        widget.onRemove,
+                        l10n.commonSend,
+                        HaloColors.amber,
+                        HaloColors.onAmber,
+                        widget.onSend,
                       ),
-                  ],
+                      if (_shown.recent)
+                        _pill(
+                          l10n.stickerRemoveRecent,
+                          HaloColors.surface3,
+                          HaloColors.text,
+                          widget.onRemove,
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
       ],
     );
   }
