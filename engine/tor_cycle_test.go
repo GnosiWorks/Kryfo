@@ -51,8 +51,7 @@ func waitBoot(limit time.Duration) (int, time.Duration) {
 }
 
 // one tor for the life of the process, put to sleep and woken again and
-// again. the version of this test that shut tor down each time is how the
-// second-shutdown abort was found.
+// again. tor aborts on a second shutdown in the same process.
 func TestTorCycles(t *testing.T) {
 	dir := t.TempDir()
 	if r := torResume(); r != "start" {
@@ -64,9 +63,7 @@ func TestTorCycles(t *testing.T) {
 	}
 	pct, took := waitBoot(4 * time.Minute)
 	if pct < 100 {
-		// this box cannot reach the tor network well enough to test
-		// against it. that is not a verdict on the code, so say so and
-		// stop rather than pass.
+		// no usable tor network on this box: skip rather than pass
 		t.Skipf("tor only bootstrapped to %d%% here, nothing to cycle", pct)
 	}
 	t.Logf("cold start: 100%% in %dms", took.Milliseconds())

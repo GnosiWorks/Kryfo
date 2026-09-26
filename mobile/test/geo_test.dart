@@ -30,7 +30,7 @@ void main() {
     expect(world.at(0, -30), null);
   });
 
-  test('the nearest town, and none in mid ocean', () {
+  test('finds the nearest town, none mid ocean', () {
     final berlin = places.nearest(52.48113, 13.43529)!;
     expect(berlin.place.country, 'DE');
     expect(berlin.km < 10, true);
@@ -39,7 +39,7 @@ void main() {
     expect(places.nearest(-16.5, 179.99)?.place.country, 'FJ');
   });
 
-  test('the view keeps the point inside and the shape asked for', () {
+  test('the view keeps the point inside', () {
     for (final p in [
       [52.48, 13.43],
       [64.1, -21.9],
@@ -62,12 +62,12 @@ void main() {
     expect(got.first.name, 'Berlin');
   });
 
-  test('coordinates read the way a person writes them', () {
+  test('formats coordinates with hemisphere letters', () {
     expect(coordsLine(52.48113, 13.43529), '52.48113°\u00a0N · 13.43529°\u00a0E');
     expect(coordsLine(-33.5, -70.25), '33.50000°\u00a0S · 70.25000°\u00a0W');
   });
 
-  test('a cut or foreign file is refused, not read', () {
+  test('refuses a cut or foreign file', () {
     expect(
       () => GeoWorld.parse(Uint8List.fromList([1, 2, 3])),
       throwsFormatException,

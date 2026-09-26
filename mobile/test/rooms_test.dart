@@ -5,7 +5,7 @@ final _pub = 'ab' * 32;
 final _fc = 'cd' * 32;
 
 void main() {
-  test('countdown wording steps down as time runs out', () {
+  test('countdown steps down as time runs out', () {
     expect(countdownLabel(const Duration(days: 6, hours: 23)), '6d 23h');
     expect(countdownLabel(const Duration(days: 2)), '2d');
     expect(countdownLabel(const Duration(hours: 3, minutes: 7)), '3h 7m');
@@ -14,7 +14,7 @@ void main() {
     expect(countdownLabel(const Duration(seconds: -1)), 'expired');
   });
 
-  test('tone turns amber under an hour and rose under five minutes', () {
+  test('tone turns amber, then rose near expiry', () {
     expect(countdownTone(const Duration(hours: 2)), CountdownTone.calm);
     expect(countdownTone(const Duration(minutes: 59)), CountdownTone.amber);
     expect(countdownTone(const Duration(minutes: 4)), CountdownTone.rose);
@@ -28,7 +28,7 @@ void main() {
     );
   });
 
-  test('expiry labels', () {
+  test('words the expiry options', () {
     expect(roomExpiryOptions.map(expiryLabel).toList(), ['1h', '24h', '7d']);
     expect(expiryWords(const Duration(hours: 24)), '24 hours');
     expect(expiryWords(const Duration(hours: 1)), 'an hour');
@@ -57,7 +57,7 @@ void main() {
     expect(back.cap, 10);
   });
 
-  test('a broken link is nothing', () {
+  test('a broken link parses to null', () {
     expect(RoomLink.parse('kryfo://share?id=x'), null);
     expect(RoomLink.parse('kryfo://room?id=r1&pub=short&fc=$_fc&exp=1'), null);
     expect(RoomLink.parse('kryfo://room?id=r1&pub=$_pub&fc=$_fc'), null);
@@ -66,13 +66,13 @@ void main() {
     expect(noName.cap, null);
   });
 
-  test('tags and key shape', () {
+  test('derives tags and checks key shape', () {
     expect(roomTag(_pub), 'ababab');
     expect(looksLikeRoomKey(_pub), true);
     expect(looksLikeRoomKey('thumb-behave-boring'), false);
   });
 
-  test('a link is found inside what was pasted around it', () {
+  test('finds a link inside pasted text', () {
     final link = 'kryfo://room?id=r1&pub=$_pub&fc=$_fc&exp=5';
     expect(firstKryfoLink('join us $link tonight'), link);
     expect(firstKryfoLink('  $link\n'), link);

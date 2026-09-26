@@ -5,16 +5,15 @@ import android.app.job.JobScheduler
 import android.content.ComponentName
 import android.content.Context
 
-// the fifteen-minute floor is scheduled from every way into the process:
-// the activity, the boot receiver and the application itself. it used to
-// be the activity alone, so a phone whose system cleared the job stayed
-// without one until the person happened to open the app.
+// the fifteen-minute floor is scheduled from every way into the process
+// (activity, boot receiver, application), so a job the system cleared comes
+// back without the app being opened.
 object JobSetup {
     const val PERIODIC_JOB_ID = 2001
 
     fun schedule(context: Context) {
-        // nothing to check in for, and scheduling it is what brought a wiped
-        // app back to life. see KryfoState.
+        // nothing to check in for, and the job would bring a wiped app back
+        // to life. see KryfoState.
         if (!KryfoState.hasData(context)) return
         val scheduler = context.getSystemService(JobScheduler::class.java) ?: return
         if (scheduler.getPendingJob(PERIODIC_JOB_ID) != null) return

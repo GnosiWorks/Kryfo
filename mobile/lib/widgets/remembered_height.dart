@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a photo has no height until its file decodes: the row is laid out a few
-// pixels tall and grows a moment later. in a chat that is every photo row,
-// every time it is built, and anything that scrolled to a message just
-// before the growth ends up somewhere else. once a row has been measured
-// its height is kept for the life of the process, and the next build
-// starts at that height instead of at nothing.
+// a photo has no height until its file decodes, so its row grows a moment
+// after layout and a scroll to a message lands somewhere else. a measured
+// height is kept for the life of the process and the next build starts there.
 import 'dart:math' as math;
 
 import 'package:flutter/rendering.dart';

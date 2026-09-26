@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// search across every chat. names first, then messages, grouped by the
-// chat they are in, the words that matched lit in amber. a tap opens the
-// chat at the message. everything here is read from this phone's own
+// search across every chat: names first, then messages grouped by chat,
+// the matched words lit in amber. messages are read from this phone's own
 // encrypted database; nothing is asked of anyone.
 import 'dart:async';
 import 'dart:math' as math;
@@ -173,7 +172,7 @@ class _SearchScreenState extends State<SearchScreen> {
       _peopleAsked = q;
       _peopleBusy = true;
     });
-    final r = await searchPeople(q, _peopleFetch);
+    final r = await searchPeople(q, _peoplePost);
     if (!mounted || _peopleAsked != q) return;
     setState(() {
       _peopleBusy = false;
@@ -182,10 +181,9 @@ class _SearchScreenState extends State<SearchScreen> {
     });
   }
 
-  // debug builds only: a canned answer from app_flutter/people_fixture.json,
-  // so the screen can be looked at before the registry has the endpoint.
+  // debug builds only: a canned answer from app_flutter/people_fixture.json.
   // a release build has only the tor request.
-  Future<String> _peopleFetch(String url) async {
+  Future<String> _peoplePost(String url, String body) async {
     if (kDebugMode) {
       final dir = await getApplicationDocumentsDirectory();
       final f = File('${dir.path}/people_fixture.json');
@@ -194,7 +192,7 @@ class _SearchScreenState extends State<SearchScreen> {
         return f.readAsString();
       }
     }
-    return torStrictGetOnIsolate(url);
+    return engine.torPost(url, body);
   }
 
   void _openPerson(PublicHandle p) {
@@ -401,7 +399,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     child: Hero(
                       tag: kSearchHero,
                       // a still copy flies: a live field built in the flight
-                      // took the focus with it and left the keyboard deaf
+                      // takes the focus with it and leaves the keyboard deaf
                       flightShuttleBuilder: (_, _, _, _, _) => const Material(
                         type: MaterialType.transparency,
                         child: _Field(),
@@ -1145,7 +1143,7 @@ class _PersonSheetState extends State<_PersonSheet>
                 child: Column(
                   children: [
                     Text(
-                      // one piece: in arabic and persian it broke at its space
+                      // one piece, so arabic and persian never break it
                       l10n.peopleFingerprint(p.fp.replaceAll(' ', '\u00a0')),
                       style: HaloType.mono(size: 11, color: HaloColors.text),
                     ),

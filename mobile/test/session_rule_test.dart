@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// screens only ever reach the open session: never the everyday database
-// underneath it, never the everyday identity, and nothing they send leaves
-// from a quiet session. read off the source, so a new screen that forgets
-// fails here rather than in someone's decoy.
+// screens reach only the open session, never the everyday database or
+// identity under it, and send nothing from a quiet session. read off the
+// source, so a new screen that forgets fails here.
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -40,7 +39,7 @@ final _member = RegExp(
 );
 
 void main() {
-  test('no screen or widget can name the everyday database', () {
+  test('screens never name the everyday database', () {
     final bad = <String>[];
     for (final f in _uiFiles()) {
       final imp = _mainImport(f.readAsStringSync());
@@ -56,7 +55,7 @@ void main() {
     expect(bad, isEmpty, reason: 'show a list without live, or hide live');
   });
 
-  test('screens show the session identity, not the engine one', () {
+  test('screens show the session identity', () {
     final bad = <String>[];
     for (final f in _uiFiles()) {
       final src = f.readAsStringSync();
@@ -75,7 +74,7 @@ void main() {
     expect(bad, isEmpty);
   });
 
-  test('every send from a screen asks first whether the session is quiet', () {
+  test('screen sends check for a quiet session', () {
     final bad = <String>[];
     for (final f in _uiFiles()) {
       final lines = f.readAsLinesSync();

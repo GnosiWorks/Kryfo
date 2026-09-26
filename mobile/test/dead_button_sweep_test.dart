@@ -1,15 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-//
-// a sweep for dead buttons, after "Open a locked file" shipped with one.
-//
-// the shape of that bug: a button whose handler is chosen at build time from
-// some condition, on a screen that does not rebuild when the condition
-// changes. it looks enabled, reports itself clickable to accessibility, and
-// does nothing for ever. nothing below the UI can catch it - the engine was
-// fine the whole time.
-//
-// so for every new screen: the buttons that should be live are live, and the
-// ones gated on input are dead until that input arrives and alive after.
+// a sweep for dead buttons: a handler picked at build time on a screen that
+// does not rebuild looks enabled and does nothing. buttons that should be live
+// are live, and ones gated on input wake once the input arrives.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -80,7 +72,7 @@ Future<void> type(WidgetTester t, int field, String s) async {
 
 void main() {
   group('tools', () {
-    testWidgets('every row and both photo buttons do something', (t) async {
+    testWidgets('every row and photo button is live', (t) async {
       var picks = 0;
       await t.pumpWidget(
         host(
@@ -112,7 +104,7 @@ void main() {
   });
 
   group('open a locked file', () {
-    testWidgets('Open file is dead empty, alive once typed', (t) async {
+    testWidgets('open file wakes once a password is typed', (t) async {
       await t.pumpWidget(host(const OpenLockedScreen(file: _age)));
       await t.pump(const Duration(milliseconds: 60));
       expect(live(t, 'Open file'), isFalse);
@@ -120,7 +112,7 @@ void main() {
       expect(live(t, 'Open file'), isTrue);
     });
 
-    testWidgets('Change is always live - you can always pick another', (
+    testWidgets('change is always live', (
       t,
     ) async {
       await t.pumpWidget(host(const OpenLockedScreen(file: _age)));
@@ -130,7 +122,7 @@ void main() {
   });
 
   group('lock a file', () {
-    testWidgets('Lock file needs two matching passwords', (t) async {
+    testWidgets('lock file needs two matching passwords', (t) async {
       await t.pumpWidget(host(const LockFileScreen(file: _file)));
       await t.pump(const Duration(milliseconds: 60));
       expect(live(t, 'Lock file'), isFalse, reason: 'nothing typed yet');
@@ -149,19 +141,18 @@ void main() {
       expect(live(t, 'Lock file'), isTrue, reason: 'matching, so it must work');
     });
 
-    testWidgets('Suggest four words is always live', (t) async {
+    testWidgets('suggest four words is always live', (t) async {
       await t.pumpWidget(host(const LockFileScreen(file: _file)));
       await t.pump(const Duration(milliseconds: 60));
       expect(live(t, 'Suggest four words'), isTrue);
     });
 
-    // what suggesting produces is lock_words_test's job; the wordlist is an
-    // asset and does not load under the test binding, so pressing it here
-    // fills nothing. that it is reachable at all is what belongs in a sweep.
+    // the wordlist asset does not load under the test binding, so pressing it
+    // fills nothing here. lock_words_test covers what it suggests.
   });
 
   group('qr', () {
-    testWidgets('all nine kinds are reachable and Share wakes with input', (
+    testWidgets('reaches nine kinds and share wakes on input', (
       t,
     ) async {
       await t.pumpWidget(host(const QrScreen()));

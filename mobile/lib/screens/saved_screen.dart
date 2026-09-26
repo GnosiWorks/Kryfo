@@ -325,5 +325,3 @@ class _SavedScreenState extends State<SavedScreen> {
     ],
   );
 }
-
-// one-time fade + slide-up entrance. delay scales with list index (capped) so

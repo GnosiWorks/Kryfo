@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the onion door's limits. anyone holding the onion address can open a
-// connection to it, so the door takes only what a real message looks like,
-// only so much of it, and only so many at once. before this a flood of junk
-// lines cost the phone a trial decrypt each against every session it held,
-// with no cap on connections, bytes or repeats.
+// the onion door's limits. anyone holding the onion address can connect, and
+// each line costs a trial decrypt against every session, so the door takes
+// only what a real message looks like, only so much, and only so many at once.
 package main
 
 import (

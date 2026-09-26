@@ -18,8 +18,7 @@ class HaloSection extends StatelessWidget {
   }
 }
 
-// one rounded surface holding a section's rows, a hairline between each.
-// the page used to be a stack of separate cards, one per row.
+// one rounded surface holding a section's rows, a hairline between each
 class HaloGroup extends StatelessWidget {
   final List<Widget> children;
   final bool rose;
@@ -57,8 +56,7 @@ class HaloGroup extends StatelessWidget {
 class HaloRow extends StatelessWidget {
   final String label;
   final String? value;
-  // one plain line under the label. toggles showed on/off and nothing
-  // about what the switch actually does.
+  // one plain line under the label saying what the switch does
   final String? hint;
   final VoidCallback? onTap;
   final IconData? icon;
@@ -75,9 +73,8 @@ class HaloRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 14pt is the label size; once it renders past ~19 the two-column layout
-    // stops fitting on a phone. a short value sits on the right, a sentence
-    // goes under the label instead of wrapping into ribbons.
+    // once the 14pt label renders past ~19 two columns stop fitting on a
+    // phone, so a long value goes under the label instead of wrapping
     final v = value ?? '';
     final stacked =
         v.length > 16 || MediaQuery.of(context).textScaler.scale(14) > 19;

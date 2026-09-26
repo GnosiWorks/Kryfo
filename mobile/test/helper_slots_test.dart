@@ -23,7 +23,7 @@ void main() {
     expect(b2.byAddress.length, 1);
   });
 
-  test('past sixteen they share, evenly, never reshuffling', () {
+  test('past sixteen slots are shared evenly', () {
     var book = const SlotBook({});
     final given = <String, int>{};
     for (var i = 0; i < 40; i++) {
@@ -42,7 +42,7 @@ void main() {
     expect(counts.reduce(max) - counts.reduce(min) <= 1, true);
   });
 
-  test('the book survives a round trip and refuses nonsense', () {
+  test('the book round trips and refuses nonsense', () {
     var book = const SlotBook({});
     for (final a in ['x', 'y', 'z']) {
       book = slotFor(book, a).$1;
@@ -56,14 +56,14 @@ void main() {
     expect(SlotBook.read('[1,2]').byAddress, isEmpty);
   });
 
-  test('a dummy address looks exactly like a real one', () {
+  test('a dummy address looks like a real one', () {
     final d = dummyAddress(Random(7));
     expect(d.length, 64);
     expect(RegExp(r'^[0-9a-f]{64}$').hasMatch(d), true);
     expect(d == dummyAddress(Random(8)), false);
   });
 
-  test('sixteen instance names, all different', () {
+  test('gives sixteen distinct instance names', () {
     final names = {for (var i = 0; i < kHelperSlots; i++) slotInstance(i)};
     expect(names.length, kHelperSlots);
     expect(slotInstance(0), 'kryfo-0');

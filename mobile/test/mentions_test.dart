@@ -7,7 +7,7 @@ void main() {
       expect(mentionQuery('hey @mar', 8), 'mar');
       expect(mentionQuery('@', 1), '');
     });
-    test('ignores an @ inside a word or behind a space', () {
+    test('ignores a mid-word or finished mention', () {
       expect(mentionQuery('mail me@x', 9), isNull);
       expect(mentionQuery('hey @mar ok', 11), isNull);
       expect(mentionQuery('plain', 5), isNull);

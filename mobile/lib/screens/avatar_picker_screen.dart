@@ -1,15 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-//
-// pick a face. shape and colour are chosen separately, because scrolling a
-// thousand combinations to find the one you wanted is not choosing - the
-// twelve shapes were just wearing a hundred outfits each.
-//
-// every option is drawn on the phone from a number. no image to upload, no
-// camera permission, nothing to license. the number rides with your messages
-// so the people you talk to see the face you picked.
-//
-// the editor is split out from the screen because onboarding shows the same
-// controls under its own chrome, and two copies would drift.
+// pick a face: shape, colour and turn chosen separately. every option is
+// drawn on the phone from a number, and the number rides with your messages.
+// the editor is its own widget because onboarding shows the same controls.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -20,8 +12,8 @@ import '../widgets/avatar_mark.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../l10n/l10n.dart';
 
-/// the shape / colour / turn controls, with a live preview on top.
-/// reports the packed choice, or null for "the initial your id already draws".
+/// the shape, colour and turn controls under a live preview. reports the
+/// packed choice, or null for the initial your id already draws.
 class AvatarChoiceEditor extends StatefulWidget {
   final ValueChanged<int?> onChanged;
   final EdgeInsets padding;

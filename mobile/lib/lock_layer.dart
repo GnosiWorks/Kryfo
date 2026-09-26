@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// lock_layer.dart - the app lock, drawn above the whole app. it sits in the
-// app's builder, over the navigator itself, so every screen, sheet, dialog,
-// menu, toast and flight the app will ever draw is under it. while it is up
-// the app underneath is not painted, cannot be touched, cannot take focus,
-// is not in the accessibility tree and has its animations stopped. nothing
-// the app does underneath can reach the pin pad, by where the pad is, not by
-// a check somebody has to remember.
+// the app lock, drawn above the navigator from the app's builder, so every
+// screen, sheet, dialog, menu and toast is under it. while it is up the app
+// is not painted, touched, focused, read out or animated.
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -201,9 +197,8 @@ class _LockLayerState extends State<LockLayer>
   }
 }
 
-// the lock as the app runs it: read at the start, up when the app is left,
-// and what goes with each edge. main.dart hands it the app's own state; the
-// tests hand it stand-ins and so test this same wiring.
+// the lock as the app runs it: read at the start, up when the app is left.
+// main.dart hands it the app's state, the tests hand it stand-ins.
 class LockGate extends StatefulWidget {
   const LockGate({
     super.key,
@@ -268,8 +263,8 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // paused and hidden mean the user left. inactive also fires for a
     // permission prompt, a screenshot toolbar or a pulled-down shade, and
-    // locking behind those put a pin between someone and the camera they
-    // just allowed.
+    // locking behind those would put a pin between someone and the camera
+    // they just allowed.
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
       widget.leaving();

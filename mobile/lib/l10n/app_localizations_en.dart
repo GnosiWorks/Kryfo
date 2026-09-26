@@ -6112,7 +6112,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get motionTellingTheNetworkYou =>
-      'telling the network you\'re online — without revealing where.';
+      'telling the network you\'re online, without revealing where.';
 
   @override
   String get motionYourIpIsHidden =>

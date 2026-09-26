@@ -3,10 +3,10 @@
 # flutter
 # go engine artifacts
 # ios
-# local-only — keep out of the repo (mockups, backups, logs, patches)
+# local-only, keep out of the repo (mockups, backups, logs, patches)
 # os
 # secrets
-# signing — never commit
+# signing, never commit
 **/*.iml
 **/.dart_tool/
 **/.flutter-plugins

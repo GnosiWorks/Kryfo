@@ -26,9 +26,8 @@ const kHeartbeatKey = 'delivery_heartbeat';
 const kKillsKey = 'delivery_kills';
 const kNudgeShownKey = 'delivery_nudge_shown';
 const kLastCheckHowKey = 'delivery_last_how';
-// when the last check-in was attempted, whatever came of it. the line on
-// the transport screen paired the last attempt's words with the last
-// success's age, so a fresh failure read "10h ago".
+// when the last check-in was attempted, whatever came of it, so a fresh
+// failure is not shown with the last success's age
 const kLastCheckTriedKey = 'delivery_last_tried';
 const kLastCheckRelaysKey = 'delivery_last_relays';
 
@@ -106,10 +105,8 @@ DeliveryStatus deliveryStatus({
       final last = lastCheckMs > 0
           ? l10n.deliveryModeLastCheckIn(agoLine(lastCheckMs, nowMs))
           : l10n.deliveryModeNoCheckInYet;
-      // with kryfo open the connection is up and messages land as they
-      // always did. the last check-in rides along anyway: this screen can
-      // only be read with kryfo open, so a line that hid it while open
-      // would never be seen at all.
+      // with kryfo open the connection is up anyway. the last check-in still
+      // shows: this screen is only ever read with kryfo open
       if (connected) {
         return DeliveryStatus(l10n.deliveryModeConnectedNow(last), live: true);
       }
@@ -134,12 +131,9 @@ DeliveryStatus deliveryStatus({
 }
 
 // ---- the nudge ----
-//
-// no reading of miui or any other vendor's settings. the app notices on its
-// own that it was dead: while it lives in always-on it writes the time every
-// few minutes, and a start that finds that time long past, on a phone that
-// was not switched off in between, was a kill. three in a day and the card
-// is shown, once, ever.
+// no reading of vendor settings. in always-on the app writes the time every
+// few minutes; a start that finds it long past, with no reboot in between,
+// was a kill. three in a day and the card shows, once ever.
 
 const kHeartbeatEveryMs = 5 * 60 * 1000;
 const kKillGapMs = 30 * 60 * 1000;
@@ -182,9 +176,8 @@ RestartVerdict judgeRestart({
   );
 }
 
-// the last check-in, stored as {how, secs, why} and worded here. a line
-// saved by an older build is english text; it is shown as it is until the
-// next check-in replaces it.
+// the last check-in, stored as {how, secs, why} and worded here. plain text
+// from an older build is shown as it is.
 Map<String, dynamic>? _json(String stored) {
   if (!stored.startsWith('{') && !stored.startsWith('[')) return null;
   try {

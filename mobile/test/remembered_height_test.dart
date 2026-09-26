@@ -17,7 +17,7 @@ Widget _host(String id, double childHeight) => Directionality(
 );
 
 void main() {
-  testWidgets('a measured row starts at that height the next time', (t) async {
+  testWidgets('a rebuilt row starts at its measured height', (t) async {
     await t.pumpWidget(_host('a', 200));
     expect(t.getSize(find.byType(RememberedHeight)).height, 200);
     // built again before its content has any height, as an undecoded photo is
@@ -33,7 +33,7 @@ void main() {
     expect(t.getSize(find.byType(RememberedHeight)).height, 0);
   });
 
-  testWidgets('never past what the parent allows', (t) async {
+  testWidgets('never exceeds the parent constraint', (t) async {
     await t.pumpWidget(_host('c', 260));
     await t.pumpWidget(const SizedBox());
     await t.pumpWidget(

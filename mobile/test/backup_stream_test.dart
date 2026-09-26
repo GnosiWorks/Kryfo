@@ -1,7 +1,5 @@
-// the v2 container, with a stand-in cipher: the real one lives in the
-// engine and needs the phone's library. what is tested here is the shape -
-// records in order, files back byte for byte, a cut file refused, a moved
-// record refused, a peek that skips what it does not want.
+// the v2 container with a stand-in cipher, since the real one lives in the
+// engine. this checks the shape: record order, cut and moved records, peeks.
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -94,7 +92,7 @@ List<int> recordStarts(Uint8List all) {
 }
 
 void main() {
-  test('writes, reads the manifest, extracts every file byte for byte', () async {
+  test('round trips every file byte for byte', () async {
     final (d, m) = await sample();
     final out = await written(d, m);
     expect(await isBackupV2(out), true);
@@ -129,7 +127,7 @@ void main() {
     );
   });
 
-  test('a peek skips what it does not want and still needs the end', () async {
+  test('a peek extracts only what it wants', () async {
     final (d, m) = await sample();
     final out = await written(d, m);
     final peek = '${d.path}/peek.db';
@@ -145,7 +143,7 @@ void main() {
     expect(Directory('${d.path}/dst').existsSync(), false);
   });
 
-  test('a file cut short is damaged, even with every file out', () async {
+  test('a cut file reads as damaged', () async {
     final (d, m) = await sample();
     final out = await written(d, m);
     final all = await File(out).readAsBytes();
@@ -157,7 +155,7 @@ void main() {
     );
   });
 
-  test('a record moved to another place will not open', () async {
+  test('a moved record does not open', () async {
     final (d, m) = await sample();
     final out = await written(d, m);
     final all = await File(out).readAsBytes();

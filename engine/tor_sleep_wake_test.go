@@ -1,14 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //go:build torconf
 
-// the redmi on 2026-09-22: check-ins put tor to sleep, a check-in woke it
-// and put it back, and a minute later the mode went back to always on. that
-// last resume never returned, and the reconnect the network change started
-// afterwards sat at "network on" for twenty hours with tor itself healthy
-// and the reconnect button answering "one already running". a release
-// build cannot say which lock it was, so this replays the sequence against
-// a real tor, with the relay runners up as they are in the app, and dumps
-// every goroutine the moment a step takes longer than it ever should:
+// check-ins put tor to sleep, a check-in wakes it and puts it back, then the
+// mode goes back to always on and the network changes. this replays that
+// against a real tor, with the relay runners up as they are in the app, and
+// dumps every goroutine the moment a step takes longer than it ever should:
 //
 //	go test -tags torconf -run TestSleepWakeThenModeSwitch -v .
 package main
@@ -68,8 +64,8 @@ func TestSleepWakeThenModeSwitch(t *testing.T) {
 	}
 
 	// the app's shape: an identity, the relay list, and runners for a few
-	// peers. every runner loops through torNostrClient, which is where the
-	// suspected lock lives. set directly - cgo is not allowed in a test file.
+	// peers. every runner loops through torNostrClient. set directly: cgo is
+	// not allowed in a test file.
 	mu.Lock()
 	if _, err := rand.Read(myXPriv[:]); err != nil {
 		mu.Unlock()
@@ -98,8 +94,7 @@ func TestSleepWakeThenModeSwitch(t *testing.T) {
 	kickRelays()
 	time.Sleep(20 * time.Second) // let the runners build a client and dial
 
-	// the gaps between the last sleep and the wake that hung on the phone
-	// are not known to the second; try the ones a person and a job produce.
+	// the gaps between sleep and wake that a person and a job produce
 	for round, gap := range []time.Duration{2 * time.Second, 20 * time.Second, 0, 45 * time.Second, 150 * time.Second} {
 		t.Logf("--- round %d, gap %s ---", round, gap)
 		// check-ins chosen: tor goes to sleep
@@ -121,16 +116,14 @@ func TestSleepWakeThenModeSwitch(t *testing.T) {
 			t.Fatalf("round %d sleep: %s", round, r)
 		}
 		time.Sleep(gap)
-		// always on chosen again: this is the resume that never came back
+		// always on chosen again
 		if r := mustReturn(t, "resume (mode -> always on)", 90*time.Second, torResume); r != "ok" {
 			t.Fatalf("round %d wake: %s", round, r)
 		}
 		mustReturn(t, "start after wake", 90*time.Second, func() string { return startListener(dir) })
 		// no kick from the test here: the app does not send one when the
 		// mode goes back to always on, so a relay has to connect on the
-		// strength of the resume alone. on 2026-09-23 none did - the runners
-		// sat out the fifteen-minute sleep they take while tor is paused, and
-		// a phone that said "Tor ready" received nothing until the next job.
+		// strength of the resume alone.
 		woke := time.Now()
 		since := func(at func(string) time.Time) (got, missing []string) {
 			for _, u := range strings.Split(testRelays, ",") {
@@ -142,8 +135,8 @@ func TestSleepWakeThenModeSwitch(t *testing.T) {
 			}
 			return
 		}
-		// awake: every runner dials within seconds of the wake. this is the
-		// bug - before the fix they slept out fifteen minutes.
+		// awake: every runner dials within seconds of the wake, not after
+		// the fifteen-minute sleep it takes while tor is paused.
 		for time.Since(woke) < 10*time.Second {
 			if _, m := since(relayDialledAt); len(m) == 0 {
 				break

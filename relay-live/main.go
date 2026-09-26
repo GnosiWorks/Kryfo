@@ -26,8 +26,7 @@ func main() {
 	relay.CountEvents = append(relay.CountEvents, db.CountEvents)
 	relay.DeleteEvent = append(relay.DeleteEvent, db.DeleteEvent)
 
-	// keep it minimal + working first. size/kind policies come in a later
-	// pass once we confirm the relay runs and halo talks to it.
+	// todo: size and kind policies
 
 	addr := "127.0.0.1:3334"
 	if v := os.Getenv("RELAY_ADDR"); v != "" {

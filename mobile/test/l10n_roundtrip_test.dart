@@ -3116,7 +3116,7 @@ void main() {
     );
     expect(
       l.motionTellingTheNetworkYou,
-      "telling the network you're online — without revealing where.",
+      "telling the network you're online, without revealing where.",
     );
     expect(
       l.motionYourIpIsHidden,

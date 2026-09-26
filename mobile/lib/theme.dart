@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// kryfo design tokens. mirrors css vars in 08_complete_spec.html.
-// keep flat. one source of truth for color, type, spacing.
+// kryfo design tokens: colour and type, in one place.
 
 import 'dart:async';
 
@@ -137,9 +136,9 @@ class HaloType {
   static const monoFallback = ['Noto Sans Arabic'];
 
   // instrument sans has no vietnamese letters with stacked or hooked accents
-  // (ế, ự, ỹ...). drawn from the phone's font a letter at a time they sat in
-  // the middle of words in another typeface, so in vietnamese the whole sans
-  // is noto sans, which has them all. fraunces and jetbrains mono have them.
+  // (ế, ự, ỹ...), and a fallback letter mid-word shows in another typeface,
+  // so vietnamese uses noto sans throughout. fraunces and jetbrains mono
+  // have them.
   static String get sansFamily => _joinedScript
       ? 'Noto Sans Arabic'
       : l10nLocale.languageCode == 'vi'
@@ -147,9 +146,8 @@ class HaloType {
       : 'Instrument Sans';
 
   // in persian and arabic the arabic-script font leads and ours follow for
-  // the latin words in a sentence. led by fraunces, a persian word with a
-  // zero-width non-joiner in it came out with its letters unjoined after
-  // the non-joiner, on the samsung.
+  // the latin words. led by fraunces, a zero-width non-joiner leaves the
+  // letters after it unjoined.
   static String get serifFamily =>
       _joinedScript ? 'Noto Naskh Arabic' : 'Fraunces';
   static String get monoFamily =>
@@ -247,12 +245,9 @@ ThemeData buildHaloTheme() {
   );
 }
 
-// editorial toast: ink surface, hairline amber edge - reads like part of kryfo
-// rather than a default grey snackbar. clears any in-flight toast first.
-// ids and crypto addresses are the two things worth stealing off a phone,
-// and any app the user pastes into can read the clipboard. so we take them
-// back out after a minute - but only if they're still what we put there,
-// otherwise we'd be wiping something the user copied since.
+// ids and crypto addresses are worth stealing, and any app the user pastes
+// into can read the clipboard, so they come back out after a minute. only
+// if they are still what we put there: the user may have copied since.
 Timer? _clipTimer;
 
 Future<void> copySensitive(String value) async {
@@ -278,14 +273,13 @@ Future<void> copySensitive(String value) async {
   });
 }
 
-// the app's scaffold messenger, set on the MaterialApp. toasts no longer go
-// through it (they are kryfo's own, in the root overlay, below).
+// the app's scaffold messenger, set on the MaterialApp. toasts use the root
+// overlay below
 final GlobalKey<ScaffoldMessengerState> haloMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
-/// the root overlay, set by the app at start. a toast lives there, over
-/// every route and sheet, so it never depends on the screen that asked for
-/// it still being alive
+/// the root overlay, set at start. a toast lives there, over every route
+/// and sheet, so it never depends on the screen that asked for it
 OverlayState? Function()? haloToastOverlay;
 
 OverlayEntry? _toastEntry;
@@ -296,9 +290,6 @@ void _dropToast(OverlayEntry e) {
   if (_toastKeys.remove(e) != null) e.remove();
 }
 
-/// a short line at the top of the screen: it drops in with a small spring,
-/// stays three and a half seconds, and goes up and out; a tap or a flick
-/// up sends it sooner. a new one takes the place of the one showing.
 /// the app lock's say, set at start: a toast shown while it is up waits
 /// for it to lift
 Future<void> Function(Future<void> Function() act)? haloWhenOpen;

@@ -8,7 +8,7 @@ import 'package:kryfo/l10n/numbers.dart';
 void main() {
   tearDown(() => setL10nLocale(const Locale('en')));
 
-  test('english numbers read as they did', () {
+  test('formats english numbers', () {
     expect(whole(5), '5');
     expect(whole(1234), '1,234');
     expect(decimal(1.25, 1), '1.3');
@@ -19,7 +19,7 @@ void main() {
     expect(l10n.home1Chat(1234), '1,234 chats');
   });
 
-  test('each language writes its own', () {
+  test('each language formats its own numbers', () {
     setDateLocale(intlLocaleFor('de'));
     expect(decimal(1.5, 1), '1,5');
     expect(whole(1234), '1.234');

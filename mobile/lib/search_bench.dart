@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// debug builds only: how fast search is on a big history. fills a scratch
-// encrypted database (never the real one) with 50,000 messages in the
-// scripts kryfo speaks, through the same index code and the same query the
-// app uses, then times a spread of searches. started by a marker file,
-// `run-as app.kryfo touch app_flutter/search_bench`; the marker and the
-// scratch database are gone afterwards. a release build carries none of it.
+// debug builds only: times search on a scratch encrypted database (never
+// the real one) filled with 50,000 messages, through the app's own index
+// code and query. started by `run-as app.kryfo touch app_flutter/search_bench`;
+// the marker and the scratch database are gone afterwards.
 import 'dart:io';
 import 'dart:math';
 

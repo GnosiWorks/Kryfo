@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-//
-// claim a public handle. this is the one screen that makes someone findable
-// by strangers, so it says what that costs before it offers the button, and
-// it is off until they ask for it.
+// claim a public handle. the one screen that makes someone findable by
+// strangers, so it says what that costs first and is off until asked for.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -59,8 +57,7 @@ class _HandleScreenState extends State<HandleScreen> {
       return;
     }
     setState(() => _state = 'checking');
-    // the registry is one request away and someone types fast. wait for them
-    // to stop before asking.
+    // wait for typing to stop before asking the registry
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       // a quiet session never reaches the registry: it answers as an
       // unreachable one would
@@ -74,8 +71,8 @@ class _HandleScreenState extends State<HandleScreen> {
     final h = _ctrl.text.trim().toLowerCase();
     if (h.isEmpty || _state != 'free') return;
     setState(() => _busy = true);
-    // same invite the qr code carries - the registry only ever holds what
-    // was already public.
+    // same invite the qr code carries, so the registry only holds what is
+    // already public
     final uri = await appState.sessionInvite();
     final r = sessionQuiet
         ? _unreached

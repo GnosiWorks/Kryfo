@@ -263,8 +263,8 @@ GeoView viewFor(double lat, double lon, GeoRing? ring, double aspect) {
 }
 
 String coordsLine(double lat, double lon) {
-  // no-break spaces: a number never leaves its N or E behind on a line of
-  // its own, which it did in arabic and persian
+  // no-break spaces, so in arabic and persian a number never leaves its N
+  // or E on a line of its own
   String one(double v, String pos, String neg) =>
       '${v.abs().toStringAsFixed(5)}°\u00a0${v >= 0 ? pos : neg}';
   return '${one(lat, 'N', 'S')} · ${one(lon, 'E', 'W')}';

@@ -28,18 +28,13 @@ Future<void> initNotifications({void Function(String? payload)? onTap}) async {
       .resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin
       >();
-  // android freezes a channel's importance at creation. the old
-  // 'halo_messages' channel was stuck below heads-up level, so bumping
-  // importance in code did nothing. drop it and make a fresh v2 channel that
-  // registers at max - that's the only way to get the banner back.
+  // android freezes a channel's importance at creation, so the old
+  // 'halo_messages' channel, below heads-up level, makes way for a v2 at max
   await android?.deleteNotificationChannel(channelId: 'halo_messages');
   await nameNotificationChannel();
-  // android 13+ denies notifications until asked. without this the channel
-  // exists but nothing is ever delivered, silently. the ask is android's own
-  // dialog, so it waits for the app lock to lift: never over the pin pad.
-  // the activity asks at most once (askForNotificationsOnce), and with no
-  // activity, as in a process the service brought back, there is no channel
-  // and nothing is asked.
+  // android 13+ denies notifications until asked, and nothing is delivered.
+  // the ask is android's own dialog, so it waits for the lock to lift. the
+  // activity asks at most once (askForNotificationsOnce)
   unawaited(
     lockGuard
         .anyUnlock()
@@ -90,8 +85,7 @@ Future<void> setHideNotifContent(
   await prefs.setBool(c.key(_hideContentKey), v);
 }
 
-// ids by chat, so opening the chat by hand takes its notifications down.
-// they used to stay in the shade after the message had been read.
+// ids by chat, so opening the chat by hand takes its notifications down
 final Map<String, List<int>> _shownFor = {};
 
 Future<void> clearNotificationsFor(String payload) async {
@@ -145,9 +139,8 @@ Future<void> showMessageNotification({
       summaryText: hidden ? null : l10n.notificationsEncrypted,
     ),
   );
-  // unique per message. a stable per-sender id meant the second message
-  // only UPDATED the first notification, and android never re-alerts for an
-  // update - so the badge moved but no banner ever appeared.
+  // unique per message: android never re-alerts when a notification is
+  // updated in place
   final id = DateTime.now().microsecondsSinceEpoch & 0x7fffffff;
   if (payload != null) (_shownFor[payload] ??= []).add(id);
   await notifPlugin.show(

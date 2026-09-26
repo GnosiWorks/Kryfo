@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the app lock on the pin table: every pin costs the same, the throttle
-// cannot be walked around with a decoy pin, and the move from the old sha256
-// pins survives a crash at any point.
+// the app lock on the pin table: every pin costs the same, a decoy unlock
+// keeps the miss budget, and the move from legacy pins holds up if it stops
+// at any point.
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
@@ -196,7 +196,7 @@ void main() {
     });
   });
 
-  test('every pin reads nothing, checks once and writes once', () async {
+  test('every check reads nothing and writes once', () async {
     final lock = await make();
     for (final (pin, want) in [
       ('1234', PinResult.normal),
@@ -213,7 +213,7 @@ void main() {
     }
   });
 
-  test('every outcome is shown at the same moment', () async {
+  test('every outcome shows at the same moment', () async {
     final lock = await make(reveal: const Duration(milliseconds: 80));
     for (final pin in ['1234', '5555', '0000', '9999']) {
       final t = Stopwatch()..start();
@@ -222,7 +222,7 @@ void main() {
     }
   });
 
-  test('a decoy unlock opens quietly and the everyday one clears it', () async {
+  test('a decoy unlock sets quiet, everyday clears it', () async {
     final lock = await make();
     await lock.verifyPin('5555');
     expect(lock.locked, isFalse);
@@ -233,7 +233,7 @@ void main() {
     expect(lock.quiet, isFalse);
   });
 
-  test('five misses hold the pad; the wipe pin still wipes', () async {
+  test('the pad holds after five misses', () async {
     final lock = await make();
     for (var i = 0; i < 5; i++) {
       expect(await lock.verifyPin('0000'), PinResult.invalid);
@@ -246,7 +246,7 @@ void main() {
   });
 
   test(
-    'a decoy unlock does not reset the count that guards the real pin',
+    'a decoy unlock keeps the miss budget',
     () async {
       final lock = await make();
       // four wrong, then the decoy, four times over: never five in a row
@@ -272,7 +272,7 @@ void main() {
   );
 
   test(
-    'the hold follows the uptime clock and starts over after a reboot',
+    'the hold uses uptime and restarts on reboot',
     () async {
       final lock = await make();
       for (var i = 0; i < 5; i++) {
@@ -289,7 +289,7 @@ void main() {
   );
 
   test(
-    'an old sha256 pin opens and moves into the table, table first',
+    'a legacy pin opens and moves to the table',
     () async {
       store.m.remove('halo.lock.table');
       store.m['halo.lock.pin_salt'] = 'c2FsdA==';
@@ -310,7 +310,7 @@ void main() {
   );
 
   test(
-    'a crash between the table and the delete still opens, and finishes',
+    'a half-done pin move opens and finishes',
     () async {
       store.m.remove('halo.lock.table');
       store.m['halo.lock.pin_salt'] = 'c2FsdA==';
@@ -330,7 +330,7 @@ void main() {
     },
   );
 
-  test('an old wipe pin still wipes after the app pin moved', () async {
+  test('a legacy wipe pin wipes after the move', () async {
     store.m.remove('halo.lock.table');
     store.m['halo.lock.pin_salt'] = 'YQ==';
     store.m['halo.lock.pin_hash'] = FakeEngine.legacyHash('2468', 'YQ==');
@@ -346,7 +346,7 @@ void main() {
   });
 
   test(
-    'a pin already in use is refused without saying which, and counts',
+    'a pin in use is refused and counts',
     () async {
       final lock = await make();
       final before = store.m['halo.lock.table'];
@@ -359,12 +359,12 @@ void main() {
     },
   );
 
-  test('changing the app pin to itself is not a clash', () async {
+  test('the app pin may be set to itself', () async {
     final lock = await make();
     expect(await lock.setupPin('1234'), isTrue);
   });
 
-  test('a keystore that will not answer keeps the app locked', () async {
+  test('an unreadable keystore keeps the app locked', () async {
     store.failReads = true;
     final lock = LockState(
       store: store,
@@ -377,7 +377,7 @@ void main() {
     expect(lock.locked, isTrue);
   });
 
-  test('turning the lock off removes the table and the counters', () async {
+  test('turning the lock off clears the table', () async {
     final lock = await make();
     await lock.verifyPin('0000');
     await lock.disable();
@@ -391,7 +391,7 @@ void main() {
     expect(lock.locked, isFalse);
   });
 
-  test('misses and a hold from before the table carry over', () async {
+  test('legacy misses and hold carry over', () async {
     store.m['halo.lock.misses'] = '5';
     store.m['halo.lock.until'] =
         '${DateTime.now().millisecondsSinceEpoch + 20000}';
@@ -400,7 +400,7 @@ void main() {
     expect(await lock.verifyPin('1234'), PinResult.throttled);
   });
 
-  test('until the decoy session exists, its pin opens nothing', () async {
+  test('a decoy pin opens nothing before its session', () async {
     decoyReady = false;
     final lock = await make();
     expect(await lock.verifyPin('5555'), PinResult.invalid);
@@ -408,7 +408,7 @@ void main() {
   });
 
   test(
-    'a finger added since fingerprint was turned on waits for the pin',
+    'a new finger waits for the pin',
     () async {
       store.m['halo.lock.biometric'] = 'true';
       bio.key = 'invalidated';
@@ -434,7 +434,7 @@ void main() {
   });
 
   test(
-    'the session each unlock opens is built before the lock lifts',
+    'the session is built before the lock lifts',
     () async {
       final lock = await make();
       final seen = <(PinResult, bool)>[];
@@ -469,7 +469,7 @@ void main() {
   });
 
   test(
-    'inside the decoy a pin equal to a hidden one is taken and kept nowhere',
+    'in the decoy a hidden clash is kept nowhere',
     () async {
       final lock = await make();
       lock.inDecoy = true;
@@ -487,7 +487,7 @@ void main() {
   );
 
   test(
-    'turning the lock off inside the decoy pauses it and deletes nothing',
+    'lock off in the decoy only pauses it',
     () async {
       final lock = await make();
       await lock.verifyPin('5555');
@@ -505,7 +505,7 @@ void main() {
   );
 
   test(
-    'enter your pin: the session\'s pin, a miss counts, the wipe pin wipes',
+    'confirming the pin works like the lock',
     () async {
       final lock = await make();
       expect(await lock.confirmPin('1234'), PinResult.normal);
@@ -518,7 +518,7 @@ void main() {
     },
   );
 
-  test('removing the decoy clears all three of its entries', () async {
+  test('removing the decoy clears its entries', () async {
     final lock = await make();
     lock.inDecoy = true;
     await lock.setupPanicPin('8888');
@@ -531,7 +531,7 @@ void main() {
     expect(store.m.containsKey('halo.lock.d.decoy'), isFalse);
   });
 
-  test('the quiet flag is read from storage every time', () async {
+  test('the quiet flag is read every time', () async {
     // a process the job starts has no lock state of its own: it reads this
     expect(await quietNow(store), isFalse);
     final lock = await make();

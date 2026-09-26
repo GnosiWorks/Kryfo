@@ -1,17 +1,10 @@
 package main
 
-// the pin table. one salt, one scrypt cost measured on this phone, and eight
-// entries of the same size. an entry that is set holds a tag and a sealed
-// record of what it opens; one that is not holds random bytes of the same
-// length, so the stored table does not say which pins exist. which entry
-// plays which role is fixed by the app (0 app, 1 wipe, 2 decoy, 3 vault,
-// the rest for pins set inside the decoy and for personas later).
-//
-// a check does the same work whatever was typed: one scrypt, eight tags
-// compared with no early exit, one sealed record opened (the matching one,
-// or entry 0 when none matches), both old sha256 checks with stand-ins when
-// there is nothing old, and one wrapped key opened, real or a stand-in. the
-// key made from the pin never leaves this file.
+// the pin table: one salt, a scrypt cost measured on this phone and eight
+// entries of the same size. an unset entry is random bytes, so the table does
+// not say which pins exist. roles are fixed by the app (0 app, 1 wipe, 2
+// decoy, 3 vault). a check does the same work whatever was typed, and the key
+// made from the pin never leaves this file.
 
 import (
 	"crypto/hmac"
@@ -56,8 +49,7 @@ type pinTable struct {
 	Entries []pinEntry `json:"e"`
 }
 
-// the old app and wipe checks: sha256 of "salt:pin" as hex, as lock_state
-// stored them before the table
+// the legacy app and wipe checks: hex sha256 of "salt:pin"
 type pinLegacy struct {
 	AppSalt  string `json:"as"`
 	AppHash  string `json:"ah"`
@@ -143,7 +135,7 @@ func legacyHash(pin []byte, salt string) []byte {
 	return []byte(hex.EncodeToString(h[:]))
 }
 
-// one old check. with nothing stored it compares against a stand-in, so the
+// one legacy check. with nothing stored it compares against a stand-in, so the
 // work is the same either way
 func legacyMatch(pin []byte, salt, hash string) bool {
 	pinCount.legacy++

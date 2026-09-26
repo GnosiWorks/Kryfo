@@ -203,7 +203,7 @@ void main() {
     haloWhenOpen = null;
   });
 
-  testWidgets('nothing the app draws underneath shows on the lock', (
+  testWidgets('the locked screen shows only the pad', (
     tester,
   ) async {
     final a = _App(tester);
@@ -274,7 +274,7 @@ void main() {
     await same('a session switch');
   });
 
-  testWidgets('taps, keys and scrolls never reach the app under the lock', (
+  testWidgets('input never reaches the app while locked', (
     tester,
   ) async {
     final a = _App(tester);
@@ -317,7 +317,7 @@ void main() {
     expect(a.scroll.offset, greaterThan(0));
   });
 
-  testWidgets('a finger already on the app lets go when the lock goes up', (
+  testWidgets('a held finger lets go on lock', (
     tester,
   ) async {
     final a = _App(tester);
@@ -330,7 +330,7 @@ void main() {
     expect(a.taps, 0);
   });
 
-  testWidgets('the screen reader finds the lock and nothing of the app', (
+  testWidgets('the screen reader sees only the lock', (
     tester,
   ) async {
     final handle = tester.ensureSemantics();
@@ -392,7 +392,7 @@ void main() {
     expect(told.last, isFalse);
   });
 
-  testWidgets('locked again while the pad fades: at once, and a fresh pad', (
+  testWidgets('locking mid-fade brings a fresh pad', (
     tester,
   ) async {
     final a = _App(tester);
@@ -409,7 +409,7 @@ void main() {
     expect(await a.capture(), lockAlone);
   });
 
-  testWidgets('with reduced motion the lock goes in one frame', (tester) async {
+  testWidgets('reduced motion lifts the lock in one frame', (tester) async {
     tester.platformDispatcher.accessibilityFeaturesTestValue =
         FakeAccessibilityFeatures(disableAnimations: true);
     addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
@@ -422,7 +422,7 @@ void main() {
     expect(find.text('secret home'), findsOneWidget);
   });
 
-  testWidgets('before the lock is read only ink shows, and no pad', (
+  testWidgets('only ink shows before the lock is read', (
     tester,
   ) async {
     final a = _App(tester);
@@ -437,7 +437,7 @@ void main() {
     expect(a.pads, 1);
   });
 
-  testWidgets('a toast from just before the lock is gone after it', (
+  testWidgets('a toast from before the lock is dropped', (
     tester,
   ) async {
     final a = _App(tester);
@@ -450,7 +450,7 @@ void main() {
     expect(find.text('before'), findsNothing);
   });
 
-  testWidgets('a toast asked for under the lock waits for it', (tester) async {
+  testWidgets('a toast under the lock waits for unlock', (tester) async {
     final a = _App(tester);
     await a.pump();
     await a.lockUp();
@@ -464,7 +464,7 @@ void main() {
     await tester.pumpAndSettle(const Duration(seconds: 5));
   });
 
-  testWidgets('what runs outside the tree stops as the lock goes up', (
+  testWidgets('media outside the tree stops on lock', (
     tester,
   ) async {
     final a = _App(tester);
@@ -480,8 +480,7 @@ void main() {
     expect(recording, isFalse);
   });
 
-  testWidgets('leaving puts the lock up at once, and coming back finds the '
-      'same pad', (tester) async {
+  testWidgets('leaving locks at once and keeps the pad', (tester) async {
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     final a = _App(tester);
     await a.pump();
@@ -502,7 +501,7 @@ void main() {
     expect(find.text('secret home'), findsNothing);
   });
 
-  testWidgets('a decoy unlock drops what waited for the everyday app', (
+  testWidgets('a decoy unlock drops what waited', (
     tester,
   ) async {
     final a = _App(tester);
@@ -521,8 +520,7 @@ void main() {
     expect(opened, isTrue);
   });
 
-  testWidgets('a session switch under the lock: the pad stays, the other '
-      "session's screens go, and flights still work after", (tester) async {
+  testWidgets('a session switch keeps the pad, drops screens', (tester) async {
     final a = _App(tester);
     await a.pump();
     a.n.push(MaterialPageRoute<void>(builder: (_) => _page('a chat')));

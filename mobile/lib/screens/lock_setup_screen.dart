@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// lock_setup_screen.dart - set or change the pin. four digits, then the
-// same four again.
+// set or change the pin: four digits, then the same four again
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

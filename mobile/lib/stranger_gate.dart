@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-//
 import 'message_envelope.dart';
 
-// the stranger gate, as plain decisions with no db or engine behind them, so
-// the rules can be tested and read in one place. a stranger is someone who
-// wrote to us before we accepted them: they get two messages into requests,
-// and the app must keep listening for them across restarts or the second
-// message quietly waits on the relay until we accept.
+// the stranger gate as plain decisions, no db or engine, so the rules can be
+// tested in one place. a stranger wrote to us before we accepted them: they
+// get two messages into requests, and we keep listening for them across
+// restarts or the second waits on the relay until we accept.
 
 // who to listen for at boot. accepted contacts, people a friend vouched for,
 // and plain strangers sitting in requests: all three can write to us on a
@@ -27,11 +25,10 @@ List<Map<String, Object?>> bootSubscribeRows({
   return out;
 }
 
-// does this frame prove the peer is talking to us? a delivery receipt does
-// not: it means their phone stored our message, which is our own words
-// coming back. counting it flipped back-paired on the sender, and with it the
-// sender's own two-message cap, so a stranger could keep writing into a gate
-// that drops everything past two. only something they wrote counts.
+// does this frame prove the peer is talking to us? a delivery receipt is
+// our own words coming back. counting it would flip back-paired and lift the
+// sender's cap while the far gate drops everything past two. only something
+// they wrote counts.
 bool proofOfEngagement(UnwrappedMessage env) =>
     env.deliveredUid == null && env.need == null;
 
@@ -45,7 +42,7 @@ bool strangerCapHolds({
 
 // thrown when the cap holds a message back. the poll loop must not mark the
 // event seen then: it stays on the relay, and the replay after accept brings
-// it in. marking it seen was the difference between delayed and lost.
+// it in.
 class CapHeld implements Exception {
   const CapHeld();
 }

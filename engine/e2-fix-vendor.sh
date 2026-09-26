@@ -1,13 +1,9 @@
 #!/usr/bin/env bash
-# e2-fix-vendor.sh
-# `go mod vendor` copies only files Go itself needs - it DROPS directories that
-# contain no .go files. go-libtor builds tor/libevent/openssl from C sources and
-# includes headers via relative paths (../openssl_config/gotor_extra.h), so the
-# vendored copy is missing every C config dir -> "file not found".
-#
-# everything is already in the module cache (the vendor step downloaded it), so
-# we just copy the complete module content into vendor/ without clobbering what
-# go put there. no network needed.
+# `go mod vendor` drops directories with no .go files, but go-libtor includes
+# its c config headers by relative path (../openssl_config/gotor_extra.h), so
+# the vendored copy fails with "file not found". this copies the full modules
+# from the module cache into vendor/ without overwriting what go put there.
+# no network needed.
 set -e
 cd "$(dirname "$0")"   # engine/
 

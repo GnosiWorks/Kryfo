@@ -8,9 +8,8 @@ import (
 	"testing"
 )
 
-// the registry verifies this exact text (server/handle, listingMsg): a
-// change on one side and not the other and nobody can opt in any more
-func TestHandleListingMessageMatchesTheRegistry(t *testing.T) {
+// the registry verifies this exact text (server/handle, listingMsg)
+func TestListingMsgMatchesRegistry(t *testing.T) {
 	got := handleListingMsg("wren", true, 1790000000, "Wren F.")
 	if got != "kryfo-handle-list-v1:wren:1:1790000000:Wren F." {
 		t.Fatal(got)
@@ -20,8 +19,7 @@ func TestHandleListingMessageMatchesTheRegistry(t *testing.T) {
 	}
 }
 
-// the body carries every field the registry reads, and its signature
-// verifies against the key it names over the text the registry rebuilds
+// every field the registry reads, signed by the key it names
 func TestHandleListingBodyVerifies(t *testing.T) {
 	pub, priv, _ := ed25519.GenerateKey(nil)
 	var got map[string]string

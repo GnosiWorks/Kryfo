@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 # cuts the apk signing block out of a signed apk and writes what is left.
-#
-# f-droid does the same with apksigcopier and compares the result to their
-# own unsigned build byte for byte - not entry by entry. entry hashes matched
-# on 0.2.8 and 0.2.10 and both were refused, because apksigner had re-padded
-# the zip on the way through and what was left was not the container they
-# built. verify.sh makes this comparison now.
+# f-droid compares that to their own unsigned build byte for byte, not entry
+# by entry.
 #
 # the block sits between the last entry and the central directory:
 #   [size u64][id-value pairs][size u64]"APK Sig Block 42"

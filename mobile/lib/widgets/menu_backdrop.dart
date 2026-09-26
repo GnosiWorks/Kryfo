@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // what sits behind every long-press menu: the page blurs and dims in one
-// short fade. shared so the chat and the group feel like the same app.
+// short fade.
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -31,9 +31,8 @@ class _MenuBackdropState extends State<MenuBackdrop>
       animation: _c,
       builder: (_, _) {
         final t = Curves.easeOut.transform(_c.value);
-        // animate only the dark overlay (cheap). the blur sigma stays fixed -
-        // animating BackdropFilter blur recomputes the whole blur every frame
-        // and janks the long-press menu on weaker phones.
+        // only the dark overlay animates: an animated blur sigma recomputes
+        // the whole blur every frame and janks on weaker phones
         return BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
           child: Container(color: Colors.black.withValues(alpha: 0.42 * t)),

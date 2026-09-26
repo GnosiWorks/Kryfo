@@ -1,17 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// polls in groups and rooms. a poll is an ordinary group message: its text
-// is the question, and it carries the options. a vote is a small frame, like
-// a reaction, sent to every member through the same pairwise sessions. no
-// server keeps a count; every phone adds up the votes it has.
-//
-// a vote names the poll, the choices, and a number that only goes up for
-// that voter. the highest number a phone has seen from a voter is their
-// vote. that one rule covers a vote that arrives twice (same number, no
-// change), votes that arrive out of order (an older one never overwrites a
-// newer one) and a member who was offline (everything arrives, the last
-// word wins). when the creator closes the poll, the close carries the votes
-// as the creator had them, and every phone takes that as the final count,
-// so a closed poll reads the same everywhere.
+// polls in groups and rooms. a poll is a group message with options, a vote
+// is a small frame to every member, like a reaction, and every phone counts
+// for itself. a voter's highest number wins, so a vote twice or out of order
+// changes nothing, and a close carries the creator's votes as the final count.
 import 'dart:convert';
 
 const kPollMinOptions = 2;
@@ -42,8 +33,7 @@ class PollSpec {
   String toRow() =>
       jsonEncode({'o': options, if (multi) 'mu': 1, if (closed) 'cl': 1});
 
-  /// a poll from the wire or a row. null when it is not one we would draw:
-  /// too few or too many options, or options that are empty or too long.
+  /// a poll from the wire or a row. null when it is not one we would draw
   static PollSpec? parse(Object? raw) {
     Object? j = raw;
     if (raw is String) {
@@ -74,8 +64,8 @@ class PollSpec {
   }
 }
 
-/// the draft from the new-poll sheet, tidied: trimmed, empty options gone,
-/// the same option twice kept once. null while it cannot be sent.
+/// the new-poll sheet's draft, trimmed and without empty or repeated
+/// options. null while it cannot be sent
 ({String question, List<String> options})? tidyDraft(
   String question,
   List<String> options,
@@ -141,8 +131,7 @@ class PollTally {
   final List<List<String>> who;
   const PollTally(this.counts, this.voters, this.mine, this.who);
 
-  /// share of voters, 0..1. on a several-answers poll the shares add up to
-  /// more than one, as they do everywhere else.
+  /// share of voters, 0..1. on a multi-answer poll they add up past one
   double share(int i) => voters == 0 ? 0 : counts[i] / voters;
 
   /// the options with the most votes, when there are votes at all

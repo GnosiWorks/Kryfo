@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// link previews, the honest kind. a link in a message shows its bare domain
-// and nothing else until the reader asks; the ask is one request for the
-// page, over whatever route the app is on, and only the title comes back.
+// link previews. a link shows its bare domain until the reader asks, then one
+// request over the app's route fetches the page and only the title is kept.
 // no image is ever loaded. these are the pure parts.
 
 import 'bidi_safe.dart';

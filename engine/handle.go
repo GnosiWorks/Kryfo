@@ -1,26 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// public handles. @wren instead of three words, for people who want to be
-// findable on purpose - a creator putting one link in a bio, someone who
-// would rather say a name than read out neon-tiger-saturn.
-//
-// this is the one part of kryfo with a central registry, and it is worth
-// being precise about what that costs. the registry holds a handle, the
-// invite it points at, and the identity key that claimed it. the invite is
-// the same blob already printed on the qr code and pasted into chats - it is
-// meant to be public. what the registry does NOT hold is who you talk to,
-// what you said, or who looked you up: the page is static and the server is
-// configured not to log visitors.
-//
-// off by default, and released as easily as claimed. a handle nobody claimed
-// is a handle nobody can be compelled to hand over.
+// public handles: @wren instead of three words, for people who want to be
+// findable on purpose. the one central registry in kryfo. it holds a handle,
+// the invite it points at (already public) and the key that claimed it, not
+// who you talk to or who looked you up. off by default.
 //
 // ownership is proved by signing the handle with the identity key the invite
 // already carries, so nobody can claim a name that points at someone else's
 // invite, and only the original claimer can release or repoint it.
 
 import (
+	"bytes"
 	"context"
 	"crypto/ed25519"
 	"encoding/hex"
@@ -70,7 +61,9 @@ func HaloHandleCheck(cHandle *C.char) *C.char {
 	if err != nil {
 		return C.CString("error: " + err.Error())
 	}
-	req, _ := http.NewRequest("GET", handleBase+"/handle/check?h="+h, nil)
+	body, _ := json.Marshal(map[string]string{"h": h})
+	req, _ := http.NewRequest("POST", handleBase+"/handle/check", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", "")
 	resp, err := client.Do(req)
 	if err != nil {
@@ -149,7 +142,7 @@ func handlePost(path string, body []byte) string {
 		return "error: " + err.Error()
 	}
 	req.Header.Set("Content-Type", "application/json")
-	// nothing identifying in the headers - the body already says who we are,
+	// nothing identifying in the headers: the body already says who we are,
 	// and only because it has to.
 	req.Header.Set("User-Agent", "")
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -176,9 +169,8 @@ func handlePost(path string, body []byte) string {
 	return "ok"
 }
 
-// the text an owner signs to go into search or out of it. the registry
-// builds the same one (server/handle, listingMsg); a test on each side pins
-// it to the same line.
+// the text an owner signs to list or unlist a handle. the registry builds
+// the same one (server/handle, listingMsg).
 func handleListingMsg(h string, listed bool, ts int64, name string) string {
 	l := "0"
 	if listed {
@@ -189,10 +181,9 @@ func handleListingMsg(h string, listed bool, ts int64, name string) string {
 
 //export HaloHandleListing
 //
-// in search or out of it: "1" puts the handle in the registry's search
-// under name, "0" takes it out. a handle and being findable are separate:
-// claiming one never lists it. signed with the identity key, with the time,
-// so the registry takes each change once and in order.
+// "1" lists the handle in the registry's search under name, "0" takes it
+// out. claiming a handle never lists it. signed with the time so the
+// registry takes each change once and in order.
 func HaloHandleListing(cHandle *C.char, cListed *C.char, cName *C.char) *C.char {
 	h := strings.ToLower(strings.TrimSpace(C.GoString(cHandle)))
 	if !handleOK.MatchString(h) {

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the page someone opens to bring a friend in. two ways in, by outcome:
-// the friend is next to you, or the friend is somewhere else. the
-// mechanism sits under each as a detail. this is the one screen that grows
-// kryfo, so it gets the room and the type of a front door.
+// the page someone opens to bring a friend in, sorted by outcome: next to
+// you, somewhere else, or a handle. the mechanism sits under each as a
+// detail. the one screen that grows kryfo, so it gets a front door's room.
 import 'package:flutter/material.dart';
 import '../lock_state.dart';
 import 'package:flutter/services.dart';
@@ -283,7 +282,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
   }
 }
 
-// ───────── the two ways ─────────
+// ───────── the ways in ─────────
 
 // a card that opens. the head is the outcome in serif with one plain line
 // under it; the body is the mechanism, revealed with a size change and a
@@ -424,7 +423,7 @@ class _Way1Card extends StatelessWidget {
             onTap: onScan,
           ),
           const SizedBox(height: 8),
-          // the code had no door: it could be shown, and nowhere typed in
+          // a code that can be shown needs somewhere to be typed in
           _Ghost(
             icon: Icons.dialpad_outlined,
             label: l10n.myKryfoTheyReadYouA,

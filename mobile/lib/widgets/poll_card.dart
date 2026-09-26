@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a poll in a group chat. before a vote: the answers to pick from. after it,
-// or once closed: a bar per answer that glides to its share as votes come
-// in, and who voted what one tap away. the votes are counted here, on this
-// phone, from what the members sent.
+// a poll in a group chat: the answers to pick before a vote, then a bar per
+// answer and who voted what. the votes are counted on this phone.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

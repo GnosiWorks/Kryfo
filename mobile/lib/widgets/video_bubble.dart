@@ -16,9 +16,9 @@ import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import 'video_viewer.dart';
 
-/// a tap on a file or a video: open it in whatever the phone has for it.
-/// when nothing does, the share sheet, which is all a tap used to offer.
-/// held against the app lock: leaving for the viewer is not leaving.
+/// a tap on a file or a video: open it in whatever the phone has for it,
+/// or the share sheet when nothing does. held against the app lock: leaving
+/// for the viewer is not leaving.
 Future<void> openReceivedFile(
   BuildContext context,
   String path,

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the line under the composer while a first message grinds its proof of
-// work. a million hashes is seconds on a fast phone and up to a minute on
-// a slow one; without this line the message just sat there.
+// work: seconds on a fast phone, up to a minute on a slow one
 import 'dart:async';
 
 import 'package:flutter/material.dart';

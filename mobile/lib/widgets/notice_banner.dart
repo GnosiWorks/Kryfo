@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the house inline notice: a 14px stroked glyph, terse lowercase text, on a
 // faint tint of one accent colour. no border, no pill, no emoji. used for
-// vouches, the scam shield and burner rooms so they all read as one voice.
+// vouches, the scam shield and burner rooms.
 import 'package:flutter/material.dart';
 import '../theme.dart';
 

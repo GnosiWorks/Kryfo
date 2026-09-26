@@ -13,9 +13,9 @@ tests=(
 	TestSleepWakeThenModeSwitch
 	TestReconnect
 	TestRegistryOverTor
-	TestClaimAfterANetworkBounce
-	TestEveryOneShotSurvivesABounce
-	TestControlPortThatNeverAnswers
+	TestClaimAfterNetworkBounce
+	TestOneShotsSurviveBounce
+	TestControlPortNeverAnswers
 	TestReconnectOutcomeDoesNotNest
 	TestOutcomeSaysRunningWhileRunning
 )

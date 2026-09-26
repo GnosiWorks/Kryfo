@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// lock_guard.dart - what the app lock's layer cannot cover by drawing over
-// it. what comes from outside while it is up, a notification tap or a link,
-// waits until it lifts, since opening it underneath would still run it. what
-// runs outside the widget tree (a voice note, a recorder, the camera, a
-// video) stops as it goes up. work that ends in a system dialog waits for it
-// to lift. a decoy unlock drops what waited instead.
+// what the lock layer cannot cover by drawing over it. taps, links and
+// system dialogs wait until it lifts, players, recorders and the camera stop
+// as it goes up, and a decoy unlock drops what waited.
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
@@ -24,9 +21,8 @@ class LockGuard {
   final List<Completer<void>> _anyWaiting = [];
   final Set<VoidCallback> _closers = {};
 
-  // done now, or once the lock lifts. a key keeps one of a kind: the same
-  // chat tapped twice while locked opens once, and a link that arrives by
-  // two routes at a cold start is handled once
+  // done now, or once the lock lifts. a key keeps one of a kind, so a link
+  // that arrives by two routes at a cold start is handled once
   Future<void> afterUnlock(Future<void> Function() act, {Object? key}) async {
     if (isLocked()) {
       _held.remove(key);
@@ -138,10 +134,9 @@ final lockGuard = LockGuard(
 // the app has been shown once since the process started
 bool appRevealed = false;
 
-// a first-build animation made now would play when the lock lifts. under
-// the lock, after the first time the app was shown (a session switch builds
-// a new home there), it starts finished: a decoy's home comes up the way the
-// everyday one does, still. before the first reveal both play it.
+// a first build under the lock, once the app has been shown, starts its
+// animation finished: a session switch builds a new home there, and it has
+// to come up as still as the everyday one
 bool get entranceDone => appRevealed && lockGuard.isLocked();
 
 // a screen is being looked at: its route is on top and no lock is over it

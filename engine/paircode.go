@@ -1,24 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// six digit pairing codes. someone reads a number out and the other person
-// types it - across a table, down a phone line, in a room where holding two
-// phones together is awkward.
+// six digit pairing codes, read out loud and typed on the other phone. both
+// sides derive the same keypair from the code alone: the person sharing
+// publishes their invite encrypted to it, the person joining reads it.
 //
-// both sides derive the same keypair from the code alone. the person sharing
-// publishes their invite encrypted to that key; the person joining subscribes
-// to it and reads what lands. no server knows either of them, and the relay
-// sees one more sealed blob.
-//
-// six digits is a million combinations and there is no rate limit on a public
-// relay, so a determined watcher can enumerate the space. what they get is an
-// invite - the thing you were about to read out loud anyway. it is not a
-// secret, it is an introduction, and the request inbox plus proof of work is
-// what actually gates a stranger. the code exists so the right person finds
-// you quickly, not so the wrong one cannot.
-//
-// the window is short for the same reason: an address nobody is listening to
-// is not worth publishing to.
+// a million codes and no rate limit on a public relay means a watcher can
+// enumerate them, but all they get is an invite, which is not a secret. the
+// request inbox and proof of work are what gate a stranger. the window is
+// short because an address nobody is listening to is not worth publishing to.
 
 import (
 	"context"
@@ -111,9 +101,8 @@ func HaloPairCodePublish(cCode, cPayload *C.char) *C.char {
 	return C.CString("ok")
 }
 
-// ask every relay at once and take whatever comes back first. this is a
-// one-shot lookup, not a subscription - the caller polls while the screen is
-// open and stops when it closes.
+// ask every relay at once and take whatever comes back first. a one-shot
+// lookup, not a subscription: the caller polls while the screen is open.
 func pairCodeQuery(ctx context.Context, pk string) []nostr.Event {
 	nostrMu.Lock()
 	urls := append([]string(nil), nostrRelays...)
@@ -192,8 +181,8 @@ func pairCodeQuery(ctx context.Context, pk string) []nostr.Event {
 }
 
 // look for an invite at the address the code names. returns the payload, or
-// "empty" when nothing is there yet - the caller polls, because the other
-// person may not have pressed share.
+// "empty" when nothing is there yet, since the other person may not have
+// pressed share.
 //
 //export HaloPairCodeFetch
 func HaloPairCodeFetch(cCode *C.char) *C.char {

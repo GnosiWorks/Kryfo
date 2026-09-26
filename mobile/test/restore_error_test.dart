@@ -22,7 +22,7 @@ void main() {
     );
     expect(classifyRestoreError('error: scrypt: x'), RestoreFailure.damaged);
   });
-  test('each cause has its own plain line, none a code', () {
+  test('each cause has its own plain line', () {
     final lines = RestoreFailure.values
         .map((w) => RestoreError(w).line)
         .toSet();

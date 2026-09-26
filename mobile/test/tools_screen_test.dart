@@ -22,7 +22,7 @@ double _lum(Color c) {
 }
 
 void main() {
-  testWidgets('the card and the four tools, in the mockup order', (t) async {
+  testWidgets('card and tools appear in order', (t) async {
     await t.pumpWidget(host(const ToolsScreen(), still: true));
     await t.pumpAndSettle(const Duration(milliseconds: 50));
     final ys = [
@@ -38,7 +38,7 @@ void main() {
     expect(ys, [...ys]..sort());
   });
 
-  testWidgets('taps reach the callbacks, and without one a row is inert', (
+  testWidgets('taps reach callbacks, rows without one are inert', (
     t,
   ) async {
     final got = <String>[];
@@ -61,7 +61,7 @@ void main() {
     expect(got, ['photo', 'video', 'qr']);
   });
 
-  testWidgets('no grey: nothing on the screen is drawn in text2 or text3', (
+  testWidgets('no text uses text2 or text3', (
     t,
   ) async {
     await t.pumpWidget(host(const ToolsScreen(), still: true));
@@ -72,14 +72,14 @@ void main() {
     }
   });
 
-  test('dark ink on the amber card holds 4.5:1 across the gradient', () {
+  test('amber card ink holds 4.5:1 contrast', () {
     for (final bg in [HaloColors.amberBright, HaloColors.amberBrightDeep]) {
       final a = _lum(bg), b = _lum(HaloColors.amberInk);
       expect((a + 0.05) / (b + 0.05), greaterThan(4.5));
     }
   });
 
-  testWidgets('fits a small phone at the largest font by scrolling', (t) async {
+  testWidgets('largest font fits a small phone by scrolling', (t) async {
     await t.pumpWidget(host(const ToolsScreen(), scale: 2, still: true));
     await t.pumpAndSettle(const Duration(milliseconds: 50));
     expect(t.takeException(), isNull);

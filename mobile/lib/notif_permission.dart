@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// whether android is letting kryfo put a notification up, and the way back
-// to the page that decides it.
-//
-// a messenger whose notifications are blocked looks broken rather than
-// quiet: nothing arrives while it is closed and nothing says why. on
-// android 13 and up the permission dialog does not come back once the
-// answer is final, so the only way to change it is android's own page.
+// whether android lets kryfo post notifications, and the way to the page
+// that decides it. on android 13 and up the dialog does not come back once
+// the answer is final, so android's own page is the only way to change it.
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

@@ -69,8 +69,7 @@ class HaloListenerService : Service() {
             .setShowWhen(false)
             .build()
         // android 14+ refuses a typed foreground service unless the type
-        // is passed here too. without it the service dies on start and the
-        // process gets frozen again.
+        // is passed here too, and the service dies on start.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(
                 NOTIFICATION_ID,
@@ -80,10 +79,9 @@ class HaloListenerService : Service() {
         } else {
             startForeground(NOTIFICATION_ID, notification)
         }
-        // wiped, or never opened: nothing to stay connected for. it has to
-        // have called startForeground first - a service started as a
-        // foreground one that stops without it takes the process down - so
-        // it does, and then leaves at once and asks not to be brought back.
+        // wiped, or never opened: nothing to stay connected for. a foreground
+        // service that stops before startForeground takes the process down,
+        // so it leaves only after that call and asks not to come back.
         if (!KryfoState.hasData(this)) {
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()

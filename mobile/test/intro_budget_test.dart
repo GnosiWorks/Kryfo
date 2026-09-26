@@ -2,8 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kryfo/intro_budget.dart';
 
-// the budget is the only thing standing between "introduce a friend" and
-// "introduce a thousand strangers", so the window math gets pinned here.
+// the budget is what caps introductions, so the window math is pinned here
 
 const _day = 24 * 60 * 60 * 1000;
 

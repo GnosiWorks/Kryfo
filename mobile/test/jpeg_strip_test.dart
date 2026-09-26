@@ -32,7 +32,7 @@ Uint8List _sample() {
 }
 
 void main() {
-  test('exif and comment go, picture data stays', () {
+  test('strips exif and comment, keeps picture data', () {
     final src = _sample();
     expect(jpegHasExif(src), isTrue);
     final out = stripJpegMetadata(src)!;
@@ -57,7 +57,7 @@ void main() {
     final png = Uint8List.fromList([0x89, 0x50, 0x4E, 0x47, 1, 2, 3]);
     expect(stripJpegMetadata(png), png);
   });
-  test('padding bytes before a segment do not hide exif', () {
+  test('padding before a segment does not hide exif', () {
     final src = _sample();
     // a legal fill byte between the app0 segment and the exif one
     final app0End = 2 + 2 + 16;
@@ -71,7 +71,7 @@ void main() {
     expect(jpegHasExif(out), isFalse);
     expect(String.fromCharCodes(out).contains('GPSLatitude'), isFalse);
   });
-  test('a broken length is refused, not copied through', () {
+  test('refuses a broken segment length', () {
     final src = _sample();
     final broken = Uint8List.fromList(src);
     // the exif segment's length now points past the end of the file
@@ -109,14 +109,14 @@ void main() {
         ]);
     String text(Uint8List b) => String.fromCharCodes(b);
 
-    test('a trailer after the end marker is not the picture', () {
+    test('drops a trailer after the end marker', () {
       final out = stripJpegMetadata(
         pic(tail: 'SEFHsamsung trailer SEFT'.codeUnits),
       )!;
       expect(text(out).contains('samsung'), false);
       expect(out.sublist(out.length - 2), [0xFF, 0xD9]);
     });
-    test('both scans and the table between them survive', () {
+    test('keeps both scans and the table between', () {
       final out = stripJpegMetadata(pic())!;
       expect(out.where((b) => b == 9).length >= 3, true);
       expect(text(out).contains('between scans'), false);
@@ -127,12 +127,12 @@ void main() {
         true,
       );
     });
-    test('app2 stays when it is a colour profile and only then', () {
+    test('keeps app2 only as a colour profile', () {
       final s = text(stripJpegMetadata(pic())!);
       expect(s.contains('ICC_PROFILE'), true);
       expect(s.contains('MPF'), false);
     });
-    test('no end marker is a file we cannot vouch for', () {
+    test('no end marker is null', () {
       expect(stripJpegMetadata(pic(eoi: false)), null);
     });
   });
@@ -201,7 +201,7 @@ void main() {
       0xFF,
       0xD9,
     ]);
-    test('the turn survives, alone', () {
+    test('keeps only the orientation', () {
       final out = stripJpegMetadata(pic(exif))!;
       final s = String.fromCharCodes(out);
       expect(s.contains('SM-A536B'), false);
@@ -213,12 +213,12 @@ void main() {
       // stripping it again changes nothing
       expect(stripJpegMetadata(out), out);
     });
-    test('upright needs no note', () {
+    test('upright gets no orientation block', () {
       final up = List<int>.from(exif)..[36] = 1;
       final out = stripJpegMetadata(pic(up))!;
       expect(out.sublist(2, 4), [0xFF, 0xDA]);
     });
-    test('an exif that cannot be read is dropped, not kept', () {
+    test('drops an unreadable exif', () {
       final out = stripJpegMetadata(
         pic([...'Exif'.codeUnits, 0, 0, 9, 9, 9, 9, 9, 9, 9, 9]),
       )!;

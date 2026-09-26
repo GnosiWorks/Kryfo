@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the language sheet: match phone first, then every language kryfo has by
-// its own name, with its name in the language kryfo is in now under it, so
-// someone who landed in a script they cannot read still finds their way
-// back. one sheet, from onboarding and from settings.
+// its own name, with its name in the current language under it so a script
+// someone cannot read still has a way back. one sheet, from onboarding and
+// from settings.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -230,9 +230,8 @@ class _LanguageSheetState extends State<_LanguageSheet>
                   ],
                   stops: [0, 14 / r.height, 1 - 14 / r.height, 1],
                 ).createShader(r),
-                // sixteen rows, all built: a lazy list does not have the
-                // chosen one yet when it sits far down, so nothing to
-                // scroll to
+                // all rows built: a lazy list has nothing to scroll to when
+                // the chosen one sits far down
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(14, 10, 14, 18),
                   child: Column(

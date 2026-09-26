@@ -1,12 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-//
-// the Open file button decides its handler at build time from whether the
-// password field is empty. the field's listener only rebuilt when it had an
-// error to clear, so the button was built once against an empty field, kept
-// a null handler, and never came alive: on the phone it looked enabled,
-// reported itself clickable, and did nothing at all with any password.
-//
-// this is the shape of that bug, guarded on the real screen.
+// the Open file button picks its handler at build time, so typing a password
+// has to rebuild it or it stays dead while looking enabled
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -27,8 +21,7 @@ const _file = PickedFile(
   mime: 'application/octet-stream',
 );
 
-// every GestureDetector the screen builds, so we can ask whether the one
-// wrapping "Open file" actually has a handler.
+// whether a GestureDetector wrapping "Open file" has a handler
 bool _openFileIsLive(WidgetTester t) {
   final label = find.text('Open file');
   if (label.evaluate().isEmpty) return false;
@@ -43,7 +36,7 @@ bool _openFileIsLive(WidgetTester t) {
 }
 
 void main() {
-  testWidgets('Open file is dead until something is typed, then alive', (
+  testWidgets('open file wakes once something is typed', (
     t,
   ) async {
     await t.pumpWidget(host(const OpenLockedScreen(file: _file)));
@@ -67,7 +60,7 @@ void main() {
     );
   });
 
-  testWidgets('clearing the field puts it back to dead', (t) async {
+  testWidgets('clearing the field disables it again', (t) async {
     await t.pumpWidget(host(const OpenLockedScreen(file: _file)));
     await t.pump(const Duration(milliseconds: 50));
 

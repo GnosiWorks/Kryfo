@@ -1,6 +1,6 @@
-// the mp4 stripper never deletes a box: it renames to 'free' and zeroes in
-// place, so the file keeps its length and the chunk offsets stay true. a
-// synthetic file is enough to prove it - the walker only reads box headers.
+// the mp4 stripper renames boxes to 'free' and zeroes them in place, so the
+// length and chunk offsets hold. the walker only reads box headers, so a
+// synthetic file is enough.
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -51,7 +51,7 @@ void main() {
     expect(await mp4MetadataCount(f.path), 5);
   });
 
-  test('strips in place, same length, mdat untouched, nothing left', () async {
+  test('strips in place and keeps mdat', () async {
     final src = sample();
     final f = await write(src);
     expect(await stripMp4Metadata(f.path), true);
@@ -69,19 +69,19 @@ void main() {
     expect('free'.allMatches(s).length, 3);
   });
 
-  test('a file that is not an mp4 comes back null', () async {
+  test('a non-mp4 file comes back null', () async {
     final f = await write(Uint8List.fromList(List.filled(300, 0x42)));
     expect(await stripMp4Metadata(f.path), null);
     expect(await mp4MetadataCount(f.path), null);
   });
 
-  test('a box running past the end comes back null', () async {
+  test('a box past the end is null', () async {
     final src = sample();
     final f = await write(src.sublist(0, src.length - 10));
     expect(await stripMp4Metadata(f.path), null);
   });
 
-  test('stray bytes after the last box are not vouched for', () async {
+  test('stray bytes after the last box fail', () async {
     final f = await write(Uint8List.fromList(sample() + [1, 2, 3]));
     expect(await mp4MetadataCount(f.path), null);
   });

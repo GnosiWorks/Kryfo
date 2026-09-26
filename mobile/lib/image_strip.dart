@@ -1,33 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a picture sent as a file, cleaned like one sent as a photo.
-//
-// the photo lane re-encodes, so nothing the camera wrote survives it. the
-// file lane sends the file as it is, and for a while that meant a jpeg
-// picked through the file picker went out with where it was taken still
-// inside it, and was then drawn as a photo on the other side. this is the
-// file lane's own cleaning, lossless: the picture data is never touched.
-//
-// what a file is decided by its first bytes, not its name. four kinds:
-//
-//   jpeg   the app segments go (exif, xmp, iptc, comments); jpeg_strip.dart
-//   png    only the chunks a picture is drawn from are kept; text, exif,
-//          timestamps, content credentials and anything unknown go. a
-//          chunk is dropped whole, so no crc has to be redone
-//   webp   the EXIF and 'XMP ' chunks go, the flags in VP8X that promise
-//          them are cleared, the riff size is rewritten
-//   gif    comments go, and every application block except the two that
-//          say how many times to loop. the frames are not touched, so it
-//          still moves
-//   heif   heic and avif. the exif and xmp are items beside the picture,
-//          found through iinf and iloc. their bytes are zeroed where they
-//          sit: removing them would move every offset in iloc. a top level
-//          box the format does not name is cut off when it is at the tail
-//          and emptied in place when it is not
-//
-// the contract is mp4_strip's. true: read end to end and clean. false: not
-// a picture of a kind known here, left alone. null: it claims to be one of
-// these and could not be read through, and a caller drops a null rather
-// than send what it could not vouch for.
+// a picture sent as a file, cleaned like one sent as a photo. the photo lane
+// re-encodes; the file lane sends the file as it is, so this cleaning is
+// lossless and never touches the picture data. the kind comes from the
+// first bytes, not the name:
+//   jpeg   the app segments go (jpeg_strip.dart)
+//   png    only the chunks a picture is drawn from are kept, whole, so no
+//          crc has to be redone
+//   webp   EXIF and 'XMP ' go, their VP8X flags are cleared
+//   gif    comments go, and every application block but the loop ones
+//   heif   heic and avif: exif and xmp items are zeroed where they sit so
+//          iloc offsets hold; unknown top level boxes are cut or emptied
+// true: read end to end and clean. false: not a kind known here, left alone.
+// null: it claims to be one and could not be read through, and a caller
+// drops a null rather than send what it could not vouch for.
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
@@ -98,9 +83,8 @@ Future<bool?> stripPictureFile(String path) async {
   return true;
 }
 
-/// the same, off the ui thread: walking eight megabytes of scan data is
-/// long enough to drop frames. top level, so the isolate is handed the path
-/// and nothing of whoever called.
+/// the same, off the ui thread: walking megabytes of scan data drops
+/// frames. top level, so the isolate gets the path and nothing of the caller.
 Future<bool?> stripPictureFileOffUi(String path) =>
     Isolate.run(() => stripPictureFile(path));
 
@@ -132,12 +116,9 @@ int _u32le(Uint8List b, int i) =>
 
 // ---------------------------------------------------------------- png
 
-// what a png needs to be drawn, and to be drawn in the right colours, and
-// the three that make an animated one move. everything else goes. this was
-// a list of chunks to drop until a real file came through with a chunk not
-// on it: caBX, content credentials, which name the tool that made the
-// picture and can name the account. a list of what to keep cannot be
-// surprised that way.
+// what a png needs to be drawn in the right colours, and the three that make
+// an animated one move. everything else goes: a keep list is not surprised
+// by a chunk like caBX (content credentials, which can name the account).
 const _pngKeep = {
   'IHDR', 'PLTE', 'IDAT', 'IEND', 'tRNS', // the picture
   'gAMA', 'cHRM', 'sRGB', 'iCCP', 'sBIT', 'cICP', 'mDCv', 'cLLi', // colour

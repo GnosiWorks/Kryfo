@@ -12,7 +12,7 @@ const me =
     'M15.6 8.5a3.6 3.6 0 1 1-7.2 0 3.6 3.6 0 1 1 7.2 0zM5 19.5c1.3-3.4 4-4.9 7-4.9s5.7 1.5 7 4.9';
 
 void main() {
-  test('the four tab icons parse and stay inside the 24 box', () {
+  test('tab icons parse inside the 24 box', () {
     for (final d in [chats, tools, support, me]) {
       final b = parseSvgPath(d).getBounds();
       expect(b.left, greaterThanOrEqualTo(0), reason: d);
@@ -23,13 +23,13 @@ void main() {
     }
   });
 
-  test('relative and absolute forms land in the same place', () {
+  test('relative and absolute forms match', () {
     final a = parseSvgPath('M2 2L10 2L10 10Z').getBounds();
     final r = parseSvgPath('m2 2h8v8z').getBounds();
     expect(a, r);
   });
 
-  test('numbers run together the way svg writes them', () {
+  test('parses numbers run together', () {
     final b = parseSvgPath('M1 1l2.5-.5.5 2').getBounds();
     expect(b.right, closeTo(4, 1e-9));
     expect(b.top, closeTo(0.5, 1e-9));
@@ -50,7 +50,7 @@ void main() {
     expect(s.getBounds(), c.getBounds());
   });
 
-  test('garbage throws, it does not draw something else', () {
+  test('garbage throws instead of drawing', () {
     expect(() => parseSvgPath('M1 1 Q 2 2 3 3'), throwsFormatException);
     expect(() => parseSvgPath('1 2 3'), throwsFormatException);
     expect(() => parseSvgPath('M1 1 L x y'), throwsFormatException);

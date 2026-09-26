@@ -35,7 +35,7 @@ void main() {
       'blocked',
     );
   });
-  test('plain and pending', () {
+  test('words plain and pending contacts', () {
     expect(
       contactStatusLine(
         verified: false,

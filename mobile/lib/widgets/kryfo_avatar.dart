@@ -1,23 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// kryfo_avatar.dart - procedural avatar from a seed string.
-// gradient background, large italic serif initial, thin divider,
-// and a 3-letter mono tag below. seed-driven palette so identical
-// kryfo ids produce identical avatars across devices.
+// avatar drawn from a seed string, or from a chosen face. the palette comes
+// from the seed, so the same id draws the same avatar on every phone.
 
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import 'avatar_mark.dart';
 
-// how many distinct avatars exist. shown on the picker because the number is
-// the point: nobody else is going to have yours by accident.
+// how many distinct avatars exist
 int get avatarChoiceCount => _palettes.length * markCount * rotCount;
 int get avatarPaletteCount => _palettes.length;
 
 class KryfoAvatar extends StatelessWidget {
   final String seed;
   final double size;
-  // null means the old behaviour - palette from the seed, serif initial.
-  // anything else is a deliberate choice, encoded as one int.
+  // null draws the seed's palette and serif initial. anything else is a
+  // chosen face, packed in one int.
   final int? choice;
   const KryfoAvatar({
     super.key,
@@ -36,7 +33,7 @@ class KryfoAvatar extends StatelessWidget {
     final letter = (parts.isNotEmpty && parts[0].isNotEmpty)
         ? parts[0][0].toUpperCase()
         : '?';
-    // first letter of each of the first three words ("TBB" for thumb-behave-boring)
+    // first letters of the first three words: "TBB" for thumb-behave-boring
     final tag = List<int>.generate(3, (i) => i)
         .map(
           (i) => (i < parts.length && parts[i].isNotEmpty)
@@ -45,8 +42,7 @@ class KryfoAvatar extends StatelessWidget {
         )
         .join();
 
-    // show the divider + tag only when the avatar is large enough to be
-    // legible. small ones get a clean drop-cap look.
+    // divider and tag only when the avatar is large enough to read them
     final showFrame = size >= 40;
 
     // the letters are part of the drawing, sized to the circle: the phone's
@@ -109,8 +105,7 @@ class KryfoAvatar extends StatelessWidget {
   }
 }
 
-// a choice is one int: palette, mark and rotation packed together, so it is
-// a single value to store and pass around. unpacked in _markedAvatar below.
+// a choice is one int: palette, mark and rotation packed together
 
 Widget _markedAvatar(int ch, double size) {
   final rot = ch % rotCount;

@@ -12,19 +12,13 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// halo fast relay - forwards opaque, end-to-end-encrypted blobs between two
-// connected clients. it never sees plaintext: payload is libsignal ciphertext.
-// it DOES see metadata - which routing keys talk to each other, timing, ip.
-// that is the fast-mode tradeoff. tor mode never touches this server.
-//
-// addressing: a client registers a routing key (its x25519 pubkey hex, the
-// same value the app already uses for nostr). senders address a recipient by
-// that key. offline recipients get a short store-and-forward queue.
-//
-// NOT DONE YET: signed-hello auth. right now a client is trusted to declare
-// its own key, so a bad actor could register someone else's key to intercept
-// their queued (still-encrypted) blobs or deny delivery. content stays
-// unreadable, but this must be closed before any public use. see README.
+// fast relay: forwards libsignal ciphertext between two connected clients.
+// it sees metadata (which keys talk, timing, ip), never plaintext. tor mode
+// never touches this server.
+// a client registers its routing key (x25519 pubkey hex) and senders address
+// it by that key. offline recipients get a short store-and-forward queue.
+// todo: signed-hello auth. anyone can register someone else's key and take
+// their queued blobs or block delivery. close this before any public use.
 
 var (
 	addr     = flag.String("addr", ":8443", "listen address")

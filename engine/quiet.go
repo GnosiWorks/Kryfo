@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// the decoy's identity: made and described by pure functions that touch no
-// engine state and log nothing. the decoy is never brought online, so none
-// of it is ever used to connect; it is only what a decoy session shows, and
-// what a backup made there carries.
+// the decoy's identity, from pure functions that touch no engine state and
+// log nothing. the decoy never goes online: its keys are only shown, and
+// carried by a backup made there.
 
 /*
 #include <stdlib.h>

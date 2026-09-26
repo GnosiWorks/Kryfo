@@ -21,17 +21,17 @@ void main() {
     now: t0.add(since),
   );
 
-  test('the case it exists for: always on, tor not ready, ten hours', () {
+  test('always on without tor for hours is offline', () {
     final d = gate(since: const Duration(hours: 10, minutes: 36));
     expect(d, isNotNull);
     expect(d!.inHours, 10);
   });
 
-  test('tor carrying traffic is not offline, however long it has been', () {
+  test('a working tor is never offline', () {
     expect(gate(torReady: true, since: const Duration(hours: 10)), isNull);
   });
 
-  test('check-ins hold tor off on purpose and must never raise it', () {
+  test('check-ins mode is never offline', () {
     expect(gate(mode: DeliveryMode.checkins), isNull);
     expect(
       gate(mode: DeliveryMode.checkins, since: const Duration(hours: 10)),
@@ -39,11 +39,11 @@ void main() {
     );
   });
 
-  test('the app holding tor itself is not the app being broken', () {
+  test('tor held by the app is not offline', () {
     expect(gate(torHeld: true), isNull);
   });
 
-  test('nothing has started trying yet, so there is nothing to measure', () {
+  test('nothing to measure before the first try', () {
     expect(
       offlineDurationFor(
         mode: DeliveryMode.always,
@@ -56,7 +56,7 @@ void main() {
     );
   });
 
-  test('a clock in the future reads zero, never a negative age', () {
+  test('a future start reads as zero', () {
     final d = offlineDurationFor(
       mode: DeliveryMode.always,
       torHeld: false,
@@ -72,10 +72,10 @@ void main() {
     test('four minutes stays quiet', () {
       expect(gate(since: const Duration(minutes: 4))! < line, isTrue);
     });
-    test('five minutes speaks', () {
+    test('five minutes shows the line', () {
       expect(gate(since: const Duration(minutes: 5))! >= line, isTrue);
     });
-    test('a moment under five still stays quiet', () {
+    test('just under five stays quiet', () {
       expect(
         gate(since: const Duration(minutes: 4, seconds: 59))! >= line,
         isFalse,

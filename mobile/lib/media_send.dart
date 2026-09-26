@@ -1,16 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// media_send.dart - the one chunked sender for photos, files and voice
-// notes to a single peer. the chat screen calls it live; the outbox drainer
-// calls it for a media row that never finished, so a photo left at 98% goes
-// out when the route is back, chat open or not.
-//
-// a slice that landed is remembered here, so a retry sends only what is
-// missing. photos had their own copy of this loop with no memory, and a
-// retry started the whole file over.
-//
-// the pair address is a drop box the peer only reads once they have added
-// us back. publishing there before that is not delivery, so it comes back
-// as 'parked' rather than 'ok', and the row stays queued.
+// the one chunked sender for photos, files and voice notes to a single peer.
+// the chat screen calls it live; the outbox drainer calls it for a media row
+// that never finished. a slice that landed is remembered, so a retry sends
+// only what is missing.
+// the pair address is a drop box the peer only reads once they add us back,
+// so publishing there comes back as 'parked', not 'ok', and the row stays
+// queued.
 
 import 'dart:convert';
 import 'dart:io';
@@ -29,9 +24,8 @@ import 'signal_session.dart';
 // the record is old enough that the peer may have restarted without it
 final Map<String, Set<int>> chunkDone = {};
 final Map<String, int> chunkDoneAt = {};
-// one send per media at a time. the chat's retry and the outbox could
-// both pick the same row, and whichever finished second overwrote the
-// bubble with its own verdict.
+// one send per media at a time: the chat's retry and the outbox can pick
+// the same row, and the second to finish would overwrite the bubble
 final Set<String> mediaInflight = {};
 // a send the person stopped. the workers see it between slices and end
 // there; the chat has already pulled the row and told the other side.
@@ -42,12 +36,8 @@ int _mediaGrind(String seed) => grindPow(seed, powBits);
 
 // base64 characters per slice on the wire. 12288 bytes of file make
 // exactly 16384 characters, so slicing the file and slicing its base64
-// give the same pieces: the receiver stitches them as it always did.
-//
-// the whole file used to be read, base64'd and cut into a list before the
-// first slice went out: three copies of an 8 mb file in memory, and a
-// 4 gb phone killing the app mid-send with nothing on screen to say why.
-// now a slice is read from disk when its turn comes and dropped after.
+// give the same pieces. a slice is read from disk when its turn comes, so
+// a big file is never held whole in memory.
 const mediaChunkSize = 16 * 1024;
 const _sliceBytes = mediaChunkSize ~/ 4 * 3;
 
@@ -180,24 +170,17 @@ Future<String> _sendChunkedMediaInner({
   // refusing. encryption stays serial per peer behind signalEncryptSerial.
   const parallel = 5;
   // once the onion fails to answer it stays skipped for the rest of this
-  // send. every slice paying the full dial timeout before the relay was
-  // twelve minutes on a fifty-slice photo.
+  // send, or every slice pays the full dial timeout before the relay
   var onionDead = false;
   String? failure;
   var parked = false;
   var next = 0;
 
-  // a chunk that will not go through costs that chunk, not the transfer.
-  // it used to cost the transfer: one slice failing its three dials, about
-  // two seconds, ended a send that was ninety-five per cent done, and a
-  // longer file is more slices so more chances to lose the lot. a failed
-  // slice goes back in the queue now and another pass picks it up, with a
-  // breather between passes because a wedged circuit needs longer than the
-  // gap between dials. the send gives up only when one slice has burned
-  // the whole budget, which is what a dead route actually looks like.
-  //
-  // the genuinely-whole-send failures still stop everything at once:
-  // cancelled, parked, and a file that has gone from disk.
+  // a chunk that will not go through costs that chunk, not the transfer: it
+  // goes back in the queue for another pass, with a pause between passes
+  // since a wedged circuit needs longer than the gap between dials. the send
+  // gives up only when one slice has burned every pass. cancelled, parked
+  // and a file gone from disk still stop everything at once.
   const chunkPasses = 4;
   final attempts = <int, int>{};
   final retryQueue = <int>[];
@@ -232,7 +215,7 @@ Future<String> _sendChunkedMediaInner({
       try {
         // name + voice flags ride every slice: the receiver rebuilds off
         // whichever chunk lands last, and that one decides file vs image.
-        // the burn too, or a ghost photo never expired on their side.
+        // the burn too, or a ghost photo would never expire on their side.
         final wrapped = await wrapMessage(
           caption,
           msgUid: msgUid,

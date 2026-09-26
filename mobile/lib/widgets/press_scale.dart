@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// shared press-scale wrapper. gently shrinks on tap-down for tactile feel.
-// used across screens so buttons and rows feel consistent instead of dead.
+// shared press-scale wrapper: shrinks a little on tap-down.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -37,8 +36,7 @@ class _PressScaleState extends State<PressScale> {
 
   @override
   Widget build(BuildContext context) {
-    // the whole box takes the tap, like an ink well: a row's empty end
-    // between its text and the edge was dead
+    // the whole box takes the tap, like an ink well, a row's empty end too
     final w = GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTapDown: (_) => _set(true),
@@ -65,8 +63,8 @@ class _PressScaleState extends State<PressScale> {
       ),
     );
     if (widget.label == null) return w;
-    // its own node: left to merge, a button laid over a page took the
-    // page's whole rect and a tap on its centre landed on the page
+    // its own node: merged, a button over a page takes the page's whole
+    // rect and a tap on its centre lands on the page
     return Semantics(
       container: true,
       label: widget.label,

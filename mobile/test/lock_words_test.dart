@@ -3,7 +3,7 @@ import 'package:kryfo/tools/age_ffi.dart';
 import 'package:kryfo/tools/lock_words.dart';
 
 void main() {
-  test('grades', () {
+  test('grades passwords by strength', () {
     expect(gradePassword(''), PassGrade.none);
     expect(gradePassword('abc'), PassGrade.tooShort);
     expect(gradePassword('password'), PassGrade.weak);
@@ -15,7 +15,7 @@ void main() {
     expect(gradePassword('Tr0ub4dor&3xyzQ'), PassGrade.strong);
   });
 
-  test('names', () {
+  test('names locked and opened files', () {
     expect(lockedName('Lease scan.pdf', hide: false), 'Lease scan.pdf.age');
     expect(lockedName('Lease scan.pdf', hide: true), 'locked file.age');
     expect(lockedName(null, hide: false), 'locked file.age');

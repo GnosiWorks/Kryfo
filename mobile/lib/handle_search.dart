@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// people who asked to be found, by handle or by the name they gave. the
-// question goes to the handle registry over tor and nowhere else; the
-// registry answers with at most twenty and keeps no record of the question.
-// nothing typed into search goes there unless the person asks for people:
-// a word someone looks for in their own chats is theirs.
+// search for people who asked to be found, over tor to the handle registry
+// only. search text goes there only when the person asks for people
 import 'dart:convert';
 
 import 'bidi_safe.dart';
@@ -26,9 +23,8 @@ class PublicHandle {
 
 final _handleRe = RegExp(r'^[a-z0-9_]{3,20}$');
 
-/// the question as the registry takes it, or null when it would refuse
-/// it: 3 to 32 characters of letters, digits, spaces and _ - . with at
-/// least three letters or digits. the same rule as the registry's.
+/// the query as the registry takes it, or null when the registry's own rule
+/// would refuse it
 String? peopleQuery(String raw) {
   var q = raw.trim().toLowerCase();
   if (q.startsWith('@')) q = q.substring(1);
@@ -47,12 +43,10 @@ String? peopleQuery(String raw) {
   return n >= 3 && n <= 32 && alnum >= 3 ? q : null;
 }
 
-/// true when what was typed is plainly a person: @ and a handle's start
 bool looksLikePerson(String raw) => raw.trim().startsWith('@');
 
-/// the registry's answer, taken apart carefully: only handles that are
-/// handles, names and bios trimmed to what the registry allows, twenty at
-/// most. anything else in it is ignored.
+/// the registry's answer: valid handles only, names and bios trimmed to the
+/// registry's limits, twenty at most
 List<PublicHandle> parsePeople(String body) {
   try {
     final j = jsonDecode(body);
@@ -88,11 +82,11 @@ List<PublicHandle> parsePeople(String body) {
 /// what went wrong, so the screen can say it plainly
 enum PeopleError { none, offline, busy, unreachable }
 
-/// ask the registry. [fetch] reads a url over tor only ("error: ..." when
-/// it could not), so tests can hand in a canned answer.
+/// [post] is passed in so tests can hand in a canned answer. the query goes
+/// in the body, never in the url: a url can end up in a proxy's log
 Future<({List<PublicHandle> people, PeopleError error})> searchPeople(
   String raw,
-  Future<String> Function(String url) fetch,
+  Future<String> Function(String url, String body) post,
 ) async {
   final q = peopleQuery(raw);
   if (q == null) {
@@ -100,9 +94,7 @@ Future<({List<PublicHandle> people, PeopleError error})> searchPeople(
   }
   final String body;
   try {
-    body = await fetch(
-      '$kHandleRegistry/handle/search?q=${Uri.encodeQueryComponent(q)}',
-    );
+    body = await post('$kHandleRegistry/handle/search', jsonEncode({'q': q}));
   } catch (_) {
     return (people: const <PublicHandle>[], error: PeopleError.unreachable);
   }

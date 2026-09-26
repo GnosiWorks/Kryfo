@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// "introduce <B> to..." - pick one accepted contact, add a line if you like,
-// and both of them get the other's card. a bottom sheet, not a screen: it is
-// one decision, made from inside a conversation.
+// "introduce <B> to...": pick an accepted contact, add a line if you like,
+// and both get the other's card. a sheet, not a screen: one decision made
+// from inside a conversation.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../intro_budget.dart';
@@ -216,7 +216,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
               ),
             ),
             // the one warning there is. no approval step behind it, on
-            // purpose: the introducer could forward an invite by hand today.
+            // purpose: the introducer could forward an invite by hand anyway.
             AnimatedSize(
               duration: const Duration(milliseconds: 220),
               curve: Curves.easeOutCubic,

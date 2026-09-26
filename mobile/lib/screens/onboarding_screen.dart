@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// kryfo onboarding - shown once. three things in the first minute, everything
-// else when it is needed: your name is three words, nobody gets in unless
-// you let them, the first connection takes a minute.
-// welcome → identity reveal → pick a face → three things → one notification →
-// add someone.
+// onboarding, shown once. three things in the first minute, everything else
+// when it is needed: your name is three words, nobody gets in unless you let
+// them, the first connection takes a minute.
+// welcome → identity → face → transport → three things → notification → add
 
 import 'dart:math' as math;
 import 'dart:ui' as ui;
@@ -75,7 +74,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
-// === 02 · WELCOME ===
+// === 01 · WELCOME ===
 
 class _WelcomeScreen extends StatefulWidget {
   final VoidCallback onContinue;
@@ -256,7 +255,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
   );
 }
 
-// === 03 · IDENTITY REVEAL ===
+// === 02 · IDENTITY REVEAL ===
 
 class _IdentityScreen extends StatefulWidget {
   final AppState appState;
@@ -632,10 +631,10 @@ class _HaloRingPainter extends CustomPainter {
       old.sweep != sweep || old.glow != glow;
 }
 
-// === 03b · PICK A FACE ===
+// === 03 · PICK A FACE ===
 //
 // straight after the identity reveal, because the face is drawn from the id
-// you have just been shown. buried in the profile, nobody found it.
+// you have just been shown
 
 class _PickFaceScreen extends StatefulWidget {
   final VoidCallback onContinue;
@@ -748,16 +747,9 @@ class _PickFaceScreenState extends State<_PickFaceScreen> {
   }
 }
 
-// === 04 · THREE THINGS ===
-//
-// the same three points the welcome page opened with, each with its why.
-// nothing about rooms, vouching, the shield or modes: the app explains those
-// the first time they come up.
-
 // === 04 · HOW YOUR MESSAGES TRAVEL ===
 // three ways, each with its cost in plain words, onion picked already. one
-// tap skips it: someone who does not know what to pick keeps the safest
-// and moves on without feeling they got something wrong.
+// tap skips it and keeps the safest.
 
 class _TransportScreen extends StatefulWidget {
   final VoidCallback onContinue;
@@ -773,11 +765,8 @@ class _TransportScreenState extends State<_TransportScreen> {
   Future<void> _go() async {
     if (_busy) return;
     setState(() => _busy = true);
-    // written whatever was picked. onion used to write nothing and lean on
-    // the stored default, so anything left in storage from before - a wipe
-    // that failed part way, an earlier install on the same phone - won
-    // over the choice just made. a redmi picked onion and came up on the
-    // relay. an explicit choice is written explicitly.
+    // written whatever was picked, onion too: a value left in storage by a
+    // half-done wipe or an earlier install must not win over this choice
     await appState.setSendMode(_pick);
     if (mounted) widget.onContinue();
   }
@@ -943,6 +932,11 @@ class _ModeCard extends StatelessWidget {
   }
 }
 
+// === 05 · THREE THINGS ===
+//
+// the same three points the welcome page opened with, each with its why.
+// rooms, vouching, the shield and modes are explained when they come up.
+
 class _ThreeThingsScreen extends StatelessWidget {
   final VoidCallback onContinue;
   const _ThreeThingsScreen({required this.onContinue});
@@ -1001,7 +995,7 @@ class _ThreeThingsScreen extends StatelessWidget {
   }
 }
 
-// === 05 · ONE NOTIFICATION ===
+// === 06 · ONE NOTIFICATION ===
 //
 // the one android fact worth a page: a background listener needs a visible
 // notification, so the tray will show one. two lines, then on.
@@ -1043,7 +1037,7 @@ class _NotificationScreen extends StatelessWidget {
   }
 }
 
-// === 06 · ADD SOMEONE ===
+// === 07 · ADD SOMEONE ===
 
 class _AddSomeoneScreen extends StatelessWidget {
   final VoidCallback onComplete;
@@ -1092,10 +1086,8 @@ class _AddSomeoneScreen extends StatelessWidget {
               final raw = await nav.push<String>(
                 haloRoute<String>(const ScanScreen()),
               );
-              // the scanner hands the code back and every other caller runs
-              // it through handleHaloUri, which is what adds the contact.
-              // this one dropped it, so a scan from onboarding read the
-              // code and added nobody.
+              // the scanner only hands the code back; handleHaloUri is what
+              // adds the contact
               if (raw != null) {
                 final status = await handleHaloUri(raw);
                 await appState.refreshContacts();
@@ -1141,7 +1133,7 @@ class _AddSomeoneScreen extends StatelessWidget {
 
 // ───────── shared pieces ─────────
 
-// "04 / 06" in mono, so the pace is visible without a progress bar
+// "04 / 07" in mono, so the pace is visible without a progress bar
 class _Step extends StatelessWidget {
   final int n;
   const _Step(this.n);

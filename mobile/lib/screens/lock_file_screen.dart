@@ -333,8 +333,8 @@ class _LockFileScreenState extends State<LockFileScreen> {
   void dispose() {
     _poll?.cancel();
     if (_working) ageCancel();
-    // same reason as the open screen: clear() notifies, and a notify after
-    // the element is defunct asserts inside setState.
+    // the listeners go first: clear() notifies, and a notify after the
+    // element is defunct asserts inside setState.
     _pw1.removeListener(_typed);
     _pw2.removeListener(_typed);
     _pw1

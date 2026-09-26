@@ -58,7 +58,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
   int get _lineCount =>
       _ctrl.text.split('\n').where((l) => l.trim().isNotEmpty).length;
 
-  // ask bridges.torproject.org for a fresh set. this is plain https, not tor -
+  // ask bridges.torproject.org for a fresh set. this is plain https, not tor:
   // tor being unreachable is the whole reason someone is on this screen.
   Future<void> _request() async {
     setState(() {
@@ -129,12 +129,9 @@ class _BridgesScreenState extends State<BridgesScreen> {
     HapticFeedback.mediumImpact();
     final lines = _ctrl.text.trim();
     final r = await appState.applyBridges(lines, _on && lines.isNotEmpty);
-    // the route generation before the reconnect. restartTor bumps it before
-    // it returns, and the reconnect itself happens later - so a "ready" read
-    // in the next second or two is the tor that is about to go, and this
-    // screen used to say Connected on the strength of it while the new tor
-    // sat at 0%. connected now means: a newer route, and a relay has actually
-    // connected through it.
+    // the route generation before the reconnect. the reconnect happens after
+    // restartTor returns, so a "ready" in the next second or two is the old
+    // tor. connected means a newer route that a relay has connected through.
     final genBefore = appState.routeGen;
     engine.restartTor();
     if (!mounted) return;
@@ -143,8 +140,8 @@ class _BridgesScreenState extends State<BridgesScreen> {
       _reconnecting = true;
       _elapsed = 0;
     });
-    // a dead button for ninety seconds looks broken. count, and stop when
-    // tor can actually carry traffic again.
+    // a dead button for minutes looks broken. count, and stop when tor can
+    // carry traffic again.
     _tick?.cancel();
     _tick = Timer.periodic(const Duration(seconds: 1), (t) {
       if (!mounted) {
@@ -449,9 +446,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                     ),
             ),
           ),
-          // the engine answers "ok: 3 bridges", never a bare ok, so the
-          // old check for exactly 'ok' never matched and a save that
-          // worked printed in the error colour
+          // the engine answers "ok: 3 bridges", never a bare ok
           if (_result != null) ...[
             const SizedBox(height: 10),
             Text(

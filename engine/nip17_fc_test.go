@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// proves the first-contact path before any of it is wired to a phone. the
-// dangerous failure here is silent: if the two sides derive the address even
-// slightly differently, nothing arrives and nothing logs an error.
+// the dangerous failure here is silent: if the two sides derive the address
+// even slightly differently, nothing arrives and nothing logs an error.
 
 import (
 	"crypto/rand"
@@ -136,8 +135,8 @@ func TestFirstContactNotReadableByThirdParty(t *testing.T) {
 }
 
 // after the counter is bumped, invites printed against the old one must stop
-// working - otherwise "reset my invite" is a lie.
-func TestOldInviteStopsWorkingAfterRotate(t *testing.T) {
+// working, or "reset my invite" is a lie.
+func TestRotateRetiresOldInvite(t *testing.T) {
 	bobPriv, bobPub := newIdentity(t)
 	alicePriv, alicePub := newIdentity(t)
 

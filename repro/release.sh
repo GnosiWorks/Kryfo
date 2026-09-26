@@ -10,9 +10,8 @@
 # pinned.
 #
 # the container builds unsigned and the keystore never goes into it.
-# signing adds the block and the v1 files, which is exactly what the
-# comparison in verify.sh leaves out, so it changes nothing that is
-# checked.
+# signing adds only what verify.sh leaves out of the comparison, so it
+# changes nothing that is checked.
 #
 # usage:
 #   ./release.sh              build the current commit and sign it
@@ -65,10 +64,8 @@ mkdir -p "$WORK/out"
 echo "== image"
 docker build -q -t "$IMAGE" . >/dev/null
 echo "== building (no gradle cache is shared: the host's journal lock deadlocks)"
-# cgo opens a lot of files at once building tor and openssl. the
-# daemon hands a container 1024 by default, which is under what
-# that needs: the engine build then dies with "too many open
-# files", sometimes, which is worse than always.
+# cgo opens more files at once building tor and openssl than the 1024 a
+# container gets by default
 docker run --rm --ulimit nofile=65536:65536 -u "$(id -u):$(id -g)" \
   -v "$WORK/src:/home/vagrant/build/app.kryfo" \
   -v "$WORK/out:/out" \
@@ -99,22 +96,13 @@ echo "== signing"
 # the plain name and are signed in place
 for f in out/app-*-release.apk; do
   [ -f "$f" ] || { echo "the container produced no apks" >&2; exit 1; }
-  # --alignment-preserved, or apksigner 0.9 rewrites the zip on the way
-  # through: native libraries re-padded to 16k pages, everything else to
-  # four bytes, aligned already or not. every entry still matched and
-  # f-droid refused 0.2.8 and 0.2.10 all the same, because they compare
-  # their unsigned build to our apk with the signature cut out, byte for
-  # byte, and what was left was not the container they built. with the
-  # flag the signature is a pure insertion: proven by signing a stripped
-  # copy and stripping it again.
-  # v2/v3 only. a v1 signature is three more entries inside the zip, and
-  # f-droid verifies by copying our signature onto their unsigned build:
-  # "the APKs must be completely identical before and after signing (apart
-  # from the signature)". v1 entries move bytes around, so their placement
-  # has to be reproduced exactly or the v2 digest over the whole file
-  # fails, which is what their log showed. the v2/v3 block sits outside
-  # the entries and is what apksigcopier is built to move. minSdk is 24
-  # and v1 is only needed below that, so nothing loses a signature.
+  # --alignment-preserved, or apksigner re-pads every entry on the way
+  # through, and f-droid compares their unsigned build to ours with the
+  # signature cut out, byte for byte. with the flag signing is a pure
+  # insertion.
+  # v2/v3 only: f-droid copies our signature onto their unsigned build, and
+  # v1 entries inside the zip move bytes around, so the v2 digest fails.
+  # minSdk is 24 and v1 is only needed below that.
   printf '%s\n%s\n' "$STOREPASS" "$KEYPASS" | "$APKSIGNER" sign \
     --ks "$KEYSTORE" --ks-key-alias "$ALIAS" \
     --ks-pass stdin --key-pass stdin \

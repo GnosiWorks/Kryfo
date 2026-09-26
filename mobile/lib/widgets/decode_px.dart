@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// how many pixels wide to decode an image for the box it will fill.
-// without a target the codec decodes the whole file: a twelve megapixel
-// photo is forty-eight megabytes of pixels for a bubble that shows three
-// hundred dp of it, and a 4 gb phone kills the app for less.
+// decode width for the box an image fills. without a target a twelve
+// megapixel photo is 48 mb of pixels, and a 4 gb phone kills the app for less.
 import 'package:flutter/widgets.dart';
 
 // a box this many logical pixels wide

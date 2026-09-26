@@ -15,7 +15,7 @@ import (
 	"fiatjaf.com/nostr"
 )
 
-func TestAgainstARealRelay(t *testing.T) {
+func TestAgainstRealRelay(t *testing.T) {
 	url := os.Getenv("RELAY_URL")
 	if url == "" {
 		t.Skip("RELAY_URL not set")

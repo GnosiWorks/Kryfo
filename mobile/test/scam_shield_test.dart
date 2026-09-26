@@ -1,9 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/scam_shield.dart';
 
-// every rule the shield ships with, one way it should fire and one way it
-// must stay quiet. the shield only advises, but a false alarm on a friend
-// is the fastest way to get it switched off.
+// each rule once firing and once quiet: a false alarm on a friend is the
+// fastest way to get the shield switched off
 
 List<String> _codes(ShieldResult r) => r.hits.map((h) => h.code).toList();
 
@@ -49,7 +48,7 @@ void main() {
       expect(r.hits.first.line, 'Name matches your contact alice');
     });
 
-    test('the same face only ever adds to a near match', () {
+    test('a matching face only adds to near matches', () {
       final r = checkImpersonation('thumb-behave-borins', 7, contacts);
       expect(_codes(r), ['name_match', 'face_match']);
       expect(
@@ -58,21 +57,21 @@ void main() {
       );
     });
 
-    test('the contact themselves is not their own impostor', () {
+    test('the contact itself is not flagged', () {
       expect(
         checkImpersonation('thumb-behave-boring', 7, contacts).flagged,
         false,
       );
     });
 
-    test('a contact with no nickname is named by id', () {
+    test('a contact without nickname is named by id', () {
       final r = checkImpersonation('candle-rope-sundae', null, contacts);
       expect(r.headline, 'This name matches candle-rope-sunday');
     });
   });
 
   group('content', () {
-    test('crypto addresses by shape', () {
+    test('spots crypto addresses by shape', () {
       expect(
         _codes(scanFirstMessage('send to 1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2')),
         ['crypto_address'],
@@ -102,7 +101,7 @@ void main() {
       expect(scanFirstMessage('my number is 0612345678').hits, isEmpty);
     });
 
-    test('money next to urgency, not money on its own', () {
+    test('flags money with urgency, not money alone', () {
       expect(
         _codes(scanFirstMessage('i need the payment today or it expires')),
         ['money_rush'],
@@ -116,7 +115,7 @@ void main() {
       );
     });
 
-    test('an ask to move apps needs the ask', () {
+    test('flags an ask to move apps', () {
       expect(_codes(scanFirstMessage('add me on telegram @notascam')), [
         'move_app',
       ]);
@@ -124,7 +123,7 @@ void main() {
       expect(scanFirstMessage('telegram is down again lol').hits, isEmpty);
     });
 
-    test('lookalike hosts', () {
+    test('spots lookalike hosts', () {
       expect(lookalikeHost('paypa1.com'), true);
       expect(lookalikeHost('paypal.com'), false);
       expect(lookalikeHost('secure.paypal.com'), false);
@@ -138,14 +137,14 @@ void main() {
       expect(scanFirstMessage('see https://github.com/x/y').hits, isEmpty);
     });
 
-    test('a long opener is one point, never a flag alone', () {
+    test('a long opener alone never flags', () {
       final long = List.filled(90, 'hello').join(' ');
       final r = scanFirstMessage(long);
       expect(_codes(r), ['long_opener']);
       expect(r.flagged, false);
     });
 
-    test('asks for a code or seed', () {
+    test('flags asks for a code or seed', () {
       expect(
         _codes(scanFirstMessage('what is the verification code you got?')),
         ['secret_ask'],
@@ -208,7 +207,7 @@ void _groupTests() {
       expect(r.flagged, true);
       expect(r.headline, 'Looks like a scam');
     });
-    test('one weak rule does not', () {
+    test('one weak rule does not flag', () {
       final r = shieldCheckInGroup(
         strangerId: 'quiet-lamp-river',
         strangerAvatar: 1,
@@ -226,7 +225,7 @@ void _groupTests() {
       );
       expect(r.flagged, false);
     });
-    test('a matching name rides a content flag as a footnote', () {
+    test('a matching name footnotes a content flag', () {
       final r = shieldCheckInGroup(
         strangerId: 'thumb-behave-b0ring',
         strangerAvatar: 7,

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // six digits you read out loud. the code points at your invite for five
-// minutes, works once, then the address is gone. lives here so the invite
-// page and the old pairing screen show the same thing.
+// minutes, works once, then the address is gone. shared by the invite page
+// and the pairing screen.
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -40,8 +40,8 @@ class _PairCodePanelState extends State<PairCodePanel> {
       _busy = true;
       _status = l10n.pairCodePanelPuttingYourInviteIn;
     });
-    // Random.secure, because a guessable code is a code someone else can
-    // stand in front of.
+    // Random.secure: a guessable code is one someone else can stand in
+    // front of
     final r = Random.secure();
     final code = List.generate(6, (_) => r.nextInt(10)).join();
     if (appState.sessionOnion.isEmpty) {

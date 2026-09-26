@@ -3,8 +3,8 @@
 #
 # qr_all_nine_test.dart renders each kind to build/qr_check/<name>.png and
 # writes what it meant to encode beside it as <name>.expected. this reads the
-# pngs back with zxing and compares. our own builder agreeing with itself
-# proves nothing about what a scanner sees - escaping especially.
+# pngs back with zxing and compares, since our own builder agreeing with
+# itself says nothing about what a scanner sees, escaping especially.
 #
 #   flutter test test/qr_all_nine_test.dart && tool/qr_decode_check.sh
 #

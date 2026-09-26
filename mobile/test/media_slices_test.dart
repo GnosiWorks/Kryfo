@@ -6,10 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/main.dart' show saveSlices;
 import 'package:kryfo/media_send.dart';
 
-// a file is sent as base64 slices read straight from disk, and rebuilt on
-// the far side one slice at a time. the wire must not notice: the slices
-// have to be the same pieces the old whole-string cut produced, and the
-// rebuilt file has to be the original, byte for byte.
+// slices read from disk must be the same pieces as cutting the whole base64
+// string, so the wire does not change, and the rebuilt file must match
 void main() {
   late Directory tmp;
   setUp(() async {
@@ -47,7 +45,7 @@ void main() {
     });
   }
 
-  test('a file rebuilt slice by slice is the original', () async {
+  test('rebuilding slice by slice gives the original', () async {
     final f = await fileOf(100001, seed: 3);
     final total = await mediaSliceCount(f.path);
     final out = File('${tmp.path}/out');

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the toggle. a pill that fills amber and a thumb that slides with a little
-// overshoot, so a setting flipping feels like the rest of the app and not
-// like Material.
+// the toggle: an amber pill and a thumb that slides with a little overshoot,
+// to match the rest of the app rather than Material.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

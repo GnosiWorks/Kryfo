@@ -1,13 +1,12 @@
 // every column a migration adds must also be in a CREATE TABLE, or a fresh
-// install and an upgrade end with different schemas. the groups.mentioned
-// column was missing this way and broke every clean install's group chats.
-// this reads the source, since the schema lives in sql strings.
+// install and an upgrade end with different schemas. the schema lives in sql
+// strings, so this reads the source.
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('migrated columns exist in every CREATE TABLE for that table', () {
+  test('migrated columns exist in every CREATE TABLE', () {
     final src = File('lib/main.dart').readAsStringSync();
     final alters = <(String, String)>[];
     for (final m in RegExp(

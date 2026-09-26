@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the pin pad and its dots, shared by the lock screen and the setup screens
-// so they feel like one thing. round keys that press, dots that land with a
-// small overshoot, a shake when a pin is wrong. a pin is 4 to 12 digits and
-// goes in with the enter key, never on its own: when it goes in must not say
-// how long it is.
+// so they feel like one thing. a pin is 4 to 12 digits and goes in with the
+// enter key, never on its own, so when it goes in says nothing of its length.
 
 import 'dart:math' as math;
 

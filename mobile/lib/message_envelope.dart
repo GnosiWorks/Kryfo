@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// message_envelope.dart - wrap outgoing plain text with optional metadata
-// (sender identity for back-pair) so the peer learns who we are over the
-// existing encrypted channel. the 'p' field once carried a push url for the
-// other side to call; it is neither sent nor read any more. wrapped
-// messages use the sentinel prefix "halo/1:" + JSON object so legacy plain
-// messages pass through unchanged.
+// wraps outgoing text with its metadata as "halo/1:" + json, so plain
+// messages without the prefix pass through unchanged.
 
 import 'dart:convert';
 
@@ -103,18 +99,14 @@ class UnwrappedMessage {
   });
 }
 
-/// A group "control message" - when present in an envelope, the payload
-/// is not a message body but a group state update (create, member add/remove,
-/// rename, leave). The 'm' body should be ignored when this is present.
+/// a group state update. the 'm' body is ignored when this is present.
 class GroupControl {
   final String type; // 'create' | 'add' | 'remove' | 'rename' | 'leave'
   final String? name; // present on 'create' and 'rename'
   final List<String>?
   members; // full member list on 'create'; the target kryfo id list on 'add'/'remove'
-  // participants carries full SenderInfo (halo_id + onion + xpub) for each
-  // member the receiver might not already have as a contact. populated on
-  // 'create' (every member) and 'add' (each newly added member). receivers
-  // auto-create contact stubs from this so subsequent group sends work.
+  // keys for members the receiver may not have as contacts, on 'create' and
+  // 'add'. receivers make contact stubs from it so group sends work.
   final List<Map<String, String>>? participants;
   const GroupControl({
     required this.type,
@@ -124,8 +116,7 @@ class GroupControl {
   });
 }
 
-/// A reaction "control message" - when present in an envelope, the payload
-/// is not a message body but a reaction (add or remove) on a previous one.
+/// a reaction added or removed on an earlier message
 class ReactionFrame {
   final String targetUid; // the msg_uid this reaction applies to
   final String emoji; // '' means remove the reactor's reaction
@@ -159,9 +150,8 @@ class PinFrame {
   const PinFrame({required this.targetUid, required this.pinned});
 }
 
-// an introduction: the sender hands us a third person's card and vouches for
-// them. carries only what a group invite already carries plus the note the
-// introducer typed. no nickname ever rides here.
+// a third person's card, vouched for by the sender: what a group invite
+// carries plus the introducer's note. no nickname ever rides here.
 class IntroFrame {
   final String haloId;
   final String onion;
@@ -196,17 +186,15 @@ class SenderInfo {
   });
 }
 
-// wrap: always includes sender identity now (cheap, enables back-pair).
 class EditFrame {
   final String targetUid;
   final String newText;
   const EditFrame({required this.targetUid, required this.newText});
 }
 
-// proof-of-work: first-contact messages carry a nonce that makes the sha256
-// of (body-without-pow + nonce) start with _powBits zero bits. ~2s to grind at
-// 20, milliseconds to verify. transport-independent - hashes the envelope, not
-// any nostr event, so it survives a transport swap.
+// first-contact messages carry a nonce so sha256(body + nonce) starts with
+// powBits zero bits: about 2s to grind, milliseconds to verify. it hashes the
+// envelope, not a transport event, so it survives a transport swap.
 const int powBits = 20;
 
 int _leadingZeroBits(List<int> hash) {
@@ -226,13 +214,11 @@ int _leadingZeroBits(List<int> hash) {
   return bits;
 }
 
-// when a grind is running, since when. the chat shows a line under the
-// composer while this is set: on a slow phone the first message to a
-// stranger sat unsent for a minute with no sign of why.
+// since when a grind is running. the chat shows a line under the composer
+// while it is set, as a slow phone can take a minute.
 final ValueNotifier<DateTime?> powBusy = ValueNotifier(null);
 
-// grind a nonce so sha256(seed + nonce) has >= bits leading zeros. runs on the
-// caller's isolate - callers should wrap in compute() to keep the ui smooth.
+// runs on the caller's isolate: wrap it in compute() to keep the ui smooth
 int grindPow(String seed, int bits) {
   var nonce = 0;
   while (true) {

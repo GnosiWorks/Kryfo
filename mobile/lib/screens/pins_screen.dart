@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the pins, on one page, each with its outcome spelled out: the one that
-// opens kryfo, and under Advanced protection the ones for when someone
-// makes you unlock the phone. in a decoy session the same page works on the
-// decoy's own pins and shows what a fresh install would.
+// the pins on one page, each with its outcome spelled out. in a decoy
+// session the page works on the decoy's own pins and shows what a fresh
+// install would.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

@@ -1,7 +1,5 @@
-// built by hand, byte by byte: the smallest files that have the shape the
-// stripper walks. what is checked is that the identifying bytes are gone,
-// the picture bytes are where they were, and a file that cannot be read
-// through comes back null and not as it was.
+// hand-built minimal files in the shapes the stripper walks: identifying
+// bytes go, picture bytes stay put, and an unreadable file comes back null.
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -128,7 +126,7 @@ void main() {
       ...pngChunk('tIME', [7, 234, 9, 18, 0, 0, 0]),
       ...pngChunk('IEND', []),
     ]);
-    test('text, exif and the save time go; the picture and colour stay', () {
+    test('strips text and exif, keeps pixels and colour', () {
       expect(pictureKind(src), PictureKind.png);
       final out = stripPictureBytes(src)!;
       expect(has(out, 'Marios'), false);
@@ -138,18 +136,18 @@ void main() {
       expect(has(out, 'iCCP'), true);
       expect(has(out, 'IEND'), true);
     });
-    test('a clean one comes back as the same object', () {
+    test('returns a clean file as is', () {
       final clean = stripPictureBytes(src)!;
       expect(identical(stripPictureBytes(clean), clean), true);
     });
-    test('bytes hidden after IEND go', () {
+    test('strips bytes hidden after IEND', () {
       final tail = Uint8List.fromList([
         ...stripPictureBytes(src)!,
         ...t('secret'),
       ]);
       expect(has(stripPictureBytes(tail)!, 'secret'), false);
     });
-    test('cut short is null, not passed on', () {
+    test('a cut file is null', () {
       expect(stripPictureBytes(src.sublist(0, src.length - 6)), null);
     });
   });
@@ -161,7 +159,7 @@ void main() {
       riffChunk('EXIF', t('GPS 37.98 23.72')),
       riffChunk('XMP ', t('<xmp>Redmi</xmp>')),
     ]);
-    test('exif and xmp go, the flags that promised them are cleared', () {
+    test('strips exif and xmp and clears their flags', () {
       expect(pictureKind(src), PictureKind.webp);
       final out = stripPictureBytes(src)!;
       expect(has(out, 'GPS'), false);
@@ -173,7 +171,7 @@ void main() {
       expect(8 + size, out.length);
       expect(identical(stripPictureBytes(out), out), true);
     });
-    test('a size that runs past the file is null', () {
+    test('an oversized riff size is null', () {
       final bad = Uint8List.fromList(src)
         ..[4] = 0xFF
         ..[5] = 0xFF;
@@ -183,7 +181,7 @@ void main() {
 
   group('heif', () {
     for (final v in [0, 1]) {
-      test('exif and xmp are zeroed where they sit, iloc v$v', () {
+      test('zeroes exif and xmp in place, iloc v$v', () {
         final src = heif(ilocVersion: v);
         expect(pictureKind(src), PictureKind.heif);
         final out = stripPictureBytes(src)!;
@@ -193,7 +191,7 @@ void main() {
         expect(has(out, 'PICTUREPICTUREPICTURE'), true);
       });
     }
-    test('a vendor box at the tail is cut off', () {
+    test('cuts a vendor box at the tail', () {
       final src = Uint8List.fromList([
         ...heif(),
         ...box('sefd', t('SM-A217F 37.98')),
@@ -204,12 +202,12 @@ void main() {
       expect(out.length, heif().length);
       expect(has(out, 'PICTUREPICTUREPICTURE'), true);
     });
-    test('a vendor box on a file with nothing else to strip', () {
+    test('strips a vendor box from a clean file', () {
       final clean = stripPictureBytes(heif())!;
       final src = Uint8List.fromList([...clean, ...box('sefd', t('SM-A217F'))]);
       expect(has(stripPictureBytes(src)!, 'SM-A217F'), false);
     });
-    test('a vendor box in the middle is emptied where it sits', () {
+    test('empties a vendor box in the middle', () {
       final src = Uint8List.fromList([
         ...heif(),
         ...box('sefd', t('SM-A217F')),
@@ -221,16 +219,16 @@ void main() {
       expect(has(out, 'SM-A217F'), false);
       expect(has(out, 'PICTUREPICTUREPICTURE'), true);
     });
-    test('a picture item kept inside a vendor box is null', () {
+    test('a picture inside a vendor box is null', () {
       final whole = heif();
       final at = latin1.decode(whole, allowInvalid: true).indexOf('mdat');
       final src = Uint8List.fromList(whole)..setRange(at, at + 4, t('sefd'));
       expect(stripPictureBytes(src), null);
     });
-    test('an exif item that iloc never places is null', () {
+    test('an unplaced exif item is null', () {
       expect(stripPictureBytes(heif(dropIlocForExif: true)), null);
     });
-    test('a box that runs past the file is null', () {
+    test('a box past the file end is null', () {
       final src = heif();
       expect(stripPictureBytes(src.sublist(0, src.length - 5)), null);
     });
@@ -248,7 +246,7 @@ void main() {
       0x2C, 0, 0, 0, 0, 1, 0, 1, 0, 0, 2, ...sub([0x44, 0x01]),
       0x3B,
     ]);
-    test('comments and xmp go, the loop and the frames stay', () {
+    test('strips comments and xmp, keeps loop and frames', () {
       expect(pictureKind(src), PictureKind.gif);
       final out = stripPictureBytes(src)!;
       expect(has(out, 'Redmi'), false);

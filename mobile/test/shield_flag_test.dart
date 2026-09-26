@@ -10,7 +10,7 @@ void main() {
     expect(ShieldFlag.cleanRow(row), isTrue);
     expect(ShieldFlag.fromRow(row), isNull);
   });
-  test('a flagged row is a flag and not clean', () {
+  test('a flagged row reads as a flag', () {
     final row = {
       'headline': 'looks like a scam',
       'lines': '["x"]',
@@ -19,7 +19,7 @@ void main() {
     expect(ShieldFlag.cleanRow(row), isFalse);
     expect(ShieldFlag.fromRow(row)?.headline, 'looks like a scam');
   });
-  test('a flag is stored as codes and worded when read', () {
+  test('stores codes and words them when read', () {
     final r = shieldCheck(
       strangerId: 'alice',
       strangerAvatar: 3,
@@ -39,7 +39,7 @@ void main() {
       'same face as your contact alicf',
     ]);
   });
-  test('nothing recorded is neither', () {
+  test('a missing row is neither clean nor flagged', () {
     expect(ShieldFlag.cleanRow(null), isFalse);
     expect(ShieldFlag.fromRow(null), isNull);
   });

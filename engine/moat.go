@@ -1,17 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// moat. bridges are only useful if you can get some, and the obvious way -
-// visit bridges.torproject.org - is blocked in most of the places that block
-// tor. moat is the same bridge database reached over a plain https api, which
-// is what tor browser's "request a bridge" button uses.
-//
-// this deliberately does NOT go through tor. tor being unreachable is the
-// entire reason someone is here.
-//
-// it is not a complete answer: where the moat host itself is blocked you need
-// domain fronting, and that is largely dead as a technique. but partial
-// censorship is the common case and this covers it.
+// moat: the bridge database over a plain https api, as tor browser's
+// "request a bridge" uses. it deliberately does not go through tor, since tor
+// being unreachable is why someone is here.
 
 import "C"
 
@@ -147,8 +139,8 @@ func HaloMoatSolve(cChallenge, cSolution *C.char) *C.char {
 			QRCode:    "false",
 		}},
 	})
-	// bridgedb answers a wrong or expired captcha with 419, which is a real
-	// outcome rather than a failure - the ui should just ask again.
+	// bridgedb answers a wrong or expired captcha with 419, not a failure:
+	// the ui just asks again
 	if code == 419 {
 		log.Println("moat: captcha rejected or expired")
 		return C.CString("wrong")

@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/vouch_text.dart';
 
 void main() {
-  test('one, two, many', () {
+  test('words one, two and many vouchers', () {
     expect(vouchedByLine(['alice']), 'Vouched by alice');
     expect(vouchedByLine(['alice', 'bob']), 'Vouched by alice and bob');
     expect(
@@ -15,7 +15,7 @@ void main() {
     );
   });
 
-  test('nobody is nothing, not a placeholder', () {
+  test('nobody gives an empty line', () {
     expect(vouchedByLine([]), '');
     expect(introducedByLine([]), '');
   });

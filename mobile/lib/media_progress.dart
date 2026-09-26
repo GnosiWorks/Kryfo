@@ -1,15 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// live progress for chunked media, both directions.
-//
-// an 8mb file is ~680 sequential 16k chunks over tor - 20+ minutes. without
-// feedback that reads as "broken" on BOTH ends: the sender's bubble now
-// shows a percentage, and the receiver gets a slim banner above the
-// composer while chunks stream in.
-//
-// design: plain maps + ONE global tick notifier. widgets sit in the tree
-// permanently, listen to the tick, and show/hide themselves - so it does
-// not matter whether the widget or the progress entry is created first
-// (that ordering race is exactly why v1's labels never appeared).
+// live progress for chunked media, both directions: a big file over tor
+// takes minutes, so the sender's bubble shows a percentage and the receiver
+// gets a slim banner above the composer.
+// plain maps and one global tick. the widgets stay mounted and hide
+// themselves, so it does not matter whether the widget or the entry comes
+// first.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -25,8 +20,8 @@ final Map<String, double> mediaSendProgress = {};
 final Map<String, double> incomingMediaProgress = {};
 final Map<String, int> _incomingTouch = {};
 // chat key -> (have, total), and the transfers that went quiet. the slices
-// stay on disk for a week, so a quiet transfer is paused, not lost: the
-// banner says so instead of vanishing at 98%.
+// stay on disk for a week, so a quiet transfer is paused, not lost, and the
+// banner says so.
 final Map<String, (int, int)> _incomingCount = {};
 final Set<String> incomingMediaStalled = {};
 
@@ -127,9 +122,7 @@ class SendProgressLabel extends StatelessWidget {
 class IncomingMediaBanner extends StatelessWidget {
   final String chatKey;
 
-  /// stops an outgoing send from the strip itself. the way out already
-  /// existed, behind a long press on a bubble that is busy sending, which
-  /// is not somewhere anyone looks while a strip says "keep the app open".
+  /// stops an outgoing send from the strip itself
   final void Function(String msgUid)? onCancel;
   const IncomingMediaBanner({super.key, required this.chatKey, this.onCancel});
 
@@ -138,8 +131,8 @@ class IncomingMediaBanner extends StatelessWidget {
     return ValueListenableBuilder<int>(
       valueListenable: mediaProgressTick,
       builder: (_, _, _) {
-        // an outgoing send for this chat takes precedence: that's the
-        // one where the user can still ruin it by leaving.
+        // an outgoing send for this chat comes first: leaving the app can
+        // still break that one
         double? outV;
         String? outUid;
         for (final e in _sendChat.entries) {

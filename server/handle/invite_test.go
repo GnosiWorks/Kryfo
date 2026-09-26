@@ -3,11 +3,9 @@ package main
 
 import "testing"
 
-// the invite goes into an href on the public page. html.EscapeString stops it
-// breaking out of the attribute and does nothing about the scheme, so
-// "javascript:alert(1)" used to render as a working link and run on this
-// origin the moment someone pressed "message on kryfo".
-func TestInviteSchemesThatMustBeRefused(t *testing.T) {
+// the invite goes into an href on the public page, and html escaping does
+// nothing about the scheme.
+func TestInviteRefusesBadSchemes(t *testing.T) {
 	bad := []struct{ why, s string }{
 		{"the bug", `javascript:alert(document.domain)`},
 		{"upper case scheme", `JavaScript:alert(1)`},
@@ -32,9 +30,8 @@ func TestInviteSchemesThatMustBeRefused(t *testing.T) {
 	}
 }
 
-// and everything the app has ever built has to keep working, or someone loses
-// the page they already published.
-func TestEveryInviteTheAppBuildsIsAccepted(t *testing.T) {
+// every shape the app builds has to pass, or someone loses a published page
+func TestInviteAcceptsAppShapes(t *testing.T) {
 	good := []struct{ why, s string }{
 		{"v1, buildHaloUri", `kryfo://share?id=chronic-army-absurd&onion=cztqhsmfhvlt5oit4em6bijxgyvhetqbspdyme6sj6dse2qrxdmef2qd.onion&xpub=BV4MAvcjaZl4VhBvEKPbMMRDEDX8F9xG3YNi`},
 		{"v2, buildHaloUriV2", `kryfo://share?id=a-b-c&onion=2dlpakwswmp5sgkbvu667hhmv6i5rd4flpdeq2z5rhnhs43afkwr3kad.onion&v=2&bundle=eyJyZWdpc3RyYXRpb25JZCI6MX0=`},

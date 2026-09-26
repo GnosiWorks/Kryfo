@@ -9,16 +9,11 @@ import (
 	"time"
 )
 
-// whether the route through tor actually carries anything.
-//
-// tor's own report is not enough. after a samsung came back from flight mode
-// it said bootstrapped, publishing, can send - and every relay connection
-// through it failed for sixteen minutes, with nothing acting on it, because
-// the only dead man switch (relaysAllDead) sat on the path where building a
-// client fails, and here building the client worked. so the judgement is made
-// from what already happens: relay connections succeeding or failing. no
-// probe of its own - a probe is battery, and a phone that pings on a timer is
-// a phone that can be told apart from one that does not.
+// whether the route through tor actually carries anything. tor's own report
+// is not enough: it can say bootstrapped while every relay connection through
+// it fails. so the judgement comes from relay connections succeeding or
+// failing. no probe of its own: a probe is battery, and a phone that pings on
+// a timer can be told apart from one that does not.
 
 var (
 	routeMu sync.Mutex
@@ -58,22 +53,15 @@ func routeNoteOK() {
 var bounceOff int32
 
 // a relay has just connected through tor, so tor can carry traffic whatever
-// its own status says. seen on the redmi on 2026-09-21: back from a check-in
-// pause, the engine's status sat at "starting, 0%" for over ten minutes while
-// six relay subscriptions ran through tor. the app said "still connecting to
-// tor", a paused upload waited for a ready that never came, and the stall
-// rule above would have bounced a working tor every few minutes. the relay
-// is the witness that cannot lie; the status follows it.
+// its own status says, and the status follows the relay. a status stuck at
+// "starting" holds back paused uploads and gets a working tor bounced.
 //
-// the first version skipped this whenever a reconnect was running, and the
-// relays reconnect in the tail of a reconnect - after the network is back,
-// before it returns - so the correction never happened: the verified build
-// sat at "starting, 0%" after flight mode with every relay ok and a message
-// in the outbox. what matters is only whether the connect came after tor was
-// back on the network. reconnectOn bumps the route generation a second time
-// at exactly that point, so okGen == routeGen says so, and bounceOff covers
-// the window before it. the route watch also applies this on every tick, for
-// a connect that landed while bounceOff was still set.
+// what counts is whether the connect came after tor was back on the network,
+// even while the reconnect is still finishing, since that is where the
+// relays reconnect. reconnectOn bumps the route generation a second time at
+// exactly that point, so okGen == routeGen says so, and bounceOff covers the
+// window before it. the route watch also applies this on every tick, for a
+// connect that landed while bounceOff was still set.
 func correctStaleStart() {
 	if !modeNeedsTor() || torIsPaused() || atomic.LoadInt32(&bounceOff) == 1 {
 		return
@@ -239,9 +227,8 @@ func routeNeedsRescue(now time.Time) string {
 }
 
 // android says the network changed. tor's open connections belong to the
-// network that went, and tor finds that out one timeout at a time - which is
-// how a phone back from flight mode sat for sixteen minutes saying ready and
-// carrying nothing. bounce it the way orbot does: DisableNetwork 1 then 0.
+// network that went, and tor finds that out one timeout at a time. bounce it
+// the way orbot does: DisableNetwork 1 then 0.
 //
 // a network that flaps must not be bounced on every flap, so the bounce waits
 // for five quiet seconds after the last change, and two network bounces are

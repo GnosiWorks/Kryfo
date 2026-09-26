@@ -13,7 +13,7 @@ void main() {
     expect(deliveryModeOf('helper'), DeliveryMode.helper);
   });
 
-  test('ago', () {
+  test('formats time ago', () {
     const now = 100 * hour;
     expect(agoLine(0, now), 'not yet');
     expect(agoLine(now + 5, now), 'not yet');
@@ -45,13 +45,13 @@ void main() {
       helperName: helper,
     );
 
-    test('always on', () {
+    test('always on shows the connection', () {
       expect(line(DeliveryMode.always, connected: true).text, 'Connected');
       expect(line(DeliveryMode.always, connected: true).live, true);
       expect(line(DeliveryMode.always, connecting: true).text, 'Connecting');
       expect(line(DeliveryMode.always).text, 'Not connected');
     });
-    test('check-ins show the real last one, late or not', () {
+    test('check-ins show the last check-in', () {
       expect(line(DeliveryMode.checkins).text, 'No check-in yet');
       expect(
         line(DeliveryMode.checkins, check: 50 * hour - 4 * min).text,
@@ -81,7 +81,7 @@ void main() {
         'Connecting \u00B7 no check-in yet',
       );
     });
-    test('helper', () {
+    test('helper shows the last wake-up', () {
       expect(
         line(
           DeliveryMode.helper,
@@ -114,7 +114,7 @@ void main() {
       mode: mode,
     );
 
-    test('a long silence on a phone that stayed on is a kill', () {
+    test('a long silence without reboot is a kill', () {
       final v = judge();
       expect(v.wasKill, true);
       expect(v.kills, [now]);
@@ -123,10 +123,10 @@ void main() {
     test('a short gap is a normal restart', () {
       expect(judge(beat: now - 10 * min).wasKill, false);
     });
-    test('the phone was off in between: not a kill', () {
+    test('a reboot in between is not a kill', () {
       expect(judge(booted: now - 5 * min).wasKill, false);
     });
-    test('first run ever: nothing to compare', () {
+    test('first run is not a kill', () {
       expect(judge(beat: 0).wasKill, false);
     });
     test('only always-on is expected to stay alive', () {
@@ -143,11 +143,11 @@ void main() {
       expect(v.kills.length, 2);
       expect(v.showNudge, false);
     });
-    test('never twice', () {
+    test('shows the card only once', () {
       final v = judge(kills: [now - 20 * hour, now - 3 * hour], shown: true);
       expect(v.showNudge, false);
     });
-    test('a clock set backwards does not count future kills', () {
+    test('a clock set back drops future kills', () {
       final v = judge(kills: [now + hour, now + 2 * hour]);
       expect(v.kills, [now]);
     });

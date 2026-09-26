@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a field lays out what is being typed in its own direction, as it is
-// typed: english in the arabic app ends in its own question mark, persian
-// in the english app starts on the right. empty, it keeps the screen's
-// direction, so the hint sits where the screen's lines start.
+// a field lays out what is typed in its own direction. empty, it keeps the
+// screen's direction, so the hint sits where the screen's lines start.
 import 'package:flutter/widgets.dart';
 
 import '../l10n/l10n.dart';

@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// transport tiers. mandatory tor is the single biggest thing that makes kryfo
-// slow, and in places where tor is blocked outright it makes it useless. the
-// answer is not to abandon tor - it stays the default - but to let someone
-// knowingly trade it away.
+// transport tiers. tor stays the default, but it is slow and blocked outright
+// in some places, so someone can knowingly trade it away.
 //
 //	private   tor for everything. nobody learns your ip. slow first connect.
 //	balanced  plain tls to our own relay, and nothing else. our relay sees
@@ -13,8 +11,7 @@ package main
 //	fast      plain tls to every relay. all of them see your ip.
 //
 // the engine only decides whether to route through tor. which relays to talk
-// to is chosen on the dart side, because that is where the list already
-// lives.
+// to is chosen on the dart side, where the list lives.
 
 import "C"
 
@@ -42,9 +39,8 @@ func currentMode() string {
 	return modePrivate
 }
 
-// tor is only required when we are actually routing through it. in the other
-// modes the app must not wait on a bootstrap that may never finish - that is
-// the whole point of the tier.
+// in the other modes the app must not wait on a tor bootstrap that may never
+// finish.
 func modeNeedsTor() bool {
 	return currentMode() == modePrivate
 }
@@ -61,8 +57,7 @@ func directNostrClient() *http.Client {
 			TLSHandshakeTimeout:   10 * time.Second,
 			ResponseHeaderTimeout: 15 * time.Second,
 			// http/2 has no websocket upgrade. a relay behind a proxy that
-			// offers h2 would negotiate it and then hang forever on the
-			// handshake, which reads as a slow network rather than a bug.
+			// offers h2 would negotiate it and then hang on the handshake.
 			ForceAttemptHTTP2: false,
 			TLSNextProto:      map[string]func(string, *tls.Conn) http.RoundTripper{},
 		},
@@ -89,10 +84,9 @@ func HaloSetTransportMode(cMode *C.char) *C.char {
 		// connection is built the new way.
 		nostrResetClient()
 		resetTrafficClock()
-		// coming back to onion after a spell elsewhere, tor has been idle
-		// and its dialer is usually stale. a stale dialer is not reliably
-		// detectable, and ten seconds of reconnecting beats three minutes
-		// of failed sends while the watchdog works it out.
+		// back on onion after a spell elsewhere, tor's dialer is usually
+		// stale and that is not reliably detectable, so rebuild now rather
+		// than fail sends until the watchdog notices.
 		if m == modePrivate && prev != modePrivate {
 			log.Println("transport: back on onion, rebuilding tor")
 			// the cooldown guards against a looping watchdog, not against

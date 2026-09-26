@@ -23,7 +23,7 @@ double _dy(WidgetTester t, String id) {
 }
 
 void main() {
-  testWidgets('a row that moves to the top slides there', (tester) async {
+  testWidgets('a row moved to the top slides there', (tester) async {
     await tester.pumpWidget(_list(['a', 'b', 'c']));
     await tester.pump();
     expect(_dy(tester, 'c'), 0);

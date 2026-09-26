@@ -20,7 +20,7 @@ BoxDecoration boxOf(WidgetTester t, Finder inside) =>
 
 void main() {
   group('HaloPrimaryButton', () {
-    testWidgets('taps through and is 46 tall, amber, radius 13', (t) async {
+    testWidgets('taps and draws amber, 46 tall', (t) async {
       var taps = 0;
       await t.pumpWidget(
         host(HaloPrimaryButton(label: 'Save', onTap: () => taps++)),
@@ -37,7 +37,7 @@ void main() {
       );
     });
 
-    testWidgets('null onTap draws it off and takes nothing', (t) async {
+    testWidgets('null onTap draws it disabled', (t) async {
       await t.pumpWidget(
         host(const HaloPrimaryButton(label: 'Send', onTap: null)),
       );
@@ -46,7 +46,7 @@ void main() {
       expect(t.widget<Text>(find.text('Send')).style!.color, HaloColors.text3);
     });
 
-    testWidgets('a screen reader gets a button with its label', (t) async {
+    testWidgets('screen readers get a labelled button', (t) async {
       final h = t.ensureSemantics();
       await t.pumpWidget(host(HaloPrimaryButton(label: 'Save', onTap: () {})));
       expect(
@@ -58,7 +58,7 @@ void main() {
   });
 
   group('HaloGhostButton', () {
-    testWidgets('amber outline and amber words by default', (t) async {
+    testWidgets('draws an amber outline by default', (t) async {
       await t.pumpWidget(host(HaloGhostButton(label: 'Verify', onTap: () {})));
       final d = boxOf(t, find.text('Verify'));
       expect(d.color, null);
@@ -68,7 +68,7 @@ void main() {
       expect(s.fontWeight, FontWeight.w600);
     });
 
-    testWidgets('quiet is a hairline and plain words', (t) async {
+    testWidgets('quiet draws a hairline and plain words', (t) async {
       var taps = 0;
       await t.pumpWidget(
         host(HaloGhostButton(label: 'Clear', quiet: true, onTap: () => taps++)),
@@ -82,7 +82,7 @@ void main() {
   });
 
   group('HaloRow', () {
-    testWidgets('a short value sits on the right, a chevron only with a tap', (
+    testWidgets('short value sits right, chevron only when tappable', (
       t,
     ) async {
       await t.pumpWidget(
@@ -123,7 +123,7 @@ void main() {
     });
   });
 
-  testWidgets('HaloGroup puts a hairline between rows, not around them', (
+  testWidgets('HaloGroup draws hairlines only between rows', (
     t,
   ) async {
     await t.pumpWidget(
@@ -143,7 +143,7 @@ void main() {
     expect(lines.length, 2);
   });
 
-  testWidgets('HaloSection shows its caption as the message has it', (t) async {
+  testWidgets('HaloSection shows its caption unchanged', (t) async {
     await t.pumpWidget(host(const HaloSection('Danger zone')));
     expect(find.text('Danger zone'), findsOneWidget);
     await t.pumpWidget(host(const HaloSection('istanbul')));
