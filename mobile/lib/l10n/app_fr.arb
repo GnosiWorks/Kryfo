@@ -1851,5 +1851,10 @@
   "flowLaw": "Dans certains pays, refuser de déverrouiller un téléphone ou cacher des données aux autorités est en soi une infraction. Renseignez-vous sur la loi là où vous voyagez.",
   "howWipe": "Tapé sur l’écran de verrouillage, le code d’effacement efface chaque discussion, votre identité et tout leurre, puis ferme Kryfo. Il fonctionne même quand le clavier est bloqué après des erreurs.",
   "howDecoy": "Le code leurre ouvre un second Kryfo, vide, avec ses propres trois mots. Les messages pour votre vrai Kryfo continuent d’arriver en dessous, sans bruit. Pour quitter le leurre, passez à une autre app et saisissez votre code PIN.",
-  "flowNotSet": "Impossible de le définir. Réessayez."
+  "flowNotSet": "Impossible de le définir. Réessayez.",
+  "stickerOpen": "Stickers",
+  "stickerRecent": "Récents",
+  "stickerA11y": "Sticker {emoji}",
+  "stickerRemoveRecent": "Retirer des récents",
+  "stickerCouldNotLoad": "Impossible de charger les stickers"
 }

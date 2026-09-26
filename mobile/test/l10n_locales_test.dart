@@ -2894,6 +2894,11 @@ final _calls = <_Call>[
   ('videoViewerOpenElsewhere', [], (l) => l.videoViewerOpenElsewhere),
   ('photoKnowsLookedFor', [], (l) => l.photoKnowsLookedFor),
   ('photoKnowsNotInIt', [], (l) => l.photoKnowsNotInIt),
+  ('stickerOpen', [], (l) => l.stickerOpen),
+  ('stickerRecent', [], (l) => l.stickerRecent),
+  ('stickerA11y', ["⟨emoji⟩"], (l) => l.stickerA11y("⟨emoji⟩")),
+  ('stickerRemoveRecent', [], (l) => l.stickerRemoveRecent),
+  ('stickerCouldNotLoad', [], (l) => l.stickerCouldNotLoad),
 ];
 
 void main() {

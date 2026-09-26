@@ -3335,5 +3335,10 @@ void main() {
     expect(l.videoViewerOpenElsewhere, "Open in another app");
     expect(l.photoKnowsLookedFor, "Looked for");
     expect(l.photoKnowsNotInIt, "not in it");
+    expect(l.stickerOpen, "Stickers");
+    expect(l.stickerRecent, "Recent");
+    expect(l.stickerA11y("<emoji>"), "Sticker <emoji>");
+    expect(l.stickerRemoveRecent, "Remove from recent");
+    expect(l.stickerCouldNotLoad, "Stickers could not be loaded");
   });
 }

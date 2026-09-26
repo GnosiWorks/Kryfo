@@ -8883,5 +8883,30 @@
   "flowNotSet": "Could not set it. Try again.",
   "@flowNotSet": {
     "description": "setting an extra PIN failed for a reason other than a clash"
+  },
+  "stickerOpen": "Stickers",
+  "@stickerOpen": {
+    "description": "screens/chat_screen.dart, screens/group_chat_screen.dart, stickers/sticker_sheet.dart"
+  },
+  "stickerRecent": "Recent",
+  "@stickerRecent": {
+    "description": "stickers/sticker_sheet.dart"
+  },
+  "stickerA11y": "Sticker {emoji}",
+  "@stickerA11y": {
+    "description": "stickers/sticker_sheet.dart",
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      }
+    }
+  },
+  "stickerRemoveRecent": "Remove from recent",
+  "@stickerRemoveRecent": {
+    "description": "stickers/sticker_sheet.dart"
+  },
+  "stickerCouldNotLoad": "Stickers could not be loaded",
+  "@stickerCouldNotLoad": {
+    "description": "stickers/sticker_sheet.dart"
   }
 }

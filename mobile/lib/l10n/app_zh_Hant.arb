@@ -1851,5 +1851,10 @@
   "flowLaw": "在有些國家，拒絕解鎖手機或向官方隱藏資料本身就是違法的。出門前先了解當地的法律。",
   "howWipe": "在鎖定畫面輸入清除 PIN，會清除所有聊天、你的身分和任何偽裝，然後關閉 Kryfo。即使多次輸錯後鍵盤暫停，它也照樣有效。",
   "howDecoy": "偽裝 PIN 會開啟第二個空的 Kryfo，它有自己的三個詞。傳給你真正 Kryfo 的訊息照樣在底下悄悄送達。要離開偽裝，切換到別的應用程式，再輸入你的 PIN 碼。",
-  "flowNotSet": "沒能設定成功，請再試一次。"
+  "flowNotSet": "沒能設定成功，請再試一次。",
+  "stickerOpen": "貼圖",
+  "stickerRecent": "最近使用",
+  "stickerA11y": "貼圖 {emoji}",
+  "stickerRemoveRecent": "從最近使用中移除",
+  "stickerCouldNotLoad": "無法載入貼圖"
 }

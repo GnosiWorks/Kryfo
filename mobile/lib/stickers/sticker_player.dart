@@ -68,11 +68,13 @@ double trackValue(StickerTrack k, double t) {
   return vs[n - 1];
 }
 
-/// where in its loop a view is: elapsed plus its phase, wrapped
-double loopTime(Sticker s, double elapsedMs, int phaseMs) {
+/// where in its loop a view is. a view waits [delayMs] at rest first:
+/// every loop starts at rest, so copies fall out of step with no jump
+double loopTime(Sticker s, double elapsedMs, int delayMs) {
   if (s.loopMs <= 0) return 0;
-  final t = (elapsedMs + phaseMs) % s.loopMs;
-  return t < 0 ? t + s.loopMs : t;
+  final t = elapsedMs - delayMs;
+  if (t <= 0) return 0;
+  return t % s.loopMs;
 }
 
 /// every node's x y rot sx sy alpha at t ms, six values a node

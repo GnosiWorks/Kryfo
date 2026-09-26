@@ -35,6 +35,7 @@ import 'chat_screen.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import '../stickers/sticker_sheet.dart' show StickerButton, showStickerSheet;
 import '../main.dart'
     show
         appState,
@@ -1234,6 +1235,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (cancelled || path.isEmpty) return;
     _sendGroupVoice(path, ms);
   }
+
+  void _showStickers() =>
+      showStickerSheet(context, container: session.container);
 
   void _showAttachSheet() {
     FocusManager.instance.primaryFocus?.unfocus();
@@ -2812,6 +2816,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               onLongPressGhost: _showBurnPicker,
               onSend: _send,
               onAttach: _showAttachSheet,
+              onStickers: _showStickers,
               onCamera: _openGroupCamera,
               onToggleDisguise: _toggleDisguise,
               onVoiceComplete: _onVoiceComplete,
@@ -3092,6 +3097,7 @@ class _Composer extends StatelessWidget {
   final VoidCallback onLongPressGhost;
   final VoidCallback onSend;
   final VoidCallback onAttach;
+  final VoidCallback onStickers;
   final VoidCallback onCamera;
   final VoidCallback onToggleDisguise;
   final void Function(String path, int ms, bool cancelled) onVoiceComplete;
@@ -3107,6 +3113,7 @@ class _Composer extends StatelessWidget {
     required this.onLongPressGhost,
     required this.onSend,
     required this.onAttach,
+    required this.onStickers,
     required this.onCamera,
     required this.onToggleDisguise,
     required this.onVoiceComplete,
@@ -3181,9 +3188,11 @@ class _Composer extends StatelessWidget {
               ),
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 4,
+                  padding: const EdgeInsetsDirectional.only(
+                    start: 14,
+                    end: 2,
+                    top: 4,
+                    bottom: 4,
                   ),
                   decoration: BoxDecoration(
                     color: HaloColors.surface2,
@@ -3193,30 +3202,45 @@ class _Composer extends StatelessWidget {
                       width: 0.6,
                     ),
                   ),
-                  child: WrittenDir(
-                    controller: controller,
-                    builder: (dir) => TextField(
-                      textDirection: dir,
-                      inputFormatters: const [UnmarkedInput()],
-                      controller: controller,
-                      style: HaloType.sans(size: 14, color: HaloColors.text),
-                      cursorColor: HaloColors.amber,
-                      decoration: InputDecoration(
-                        hintText: l10n.groupChatMessage,
-                        hintStyle: HaloType.sans(
-                          size: 14,
-                          color: HaloColors.text3,
-                        ),
-                        border: InputBorder.none,
-                        isCollapsed: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 12,
+                  // stickers sit inside the field: no width taken from the row
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: WrittenDir(
+                          controller: controller,
+                          builder: (dir) => TextField(
+                            textDirection: dir,
+                            inputFormatters: const [UnmarkedInput()],
+                            controller: controller,
+                            style: HaloType.sans(
+                              size: 14,
+                              color: HaloColors.text,
+                            ),
+                            cursorColor: HaloColors.amber,
+                            decoration: InputDecoration(
+                              hintText: l10n.groupChatMessage,
+                              hintStyle: HaloType.sans(
+                                size: 14,
+                                color: HaloColors.text3,
+                              ),
+                              border: InputBorder.none,
+                              isCollapsed: true,
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                              ),
+                            ),
+                            minLines: 1,
+                            maxLines: 5,
+                            onSubmitted: (_) => onSend(),
+                          ),
                         ),
                       ),
-                      minLines: 1,
-                      maxLines: 5,
-                      onSubmitted: (_) => onSend(),
-                    ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 2),
+                        child: StickerButton(onTap: onStickers),
+                      ),
+                    ],
                   ),
                 ),
               ),

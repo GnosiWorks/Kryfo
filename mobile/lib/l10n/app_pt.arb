@@ -1851,5 +1851,10 @@
   "flowLaw": "Em alguns países, recusar-se a desbloquear um celular ou esconder dados das autoridades já é crime por si só. Conheça a lei dos lugares para onde você viaja.",
   "howWipe": "Digitado na tela de bloqueio, o PIN de apagamento apaga cada conversa, sua identidade e qualquer disfarce, e depois fecha o Kryfo. Funciona mesmo quando o teclado está travado depois de tentativas erradas.",
   "howDecoy": "O PIN de disfarce abre um segundo Kryfo, vazio, com três palavras próprias. As mensagens para o seu Kryfo de verdade continuam chegando por baixo, em silêncio. Para sair do disfarce, troque de app e digite seu PIN.",
-  "flowNotSet": "Não deu para definir. Tente de novo."
+  "flowNotSet": "Não deu para definir. Tente de novo.",
+  "stickerOpen": "Figurinhas",
+  "stickerRecent": "Recentes",
+  "stickerA11y": "Figurinha {emoji}",
+  "stickerRemoveRecent": "Remover dos recentes",
+  "stickerCouldNotLoad": "Não foi possível carregar as figurinhas"
 }

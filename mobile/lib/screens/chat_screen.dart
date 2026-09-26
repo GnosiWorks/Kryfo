@@ -62,6 +62,7 @@ import '../main.dart'
         torStrictGetOnIsolate,
         TorHalo;
 import '../widgets/press_scale.dart';
+import '../stickers/sticker_sheet.dart' show StickerButton, showStickerSheet;
 import '../widgets/stagger_in.dart';
 import '../widgets/motion.dart';
 import '../widgets/burn_fade.dart';
@@ -2636,6 +2637,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     ).then((result) => _finishMediaSend(msg, result));
   }
 
+  void _showStickers() =>
+      showStickerSheet(context, container: session.container);
+
   // bottom sheet: camera or gallery, instead of jumping straight to gallery.
   void _showAttachSheet() {
     HapticFeedback.selectionClick();
@@ -5084,6 +5088,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           ),
                           _Composer(
                             onAttach: _showAttachSheet,
+                            onStickers: _showStickers,
                             onCamera: _openCamera,
                             ghost: _ghost,
                             secure: _secureNext,
@@ -7509,6 +7514,7 @@ class _Composer extends StatelessWidget {
   final VoidCallback onPickBurn;
   final int burnSeconds;
   final VoidCallback onAttach;
+  final VoidCallback onStickers;
   final VoidCallback onCamera;
   final bool disguise;
   final VoidCallback onToggleDisguise;
@@ -7525,6 +7531,7 @@ class _Composer extends StatelessWidget {
     required this.onPickBurn,
     required this.burnSeconds,
     required this.onAttach,
+    required this.onStickers,
     required this.onCamera,
     required this.disguise,
     required this.onToggleDisguise,
@@ -7667,6 +7674,12 @@ class _Composer extends StatelessWidget {
                   decoration: InputDecoration(
                     hintText: l10n.chatMessage,
                     hintStyle: HaloType.sans(size: 14, color: HaloColors.text3),
+                    // stickers sit inside the field: no width taken from the row
+                    suffixIcon: StickerButton(onTap: onStickers),
+                    suffixIconConstraints: const BoxConstraints(
+                      minWidth: 40,
+                      minHeight: 36,
+                    ),
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 14,

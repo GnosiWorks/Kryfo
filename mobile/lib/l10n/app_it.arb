@@ -1851,5 +1851,10 @@
   "flowLaw": "In alcuni paesi rifiutarsi di sbloccare un telefono o nascondere dati alle autorità è di per sé un reato. Informati sulla legge dei posti in cui viaggi.",
   "howWipe": "Digitato nella schermata di blocco, il PIN di cancellazione cancella ogni chat, la tua identità e ogni esca, poi chiude Kryfo. Funziona anche mentre il tastierino è bloccato dopo tentativi sbagliati.",
   "howDecoy": "Il PIN esca apre un secondo Kryfo, vuoto, con tre parole sue. I messaggi al tuo vero Kryfo continuano ad arrivare sotto, in silenzio. Per uscire dall'esca, passa a un'altra app e inserisci il tuo PIN.",
-  "flowNotSet": "Non è stato possibile impostarlo. Riprova."
+  "flowNotSet": "Non è stato possibile impostarlo. Riprova.",
+  "stickerOpen": "Sticker",
+  "stickerRecent": "Recenti",
+  "stickerA11y": "Sticker {emoji}",
+  "stickerRemoveRecent": "Rimuovi dai recenti",
+  "stickerCouldNotLoad": "Impossibile caricare gli sticker"
 }

@@ -192,6 +192,7 @@ const containerKeys = {
   'kryfo.intro.sent',
   'kryfo.scamshield.on',
   'notif_hide_content',
+  'sticker_recents',
 };
 
 // the phone's, and the everyday identity's working keys that only the

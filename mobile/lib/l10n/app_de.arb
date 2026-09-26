@@ -1851,5 +1851,10 @@
   "flowLaw": "In manchen Ländern ist es schon eine Straftat, ein Handy nicht zu entsperren oder Daten vor Behörden zu verbergen. Kenne das Recht dort, wo du hinreist.",
   "howWipe": "Auf dem Sperrbildschirm eingegeben, löscht die Lösch-PIN jeden Chat, deine Identität und jede Tarnung und schließt dann Kryfo. Sie wirkt auch, während das Tastenfeld nach falschen Versuchen gesperrt ist.",
   "howDecoy": "Die Tarn-PIN öffnet ein zweites, leeres Kryfo mit eigenen drei Wörtern. Nachrichten an dein echtes Kryfo kommen darunter weiter an, lautlos. Zum Verlassen der Tarnung wechsle weg und gib deine PIN ein.",
-  "flowNotSet": "Konnte nicht festgelegt werden. Versuch es noch einmal."
+  "flowNotSet": "Konnte nicht festgelegt werden. Versuch es noch einmal.",
+  "stickerOpen": "Sticker",
+  "stickerRecent": "Zuletzt",
+  "stickerA11y": "Sticker {emoji}",
+  "stickerRemoveRecent": "Aus „Zuletzt“ entfernen",
+  "stickerCouldNotLoad": "Sticker konnten nicht geladen werden"
 }
