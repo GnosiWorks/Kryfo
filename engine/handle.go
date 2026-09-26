@@ -21,6 +21,7 @@ package main
 // invite, and only the original claimer can release or repoint it.
 
 import (
+	"bytes"
 	"context"
 	"crypto/ed25519"
 	"encoding/hex"
@@ -70,7 +71,9 @@ func HaloHandleCheck(cHandle *C.char) *C.char {
 	if err != nil {
 		return C.CString("error: " + err.Error())
 	}
-	req, _ := http.NewRequest("GET", handleBase+"/handle/check?h="+h, nil)
+	body, _ := json.Marshal(map[string]string{"h": h})
+	req, _ := http.NewRequest("POST", handleBase+"/handle/check", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", "")
 	resp, err := client.Do(req)
 	if err != nil {

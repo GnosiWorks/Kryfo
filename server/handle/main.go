@@ -271,7 +271,25 @@ func routes(st *store, lim *limiter) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/handle/check", func(w http.ResponseWriter, r *http.Request) {
-		h := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("h")))
+		var raw string
+		switch {
+		case r.Method == http.MethodPost && r.URL.RawQuery == "":
+			var body struct {
+				H string `json:"h"`
+			}
+			if json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<10)).Decode(&body) != nil {
+				refuseCode(w, http.StatusBadRequest, "bad request")
+				return
+			}
+			raw = body.H
+		case r.Method == http.MethodGet:
+			// apps up to 0.4.1 still ask in the url. drop this once they are gone
+			raw = r.URL.Query().Get("h")
+		default:
+			refuseCode(w, http.StatusMethodNotAllowed, "post the name in the body")
+			return
+		}
+		h := strings.ToLower(strings.TrimSpace(raw))
 		if !handleOK.MatchString(h) || reserved[h] {
 			writeJSON(w, http.StatusOK, map[string]any{"free": false})
 			return

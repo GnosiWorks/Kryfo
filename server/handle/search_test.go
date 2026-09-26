@@ -332,3 +332,36 @@ func TestTheQuestionIsNeverTakenFromTheURL(t *testing.T) {
 		t.Errorf("POST with a query: %d, want 405", resp.StatusCode)
 	}
 }
+
+func TestTheCheckTakesThePostBodyAndOldAppsStillGetAnAnswer(t *testing.T) {
+	srv, _ := service(t, newLimiter(100, 100))
+	c, base := srv.Client(), srv.URL
+	claim(t, c, base, "wren", newOwner(t))
+	if out := post(t, c, base, "/handle/check", map[string]string{"h": "wren"}); out["free"] != false {
+		t.Errorf("post, taken name: %v", out)
+	}
+	if out := post(t, c, base, "/handle/check", map[string]string{"h": "heron"}); out["free"] != true {
+		t.Errorf("post, free name: %v", out)
+	}
+	// 0.3.x and 0.4.x ask with a get
+	resp, err := c.Get(base + "/handle/check?h=wren")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out map[string]any
+	_ = json.NewDecoder(resp.Body).Decode(&out)
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK || out["free"] != false {
+		t.Errorf("get from an old app: %d %v", resp.StatusCode, out)
+	}
+	// a post that also carries the name in the url is refused
+	resp, err = c.Post(base+"/handle/check?h=wren", "application/json",
+		strings.NewReader(`{"h":"wren"}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusMethodNotAllowed {
+		t.Errorf("post with a query: %d, want 405", resp.StatusCode)
+	}
+}
