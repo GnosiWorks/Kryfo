@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- stickers: the Fokia pack, 29 animated stickers, in chats, groups and rooms. a sticker travels as its name and the app draws it, so it costs a few bytes and no picture leaves the phone. older versions show its emoji.
+
 ## [0.4.1] - 2026-09-25
 
 ### Security
