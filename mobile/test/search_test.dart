@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // search: what the index keeps and what a query becomes, in every script
-// kryfo speaks. the full-text engine itself runs on the phone; its side of
-// this (tokens split on anything that is not a letter or digit, prefix
-// terms, phrases) is checked against real sqlite in the notes' tools.
+// kryfo speaks. the full-text engine itself runs on the phone.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/search.dart';
 
 void main() {
-  test('latin text is folded: case and accents go', () {
+  test('folds case and accents in latin', () {
     expect(indexText('Café CRÈME à Hà Nội'), 'cafe creme a ha noi');
     // the sharp s and the russian yo as people type them
     expect(indexText('Straße'), 'strasse');
@@ -17,7 +15,7 @@ void main() {
     expect(indexText('İstanbul'), 'istanbul');
   });
 
-  test('arabic-script letters and marks keyboards differ on are one', () {
+  test('folds arabic-script letter variants', () {
     // arabic kaf and yeh, persian keheh and farsi yeh
     expect(indexText('كتاب'), indexText('کتاب'));
     expect(indexText('علي'), indexText('علی'));
@@ -28,12 +26,12 @@ void main() {
     expect(indexText('می‌خواهم'), indexText('میخواهم'));
   });
 
-  test('chinese: every character its own token', () {
+  test('each chinese character is a token', () {
     expect(indexText('我们去吃饭'), ' 我  们  去  吃  饭 ');
     expect(indexText('去Kryfo吃饭'), ' 去 kryfo 吃  饭 ');
   });
 
-  test('a query becomes terms that all have to be there', () {
+  test('a query needs every term', () {
     expect(queryTerms('  Pizza   tonight '), ['pizza', 'tonight']);
     expect(queryTerms('吃饭'), ['吃饭']);
     expect(queryTerms('去Kryfo吃饭'), ['去', 'kryfo', '吃饭']);
@@ -41,7 +39,7 @@ void main() {
     expect(queryTerms('،؟'), isEmpty);
   });
 
-  test('the match: prefix words, chinese phrases, nothing that breaks out', () {
+  test('builds a safe match expression', () {
     expect(ftsMatch('pizz'), '"pizz"*');
     expect(ftsMatch('Pizza tonight'), '"pizza"* "tonight"*');
     expect(ftsMatch('吃饭'), '"吃 饭"');
@@ -58,7 +56,7 @@ void main() {
     expect(ftsMatch('می‌خواهم'), ftsMatch('میخواهم'));
   });
 
-  test('highlights land on the original text, accents and all', () {
+  test('highlights land on the original text', () {
     const t = 'Le café est prêt';
     final r = matchRanges(t, 'cafe pret');
     expect([for (final x in r) t.substring(x.$1, x.$2)], ['café', 'prêt']);
@@ -79,7 +77,7 @@ void main() {
     expect(matchRanges('', 'x'), isEmpty);
   });
 
-  test('characters outside the basic plane keep their place', () {
+  test('astral characters keep their place', () {
     const t = 'ok 𠀀 pizza';
     final r = matchRanges(t, 'pizza');
     expect(t.substring(r.first.$1, r.first.$2), 'pizza');

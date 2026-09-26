@@ -24,7 +24,7 @@ void main() {
     expect(unmarked('plain'), 'plain');
   });
 
-  test('a message, its names and its poll come out clean', () {
+  test('strips controls from a message, names and poll', () {
     final sent = {
       'm': marked,
       'h': 'aaa-bbb-ccc',

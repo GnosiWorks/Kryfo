@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// people search, the phone's side: only a question the registry would
-// take goes out, in the body of the post it is handed, and the answer is read with
-// care. the registry's side is tested in server/handle/search_test.go.
+// people search, the phone's side. the registry's side is tested in
+// server/handle/search_test.go.
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/handle_search.dart';
 
 void main() {
-  test('a question is sent only when the registry would take it', () {
+  test('sends only queries the registry takes', () {
     expect(peopleQuery('wren'), 'wren');
     expect(peopleQuery('@Wren'), 'wren');
     expect(peopleQuery('  Wren   F  '), 'wren f');
@@ -30,14 +29,14 @@ void main() {
     }
   });
 
-  test('only @ asks the registry without a tap', () {
+  test('only @ searches without a tap', () {
     expect(looksLikePerson('@wren'), isTrue);
     expect(looksLikePerson(' @wren'), isTrue);
     expect(looksLikePerson('wren'), isFalse);
     expect(looksLikePerson('dinner at 8'), isFalse);
   });
 
-  test('the answer is read with care', () {
+  test('parses the answer strictly', () {
     final p = parsePeople('''
       {"results": [
         {"handle": "wren", "name": "Wren  F.", "bio": "hi", "verified": true, "fp": "ABCD 1234"},
@@ -59,7 +58,7 @@ void main() {
   });
 
   test(
-    'the question goes to the registry, encoded, and errors are told apart',
+    'posts the query and sorts errors',
     () async {
       String? asked, sent;
       final ok = await searchPeople('@Wren F', (url, body) async {

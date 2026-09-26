@@ -81,7 +81,7 @@ func TestPinCheckSameWork(t *testing.T) {
 	}
 }
 
-func TestPinSetupRefusesAPinAlreadyInUse(t *testing.T) {
+func TestPinSetupRefusesUsedPin(t *testing.T) {
 	tb := newPinTable(pinLogNLow)
 	tb = mustSetup(t, tb, "1234", 0, 1, pinLegacy{})
 	if _, _, err := pinSetup([]byte("1234"), tb, pinLegacy{}, 2, 3, box, nil); !errors.Is(err, errPinCollision) {
@@ -100,7 +100,7 @@ func TestPinSetupRefusesAPinAlreadyInUse(t *testing.T) {
 }
 
 // lock_state stored sha256("$salt:$pin") as hex
-func TestPinLegacyMatchesTheOldHash(t *testing.T) {
+func TestPinLegacyMatchesOldHash(t *testing.T) {
 	sum := sha256.Sum256([]byte("c2FsdHNhbHQ=:2468"))
 	want := hex.EncodeToString(sum[:])
 	old := pinLegacy{AppSalt: "c2FsdHNhbHQ=", AppHash: want}
@@ -153,7 +153,7 @@ func TestPinWrapOpensOnlyForItsPin(t *testing.T) {
 	}
 }
 
-func TestPinBadTablesAreRefused(t *testing.T) {
+func TestPinRefusesBadTables(t *testing.T) {
 	good := newPinTable(pinLogNLow)
 	short := good
 	short.Entries = good.Entries[:7]

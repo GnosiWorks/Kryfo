@@ -14,7 +14,7 @@ import (
 	"github.com/cretz/bine/torutil"
 )
 
-func TestQuietIdentityIsSilentAndLeavesTheEngineAlone(t *testing.T) {
+func TestQuietNewIsSilentAndSeparate(t *testing.T) {
 	var logged bytes.Buffer
 	log.SetOutput(&logged)
 	defer log.SetOutput(os.Stderr)
@@ -51,7 +51,7 @@ func TestQuietIdentityIsSilentAndLeavesTheEngineAlone(t *testing.T) {
 	}
 }
 
-func TestQuietDescribeGivesBackTheSameIdentity(t *testing.T) {
+func TestQuietDescribeRoundTrips(t *testing.T) {
 	a, err := quietNew()
 	if err != nil {
 		t.Fatal(err)
@@ -82,7 +82,7 @@ func TestQuietDescribeGivesBackTheSameIdentity(t *testing.T) {
 	}
 }
 
-func TestQuietFirstContactMatchesTheEngines(t *testing.T) {
+func TestQuietFirstContactKey(t *testing.T) {
 	a, err := quietNew()
 	if err != nil {
 		t.Fatal(err)

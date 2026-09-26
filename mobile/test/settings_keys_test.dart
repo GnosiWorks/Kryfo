@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// every setting the app keeps outside its database is placed: an identity's
-// own (a decoy keeps its own copy) or the phone's (every identity shares
-// it). a new key on neither list fails here before it can leak between
+// every setting kept outside the database is an identity's own or the
+// phone's. a new key on neither list fails here before it can leak between
 // identities.
 import 'dart:io';
 

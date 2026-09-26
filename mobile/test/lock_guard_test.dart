@@ -70,7 +70,7 @@ void main() {
     expect(now, isTrue);
   });
 
-  test('a decoy unlock drops what waited, and a dialog gives up', () async {
+  test('a decoy unlock drops what waited', () async {
     var locked = true;
     final g = LockGuard(isLocked: () => locked);
     final done = <String>[];

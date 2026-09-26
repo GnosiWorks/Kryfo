@@ -62,7 +62,7 @@ void main() {
     expect(got.first.name, 'Berlin');
   });
 
-  test('coordinates read the way a person writes them', () {
+  test('formats coordinates with hemisphere letters', () {
     expect(coordsLine(52.48113, 13.43529), '52.48113°\u00a0N · 13.43529°\u00a0E');
     expect(coordsLine(-33.5, -70.25), '33.50000°\u00a0S · 70.25000°\u00a0W');
   });

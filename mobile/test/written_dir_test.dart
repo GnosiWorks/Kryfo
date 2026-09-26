@@ -19,7 +19,7 @@ void main() {
     expect(writtenDir('\u2066@wren\u2069 سلام'), TextDirection.ltr);
   });
 
-  test('nothing to go by leaves the app its own direction', () {
+  test('no letters means no direction', () {
     expect(writtenDir(''), isNull);
     expect(writtenDir('12:30'), isNull);
     expect(writtenDir('?!…'), isNull);

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// polls: the rules every phone applies to the votes it gets. a small book
-// below keeps votes the way the database does (one per voter, the highest
-// seq wins, a close replaces them with the creator's final count), so the
-// sequences members actually produce can be played through it.
+// polls: the rules every phone applies to the votes it gets. the small book
+// below keeps votes the way the database does.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/polls.dart';
 
@@ -37,7 +35,7 @@ class Book {
 }
 
 void main() {
-  test('a vote counts, and shows as mine', () {
+  test('a vote counts and shows as mine', () {
     final b = Book(lunch);
     expect(b.vote('ana', [0], 100), isTrue);
     expect(b.vote('ben', [1], 100), isTrue);
@@ -66,7 +64,7 @@ void main() {
     expect(b.tally('x').counts, [0, 1, 0]);
   });
 
-  test('votes out of order: the newest one stands', () {
+  test('the newest vote wins in any order', () {
     final b = Book(lunch);
     // ana voted pizza, then noodles, then salad; they arrive shuffled
     b.vote('ana', [2], 300);
@@ -87,7 +85,7 @@ void main() {
     expect(t.leaders, isEmpty);
   });
 
-  test('several answers: shares can add up past one', () {
+  test('multi-answer shares add up past one', () {
     final b = Book(toppings);
     b.vote('ana', [0, 2], 100);
     b.vote('ben', [2], 100);
@@ -98,13 +96,13 @@ void main() {
     expect(t.leaders, {2});
   });
 
-  test('a single-answer poll keeps one choice, whatever the frame says', () {
+  test('a single-answer poll keeps one choice', () {
     expect(cleanChoices([2, 0, 1], lunch), [0]);
     expect(cleanChoices([5, -1, 'x', 1, 1], lunch), [1]);
     expect(cleanChoices([2, 0, 2], toppings), [0, 2]);
   });
 
-  test('closing: the creator\'s count is the final one everywhere', () {
+  test('the creator\'s close sets the final count', () {
     // this phone had a vote the creator never got
     final here = Book(lunch)
       ..vote('ana', [0], 100)
@@ -123,7 +121,7 @@ void main() {
     expect(here.tally('x').counts, [1, 1, 0]);
   });
 
-  test('a close with junk in it keeps only what the poll allows', () {
+  test('a close keeps only valid votes', () {
     final f = cleanFinal({
       'ana': [0],
       'ben': [9],
@@ -137,7 +135,7 @@ void main() {
     });
   });
 
-  test('a vote meets the poll it names', () {
+  test('a vote counts, waits or drops', () {
     expect(
       voteFate(member: true, pollHere: true, pollGone: false),
       VoteFate.count,
@@ -166,7 +164,7 @@ void main() {
     );
   });
 
-  test('only the creator closes, once, in its own chat', () {
+  test('only the creator closes, once', () {
     expect(closeAccepted(pollHere: true, fromCreator: true), isTrue);
     expect(closeAccepted(pollHere: true, fromCreator: false), isFalse);
     expect(closeAccepted(pollHere: false, fromCreator: true), isFalse);
@@ -188,7 +186,7 @@ void main() {
     expect(kPollFinalSeq > DateTime(2200).millisecondsSinceEpoch, isTrue);
   });
 
-  test('a poll parses from the wire only when it is one we would draw', () {
+  test('parses only polls we would draw', () {
     expect(
       PollSpec.parse({
         'o': ['a', 'b'],
@@ -233,7 +231,7 @@ void main() {
     expect(p.toWire().containsKey('cl'), isFalse);
   });
 
-  test('a draft is tidied before it goes', () {
+  test('tidies a draft before sending', () {
     final d = tidyDraft('  Lunch?  ', [' pizza ', '', 'Pizza', 'noodles', ' ']);
     expect(d?.question, 'Lunch?');
     expect(d?.options, ['pizza', 'noodles']);

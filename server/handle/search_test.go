@@ -36,8 +36,7 @@ func (o owner) sign(msg string) string {
 
 const invite = "kryfo://share?id=a-b-c&onion=x.onion&v=3&bundle=zz&fc=ff"
 
-// a service on a scratch store; the server itself, so connection counting
-// works as it does in production
+// the real server on a scratch store, so connection counting works
 func service(t *testing.T, lim *limiter) (*httptest.Server, *store) {
 	t.Helper()
 	st := openStore(filepath.Join(t.TempDir(), "handles.json"))
@@ -116,7 +115,7 @@ func handles(a answer) []string {
 	return out
 }
 
-func TestAHandleIsNotInSearchUntilItsOwnerSaysSo(t *testing.T) {
+func TestUnlistedUntilOwnerOptsIn(t *testing.T) {
 	srv, _ := service(t, newLimiter(100, 100))
 	c := srv.Client()
 	o := newOwner(t)
@@ -143,7 +142,7 @@ func TestAHandleIsNotInSearchUntilItsOwnerSaysSo(t *testing.T) {
 	}
 }
 
-func TestOnlyTheOwnerChangesTheListingAndNeverWithAnOldRequest(t *testing.T) {
+func TestListingOwnerOnlyNoReplay(t *testing.T) {
 	srv, st := service(t, newLimiter(100, 100))
 	c := srv.Client()
 	o, other := newOwner(t), newOwner(t)
@@ -185,7 +184,7 @@ func TestOnlyTheOwnerChangesTheListingAndNeverWithAnOldRequest(t *testing.T) {
 	}
 }
 
-func TestReclaimingKeepsTheChoice(t *testing.T) {
+func TestReclaimKeepsListing(t *testing.T) {
 	srv, st := service(t, newLimiter(100, 100))
 	c := srv.Client()
 	o := newOwner(t)
@@ -200,7 +199,7 @@ func TestReclaimingKeepsTheChoice(t *testing.T) {
 	}
 }
 
-func TestQueriesThatCouldSweepTheListAreRefused(t *testing.T) {
+func TestSweepQueriesRefused(t *testing.T) {
 	srv, _ := service(t, newLimiter(100, 100))
 	c := srv.Client()
 	for _, q := range []string{"", "ab", "@ab", "a b", "***", "%%%", "a*b*c", "___", "...",
@@ -216,7 +215,7 @@ func TestQueriesThatCouldSweepTheListAreRefused(t *testing.T) {
 	}
 }
 
-func TestAtMostTwentyAndBestFirst(t *testing.T) {
+func TestSearchTwentyBestFirst(t *testing.T) {
 	srv, _ := service(t, newLimiter(1000, 1000))
 	c := srv.Client()
 	now := time.Now().Unix()
@@ -250,7 +249,7 @@ func TestAtMostTwentyAndBestFirst(t *testing.T) {
 	}
 }
 
-func TestOneConnectionCannotAskForever(t *testing.T) {
+func TestPerConnectionSearchLimit(t *testing.T) {
 	srv, _ := service(t, newLimiter(1000, 1000))
 	// one client, keep-alive: every request on the same connection
 	c := srv.Client()
@@ -268,7 +267,7 @@ func TestOneConnectionCannotAskForever(t *testing.T) {
 	}
 }
 
-func TestTheWholeServiceHasACeiling(t *testing.T) {
+func TestServiceWideLimit(t *testing.T) {
 	srv, _ := service(t, newLimiter(0.001, 5))
 	for i := 0; i < 5; i++ {
 		c := &http.Client{Transport: &http.Transport{DisableKeepAlives: true}}
@@ -305,7 +304,7 @@ func TestListingMessageIsStable(t *testing.T) {
 	}
 }
 
-func TestTheQuestionIsNeverTakenFromTheURL(t *testing.T) {
+func TestSearchQueryNotInURL(t *testing.T) {
 	srv, _ := service(t, newLimiter(100, 100))
 	c, base := srv.Client(), srv.URL
 	for _, u := range []string{
@@ -333,7 +332,7 @@ func TestTheQuestionIsNeverTakenFromTheURL(t *testing.T) {
 	}
 }
 
-func TestTheCheckTakesThePostBodyAndOldAppsStillGetAnAnswer(t *testing.T) {
+func TestCheckTakesPostBody(t *testing.T) {
 	srv, _ := service(t, newLimiter(100, 100))
 	c, base := srv.Client(), srv.URL
 	claim(t, c, base, "wren", newOwner(t))
@@ -343,7 +342,7 @@ func TestTheCheckTakesThePostBodyAndOldAppsStillGetAnAnswer(t *testing.T) {
 	if out := post(t, c, base, "/handle/check", map[string]string{"h": "heron"}); out["free"] != true {
 		t.Errorf("post, free name: %v", out)
 	}
-	// 0.3.x and 0.4.x ask with a get
+	// older apps ask with a get
 	resp, err := c.Get(base + "/handle/check?h=wren")
 	if err != nil {
 		t.Fatal(err)

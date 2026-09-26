@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// what the app lock's layer cannot cover by drawing: sound, the microphone,
-// the camera and anything android draws itself run outside the widget tree.
-// every file that makes one has to hand it to the lock (closeOnLock), and a
-// new one that does not fails here.
+// sound, the microphone, the camera and native views run outside the widget
+// tree, so the lock's layer cannot cover them by drawing. every class that
+// makes one hands it to the lock (closeOnLock).
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -14,8 +13,7 @@ Iterable<File> _dart(String dir) => Directory(dir)
     .where((f) => !f.path.contains('/l10n/'));
 
 void main() {
-  test('everything that plays, records, films or draws natively stops for '
-      'the lock, in the class that makes it', () {
+  test('native media stops for the lock', () {
     final makes = RegExp(
       r'\bAudioPlayer\(|\bAudioRecorder\(|\bCameraController\(|'
       r'\bReaderWidget\(|'
@@ -49,7 +47,7 @@ void main() {
     expect(missing, isEmpty, reason: 'made where nothing stops it');
   });
 
-  test('secret fields are never offered to the autofill service', () {
+  test('secret fields are kept from autofill', () {
     final bad = <String>[];
     for (final f in _dart('lib')) {
       final lines = f.readAsLinesSync();
