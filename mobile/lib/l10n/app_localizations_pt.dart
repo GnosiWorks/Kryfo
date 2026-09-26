@@ -7039,9 +7039,5 @@ class AppLocalizationsPt extends AppLocalizations {
       'O PIN de disfarce abre um segundo Kryfo, vazio, com três palavras próprias. As mensagens para o seu Kryfo de verdade continuam chegando por baixo, em silêncio. Para sair do disfarce, troque de app e digite seu PIN.';
 
   @override
-  String get howLimits =>
-      'Uma olhada rápida, não um laboratório. Uma cópia do celular feita com ferramentas forenses pode mostrar que o Kryfo guarda mais do que mostra, e um PIN curto pode ser adivinhado offline.';
-
-  @override
   String get flowNotSet => 'Não deu para definir. Tente de novo.';
 }

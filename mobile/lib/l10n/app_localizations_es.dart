@@ -7043,9 +7043,5 @@ class AppLocalizationsEs extends AppLocalizations {
       'El PIN señuelo abre un segundo Kryfo, vacío, con sus propias tres palabras. Los mensajes a tu Kryfo real siguen llegando por debajo, en silencio. Para salir del señuelo, cambia a otra app y escribe tu PIN.';
 
   @override
-  String get howLimits =>
-      'Un vistazo rápido, no un laboratorio. Una copia del teléfono hecha con herramientas forenses puede mostrar que Kryfo guarda más de lo que muestra, y un PIN corto se puede adivinar sin conexión.';
-
-  @override
   String get flowNotSet => 'No se pudo poner. Inténtalo de nuevo.';
 }

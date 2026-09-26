@@ -1851,6 +1851,5 @@
   "flowLaw": "En algunos países, negarse a desbloquear un teléfono u ocultar datos a las autoridades es un delito en sí mismo. Conoce la ley de los lugares a los que viajas.",
   "howWipe": "Escrito en la pantalla de bloqueo, el PIN de borrado borra cada chat, tu identidad y cualquier señuelo, y luego cierra Kryfo. Funciona incluso mientras el teclado está bloqueado tras intentos fallidos.",
   "howDecoy": "El PIN señuelo abre un segundo Kryfo, vacío, con sus propias tres palabras. Los mensajes a tu Kryfo real siguen llegando por debajo, en silencio. Para salir del señuelo, cambia a otra app y escribe tu PIN.",
-  "howLimits": "Un vistazo rápido, no un laboratorio. Una copia del teléfono hecha con herramientas forenses puede mostrar que Kryfo guarda más de lo que muestra, y un PIN corto se puede adivinar sin conexión.",
   "flowNotSet": "No se pudo poner. Inténtalo de nuevo."
 }

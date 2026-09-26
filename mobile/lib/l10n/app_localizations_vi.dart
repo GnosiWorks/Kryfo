@@ -6969,9 +6969,5 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mã PIN ngụy trang mở một Kryfo thứ hai, trống, với ba từ riêng. Tin nhắn gửi đến Kryfo thật của bạn vẫn đến bên dưới, lặng lẽ. Để thoát khỏi phần ngụy trang, chuyển sang ứng dụng khác rồi nhập mã PIN của bạn.';
 
   @override
-  String get howLimits =>
-      'Một cái nhìn lướt, không phải phòng thí nghiệm. Bản sao điện thoại tạo bằng công cụ pháp y có thể cho thấy Kryfo chứa nhiều hơn những gì nó hiện ra, và mã PIN ngắn có thể bị đoán ngoại tuyến.';
-
-  @override
   String get flowNotSet => 'Không đặt được. Hãy thử lại.';
 }

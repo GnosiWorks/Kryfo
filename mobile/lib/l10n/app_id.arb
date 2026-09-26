@@ -1851,6 +1851,5 @@
   "flowLaw": "Di beberapa negara, menolak membuka kunci ponsel atau menyembunyikan data dari petugas sudah merupakan pelanggaran hukum. Kenali hukum di tempat tujuanmu.",
   "howWipe": "Jika diketik di layar kunci, PIN penghapus menghapus semua chat, identitasmu, dan umpan mana pun, lalu menutup Kryfo. PIN ini tetap bekerja meski papan angka sedang ditahan setelah salah coba.",
   "howDecoy": "PIN umpan membuka Kryfo kedua yang kosong dengan tiga kata sendiri. Pesan ke Kryfo-mu yang asli tetap masuk di bawahnya tanpa suara. Untuk keluar dari umpan, beralih ke aplikasi lain lalu masukkan PIN-mu.",
-  "howLimits": "Sekilas lihat, bukan laboratorium. Salinan ponsel yang dibuat dengan alat forensik bisa menunjukkan bahwa Kryfo menyimpan lebih dari yang ditampilkannya, dan PIN pendek bisa ditebak secara offline.",
   "flowNotSet": "Gagal dibuat. Coba lagi."
 }

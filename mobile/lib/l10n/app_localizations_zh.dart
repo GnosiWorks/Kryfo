@@ -6719,10 +6719,6 @@ class AppLocalizationsZh extends AppLocalizations {
       '伪装 PIN 会打开第二个空的 Kryfo，它有自己的三个词。发给你真正 Kryfo 的消息照样在底下悄悄到达。要离开伪装，切到别的应用，再输入你的 PIN 码。';
 
   @override
-  String get howLimits =>
-      '经得住快速翻看，挡不住实验室。用取证工具复制的手机副本可能显示 Kryfo 存的比它显示的多，而且较短的 PIN 码可以离线猜出来。';
-
-  @override
   String get flowNotSet => '没能设置成功，请再试一次。';
 }
 
@@ -13439,10 +13435,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get howDecoy =>
       '偽裝 PIN 會開啟第二個空的 Kryfo，它有自己的三個詞。傳給你真正 Kryfo 的訊息照樣在底下悄悄送達。要離開偽裝，切換到別的應用程式，再輸入你的 PIN 碼。';
-
-  @override
-  String get howLimits =>
-      '經得起快速翻看，擋不住實驗室。用鑑識工具複製的手機副本可能顯示 Kryfo 存的比它顯示的多，而且較短的 PIN 碼可以離線猜出來。';
 
   @override
   String get flowNotSet => '沒能設定成功，請再試一次。';

@@ -6980,9 +6980,5 @@ class AppLocalizationsEn extends AppLocalizations {
       'The decoy PIN opens a second, empty Kryfo with three words of its own. Messages to your real Kryfo keep arriving underneath, silently. To leave the decoy, switch away and enter your PIN.';
 
   @override
-  String get howLimits =>
-      'A quick look, not a lab. A copy of the phone made with forensic tools can show that Kryfo holds more than it shows, and a short PIN can be guessed offline.';
-
-  @override
   String get flowNotSet => 'Could not set it. Try again.';
 }

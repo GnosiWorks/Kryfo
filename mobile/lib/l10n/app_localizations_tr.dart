@@ -7017,9 +7017,5 @@ class AppLocalizationsTr extends AppLocalizations {
       'Yem PIN’i, kendi üç kelimesi olan ikinci ve boş bir Kryfo açar. Gerçek Kryfo’na gelen mesajlar altta sessizce gelmeye devam eder. Yemden çıkmak için başka bir uygulamaya geç ve PIN’ini gir.';
 
   @override
-  String get howLimits =>
-      'Hızlı bir bakış, laboratuvar değil. Adli araçlarla alınmış bir telefon kopyası, Kryfo’nun gösterdiğinden fazlasını tuttuğunu gösterebilir; kısa bir PIN çevrimdışı tahmin edilebilir.';
-
-  @override
   String get flowNotSet => 'Belirlenemedi. Tekrar dene.';
 }

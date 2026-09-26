@@ -427,7 +427,6 @@ void _showHow(BuildContext context) {
               (Icons.theater_comedy_outlined, HaloColors.amber, l10n.howDecoy),
               (Icons.fingerprint, HaloColors.amber, l10n.flowDecoyFinger),
               (Icons.dialpad_outlined, HaloColors.amber, l10n.flowDecoyDigits),
-              (Icons.science_outlined, HaloColors.text2, l10n.howLimits),
               (Icons.gavel_outlined, HaloColors.text2, l10n.flowLaw),
             ]) ...[
               Row(

@@ -7056,9 +7056,5 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le code leurre ouvre un second Kryfo, vide, avec ses propres trois mots. Les messages pour votre vrai Kryfo continuent d’arriver en dessous, sans bruit. Pour quitter le leurre, passez à une autre app et saisissez votre code PIN.';
 
   @override
-  String get howLimits =>
-      'Un coup d’œil, pas un labo. Une copie du téléphone faite avec des outils d’investigation peut montrer que Kryfo contient plus qu’il ne montre, et un code court peut être deviné hors ligne.';
-
-  @override
   String get flowNotSet => 'Impossible de le définir. Réessayez.';
 }

@@ -8880,10 +8880,6 @@
   "@howDecoy": {
     "description": "How this works sheet"
   },
-  "howLimits": "A quick look, not a lab. A copy of the phone made with forensic tools can show that Kryfo holds more than it shows, and a short PIN can be guessed offline.",
-  "@howLimits": {
-    "description": "How this works sheet: the limits, stated honestly"
-  },
   "flowNotSet": "Could not set it. Try again.",
   "@flowNotSet": {
     "description": "setting an extra PIN failed for a reason other than a clash"

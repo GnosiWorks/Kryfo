@@ -1851,6 +1851,5 @@
   "flowLaw": "Bazı ülkelerde bir telefonun kilidini açmayı reddetmek ya da verileri yetkililerden gizlemek başlı başına suçtur. Seyahat ettiğin yerlerin yasalarını bil.",
   "howWipe": "Kilit ekranında girildiğinde silme PIN’i her sohbeti, kimliğini ve varsa yemi siler, sonra Kryfo’yu kapatır. Yanlış denemelerden sonra tuş takımı beklemedeyken bile çalışır.",
   "howDecoy": "Yem PIN’i, kendi üç kelimesi olan ikinci ve boş bir Kryfo açar. Gerçek Kryfo’na gelen mesajlar altta sessizce gelmeye devam eder. Yemden çıkmak için başka bir uygulamaya geç ve PIN’ini gir.",
-  "howLimits": "Hızlı bir bakış, laboratuvar değil. Adli araçlarla alınmış bir telefon kopyası, Kryfo’nun gösterdiğinden fazlasını tuttuğunu gösterebilir; kısa bir PIN çevrimdışı tahmin edilebilir.",
   "flowNotSet": "Belirlenemedi. Tekrar dene."
 }

@@ -6986,9 +6986,5 @@ class AppLocalizationsId extends AppLocalizations {
       'PIN umpan membuka Kryfo kedua yang kosong dengan tiga kata sendiri. Pesan ke Kryfo-mu yang asli tetap masuk di bawahnya tanpa suara. Untuk keluar dari umpan, beralih ke aplikasi lain lalu masukkan PIN-mu.';
 
   @override
-  String get howLimits =>
-      'Sekilas lihat, bukan laboratorium. Salinan ponsel yang dibuat dengan alat forensik bisa menunjukkan bahwa Kryfo menyimpan lebih dari yang ditampilkannya, dan PIN pendek bisa ditebak secara offline.';
-
-  @override
   String get flowNotSet => 'Gagal dibuat. Coba lagi.';
 }

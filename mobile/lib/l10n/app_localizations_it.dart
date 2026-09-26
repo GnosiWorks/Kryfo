@@ -7055,9 +7055,5 @@ class AppLocalizationsIt extends AppLocalizations {
       'Il PIN esca apre un secondo Kryfo, vuoto, con tre parole sue. I messaggi al tuo vero Kryfo continuano ad arrivare sotto, in silenzio. Per uscire dall\'esca, passa a un\'altra app e inserisci il tuo PIN.';
 
   @override
-  String get howLimits =>
-      'Un\'occhiata veloce, non un laboratorio. Una copia del telefono fatta con strumenti forensi può mostrare che Kryfo contiene più di quanto mostra, e un PIN corto si può indovinare offline.';
-
-  @override
   String get flowNotSet => 'Non è stato possibile impostarlo. Riprova.';
 }

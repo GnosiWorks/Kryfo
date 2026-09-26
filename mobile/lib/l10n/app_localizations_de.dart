@@ -7064,10 +7064,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die Tarn-PIN öffnet ein zweites, leeres Kryfo mit eigenen drei Wörtern. Nachrichten an dein echtes Kryfo kommen darunter weiter an, lautlos. Zum Verlassen der Tarnung wechsle weg und gib deine PIN ein.';
 
   @override
-  String get howLimits =>
-      'Ein schneller Blick, kein Labor. Eine Kopie des Handys mit forensischen Werkzeugen kann zeigen, dass Kryfo mehr enthält, als es zeigt, und eine kurze PIN lässt sich offline erraten.';
-
-  @override
   String get flowNotSet =>
       'Konnte nicht festgelegt werden. Versuch es noch einmal.';
 }
