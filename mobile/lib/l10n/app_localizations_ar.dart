@@ -7071,8 +7071,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get flowDecoyTitle => 'رمز PIN للتمويه';
 
   @override
-  String get flowDecoy1 =>
-      'يفتح Kryfo فارغًا، كأنه مثبت للتو. يصمد أمام نظرة سريعة، لا أمام من يعرف كلماتك الثلاث، أو من يراسلك، أو من ينسخ الهاتف. لا يخفي المساحة التي يشغلها Kryfo.';
+  String get flowDecoy1 => 'يفتح Kryfo فارغًا، كأنه مثبت للتو.';
 
   @override
   String get flowDecoyFinger =>

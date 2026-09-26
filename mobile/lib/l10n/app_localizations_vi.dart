@@ -6931,8 +6931,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get flowDecoyTitle => 'Mã PIN ngụy trang';
 
   @override
-  String get flowDecoy1 =>
-      'Mở một Kryfo trống, như vừa mới cài. Nó chịu được một cái nhìn lướt qua, nhưng không qua mắt được người biết ba từ của bạn, người nhắn tin cho bạn, hay người sao chép điện thoại. Nó không che giấu dung lượng Kryfo đang dùng.';
+  String get flowDecoy1 => 'Mở một Kryfo trống, như vừa mới cài.';
 
   @override
   String get flowDecoyFinger =>

@@ -1841,7 +1841,7 @@
   "flowWipeDone": "PIN penghapus sudah dibuat",
   "flowWipeDoneLine": "Tak ada apa pun di layar kunci yang menunjukkan PIN ini ada.",
   "flowDecoyTitle": "PIN umpan",
-  "flowDecoy1": "Membuka Kryfo kosong, seperti baru dipasang. Tahan terhadap pemeriksaan sekilas, tapi tidak terhadap orang yang tahu tiga katamu, mengirimimu pesan, atau menyalin ponselmu. PIN ini tidak menyembunyikan seberapa besar ruang yang dipakai Kryfo.",
+  "flowDecoy1": "Membuka Kryfo kosong, seperti baru dipasang.",
   "flowDecoyFinger": "Sidik jarimu membuka Kryfo-mu yang asli. Jika seseorang bisa memaksamu memakainya, matikan sidik jari.",
   "flowDecoyDigits": "Pakai jumlah angka yang sama dengan PIN-mu, karena siapa pun yang melihat bisa menghitung titiknya.",
   "flowDecoyShade": "Notifikasi yang sudah ada di panel sudah terlihat. Selama umpan terbuka, tidak ada notifikasi baru yang muncul.",

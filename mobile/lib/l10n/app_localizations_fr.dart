@@ -7018,8 +7018,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get flowDecoyTitle => 'Un code leurre';
 
   @override
-  String get flowDecoy1 =>
-      'Ouvre un Kryfo vide, comme tout juste installé. Il résiste à un coup d’œil rapide, pas à quelqu’un qui connaît vos trois mots, qui vous écrit ou qui copie le téléphone. Il ne cache pas la place qu’occupe Kryfo.';
+  String get flowDecoy1 => 'Ouvre un Kryfo vide, comme tout juste installé.';
 
   @override
   String get flowDecoyFinger =>

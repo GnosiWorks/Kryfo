@@ -7080,7 +7080,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get flowDecoy1 =>
-      'Открывает пустой Kryfo, как будто его только что установили. Он выдержит беглый взгляд, но не того, кто знает твои три слова, пишет тебе или копирует телефон. Он не скрывает, сколько места занимает Kryfo.';
+      'Открывает пустой Kryfo, как будто его только что установили.';
 
   @override
   String get flowDecoyFinger =>

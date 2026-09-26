@@ -7005,8 +7005,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get flowDecoyTitle => 'Un PIN señuelo';
 
   @override
-  String get flowDecoy1 =>
-      'Abre un Kryfo vacío, como recién instalado. Resiste un vistazo rápido, pero no a quien conozca tus tres palabras, te escriba o copie el teléfono. No oculta cuánto espacio ocupa Kryfo.';
+  String get flowDecoy1 => 'Abre un Kryfo vacío, como recién instalado.';
 
   @override
   String get flowDecoyFinger =>

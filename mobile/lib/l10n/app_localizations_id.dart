@@ -6948,8 +6948,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get flowDecoyTitle => 'PIN umpan';
 
   @override
-  String get flowDecoy1 =>
-      'Membuka Kryfo kosong, seperti baru dipasang. Tahan terhadap pemeriksaan sekilas, tapi tidak terhadap orang yang tahu tiga katamu, mengirimimu pesan, atau menyalin ponselmu. PIN ini tidak menyembunyikan seberapa besar ruang yang dipakai Kryfo.';
+  String get flowDecoy1 => 'Membuka Kryfo kosong, seperti baru dipasang.';
 
   @override
   String get flowDecoyFinger =>

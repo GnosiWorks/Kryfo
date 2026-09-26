@@ -8840,7 +8840,7 @@
   "@flowDecoyTitle": {
     "description": "first page of the decoy PIN setup"
   },
-  "flowDecoy1": "Opens an empty Kryfo, as if just installed. It holds up to a quick look, not to someone who knows your three words, messages you, or copies the phone. It doesn't hide how much space Kryfo uses.",
+  "flowDecoy1": "Opens an empty Kryfo, as if just installed.",
   "@flowDecoy1": {
     "description": "decoy PIN setup, what it does and does not do"
   },

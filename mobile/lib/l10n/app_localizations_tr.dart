@@ -6979,8 +6979,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get flowDecoyTitle => 'Bir yem PIN’i';
 
   @override
-  String get flowDecoy1 =>
-      'Yeni kurulmuş gibi boş bir Kryfo açar. Hızlı bir göz atmaya dayanır; üç kelimeni bilen, sana mesaj atan ya da telefonu kopyalayan birine dayanmaz. Kryfo’nun ne kadar yer kapladığını gizlemez.';
+  String get flowDecoy1 => 'Yeni kurulmuş gibi boş bir Kryfo açar.';
 
   @override
   String get flowDecoyFinger =>

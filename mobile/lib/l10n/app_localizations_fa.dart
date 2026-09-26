@@ -6965,8 +6965,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get flowDecoyTitle => 'یک PIN فریب';
 
   @override
-  String get flowDecoy1 =>
-      'یک Kryfo خالی باز می‌کند، انگار تازه نصب شده. در برابر یک نگاه سریع دوام می‌آورد، نه در برابر کسی که سه واژه‌ی شما را می‌داند، به شما پیام می‌دهد یا از گوشی کپی می‌گیرد. پنهان نمی‌کند که Kryfo چقدر فضا گرفته.';
+  String get flowDecoy1 => 'یک Kryfo خالی باز می‌کند، انگار تازه نصب شده.';
 
   @override
   String get flowDecoyFinger =>

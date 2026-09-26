@@ -1841,7 +1841,7 @@
   "flowWipeDone": "Đã đặt mã PIN xóa sạch",
   "flowWipeDoneLine": "Màn hình khóa không để lộ gì cho thấy nó tồn tại.",
   "flowDecoyTitle": "Mã PIN ngụy trang",
-  "flowDecoy1": "Mở một Kryfo trống, như vừa mới cài. Nó chịu được một cái nhìn lướt qua, nhưng không qua mắt được người biết ba từ của bạn, người nhắn tin cho bạn, hay người sao chép điện thoại. Nó không che giấu dung lượng Kryfo đang dùng.",
+  "flowDecoy1": "Mở một Kryfo trống, như vừa mới cài.",
   "flowDecoyFinger": "Vân tay của bạn mở Kryfo thật. Nếu có người có thể ép bạn dùng nó, hãy tắt vân tay.",
   "flowDecoyDigits": "Dùng cùng số chữ số với mã PIN của bạn, vì ai đang nhìn cũng có thể đếm các dấu chấm.",
   "flowDecoyShade": "Thông báo đã nằm trong bảng thông báo thì đã bị thấy rồi. Khi phần ngụy trang đang mở, không có thông báo mới nào hiện ra.",

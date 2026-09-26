@@ -1841,7 +1841,7 @@
   "flowWipeDone": "PIN de borrado listo",
   "flowWipeDoneLine": "Nada en la pantalla de bloqueo muestra que existe.",
   "flowDecoyTitle": "Un PIN señuelo",
-  "flowDecoy1": "Abre un Kryfo vacío, como recién instalado. Resiste un vistazo rápido, pero no a quien conozca tus tres palabras, te escriba o copie el teléfono. No oculta cuánto espacio ocupa Kryfo.",
+  "flowDecoy1": "Abre un Kryfo vacío, como recién instalado.",
   "flowDecoyFinger": "Tu huella abre tu Kryfo real. Si alguien pudiera obligarte a usarla, desactiva la huella.",
   "flowDecoyDigits": "Usa el mismo número de dígitos que tu PIN, porque quien mire puede contar los puntos.",
   "flowDecoyShade": "Las notificaciones que ya están en el panel ya se vieron. Mientras el señuelo esté abierto, no aparece ninguna nueva.",

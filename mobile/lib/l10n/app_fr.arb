@@ -1841,7 +1841,7 @@
   "flowWipeDone": "Code d’effacement défini",
   "flowWipeDoneLine": "Rien sur l’écran de verrouillage ne montre qu’il existe.",
   "flowDecoyTitle": "Un code leurre",
-  "flowDecoy1": "Ouvre un Kryfo vide, comme tout juste installé. Il résiste à un coup d’œil rapide, pas à quelqu’un qui connaît vos trois mots, qui vous écrit ou qui copie le téléphone. Il ne cache pas la place qu’occupe Kryfo.",
+  "flowDecoy1": "Ouvre un Kryfo vide, comme tout juste installé.",
   "flowDecoyFinger": "Votre empreinte ouvre votre vrai Kryfo. Si quelqu’un pouvait vous forcer à l’utiliser, désactivez l’empreinte.",
   "flowDecoyDigits": "Utilisez le même nombre de chiffres que votre code PIN, car quiconque regarde peut compter les points.",
   "flowDecoyShade": "Les notifications déjà dans le volet ont déjà été vues. Tant que le leurre est ouvert, aucune nouvelle ne s’affiche.",

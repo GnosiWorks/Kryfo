@@ -7026,8 +7026,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get flowDecoyTitle => 'Eine Tarn-PIN';
 
   @override
-  String get flowDecoy1 =>
-      'Öffnet ein leeres Kryfo, wie frisch installiert. Es hält einem schnellen Blick stand, aber nicht jemandem, der deine drei Wörter kennt, dir schreibt oder das Handy kopiert. Es verbirgt nicht, wie viel Speicher Kryfo belegt.';
+  String get flowDecoy1 => 'Öffnet ein leeres Kryfo, wie frisch installiert.';
 
   @override
   String get flowDecoyFinger =>

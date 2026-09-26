@@ -1841,7 +1841,7 @@
   "flowWipeDone": "Silme PIN’i belirlendi",
   "flowWipeDoneLine": "Kilit ekranında varlığını belli eden hiçbir şey yok.",
   "flowDecoyTitle": "Bir yem PIN’i",
-  "flowDecoy1": "Yeni kurulmuş gibi boş bir Kryfo açar. Hızlı bir göz atmaya dayanır; üç kelimeni bilen, sana mesaj atan ya da telefonu kopyalayan birine dayanmaz. Kryfo’nun ne kadar yer kapladığını gizlemez.",
+  "flowDecoy1": "Yeni kurulmuş gibi boş bir Kryfo açar.",
   "flowDecoyFinger": "Parmak izin gerçek Kryfo’nu açar. Biri seni onu kullanmaya zorlayabilecekse parmak izini kapat.",
   "flowDecoyDigits": "PIN’indeki kadar rakam kullan, çünkü izleyen biri noktaları sayabilir.",
   "flowDecoyShade": "Bildirim panelinde zaten olan bildirimler zaten görüldü. Yem açıkken yeni bildirim gelmez.",

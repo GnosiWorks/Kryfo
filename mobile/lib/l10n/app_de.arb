@@ -1841,7 +1841,7 @@
   "flowWipeDone": "Lösch-PIN festgelegt",
   "flowWipeDoneLine": "Auf dem Sperrbildschirm deutet nichts auf sie hin.",
   "flowDecoyTitle": "Eine Tarn-PIN",
-  "flowDecoy1": "Öffnet ein leeres Kryfo, wie frisch installiert. Es hält einem schnellen Blick stand, aber nicht jemandem, der deine drei Wörter kennt, dir schreibt oder das Handy kopiert. Es verbirgt nicht, wie viel Speicher Kryfo belegt.",
+  "flowDecoy1": "Öffnet ein leeres Kryfo, wie frisch installiert.",
   "flowDecoyFinger": "Dein Fingerabdruck öffnet dein echtes Kryfo. Wenn dich jemand zwingen könnte, ihn zu benutzen, schalte den Fingerabdruck aus.",
   "flowDecoyDigits": "Nimm genauso viele Ziffern wie bei deiner PIN, denn wer zusieht, kann die Punkte zählen.",
   "flowDecoyShade": "Benachrichtigungen, die schon in der Leiste sind, wurden schon gesehen. Solange die Tarnung offen ist, kommen keine neuen.",

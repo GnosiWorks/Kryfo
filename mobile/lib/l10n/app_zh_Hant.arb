@@ -1841,7 +1841,7 @@
   "flowWipeDone": "已設定清除 PIN",
   "flowWipeDoneLine": "鎖定畫面上沒有任何跡象顯示它的存在。",
   "flowDecoyTitle": "偽裝 PIN",
-  "flowDecoy1": "開啟一個空的 Kryfo，就像剛安裝好一樣。它經得起快速翻看，但騙不過知道你的三個詞、傳訊息給你或複製手機的人。它不會隱藏 Kryfo 佔用多少空間。",
+  "flowDecoy1": "開啟一個空的 Kryfo，就像剛安裝好一樣。",
   "flowDecoyFinger": "你的指紋會開啟真正的 Kryfo。如果有人可能逼你用指紋，請關閉指紋解鎖。",
   "flowDecoyDigits": "位數要跟你的 PIN 碼一樣，因為旁邊看著的人數得出圓點。",
   "flowDecoyShade": "已經在通知欄裡的通知已經被看到了。偽裝開啟期間，不會出現新的通知。",

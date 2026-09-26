@@ -11172,7 +11172,7 @@ abstract class AppLocalizations {
   /// decoy PIN setup, what it does and does not do
   ///
   /// In en, this message translates to:
-  /// **'Opens an empty Kryfo, as if just installed. It holds up to a quick look, not to someone who knows your three words, messages you, or copies the phone. It doesn\'t hide how much space Kryfo uses.'**
+  /// **'Opens an empty Kryfo, as if just installed.'**
   String get flowDecoy1;
 
   /// decoy PIN setup
