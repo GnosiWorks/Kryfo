@@ -74,14 +74,13 @@ void main() {
 
   setUp(() => FlutterSecureStorage.setMockInitialValues({}));
 
-  testWidgets('it offers the five that move, and no recent tab yet', (t) async {
+  testWidgets('it offers the pack, and no recent tab yet', (t) async {
     final h = _Harness(t, pack);
     await h.pump();
     await h.open();
-    for (final e in ['👋', '😂', '❤️', '🔒', '🕳️']) {
+    for (final e in ['👋', '😂', '👍', '❤️']) {
       expect(h.cell(e), findsOneWidget, reason: e);
     }
-    expect(find.bySemanticsLabel('Sticker 👍'), findsNothing);
     expect(find.bySemanticsLabel('Recent'), findsNothing);
     expect(find.bySemanticsLabel('Fokia'), findsWidgets);
     // the grid plays once the sheet is up, within its budget
@@ -181,12 +180,12 @@ void main() {
 
   testWidgets('a recent one can be removed from recent', (t) async {
     FlutterSecureStorage.setMockInitialValues({
-      'sticker_recents': 'fokia:17,fokia:1',
+      'sticker_recents': 'fokia:2,fokia:1',
     });
     final h = _Harness(t, pack);
     await h.pump();
     await h.open();
-    final g = await t.startGesture(t.getCenter(h.cell('🔒').first));
+    final g = await t.startGesture(t.getCenter(h.cell('😂').first));
     await t.pump(const Duration(milliseconds: 360));
     await g.up();
     await h.frames(20);
@@ -195,9 +194,9 @@ void main() {
     expect(await StickerRecents(HaloContainer.everyday).load(), const [
       StickerRef('fokia', 1),
     ]);
-    // the sheet stays; 🔒 is only in the pack now
+    // the sheet stays; 😂 is only in the pack now
     expect(h.closed, false);
-    expect(h.cell('🔒'), findsOneWidget);
+    expect(h.cell('😂'), findsOneWidget);
   });
 
   testWidgets('back closes the preview before the sheet', (t) async {

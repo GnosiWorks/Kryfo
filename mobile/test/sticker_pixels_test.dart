@@ -161,8 +161,8 @@ void main() {
     }
   });
 
-  test('the picker offers the five that move', () {
-    expect(pack.playable, [1, 2, 4, 17, 19]);
+  test('the picker offers every sticker', () {
+    expect(pack.playable, [for (var i = 1; i <= 29; i++) i]);
     expect(kStickerBox, 512);
   });
 }

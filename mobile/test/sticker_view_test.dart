@@ -281,10 +281,9 @@ void main() {
     expect(_boxes(t).every((b) => b.time >= 0), true);
   });
 
-  testWidgets('a still is drawn without a ticker', (t) async {
-    final still = pack.sticker(3)!;
-    expect(still.animated, false);
-    await t.pumpWidget(_plain(StickerView(sticker: still, size: 120)));
+  testWidgets('a view told not to play draws without a ticker', (t) async {
+    final s = pack.sticker(3)!;
+    await t.pumpWidget(_plain(StickerView(sticker: s, size: 120, play: false)));
     final before = StickerView.frames;
     await _frames(t, 10);
     expect(StickerView.frames, before);
