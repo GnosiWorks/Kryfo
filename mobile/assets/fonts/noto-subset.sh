@@ -30,10 +30,14 @@ done
 
 # cyrillic and its supplement, and the numero sign
 CYR=U+0400-052F,U+2116
-# arabic, with the persian letters and digits in it, the rial sign, and the
-# zero-width non-joiner persian writes words with. not the zero-width joiner:
-# emoji sequences use it, and a fallback that claims it could split them.
-ARAB=U+0600-06FF,U+FDFC,U+200C
+# arabic with the persian letters, digits and punctuation in it, and what
+# arabic and persian text uses around them: the spaces, ascii punctuation,
+# « » · ° ×, quotes, dashes, the minus sign, the joiners and direction marks,
+# and the rial sign. latin letters and digits stay with our fonts, so latin
+# words keep their typeface. the sources have no embedding or isolate controls.
+# the zero-width joiner is safe to claim: fallback goes by grapheme, so emoji
+# sequences stay whole.
+ARAB=U+0020-002F,U+003A-0040,U+005B-0060,U+007B-007E,U+00A0,U+00AB,U+00B0,U+00B7,U+00BB,U+00D7,U+0600-06FF,U+2009,U+200B-2010,U+2013-2014,U+2018-2019,U+201C-201D,U+2022,U+2026,U+202F,U+2039-203A,U+2212,U+FDFC
 # latin with every vietnamese letter (precomposed, and the combining marks),
 # general punctuation, the dong and euro signs
 VIET=U+0020-007E,U+00A0-017F,U+01A0-01A1,U+01AF-01B0,U+0300-0303,U+0306,U+0309,U+0323,U+1EA0-1EF9,U+2000-206F,U+20AB-20AC
