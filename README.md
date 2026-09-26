@@ -41,4 +41,6 @@ the release signing certificate (sha-256):
 
 ## license
 
-GPL-3.0
+GPL-3.0. the sticker art is CC BY-SA 4.0, see
+`mobile/tool/stickers/fokia/LICENSE.md`. the names Kryfo and Fokia are not
+included: a fork may use the art, not the names.
