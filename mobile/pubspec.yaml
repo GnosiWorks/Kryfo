@@ -92,6 +92,7 @@ flutter:
   assets:
     - assets/geo/world.bin
     - assets/geo/places.bin.gz
+    - assets/stickers/fokia.kst
 
   fonts:
     - family: Fraunces

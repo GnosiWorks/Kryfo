@@ -1,0 +1,133 @@
+# fokia animation, read by tool/pack_stickers.py.
+#
+# times in ms, angles in degrees clockwise, distances in the layer's own svg
+# units, pivots in the space the selection sits in. every track starts and
+# ends at rest, so the first frame is the svg and each loop closes on itself.
+#
+#   sticker NN name loop=MS emoji=E since=N   no loop: a still, not offered yet
+#   node NAME SELECTOR @x,y pivot=P           a moving part; @x,y is the first
+#                                             point of the selection, checked
+#   PROP TARGET t:v t:v:ease ... ease=E       PROP x y rot sx sy scale alpha
+#   clear A B px                              A and B never come closer than px
+#   macros: blink look tuft breathe sway shiver pulse twinkle drop squeeze
+#
+# selectors: a layer id (props, props#2 for a duplicate), children by index
+# (head[13:15], flipper_left[0][0][2]), root for the character, top for the
+# outer transformed group. `pack_stickers.py --list NN` prints the indices.
+# eases: linear hold sine out in back inout sineout sinein. a trailing !
+# lets one line past the amplitude limits.
+
+pivot root 256,440
+pivot neck 256,276
+pivot shoulder_l 168,300
+pivot shoulder_r 344,300
+
+sticker 01 hi loop=2400 emoji=👋 since=1
+  # the rest pose is the right end of the wave, where the arcs are: the
+  # flipper swings left and back, so the paw never runs into the arcs
+  node arm   flipper_right     @344,300  pivot=shoulder_r
+  node paw   flipper_right[3]  @420,176  pivot=420,170
+  node lines props             @458,108  pivot=468,136
+  rot   arm   0:0 260:-8 520:-1 780:-7 1040:0
+  rot   paw   0:0 330:3 590:-1.5 850:2.5 1110:-1.5 1320:0
+  alpha lines 0:1 260:0.25 470:1 780:0.25 990:1
+  x     lines 0:0 260:-2 520:1.5 780:-2 1040:0
+  rot   head  0:0 520:-1.5 1300:0  pivot=neck
+  tuft 160
+  blink 1750
+  clear paw lines 2.5
+
+sticker 02 lol loop=2000 emoji=😂 since=1
+  # a belly laugh: the whole seal shakes inside its tilted wrapper
+  node body  top[0]       pivot=256,300
+  node mouth mouth[2:4]   @208,254  pivot=256,256
+  node tearl head[13]     @194,182
+  node tearr head[14]     @318,182
+  node footl tail[0:2]    @216,420  pivot=226,436
+  node footr tail[2:4]    @296,420  pivot=286,436
+  node kicks props        @150,500
+  shiver body 1.6 250 0 2000
+  sy    mouth 0:1 125:1.08 250:1 375:1.08 500:1 625:1.08 750:1 875:1.08 1000:1 1125:1.08 1250:1 1375:1.08 1500:1 1625:1.08 1750:1 1875:1.08 2000:1
+  y     tearl 0:0 250:3 500:0 750:3 1000:0 1250:3 1500:0 1750:3 2000:0
+  y     tearr 0:0 250:3 500:0 750:3 1000:0 1250:3 1500:0 1750:3 2000:0
+  shiver footl 6 500 0 2000
+  rot   footr 0:0 125:-6:sineout 250:0:sinein 375:6:sineout 500:0:sinein 625:-6:sineout 750:0:sinein 875:6:sineout 1000:0:sinein 1125:-6:sineout 1250:0:sinein 1375:6:sineout 1500:0:sinein 1625:-6:sineout 1750:0:sinein 1875:6:sineout 2000:0:sinein
+  alpha kicks 0:1 250:0.3 500:1 750:0.3 1000:1 1250:0.3 1500:1 1750:0.3 2000:1
+
+sticker 03 ok emoji=👍 since=1
+
+sticker 04 love loop=2400 emoji=❤️ since=1
+  # lub-dub twice a loop; the paws are drawn over the heart and hold it
+  node heart root[7:9]   @256,394.4  pivot=256,360
+  node drips root[4:6]   @226,340    pivot=256,360
+  node blushl blush[0]   @194,254
+  node blushr blush[1]   @318,254
+  node small1 head[13:15] @356,128
+  node small2 head[15:17] @384,88.6
+  scale heart  0:1 100:1 210:1.09:out 330:1:inout 440:1.05:out 620:1:inout 1300:1 1410:1.09:out 1530:1:inout 1640:1.05:out 1820:1:inout
+  scale drips  0:1 100:1 210:1.09:out 330:1:inout 440:1.05:out 620:1:inout 1300:1 1410:1.09:out 1530:1:inout 1640:1.05:out 1820:1:inout
+  scale blushl 0:1 100:1 210:1.1:out 400:1:inout 1300:1 1410:1.1:out 1600:1:inout
+  scale blushr 0:1 100:1 210:1.1:out 400:1:inout 1300:1 1410:1.1:out 1600:1:inout
+  y     small1 0:0 800:-7 1600:0
+  alpha small1 0:1 800:0.7 1600:1
+  y     small2 0:0 500:0 1300:-6 2100:0
+  alpha small2 0:1 500:1 1300:0.7 2100:1
+  sway head 1.5 pivot=neck
+
+sticker 05 sad emoji=😢 since=1
+sticker 06 philosopher emoji=🤔 since=1
+sticker 07 shocked emoji=😱 since=1
+sticker 08 angry emoji=😠 since=1
+sticker 09 opa emoji=🎉 since=1
+sticker 10 bravo emoji=👏 since=1
+sticker 11 on-my-way emoji=🏃 since=1
+sticker 12 hungry emoji=🤤 since=1
+sticker 13 santorini emoji=🌅 since=1
+sticker 14 good-night emoji=😴 since=1
+sticker 15 sealed emoji=🤐 since=1
+sticker 16 saw-nothing emoji=🙈 since=1
+
+sticker 17 encrypted loop=2600 emoji=🔒 since=1
+  # rises out of the ring to check who is there, looks both ways, sinks back
+  node seal  top[1][0]    pivot=256,300
+  node pawl  props#2[0]   @150,414  pivot=150,414
+  node pawr  props#2[1]   @362,414  pivot=362,414
+  y seal 0:0 200:0 500:-6:out 2000:-6 2400:0:sine
+  y pawl 0:0 200:0 500:-2:out 2000:-2 2400:0:sine
+  y pawr 0:0 200:0 500:-2:out 2000:-2 2400:0:sine
+  look 600 -4,0 200
+  look 1100 4,0 200
+  look 1700 0,0 200
+  blink 2050 slow
+
+sticker 18 screenshot emoji=📸 since=1
+
+sticker 19 going-dark loop=2400 emoji=🕳️ since=1
+  # the seal is gone below; the flippers wave, drops fall back in, bubbles rise
+  node flipl tail[0]     @248,372  pivot=248,374
+  node flipr tail[1]     @264,372  pivot=264,374
+  rot  flipl 0:0 260:-8 540:5 800:0 1200:0 1460:-8 1740:5 2000:0
+  rot  flipr 0:0 150:0 410:8 690:-5 950:0 1350:0 1610:8 1890:-5 2150:0
+  drop props[0] 12 0 500
+  drop props[1] 12 300 800
+  drop props[2] 12 600 1100
+  drop props[3] 12 900 1400
+  y     props[4] 0:0 400:-6 800:0
+  alpha props[4] 0:1 400:0.2 800:1
+  y     props[5] 0:0 200:0 600:-6 1000:0
+  alpha props[5] 0:1 200:1 600:0.2 1000:1
+  y     props[6] 0:0 400:0 800:-6 1200:0
+  alpha props[6] 0:1 400:1 800:0.2 1200:1
+  y     props[7] 0:0 600:0 1000:-6 1400:0
+  alpha props[7] 0:1 600:1 1000:0.2 1400:1
+
+sticker 20 burn emoji=🔥 since=1
+sticker 21 trust-me emoji=😉 since=1
+sticker 22 no-number emoji=📵 since=1
+sticker 23 onion emoji=🧅 since=1
+sticker 24 whos-this emoji=🤨 since=1
+sticker 25 three-hops emoji=📨 since=1
+sticker 26 evil-eye emoji=🧿 since=1
+sticker 27 spartan emoji=🛡️ since=1
+sticker 28 trojan emoji=🐴 since=1
+sticker 29 kafenio emoji=☕ since=1
