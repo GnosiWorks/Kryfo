@@ -22,7 +22,9 @@ import 'l10n/l10n.dart';
 import 'lock_guard.dart' show lockGuard;
 import 'notifications.dart';
 
-enum PinResult { normal, panic, decoy, invalid, throttled }
+// vault: the everyday app with its hidden chats. the decoy's vault comes back
+// as decoy, with its key handed to the session
+enum PinResult { normal, panic, decoy, vault, invalid, throttled }
 
 // which entry of the table plays which part. fixed, so a pin set in one
 // place can never land on another's entry
@@ -33,6 +35,8 @@ class PinSlot {
   static const vault = 3;
   static const decoyWipe = 4;
   static const decoyDecoy = 5;
+  static const decoyVault = 6;
+  // 7 to 15 free
 }
 
 // what an entry opens, sealed inside it
@@ -89,8 +93,11 @@ class SecureLockStore implements LockStore {
 abstract class PinEngine {
   Future<Map<String, dynamic>> calibrate();
   Future<String> newTable(int logN);
+  // {"i", "k", "c", "la", "lw", "u"}. u is the key the matched entry wraps,
+  // 64 hex, or ''
   Future<Map<String, dynamic>> check(String pin, String table, String legacy);
-  // {"t": table, "w": wrapped} or throws PinCollision
+  // {"t": table} or throws PinCollision. wrapPlain is a vault's database key
+  // in hex, sealed into the entry, or '' for none
   Future<Map<String, dynamic>> setup(
     String pin,
     String table,
@@ -98,7 +105,20 @@ abstract class PinEngine {
     int index,
     int kind,
     String container,
+    String wrapPlain,
   );
+  // entry index opens with newPin instead, keeping what it opens and the key
+  // it wraps: the key never leaves the engine. {"t": table}, throws
+  // PinCollision, or a StateError for a wrong old pin or an entry with no key
+  Future<Map<String, dynamic>> rewrap(
+    String oldPin,
+    String newPin,
+    String table,
+    String legacy,
+    int index,
+  );
+  // the table as v2, the same pins opening the same entries
+  Future<String> upgrade(String table);
   Future<String> clear(String table, int index);
 }
 
@@ -211,36 +231,27 @@ class FfiPinEngine implements PinEngine {
   });
 
   @override
-  Future<Map<String, dynamic>> check(String pin, String table, String legacy) =>
-      Isolate.run(() {
-        final fn = _lib()
-            .lookupFunction<
-              Pointer<Utf8> Function(
-                Pointer<Utf8>,
-                Pointer<Utf8>,
-                Pointer<Utf8>,
-                Pointer<Utf8>,
-              ),
-              Pointer<Utf8> Function(
-                Pointer<Utf8>,
-                Pointer<Utf8>,
-                Pointer<Utf8>,
-                Pointer<Utf8>,
-              )
-            >('HaloPinCheck');
-        final p = pin.toNativeUtf8(),
-            t = table.toNativeUtf8(),
-            l = legacy.toNativeUtf8(),
-            w = ''.toNativeUtf8();
-        try {
-          return _json(_take(fn(p, t, l, w)));
-        } finally {
-          _wipeFree(p);
-          calloc.free(t);
-          calloc.free(l);
-          calloc.free(w);
-        }
-      });
+  Future<Map<String, dynamic>> check(
+    String pin,
+    String table,
+    String legacy,
+  ) => Isolate.run(() {
+    final fn = _lib()
+        .lookupFunction<
+          Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>),
+          Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>)
+        >('HaloPinCheck');
+    final p = pin.toNativeUtf8(),
+        t = table.toNativeUtf8(),
+        l = legacy.toNativeUtf8();
+    try {
+      return _json(_take(fn(p, t, l)));
+    } finally {
+      _wipeFree(p);
+      calloc.free(t);
+      calloc.free(l);
+    }
+  });
 
   @override
   Future<Map<String, dynamic>> setup(
@@ -250,6 +261,7 @@ class FfiPinEngine implements PinEngine {
     int index,
     int kind,
     String container,
+    String wrapPlain,
   ) => Isolate.run(() {
     final fn = _lib()
         .lookupFunction<
@@ -275,7 +287,7 @@ class FfiPinEngine implements PinEngine {
     final p = pin.toNativeUtf8(),
         t = table.toNativeUtf8(),
         l = legacy.toNativeUtf8();
-    final c = container.toNativeUtf8(), w = ''.toNativeUtf8();
+    final c = container.toNativeUtf8(), w = wrapPlain.toNativeUtf8();
     try {
       final s = _take(fn(p, t, l, index, kind, c, w));
       if (s == 'error: collision') throw PinCollision();
@@ -285,7 +297,65 @@ class FfiPinEngine implements PinEngine {
       calloc.free(t);
       calloc.free(l);
       calloc.free(c);
-      calloc.free(w);
+      // the key's bytes go the way the pin's do
+      _wipeFree(w);
+    }
+  });
+
+  // two scrypt runs, so an isolate like the check
+  @override
+  Future<Map<String, dynamic>> rewrap(
+    String oldPin,
+    String newPin,
+    String table,
+    String legacy,
+    int index,
+  ) => Isolate.run(() {
+    final fn = _lib()
+        .lookupFunction<
+          Pointer<Utf8> Function(
+            Pointer<Utf8>,
+            Pointer<Utf8>,
+            Pointer<Utf8>,
+            Pointer<Utf8>,
+            Int32,
+          ),
+          Pointer<Utf8> Function(
+            Pointer<Utf8>,
+            Pointer<Utf8>,
+            Pointer<Utf8>,
+            Pointer<Utf8>,
+            int,
+          )
+        >('HaloPinRewrap');
+    final o = oldPin.toNativeUtf8(), n = newPin.toNativeUtf8();
+    final t = table.toNativeUtf8(), l = legacy.toNativeUtf8();
+    try {
+      final s = _take(fn(o, n, t, l, index));
+      if (s == 'error: collision') throw PinCollision();
+      return _json(s);
+    } finally {
+      _wipeFree(o);
+      _wipeFree(n);
+      calloc.free(t);
+      calloc.free(l);
+    }
+  });
+
+  @override
+  Future<String> upgrade(String table) => Isolate.run(() {
+    final fn = _lib()
+        .lookupFunction<
+          Pointer<Utf8> Function(Pointer<Utf8>),
+          Pointer<Utf8> Function(Pointer<Utf8>)
+        >('HaloPinUpgrade');
+    final t = table.toNativeUtf8();
+    try {
+      final s = _take(fn(t));
+      if (s.startsWith('error:')) throw StateError(s);
+      return s;
+    } finally {
+      calloc.free(t);
     }
   });
 
@@ -428,8 +498,10 @@ class LockState extends ChangeNotifier {
   final LockClock _clock;
   final LockBio _bio;
   // the session an unlock opens is built here, under the lock screen, before
-  // it lifts: the everyday one, or the decoy's
-  Future<void> Function(PinResult)? onOutcome;
+  // it lifts: the everyday one, or the decoy's. with vaultKey, that one with
+  // its vault, opened with the key the pin unwrapped. it throws when the
+  // vault will not open
+  Future<void> Function(PinResult, {String? vaultKey})? onOutcome;
   // the containers are open and a decoy session could be built: a check
   // waits for it (the same wait whatever is typed), so a decoy pin typed
   // in the first second after a cold start is not taken for a wrong one
@@ -493,6 +565,14 @@ class LockState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // a vault is open over the session, set by the session like inDecoy
+  bool _inVault = false;
+  bool get inVault => _inVault;
+  set inVault(bool v) {
+    _inVault = v;
+    notifyListeners();
+  }
+
   bool _paused = false;
   bool _dWipe = false;
   bool _dDecoy = false;
@@ -551,6 +631,7 @@ class LockState extends ChangeNotifier {
       Future.delayed(const Duration(seconds: 2), load);
       return;
     }
+    await _upgradeTable();
     _standIn ??= await _engine.newTable(14);
     await _refreshHoldForScreen();
     // the app waits under its cover for these, so none of them may hang
@@ -574,6 +655,29 @@ class LockState extends ChangeNotifier {
     _locked = _enabled;
     _loaded = true;
     notifyListeners();
+  }
+
+  // a table from before vaults gets its wraps and more entries, in one
+  // write. until that write lands the old table opens the same pins, and a
+  // failed one is tried again on the next start
+  Future<void> _upgradeTable() async {
+    final t = _table;
+    if (t == null || _tableVersion(t) == 2) return;
+    try {
+      final up = await _engine.upgrade(t);
+      await _store.write(_kTable, up);
+      _table = up;
+    } catch (e) {
+      dlog('lock: table upgrade failed: $e');
+    }
+  }
+
+  static int _tableVersion(String table) {
+    try {
+      return ((jsonDecode(table) as Map)['v'] as num?)?.toInt() ?? 0;
+    } catch (_) {
+      return 0;
+    }
   }
 
   Future<void> _refreshHoldForScreen() async {
@@ -613,9 +717,13 @@ class LockState extends ChangeNotifier {
     final kind = (r['k'] as num?)?.toInt() ?? 0;
     final everyday = kind == PinKind.everyday || r['la'] == true;
     final wipe = kind == PinKind.wipe || r['lw'] == true;
-    final decoy = kind == PinKind.decoy;
+    // the decoy's vault opens with the decoy, and counts as the decoy does
+    final decoysVault =
+        kind == PinKind.vault && r['c'] == HaloContainer.decoyVault.id;
+    final vault = kind == PinKind.vault && !decoysVault;
+    final decoy = kind == PinKind.decoy || decoysVault;
 
-    late final PinResult result;
+    var result = PinResult.invalid;
     late final LockCounters next;
     if (wipe) {
       // someone forced to open the phone can always wipe it, held or not
@@ -627,22 +735,21 @@ class LockState extends ChangeNotifier {
     } else if (everyday) {
       result = PinResult.normal;
       next = const LockCounters();
+    } else if (vault) {
+      // the owner's other pin: it clears the budget as the app pin does
+      result = PinResult.vault;
+      next = const LockCounters();
     } else if (decoy && decoyReady) {
       result = PinResult.decoy;
       next = LockCounters(budget: base.budget, quiet: true);
     } else {
-      result = PinResult.invalid;
       next = base.miss(uptime, boot);
     }
     await _store.write(_kState, next.encode());
     _counters = next;
-    if (result == PinResult.normal || result == PinResult.decoy) {
-      try {
-        await onOutcome?.call(result);
-      } catch (e) {
-        dlog('lock: session not opened: $e');
-      }
-    }
+    final opensVault =
+        result == PinResult.vault || (result == PinResult.decoy && decoysVault);
+    result = await _open(result, opensVault ? r['u'] as String? ?? '' : null);
     final built = DateTime.now().difference(t0);
 
     final left = revealAfter - built;
@@ -655,7 +762,9 @@ class LockState extends ChangeNotifier {
       );
     }
 
-    if (result == PinResult.normal || result == PinResult.decoy) {
+    if (result == PinResult.normal ||
+        result == PinResult.decoy ||
+        result == PinResult.vault) {
       _locked = false;
     }
 
@@ -665,7 +774,9 @@ class LockState extends ChangeNotifier {
     notifyListeners();
     // the pin was typed: a finger added before now may open kryfo again.
     // after the reveal, so it adds nothing to the wait
-    if (result == PinResult.normal && _biometric && _bioStale) {
+    if ((result == PinResult.normal || result == PinResult.vault) &&
+        _biometric &&
+        _bioStale) {
       unawaited(
         _bio.enable().then((ok) {
           _bioStale = !ok;
@@ -678,6 +789,34 @@ class LockState extends ChangeNotifier {
         kind != PinKind.everyday &&
         r['la'] == true) {
       unawaited(_migrateApp(pin));
+    }
+    return result;
+  }
+
+  // builds the session the pin opened, under the lock. a vault that will not
+  // open gives its primary's session instead: the pin was right, and nothing
+  // on screen may differ from any other unlock
+  Future<PinResult> _open(PinResult result, String? vaultKey) async {
+    if (result != PinResult.normal &&
+        result != PinResult.decoy &&
+        result != PinResult.vault) {
+      return result;
+    }
+    if (vaultKey != null) {
+      try {
+        if (vaultKey.isEmpty) throw StateError('no key');
+        await onOutcome?.call(result, vaultKey: vaultKey);
+        return result;
+      } catch (e) {
+        // the type only: an open error may quote the key
+        dlog('lock: vault not opened: ${e.runtimeType}');
+        if (result == PinResult.vault) result = PinResult.normal;
+      }
+    }
+    try {
+      await onOutcome?.call(result);
+    } catch (e) {
+      dlog('lock: session not opened: $e');
     }
     return result;
   }
@@ -696,6 +835,7 @@ class LockState extends ChangeNotifier {
         PinSlot.app,
         PinKind.everyday,
         everydayContainer,
+        '',
       );
       final t = jsonEncode(out['t']);
       await _store.write(_kTable, t);
@@ -740,7 +880,12 @@ class LockState extends ChangeNotifier {
   Future<void> clearDecoyPins() async {
     var t = _table;
     if (t != null) {
-      for (final i in [PinSlot.decoy, PinSlot.decoyWipe, PinSlot.decoyDecoy]) {
+      for (final i in [
+        PinSlot.decoy,
+        PinSlot.decoyWipe,
+        PinSlot.decoyDecoy,
+        PinSlot.decoyVault,
+      ]) {
         t = await _engine.clear(t!, i);
       }
       await _store.write(_kTable, t!);
@@ -768,8 +913,10 @@ class LockState extends ChangeNotifier {
 
   // "Enter your PIN" before an Advanced protection flow. misses and the wipe
   // pin count as on the lock screen, and a legacy pin moves into the table
-  // here too, for people who only unlock by fingerprint
-  Future<PinResult> confirmPin(String pin) async {
+  // here too, for people who only unlock by fingerprint. inside a vault its
+  // own pin is taken too, and a flow that changes the vault takes only that
+  // one. anywhere else a vault pin is a miss. normal when taken
+  Future<PinResult> confirmPin(String pin, {bool changesVault = false}) async {
     final uptime = await _clock.uptimeMs();
     final boot = await _clock.bootCount();
     final base = _counters.rebased(uptime, boot);
@@ -778,9 +925,14 @@ class LockState extends ChangeNotifier {
     final kind = (r['k'] as num?)?.toInt() ?? 0;
     if (kind == PinKind.wipe || r['lw'] == true) return PinResult.panic;
     if (base.holdLeft(uptime, boot) > 0) return PinResult.throttled;
-    final ok = _inDecoy
+    final primary = _inDecoy
         ? kind == PinKind.decoy
         : kind == PinKind.everyday || r['la'] == true;
+    final ownVault =
+        kind == PinKind.vault &&
+        r['c'] == _vaultContainer &&
+        (r['u'] as String? ?? '').isNotEmpty;
+    final ok = _inVault ? ownVault || (primary && !changesVault) : primary;
     if (!ok) {
       _counters = base.miss(uptime, boot);
       await _store.write(_kState, _counters.encode());
@@ -792,6 +944,64 @@ class LockState extends ChangeNotifier {
       await _migrateApp(pin);
     }
     return PinResult.normal;
+  }
+
+  // the vault of the session's own identity: the everyday one's, or inside
+  // the decoy the decoy's
+  int get _vaultSlot => _inDecoy ? PinSlot.decoyVault : PinSlot.vault;
+  String get _vaultContainer =>
+      (_inDecoy ? HaloContainer.decoyVault : HaloContainer.vault).id;
+
+  // the vault's pin, its database key sealed into the entry. written last
+  // when a vault is made. false when the pin is in use
+  Future<bool> setupVaultPin(String pin, String keyHex) async {
+    if (!RegExp(r'^[0-9a-fA-F]{64}$').hasMatch(keyHex)) {
+      throw ArgumentError('a vault key is 64 hex characters');
+    }
+    // with no app lock no pin is ever asked for, and the vault never opens
+    if (!_enabled) throw StateError('no app lock');
+    return _setup(
+      pin,
+      _vaultSlot,
+      PinKind.vault,
+      container: _vaultContainer,
+      wrapPlain: keyHex,
+    );
+  }
+
+  // a new pin for the same vault. the engine opens the key and seals it
+  // again, so it never reaches here. the old pin is one confirmPin already
+  // took, so a wrong one throws without counting. false when the new pin is
+  // in use
+  Future<bool> rewrapVaultPin(String oldPin, String newPin) async {
+    final t = _table;
+    if (t == null) throw StateError('no table');
+    try {
+      final out = await _engine.rewrap(
+        oldPin,
+        newPin,
+        t,
+        _legacyJson,
+        _vaultSlot,
+      );
+      final nt = jsonEncode(out['t']);
+      await _store.write(_kTable, nt);
+      _table = nt;
+    } on PinCollision {
+      return _clash();
+    }
+    notifyListeners();
+    return true;
+  }
+
+  // the vault's entry goes back to random bytes: the first step when a
+  // vault is replaced or removed, so no pin opens a half-gone one
+  Future<void> clearVault() async {
+    final t = _table;
+    if (t == null) return;
+    final out = await _engine.clear(t, _vaultSlot);
+    await _store.write(_kTable, out);
+    _table = out;
   }
 
   Future<bool> setupPanicPin(String pin) async {
@@ -821,6 +1031,7 @@ class LockState extends ChangeNotifier {
     int slot,
     int kind, {
     String? container,
+    String wrapPlain = '',
   }) async {
     final wasOn = _enabled;
     final table = await _ensureTable();
@@ -841,18 +1052,13 @@ class LockState extends ChangeNotifier {
         slot,
         kind,
         container ?? everydayContainer,
+        wrapPlain,
       );
       final t = jsonEncode(out['t']);
       await _store.write(_kTable, t);
       _table = t;
     } on PinCollision {
-      // inside the decoy a clash is taken and kept nowhere
-      if (_inDecoy) return true;
-      final uptime = await _clock.uptimeMs();
-      final boot = await _clock.bootCount();
-      _counters = _counters.miss(uptime, boot);
-      await _store.write(_kState, _counters.encode());
-      return false;
+      return _clash();
     }
     if (slot == PinSlot.app) {
       await _store.delete(_kHash);
@@ -867,6 +1073,18 @@ class LockState extends ChangeNotifier {
     }
     notifyListeners();
     return true;
+  }
+
+  // a pin already in use. the screen says "pick a different pin", never
+  // which one, and it counts as a miss. inside the decoy it is taken and
+  // kept nowhere, so the decoy never learns a pin it cannot see
+  Future<bool> _clash() async {
+    if (_inDecoy) return true;
+    final uptime = await _clock.uptimeMs();
+    final boot = await _clock.bootCount();
+    _counters = _counters.miss(uptime, boot);
+    await _store.write(_kState, _counters.encode());
+    return false;
   }
 
   Future<void> disablePanicPin() async {
@@ -941,7 +1159,7 @@ class LockState extends ChangeNotifier {
     return true;
   }
 
-  // a finger opens the everyday app and nothing else
+  // a finger opens the everyday app and nothing else, never a vault
   Future<bool> tryBiometric() async {
     if (throttleLeft > Duration.zero) return false;
     if (!_enabled || !_biometric || !_bioSupported || _bioStale) return false;

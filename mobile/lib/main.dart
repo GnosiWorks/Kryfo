@@ -6874,7 +6874,7 @@ class AppState extends ChangeNotifier {
 
   // an unlock's outcome, under the lock screen before it lifts: the screens
   // get the session the pin opened, and every screen of the other one goes
-  Future<void> sessionFor(PinResult r) async {
+  Future<void> sessionFor(PinResult r, {String? vaultKey}) async {
     final decoy = r == PinResult.decoy;
     final want = decoy ? _decoyDb : live;
     if (want == null) return;
