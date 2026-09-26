@@ -62,7 +62,7 @@ import 'message_envelope.dart';
 import 'polls.dart';
 import 'search.dart';
 import 'search_bench.dart';
-import 'stickers/sticker_pack.dart' show StickerPack;
+import 'stickers/sticker_pack.dart' show StickerLibrary;
 import 'stickers/sticker_wire.dart' show StickerWire, stickerText;
 import 'widgets/motion.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -5964,11 +5964,11 @@ class AppState extends ChangeNotifier {
         : PollSpec(options: p.options, multi: p.multi).toRow();
   }
 
-  // the pack an arriving sticker is read against. null if it cannot load:
-  // the sticker is then read as one this version does not have
-  Future<StickerPack?> _stickerPack() async {
+  // the packs an arriving sticker is read against. null if none loads: the
+  // sticker is then read as one this version does not have
+  Future<StickerLibrary?> _stickers() async {
     try {
-      return await StickerPack.load();
+      return await StickerLibrary.load();
     } catch (e) {
       dlog('stickers: $e');
       return null;
@@ -6306,7 +6306,7 @@ class AppState extends ChangeNotifier {
     // a known sticker's text is our own emoji for it, never the sender's
     final text = wire == null
         ? bodyText
-        : stickerText(wire, env.message, await _stickerPack());
+        : stickerText(wire, env.message, await _stickers());
     // what the sender said, as far as this phone shows it
     final said = wire == null ? env.message : text;
     // dedup: the db check alone races when two copies arrive at once, so an

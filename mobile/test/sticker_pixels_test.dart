@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// every sticker's still frame, drawn by the app's own painter, against the
-// png tool/pack_stickers.py --png paints from the svgs. no golden files: the
-// pngs are built, not committed. skia's anti-aliasing is not exact area
-// coverage, so the share within 24 is taken after a 3x3 box filter on both;
-// the mean and the eroded mask stay raw.
+// every sticker's still frame in each pack, drawn by the app's own painter,
+// against the png tool/pack_stickers.py --png paints from the svgs. no golden
+// files: the pngs are built, not committed. skia's anti-aliasing is not
+// exact area coverage, so the share within 24 is taken after a 3x3 box
+// filter on both; the mean and the eroded mask stay raw.
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -119,20 +119,34 @@ Int32List _box3(Uint8List px) {
 }
 
 void main() {
-  final pack = loadPack();
+  group('fokia', () {
+    _pixelTests(fokiaFiles);
+    test('the picker offers every sticker', () {
+      expect(loadPack().playable, [for (var i = 1; i <= 29; i++) i]);
+      expect(kStickerBox, 512);
+    });
+  });
+  group('fokia remix', () {
+    _pixelTests(remixFiles);
+    test('the picker offers every sticker', () {
+      expect(loadPack(remixFiles).offered, [for (var i = 30; i <= 47; i++) i]);
+    });
+  });
+}
+
+void _pixelTests(PackFiles f) {
+  final pack = loadPack(f);
 
   testWidgets('every still matches its png', (tester) async {
-    if (!Directory(pngDir).existsSync()) {
-      markTestSkipped(
-        'render the reference pngs first: tool/pack_stickers.py --png',
-      );
+    if (!Directory(f.png).existsSync()) {
+      markTestSkipped('render the reference pngs first: ${f.tool} --png');
       return;
     }
     final lines = <String>[];
     final bad = <String>[];
     for (final id in pack.ids) {
       final s = pack.sticker(id)!;
-      final ref = decodePng(pngFor(id).readAsBytesSync());
+      final ref = decodePng(pngFor(id, f).readAsBytesSync());
       expect(ref.width, 512);
       final ours = (await tester.runAsync(() => renderSticker(s)))!;
       final d = compare(ours, ref.premultiplied(), ref.px);
@@ -167,10 +181,5 @@ void main() {
       expect(zero, still, reason: 'sticker $id at 0 ms');
       expect(end, still, reason: 'sticker $id at the end of its loop');
     }
-  });
-
-  test('the picker offers every sticker', () {
-    expect(pack.playable, [for (var i = 1; i <= 29; i++) i]);
-    expect(kStickerBox, 512);
   });
 }

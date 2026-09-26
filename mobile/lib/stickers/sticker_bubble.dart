@@ -23,9 +23,8 @@ const kStickerThumb = 28.0;
 // the arrival's scale, found by tests next to PressScale's own
 const kStickerPopKey = ValueKey('sticker-pop');
 
-/// the sticker [w] names, if this version's pack has it
-Sticker? stickerFor(StickerPack? pack, StickerWire w) =>
-    pack != null && pack.name == w.ref.pack ? pack.sticker(w.ref.id) : null;
+/// the sticker [w] names, if one of this version's packs has it
+Sticker? stickerFor(StickerLibrary? lib, StickerWire w) => lib?.sticker(w.ref);
 
 /// what a screen reader says for a sticker
 String stickerSaid(String emoji) =>
@@ -225,11 +224,11 @@ class _StickerBubbleState extends State<StickerBubble>
             child: PressScale(
               scale: 0.94,
               onTap: widget.onTap ?? () {},
-              child: StickerPackBuilder(
-                builder: (pack, failed) {
-                  final s = stickerFor(pack, widget.wire);
+              child: StickerLibraryBuilder(
+                builder: (lib, failed) {
+                  final s = stickerFor(lib, widget.wire);
                   // still loading: an empty box the size it will be
-                  if (s == null && pack == null && !failed) {
+                  if (s == null && lib == null && !failed) {
                     return _sticker(null);
                   }
                   if (s == null) return _tile();
@@ -244,30 +243,30 @@ class _StickerBubbleState extends State<StickerBubble>
   }
 }
 
-/// builds with the pack. it loads once, in a few ms; until then pack is
+/// builds with the packs. they load once, in a few ms; until then lib is
 /// null and failed false
-class StickerPackBuilder extends StatefulWidget {
-  const StickerPackBuilder({super.key, required this.builder});
-  final Widget Function(StickerPack? pack, bool failed) builder;
+class StickerLibraryBuilder extends StatefulWidget {
+  const StickerLibraryBuilder({super.key, required this.builder});
+  final Widget Function(StickerLibrary? lib, bool failed) builder;
 
   @override
-  State<StickerPackBuilder> createState() => _StickerPackBuilderState();
+  State<StickerLibraryBuilder> createState() => _StickerLibraryBuilderState();
 }
 
-class _StickerPackBuilderState extends State<StickerPackBuilder> {
-  StickerPack? _pack = StickerPack.ready;
+class _StickerLibraryBuilderState extends State<StickerLibraryBuilder> {
+  StickerLibrary? _lib = StickerLibrary.ready;
   bool _failed = false;
 
   @override
   void initState() {
     super.initState();
-    if (_pack == null) _load();
+    if (_lib == null) _load();
   }
 
   Future<void> _load() async {
     try {
-      final p = await StickerPack.load();
-      if (mounted) setState(() => _pack = p);
+      final l = await StickerLibrary.load();
+      if (mounted) setState(() => _lib = l);
     } catch (e) {
       dlog('sticker pack: $e');
       if (mounted) setState(() => _failed = true);
@@ -275,7 +274,7 @@ class _StickerPackBuilderState extends State<StickerPackBuilder> {
   }
 
   @override
-  Widget build(BuildContext context) => widget.builder(_pack, _failed);
+  Widget build(BuildContext context) => widget.builder(_lib, _failed);
 }
 
 /// a sticker this version does not have: its emoji if it is one, and words
@@ -444,15 +443,15 @@ class StickerThumb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ExcludeSemantics(
-      child: StickerPackBuilder(
-        builder: (pack, failed) {
-          final s = stickerFor(pack, wire);
+      child: StickerLibraryBuilder(
+        builder: (lib, failed) {
+          final s = stickerFor(lib, wire);
           if (s != null) {
             return StickerView(sticker: s, size: size, play: false);
           }
           return SizedBox.square(
             dimension: size,
-            child: pack == null && !failed
+            child: lib == null && !failed
                 ? null
                 : Center(
                     child: StrokeIcon(

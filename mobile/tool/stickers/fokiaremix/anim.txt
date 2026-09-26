@@ -1,0 +1,34 @@
+# fokia remix animation, read by tool/pack_stickers.py --pack fokiaremix.
+# the format is fokia's own: see tool/stickers/fokia/anim.txt.
+#
+#   title WORDS                               the name the picker shows
+#   sticker NN name loop=MS emoji=E since=N   no loop: a still
+#
+# all stills for now. while no sticker in a pack moves, the picker offers
+# its stills; once one moves, only the moving ones.
+
+title Fokia Remix
+
+pivot root 256,440
+pivot neck 256,276
+pivot shoulder_l 168,300
+pivot shoulder_r 344,300
+
+sticker 30 writing-fire emoji=✍️ since=1
+sticker 31 victory-dance emoji=🙌 since=1
+sticker 32 side-eye emoji=😒 since=1
+sticker 33 slow-clap emoji=👏 since=1
+sticker 34 mind-blown emoji=🤯 since=1
+sticker 35 sipping-tea emoji=🍵 since=1
+sticker 36 tiny-violin emoji=🎻 since=1
+sticker 37 vibing emoji=🎧 since=1
+sticker 38 eyebrow-raise emoji=🤨 since=1
+sticker 39 um-actually emoji=🤓 since=1
+sticker 40 mic-drop emoji=🎤 since=1
+sticker 41 keep-yapping emoji=🗣️ since=1
+sticker 42 laser-eyes emoji=👁️ since=1
+sticker 43 larp-department emoji=🎭 since=1
+sticker 44 power-up emoji=⚡ since=1
+sticker 45 shh emoji=🤫 since=1
+sticker 46 please emoji=🙏 since=1
+sticker 47 no-limit-larp emoji=👑 since=1

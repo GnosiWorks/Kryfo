@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-# compiles the fokia svgs and their motion into the one pack the app draws.
+# compiles a pack's svgs and their motion into one file the app draws.
 #
-#   tool/stickers/fokia/svg/*.svg   the art, 512 x 512, one layered file each
-#   tool/stickers/fokia/anim.txt    the motion
-#   assets/stickers/fokia.kst       the output, committed
-#   build/stickers/png/*.png        each still frame, for the pixel test (--png)
+#   tool/stickers/NAME/svg/*.svg    the art, 512 x 512, one layered file each
+#   tool/stickers/NAME/anim.txt     the motion
+#   assets/stickers/NAME.kst        the output, committed
+#   build/stickers/png/NAME/*.png   each still frame, for the pixel test (--png)
 #
 # usage:
 #   pack_stickers.py              build fokia.kst
+#   --pack NAME                   work on tool/stickers/NAME instead (default fokia)
 #   pack_stickers.py --list 17    every layer's children: index, tag, colour, first point
 #   pack_stickers.py --report     sizes, halo pieces, bridges, clearances
 #   pack_stickers.py --check      rebuild in memory, compare with the committed file
 #   pack_stickers.py --selftest   arcs, dashes, bbox, contours, coverage on known shapes
 #   pack_stickers.py --only 01,02 build a subset while iterating (never committed)
 #   pack_stickers.py --png [DIR]  build in memory and paint each still frame into
-#                                 DIR (build/stickers/png): 512 x 512 rgba, straight
-#                                 alpha, the same bytes every run
+#                                 DIR (build/stickers/png/NAME): 512 x 512 rgba,
+#                                 straight alpha, the same bytes every run
 #   --blur gauss|box3             how the die-cut blur is made (box3 is svg's own)
 #
 # run by hand when the art or anim.txt changes, like pack_geo.py. numpy is
@@ -33,10 +34,12 @@ from pathlib import Path
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-PACK = HERE / 'stickers' / 'fokia'
-OUT = HERE.parent / 'assets' / 'stickers' / 'fokia.kst'
+PNG_ROOT = HERE.parent / 'build' / 'stickers' / 'png'
 
+# 1: no title, the app shows the name with a capital. 2: a title after the
+# name. a pack without a title line stays 1, so its file does not change
 VERSION = 1
+VERSION_TITLE = 2
 PACK_VERSION = 1
 UNIT = 5  # coordinates in 1/32 px
 Q = 1 << UNIT
@@ -45,7 +48,8 @@ DRAWN = ('g', 'path', 'ellipse', 'circle', 'rect', 'polygon')
 SHAPES = ('path', 'ellipse', 'circle', 'rect', 'polygon')
 SKIPPED = ('defs', 'clipPath', 'linearGradient', 'radialGradient', 'stop',
            'filter', 'feGaussianBlur', 'feComponentTransfer', 'feFuncA',
-           'feFlood', 'feComposite', 'feMerge', 'feMergeNode')
+           'feFlood', 'feComposite', 'feMerge', 'feMergeNode',
+           'feColorMatrix', 'feFuncR', 'feFuncG', 'feFuncB')
 REFUSED_ATTRS = ('style', 'class', 'vector-effect', 'stroke-dashoffset',
                  'mask', 'marker-start', 'marker-mid', 'marker-end')
 
@@ -75,6 +79,20 @@ class Fail(Exception):
 
 def fail(msg):
     raise Fail(msg)
+
+
+class Pack:
+    # tool/stickers/NAME -> assets/stickers/NAME.kst. the name goes on the
+    # wire, so it has the wire's shape
+    def __init__(self, name):
+        if not re.fullmatch(r'[a-z][a-z0-9]{0,15}', name):
+            fail(f'pack {name!r}: a to z and digits, 16 at most, a letter first')
+        self.name = name
+        self.dir = HERE / 'stickers' / name
+        self.out = HERE.parent / 'assets' / 'stickers' / f'{name}.kst'
+        self.png = PNG_ROOT / name
+        if not (self.dir / 'anim.txt').is_file():
+            fail(f'no pack {name}: {self.dir / "anim.txt"} is missing')
 
 
 # ---- matrices: (a b c d e f), x' = a x + c y + e, y' = b x + d y + f
@@ -547,6 +565,7 @@ class El:
         self.id = None
         self.local = ID
         self.clip = None
+        self.tint = None  # a colour filter's id
         self.made = False  # made by this tool (lids)
 
     def where(self):
@@ -584,6 +603,8 @@ class Svg:
         self.path = path
         self.name = path.name
         self.ids, self.dups, self.grads, self.clips = {}, [], {}, {}
+        self.tints = {}
+        diecuts = set()
         root = ET.parse(path).getroot()
 
         def strip(t):
@@ -607,19 +628,22 @@ class Svg:
                 fail(f'{self.name}: element {t}')
             if t == 'filter':
                 prims = [strip(c.tag) for c in e]
-                if prims != ['feGaussianBlur', 'feComponentTransfer', 'feFlood', 'feComposite', 'feMerge']:
-                    fail(f'{self.name}: filter {prims}')
-                blur = e[0]
-                if abs(float(blur.get('stdDeviation')) - SIGMA) > 1e-9:
-                    fail(f'{self.name}: blur {blur.get("stdDeviation")}')
-                fa = e[1][0]
-                if (fa.get('slope'), fa.get('intercept')) != ('30', '-0.6'):
-                    fail(f'{self.name}: die-cut transfer changed')
+                if prims == ['feGaussianBlur', 'feComponentTransfer', 'feFlood', 'feComposite', 'feMerge']:
+                    blur = e[0]
+                    if abs(float(blur.get('stdDeviation')) - SIGMA) > 1e-9:
+                        fail(f'{self.name}: blur {blur.get("stdDeviation")}')
+                    fa = e[1][0]
+                    if (fa.get('slope'), fa.get('intercept')) != ('30', '-0.6'):
+                        fail(f'{self.name}: die-cut transfer changed')
+                    diecuts.add(e.get('id'))
+                else:
+                    self.tints[e.get('id')] = self.parse_tint(e)
         vb = root.get('viewBox', '').split()
         if vb != ['0', '0', '512', '512']:
             fail(f'{self.name}: viewBox {vb}')
+        # the character's group: #fokia in every pack, the remix too
         fok = [e for e in root.iter() if e.get('id') == 'fokia']
-        if len(fok) != 1 or not fok[0].get('filter'):
+        if len(fok) != 1 or fok[0].get('filter', '')[5:-1] not in diecuts:
             fail(f'{self.name}: no #fokia group with the die-cut')
 
         def build(e, parent):
@@ -641,6 +665,11 @@ class Svg:
                 if not (v.startswith('url(#') and v.endswith(')')) or v[5:-1] not in self.clips:
                     fail(f'{self.name}: clip-path {v}')
                 el.clip = v[5:-1]
+            if 'filter' in e.attrib and e is not fok[0]:
+                v = e.get('filter')
+                if not (v.startswith('url(#') and v.endswith(')')) or v[5:-1] not in self.tints:
+                    fail(f'{el.where()}: filter {v}')
+                el.tint = v[5:-1]
             for c in e:
                 if strip(c.tag) in DRAWN:
                     el.kids.append(build(c, el))
@@ -687,6 +716,58 @@ class Svg:
             c = colour(s.get('stop-color', '#000000'), self.name)
             stops.append((o, c, float(s.get('stop-opacity', '1'))))
         return (kind, geo, units, stops)
+
+    def parse_tint(self, e):
+        # a filter that only changes colour (a saturate, linear curves on r g
+        # b) acts on each pixel alone, so it is baked into the colours under
+        # it. anything else would need the filter at runtime: refused
+        def strip(x):
+            return x.split('}')[-1]
+        fid = e.get('id')
+        if e.get('color-interpolation-filters') != 'sRGB':
+            fail(f'{self.name}: filter {fid} is not in srgb')
+        for k in ('x', 'y', 'width', 'height', 'filterUnits', 'primitiveUnits'):
+            if k in e.attrib:
+                fail(f'{self.name}: filter {fid} has a region')
+        steps = []
+        for p in e:
+            t = strip(p.tag)
+            if any(k in p.attrib for k in ('in', 'in2', 'result')):
+                fail(f'{self.name}: filter {fid}: {t} is not a plain chain')
+            if t == 'feColorMatrix' and p.get('type') == 'saturate':
+                steps.append(('saturate', float(p.get('values', '1'))))
+            elif t == 'feComponentTransfer':
+                curves = {}
+                for f in p:
+                    ft = strip(f.tag)
+                    if ft not in ('feFuncR', 'feFuncG', 'feFuncB') or f.get('type') != 'linear':
+                        fail(f'{self.name}: filter {fid}: {ft} {f.get("type")}')
+                    curves['RGB'.index(ft[-1])] = (float(f.get('slope', '1')),
+                                                   float(f.get('intercept', '0')))
+                steps.append(('linear', curves))
+            else:
+                fail(f'{self.name}: filter {fid}: {t} {p.get("type", "")}')
+        if not steps:
+            fail(f'{self.name}: filter {fid} is empty')
+        return steps
+
+
+def tinted(rgb, steps):
+    # one colour through a colour filter, as svg does it on srgb values:
+    # every primitive's result clamped to 0..1
+    c = [((rgb >> 16) & 255) / 255, ((rgb >> 8) & 255) / 255, (rgb & 255) / 255]
+    for kind, v in steps:
+        if kind == 'saturate':
+            s = v
+            r, g, b = c
+            c = [(0.213 + 0.787 * s) * r + (0.715 - 0.715 * s) * g + (0.072 - 0.072 * s) * b,
+                 (0.213 - 0.213 * s) * r + (0.715 + 0.285 * s) * g + (0.072 - 0.072 * s) * b,
+                 (0.213 - 0.213 * s) * r + (0.715 - 0.715 * s) * g + (0.072 + 0.928 * s) * b]
+        else:
+            c = [v[i][0] * c[i] + v[i][1] if i in v else c[i] for i in range(3)]
+        c = [min(1.0, max(0.0, x)) for x in c]
+    r, g, b = (round(x * 255) for x in c)
+    return (r << 16) | (g << 8) | b
 
 
 def fingerprint(els):
@@ -859,6 +940,8 @@ class Anim:
     def __init__(self, path):
         self.pivots = {}
         self.stickers = {}
+        # the name the picker shows; none: the pack name with a capital
+        self.title = None
         cur = None
         for no, raw in enumerate(path.read_text(encoding='utf-8').splitlines(), 1):
             line = raw.strip()
@@ -866,7 +949,13 @@ class Anim:
                 continue
             where = f'anim.txt:{no}'
             words = line.split()
-            if words[0] == 'pivot' and not raw[0].isspace():
+            if words[0] == 'title' and not raw[0].isspace():
+                if self.title is not None or len(words) < 2:
+                    fail(f'{where}: one title, with words')
+                self.title = ' '.join(words[1:])
+                if len(self.title.encode('utf-8')) > 64:
+                    fail(f'{where}: a title of 64 bytes at most')
+            elif words[0] == 'pivot' and not raw[0].isspace():
                 self.pivots[words[1]] = parse_pair(words[2], where)
             elif words[0] == 'sticker':
                 kv = dict(w.split('=', 1) for w in words[3:])
@@ -1313,7 +1402,14 @@ def compile_sticker(anim, st, svg, palette, blur, report):
     out.ops = art_ops
     clipstack = []
     nodestack = []
+    tints = []  # colour filters around what is drawn, outermost first
     push_at = {}  # op index of each PUSH -> node, for the layer decision
+
+    def ink(c):
+        # the inner filter works first, on its own group
+        for steps in reversed(tints):
+            c = tinted(c, steps)
+        return c
 
     def emit_kids(el, m):
         for k in el.kids:
@@ -1335,10 +1431,14 @@ def compile_sticker(anim, st, svg, palette, blur, report):
             out.op(OP_SAVE)
             out.op(OP_CLIP, out.path(csubs, rule == 'evenodd'))
             clipstack.append((csubs, rule == 'evenodd'))
+        if el.tint:
+            tints.append(svg.tints[el.tint])
         if el.tag == 'g':
             emit_kids(el, m)
         else:
             draw(el, m)
+        if el.tint:
+            tints.pop()
         if el.clip:
             out.op(OP_POP)
             clipstack.pop()
@@ -1354,7 +1454,7 @@ def compile_sticker(anim, st, svg, palette, blur, report):
             gm = mul(m, (x1 - x0, 0.0, 0.0, y1 - y0, x0, y0))
         else:
             gm = m
-        st_ = tuple((min(255, round(o * 255)), out.colour_ix(c), round(a * 255)) for o, c, a in stops)
+        st_ = tuple((min(255, round(o * 255)), out.colour_ix(ink(c)), round(a * 255)) for o, c, a in stops)
         return out.shader((kind, tuple(round(g, 6) for g in geo), tuple(round(g, 5) for g in gm), st_))
 
     def draw(el, m):
@@ -1383,7 +1483,7 @@ def compile_sticker(anim, st, svg, palette, blur, report):
             if isinstance(c, tuple):
                 sh = grad_paint(c[1], local, m, where)
                 return out.paint((style | 2, sh, round(alpha * 255), width, cap, join))
-            return out.paint((style, out.colour_ix(c), round(alpha * 255), width, cap, join))
+            return out.paint((style, out.colour_ix(ink(c)), round(alpha * 255), width, cap, join))
         if fill is not None:
             pi = paint_of(fill, o * fo, 0)
             out.op(OP_DRAW, out.path(subs, evenodd))
@@ -2214,25 +2314,35 @@ def pack_blob(st, out, nodes, ops, tracks):
     return bytes(b)
 
 
-def source_hash():
+def source_hash(pack):
     h = hashlib.sha256()
-    for f in sorted((PACK / 'svg').glob('*.svg'), key=lambda p: p.name):
+    for f in sorted((pack.dir / 'svg').glob('*.svg'), key=lambda p: p.name):
         h.update(f.read_bytes())
-    h.update((PACK / 'anim.txt').read_bytes())
+    h.update((pack.dir / 'anim.txt').read_bytes())
     return h.digest()[:16]
 
 
-def svg_file(num):
-    got = sorted((PACK / 'svg').glob(f'fokia-{num:02d}-*.svg'))
+def svg_num(f):
+    # files are CHARACTER-NN-name.svg; the number is the sticker's id
+    parts = f.stem.split('-')
+    if len(parts) < 3 or not re.fullmatch(r'\d{2,4}', parts[1]):
+        fail(f'{f.name}: not name-NN-what.svg')
+    return int(parts[1])
+
+
+def svg_file(pack, num):
+    got = [f for f in sorted((pack.dir / 'svg').glob('*.svg')) if svg_num(f) == num]
     if len(got) != 1:
         fail(f'sticker {num}: {len(got)} svg files')
     return got[0]
 
 
-def build(only=None, blur_how='box3', verbose=False):
-    anim = Anim(PACK / 'anim.txt')
-    files = sorted((PACK / 'svg').glob('*.svg'))
-    nums = sorted(int(f.name.split('-')[1]) for f in files)
+def build(pack, only=None, blur_how='box3', verbose=False):
+    anim = Anim(pack.dir / 'anim.txt')
+    files = sorted((pack.dir / 'svg').glob('*.svg'))
+    nums = sorted(svg_num(f) for f in files)
+    if len(set(nums)) != len(nums):
+        fail(f'{pack.name}: two svg files with one number')
     if sorted(anim.stickers) != nums:
         fail(f'anim.txt lists {sorted(anim.stickers)}, the svg folder has {nums}')
     palette = {}
@@ -2243,7 +2353,7 @@ def build(only=None, blur_how='box3', verbose=False):
         if only and num not in only:
             continue
         st = anim.stickers[num]
-        svg = Svg(svg_file(num))
+        svg = Svg(svg_file(pack, num))
         if st.name not in svg.name:
             fail(f'{st.line}: {st.name} is not {svg.name}')
         rep = []
@@ -2263,10 +2373,13 @@ def build(only=None, blur_how='box3', verbose=False):
     if len(palette) > 255:
         fail('palette over 255 colours')
     head = bytearray(b'KSTK')
-    name = b'fokia'
-    head += struct.pack('<BBH', VERSION, UNIT, PACK_VERSION)
-    head += source_hash()
+    name = pack.name.encode('ascii')
+    title = anim.title.encode('utf-8') if anim.title is not None else None
+    head += struct.pack('<BBH', VERSION if title is None else VERSION_TITLE, UNIT, PACK_VERSION)
+    head += source_hash(pack)
     head += struct.pack('<B', len(name)) + name
+    if title is not None:
+        head += struct.pack('<B', len(title)) + title
     pal = sorted(palette.items(), key=lambda kv: kv[1])
     head += struct.pack('<B', len(pal))
     for rgb, _ in pal:
@@ -2284,7 +2397,6 @@ def build(only=None, blur_how='box3', verbose=False):
 # ---- --png: each still frame from the built pack, painted the way
 # sticker_player.dart paints it, for the pixel test
 
-PNG_DIR = HERE.parent / 'build' / 'stickers' / 'png'
 SUB = 16     # sample rows a pixel row; along a row coverage is exact
 TOL = 0.02   # flattening, px
 BOX = 512
@@ -2294,6 +2406,8 @@ def read_pack(data):
     # the palette and every blob, as sticker_pack.dart reads them
     o = 24
     o += 1 + data[o]
+    if data[4] == VERSION_TITLE:
+        o += 1 + data[o]
     npal = data[o]
     pal = struct.unpack_from(f'<{npal}I', data, o + 1)
     o += 1 + 4 * npal
@@ -2552,23 +2666,23 @@ def png_bytes(img):
             + chunk(b'IDAT', zlib.compress(raw.tobytes(), 9)) + chunk(b'IEND', b''))
 
 
-def write_pngs(data, where):
+def write_pngs(pack, data, where):
     pal, blobs = read_pack(data)
     where.mkdir(parents=True, exist_ok=True)
     for num, b in blobs:
-        (where / (svg_file(num).stem + '.png')).write_bytes(png_bytes(paint_still(Still(b), pal)))
+        (where / (svg_file(pack, num).stem + '.png')).write_bytes(png_bytes(paint_still(Still(b), pal)))
     print(f'wrote {len(blobs)} pngs to {where}')
 
 
 # ---- --list and --selftest
 
-def list_sticker(num):
-    svg = Svg(svg_file(num))
+def list_sticker(pack, num):
+    svg = Svg(svg_file(pack, num))
 
     def show(el, ind, idx):
         a = el.a
         bits = []
-        for k in ('id', 'fill', 'stroke', 'stroke-width', 'opacity', 'transform', 'clip-path'):
+        for k in ('id', 'fill', 'stroke', 'stroke-width', 'opacity', 'transform', 'clip-path', 'filter'):
             if k in a:
                 bits.append(f'{k}={a[k]}')
         fp = fingerprint([el])
@@ -2629,37 +2743,45 @@ def main(argv):
         how = argv[argv.index('--blur') + 1]
         if how not in ('gauss', 'box3'):
             fail('--blur gauss|box3')
-    if '--only' in argv:
-        only = {int(x) for x in argv[argv.index('--only') + 1].split(',')}
-    if '--list' in argv:
-        list_sticker(int(argv[argv.index('--list') + 1]))
-        return 0
     if '--selftest' in argv:
         selftest()
         return 0
-    data, report, sizes = build(only, how, verbose='--report' in argv)
+    name = 'fokia'
+    if '--pack' in argv:
+        k = argv.index('--pack') + 1
+        if k >= len(argv):
+            fail('--pack NAME')
+        name = argv[k]
+    pack = Pack(name)
+    run = 'tool/pack_stickers.py' + ('' if name == 'fokia' else f' --pack {name}')
+    if '--only' in argv:
+        only = {int(x) for x in argv[argv.index('--only') + 1].split(',')}
+    if '--list' in argv:
+        list_sticker(pack, int(argv[argv.index('--list') + 1]))
+        return 0
+    data, report, sizes = build(pack, only, how, verbose='--report' in argv)
     if '--png' in argv:
         k = argv.index('--png') + 1
-        where = Path(argv[k]) if k < len(argv) and not argv[k].startswith('--') else PNG_DIR
-        write_pngs(data, where)
+        where = Path(argv[k]) if k < len(argv) and not argv[k].startswith('--') else pack.png
+        write_pngs(pack, data, where)
         return 0
     if '--check' in argv:
-        old = OUT.read_bytes() if OUT.exists() else b''
+        old = pack.out.read_bytes() if pack.out.exists() else b''
         if old != data:
-            print('fokia.kst is stale: run tool/pack_stickers.py')
+            print(f'{pack.out.name} is stale: run {run}')
             return 1
-        print('fokia.kst is up to date')
+        print(f'{pack.out.name} is up to date')
         return 0
     if only:
         print('\n'.join(report))
         print(f'{len(data)} bytes, not written (--only)')
         return 0
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_bytes(data)
+    pack.out.parent.mkdir(parents=True, exist_ok=True)
+    pack.out.write_bytes(data)
     if '--report' not in argv:
         print('\n'.join(r for r in report if not r.startswith('  ')))
     big = max(sizes.items(), key=lambda kv: kv[1])
-    print(f'wrote {OUT.name}: {len(data)} bytes, {len(sizes)} stickers, '
+    print(f'wrote {pack.out.name}: {len(data)} bytes, {len(sizes)} stickers, '
           f'biggest {big[0]:02d} at {big[1]} bytes')
     return 0
 

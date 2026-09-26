@@ -1,18 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// reads assets/stickers/fokia.kst, which tool/pack_stickers.py compiles from
-// the svgs. the pack loads once; a sticker's paths and paints are built the
-// first time it is drawn and then kept.
+// reads the packs in assets/stickers, which tool/pack_stickers.py compiles
+// from the svgs. every pack loads once; a sticker's paths and paints are
+// built the first time it is drawn and then kept.
 import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart';
 
 import '../dlog.dart';
 import 'sticker_player.dart';
 
-const kStickerAsset = 'assets/stickers/fokia.kst';
+/// the packs this version has, in the picker's order
+const kStickerAssets = [
+  'assets/stickers/fokia.kst',
+  'assets/stickers/fokiaremix.kst',
+];
 const kStickerBox = 512.0;
 
 // ops, the top three bits of a word
@@ -126,7 +131,10 @@ class Sticker {
 }
 
 class StickerPack {
+  // on the wire and in recents
   final String name;
+  // what the picker calls it
+  final String title;
   final int version;
   final Uint8List sourceHash;
   final List<int> palette;
@@ -138,6 +146,7 @@ class StickerPack {
 
   StickerPack._(
     this.name,
+    this.title,
     this.version,
     this.sourceHash,
     this.palette,
@@ -146,32 +155,25 @@ class StickerPack {
     this._index,
   );
 
-  static Future<StickerPack>? _loading;
-
-  /// the pack, loaded on first use. a failed load is tried again next time.
-  static Future<StickerPack> load() => _loading ??= () async {
-    try {
-      return parse(await rootBundle.load(kStickerAsset));
-    } catch (_) {
-      _loading = null;
-      rethrow;
-    }
-  }();
-
-  static StickerPack? _ready;
-  static StickerPack? get ready => _ready;
-
   static StickerPack parse(ByteData data) {
     final r = _Reader(data);
     if (r.u8() != 0x4B || r.u8() != 0x53 || r.u8() != 0x54 || r.u8() != 0x4B) {
       throw StickerFormatError('magic');
     }
     final version = r.u8();
-    if (version != 1) throw StickerFormatError('version $version');
+    if (version != 1 && version != 2) {
+      throw StickerFormatError('version $version');
+    }
     if (r.u8() != 5) throw StickerFormatError('unit');
     final packVersion = r.u16();
     final hash = r.bytes(16);
     final name = utf8.decode(r.bytes(r.u8()));
+    // 2 carries a title; a pack from before titles shows its name
+    final title = version == 2
+        ? utf8.decode(r.bytes(r.u8()))
+        : name.isEmpty
+        ? name
+        : name[0].toUpperCase() + name.substring(1);
     final palette = List<int>.generate(r.u8(), (_) => r.u32());
     final n = r.u16();
     final ids = <int>[];
@@ -184,8 +186,9 @@ class StickerPack {
       ids.add(id);
       index[id] = (off, len);
     }
-    return _ready = StickerPack._(
+    return StickerPack._(
       name,
+      title,
       packVersion,
       Uint8List.fromList(hash),
       palette,
@@ -219,11 +222,18 @@ class StickerPack {
     }
   }
 
-  /// the ones with motion: a still is not offered until it moves
+  /// the ones with motion
   List<int> get playable => [
     for (final id in ids)
       if ((_data.getUint16(_index[id]!.$1 + 4, Endian.little)) > 0) id,
   ];
+
+  /// what the picker offers: a still is not offered until it moves, but a
+  /// pack with no motion yet offers all of its stills
+  List<int> get offered {
+    final p = playable;
+    return p.isEmpty ? ids : p;
+  }
 
   Sticker _decode(ByteData b) {
     final r = _Reader(b);
@@ -423,6 +433,55 @@ class StickerPack {
       (_) => (r.u8(), r.u8(), r.u8()),
     );
     return _Shader(kind, geo, m, stops);
+  }
+}
+
+/// every pack this version has. each loads on its own: one that fails is
+/// left out, the rest work, and the next load tries it again.
+class StickerLibrary {
+  StickerLibrary(Iterable<StickerPack> packs)
+    : packs = List.unmodifiable(packs),
+      _byName = {for (final p in packs) p.name: p};
+
+  /// in the picker's order
+  final List<StickerPack> packs;
+  final Map<String, StickerPack> _byName;
+
+  StickerPack? pack(String name) => _byName[name];
+
+  /// the sticker [ref] names, if this version has it
+  Sticker? sticker(StickerRef ref) => _byName[ref.pack]?.sticker(ref.id);
+
+  static final _parsed = <String, StickerPack>{};
+  static Future<StickerLibrary>? _loading;
+  static StickerLibrary? _ready;
+  static StickerLibrary? get ready => _ready;
+
+  /// the packs, loaded on first use. throws only when none loads.
+  static Future<StickerLibrary> load() => _loading ??= () async {
+    final got = await Future.wait([for (final a in kStickerAssets) _load(a)]);
+    final packs = [for (final p in got) ?p];
+    if (packs.length < got.length) _loading = null;
+    if (packs.isEmpty) throw StickerFormatError('no pack loaded');
+    return _ready = StickerLibrary(packs);
+  }();
+
+  static Future<StickerPack?> _load(String asset) async {
+    final had = _parsed[asset];
+    if (had != null) return had;
+    try {
+      return _parsed[asset] = StickerPack.parse(await rootBundle.load(asset));
+    } catch (e) {
+      dlog('sticker pack $asset: $e');
+      return null;
+    }
+  }
+
+  /// for tests: these packs, as if loaded
+  @visibleForTesting
+  static void use(StickerLibrary? lib) {
+    _ready = lib;
+    _loading = lib == null ? null : Future.value(lib);
   }
 }
 
