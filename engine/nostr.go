@@ -1332,7 +1332,7 @@ func HaloTorGet(cUrl *C.char) *C.char {
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: req: %v", err))
 	}
-	// no agent: the request should not say which app made it
+	// no user agent: the request should not say which app made it
 	req.Header.Set("User-Agent", "")
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
@@ -1524,7 +1524,7 @@ func HaloTorGetB64(cUrl *C.char) *C.char {
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: req: %v", err))
 	}
-	// no agent: the request should not say which app made it
+	// no user agent: the request should not say which app made it
 	req.Header.Set("User-Agent", "")
 	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 	defer cancel()
