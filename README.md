@@ -1,47 +1,38 @@
-# kryfo
+# Kryfo
 
-a private messenger. no phone number, no email, no account. messages go end
-to end encrypted, routed over tor onion services or through nostr relays when
-the other side is offline.
+a private messenger for android. no phone number, no email, no account.
+messages are end to end encrypted and go over tor onion services, or wait on
+nostr relays when the other side is offline.
 
-## status: pre-alpha, unaudited
+## status
 
-this is early software built by one person. it has not had an independent
-security review. the crypto rests on standard libraries (libsignal, tor,
-sqlcipher, nip-44/59) but the integration is new and unproven. do not rely on
-it for anything where being wrong would hurt you. read THREAT_MODEL.md for a
-straight account of what it does and does not protect against.
+pre-alpha and unaudited. one person builds it and nobody has reviewed its
+security yet. don't rely on it where being wrong would hurt you.
+THREAT_MODEL.md says what it protects against and what it doesn't.
 
-known caveat in the current build: databases created before the random-key
-fix use a weaker key derived from the install time. wipe and re-onboard to
-upgrade.
+databases created before the random-key fix use a weaker key derived from the
+install time. wipe and set up again to upgrade.
 
 ## how it works
 
-- identity is a key pair. your handle is three words derived from it.
-- direct messages go device to device over tor onion services.
-- when a contact is offline, messages wait on public nostr relays, sealed so
-  the relay learns nothing about who is talking or what is said.
-- contents use the signal double ratchet. storage is encrypted with sqlcipher.
-- no address book upload, no analytics, no push service, nothing phones home.
+- your identity is a key pair, your handle is three words derived from it
+- messages go phone to phone over tor onion services
+- when a contact is offline, sealed messages wait on nostr relays (nip-44/59)
+- signal double ratchet for messages, sqlcipher for storage
+- no contact upload, no analytics, no push service
 
 ## building
 
-see BUILDING.md for the full toolchain and steps. in short: build the go
-engine (`cd engine && ./build.sh`), then the flutter app (`cd mobile &&
-flutter build apk --release --target-platform android-arm64`).
-
-the go engine (libhalo.so) has a reproducible build so anyone can confirm the
-binary in a release matches this source; see repro/README.md.
+see BUILDING.md. release builds are reproducible, see repro/README.md.
 
 ## layout
 
 - `mobile/` flutter app
-- `engine/` go engine: identity, tor, nostr transport, crypto ffi
-- `relay/` optional fast relay (store-and-forward, no auth yet, not for
-  production)
-- `repro/` reproducible engine build
+- `engine/` go engine: identity, tor, nostr, crypto
+- `server/` handle registry
+- `relay/` optional relay, not for production
+- `repro/` reproducible release builds
 
 ## license
 
-GPL-3.0.
+GPL-3.0

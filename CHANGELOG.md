@@ -1,7 +1,5 @@
 # Changelog
 
-All notable user-facing changes to kryfo will land here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
-
 ## [0.3.2] - 2026-09-25
 
 ### Security
@@ -14,344 +12,324 @@ All notable user-facing changes to kryfo will land here. Format loosely follows 
 
 ## [0.3.0] - 2026-09-24
 
-0.2.11 and 0.2.12 were never released, so this is everything since 0.2.10.
+0.2.11 and 0.2.12 were never released, so this covers everything since 0.2.10.
 
 ### Security
-- the engine is built with go 1.25.14 instead of 1.25.0, which brings in the fixes go has released since, several of them for security.
-- tor is updated from 0.4.9.5 to 0.4.9.12, which carries fixes for two use-after-free bugs in the part of tor that splits traffic over several paths, and for a crash a malformed name lookup could cause.
-- three fixes from openssl 3.6.3 are carried into the copy of openssl inside kryfo: an oversized piece of text in a certificate could overflow a buffer, a certificate field over two gigabytes long could be read past its end, and a peer could choose part of the numbers used to agree a key instead of having it checked. tor reads certificates from the network, so these are the ones that reach kryfo. the rest of that openssl release is in parts kryfo does not use.
-- a video opened with another app was left behind as a decrypted copy until the next file was opened, so one from a timed message could outlast the message by any length of time. it is removed as soon as you come back to kryfo, and on every start.
-- every voice note left the recording of your voice as spoken, before any disguise, in the app's cache for good. it is removed as soon as the note is sent, and anything left over is cleared at start.
-- with a pin on kryfo, notifications still showed who wrote and what they said once the phone was unlocked. setting a pin now turns message previews off. you can turn them back on, and the setting says what that shows.
-- after a panic wipe, kryfo started itself again within a minute: its "kryfo is on" notification came back, it made a new identity and connected to tor, with nobody having opened it. the wiped messages and keys were gone, but a wipe that announces itself defeats the point. nothing starts kryfo in the background now until it has been opened again.
-- ntfy push is gone, all of it. the option opened a connection to a public server from outside tor, so that server had your address for as long as the app ran, and the wake-up it waited for did nothing. while it existed every message also carried an address for the other side to call after sending, and off onion mode that call went out directly: a contact could have learned where you were by naming a server of their own. nobody needed the option on for that part. the option, the field and the call are removed, and what they had stored is cleared the first time this version starts. if push ever comes back it goes over tor or not at all.
-- a photo sent as a file kept everything the camera wrote in it: where, when, on what phone. the photo button has always cleaned that off; the file button sent the file as it was, and the other side then showed it as a photo. pictures sent as files are cleaned now, without touching the picture itself: jpeg, png, webp, heic, avif, and gifs on the gif button. one the app cannot read through is not sent.
-- the cleaning itself missed things, found by running it on real photos instead of test files. a samsung camera writes a block of its own after the end of the picture, and that came through. some phones hang a second image off the first, and that came through. a png can carry a record of what made it and under which account, and that came through. all three are gone now, and a png keeps only what it takes to draw it.
-- the parts of the engine written in c, which is tor and the libraries under it, are now built with stack protection. they are what reads bytes off the network, and they were being built without it.
-- anyone who could reach you and knew a message's id could pin or unpin it on your phone. nothing could be read or changed that way, but it should not have been possible. a pin is accepted only from the other person in that chat, or from a member of that group.
-- reactions are now only accepted from people in that chat, same as pins.
+- the engine is built with go 1.25.14 (was 1.25.0).
+- tor 0.4.9.12 (was 0.4.9.5): two use-after-free fixes and a crash fix.
+- three certificate and key agreement fixes from openssl 3.6.3 in the bundled openssl.
+- a video opened in another app left a decrypted copy behind. it is removed when you come back, and at start.
+- voice notes left the undisguised recording in the cache. it is removed after sending, and at start.
+- setting a pin turns notification previews off.
+- after a panic wipe the app started itself again in the background. nothing starts it now until it is opened.
+- ntfy push is removed. it connected outside tor, and every message carried an address for the other side to call.
+- photos sent as files are cleaned of metadata too: jpeg, png, webp, heic, avif, gif.
+- the cleaner also removes vendor data after the image, attached second images and png text chunks.
+- tor and the c libraries under it are built with stack protection.
+- pins and reactions are only accepted from people in that chat.
 
 ### Added
-- kryfo in fifteen languages: english, german, french, spanish, portuguese (brazil), italian, russian, ukrainian, turkish, chinese (simplified and traditional), vietnamese, indonesian, persian and arabic, the last two laid out right to left. it follows the phone, or you choose in settings, or on the first screen when you set kryfo up. dates, numbers and plurals follow the language too. the translations are inside the app: nothing is fetched to show them.
-- a tools tab. four things, all of them on your phone and none of them touching the network: what a photo gives away (where it was taken, drawn on a map the app carries itself, and on what phone and when), a clean copy of a photo or video with all of that removed, a private qr code for links, wi-fi, contacts and more, and locking a file behind a password so it can be sent anywhere and opened with the free tool age. a photo shared to kryfo from the gallery lands straight in the cleaner.
-- a choice of how messages arrive, in settings. "always on" is what kryfo has always done. "check-ins" wakes every fifteen minutes, looks for messages and goes back to sleep, which is far easier on the battery and can make messages late. the screen says when the last check-in really happened, not when one was promised.
-- if your phone keeps stopping kryfo while it is meant to be staying connected, kryfo notices on its own and offers check-ins once. it reads nothing about your phone to work that out.
-- videos look like videos: the first frame, how long it runs, and a play button, in chats and groups, without a frame around them, like photos. tap one and it plays inside kryfo: it opens out of the message, pulls down to close, and can be scrubbed. screenshots, screen recordings and the recent apps view show nothing of it while it plays. a video your phone cannot play in kryfo still opens in another app. the first frame is never written to the phone, so nothing of a video outlives a message that burns.
-- tapping a file opens it, in whatever your phone has for that kind of file. it only ever offered to share it. share is under a long press now.
-- pins work the way you would expect from discord. the pin in the top bar is always there and opens the list: newest first, who wrote it, when, a picture if there is one, jump and unpin. a pin in a one to one chat shows for both of you, as it always has in groups. pinning asks first. fifty to a chat, up from three. the strip that sat under the top bar is gone.
-- a room link on its own in a message is an invitation with a join button, and the room opens once you are in. the room's link sheet can share the link or send it to a contact, after saying what that costs: they will know the room came from you.
+- 15 languages, persian and arabic right to left. translations ship inside the app.
+- tools tab, all offline: what a photo gives away, a cleaner for photos and videos, qr codes, and age file encryption.
+- check-ins: a delivery mode that wakes every 15 minutes. easier on the battery, messages can be late. offered once if the phone keeps killing always on.
+- videos show a first frame, their length and a play button, and play inside the app.
+- tapping a file opens it. share moved to a long press.
+- pins: a list behind the pin in the top bar, shown to both sides in 1:1 chats, up to fifty per chat.
+- a room link in a message shows a join button.
 
 ### Fixed
-- a phone on always on could go quiet for good and say "connecting" for the rest of the day, with the reconnect button doing nothing. a test phone was found like that after twenty hours. the cause was in how the app built its connections through tor: the library it uses asked tor a question over a shared control connection every time, and switched tor's network back on while it was at it - on a tor the app had just put to sleep between check-ins. several of those at once jammed that connection for good, every later question waited behind them, and the wake-up that was to bring tor back waited behind those. nothing asks that connection for anything any more: connections are built from an address the app already knows, and tor's events are read on a connection of their own. a reconnect that has been stuck for five minutes is also abandoned now, so the button works.
-- after a long time away, with messages waiting from more than one person, fetching one person's backlog could skip part of another's, so older messages from them stayed on the relay. each conversation now keeps its own place.
-- going from check-ins back to always on could leave a phone saying "Tor ready" and hearing nothing for up to a quarter of an hour, until the next background check came round. the connections to the relays wait while tor sleeps, and only a check-in woke them. waking tor wakes them now, whatever woke it. connecting to our own onion relay is also given longer than the seven seconds it had, which it often needed after a wake.
-- messages could sit unsent for minutes after the network changed: flight mode, a dropped wi-fi, a switch to mobile data. kryfo said it was ready and was not. it now tells tor the network has changed the moment the phone says so, and it judges "ready" by whether messages are actually getting through rather than by tor's word. if they stop getting through for a minute, the connection is rebuilt. in testing, a message written in flight mode went out 28 seconds after the network came back, where it had taken six minutes, and on one phone had not gone after sixteen.
-- the bridges screen could say "connected" before the new connection had even started. it now waits until a message path actually works through the bridges.
-- holding the microphone could stop doing anything for the rest of a chat, until the chat was closed and opened again.
-- a file that arrived with pieces missing stayed stuck. the receiver now works out exactly which pieces it never got and asks for those, and the sender sends only those.
-- coming back after a long time away could leave messages behind for good. relays hand back only the newest hundred stored messages, and anything behind that was never asked for again; now kryfo pages back through the lot, and does not move its place in the queue until it has all of it.
-- changing bridges, or recovering from a stalled connection, used to restart tor. tor survives one shutdown per run and the second one could hang or kill the app, so this could have taken kryfo down at any time since bridges shipped. tor is reconfigured where it stands now, which is also far quicker: switching bridges takes about half a second instead of a full reconnect.
-- a heic photo from a samsung carried a block of the camera's own after the picture, and it survived cleaning. it is removed now, in the tools tab and when a photo is sent as a file.
-- tor could get stuck off and stay that way. if tor's control port stopped answering - which it does now and then, and is tor's own behaviour, not kryfo's - the attempt to bring it back waited for an answer that never came, while holding the lock every later attempt needed. a phone was found like this after ten and a half hours: online, running, and quietly unable to send or receive anything. every command to tor now has a time limit, a connection that stops answering is thrown away and replaced, and tor itself is never restarted to do it.
-- and if it ever does go quiet again, kryfo says so. five minutes unable to connect, while it is meant to be connected, and the home screen says "kryfo is offline" with a button to try again. it should never again be possible to be offline for hours with nothing on screen.
-- pay with bitcoin froze the app while it reached the payment service over tor, fifteen or twenty seconds on a slow connection, long enough that some phones said kryfo had stopped working. the work was being done in the one place nothing else can happen. it is not now: the screen shows that it is waiting and for how long, and after twenty seconds offers the plain address instead.
-- voice notes stopped a second or two in and had to be started again. every delivery tick rebuilt the whole conversation on screen, and the player went with it. a row keeps what it is doing now when the list under it changes.
-- a video or a big file could be sent twice. the first pass got to 99%, the bar started again from nothing, and it arrived at the end of the second pass. the app had marked a send that was still running as failed and then retried it. a file goes out once. the receiving phone also stops collecting pieces of a file it already has, which had left a "receiving" strip counting towards nothing.
-- moving to a new phone left your public handle behind. the new phone did not know it had one, and if you had ever reset your invite, people adding you for the first time wrote to an address nobody was listening on. the backup carries both now.
-- restoring over an account that had a handle left the handle pointing at an account that no longer existed, with no way to take it back. the restore gives the handle back first, and if it cannot reach the registry it tells you what going ahead will cost. the handle screen also says so when a name is held under a different key, instead of going on saying it is yours.
-- tapping a pin a second time scrolled past the message. a jump lands on the message now, however many times you ask and wherever you were.
-- a room link sent in a chat was a wall of text that could not be tapped, and pasted with anything around it the app called it invalid. opened from outside the app, nothing told you what had happened.
-- a phone whose account has moved still said it was building a private route and that what you sent would deliver itself.
-- a file you sent stayed on "sending" in an open chat after it had arrived. the tick shows up now without leaving the chat.
-- the photo tool showed a lone button when a photo had nothing to remove. it shows the photo and everything it looked for.
+- always on could get stuck on "connecting" for good. tor's control connection is no longer shared, and a stuck reconnect gives up after five minutes.
+- fetching several contacts' backlogs could skip messages. each conversation keeps its own place now.
+- going from check-ins back to always on could stay deaf for up to 15 minutes.
+- messages sat unsent after a network change. tor is told at once, and "ready" means messages go through.
+- the bridges screen said connected too early.
+- the mic button could stop working inside a chat.
+- a file with missing pieces asks for just those pieces.
+- relays only hand back the newest hundred messages. the app pages back through the rest.
+- changing bridges restarted tor, which could hang or close the app. tor is reconfigured in place, in about half a second.
+- tor could stay off when its control port stopped answering. every command has a timeout and a dead connection is replaced.
+- home says "Kryfo is offline" after five minutes without a connection.
+- paying with bitcoin froze the app. it shows progress and offers the plain address after 20 seconds.
+- voice notes stopped a second in.
+- a big file could be sent twice.
+- moving to a new phone lost the public handle.
+- restoring over an account with a handle left the handle pointing nowhere.
+- jumping to a pin scrolled past the message.
+- room links in chats could not be tapped.
+- a sent file stayed on "sending" in an open chat.
+- the photo tool showed a lone button when there was nothing to remove.
+- a phone whose account had moved still said it would deliver.
 
 ### Changed
-- the link preview setting is gone. it was a switch for whether you would be offered a button, and the button is already a choice you make per message. the button is offered whenever tor is up, and your phone still never fetches a link someone sent you.
+- the link preview setting is gone. the per-message button shows whenever tor is up.
 - the voice mask sits a little lower.
-- the public handle page loaded its fonts from google, which showed google everyone who opened one. it carries its own now.
+- the public handle page carries its own fonts instead of loading them from google.
 
 ## [0.2.10] - 2026-09-16
 
 ### Added
-- moving to another phone. the backup screen now asks whether you are making a copy to keep or moving, and a move retires the phone it left: next time it opens it says so, you can keep it to read, wipe it, or say you are not moving after all. it never sends or receives again, so the two phones cannot fall out of step. on the new phone, before anything is written, the restore says what follows and what does not, and warns you when a big file will take a few minutes.
-- backups now hold every photo, voice note and file, not just the messages. the file is written and read a piece at a time, so a big one does not need a big phone. it is saved through the phone's own save dialog, into downloads unless you pick somewhere else, and it is called kryfo-backup followed by a number, ending in .kryfo. that is the file to look for when you restore. old backup files still work.
-- a video tile next to the gif one, in chats and groups. the gallery only ever showed photos.
+- moving to another phone. a move retires the old phone, and the restore says what comes over before it writes anything.
+- backups hold photos, voice notes and files, written a piece at a time. saved through the system dialog as kryfo-backup-N.kryfo. old backups still restore.
+- a video tile next to the gif one.
 
 ### Fixed
-- a video from the gallery went out with where it was filmed, on what phone, and when, still inside it. photos have had that taken off for a while and videos had not. it is blanked inside the file before it leaves, so the clip plays exactly as before. mp4, mov and 3gp. a video the app cannot read through is not sent.
-- picking onion at the start could leave the app on the relay. an explicit choice is written now, and skip means onion for real.
-- scanning a code from the first screen read it and added nobody.
-- the button at the bottom of the backup screen could sit just past what the phone lets you tap. the same fault had been fixed on onboarding and the pin pads; every screen that pushes a button to the bottom now fits or scrolls.
-- the bitcoin page said the payment service could not be reached when it had been reached and was having trouble. it says that now.
-- the every-way-in row under the plus button was easy to miss. it is not any more.
+- gallery videos kept where, when and on what phone they were filmed. cleaned now: mp4, mov, 3gp.
+- picking onion during setup could leave the app on the relay.
+- scanning a code from the first screen added nobody.
+- the button at the bottom of the backup screen could be out of reach.
+- the bitcoin page said the payment service was unreachable when it was having trouble.
+- the add row under the plus button was easy to miss.
 
 ### Changed
-- the app's transitions are a touch quicker: everything that moves when you tap finishes inside three tenths of a second. the slow reveals on onboarding and the loaders are unchanged on purpose.
-- the three modes in speed & privacy, the group attach sheet and the donation buttons are capitalised like everything else.
+- transitions finish within 300 ms.
+- capitalisation fixes in speed & privacy, the group attach sheet and donations.
 
 ## [0.2.9] - 2026-09-16
 
 ### Fixed
-- the app re-downloaded the same messages every fifteen minutes even when nothing had happened, which could use a lot of mobile data. it doesn't now. one person got through 3.5gb in a day without sending anything. there were two causes and both are fixed. a background check that runs every quarter of an hour dropped every working connection and asked for the last twelve hours of messages again on each one, and separately a quiet conversation was treated as a broken connection and thrown away every seventy-five seconds. after a photo or a voice note, asking for those twelve hours again means a few megabytes of data you already have, every time. the app now asks a connection whether it is still there instead of assuming it is dead, and when it does have to catch up it asks only for the stretch it was actually away for.
-- a photo, file or voice note showed a tick before it had arrived. finishing an upload means the pieces were accepted somewhere, not that the other person got them; on the relay route those are not the same thing, and a photo could sit ticked and unread for good. media now says nothing until the receipt comes back, then says delivered.
-- one bad piece of a photo or video killed the whole transfer. each piece gets its own retries now, so a single dropped one costs that piece and not the file.
-- voice notes could stop partway through, and tapping them started again from the beginning. when android takes the audio player back the note is now reloaded and carries on where it stopped.
-- the tor screen still described the faster modes as coming soon, long after they shipped. it points at where they live in settings.
-- the date label was drawn twice while scrolling, once in the list and once floating over it a few pixels apart. in groups too.
-- a photo whose file had gone showed as a black square on the contact page strip and in the shared photos grid. it says the photo is missing now.
-- a picture sent through the file picker arrived looking like a document with a paperclip. if the name says it is an image, it is shown as one, with the name kept underneath.
+- the app re-downloaded twelve hours of messages every fifteen minutes, which could use gigabytes of mobile data. it checks the connection instead and only catches up on the gap.
+- media showed a tick before it arrived. it waits for the receipt now.
+- one bad piece killed a whole transfer. each piece retries on its own.
+- voice notes stopped partway and restarted from the beginning.
+- the tor screen still said the faster modes were coming soon.
+- the date label was drawn twice while scrolling.
+- a missing photo showed as a black square.
+- a picture sent as a file showed as a document.
 
 ### Added
-- cancel, on the strip that shows a photo or file going out. stopping a send always worked, but the only way to it was a long press on the bubble, which nobody found. groups had no way to stop a send at all and now have the same one.
+- cancel on the sending strip, in chats and groups.
 
 ## [0.2.8] - 2026-09-15
 
 ### Fixed
 - a way around the app lock. update when you can.
-- the scam shield has never once run in a group. the check that decides whether to look at a stranger's first message was written so that in a group it was always false. every group part of the feature - the mark on a flagged member's messages, the block from inside the group, the check itself - has been dead since it shipped. it looks at a message from any member you never added, which is what it always said it did. the sheet that explains a flag has a group wording built into it that nobody could ever have seen.
-- a burner room frame that could not be stripped of your identity was sent anyway. the function that takes your onion address, your kryfo id and your push endpoint off a room message handed the message back untouched when it could not parse it, and the caller sent that. it refuses now, and the send is dropped instead.
-- blocking someone in a group left everything they had already said on screen. the filter ran on one of the three paths that load messages, so reopening the group brought it all back, and someone blocked before you ever accepted them was never filtered at all.
-- a message waiting for someone to add you back was invisible on home. half the condition on the status strip was dropped, which also took the retry button with it.
-- cancelling the "send this file?" sheet still spent one of the two messages a stranger is allowed before you accept them. two cancels locked the composer.
-- the app would not let you type, then closed itself. on android 13 and newer, once you had refused the notification permission twice, kryfo asked again every time a screen came to the front, and android answered instantly from its own record rather than showing a dialog. that is a request every forty milliseconds, for as long as the app is open: the window loses focus each turn, so the keyboard will not stay up, taps and the back key land on a screen that is already going, and the phone warms up until android kills the app. it asks once now, and not at all once the answer is final. nothing to do with the phone being 32-bit or short of memory; a refusal on android 13 was enough.
-- scrolling back in a group could stop early once a blocked member's messages were filtered out of a page.
+- the scam shield never ran in groups.
+- a burner room message that could not be stripped of your identity was sent anyway. it is dropped now.
+- blocking someone in a group left their old messages on screen.
+- a message waiting for someone to add you back was hidden on home.
+- cancelling a file send used up one of a stranger's two messages.
+- on android 13 and newer, a refused notification permission was asked for in a loop, which broke typing and crashed the app.
+- scrolling back in a group could stop early.
 
 ### Added
-- home says when android is blocking notifications, and opens the page that turns them back on. nothing arrives while the app is closed when they are off, and until now nothing said so. the android 13 permission dialog does not come back once your answer is final, so that page is the only way. dismiss the banner and a line in settings still says it.
+- home says when android is blocking notifications and opens the setting.
 
 ### Changed
-- release builds are made in a pinned container at the path f-droid builds in, which is what makes an apk you can check against ours byte for byte. repro/README.md says what that means and what it does not.
-- dependencies moved up within the versions already declared. the encrypted storage and the signal libraries were deliberately left where they are.
+- release builds are made in a pinned container at f-droid's build path, so the apks can be checked byte for byte. see repro/README.md.
+- dependencies moved up within the declared versions.
 
 ## [0.2.7] - 2026-09-14
 
-### Fixed
-- the wipe did not wipe. both the wipe pin and the settings wipe deleted your messages and keys, then lost a race on the way out: the app pin, the wipe pin and the onboarding flag were still queued for disk when the process ended, so the next launch asked for your old pin and showed a fresh, nameless identity. the wipe now goes through android's own clear-data call, the same thing as "clear storage" in settings: everything gone, the process stopped, the next launch is onboarding.
-- the app lock covers every screen now, and after the pin you land where you were.
-- taking a screenshot no longer asks for your pin afterwards. a permission prompt or the notification shade does not either.
-- a message to someone who has not added you back yet could show a tick while it sat at an address they never read. it now says "waiting for them to come online or add you back" and keeps trying until they do. a false tick is worse than an honest wait.
-- a manual retry of your first message to a stranger was silently dropped by their phone. it carries what their gate needs now.
-- a photo that stalled at 98% and then "dropped": nothing was dropped. the pieces stay on the receiving phone for a week; the banner just vanished. it now says paused, with the count, and the sender resumes from the missing piece instead of starting over, chat open or not.
-- switching screenshots on or off flashed white. the window behind the app was painted white; it is dark now.
-- the speed & privacy and backup screens had a light box across the bottom. a layout error the release build paints as a plain box. fixed.
-- disappearing messages that went through the queue (tor warming up, a retry) arrived with no timer and stayed forever on both phones. the timer rides along now.
-- changing your pin to the same digits as your wipe pin quietly disarmed the wipe while the page said it was set. refused now.
-- a stranger who could reach you could edit or delete any message in your history by id, and a group created by someone you never accepted appeared in your list. both need the author, or an accepted contact, now.
-- someone you declined stopped being listened for after a restart, so their next message never resurfaced the request. they are listened for again.
-- adding by @handle left the sheet open after it had worked.
-- retrying a photo dropped its caption and its no-screenshot mark. searching a chat only searched the last sixty messages. the offline strip said "sending now" forever for a message waiting on someone who has not added you back.
-- copying your id, a pairing code or a link is marked sensitive, so keyboards with a clipboard history and the android 13 preview treat it as such.
-- the notifications row in settings shows the push mode you actually picked.
-- a four digit pin could be guessed at pad speed with no limit. five wrong pins now hold the pad for thirty seconds, then a minute, then two, across restarts. the wipe pin is never held.
-- a request notification showed the stranger's own words on the lock screen. it says a request arrived, nothing more.
-- an edit made offline was one attempt and then silently lost. edits queue and retry like messages now.
-- accept, decline and block are on the requests list, not only inside the chat.
-- "reset my invite link" promised that old codes and links stop working. it moved only the relay address: an old link still opened a session and could still dial your onion directly. that promise was wrong and could have got someone hurt. reset now also replaces the key inside the invite, so an old link fails on every route, and the button says what it costs: anyone who has the old link but never used it needs a new one.
-- the onion door has limits now: eight connections at once, a full inbox takes nothing more, a line has to look like a message before it costs the phone a decrypt, repeats are dropped. someone with your onion address could keep your phone busy for as long as they liked before.
-- photos taken with the in-app camera came out sideways: the orientation tag was stripped before the pixels were turned. upright now.
-- the shared contact card had thin yellow lines under every word. gone.
-- the six digit pairing code could be shown but typed in nowhere. "they read you a code" under the code opens the way in.
-- the home strip said "waiting" with a retry for every message still on its way. it speaks now only when the phone cannot send, or when a message waits on someone who has not added you back.
-- two of anything before a stranger accepts you, photos, files and voice notes included; a third photo sat at a single tick.
-- a member blocked from the scam shield sheet inside a group stays on screen until reopened. gone at once now.
-- a friend in relay mode published to a relay nobody in onion mode read, so everything they sent sat at one tick. every mode now shares our relay, reached over tor in onion mode. the first-contact address follows a mode switch too.
-- switching to tor a second time inside a minute could leave the app on "connecting" for good. the engine now reports off when a restart is skipped, so the watchdog tries again.
-- notifications for a chat come down when you open it, not only when you tap them.
-- a photo sent with a timer showed its countdown on the receiver only. the sender sees it now.
-- holding the mic with the keyboard up recorded with no bar on screen: the bar drew under the keyboard. it sits above it now.
-- a photo, a file or a voice note can no longer be edited into text.
-- the send estimate for a file matched the old one-slice-at-a-time sender. it follows the pool now.
-- the receiving banner no longer appears for a voice note.
-- the atmospheres drifted at eight steps a second, which read as stutter on snow. they move on the frame clock now.
-- the card payment tab in donate is gone until there is something behind it.
-- one screenshot switch for the whole app, applied at the next start. the per-chat one is gone, and so is the flash on every toggle: changing the flag live recreated the window.
-- a photo or file can be stopped while it is still on its way: hold it, stop sending. it goes here, and the other side drops the part it had along with its banner.
-- a wallpaper can be one of your own photos, per chat. it lives in the app's folder and goes with a wipe.
-- the name field in the profile is gone. it was stored on the phone and shown to nobody.
-- onboarding asks how your messages should travel: onion, relay or fast, each with its cost in plain words, onion picked already, one tap to skip.
-- claiming a handle froze the app until android offered to close it. the registry call ran on the screen's own thread. fixed, along with checking and deleting a handle.
-- adding someone by handle, or by a link that had already been used once, went nowhere: the invite named a one-time key that the first person to use it consumed, so everyone after them was dropped unread. the invite now carries a key that is kept. a phone with a handle republishes it on the next start.
-- direct-onion messages past a stranger's two are held on the phone and opened when you accept them, the way the relay lane already replayed them. someone you deleted has to pay the opener's proof of work again to come back.
-- the scam shield now reads the first message of a group member you never added. a flagged member gets a small mark on their own bubbles, nothing above the thread. tap it for the reasons, block or ignore. in a group the content decides; a look-alike name is a footnote, since the id is on every bubble.
+### Added
+- stop a photo or file while it is sending.
+- a wallpaper from your own photo, per chat.
+- setup asks how messages should travel: onion, relay or fast.
+- the scam shield checks first messages from group members you never added.
+- 32-bit phones (armeabi-v7a).
 
-- photos and files send five slices at a time instead of one after another, and once the other phone's onion stops answering the rest of that send goes straight to the relay instead of waiting out the dial every slice. camera shots are brought to the same size and quality as gallery picks before sending, which halves them. debug builds log the time each slice took.
+### Fixed
+- the wipe left the pins behind. it uses android's clear data now.
+- the app lock only covered home. it covers every screen now.
+- screenshots, permission prompts and the notification shade no longer ask for the pin.
+- a message to someone who had not added you back showed a tick.
+- a retried first message to a stranger was dropped.
+- a stalled transfer says paused and resumes from the missing piece.
+- toggling screenshots flashed white.
+- light boxes across the bottom of two screens.
+- queued disappearing messages lost their timer.
+- the pin could be set to the wipe pin, which disarmed the wipe.
+- a stranger could edit or delete messages by id, and groups from strangers showed up.
+- declined contacts were forgotten after a restart.
+- adding by @handle left the sheet open.
+- retrying a photo dropped its caption. chat search only covered the last sixty messages.
+- copied ids, codes and links are marked sensitive.
+- wrong pins are rate limited: five tries hold the pad, longer each time.
+- request notifications no longer show the stranger's words.
+- offline edits queue and retry.
+- accept, decline and block on the requests list.
+- resetting your invite link also replaces its key, so old links stop working everywhere.
+- the onion listener has limits on connections and inbox size.
+- in-app camera photos came out sideways.
+- yellow lines under the shared contact card.
+- the pairing code could be shown but not typed in.
+- the home strip nagged about every pending message.
+- a stranger gets two of anything before you accept, media included.
+- relay and onion users could not reach each other. every mode shares one relay now.
+- switching to tor twice in a minute could hang on "connecting".
+- notifications clear when you open the chat.
+- the sender sees the countdown on timed photos.
+- the recording bar drew under the keyboard.
+- a photo, file or voice note could be edited into text.
+- the send estimate for files was wrong.
+- the receiving banner showed for voice notes.
+- atmospheres stuttered.
+- claiming a handle froze the app.
+- adding by handle, or by a used link, failed after the first person. invites carry a lasting key now.
+- messages past a stranger's two are held until you accept.
 
 ### Changed
-- a slow send while online no longer shows "failed · tap to retry". it retries itself and stays pending; failed shows only when the phone cannot send at all, or after six goes.
-- sentence case throughout: every label, hint, button, tab and line starts with a capital. the settings hints are shorter.
-- bridges and transport moved out of about to sit with the network rows. the open source row copies the github link instead of opening it in a browser.
-- the honest part in why kryfo ends on "yet".
-- 32-bit phones: the app ships its engine for armeabi-v7a too, so a galaxy a13 and its kind install and run. and connect: the embedded tor was built with two config headers made on a 64-bit machine, so on a 32-bit phone its event loop never answered and the app sat at "connecting" for good. both headers now follow the target.
-- short screens and large display zoom: the pin pad, the lock screen and every onboarding page scroll instead of dropping their button under the navigation bar. a galaxy a13 with a bigger display zoom could not reach "keep onion", and a pin pad cut off is a phone you cannot get into.
-- the first message to someone new says what it is doing. a line under the composer counts the seconds while the phone proves the message is real; that is seconds on most phones and up to a minute on a slow one. it used to be silence.
-- sheets scroll by default, with the keyboard pushing them up, instead of a fixed nine sixteenths of the screen that cut off the last button on a short phone.
-- memory on a 4 gb phone: every picture decodes at the size of its box instead of the size of the file, a photo or file goes out slice by slice from disk instead of three copies of it sitting in memory, and a received one is rebuilt slice by slice straight to disk. an 8 mb file used to cost fifty to sixty megabytes at both ends, which is how a transfer failed with nothing on screen to say why.
+- photos and files send five pieces at a time and fall back to the relay when the onion stops answering. camera shots are resized like gallery picks.
+- a slow send retries on its own instead of saying failed.
+- sentence case everywhere.
+- bridges and transport sit with the network rows.
+- one screenshot switch for the whole app.
+- the card payment tab and the unused profile name are gone.
+- short screens and large display zoom: pin pads and setup scroll.
+- the first message to someone new shows the proof of work counting.
+- sheets scroll and move up with the keyboard.
+- less memory: pictures decode at display size, files stream from disk.
 
 ## [0.2.6] - 2026-09-12
 
 ### Fixed
-- after the system closed kryfo in the background, it could come back showing "kryfo is on" while receiving nothing at all, until you opened it again. the process the system restarted had no engine in it. it boots on its own now, screen or no screen.
-- every time you reopened kryfo after swiping it out of recents, a second copy of the whole app started inside the same process, and the first one never stopped. two reopens doubled the memory, which is what xiaomi's killer looks for.
-- xiaomi phones were asked for autostart but never for the battery exemption, so they slept through the night with a green notification up. both are asked now.
-- messages already on the phone in onion mode waited for tor's state before being read. they are read as soon as they arrive.
+- after android closed the app in the background it could say "Kryfo is on" and receive nothing.
+- reopening after swiping from recents started a second copy of the app in the same process.
+- xiaomi phones were never asked for the battery exemption.
+- messages already on the phone in onion mode waited for tor before being read.
 
 ### Added
-- a floor under delivery: every fifteen minutes the system runs a short job that reconnects every relay and pulls what is waiting, even after a kill, even in deep sleep windows.
-- transport shows a "staying alive" section: whether the app is listening, when it last checked, when the last message came in, the battery exemption, how long the process has been up, and why it last stopped, in the system's own words. enough to tell asleep from killed without a cable.
+- a background job every fifteen minutes reconnects and fetches what is waiting, even after a kill.
+- transport shows whether the app is listening, the last check, the last message, the battery exemption and why it last stopped.
 
 ## [0.2.5] - 2026-09-12
 
 ### Added
-- link previews that don't phone home. with "add link previews" on, typing a link offers a small add preview pill. tap it and your phone fetches the page title over tor and ships it inside the encrypted message. the other person's phone renders it and asks the network for nothing. their card says so: fetched over tor · by their device. offered only while tor is up, in chats and groups, never in a burner room. a stranger's preview stays plain text.
-- atmospheres. the wallpaper sheet is now the atmosphere picker: six moods, rain, late night, warm afternoon, snow, desert, paper, above the old gradients and patterns. each tap previews live behind the sheet. just for you, they see their own, nothing is ever sent.
-- the contact page shows the three facts as cards: verified, how many of your own contacts vouched, and how long you have been chatting. a zero is never drawn. message and verify keys sit at the bottom as buttons.
+- link previews that don't phone home: your phone fetches the title over tor and sends it inside the message. the other phone fetches nothing.
+- atmospheres: six animated wallpapers.
+- the contact page shows verified, vouches and how long you have been chatting.
 
 ### Changed
-- the reader's link preview setting is gone, along with the tap-to-fetch path. your phone never fetches a link someone sent you.
-- settings is grouped: one surface per section, icon tiles, values on the right, the danger zone in rose.
-- the home is tidier: note to self and saved are two small tiles, the chat list starts higher, and the tabs and status chip are lowercase.
-- the plus sheet is "add someone": scan their code, paste a link or handle, or open every way to add someone.
-- the protections card says off · relay mode instead of connecting forever when tor is not the route.
+- the reader's link preview setting is gone. your phone never fetches a link someone sent you.
+- settings is grouped.
+- a tidier home.
+- the plus sheet is "add someone".
+- the protections card says relay mode instead of connecting forever.
 
 ### Fixed
-- a cold start showed nothing for several seconds on a new phone while the keystore was created. the splash paints first now and says what it is doing.
-- the empty home offered only scan. it offers scan, link and handle.
-- the camera asked for the microphone before a photo. it asks only when you switch to video.
+- a cold start on a new phone showed nothing for several seconds.
+- the empty home only offered scan.
+- the camera asked for the microphone before a photo.
 
 ## [0.2.4] - 2026-09-11
 
 ### Fixed
-- opening an invite link while kryfo was closed did nothing. the contact was never added and nothing said so. the link now waits for the app to finish starting.
-- on a clean install, opening any group threw underneath and its unread count never cleared. every phone we had tested on was an upgrade. fixed for new installs.
-- a backup handed to the share sheet could be zeroed while the other app was still reading it, leaving an empty file to discover at restore time. gone.
-- a link from someone you had not accepted could fetch its title on its own in automatic mode, in the moment before the app knew who they were. it waits now.
-- the photo stripper's self-check could be fooled by a legal but unusual jpeg, and a broken file was copied through untouched. one walker for both now, and a file it cannot read is refused.
-- a video interrupted by a call or a switch to another app left the clip on disk until the next cold start. it is stopped and shredded on the spot.
-- a backspace in the moment after the fourth digit of a new pin could shorten it and guarantee a mismatch.
-- a link followed by a full stop or a closing bracket previewed the wrong address.
-- an attachment that could not be saved, a full phone say, arrived as an empty bubble. the message now says so.
-- if timed messages stop clearing you are told, instead of nothing.
-- cached copies of every file you ever picked stayed in the app cache. shredded the moment they are read.
+- opening an invite link while the app was closed did nothing.
+- on a clean install, opening a group failed and its unread count never cleared.
+- a backup handed to the share sheet could be wiped while the other app was still reading it.
+- a stranger's link could fetch its title before the app knew who they were.
+- the photo cleaner's self-check could be fooled, and a broken file went through. a file it cannot read is refused now.
+- an interrupted video stayed on disk until the next start.
+- a quick backspace after a new pin could shorten it.
+- a link followed by a full stop or bracket previewed the wrong address.
+- an attachment that could not be saved arrived as an empty bubble.
+- you are told if timed messages stop clearing.
+- picked files stayed in the cache.
 
 ### Changed
-- the link preview choice says why it exists, in plain words.
-- every icon-only button has a name for screen readers.
-- the two background prompts sit on the same sheet as every other ask.
-- a phone with no camera can install kryfo, and the legacy storage grant is gone from the listing.
+- the link preview choice says why it exists.
+- every icon button has a name for screen readers.
+- the two background prompts use the same sheet as the rest.
+- phones without a camera can install the app, and the legacy storage permission is gone.
 
 ## [0.2.3] - 2026-09-09
 
 ### Added
-- in-app camera. photos get their exif, location and maker notes stripped before anything else touches them, and nothing lands in your gallery unless you tap keep a copy. video isn't stripped yet and the screen says so.
-- link previews are a choice now. first time you tap one you pick: show them on their own, only when i tap, or not at all. changeable in settings.
+- in-app camera. photos are stripped of exif, location and maker notes, and nothing goes to the gallery unless you keep a copy. video is not stripped yet.
+- link previews are a choice: automatic, on tap, or off.
 
 ### Fixed
-- your phone used to fetch every link you sent, twice, before the message went out, on a plain connection unless you were on onion mode. the site learned your address and that the request came from kryfo. gone.
-- the backup screen left the encrypted file sitting in a cache. so did the file picker, for everything you ever picked. both shredded now, and swept at boot.
-- decrypting a backup froze the screen while it worked.
-- links the keyboard had capitalised never matched, so they showed as plain text.
+- the app fetched every link you sent before sending it, outside tor unless you were on onion mode.
+- the backup screen and the file picker left files in the cache.
+- decrypting a backup froze the screen.
+- links the keyboard had capitalised were not recognised.
 
 ### Changed
-- restore reads as three steps: the file, the passphrase, what comes back. it shows what's in the backup and when it was made before touching anything, and says which of four things went wrong instead of "an error occurred".
-- a stranger's link, and any link in a burner room, stays plain text. no preview offered.
-- previews never load images, only the title.
+- restore is three steps and shows what is in the backup before touching anything.
+- a stranger's link and any link in a burner room stays plain text.
+- previews load the title only, never images.
 
 ## [0.2.2] - 2026-09-08
 
 ### Added
-- introductions. know two people who don't know each other? introduce them. both sides get a request that skips the usual first-contact wait, and each profile shows who vouched. only people you've already added count. a stranger vouched for by strangers shows nothing.
-- scam shield. tells you when a new request is using the name of someone you already know, lookalike letters included. flags the usual stuff in a stranger's first message. runs on your phone, talks to nothing, and never blocks anything for you.
-- burner rooms. group chats that expire and take everything with them. you join under an identity that only exists in that room, so leaving ends it completely. screenshots don't work while a room is open.
-- handles can be looked up now. you could claim one before but nobody could find it.
-- mentions in groups. wallpapers per chat.
+- introductions, with vouches on the profile.
+- scam shield: warns about lookalike names and the usual scam messages. runs on the phone and never blocks anything.
+- burner rooms: group chats that expire, joined under a one-off identity.
+- handle lookup.
+- mentions in groups, wallpapers per chat.
 
 ### Fixed
-- a first message to someone new could quietly never arrive. if the direct send failed and it queued, the retry went out without the proof it needed and the other side dropped it.
-- messages from someone you hadn't accepted stopped arriving after a restart, while the sender still saw them delivered.
-- a chat you'd left stayed in memory with everything still running.
-- home could say nothing was waiting while messages sat queued offline, and never showed queued on the row.
+- a first message to someone new could get lost on retry.
+- messages from someone you had not accepted stopped after a restart.
+- a chat you had left kept running in memory.
+- home could miss messages queued offline.
 
 ### Changed
-- adding someone is rebuilt around what you're actually doing: scanning a code with someone next to you, or sending an invite to someone far away.
-- one page per contact. verification, shared media and vouches together instead of scattered.
-- bridges and the second pin explain themselves properly now.
+- adding someone is rebuilt around scanning in person or sending an invite.
+- one page per contact.
+- bridges and the second pin explain themselves.
 - setup rewritten.
 
 ## [0.2.1] - 2026-09-06
 
-Third pre-alpha. Friends can introduce you, strangers get looked at on your
-phone before you do, and a room can be made to disappear.
-
 ### Added
-- introductions: a contact you accepted can hand you a friend's card. the request skips the stranger gate, shows who vouched, and the introducer has five a week
-- vouches as their own table, so several people you know can vouch for one person and the profile says so
-- scam shield: a stranger's first message and a lookalike name are checked on the phone, with rules that ship in the app. it advises, never blocks
-- burner rooms: a room with an end time, joined under a key made for it alone. late joiners see no history, expiry shreds everything, the screen is shielded while it is open
-- per-room keys in the engine, so a room's relay addresses share nothing with your identity
+- introductions: a contact can hand you a friend's card, five a week.
+- vouches from several contacts.
+- scam shield, advice only.
+- burner rooms with an end time and their own keys.
 
 ### Fixed
-- a stranger's queued first message lost its proof-of-work on retry and was dropped at the far end without a word
-- the screen shield stayed on after leaving a room, and every chat screen leaked its listeners on the way out: an unswiped bubble built its spring inside dispose
-- leaving a room from its info screen closed the app
-- the burn timer deleted rows but never the files behind them
-- release builds no longer print ids, onions or message text to the log
-- grey hex colours replaced by the palette tokens on every screen
+- a stranger's queued first message lost its proof of work on retry.
+- the screen shield stayed on after leaving a room, and chat screens leaked listeners.
+- leaving a room from its info screen closed the app.
+- the burn timer left the files behind.
+- release builds no longer log ids, onions or message text.
+- grey colours replaced by the palette.
 
 ### Changed
-- sharing and switches use the current flutter apis
-- three dependencies nothing imported are gone, and so is the dead status bar
+- current flutter apis for sharing and switches.
+- three unused dependencies removed.
 
 ## [0.2.0] - 2026-09-04
 
-Second pre-alpha. Groups, a relay route that works on its own, and the photo
-bubble finally paints.
-
 ### Added
 - group chats with photos, files, voice notes, replies, reactions and pins
-- relay as a route in its own right, named on every screen, surviving restart
-- obfs4 bridges in process over socks5, with no executable shipped
-- pair codes and a contact card you can share
-- public handles, which follow wipes and invite resets
-- 1200 drawn avatars picked by shape and colour, now offered during setup
-- first contact over a relay, so a stranger reaches you before your onion publishes
-- one apk per abi, each with its own version code
+- relay as a route of its own
+- obfs4 bridges in process, no executable shipped
+- pair codes and a shareable contact card
+- public handles
+- 1200 drawn avatars
+- first contact over a relay
+- one apk per abi
 
 ### Fixed
 - photos drew as a black rectangle in 1:1 chats
-- the first stranger to write could claim the shared first-contact tag, and everyone after them silently failed to pair
-- chats could blank out when two day dividers shared one key
-- a tree with no engine built an apk that died on launch; it now fails at build time
-- boot failures say what went wrong instead of sitting on the tor splash forever
+- the first stranger could claim the shared first-contact tag
+- chats could blank out when two day dividers shared a key
+- a tree with no engine built an apk that crashed on launch
+- boot failures say what went wrong
 
 ## [0.1.0-alpha] - 2026-05-20
 
-First public pre-alpha. Usable for technical testers; not yet ready for everyday use.
+First public pre-alpha, for technical testers.
 
 ### Added
-- 1:1 chat over tor onion v3 (direct p2p) with nostr relays as the store-and-forward fallback
-- libsignal double ratchet end-to-end encryption with x25519 identity keys
-- bip-39 anonymous identities ("thumb-behave-boring") derived from ed25519
-- in-app qr pairing with auto back-pair on first message (no need to scan from both sides)
-- ghost mode - self-destructing messages with 30s / 1m / 5m / 1h / 24h windows
-- reactions - long-press any message for a floating emoji picker
-- reply-to - quote any message in your response
-- app lock with pin + biometric
-- panic pin - second pin that silently wipes the app (looks like a crash)
-- procedurally generated avatars from each kryfo id
-- editorial design language: italic serif accents, jetbrains mono for technical bits, ink + amber palette
-- foreground service + boot receiver + jobscheduler so messages arrive while the phone is locked
-- three privacy modes: fast (1 onion hop), normal (3 hops, default), private (3 hops + nostr mailbox)
-- sqlcipher encrypted local storage
-- backup + restore via encrypted file
-- notes tab - private space, never syncs anywhere
+- 1:1 chat over tor onion v3 with nostr relays as the fallback
+- signal double ratchet with x25519 identity keys
+- anonymous three-word identities
+- qr pairing, paired back on the first message
+- ghost mode: messages that delete themselves after 30s to 24h
+- reactions and replies
+- app lock with pin and biometrics
+- panic pin that wipes the app
+- generated avatars
+- foreground service and boot receiver so messages arrive while locked
+- three privacy modes: fast, normal, private
+- sqlcipher storage
+- encrypted backup and restore
+- notes, never synced
 
-### Privacy posture
-- no telemetry, crash reporting, analytics - ever
+### Privacy
+- no telemetry, crash reporting or analytics
 - no google play services
 - no proprietary blobs
-- no phone numbers, emails, or accounts
-
-### Known limitations
-- group chats not yet implemented (planned next)
-- ios port pending hardware arrival (~sept-oct 2026)
-- no voice messages, files, or rich link embeds yet
+- no phone numbers, emails or accounts
