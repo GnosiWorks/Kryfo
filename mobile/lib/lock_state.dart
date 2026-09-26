@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// lock_state.dart - the app lock. the pins live in one table the engine
-// keeps (engine/pin.go): eight entries of one size, so what is stored does
-// not say which pins exist, and one check that does the same work whatever
-// was typed. everything a check needs is read once in load(); a check reads
-// nothing and writes exactly one value, whatever it turns out to be. the
-// outcome is shown at one moment after the tap, the same for every pin.
+// the app lock. the pins live in the engine's table (engine/pin.go). a check
+// reads nothing, writes one value and does the same work whatever was typed,
+// and every outcome shows at the same moment after the tap.
 
 import 'dart:async';
 import 'dart:convert';
@@ -70,8 +67,8 @@ abstract class LockStore {
 }
 
 class SecureLockStore implements LockStore {
-  // resetOnError off: on a read error the plugin used to delete every key,
-  // the database passphrase with them
+  // resetOnError off: on a read error the plugin deletes every key, the
+  // database passphrase with them
   static const _s = FlutterSecureStorage(
     aOptions: AndroidOptions(
       encryptedSharedPreferences: true,
@@ -410,8 +407,8 @@ class LockCounters {
   }
 }
 
-// set once the decoy session exists (step 1, piece 5). until then a decoy
-// match counts as a wrong pin, so it can never open the everyday app
+// set once the decoy session exists. until then a decoy match counts as a
+// wrong pin, so it can never open the everyday app
 bool decoyReady = false;
 
 class LockState extends ChangeNotifier {
@@ -452,7 +449,7 @@ class LockState extends ChangeNotifier {
   // whether the decoy has a wipe pin, or a decoy pin, of its own
   static const _kDWipe = 'halo.lock.d.wipe';
   static const _kDDecoy = 'halo.lock.d.decoy';
-  // from before the table: sha256("salt:pin"), kept until migrated
+  // legacy sha256("salt:pin") keys, kept until migrated
   static const _kHash = 'halo.lock.pin_hash';
   static const _kSalt = 'halo.lock.pin_salt';
   static const _kPanicHash = 'halo.lock.panic_hash';
@@ -486,11 +483,9 @@ class LockState extends ChangeNotifier {
   bool get bioSupported => _bioSupported;
   bool get panicEnabled => _inDecoy ? _dWipe : _panicEnabled;
 
-  // a decoy session is open (the session switch says so). the App lock
-  // screen then works on the decoy's own entries: its pin, its wipe pin, its
-  // decoy pin. a pin that clashes with one it cannot see is taken and kept
-  // nowhere, so nothing there says another exists; turning the lock off
-  // only pauses it until the next start
+  // a decoy session is open: the App lock screen works on the decoy's own
+  // entries. a pin that clashes with one it cannot see is taken and kept
+  // nowhere, and turning the lock off only pauses it until the next start
   bool _inDecoy = false;
   bool get inDecoy => _inDecoy;
   set inDecoy(bool v) {
@@ -506,7 +501,7 @@ class LockState extends ChangeNotifier {
   bool get decoyPinOn => _dDecoy;
   // a decoy session is open: nothing may notify
   bool get quiet => _counters.quiet;
-  // the old wipe pin is still the sha256 kind: App lock asks for it again
+  // the wipe pin is still the legacy kind: App lock asks for it again
   bool get legacyWipe => (_legacy['ws'] ?? '').isNotEmpty;
 
   Duration get throttleLeft {
@@ -529,7 +524,7 @@ class LockState extends ChangeNotifier {
         'wh': await _store.read(_kPanicHash) ?? '',
       };
       var c = LockCounters.parse(await _store.read(_kState));
-      // misses and a hold from before the table
+      // legacy misses and hold move into the counters
       final oldMisses = int.tryParse(await _store.read(_kMisses) ?? '');
       if (oldMisses != null) {
         final oldUntil = int.tryParse(await _store.read(_kUntil) ?? '') ?? 0;
@@ -652,8 +647,7 @@ class LockState extends ChangeNotifier {
 
     final left = revealAfter - built;
     if (left > Duration.zero) await Future.delayed(left);
-    // profile builds only, and only times: how close every outcome comes
-    // to the moment it is shown
+    // profile builds only, and only timings
     if (kProfileMode) {
       debugPrint(
         'lock: ready ${built.inMilliseconds} ms, shown '
@@ -679,8 +673,7 @@ class LockState extends ChangeNotifier {
         }),
       );
     }
-    // an everyday unlock with the old kind of pin moves it into the table,
-    // after the screen has already opened
+    // a legacy pin moves into the table after the screen has opened
     if (result == PinResult.normal &&
         kind != PinKind.everyday &&
         r['la'] == true) {
@@ -773,10 +766,9 @@ class LockState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // "Enter your PIN" before any Advanced protection flow: the pin of the
-  // session that is open. a miss counts as it would on the lock screen, the
-  // wipe pin wipes as it would there, and an old sha256 pin moves into the
-  // table here too, for people who only ever used their fingerprint
+  // "Enter your PIN" before an Advanced protection flow. misses and the wipe
+  // pin count as on the lock screen, and a legacy pin moves into the table
+  // here too, for people who only unlock by fingerprint
   Future<PinResult> confirmPin(String pin) async {
     final uptime = await _clock.uptimeMs();
     final boot = await _clock.bootCount();

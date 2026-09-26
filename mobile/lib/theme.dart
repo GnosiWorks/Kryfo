@@ -273,14 +273,13 @@ Future<void> copySensitive(String value) async {
   });
 }
 
-// the app's scaffold messenger, set on the MaterialApp. toasts no longer go
-// through it (they are kryfo's own, in the root overlay, below).
+// the app's scaffold messenger, set on the MaterialApp. toasts use the root
+// overlay below
 final GlobalKey<ScaffoldMessengerState> haloMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
-/// the root overlay, set by the app at start. a toast lives there, over
-/// every route and sheet, so it never depends on the screen that asked for
-/// it still being alive
+/// the root overlay, set at start. a toast lives there, over every route
+/// and sheet, so it never depends on the screen that asked for it
 OverlayState? Function()? haloToastOverlay;
 
 OverlayEntry? _toastEntry;
@@ -291,9 +290,6 @@ void _dropToast(OverlayEntry e) {
   if (_toastKeys.remove(e) != null) e.remove();
 }
 
-/// a short line at the top of the screen: it drops in with a small spring,
-/// stays three and a half seconds, and goes up and out; a tap or a flick
-/// up sends it sooner. a new one takes the place of the one showing.
 /// the app lock's say, set at start: a toast shown while it is up waits
 /// for it to lift
 Future<void> Function(Future<void> Function() act)? haloWhenOpen;

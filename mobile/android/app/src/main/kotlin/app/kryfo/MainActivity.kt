@@ -82,9 +82,8 @@ class MainActivity : FlutterFragmentActivity() {
         // resume also follows every start. an app that still holds it open
         // keeps its descriptor; the name is gone.
         clearOpenCopies()
-        // the notification ask is android's own dialog and it would open over
-        // the app lock's pin pad: dart asks for it (askNotifications) once
-        // the lock is down
+        // dart asks for notifications (askNotifications) once the lock is
+        // down, so android's dialog never opens over the pin pad
         startListenerService()
         schedulePeriodicJob()
     }
@@ -184,8 +183,8 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
-    // the last word from dart on screenshots, kept here so the next start's
-    // first frame is covered before dart has said anything
+    // dart's last screenshot setting, kept so the next start's first frame is
+    // covered before dart runs
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         if (getSharedPreferences("kryfo_window", MODE_PRIVATE).getBoolean("secure", false)) {
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)

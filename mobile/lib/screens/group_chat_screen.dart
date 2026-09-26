@@ -211,7 +211,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         if (link != null && mounted) await showRoomLinkSheet(context, link);
       }
     });
-    // opened while the lock is up (it never is by hand): read once it lifts
+    // opened under the lock: marked read once it lifts
     lockGuard.isLocked() ? _underLock = true : _markRead();
     // restore a draft left behind last time this group was open.
     _msgCtrl.text = _draftPerGroup[widget.groupId] ?? '';
@@ -528,8 +528,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       }
       final members = await session.getGroupMembers(widget.groupId);
       _me = await appState.meIn(widget.groupId);
-      // keep whatever window the user has expanded to - a mid-scroll reaction
-      // used to collapse the list back to one page and yank the view.
+      // keep whatever window the user has expanded to, so a mid-scroll
+      // reaction does not collapse the list back to one page
       final wantAll =
           _searching ||
           _pagedOut ||
@@ -670,11 +670,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
   }
 
-  // a reload rebuilds every row from the database. a message already
-  // leaving keeps its own row, so the burn and fold carry on; one that is
-  // gone from the database since (unsent by its sender, burned) stays a
-  // moment longer and leaves the same way instead of popping out and
-  // making the rest jump. placed by time, the list's order.
+  // a reload rebuilds every row from the database. a message already leaving
+  // keeps its row so the burn and fold carry on, and one gone from the
+  // database since leaves the same way, placed by time, instead of popping out
   void _keepLeaving(List<_GMsg> before) {
     final old = {
       for (final m in before)
@@ -1282,8 +1280,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final burnSeconds = _ghost ? _burnSeconds : null;
     final poll = PollSpec(options: d.options, multi: d.multi);
     // on screen at once, like a typed message, and settled by this send
-    // when it is done: a row that only the database said was sending kept
-    // the screen from reloading, votes and all
+    // when it is done, so a row stuck sending never blocks the reload
     final optimistic =
         _GMsg(
             sender: appState.sessionId,
@@ -2520,10 +2517,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         state == AppLifecycleState.inactive) {
       releaseChat('group:${widget.groupId}');
     } else if (state == AppLifecycleState.resumed) {
-      // only re-claim the marker while it is really being looked at: the
-      // visible route with no lock over it, else backing out and resuming
-      // later leaves the group marked open and its badge dead. under the
-      // lock the claim waits for _lockLifted.
+      // only re-claim the marker as the visible route with no lock over it,
+      // else backing out and resuming later leaves the group marked open and
+      // its badge dead. under the lock the claim waits for _lockLifted.
       if (!onScreen(context)) {
         releaseChat('group:${widget.groupId}');
         return;
@@ -3655,8 +3651,8 @@ class _GroupBubble extends StatelessWidget {
                                     ? EdgeInsets.zero
                                     : const EdgeInsets.fromLTRB(12, 8, 12, 9),
                                 decoration: BoxDecoration(
-                                  // any photo goes edge-to-edge, no bubble fill,
-                                  // so there's no amber/grey frame (1:1 look).
+                                  // a photo or video goes edge to edge with no
+                                  // bubble fill, so no amber or grey frame
                                   color: frameless
                                       ? Colors.transparent
                                       : (isOut
@@ -3861,9 +3857,10 @@ class _GroupBubble extends StatelessWidget {
                                                   if (m.text.isEmpty &&
                                                       !m.failed)
                                                     PositionedDirectional(
-                                                      // chip hangs right on out,
-                                                      // left on in - time takes
-                                                      // the free corner.
+                                                      // the reaction chip hangs
+                                                      // at the end on out, the
+                                                      // start on in; the time
+                                                      // takes the free corner
                                                       end: isOut ? null : 8,
                                                       start: isOut ? 8 : null,
                                                       bottom: 8,
@@ -3912,16 +3909,17 @@ class _GroupBubble extends StatelessWidget {
                                                     m.text,
                                                     HaloType.sans(
                                                       size: 14,
-                                                      // captions get a touch more weight
-                                                      // so they read over busy images.
+                                                      // captions get more
+                                                      // weight to read over
+                                                      // busy images
                                                       weight:
                                                           m.mediaPath != null
                                                           ? FontWeight.w600
                                                           : FontWeight.w400,
-                                                      // a photo caption sits on a transparent
-                                                      // bubble (no amber), so onAmber would be
-                                                      // invisible - use the readable color.
-                                                      // text-only out messages keep onAmber.
+                                                      // a photo caption sits
+                                                      // on a transparent
+                                                      // bubble, where onAmber
+                                                      // is invisible
                                                       color:
                                                           (isOut &&
                                                               m.mediaPath ==
@@ -3963,9 +3961,9 @@ class _GroupBubble extends StatelessWidget {
                                                   ),
                                               decoration: BoxDecoration(
                                                 // an outgoing photo sits on a
-                                                // transparent bubble, so onAmber
-                                                // (dark) was invisible there -
-                                                // media rows take the amber look.
+                                                // transparent bubble where
+                                                // onAmber (dark) is invisible,
+                                                // so media rows take amber
                                                 color:
                                                     (isOut &&
                                                         m.mediaPath == null)
@@ -4021,7 +4019,7 @@ class _GroupBubble extends StatelessWidget {
                                               style: HaloType.mono(
                                                 size: 9.5,
                                                 // out photo bubble is transparent:
-                                                // onAmber (dark) vanished there.
+                                                // onAmber (dark) vanishes there
                                                 color: (isOut && !frameless)
                                                     ? HaloColors.onAmber
                                                           .withValues(
@@ -4032,11 +4030,10 @@ class _GroupBubble extends StatelessWidget {
                                                     : HaloColors.text3,
                                               ),
                                             ),
-                                          // sent tick, matching 1:1: outgoing +
-                                          // delivered, only where the row-time shows
-                                          // (skip caption-less photos, time's on the
-                                          // image there). photo bubble is
-                                          // transparent so use a readable color.
+                                          // sent tick: outgoing and delivered,
+                                          // only where the row time shows. a
+                                          // photo bubble is transparent, so it
+                                          // takes a readable colour.
                                           if (isOut &&
                                               !m.pending &&
                                               !m.looksFailed &&

@@ -102,8 +102,8 @@ Future<void> shareContactCard({
   required String haloId,
   required String uri,
 }) async {
-  // it is drawn off screen and captured, and under the lock nothing is
-  // drawn: it waits for the lock to lift, and gives up if a decoy opens
+  // the card is captured off screen and nothing draws under the lock, so
+  // wait for it to lift, and give up if a decoy opens
   try {
     await lockGuard.unlocked();
   } on LockDropped {

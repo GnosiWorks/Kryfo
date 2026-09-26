@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // text folded for comparing: lowercase, no accents, and the arabic-script
 // letters keyboards spell differently made one. the wipe word and search
-// both compare this way, so "xoa" finds "xóa" and a persian word typed with
-// an arabic kaf finds the one written with the persian one.
+// both compare this way.
 
 const _accented =
     'ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïñòóôõöùúûüýÿĀāĂăĄąĆćĈĉĊċČčĎďĒēĔĕĖėĘęĚěĜĝĞğĠġĢģĤĥĨĩĪīĬĭĮįİĴĵĶķĹĺĻļĽľŃńŅņŇňŌōŎŏŐőŔŕŖŗŘřŚśŜŝŞşŠšŢţŤťŨũŪūŬŭŮůŰűŲųŴŵŶŷŸŹźŻżŽžƠơƯưǍǎǏǐǑǒǓǔǕǖǗǘǙǚǛǜǞǟǠǡǦǧǨǩǪǫǬǭǰǴǵǸǹǺǻȀȁȂȃȄȅȆȇȈȉȊȋȌȍȎȏȐȑȒȓȔȕȖȗȘșȚțȞȟȦȧȨȩȪȫȬȭȮȯȰȱȲȳẠạẢảẤấẦầẨẩẪẫẬậẮắẰằẲẳẴẵẶặẸẹẺẻẼẽẾếỀềỂểỄễỆệỈỉỊịỌọỎỏỐốỒồỔổỖỗỘộỚớỜờỞởỠỡỢợỤụỦủỨứỪừỬửỮữỰựỲỳỴỵỶỷỸỹđĐıøØłŁ';
@@ -27,9 +26,8 @@ const _arabicForms = {
   0x0622: 'ا', // alef with madda
 };
 
-/// true for marks that never change a word: combining accents, arabic
-/// vowel marks and the tatweel, the zero-width non-joiner and direction
-/// marks
+/// marks that never change a word: combining accents, arabic vowel marks,
+/// the tatweel, joiners and direction marks
 bool _dropped(int r) =>
     (r >= 0x0300 && r <= 0x036F) ||
     (r >= 0x064B && r <= 0x065F) ||

@@ -72,11 +72,8 @@ Widget _stillFade(Widget child) => TweenAnimationBuilder<double>(
   child: child,
 );
 
-/// every way a message leaves a chat: its timer, unsend, a stopped send, a
-/// delete from the other side. the bubble burns itself (BurnFade, like a
-/// timed message); this is its row, which waits [after] for the burn and
-/// then folds shut, fading whatever else is on it (a name, a face), so the
-/// messages around it glide together instead of jumping.
+/// the row of a message leaving a chat: it waits [after] for the bubble's
+/// burn, then folds shut so the messages around it glide together
 class LeaveFold extends StatelessWidget {
   final bool leaving;
   final Duration after;
@@ -94,8 +91,7 @@ class LeaveFold extends StatelessWidget {
     final total = still ? const Duration(milliseconds: 160) : after + _kFold;
     final wait = still ? 0.0 : after.inMicroseconds / total.inMicroseconds;
     // the same widgets above the child whether it is leaving or not: a
-    // change of shape here rebuilds the bubble from nothing, and its burn
-    // starts over mid-fold (the whole bubble came back for a frame)
+    // change of shape here rebuilds the bubble and restarts its burn
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: leaving ? 1.0 : 0.0),
       duration: total,

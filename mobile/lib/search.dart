@@ -1,15 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// search across every chat, on this phone. the words of each message are
-// kept in a full-text index inside the encrypted database, never in a file
-// of their own, and they leave it with the message: a burn, an unsend, a
-// cleared chat, a wipe.
-//
-// what goes into the index, and what a query becomes, is the same folded
-// text (see text_fold.dart), so "cafe" finds "café", a persian word typed
-// with an arabic kaf finds the persian one, and a zero-width non-joiner
-// typed or not makes no difference. chinese has no spaces between words:
-// each character is its own token, and a query is a phrase of them, so a
-// word of any length is found where its characters stand side by side.
+// search across every chat, on this phone. the words sit in a full-text
+// index inside the encrypted database and leave it with the message.
+// the index and a query hold the same folded text (text_fold.dart), so
+// "cafe" finds "café". chinese has no spaces: each character is a token
+// and a query is a phrase of them.
 import 'text_fold.dart';
 
 /// characters written without spaces between words: each one a token

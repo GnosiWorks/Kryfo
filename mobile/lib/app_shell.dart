@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// app_shell.dart - the app's MaterialApp, in one place for the app and its
-// tests: the lock's tests pump exactly what the app runs, so anything that
-// one day goes between the navigator and the lock shows up in them.
+// the app's MaterialApp, shared with the lock's tests so they pump exactly
+// what the app runs
 import 'package:flutter/material.dart';
 
 import 'l10n/app_localizations.dart';
@@ -17,8 +16,7 @@ MaterialApp haloAppShell({
 }) {
   return MaterialApp(
     navigatorKey: navigatorKey,
-    // what the navigator says about back goes to android through the lock:
-    // while it is up, back is dart's, and goes nowhere
+    // back reaches android through the lock, which keeps it while it is up
     onNavigationNotification: lockBack.navigation,
     scaffoldMessengerKey: haloMessengerKey,
     title: 'Kryfo',
@@ -29,7 +27,7 @@ MaterialApp haloAppShell({
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     // one place for the two accessibility settings everything else should
-    // obey. clamped rather than uncapped - past 1.6 the chat bubbles stop
+    // obey. clamped rather than uncapped: past 1.6 the chat bubbles stop
     // being readable, which helps nobody.
     builder: (ctx, child) {
       final mq = MediaQuery.of(ctx);
@@ -40,15 +38,14 @@ MaterialApp haloAppShell({
             maxScaleFactor: 1.6,
           ),
         ),
-        // the lock sits here, above the navigator itself, so it covers
-        // every screen, sheet, menu and toast the app draws. nothing may go
-        // between this MediaQuery and the lock.
+        // the lock sits here, above the navigator, so it covers every
+        // screen, sheet, menu and toast. nothing may go between this
+        // MediaQuery and the lock.
         child: lock(child ?? const SizedBox.shrink()),
       );
     },
     // one scroll feel everywhere: ios-style rubber-band on every platform,
-    // no stretch-glow. the single biggest "premium" tell, and it was unset
-    // so android fell back to the clamp+glow default.
+    // no stretch-glow
     scrollBehavior: const HaloScrollBehavior(),
     home: home,
   );
@@ -61,5 +58,5 @@ class HaloScrollBehavior extends ScrollBehavior {
       const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
   @override
   Widget buildOverscrollIndicator(BuildContext context, Widget child, _) =>
-      child; // no glow - the bounce is the feedback
+      child; // no glow, the bounce is the feedback
 }

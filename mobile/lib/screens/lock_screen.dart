@@ -72,9 +72,8 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
     WidgetsBinding.instance.addPostFrameCallback((_) => _fingerWhenInFront());
   }
 
-  // the prompt only while the app is in front. the pad goes up as the app
-  // leaves, in a frame drawn in the background, and a prompt asked for
-  // there would go to a stopped screen and not be there on the way back
+  // the prompt only while the app is in front: the pad goes up as the app
+  // leaves, and a prompt asked for then is gone on the way back
   AppLifecycleListener? _toFront;
   void _fingerWhenInFront() {
     if (!mounted || !_fingerReady) return;

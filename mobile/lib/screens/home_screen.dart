@@ -243,8 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: HaloNavBar(
                 active: _tab,
                 onPick: _pick,
-                // the developer screen is for debug builds only: it reads
-                // the everyday data and could turn the lock off without a pin
+                // the developer screen is for debug builds only
                 onMeLongPress: kDebugMode ? widget.onOpenDev : null,
               ),
             ),
@@ -1784,10 +1783,8 @@ class _ContactList extends StatelessWidget {
 bool _homeEntered = false;
 bool _enterUnderLock = false;
 
-// the app came out from under the lock. rows built under it have waited for
-// their entrance and play it now; from here on no row plays one. a decoy's
-// home, built under the lock before the first reveal, plays it the same way
-// as the everyday one would, and after that neither does
+// the app came out from under the lock: rows built under it play their
+// entrance now, and no row plays one after
 void homeRevealed() {
   if (_enterUnderLock) _homeEntered = true;
 }

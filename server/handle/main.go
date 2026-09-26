@@ -48,10 +48,9 @@ type entry struct {
 	Bio       string `json:"bio"`
 	Pubkey    string `json:"pubkey"`
 	ClaimedAt int64  `json:"claimed_at"`
-	// in search only when the owner asked for it, under a name they chose.
-	// every handle claimed before search existed has none of these and
-	// stays out of it until its owner opts in. ListedAt is the time on the
-	// owner's last signed change, so an older one cannot be replayed.
+	// in search only when the owner opts in, under a name they chose.
+	// ListedAt is the time on their last signed change, so an older one
+	// cannot be replayed
 	Listed   bool   `json:"listed,omitempty"`
 	Name     string `json:"name,omitempty"`
 	ListedAt int64  `json:"listed_at,omitempty"`
@@ -230,8 +229,8 @@ func main() {
 	log.Fatal(newServer(addr, st, newLimiter(2, 20)).ListenAndServe())
 }
 
-// the server: the routes, and a counter on every connection so search can
-// be limited per connection. no address is kept, only the count.
+// a counter on every connection so search can be limited per connection.
+// no address is kept, only the count.
 func newServer(addr string, st *store, lim *limiter) *http.Server {
 	return &http.Server{
 		Addr:              addr,
@@ -262,7 +261,7 @@ func routes(st *store, lim *limiter) http.Handler {
 			}
 			raw = body.H
 		case r.Method == http.MethodGet:
-			// apps up to 0.4.1 still ask in the url. drop this once they are gone
+			// todo: older apps ask in the url, drop this once they are gone
 			raw = r.URL.Query().Get("h")
 		default:
 			refuseCode(w, http.StatusMethodNotAllowed, "post the name in the body")
@@ -492,17 +491,11 @@ body{margin:0;min-height:100vh;background:#0D0B09;color:#F5F1EA;
 
 // ---- search ----
 //
-// people who asked to be found can be found by their handle or the name they
-// gave. nobody else: a handle and being searchable are separate choices, and
-// every handle claimed before this existed stays out until its owner opts
-// in. what a search asked for is never written down anywhere: there is no
-// log line in this file, the server's error log is discarded, and the
-// answer is marked not to be stored.
-//
-// scraping the list is made slow rather than impossible: at least three
-// characters, no wildcards, twenty answers at most, a cap per connection and
-// one for the whole service. the requests come in over tor, so there is no
-// address to limit by, and none is kept.
+// only owners who opted in can be found, by handle or given name. a query is
+// never written down: no log line here, the error log is discarded and the
+// answer is marked not to be stored. scraping is slowed by a three-character
+// minimum, no wildcards, twenty answers and caps per connection and for the
+// service. requests come over tor, so there is no address to limit by.
 
 const (
 	searchMax       = 20
@@ -623,10 +616,8 @@ func listingHandler(st *store) http.HandlerFunc {
 	}
 }
 
-// what someone typed, as it is matched: lowercase, no leading @, single
-// spaces. ok when it is 3 to 32 characters of letters, digits, spaces and
-// _ - . with at least three letters or digits: nothing that works as a
-// wildcard, and nothing short enough to sweep the list.
+// the query as it is matched: lowercase, no leading @, single spaces. ok
+// only without wildcards and long enough not to sweep the list
 func searchQuery(raw string) (string, bool) {
 	q := strings.ToLower(strings.TrimSpace(raw))
 	q = strings.TrimPrefix(q, "@")

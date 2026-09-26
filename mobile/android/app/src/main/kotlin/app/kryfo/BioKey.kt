@@ -13,11 +13,9 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 
-// fingerprint unlock tied to a key the phone throws away when a finger is
-// added. someone who knows the phone's own screen lock could otherwise add
-// their finger and open kryfo with it. the key guards nothing; a signature
-// with it only proves the finger was enrolled before fingerprint unlock was
-// turned on. android 9 and later: older phones do not get fingerprint unlock.
+// fingerprint unlock tied to a key the phone drops when a finger is added,
+// so only fingers enrolled before it was turned on open kryfo. the key
+// guards nothing, using it is the proof. android 9 and later.
 object BioKey {
     private const val ALIAS = "kryfo_bio_unlock"
 

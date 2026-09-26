@@ -79,9 +79,8 @@ Future<void> saveSupporterTier(
   await prefs.setString(c.key(_tierKey), t.name);
 }
 
-// the signed receipt from the bitcoin path. keeping it means the badge stays
-// provable offline for good - the alternative was trusting a bare string in
-// prefs, which proves nothing.
+// the signed receipt from the bitcoin path: the badge stays provable offline,
+// where a bare string in prefs proves nothing
 Future<void> saveBadgeReceipt(
   String payload,
   String sig, [

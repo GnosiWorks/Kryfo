@@ -1,17 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // direction controls out of what other people write, before kryfo keeps or
-// shows it.
-//
-// they come out of messages, names, file names, link titles, room names,
-// and out of anything pasted, captioned or edited before it is kept. the
-// words read the same without them, and each message is laid out in the
-// direction of its own words anyway, by its first letter. nobody needs them
-// in a message, so every one goes: isolates, embeddings, overrides and the
-// plain marks. the joiners stay, persian needs them. an override is also
-// how a file called "gpj.exe" reads as "exe.jpg". each message is laid out
-// in its own direction anyway (writtenDir). the app's own sentences carry
-// their isolates in the translations, kept to one plain shape by a test,
-// and never pass through here.
+// shows it. nobody needs them in a message, and an override is how a file
+// called "gpj.exe" reads as "exe.jpg". the joiners stay, persian needs them.
+// the app's own strings carry their isolates and never pass through here.
 import 'package:flutter/services.dart';
 
 final _controls = RegExp('[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]');

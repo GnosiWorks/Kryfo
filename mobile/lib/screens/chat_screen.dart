@@ -553,11 +553,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   final Map<String, _Msg> _byUid = {};
 
-  // a reload rebuilds every row from the database. a message already
-  // leaving keeps its own row, so the burn and fold carry on; one that is
-  // gone from the database since (the other side unsent it, its timer ran
-  // out) stays a moment longer and leaves the same way instead of popping
-  // out and making the rest jump.
+  // a reload rebuilds every row from the database. a message already leaving
+  // keeps its row so the burn and fold carry on, and one gone from the
+  // database since leaves the same way instead of popping out
   void _keepLeaving(List<_Msg> before) {
     final old = {
       for (final m in before)
@@ -688,7 +686,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     appState.loadSendMode();
     lockState.addListener(_lockLifted);
     claimChat(widget.peerHaloId);
-    // opened while the lock is up (it never is by hand): read once it lifts
+    // opened under the lock: marked read once it lifts
     lockGuard.isLocked() ? _underLock = true : _markRead();
     _unreadAfterMs =
         _lastReadPerPeer[widget.peerHaloId] ??
@@ -2283,8 +2281,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       msg.sending = true;
       _status = '';
     });
-    // a stranger's opener rides its nonce again. without it the far side's
-    // gate dropped every manual retry of a first message, quietly.
+    // a stranger's opener rides its nonce again, or the far side's gate
+    // drops the retry
     final nonce = msg.msgUid == null
         ? null
         : await session.powNonceOf(msg.msgUid!);
@@ -3312,12 +3310,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       });
       return;
     }
-    // first-contact proof-of-work: grind a nonce (~2s, off the ui thread) while
-    // the peer hasn't back-paired with us. until they reply they still see us as
-    // a stranger and their gate requires the pow. once _peerEngaged flips we stop.
-    // keyed off _peerEngaged not _accepted: _accepted defaults true (avoids a
-    // banner flash) and races the db load, so it would skip the grind on a fast
-    // first send. seed is the raw text - matches the receiver's verifyPow.
+    // first-contact proof of work, ground off the ui thread: until they have
+    // written to us their gate sees a stranger. the seed is the raw text, as
+    // the receiver's verifyPow expects.
     int? powNonce;
     final String cipher;
     try {
@@ -3504,11 +3499,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         state == AppLifecycleState.inactive) {
       releaseChat(widget.peerHaloId);
     } else if (state == AppLifecycleState.resumed) {
-      // only re-claim "this chat is open" if it is really being looked at:
-      // the visible route, with no lock over it. without the check, backing
-      // out to home and resuming later left this peer marked as open
-      // forever, and their unread dot never lit again. under the lock the
-      // claim waits for _lockLifted.
+      // only re-claim "this chat is open" as the visible route with no lock
+      // over it, or a backed-out chat stays open for good and its unread dot
+      // never lights. under the lock the claim waits for _lockLifted.
       if (!onScreen(context)) {
         releaseChat(widget.peerHaloId);
         return;

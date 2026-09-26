@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// pin_flow_screen.dart - setting up an extra pin, one step at a time: what
-// it does and what it does not, the pin that opens this session, the new pin
-// twice, done. the words change above the pad; the pad stays where it is.
+// setting up an extra pin step by step: what it does, the current pin, the
+// new pin twice. the words change above the pad; the pad stays where it is.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

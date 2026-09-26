@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// container.dart - identity containers. a container is one database file
-// under its own key, its own media folder and its own slice of settings,
-// and a word on how the engine treats the identity inside. the everyday
-// container keeps every path it had before containers existed. the decoy is
-// the first other one; the vault and personas come later on the same shape.
+// identity containers: each one is a database under its own key, its own
+// media folders and its own slice of settings
 
 import 'dart:io';
 import 'dart:math';
@@ -39,13 +36,11 @@ class HaloContainer {
   final String dbFile;
   // where its database key sits in secure storage
   final String keyName;
-  // its folders in the documents folder carry this after their name:
-  // media, wallpapers ('' for the everyday ones, as before)
+  // after the media and wallpapers folder names, '' for the everyday one
   final String suffix;
-  // settings namespace: '' is the everyday one, as before containers
+  // settings prefix, '' for the everyday one
   final String prefix;
-  // a raw 32-byte key (sqlcipher skips its key derivation) rather than the
-  // passphrase the everyday database has always had
+  // a raw 32-byte key, so sqlcipher skips its key derivation
   final bool rawKey;
 
   bool get quiet => binding == Binding.quiet;
@@ -170,9 +165,8 @@ Future<void> sweepContainers(Set<String> listed) async {
   }
 }
 
-// an identity's own settings: a decoy starts without them and keeps its own
-// (decoy-step1/SETTINGS-KEYS.md). the transport screen's history is kept
-// once for the phone and shown in a decoy only from when it opened
+// an identity's own settings: a decoy starts without them and keeps its own.
+// the transport screen's history is kept once for the phone
 const containerKeys = {
   'my_handle',
   'my_handle_bio',

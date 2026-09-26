@@ -34,9 +34,7 @@ class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
   @override
   void initState() {
     super.initState();
-    // no .then() without a catch: this used to be the only thing standing
-    // between the old screen and a blank page, and a throw here left it
-    // blank for good.
+    // no .then() without a catch: a throw here must not break the page
     loadHideNotifContent(session.container)
         .then((v) {
           if (mounted) setState(() => _hidePreview = v);

@@ -169,9 +169,8 @@ func handlePost(path string, body []byte) string {
 	return "ok"
 }
 
-// the text an owner signs to go into search or out of it. the registry
-// builds the same one (server/handle, listingMsg); a test on each side pins
-// it to the same line.
+// the text an owner signs to list or unlist a handle. the registry builds
+// the same one (server/handle, listingMsg).
 func handleListingMsg(h string, listed bool, ts int64, name string) string {
 	l := "0"
 	if listed {
@@ -182,10 +181,9 @@ func handleListingMsg(h string, listed bool, ts int64, name string) string {
 
 //export HaloHandleListing
 //
-// in search or out of it: "1" puts the handle in the registry's search
-// under name, "0" takes it out. a handle and being findable are separate:
-// claiming one never lists it. signed with the identity key, with the time,
-// so the registry takes each change once and in order.
+// "1" lists the handle in the registry's search under name, "0" takes it
+// out. claiming a handle never lists it. signed with the time so the
+// registry takes each change once and in order.
 func HaloHandleListing(cHandle *C.char, cListed *C.char, cName *C.char) *C.char {
 	h := strings.ToLower(strings.TrimSpace(C.GoString(cHandle)))
 	if !handleOK.MatchString(h) {

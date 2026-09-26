@@ -965,9 +965,7 @@ class HaloDb {
 
   Database? _db;
 
-  // 32 bytes from the platform csprng. the old version derived the key from
-  // the launch timestamp - brute-forceable offline down to the microsecond
-  // the app first opened.
+  // 32 bytes from the platform csprng
   Future<String> _passphrase() async {
     var pw = await _storage.read(key: container.keyName);
     if (pw != null) return pw;
@@ -1146,7 +1144,7 @@ class HaloDb {
           try {
             await db.execute('ALTER TABLE messages ADD COLUMN poll TEXT');
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
           await _pollTables(db);
         }
@@ -3009,7 +3007,6 @@ class HaloDb {
     await db.delete('edits_out', where: 'msg_uid = ?', whereArgs: [msgUid]);
   }
 
-  // did this sender write this row. what edit and unsend frames check.
   // ---- polls ----
 
   /// the poll on a row, the chat it is in, and whether it is ours
@@ -3174,6 +3171,7 @@ class HaloDb {
     await db.delete('polls_gone', where: 'at < ?', whereArgs: [cut]);
   }
 
+  // did this sender write this row. what edit and unsend frames check.
   Future<bool> isTheirs(String msgUid, String sender) async {
     final db = await open();
     final r = await db.query(
@@ -3653,11 +3651,10 @@ class HaloDb {
   }
 }
 
-// search: the words of every message in a full-text index, in this
-// encrypted database and nowhere else. a message's words leave with the
-// message, whichever way it goes - a burn, an unsend, a cleared chat -
-// because the trigger removes them, not each delete. a wipe takes the whole
-// file. search_meta says how far the first fill of an older history got.
+// search: every message's words in a full-text index, in this encrypted
+// database and nowhere else. a trigger takes a message's words with it
+// however it goes (burn, unsend, cleared chat), not each delete. search_meta
+// says how far the first fill of an older history got.
 Future<void> searchTables(Database db, {bool fresh = false}) async {
   await db.execute(
     'CREATE VIRTUAL TABLE IF NOT EXISTS msg_fts USING fts5('
@@ -3707,9 +3704,9 @@ Future<List<Map<String, Object?>>> runSearchQuery(
   final args = <Object?>[];
   final kw = kindWhere(kind);
   if (kw.isNotEmpty) where.add(kw);
-  // newest first by row id, which is the order messages arrived in: the
-  // index walks its ids backwards and stops at the limit, where sorting by
-  // time had to sort every match of a common word first
+  // newest first by row id, the order messages arrived in: the index walks
+  // its ids backwards and stops at the limit. sorting by time would sort
+  // every match of a common word first
   final String from;
   final String order;
   if (match != null) {
@@ -3770,9 +3767,8 @@ Future<void> indexSearchRow(
 
 // a poll's votes: one row per voter, the highest seq they sent. a vote can
 // overtake its poll (members write to us separately), so a row may wait a
-// while for the poll it names. when the poll's message goes - burned,
-// unsent, deleted, a chat cleared - its votes go with it, whichever path
-// removed it: the trigger does that, not each delete.
+// while for the poll it names. the trigger drops the votes however the
+// poll's message goes, not each delete.
 Future<void> _pollTables(Database db) async {
   await db.execute('''
     CREATE TABLE IF NOT EXISTS poll_votes (
@@ -3909,9 +3905,9 @@ Future<void> _signalTables(Database db) async {
 Future<String> makePreKeyBundleB64([SignalSession? of]) async {
   final ss = of ?? signalSession;
   final spk = await ss.signedPreKeyStore.loadSignedPreKey(1);
-  // the kept invite prekey, never the lowest one-time key: that one was
-  // gone after the first person used the invite, and a handle's published
-  // invite is static, so everyone after the first was dropped unread
+  // the kept invite prekey, never the lowest one-time key: a handle's
+  // published invite is static, and a one-time key is gone after the first
+  // person uses it
   final pk = await ss.preKeyStore.loadPreKey(invitePreKeyId);
   final bundle = {
     'registrationId': ss.registrationId,
@@ -4679,8 +4675,7 @@ class AppState extends ChangeNotifier {
   // do (one indexed query). skipped entirely while tor can't carry traffic.
   Future<void> drainOutbox() async {
     // count first, wire or no wire: the strip and the rows say what is
-    // waiting whether or not anything can move yet. the old order counted
-    // only once the route was up, so an offline phone said nothing waited.
+    // waiting whether or not anything can move yet
     final rows = await live.unsentOutbox();
     final perPeer = <String, int>{};
     final paired = <String, bool>{};
@@ -5232,10 +5227,8 @@ class AppState extends ChangeNotifier {
       _blockScreenshots != _blockScreenshotsApplied;
 
   // the heartbeat. listen is the last tick the relay queue was read, drain
-  // the last time something came out of it. both kept in memory and
-  // written once a minute, so after a kill the transport screen can still
-  // say when this phone last listened. that is how a person tells asleep
-  // from killed from listening without adb.
+  // the last time something came out of it. written once a minute, so after
+  // a kill the transport screen can still say when this phone last listened.
   int _lastListenAt = 0;
   int _lastDrainAt = 0;
   int _beatWritten = 0;
@@ -5337,9 +5330,8 @@ class AppState extends ChangeNotifier {
   Timer? _sleepTimer;
   int _lastCheckAt = 0;
   int _lastWakeAt = 0;
-  // how the last check-in ended, for the transport screen. a check-in that
-  // gave up is the thing a person needs to see, and it used to leave no
-  // trace at all: the line just said there had never been one.
+  // how the last check-in ended, for the transport screen, including one
+  // that gave up
   String _lastCheckHow = '';
   // "relay.example 4.1s · other.example 30.0s dropped"
   String _lastCheckRelays = '';
@@ -5894,9 +5886,8 @@ class AppState extends ChangeNotifier {
   Future<void> resetInviteAddress() async {
     // the everyday invite's key and address: never from a quiet session
     if (sessionQuiet) return;
-    // the key first: moving only the relay address left every old link
-    // able to open a session and dial the onion directly, which made the
-    // promise on the button a lie
+    // the key first: moving only the relay address leaves every old link
+    // able to open a session and dial the onion directly
     await signalSession.rotateInvitePreKey();
     _fcCounter++;
     await const FlutterSecureStorage().write(
@@ -5962,12 +5953,8 @@ class AppState extends ChangeNotifier {
         : PollSpec(options: p.options, multi: p.multi).toRow();
   }
 
-  // unified incoming routing. handles three payload variants:
-  //   1) group control msg (no chat row, no notif)
-  //   2) reaction       (add/remove on a target uid, no chat row, no notif)
-  //   3) data message   (1:1 or group - save + maybe notify)
-  // called from all three receive paths (back-pair-from-cipher, tor drain,
-  // nostr poll) so the routing rules live in exactly one place.
+  // routing for group controls, reactions and data messages, shared by all
+  // three receive paths (back-pair, tor drain, nostr poll)
   Future<void> _applyIncomingPayload(
     String senderHaloId,
     UnwrappedMessage env, {
@@ -6059,8 +6046,8 @@ class AppState extends ChangeNotifier {
     // 2) reaction
     if (env.reaction != null) {
       final r = env.reaction!;
-      // same hole pins had: the frame names a uid and nothing else, so only
-      // someone in the chat that row lives in gets to react to it
+      // the frame names a uid and nothing else, so only someone in the chat
+      // that row lives in gets to react to it
       final where = await live.chatOf(r.targetUid);
       final ok = pinAllowed(
         rowPeer: where?.$1,
@@ -6114,8 +6101,8 @@ class AppState extends ChangeNotifier {
     // 3) data message: could be 1:1 or group
     final isGroup = env.groupId != null;
     if (isGroup && !await live.groupExists(env.groupId!)) {
-      // unknown group - drop. prevents random senders from injecting rows
-      // into groups we never joined.
+      // unknown group: drop, so random senders cannot inject rows into
+      // groups we never joined
       dlog('dropping group msg for unknown group ${env.groupId}');
       return;
     }
@@ -6167,7 +6154,7 @@ class AppState extends ChangeNotifier {
         return;
       }
       // 2-message cap: a stranger gets 2 into requests, then the chat is locked
-      // until we accept them. drop past the cap - no receipt.
+      // until we accept them. past the cap there is no receipt.
       final have = vouched ? 0 : await live.countMessagesFrom(senderHaloId);
       if (strangerCapHolds(accepted: false, vouched: vouched, have: have)) {
         dlog('stranger lock: holding from $senderHaloId (cap hit)');
@@ -6197,9 +6184,8 @@ class AppState extends ChangeNotifier {
       final progressKey = isGroup ? env.groupId! : senderHaloId;
       final slice = (env.imageB64 ?? env.fileB64) ?? '';
       // a slice of a file already put together: the sender went round
-      // again. buffering it began a second copy that could never finish,
-      // and a banner counting towards nothing for a day. one receipt per
-      // pass, on the first slice, so the sender learns it can stop.
+      // again. buffering it would start a copy that never finishes. one
+      // receipt per pass, on the first slice, so the sender can stop.
       if (await live.messageExists(mid)) {
         if (!isGroup && (env.chunkIndex ?? 0) == 0 && senderHaloId != myId) {
           unawaited(_sendDeliveryReceipt(senderHaloId, mid));
@@ -6207,9 +6193,8 @@ class AppState extends ChangeNotifier {
         unawaited(live.dropMediaWant(mid));
         return;
       }
-      // slices land on disk as they arrive, so closing the app mid-transfer
-      // no longer throws the partial away. the count is over rows, which is
-      // what makes a restart resume instead of start over.
+      // slices land on disk as they arrive and the count is over rows, so a
+      // restart resumes instead of starting over
       final have = await live.putMediaChunk(
         mid,
         env.chunkIndex ?? 0,
@@ -6376,7 +6361,7 @@ class AppState extends ChangeNotifier {
     if (!isGroup && currentChatPeer != senderHaloId) {
       await live.bumpUnread(senderHaloId);
     } else if (!isGroup && currentChatPeer == senderHaloId) {
-      // already reading this chat - clear any stale badge instead of leaving it.
+      // already reading this chat: clear any stale badge
       await live.clearUnread(senderHaloId);
     } else if (isGroup && env.groupId != null) {
       final openGroup = 'group:${env.groupId}';
@@ -6624,10 +6609,8 @@ class AppState extends ChangeNotifier {
 
   bool onboardingComplete = false;
   // this identity was moved to another device from here. set by the
-  // export that moved it, never inferred: a phone that works out it is
-  // dead by failing is the silent failure this app has spent weeks
-  // removing. while set the engine never starts, so nothing here can
-  // advance a ratchet the other device now owns.
+  // export that moved it, never inferred. while set the engine never
+  // starts, so nothing here can advance a ratchet the other device owns.
   bool _movedAway = false;
   bool get movedAway => !sessionQuiet && _movedAway;
   // the person chose to keep reading what was here. this session only.
@@ -7125,7 +7108,7 @@ class AppState extends ChangeNotifier {
       await signalSession.sessionStore.storeSession(realAddr, record);
       await signalSession.sessionStore.deleteSession(tempAddr);
       // persist contact + nostr sub. a stranger who back-paired to us lands
-      // unaccepted - their message waits in requests until we accept.
+      // unaccepted: their message waits in requests until we accept.
       await live.upsertContact(
         h,
         env.senderOnion ?? '',
@@ -7418,15 +7401,15 @@ class AppState extends ChangeNotifier {
     startMemoryLog();
     await initNotifications(onTap: openChatForHalo);
     // the first call into android's notification service after a start is
-    // slow, a tenth of a second or more. every start pays it here, on every
-    // phone, so nothing later pays it where it could be timed
+    // slow, a tenth of a second or more. every start pays it here, so
+    // nothing later pays it where it could be timed
     unawaited(notifPlugin.cancel(id: 0x7ffffffe).catchError((_) {}));
 
+    unawaited(_fillSearch());
+    if (kDebugMode) unawaited(maybeRunSearchBench());
     // periodic sweep: delete messages whose burn_at has passed. a sweep
     // that keeps failing means burned messages are staying, which the
     // user was promised would not happen, so after a minute of it say so
-    unawaited(_fillSearch());
-    if (kDebugMode) unawaited(maybeRunSearchBench());
     var sweepFails = 0;
     var sweeps = 0;
     Timer.periodic(const Duration(seconds: 5), (_) async {
@@ -8672,10 +8655,9 @@ class AppState extends ChangeNotifier {
     final burnAt = (burnSeconds != null && burnSeconds > 0)
         ? DateTime.now().millisecondsSinceEpoch + burnSeconds * 1000
         : null;
-    // save the local row up-front so the chat list shows it immediately.
-    // peer_id = self so we render it as outgoing. a RETRY passes the same
-    // uid - inserting again duplicated the row and blew up every uid-keyed
-    // widget key. one row per uid, ever.
+    // save the local row up front so the chat list shows it at once.
+    // peer_id = self so we render it as outgoing. a retry passes the same
+    // uid, and a second row breaks every uid-keyed widget key.
     if (!await session.messageExists(msgUid)) {
       await session.saveMessage(
         sessionId,

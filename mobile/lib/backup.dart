@@ -494,10 +494,9 @@ Future<void> createBackupFile(
   }
 }
 
-// a backup made in a decoy session is the decoy's own: its database, key,
-// identity, onion key and files, under the names an everyday install uses,
-// so it restores anywhere as the empty account it is. it is never a move,
-// and nothing of the everyday container is read
+// a backup in a decoy session holds only the decoy, under the names an
+// everyday install uses, so it restores anywhere as its own account. never a
+// move, and nothing of the everyday container is read
 Future<void> _createQuietBackup(
   String passphrase,
   String outPath, {
@@ -720,10 +719,9 @@ Future<Object?> _restoreJob(_Job j) async {
   }
 }
 
-// a restore made in a decoy session: the files move from their staging
-// place onto the decoy's names, its key is the backup's, and its onion key
-// waits in onion_d.key for the next start to take in. no engine call: the
-// engine carries the everyday identity
+// a restore in a decoy session lands on the decoy's names. the onion key
+// waits in onion_d.key for the next start. no engine call: the engine
+// carries the everyday identity
 Future<void> _landInDecoy(
   String from,
   String docs,

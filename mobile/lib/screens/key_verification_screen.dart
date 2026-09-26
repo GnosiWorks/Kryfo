@@ -63,9 +63,9 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
   Future<void> _toggle() async {
     final next = !_verified;
     await session.setVerified(widget.peerHaloId, next);
-    // the new key is already trusted and the session already re-established on
-    // the inbound message (deliver-and-warn). verifying here just clears the
-    // banner - no identity/session teardown, which would break sending.
+    // the new key is already trusted and the session rebuilt on the inbound
+    // message (deliver-and-warn), so verifying only clears the banner. a
+    // session teardown here would break sending.
     if (next && await session.keyChanged(widget.peerHaloId)) {
       await session.clearKeyChanged(widget.peerHaloId);
     }

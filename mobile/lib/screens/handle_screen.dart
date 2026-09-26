@@ -71,8 +71,8 @@ class _HandleScreenState extends State<HandleScreen> {
     final h = _ctrl.text.trim().toLowerCase();
     if (h.isEmpty || _state != 'free') return;
     setState(() => _busy = true);
-    // same invite the qr code carries - the registry only ever holds what
-    // was already public.
+    // same invite the qr code carries, so the registry only holds what is
+    // already public
     final uri = await appState.sessionInvite();
     final r = sessionQuiet
         ? _unreached

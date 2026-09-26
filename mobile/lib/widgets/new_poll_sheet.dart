@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the sheet that makes a poll: a question, the answers, one or several. a
-// fresh empty answer appears under the last one as soon as it has text, up
-// to twelve, so there is no add button to hunt for.
+// the sheet that makes a poll. a new empty answer appears under the last one
+// once it has text, up to twelve, so there is no add button to hunt for.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

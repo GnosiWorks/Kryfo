@@ -32,12 +32,9 @@ Future<void> initNotifications({void Function(String? payload)? onTap}) async {
   // 'halo_messages' channel, below heads-up level, makes way for a v2 at max
   await android?.deleteNotificationChannel(channelId: 'halo_messages');
   await nameNotificationChannel();
-  // android 13+ denies notifications until asked. without this the channel
-  // exists but nothing is ever delivered, silently. the ask is android's own
-  // dialog, so it waits for the app lock to lift: never over the pin pad.
-  // the activity asks at most once (askForNotificationsOnce), and with no
-  // activity, as in a process the service brought back, there is no channel
-  // and nothing is asked.
+  // android 13+ denies notifications until asked, and nothing is delivered.
+  // the ask is android's own dialog, so it waits for the lock to lift. the
+  // activity asks at most once (askForNotificationsOnce)
   unawaited(
     lockGuard
         .anyUnlock()
