@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/pin_gate.dart';
 
 void main() {
-  test('the other person in a 1:1 chat may pin there', () {
+  test('the peer may pin in a 1:1 chat', () {
     expect(
       pinAllowed(
         rowPeer: 'wren',
@@ -15,7 +15,7 @@ void main() {
     );
   });
 
-  test('someone else may not pin in a chat that is not theirs', () {
+  test('others may not pin in a 1:1 chat', () {
     expect(
       pinAllowed(
         rowPeer: 'wren',
@@ -54,7 +54,7 @@ void main() {
     );
   });
 
-  test('not a member, not allowed, whatever group the frame names', () {
+  test('a non-member may not pin', () {
     expect(
       pinAllowed(
         rowPeer: 'wren',
@@ -67,7 +67,7 @@ void main() {
     );
   });
 
-  test('a member of one group cannot pin in another', () {
+  test('a member cannot pin in another group', () {
     expect(
       pinAllowed(
         rowPeer: 'wren',
@@ -80,7 +80,7 @@ void main() {
     );
   });
 
-  test('no such row, nothing to pin', () {
+  test('a missing row cannot be pinned', () {
     expect(
       pinAllowed(
         rowPeer: null,

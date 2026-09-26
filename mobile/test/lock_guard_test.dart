@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// nothing gets past the app lock (lock_guard.dart)
+// what the app lock holds back until it lifts (lock_guard.dart)
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -71,7 +71,7 @@ class _Harness {
 }
 
 void main() {
-  test('a tap waits while locked and happens once the lock lifts', () async {
+  test('a tap waits for the lock to lift', () async {
     var locked = true;
     final g = LockGuard(isLocked: () => locked);
     final done = <String>[];
@@ -94,7 +94,7 @@ void main() {
     expect(done.where((d) => d == 'dup').length, 1);
   });
 
-  test('what is open closes when the lock goes up, and only once', () {
+  test('open menus close once on lock', () {
     final g = LockGuard(isLocked: () => false);
     var menu = 0, player = 0;
     g.closeOnLock(() => menu++);
@@ -106,7 +106,7 @@ void main() {
     expect(player, 0);
   });
 
-  test('what starts after the lock went up closes at once', () async {
+  test('a menu opened while locked closes at once', () async {
     final g = LockGuard(isLocked: () => true);
     var closed = 0;
     final unguard = g.closeOnLock(() => closed++);
@@ -118,7 +118,7 @@ void main() {
     expect(closed, 1);
   });
 
-  test('a system dialog waits for the lock to lift', () async {
+  test('a system dialog waits for unlock', () async {
     var locked = true;
     final g = LockGuard(isLocked: () => locked);
     var opened = false;
@@ -135,7 +135,7 @@ void main() {
     expect(now, isTrue);
   });
 
-  testWidgets('a screen pushed while locked waits under the lock', (
+  testWidgets('a screen pushed while locked stays hidden', (
     tester,
   ) async {
     final h = _Harness(tester);
@@ -154,7 +154,7 @@ void main() {
     expect(find.text('sheet'), findsOneWidget);
   });
 
-  testWidgets('a pop from under the lock does not take the lock down', (
+  testWidgets('a pop under the lock keeps it up', (
     tester,
   ) async {
     final h = _Harness(tester);
@@ -180,8 +180,7 @@ void main() {
     expect(find.text('chat'), findsOneWidget);
   });
 
-  testWidgets('something drawn above the routes after the lock went up '
-      'is gone before its first frame', (tester) async {
+  testWidgets('a late overlay goes before its first frame', (tester) async {
     final h = _Harness(tester);
     await h.pump();
     await h.lockUp();
@@ -201,7 +200,7 @@ void main() {
     expect(find.text('pin'), findsOneWidget);
   });
 
-  testWidgets('a toast asked for just before the lock goes up never shows', (
+  testWidgets('a toast right before locking never shows', (
     tester,
   ) async {
     final h = _Harness(tester);
@@ -217,7 +216,7 @@ void main() {
     expect(find.text('joined the room'), findsNothing);
   });
 
-  testWidgets('a toast waits for the lock and never shows on the pin pad', (
+  testWidgets('a toast shows only after the lock lifts', (
     tester,
   ) async {
     final h = _Harness(tester);

@@ -9,7 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  test('every language with a file has a name, and english is there', () {
+  test('every language file has a name', () {
     expect(availableLanguages, contains('en'));
     for (final t in availableLanguages) {
       expect(kLanguageNames[t], isNotNull, reason: t);
@@ -23,7 +23,7 @@ void main() {
     }
   });
 
-  test('traditional chinese is its own file, not simplified', () {
+  test('traditional chinese has its own file', () {
     final hant = lookupAppLocalizations(localeOf('zh_Hant'));
     final hans = lookupAppLocalizations(localeOf('zh'));
     expect(hant.localeName, 'zh_Hant');
@@ -33,13 +33,13 @@ void main() {
     );
   });
 
-  test('nothing saved is match phone', () async {
+  test('defaults to match phone', () async {
     await loadAppLocale();
     expect(appLocalePref, 'system');
     expect(availableLanguages, contains(currentLanguage));
   });
 
-  test('a saved language that has no file falls back to the phone', () async {
+  test('unknown saved language falls back to the phone', () async {
     SharedPreferences.setMockInitialValues({kAppLocaleKey: 'xx'});
     await loadAppLocale();
     expect(appLocalePref, 'xx');
@@ -57,7 +57,7 @@ void main() {
     expect(languageValue(), 'Match phone (${kLanguageNames[systemLanguage]})');
   });
 
-  testWidgets('the button opens the sheet, match phone first', (t) async {
+  testWidgets('button opens the sheet with match phone first', (t) async {
     await loadAppLocale();
     await t.pumpWidget(
       const MaterialApp(

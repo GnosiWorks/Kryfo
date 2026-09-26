@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/wipe_word.dart';
 
 void main() {
-  test('the wipe word, however the keyboard typed it', () {
+  test('matches the wipe word however it is typed', () {
     expect(isWipeWord('xóa', 'xóa'), isTrue);
     expect(isWipeWord('xoa', 'xóa'), isTrue);
     expect(isWipeWord('xoá', 'xóa'), isTrue); // a + combining acute
@@ -18,7 +18,7 @@ void main() {
     expect(isWipeWord('إمسح', 'امسح'), isTrue); // hamza under the alef
   });
 
-  test('anything else is not', () {
+  test('rejects anything else', () {
     expect(isWipeWord('xo', 'xóa'), isFalse);
     expect(isWipeWord('', 'xóa'), isFalse);
     expect(isWipeWord(null, 'xóa'), isFalse);

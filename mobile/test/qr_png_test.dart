@@ -8,7 +8,7 @@ import 'package:kryfo/tools/qr_payload.dart';
 import 'package:kryfo/tools/qr_png.dart';
 
 void main() {
-  testWidgets('the saved png is a png with nothing in it but the picture', (
+  testWidgets('the saved png holds only the picture', (
     tester,
   ) async {
     final g = gridFor('WIFI:T:WPA;S:Home;P:correct horse;;')!;

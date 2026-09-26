@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/widgets/swipe_to_reply.dart';
 
-// every bubble wears this. a version of it once built its spring on first
-// use, which for an unswiped bubble meant inside dispose, and a ticker made
-// that late throws and stops the whole chat route from unmounting. so: pump
-// one, never touch it, take it out, and demand silence.
+// a ticker made inside dispose throws and keeps the chat route from
+// unmounting, so an untouched bubble has to come and go cleanly
 
 void main() {
-  testWidgets('an unswiped bubble comes and goes without a word', (
+  testWidgets('an unswiped bubble unmounts cleanly', (
     tester,
   ) async {
     await tester.pumpWidget(

@@ -93,7 +93,7 @@ func TestRegistryOverTor(t *testing.T) {
 // bounce is still in the transport's pool afterwards. go retries an
 // idempotent GET on a dead pooled connection; it does not retry a POST once
 // anything has been written. so checks answer and claims time out.
-func TestClaimAfterANetworkBounce(t *testing.T) {
+func TestClaimAfterNetworkBounce(t *testing.T) {
 	mu.Lock()
 	already := myAddr != ""
 	mu.Unlock()
@@ -223,7 +223,7 @@ func trunc(s string, n int) string {
 // moat is deliberately absent: it does not use tor, because tor is what is
 // broken when you are asking for bridges. the onion dial in bridge.go builds
 // its own dialer per call and cannot go stale.
-func TestEveryOneShotSurvivesABounce(t *testing.T) {
+func TestOneShotsSurviveBounce(t *testing.T) {
 	mu.Lock()
 	already := myAddr != ""
 	mu.Unlock()

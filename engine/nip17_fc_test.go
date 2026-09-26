@@ -136,7 +136,7 @@ func TestFirstContactNotReadableByThirdParty(t *testing.T) {
 
 // after the counter is bumped, invites printed against the old one must stop
 // working, or "reset my invite" is a lie.
-func TestOldInviteStopsWorkingAfterRotate(t *testing.T) {
+func TestRotateRetiresOldInvite(t *testing.T) {
 	bobPriv, bobPub := newIdentity(t)
 	alicePriv, alicePub := newIdentity(t)
 

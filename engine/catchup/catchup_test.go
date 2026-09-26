@@ -72,7 +72,7 @@ func run(t *testing.T, r *fakeRelay, since nostr.Timestamp, limit, maxPages int)
 	return res, got
 }
 
-func TestEverythingBehindTheCapArrives(t *testing.T) {
+func TestEventsBehindCapArrive(t *testing.T) {
 	r := &fakeRelay{events: mk(1234, 1000, 7), cap: 100}
 	res, got := run(t, r, 500, 100, 200)
 	if !res.Complete || len(got) != 1234 {
@@ -80,7 +80,7 @@ func TestEverythingBehindTheCapArrives(t *testing.T) {
 	}
 }
 
-func TestARelayThatCapsBelowWhatWasAsked(t *testing.T) {
+func TestRelayCapBelowLimit(t *testing.T) {
 	r := &fakeRelay{events: mk(430, 1000, 3), cap: 50}
 	res, got := run(t, r, 0, 100, 200)
 	if !res.Complete || len(got) != 430 {
@@ -102,7 +102,7 @@ func TestSinceIsRespected(t *testing.T) {
 	}
 }
 
-func TestManyEventsInOneSecondDoNotLoopForever(t *testing.T) {
+func TestSameSecondEventsDoNotLoop(t *testing.T) {
 	ev := mk(250, 5000, 0)
 	r := &fakeRelay{events: append(ev, mk(40, 100, 1)...), cap: 100}
 	for i := range r.events[250:] {
@@ -125,7 +125,7 @@ func TestManyEventsInOneSecondDoNotLoopForever(t *testing.T) {
 	}
 }
 
-func TestAFailedPageIsNotComplete(t *testing.T) {
+func TestFailedPageIsNotComplete(t *testing.T) {
 	r := &fakeRelay{events: mk(500, 1000, 5), cap: 100, failAt: 3}
 	res, _ := run(t, r, 0, 100, 200)
 	if res.Complete {

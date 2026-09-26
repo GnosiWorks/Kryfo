@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/delivery_mode.dart';
 
 void main() {
-  test('the last check-in is worded when shown', () {
+  test('formats the last check-in', () {
     final ok = jsonEncode({'how': 'ok_norelay', 'secs': 48, 'why': 'push'});
     expect(checkInLine(ok), 'ok, no relay began, 48s, by push');
     expect(checkInOk(ok), isTrue);
@@ -14,14 +14,14 @@ void main() {
     expect(checkInOk(bad), isFalse);
   });
 
-  test('a line an older build saved is shown as it is', () {
+  test('shows an old plain-text line as is', () {
     expect(checkInLine('ok, 31s, by job'), 'ok, 31s, by job');
     expect(checkInOk('ok, 31s, by job'), isTrue);
     expect(catchupLine('relay.kryfo.app 2.1s'), 'relay.kryfo.app 2.1s');
     expect(catchupDropped('x 30.0s dropped'), isTrue);
   });
 
-  test('the catch-up line, fast, slow and dropped', () {
+  test('formats fast, slow and dropped catch-ups', () {
     final stored = jsonEncode([
       {'host': 'a.example', 'ms': 2100, 'long': false, 'dropped': false},
       {

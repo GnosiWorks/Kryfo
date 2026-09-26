@@ -12,13 +12,13 @@ void main() {
     expect(plan.remove, ['my_handle_bio', 'peer_fc']);
   });
 
-  test('a backup from before they were carried removes them all', () {
+  test('an older backup removes all carried keys', () {
     final plan = identitySecurePlan(null);
     expect(plan.write, isEmpty);
     expect(plan.remove, kIdentitySecureKeys);
   });
 
-  test('an empty value is not a value', () {
+  test('treats an empty value as missing', () {
     final plan = identitySecurePlan({'my_handle': ''});
     expect(plan.write, isEmpty);
     expect(plan.remove, contains('my_handle'));

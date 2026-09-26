@@ -20,19 +20,19 @@ void main() {
     test('a plain name keeps its stem', () {
       expect(cleanName('beach.JPG', MetaKind.jpeg), 'beach clean.jpg');
     });
-    test('a name that carries a date is replaced', () {
+    test('replaces a name that carries a date', () {
       expect(
         cleanName('IMG_20260918_112233.jpg', MetaKind.jpeg),
         'photo clean.jpg',
       );
       expect(cleanName('VID_20260918.mp4', MetaKind.mp4), 'video clean.mp4');
     });
-    test('the extension follows what the file is, not what it says', () {
+    test('extension follows the real file kind', () {
       expect(cleanName('holiday.png', MetaKind.jpeg), 'holiday clean.jpg');
       expect(cleanName('clip.mov', MetaKind.mp4), 'clip clean.mov');
       expect(cleanName('clip.mov', MetaKind.jpeg), 'clip clean.jpg');
     });
-    test('separators and empty names', () {
+    test('handles separators and empty names', () {
       expect(
         cleanName('../../etc/passwd', MetaKind.png),
         '_.._etc_passwd clean.png',
@@ -42,7 +42,7 @@ void main() {
     });
   });
 
-  test('a camera jpeg comes out reading as nothing', () async {
+  test('a camera jpeg comes out clean', () async {
     final src = put('a.jpg', jpeg(tiff: cameraTiff()));
     final r = await cleanFileHere(src, '${tmp.path}/out', 'a.jpg');
     expect(r.failure, null);
@@ -53,7 +53,7 @@ void main() {
     expect(File(src).existsSync(), true);
   });
 
-  test('heif and mp4 go through too', () async {
+  test('cleans heif and mp4 too', () async {
     final h = put('h.heic', heif(tiff: cameraTiff(), xmp: xmpGps));
     final rh = await cleanFileHere(h, '${tmp.path}/out', 'h.heic');
     expect(rh.failure, null);
@@ -63,7 +63,7 @@ void main() {
     expect(readFile(rm.path!).status, MetaStatus.nothing);
   });
 
-  test('a motion photo is refused and nothing is left behind', () async {
+  test('refuses a motion photo and leaves nothing', () async {
     final src = put(
       'm.heic',
       heif(tiff: cameraTiff(), after: box('mpvd', t('ftypmp42'))),
@@ -75,7 +75,7 @@ void main() {
     expect(!out.existsSync() || out.listSync().isEmpty, true);
   });
 
-  test('a samsung vendor box goes with the rest', () async {
+  test('removes a vendor box too', () async {
     final src = put(
       's.heic',
       heif(tiff: cameraTiff(), after: box('sefd', t('samsung'))),
@@ -85,14 +85,14 @@ void main() {
     expect(readFile(r.path!).status, MetaStatus.nothing);
   });
 
-  test('what the stripper leaves and the reader sees fails closed', () async {
+  test('fails closed on leftovers the reader sees', () async {
     final src = put('u.heic', heif(coding: 'uri '));
     final r = await cleanFileHere(src, '${tmp.path}/out', 'u.heic');
     expect(r.failure, CleanFailure.notClean);
     expect(Directory('${tmp.path}/out').listSync().isEmpty, true);
   });
 
-  test('not a picture, and a cut file', () async {
+  test('refuses a non-picture and a cut file', () async {
     final pdf = put('x.pdf', t('%PDF-1.7 hello hello hello hello'));
     expect(
       (await cleanFileHere(pdf, '${tmp.path}/out', 'x.pdf')).failure,

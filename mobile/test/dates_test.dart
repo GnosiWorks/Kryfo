@@ -10,7 +10,7 @@ void main() {
 
   tearDown(() => setL10nLocale(const Locale('en')));
 
-  test('english dates: day first, capitalised, 24-hour', () {
+  test('english dates are day first and 24-hour', () {
     expect(dayMonth(d), '23 Sept');
     expect(dayMonthYear(lastYear), '4 Mar 2025');
     expect(dayMonthMaybeYear(d, now: d), '23 Sept');

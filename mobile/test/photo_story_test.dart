@@ -18,7 +18,7 @@ void main() {
   );
   MetaReport read(Uint8List b) => readMeta(MemorySource(b));
 
-  test('a camera photo in athens', () {
+  test('reads a camera photo in athens', () {
     final s = storyOf(
       read(jpeg(tiff: cameraTiff())),
       world: world,
@@ -42,7 +42,7 @@ void main() {
     expect(s.everything.any((l) => l.startsWith('Location: 37.97')), true);
   });
 
-  test('without the map data it still names what it can', () {
+  test('works without the map data', () {
     final s = storyOf(read(jpeg(tiff: cameraTiff())));
     expect(s.rows.first.title, 'Far from any town');
   });
@@ -61,7 +61,7 @@ void main() {
     expect(s.canClean, false);
   });
 
-  test('a location android blanked is named as hidden, never as absent', () {
+  test('a blanked location reads as hidden', () {
     final r = MetaReport()
       ..kind = MetaKind.jpeg
       ..status = MetaStatus.found
@@ -73,7 +73,7 @@ void main() {
     expect(s.head.contains('No location'), false);
   });
 
-  test('far from a town, and the open sea', () {
+  test('names far from town and open sea', () {
     expect(
       placeLine(const GpsFix(0, -30, from: 't'), world, places),
       'Far from any town',

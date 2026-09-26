@@ -14,7 +14,7 @@ const marked =
     '\u2067one\u2069 \u202etwo\u202c \u200fthree\u200e \u2066four\u2069';
 
 void main() {
-  test('every direction control goes, the joiners stay', () {
+  test('strips direction controls, keeps the joiners', () {
     expect(unmarked(marked), 'one two three four');
     expect(unmarked('\u202egpj.exe'), 'gpj.exe');
     expect(unmarked('\u2067a\u202ab\u202bc\u202cd\u202de'), 'abcde');
@@ -25,7 +25,7 @@ void main() {
     expect(unmarked('plain'), 'plain');
   });
 
-  test('a message and its names come out clean', () {
+  test('strips controls from a message and its names', () {
     final sent = {
       'm': marked,
       'h': 'aaa-bbb-ccc',
@@ -43,13 +43,13 @@ void main() {
     expect(env.powText, marked);
   });
 
-  test('escaped in the json, they go too', () {
+  test('strips controls escaped in the json', () {
     final raw = 'halo/1:{"m":"\\u2068abc\\u2069","h":"x"}';
     expect(unwrapMessage(raw).message, 'abc');
     expect(unwrapMessage('plain \u2066text').message, 'plain text');
   });
 
-  test('a paste loses them and the caret keeps its place', () {
+  test('a paste strips them and keeps the caret', () {
     const f = UnmarkedInput();
     final v = f.formatEditUpdate(
       TextEditingValue.empty,
@@ -62,7 +62,7 @@ void main() {
     expect(v.selection.baseOffset, 6);
   });
 
-  test('the translations use isolates in one shape only', () {
+  test('translations use one isolate shape', () {
     // one shape for every isolate in the translations (bidi_safe.dart)
     final one = RegExp(r'(?:\u2066|\u2068)@?\{\w+\}\u2069');
     final opener = RegExp(r'[\u2066-\u2068]');

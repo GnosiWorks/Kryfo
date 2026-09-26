@@ -90,7 +90,7 @@ func TestSettledIsSignedAndVerifies(t *testing.T) {
 	}
 }
 
-func TestAmountMustCoverTheTier(t *testing.T) {
+func TestAmountCoversTier(t *testing.T) {
 	cases := []struct{ amount, currency, tier string }{
 		{"1.00", "USD", "guardian"},   // a dollar that says guardian
 		{"100.00", "EUR", "guardian"}, // not the currency tiers are priced in
@@ -110,7 +110,7 @@ func TestAmountMustCoverTheTier(t *testing.T) {
 	}
 }
 
-func TestReceiptIDIsAnAllowList(t *testing.T) {
+func TestReceiptIDAllowList(t *testing.T) {
 	setup(t, &fakeBTCPay{status: "Settled", amount: "20", currency: "USD", tier: "supporter"})
 	for _, id := range []string{"", "..%2F..%2Fstores", "a/b", "INV 00001", "short", "x\x00y12345", strings.Repeat("A", 65)} {
 		if code, _ := receipt(t, id); code != 400 {
@@ -119,7 +119,7 @@ func TestReceiptIDIsAnAllowList(t *testing.T) {
 	}
 }
 
-func TestInvoicesAreLimited(t *testing.T) {
+func TestInvoiceRateLimit(t *testing.T) {
 	f := &fakeBTCPay{}
 	setup(t, f)
 	post := func(body string) int {
@@ -151,7 +151,7 @@ func TestInvoicesAreLimited(t *testing.T) {
 	}
 }
 
-func TestInvoiceDoesNotPassOnTheCheckoutLink(t *testing.T) {
+func TestInvoiceHidesCheckoutLink(t *testing.T) {
 	setup(t, &fakeBTCPay{})
 	w := httptest.NewRecorder()
 	handleInvoice(w, httptest.NewRequest("POST", "/invoice", strings.NewReader(`{"tier":"patron"}`)))

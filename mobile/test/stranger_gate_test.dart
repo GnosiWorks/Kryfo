@@ -12,7 +12,7 @@ Map<String, Object?> _row(String id, {int accepted = 1, int blocked = 0}) => {
 
 void main() {
   group('bootSubscribeRows', () {
-    test('a plain stranger in requests is listened for after a restart', () {
+    test('listens for pending strangers after a restart', () {
       final rows = bootSubscribeRows(
         accepted: [_row('friend')],
         vouchedPending: [],
@@ -42,16 +42,16 @@ void main() {
   });
 
   group('proofOfEngagement', () {
-    test('a delivery receipt is not the peer talking to us', () {
+    test('a delivery receipt is not engagement', () {
       expect(
         proofOfEngagement(UnwrappedMessage('', deliveredUid: 'u1')),
         isFalse,
       );
     });
-    test('a message is', () {
+    test('a message is engagement', () {
       expect(proofOfEngagement(UnwrappedMessage('hi', msgUid: 'u2')), isTrue);
     });
-    test('nor is a request for missing slices, their phone sends it alone', () {
+    test('a missing slice request is not engagement', () {
       expect(
         proofOfEngagement(
           UnwrappedMessage('', need: const NeedFrame('u3', [1, 2])),

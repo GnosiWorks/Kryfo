@@ -87,7 +87,7 @@ func (d *deadControl) close() { _ = d.ln.Close() }
 // a control port that answers the handshake and then goes silent must not
 // take the engine with it: the call gives up on its own deadline, the socket
 // is dropped, and the very next call works once tor is answering again.
-func TestControlPortThatNeverAnswers(t *testing.T) {
+func TestControlPortNeverAnswers(t *testing.T) {
 	old := ctrlDeadline
 	ctrlDeadline = 700 * time.Millisecond
 	defer func() { ctrlDeadline = old; ctrlReset() }()
