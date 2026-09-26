@@ -7065,4 +7065,21 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get flowNotSet =>
       'Konnte nicht festgelegt werden. Versuch es noch einmal.';
+
+  @override
+  String get stickerOpen => 'Sticker';
+
+  @override
+  String get stickerRecent => 'Zuletzt';
+
+  @override
+  String stickerA11y(String emoji) {
+    return 'Sticker $emoji';
+  }
+
+  @override
+  String get stickerRemoveRecent => 'Aus „Zuletzt“ entfernen';
+
+  @override
+  String get stickerCouldNotLoad => 'Sticker konnten nicht geladen werden';
 }

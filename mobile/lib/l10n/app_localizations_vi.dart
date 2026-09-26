@@ -6969,4 +6969,21 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get flowNotSet => 'Không đặt được. Hãy thử lại.';
+
+  @override
+  String get stickerOpen => 'Nhãn dán';
+
+  @override
+  String get stickerRecent => 'Gần đây';
+
+  @override
+  String stickerA11y(String emoji) {
+    return 'Nhãn dán $emoji';
+  }
+
+  @override
+  String get stickerRemoveRecent => 'Xóa khỏi gần đây';
+
+  @override
+  String get stickerCouldNotLoad => 'Không thể tải nhãn dán';
 }

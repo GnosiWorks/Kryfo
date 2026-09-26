@@ -7113,4 +7113,21 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get flowNotSet => 'Не вдалося задати. Спробуй ще раз.';
+
+  @override
+  String get stickerOpen => 'Стікери';
+
+  @override
+  String get stickerRecent => 'Нещодавні';
+
+  @override
+  String stickerA11y(String emoji) {
+    return 'Стікер $emoji';
+  }
+
+  @override
+  String get stickerRemoveRecent => 'Прибрати з нещодавніх';
+
+  @override
+  String get stickerCouldNotLoad => 'Не вдалося завантажити стікери';
 }

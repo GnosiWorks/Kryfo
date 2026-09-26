@@ -7040,4 +7040,21 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get flowNotSet => 'Não deu para definir. Tente de novo.';
+
+  @override
+  String get stickerOpen => 'Figurinhas';
+
+  @override
+  String get stickerRecent => 'Recentes';
+
+  @override
+  String stickerA11y(String emoji) {
+    return 'Figurinha $emoji';
+  }
+
+  @override
+  String get stickerRemoveRecent => 'Remover dos recentes';
+
+  @override
+  String get stickerCouldNotLoad => 'Não foi possível carregar as figurinhas';
 }

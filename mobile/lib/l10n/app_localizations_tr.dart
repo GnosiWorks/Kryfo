@@ -7017,4 +7017,21 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get flowNotSet => 'Belirlenemedi. Tekrar dene.';
+
+  @override
+  String get stickerOpen => 'Çıkartmalar';
+
+  @override
+  String get stickerRecent => 'Son kullanılanlar';
+
+  @override
+  String stickerA11y(String emoji) {
+    return 'Çıkartma $emoji';
+  }
+
+  @override
+  String get stickerRemoveRecent => 'Son kullanılanlardan kaldır';
+
+  @override
+  String get stickerCouldNotLoad => 'Çıkartmalar yüklenemedi';
 }

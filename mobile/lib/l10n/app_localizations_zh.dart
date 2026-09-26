@@ -6719,6 +6719,23 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get flowNotSet => '没能设置成功，请再试一次。';
+
+  @override
+  String get stickerOpen => '贴纸';
+
+  @override
+  String get stickerRecent => '最近使用';
+
+  @override
+  String stickerA11y(String emoji) {
+    return '贴纸 $emoji';
+  }
+
+  @override
+  String get stickerRemoveRecent => '从最近使用中移除';
+
+  @override
+  String get stickerCouldNotLoad => '无法加载贴纸';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -13436,4 +13453,21 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get flowNotSet => '沒能設定成功，請再試一次。';
+
+  @override
+  String get stickerOpen => '貼圖';
+
+  @override
+  String get stickerRecent => '最近使用';
+
+  @override
+  String stickerA11y(String emoji) {
+    return '貼圖 $emoji';
+  }
+
+  @override
+  String get stickerRemoveRecent => '從最近使用中移除';
+
+  @override
+  String get stickerCouldNotLoad => '無法載入貼圖';
 }

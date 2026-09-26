@@ -6986,4 +6986,21 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get flowNotSet => 'Gagal dibuat. Coba lagi.';
+
+  @override
+  String get stickerOpen => 'Stiker';
+
+  @override
+  String get stickerRecent => 'Terbaru';
+
+  @override
+  String stickerA11y(String emoji) {
+    return 'Stiker $emoji';
+  }
+
+  @override
+  String get stickerRemoveRecent => 'Hapus dari terbaru';
+
+  @override
+  String get stickerCouldNotLoad => 'Stiker tidak dapat dimuat';
 }

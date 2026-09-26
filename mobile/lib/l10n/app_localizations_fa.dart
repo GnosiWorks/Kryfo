@@ -7003,4 +7003,21 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get flowNotSet => 'تعیین نشد. دوباره امتحان کنید.';
+
+  @override
+  String get stickerOpen => 'استیکرها';
+
+  @override
+  String get stickerRecent => 'اخیر';
+
+  @override
+  String stickerA11y(String emoji) {
+    return 'استیکر $emoji';
+  }
+
+  @override
+  String get stickerRemoveRecent => 'حذف از اخیر';
+
+  @override
+  String get stickerCouldNotLoad => 'استیکرها بارگیری نشدند';
 }

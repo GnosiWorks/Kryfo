@@ -7109,4 +7109,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get flowNotSet => 'تعذّر التعيين. حاول مرة أخرى.';
+
+  @override
+  String get stickerOpen => 'الملصقات';
+
+  @override
+  String get stickerRecent => 'الأخيرة';
+
+  @override
+  String stickerA11y(String emoji) {
+    return 'ملصق $emoji';
+  }
+
+  @override
+  String get stickerRemoveRecent => 'إزالة من الأخيرة';
+
+  @override
+  String get stickerCouldNotLoad => 'تعذّر تحميل الملصقات';
 }

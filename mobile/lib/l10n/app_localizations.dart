@@ -11234,6 +11234,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not set it. Try again.'**
   String get flowNotSet;
+
+  /// screens/chat_screen.dart, screens/group_chat_screen.dart, stickers/sticker_sheet.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Stickers'**
+  String get stickerOpen;
+
+  /// stickers/sticker_sheet.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get stickerRecent;
+
+  /// stickers/sticker_sheet.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Sticker {emoji}'**
+  String stickerA11y(String emoji);
+
+  /// stickers/sticker_sheet.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from recent'**
+  String get stickerRemoveRecent;
+
+  /// stickers/sticker_sheet.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Stickers could not be loaded'**
+  String get stickerCouldNotLoad;
 }
 
 class _AppLocalizationsDelegate
