@@ -7003,4 +7003,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get stickerCouldNotLoad => 'Stiker tidak dapat dimuat';
+
+  @override
+  String get stickerLabel => 'Stiker';
+
+  @override
+  String get stickerNewer => 'Dari Kryfo versi lebih baru';
 }

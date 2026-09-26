@@ -3340,5 +3340,7 @@ void main() {
     expect(l.stickerA11y("<emoji>"), "Sticker <emoji>");
     expect(l.stickerRemoveRecent, "Remove from recent");
     expect(l.stickerCouldNotLoad, "Stickers could not be loaded");
+    expect(l.stickerLabel, "Sticker");
+    expect(l.stickerNewer, "From a newer Kryfo");
   });
 }

@@ -1856,5 +1856,7 @@
   "stickerRecent": "Son kullanılanlar",
   "stickerA11y": "Çıkartma {emoji}",
   "stickerRemoveRecent": "Son kullanılanlardan kaldır",
-  "stickerCouldNotLoad": "Çıkartmalar yüklenemedi"
+  "stickerCouldNotLoad": "Çıkartmalar yüklenemedi",
+  "stickerLabel": "Çıkartma",
+  "stickerNewer": "Daha yeni bir Kryfo’dan"
 }

@@ -7034,4 +7034,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get stickerCouldNotLoad => 'Çıkartmalar yüklenemedi';
+
+  @override
+  String get stickerLabel => 'Çıkartma';
+
+  @override
+  String get stickerNewer => 'Daha yeni bir Kryfo’dan';
 }

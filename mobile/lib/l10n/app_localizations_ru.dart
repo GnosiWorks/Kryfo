@@ -7135,4 +7135,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get stickerCouldNotLoad => 'Не удалось загрузить стикеры';
+
+  @override
+  String get stickerLabel => 'Стикер';
+
+  @override
+  String get stickerNewer => 'Из более новой версии Kryfo';
 }

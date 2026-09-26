@@ -50,19 +50,34 @@ void main() {
     );
   });
 
-  test(
-    'no row nonce means no envelope nonce',
-    () async {
-      final env = unwrapMessage(
-        await wrapRedelivery({
-          'plaintext': 'hello',
-          'msg_uid': 'u2',
-          'group_id': '',
-        }, sender: _sender),
-      );
-      expect(env.powNonce, null);
-      expect(env.powBitsUsed, null);
-      expect(env.groupId, null);
-    },
-  );
+  test('no row nonce means no envelope nonce', () async {
+    final env = unwrapMessage(
+      await wrapRedelivery({
+        'plaintext': 'hello',
+        'msg_uid': 'u2',
+        'group_id': '',
+      }, sender: _sender),
+    );
+    expect(env.powNonce, null);
+    expect(env.powBitsUsed, null);
+    expect(env.groupId, null);
+  });
+
+  test('a retried sticker keeps its sticker', () async {
+    final row = <String, Object?>{
+      'plaintext': '🔒',
+      'msg_uid': 'u3',
+      'group_id': null,
+      'pow_nonce': 1,
+      'sticker': 'fokia:17:1',
+    };
+    final env = unwrapMessage(await wrapRedelivery(row, sender: _sender));
+    expect(env.message, '🔒');
+    expect(env.sticker, 'fokia:17:1');
+    // a text row has none
+    final text = unwrapMessage(
+      await wrapRedelivery({...row, 'sticker': null}, sender: _sender),
+    );
+    expect(text.sticker, null);
+  });
 }

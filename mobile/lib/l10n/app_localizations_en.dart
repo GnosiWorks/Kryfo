@@ -6997,4 +6997,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stickerCouldNotLoad => 'Stickers could not be loaded';
+
+  @override
+  String get stickerLabel => 'Sticker';
+
+  @override
+  String get stickerNewer => 'From a newer Kryfo';
 }

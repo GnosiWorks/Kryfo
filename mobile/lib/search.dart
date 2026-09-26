@@ -4,6 +4,9 @@
 // the index and a query hold the same folded text (text_fold.dart), so
 // "cafe" finds "café". chinese has no spaces: each character is a token
 // and a query is a phrase of them.
+import 'dart:convert';
+
+import 'polls.dart';
 import 'text_fold.dart';
 
 /// characters written without spaces between words: each one a token
@@ -31,6 +34,26 @@ String indexText(String s) {
     }
   }
   return out.toString();
+}
+
+/// the words a message row is found by: its text, a poll's answers, a
+/// file's name, the title of the link it carries. a sticker has none: its
+/// text is an emoji, which the index would drop anyway.
+String searchBody(Map<String, Object?> r) {
+  if (r['sticker'] != null) return '';
+  final parts = <String>[(r['plaintext'] as String?) ?? ''];
+  final poll = PollSpec.parse(r['poll']);
+  if (poll != null) parts.addAll(poll.options);
+  final name = r['file_name'] as String?;
+  if (name != null && name != 'voice.wav') parts.add(name);
+  final pv = r['preview'];
+  if (pv is String && pv.contains('"title"')) {
+    try {
+      final t = (jsonDecode(pv) as Map)['title'];
+      if (t is String) parts.add(t);
+    } catch (_) {}
+  }
+  return indexText(parts.where((x) => x.trim().isNotEmpty).join('\n'));
 }
 
 /// what a person typed, as terms: folded, split on spaces. a run of

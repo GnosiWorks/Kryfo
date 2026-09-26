@@ -1856,5 +1856,7 @@
   "stickerRecent": "Нещодавні",
   "stickerA11y": "Стікер {emoji}",
   "stickerRemoveRecent": "Прибрати з нещодавніх",
-  "stickerCouldNotLoad": "Не вдалося завантажити стікери"
+  "stickerCouldNotLoad": "Не вдалося завантажити стікери",
+  "stickerLabel": "Стікер",
+  "stickerNewer": "З новішої версії Kryfo"
 }

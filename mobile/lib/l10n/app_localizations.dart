@@ -11264,6 +11264,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stickers could not be loaded'**
   String get stickerCouldNotLoad;
+
+  /// a sticker named in words: chat list row, notification, reply quote, pins, saved (main.dart and the chat screens)
+  ///
+  /// In en, this message translates to:
+  /// **'Sticker'**
+  String get stickerLabel;
+
+  /// under a sticker this version does not have (stickers/sticker_bubble.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'From a newer Kryfo'**
+  String get stickerNewer;
 }
 
 class _AppLocalizationsDelegate

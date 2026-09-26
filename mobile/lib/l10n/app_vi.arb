@@ -1856,5 +1856,7 @@
   "stickerRecent": "Gần đây",
   "stickerA11y": "Nhãn dán {emoji}",
   "stickerRemoveRecent": "Xóa khỏi gần đây",
-  "stickerCouldNotLoad": "Không thể tải nhãn dán"
+  "stickerCouldNotLoad": "Không thể tải nhãn dán",
+  "stickerLabel": "Nhãn dán",
+  "stickerNewer": "Từ một bản Kryfo mới hơn"
 }

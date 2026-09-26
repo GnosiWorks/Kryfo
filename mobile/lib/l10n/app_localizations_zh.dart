@@ -6736,6 +6736,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get stickerCouldNotLoad => '无法加载贴纸';
+
+  @override
+  String get stickerLabel => '贴纸';
+
+  @override
+  String get stickerNewer => '来自更新版本的 Kryfo';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -13470,4 +13476,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get stickerCouldNotLoad => '無法載入貼圖';
+
+  @override
+  String get stickerLabel => '貼圖';
+
+  @override
+  String get stickerNewer => '來自較新版的 Kryfo';
 }

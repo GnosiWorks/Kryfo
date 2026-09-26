@@ -2899,6 +2899,8 @@ final _calls = <_Call>[
   ('stickerA11y', ["⟨emoji⟩"], (l) => l.stickerA11y("⟨emoji⟩")),
   ('stickerRemoveRecent', [], (l) => l.stickerRemoveRecent),
   ('stickerCouldNotLoad', [], (l) => l.stickerCouldNotLoad),
+  ('stickerLabel', [], (l) => l.stickerLabel),
+  ('stickerNewer', [], (l) => l.stickerNewer),
 ];
 
 void main() {

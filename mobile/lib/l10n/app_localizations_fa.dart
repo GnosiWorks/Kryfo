@@ -7020,4 +7020,10 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get stickerCouldNotLoad => 'استیکرها بارگیری نشدند';
+
+  @override
+  String get stickerLabel => 'استیکر';
+
+  @override
+  String get stickerNewer => 'از نسخه‌ی جدیدتر Kryfo';
 }

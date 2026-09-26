@@ -1856,5 +1856,7 @@
   "stickerRecent": "الأخيرة",
   "stickerA11y": "ملصق {emoji}",
   "stickerRemoveRecent": "إزالة من الأخيرة",
-  "stickerCouldNotLoad": "تعذّر تحميل الملصقات"
+  "stickerCouldNotLoad": "تعذّر تحميل الملصقات",
+  "stickerLabel": "ملصق",
+  "stickerNewer": "من إصدار أحدث من Kryfo"
 }

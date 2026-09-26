@@ -1856,5 +1856,7 @@
   "stickerRecent": "最近使用",
   "stickerA11y": "贴纸 {emoji}",
   "stickerRemoveRecent": "从最近使用中移除",
-  "stickerCouldNotLoad": "无法加载贴纸"
+  "stickerCouldNotLoad": "无法加载贴纸",
+  "stickerLabel": "贴纸",
+  "stickerNewer": "来自更新版本的 Kryfo"
 }

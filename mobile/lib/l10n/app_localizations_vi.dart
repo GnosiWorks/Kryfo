@@ -6986,4 +6986,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get stickerCouldNotLoad => 'Không thể tải nhãn dán';
+
+  @override
+  String get stickerLabel => 'Nhãn dán';
+
+  @override
+  String get stickerNewer => 'Từ một bản Kryfo mới hơn';
 }

@@ -5,6 +5,7 @@
 import 'dart:convert';
 
 import 'message_envelope.dart';
+import 'stickers/sticker_wire.dart' show StickerWire;
 
 // does this row still owe a nonce before it can leave. a peer who has
 // answered us (back-paired) has no gate for us any more.
@@ -44,6 +45,8 @@ Future<String> wrapRedelivery(
     burnSeconds: (row['burn_secs'] as num?)?.toInt(),
     powNonce: nonce,
     powBitsUsed: nonce == null ? null : powBits,
+    // or a retried sticker arrives as its emoji
+    sticker: StickerWire.parse(row['sticker'])?.value,
     sender: sender,
   );
 }

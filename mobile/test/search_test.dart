@@ -99,6 +99,19 @@ void main() {
     );
   });
 
+  test('a sticker row has no words', () {
+    expect(searchBody({'plaintext': '🔒', 'sticker': 'fokia:17:1'}), '');
+    expect(
+      searchBody({'plaintext': 'pizza tonight', 'sticker': 'fokia:17:1'}),
+      '',
+    );
+    // a text row is found by its words, as before
+    expect(
+      searchBody({'plaintext': 'Pizza tonight', 'sticker': null}),
+      indexText('Pizza tonight'),
+    );
+  });
+
   test('filters are plain sql on the message row', () {
     expect(kindWhere(SearchKind.all), '');
     expect(kindWhere(SearchKind.photos), contains('media_path'));

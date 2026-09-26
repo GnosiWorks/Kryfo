@@ -9,6 +9,7 @@ import 'package:crypto/crypto.dart';
 import 'bidi_safe.dart';
 import 'dlog.dart';
 import 'media_resend.dart';
+import 'stickers/sticker_wire.dart' show StickerWire;
 
 const _envelopePrefix = 'halo/1:';
 
@@ -53,6 +54,7 @@ class UnwrappedMessage {
   final Object? poll; // 'pl' - the options of a poll; the question is 'm'
   final VoteFrame? vote; // 'vt' - a vote on a poll
   final PollCloseFrame? pollClose; // 'pc' - the creator closed a poll
+  final String? sticker; // 'st' - pack:id:since, drawn from our own pack
   // 'm' as it was sent, before the direction controls came out: the
   // proof of work was done over these characters
   final String? powText;
@@ -96,6 +98,7 @@ class UnwrappedMessage {
     this.poll,
     this.vote,
     this.pollClose,
+    this.sticker,
   });
 }
 
@@ -268,8 +271,10 @@ Future<String> wrapMessage(
   Map<String, Object>? poll,
   VoteFrame? vote,
   PollCloseFrame? pollClose,
+  String? sticker,
 }) async {
   final body = <String, dynamic>{'m': plain};
+  if (sticker != null) body['st'] = sticker;
   if (poll != null) body['pl'] = poll;
   if (vote != null) {
     body['vt'] = {'u': vote.pollUid, 'c': vote.choices, 's': vote.seq};
@@ -491,6 +496,8 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       poll: json['pl'],
       vote: vote,
       pollClose: pollClose,
+      // the raw value: one with direction controls in it is no sticker
+      sticker: StickerWire.parse(sent['st'])?.value,
     );
   } catch (e) {
     dlog(

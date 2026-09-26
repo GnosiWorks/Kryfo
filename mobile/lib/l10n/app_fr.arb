@@ -1856,5 +1856,7 @@
   "stickerRecent": "Récents",
   "stickerA11y": "Sticker {emoji}",
   "stickerRemoveRecent": "Retirer des récents",
-  "stickerCouldNotLoad": "Impossible de charger les stickers"
+  "stickerCouldNotLoad": "Impossible de charger les stickers",
+  "stickerLabel": "Sticker",
+  "stickerNewer": "D’un Kryfo plus récent"
 }

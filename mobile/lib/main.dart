@@ -62,6 +62,8 @@ import 'message_envelope.dart';
 import 'polls.dart';
 import 'search.dart';
 import 'search_bench.dart';
+import 'stickers/sticker_pack.dart' show StickerPack;
+import 'stickers/sticker_wire.dart' show StickerWire, stickerText;
 import 'widgets/motion.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:app_links/app_links.dart';
@@ -997,7 +999,7 @@ class HaloDb {
     _db = await openDatabase(
       path,
       password: pw,
-      version: 51,
+      version: 52,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE identity (
@@ -1059,6 +1061,7 @@ class HaloDb {
             pow_nonce INTEGER,
             burn_secs INTEGER,
             poll TEXT,
+            sticker TEXT,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
         ''');
@@ -1134,6 +1137,14 @@ class HaloDb {
         await searchTables(db, fresh: true);
       },
       onUpgrade: (db, oldV, newV) async {
+        if (oldV < 52) {
+          // stickers: the wire value on the row
+          try {
+            await db.execute('ALTER TABLE messages ADD COLUMN sticker TEXT');
+          } catch (_) {
+            // already present: a migration must be safe to re-run
+          }
+        }
         if (oldV < 51) {
           // search: the index starts empty and fills from the oldest
           // message up, in the background, a batch at a time
@@ -2262,6 +2273,7 @@ class HaloDb {
     String? preview,
     bool secure = false,
     String? poll,
+    String? sticker,
   }) async {
     final db = await open();
     final id = await db.insert('messages', {
@@ -2285,6 +2297,7 @@ class HaloDb {
       'sent': sent,
       'secure': secure ? 1 : 0,
       'poll': ?poll,
+      'sticker': ?sticker,
     });
     try {
       await indexSearchRow(db, id, {
@@ -2292,6 +2305,7 @@ class HaloDb {
         'poll': poll,
         'file_name': fileName,
         'preview': preview,
+        'sticker': sticker,
       });
     } catch (e) {
       // a message is never lost to its index; the fill catches it up
@@ -2723,6 +2737,7 @@ class HaloDb {
         'media_path',
         'file_name',
         'pinned_at',
+        'sticker',
       ],
       where: groupId != null
           ? 'pinned = 1 AND msg_uid IS NOT NULL AND group_id = ?'
@@ -3007,6 +3022,19 @@ class HaloDb {
     await db.delete('edits_out', where: 'msg_uid = ?', whereArgs: [msgUid]);
   }
 
+  /// the sticker on a row, as it goes on the wire
+  Future<String?> stickerOf(String uid) async {
+    final db = await open();
+    final r = await db.query(
+      'messages',
+      columns: ['sticker'],
+      where: 'msg_uid = ? AND sticker IS NOT NULL',
+      whereArgs: [uid],
+      limit: 1,
+    );
+    return r.isEmpty ? null : StickerWire.parse(r.first['sticker'])?.value;
+  }
+
   // ---- polls ----
 
   /// the poll on a row, the chat it is in, and whether it is ours
@@ -3189,13 +3217,14 @@ class HaloDb {
     await db.update(
       'messages',
       {'plaintext': unmarked(newText), 'edited': 1},
-      where: 'msg_uid = ?',
+      // a sticker has no words to edit: its text stays its emoji
+      where: 'msg_uid = ? AND sticker IS NULL',
       whereArgs: [msgUid],
     );
     // the old words must not find it any more
     final rows = await db.query(
       'messages',
-      columns: ['id', 'plaintext', 'poll', 'file_name', 'preview'],
+      columns: ['id', 'plaintext', 'poll', 'file_name', 'preview', 'sticker'],
       where: 'msg_uid = ?',
       whereArgs: [msgUid],
     );
@@ -3221,7 +3250,7 @@ class HaloDb {
     if (at >= to) return (at: at, to: to);
     final rows = await db.query(
       'messages',
-      columns: ['id', 'plaintext', 'poll', 'file_name', 'preview'],
+      columns: ['id', 'plaintext', 'poll', 'file_name', 'preview', 'sticker'],
       where: 'id > ? AND id <= ?',
       whereArgs: [at, to],
       orderBy: 'id ASC',
@@ -3600,7 +3629,7 @@ class HaloDb {
     final db = await open();
     final rows = await db.rawQuery('''
       SELECT m.peer_id, m.direction, m.plaintext, m.media_path, m.file_name,
-             m.sent_at
+             m.sent_at, m.sticker
       FROM messages m
       JOIN (
         SELECT peer_id, MAX(rowid) AS r FROM messages
@@ -3729,28 +3758,10 @@ Future<List<Map<String, Object?>>> runSearchQuery(
   );
 }
 
-// the words a row is found by: its text, a poll's answers, a file's name, the
-// title of the link it carries
-String _searchBody(Map<String, Object?> r) {
-  final parts = <String>[(r['plaintext'] as String?) ?? ''];
-  final poll = PollSpec.parse(r['poll']);
-  if (poll != null) parts.addAll(poll.options);
-  final name = r['file_name'] as String?;
-  if (name != null && name != 'voice.wav') parts.add(name);
-  final pv = r['preview'];
-  if (pv is String && pv.contains('"title"')) {
-    try {
-      final t = (jsonDecode(pv) as Map)['title'];
-      if (t is String) parts.add(t);
-    } catch (_) {}
-  }
-  return indexText(parts.where((x) => x.trim().isNotEmpty).join('\n'));
-}
-
 /// the same, queued on a batch: one trip for many rows
 void indexSearchRowIn(Batch b, int id, Map<String, Object?> r) {
   b.delete('msg_fts', where: 'rowid = ?', whereArgs: [id]);
-  final body = _searchBody(r);
+  final body = searchBody(r);
   if (body.trim().isNotEmpty) b.insert('msg_fts', {'rowid': id, 'body': body});
 }
 
@@ -3760,7 +3771,7 @@ Future<void> indexSearchRow(
   Map<String, Object?> r,
 ) async {
   await db.delete('msg_fts', where: 'rowid = ?', whereArgs: [id]);
-  final body = _searchBody(r);
+  final body = searchBody(r);
   if (body.trim().isEmpty) return;
   await db.insert('msg_fts', {'rowid': id, 'body': body});
 }
@@ -5953,6 +5964,17 @@ class AppState extends ChangeNotifier {
         : PollSpec(options: p.options, multi: p.multi).toRow();
   }
 
+  // the pack an arriving sticker is read against. null if it cannot load:
+  // the sticker is then read as one this version does not have
+  Future<StickerPack?> _stickerPack() async {
+    try {
+      return await StickerPack.load();
+    } catch (e) {
+      dlog('stickers: $e');
+      return null;
+    }
+  }
+
   // routing for group controls, reactions and data messages, shared by all
   // three receive paths (back-pair, tor drain, nostr poll)
   Future<void> _applyIncomingPayload(
@@ -6272,6 +6294,21 @@ class AppState extends ChangeNotifier {
             l10n.appAnAttachmentCouldNot,
           ].where((s) => s.trim().isNotEmpty).join('\n')
         : env.message;
+    // a sticker is a message of its own: a frame with media, a file or a
+    // poll on it is read without it
+    final bare =
+        env.imageB64 == null &&
+        env.fileB64 == null &&
+        env.fileName == null &&
+        env.mediaId == null &&
+        env.poll == null;
+    final wire = bare ? StickerWire.parse(env.sticker) : null;
+    // a known sticker's text is our own emoji for it, never the sender's
+    final text = wire == null
+        ? bodyText
+        : stickerText(wire, env.message, await _stickerPack());
+    // what the sender said, as far as this phone shows it
+    final said = wire == null ? env.message : text;
     // dedup: the db check alone races when two copies arrive at once, so an
     // in-memory set of uids in flight backs it. the first in claims the uid;
     // a twin takes the known path instead of inserting.
@@ -6312,7 +6349,7 @@ class AppState extends ChangeNotifier {
     await live.saveMessage(
       senderHaloId,
       'in',
-      bodyText,
+      text,
       burnAt: burnOk && chunkBurn != null && chunkBurn > 0
           ? DateTime.now().millisecondsSinceEpoch + chunkBurn * 1000
           : null,
@@ -6333,6 +6370,7 @@ class AppState extends ChangeNotifier {
       // never closed on arrival, whatever the frame says: only a close from
       // its creator does that
       poll: isGroup ? _arrivingPoll(env.poll) : null,
+      sticker: wire?.value,
     );
     // remember the face they picked. cheap, and it arrives with every
     // message so it stays current if they change it.
@@ -6343,7 +6381,7 @@ class AppState extends ChangeNotifier {
     // group that is any member you never added.
     if (!senderAccepted && senderHaloId != myId) {
       unawaited(
-        _runShield(senderHaloId, env.message, env.senderAvatar, group: isGroup),
+        _runShield(senderHaloId, said, env.senderAvatar, group: isGroup),
       );
     }
     // saved now, messageExists covers dedup from here
@@ -6367,7 +6405,7 @@ class AppState extends ChangeNotifier {
       final openGroup = 'group:${env.groupId}';
       if (currentChatPeer != openGroup) {
         await live.bumpGroupUnread(env.groupId!);
-        if (mentionsMe(env.message, myId)) {
+        if (mentionsMe(said, myId)) {
           await live.setGroupMentioned(env.groupId!);
         }
       } else {
@@ -6385,7 +6423,9 @@ class AppState extends ChangeNotifier {
     if (isGroup) {
       final g = await live.getGroup(env.groupId!);
       notifTitle = (g?['name'] as String?) ?? l10n.appGroup2;
-      final gBody = env.poll != null && PollSpec.parse(env.poll) != null
+      final gBody = wire != null
+          ? l10n.stickerLabel
+          : env.poll != null && PollSpec.parse(env.poll) != null
           ? l10n.pollPreview(env.message)
           : env.message.isNotEmpty
           ? env.message
@@ -6408,7 +6448,9 @@ class AppState extends ChangeNotifier {
           currentChatPeer == senderHaloId || await live.isMuted(senderHaloId);
     } else {
       notifTitle = senderHaloId;
-      notifBody = env.message.isNotEmpty
+      notifBody = wire != null
+          ? l10n.stickerLabel
+          : env.message.isNotEmpty
           ? env.message
           : (fileName ?? (mediaPath != null ? l10n.appPhoto : env.message));
       notifPayload = senderHaloId;
@@ -7905,7 +7947,10 @@ class AppState extends ChangeNotifier {
         final media = last['media_path'] as String?;
         final fileName = last['file_name'] as String?;
         String body;
-        if (text.isNotEmpty) {
+        // a sticker's text is its emoji; the row says what it is
+        if (last['sticker'] != null) {
+          body = l10n.stickerLabel;
+        } else if (text.isNotEmpty) {
           body = text;
         } else if (fileName == 'voice.wav') {
           body = l10n.appVoiceMessage2;
@@ -8315,47 +8360,11 @@ class AppState extends ChangeNotifier {
     if (room == null) return _sendOneEnvelope(memberId, wrapped);
     if (memberId == room.pub) return false;
     if (room.expiresAt <= DateTime.now().millisecondsSinceEpoch) return false;
-    final stripped = _roomify(wrapped, room.pub);
+    final stripped = roomFrame(wrapped, room.pub);
     if (stripped == null) return false;
     final r = await engine.roomSend(room.priv, memberId, stripped);
     if (r != 'ok') dlog('room send: $r');
     return r == 'ok';
-  }
-
-  // strip every trace of who sent this and put the room key in its place.
-  // null when it cannot be done, and the send has to be dropped: the frame
-  // it could not rewrite still carries the real onion, the kryfo id and the
-  // push endpoint, which is the one thing a burner room exists to withhold.
-  String? _roomify(String wrapped, String pub) {
-    final prefix = 'halo/1:';
-    if (!wrapped.startsWith(prefix)) {
-      dlog('room: frame is not halo/1, not sending it');
-      return null;
-    }
-    try {
-      final j =
-          jsonDecode(wrapped.substring(prefix.length)) as Map<String, dynamic>;
-      j['h'] = pub;
-      j['x'] = pub;
-      j.remove('o');
-      j.remove('e');
-      j.remove('p');
-      j.remove('bg');
-      j.remove('rp');
-      final out = '$prefix${jsonEncode(j)}';
-      // read it back: the fields have to be gone, whatever the encoder did
-      final check = jsonDecode(out.substring(prefix.length)) as Map;
-      for (final k in ['o', 'e', 'p', 'bg', 'rp']) {
-        if (check.containsKey(k)) {
-          dlog('room: $k survived the strip, not sending it');
-          return null;
-        }
-      }
-      return out;
-    } catch (e) {
-      dlog('room: could not strip the frame, not sending it');
-      return null;
-    }
   }
 
   // ---- burner rooms ----
@@ -8442,7 +8451,7 @@ class AppState extends ChangeNotifier {
     await _subscribeRoomMembers(link.roomId);
     _armRoomTimer();
     await refreshGroups();
-    final wrapped = _roomify(
+    final wrapped = roomFrame(
       await wrapMessage(
         '',
         groupId: link.roomId,
@@ -8646,10 +8655,15 @@ class AppState extends ChangeNotifier {
     int? burnSeconds,
     Map<String, String>? preview,
     PollSpec? poll,
+    String? sticker,
   }) async {
     // a retry of a poll passes only its uid: the options come off the row
     if (poll == null && msgUid != null) {
       poll = (await session.pollRow(msgUid))?.spec;
+    }
+    // and so does a retry of a sticker, or it goes out as its emoji
+    if (sticker == null && msgUid != null) {
+      sticker = await session.stickerOf(msgUid);
     }
     msgUid ??= newMsgUid();
     final burnAt = (burnSeconds != null && burnSeconds > 0)
@@ -8672,6 +8686,7 @@ class AppState extends ChangeNotifier {
         sent: 0,
         preview: preview == null ? null : jsonEncode(preview),
         poll: poll?.toRow(),
+        sticker: sticker,
       );
     }
     // a quiet session keeps the row here, unsent: nothing leaves
@@ -8700,6 +8715,7 @@ class AppState extends ChangeNotifier {
       supporterBadge: await sharedBadge(),
       sender: _mySender(),
       poll: poll?.toWire(),
+      sticker: sticker,
     );
     dlog('GRPSEND group=$groupId members=$members me=$myId admin=$amAdmin');
     final results = await Future.wait([

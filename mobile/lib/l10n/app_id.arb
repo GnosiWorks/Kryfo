@@ -1856,5 +1856,7 @@
   "stickerRecent": "Terbaru",
   "stickerA11y": "Stiker {emoji}",
   "stickerRemoveRecent": "Hapus dari terbaru",
-  "stickerCouldNotLoad": "Stiker tidak dapat dimuat"
+  "stickerCouldNotLoad": "Stiker tidak dapat dimuat",
+  "stickerLabel": "Stiker",
+  "stickerNewer": "Dari Kryfo versi lebih baru"
 }

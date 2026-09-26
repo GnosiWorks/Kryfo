@@ -7057,4 +7057,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get stickerCouldNotLoad => 'Não foi possível carregar as figurinhas';
+
+  @override
+  String get stickerLabel => 'Figurinha';
+
+  @override
+  String get stickerNewer => 'De um Kryfo mais novo';
 }

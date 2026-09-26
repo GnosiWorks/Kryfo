@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'bidi_safe.dart';
+import 'dlog.dart';
 import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
 // SPDX-License-Identifier: GPL-3.0-or-later
 // burner room helpers with no io in them: the link, the short tag a room
-// key is shown as, the countdown wording and its colour thresholds.
+// key is shown as, the countdown wording and its colour thresholds, and
+// what a frame loses before it leaves.
 
 const roomExpiryOptions = <Duration>[
   Duration(hours: 1),
@@ -76,6 +80,45 @@ String roomTag(String pub) => pub.length >= 6 ? pub.substring(0, 6) : pub;
 
 bool looksLikeRoomKey(String id) =>
     id.length == 64 && RegExp(r'^[0-9a-f]+$').hasMatch(id);
+
+// what a room frame may not carry: the onion, the signing key, the push
+// endpoint, the badge and the roster's keys
+const _roomStripped = ['o', 'e', 'p', 'bg', 'rp'];
+
+/// [wrapped] with every trace of who sent it gone and the room key [pub] in
+/// its place. null when it cannot be done, and the send has to be dropped:
+/// the frame it could not rewrite still carries the real onion, the kryfo
+/// id and the push endpoint, which is the one thing a burner room exists to
+/// withhold. the message itself ('m', 'st', 'u', 'q' and the rest) stays.
+String? roomFrame(String wrapped, String pub) {
+  const prefix = 'halo/1:';
+  if (!wrapped.startsWith(prefix)) {
+    dlog('room: frame is not halo/1, not sending it');
+    return null;
+  }
+  try {
+    final j =
+        jsonDecode(wrapped.substring(prefix.length)) as Map<String, dynamic>;
+    j['h'] = pub;
+    j['x'] = pub;
+    for (final k in _roomStripped) {
+      j.remove(k);
+    }
+    final out = '$prefix${jsonEncode(j)}';
+    // read it back: the fields have to be gone, whatever the encoder did
+    final check = jsonDecode(out.substring(prefix.length)) as Map;
+    for (final k in _roomStripped) {
+      if (check.containsKey(k)) {
+        dlog('room: $k survived the strip, not sending it');
+        return null;
+      }
+    }
+    return out;
+  } catch (e) {
+    dlog('room: could not strip the frame, not sending it');
+    return null;
+  }
+}
 
 class RoomLink {
   final String roomId;

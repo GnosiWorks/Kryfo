@@ -8908,5 +8908,13 @@
   "stickerCouldNotLoad": "Stickers could not be loaded",
   "@stickerCouldNotLoad": {
     "description": "stickers/sticker_sheet.dart"
+  },
+  "stickerLabel": "Sticker",
+  "@stickerLabel": {
+    "description": "a sticker named in words: chat list row, notification, reply quote, pins, saved (main.dart and the chat screens)"
+  },
+  "stickerNewer": "From a newer Kryfo",
+  "@stickerNewer": {
+    "description": "under a sticker this version does not have (stickers/sticker_bubble.dart)"
   }
 }

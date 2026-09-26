@@ -7126,4 +7126,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get stickerCouldNotLoad => 'تعذّر تحميل الملصقات';
+
+  @override
+  String get stickerLabel => 'ملصق';
+
+  @override
+  String get stickerNewer => 'من إصدار أحدث من Kryfo';
 }
