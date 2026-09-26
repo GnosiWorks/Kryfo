@@ -1,10 +1,12 @@
 package main
 
-// the pin table: one salt, a scrypt cost measured on this phone and eight
-// entries of the same size. an unset entry is random bytes, so the table does
-// not say which pins exist. roles are fixed by the app (0 app, 1 wipe, 2
-// decoy, 3 vault). a check does the same work whatever was typed, and the key
-// made from the pin never leaves this file.
+// the pin table: one salt, a scrypt cost measured on this phone and sixteen
+// entries of the same size. each entry holds a tag, what it opens (sealed) and
+// a wrap: a vault's database key sealed under the pin, or random bytes. an
+// unset entry is random bytes too, so the table does not say which pins or
+// vaults exist. roles are fixed by the app (0 app, 1 wipe, 2 decoy, 3 vault,
+// 4 to 6 the decoy's own). a check does the same work whatever was typed, and
+// the key made from the pin never leaves this file.
 
 import (
 	"crypto/hmac"
@@ -21,25 +23,33 @@ import (
 )
 
 const (
-	pinEntries  = 8
-	pinTagLen   = 32
-	pinMetaLen  = 1 + 16 // kind, container id
-	pinSealLen  = chacha20poly1305.NonceSize + pinMetaLen + chacha20poly1305.Overhead
-	pinSaltLen  = 32
-	pinLogNLow  = 14 // 16 MiB at r=8
-	pinLogNHigh = 15 // 32 MiB, what backups use
-	pinR        = 8
-	pinP        = 1
+	pinVersion   = 2
+	pinEntries   = 16
+	pinEntriesV1 = 8
+	pinTagLen    = 32
+	pinMetaLen   = 1 + 16 // kind, container id
+	pinSealLen   = chacha20poly1305.NonceSize + pinMetaLen + chacha20poly1305.Overhead
+	pinKeyLen    = 32 // a vault's database key
+	pinWrapLen   = chacha20poly1305.NonceSize + pinKeyLen + chacha20poly1305.Overhead
+	pinSaltLen   = 32
+	pinLogNLow   = 14 // 16 MiB at r=8
+	pinLogNHigh  = 15 // 32 MiB, what backups use
+	pinR         = 8
+	pinP         = 1
 )
 
-var errPinCollision = errors.New("collision")
+var (
+	errPinCollision = errors.New("collision")
+	errPinWrong     = errors.New("wrong pin")
+)
 
 // what a check did, counted, so a test can show every pin costs the same
 var pinCount struct{ kdf, mac, open, legacy int }
 
 type pinEntry struct {
-	T string `json:"t"` // tag, hex
-	M string `json:"m"` // sealed kind and container, hex
+	T string `json:"t"`           // tag, hex
+	M string `json:"m"`           // sealed kind and container, hex
+	W string `json:"w,omitempty"` // sealed database key or random, hex. v2 only
 }
 
 type pinTable struct {
@@ -98,7 +108,7 @@ func pinKey(pin, salt []byte, logN int) ([]byte, error) {
 
 // a fresh table: new salt, every entry random
 func newPinTable(logN int) pinTable {
-	t := pinTable{V: 1, LogN: logN, Salt: hex.EncodeToString(randBytes(pinSaltLen))}
+	t := pinTable{V: pinVersion, LogN: logN, Salt: hex.EncodeToString(randBytes(pinSaltLen))}
 	for i := 0; i < pinEntries; i++ {
 		t.Entries = append(t.Entries, randomEntry())
 	}
@@ -106,28 +116,89 @@ func newPinTable(logN int) pinTable {
 }
 
 func randomEntry() pinEntry {
-	return pinEntry{T: hex.EncodeToString(randBytes(pinTagLen)), M: hex.EncodeToString(randBytes(pinSealLen))}
+	return pinEntry{
+		T: hex.EncodeToString(randBytes(pinTagLen)),
+		M: hex.EncodeToString(randBytes(pinSealLen)),
+		W: hex.EncodeToString(randBytes(pinWrapLen)),
+	}
 }
 
-// the table as bytes, refused whole if any part is the wrong shape
-func (t pinTable) decode() (salt []byte, tags, seals [][]byte, err error) {
-	if t.V != 1 || len(t.Entries) != pinEntries || t.LogN < pinLogNLow || t.LogN > pinLogNHigh {
-		return nil, nil, nil, errors.New("bad table")
+func (t pinTable) copy() pinTable {
+	return pinTable{V: t.V, LogN: t.LogN, Salt: t.Salt, Entries: append([]pinEntry(nil), t.Entries...)}
+}
+
+// the table as bytes
+type pinRaw struct {
+	salt               []byte
+	tags, seals, wraps [][]byte
+}
+
+// v1 (eight entries, no wraps) or v2, refused whole if any part is the wrong
+// shape
+func (t pinTable) decode() (pinRaw, error) {
+	var d pinRaw
+	want := 0
+	switch t.V {
+	case 1:
+		want = pinEntriesV1
+	case pinVersion:
+		want = pinEntries
 	}
-	salt, err = hex.DecodeString(t.Salt)
+	if want == 0 || len(t.Entries) != want || t.LogN < pinLogNLow || t.LogN > pinLogNHigh {
+		return d, errors.New("bad table")
+	}
+	salt, err := hex.DecodeString(t.Salt)
 	if err != nil || len(salt) != pinSaltLen {
-		return nil, nil, nil, errors.New("bad salt")
+		return d, errors.New("bad salt")
 	}
+	d.salt = salt
 	for _, e := range t.Entries {
 		tg, err1 := hex.DecodeString(e.T)
 		sl, err2 := hex.DecodeString(e.M)
-		if err1 != nil || err2 != nil || len(tg) != pinTagLen || len(sl) != pinSealLen {
-			return nil, nil, nil, errors.New("bad entry")
+		wr, err3 := hex.DecodeString(e.W)
+		wrapOK := len(wr) == pinWrapLen
+		if t.V == 1 {
+			wrapOK = e.W == ""
 		}
-		tags = append(tags, tg)
-		seals = append(seals, sl)
+		if err1 != nil || err2 != nil || err3 != nil || len(tg) != pinTagLen || len(sl) != pinSealLen || !wrapOK {
+			return pinRaw{}, errors.New("bad entry")
+		}
+		d.tags = append(d.tags, tg)
+		d.seals = append(d.seals, sl)
+		d.wraps = append(d.wraps, wr)
 	}
-	return salt, tags, seals, nil
+	return d, nil
+}
+
+// a v1 table as v2: the same salt, cost and entries, each with a random wrap,
+// and eight more random entries, so every pin opens what it did. a v2 table
+// comes back as it is
+func (t pinTable) upgrade() (pinTable, error) {
+	if _, err := t.decode(); err != nil {
+		return t, err
+	}
+	if t.V == pinVersion {
+		return t.copy(), nil
+	}
+	out := pinTable{V: pinVersion, LogN: t.LogN, Salt: t.Salt}
+	for _, e := range t.Entries {
+		out.Entries = append(out.Entries, pinEntry{T: e.T, M: e.M, W: hex.EncodeToString(randBytes(pinWrapLen))})
+	}
+	for len(out.Entries) < pinEntries {
+		out.Entries = append(out.Entries, randomEntry())
+	}
+	return out, nil
+}
+
+// every call works on v2. a v1 table is upgraded in memory, so it costs the
+// same and opens the same until the upgraded one is written
+func (t pinTable) current() (pinTable, pinRaw, error) {
+	up, err := t.upgrade()
+	if err != nil {
+		return t, pinRaw{}, err
+	}
+	d, err := up.decode()
+	return up, d, err
 }
 
 func legacyHash(pin []byte, salt string) []byte {
@@ -169,14 +240,14 @@ func seal(key, plain []byte) []byte {
 	return append(nonce, a.Seal(nil, nonce, plain, nil)...)
 }
 
-// the check. wrapped is the vault's wrapped database key, or nil: a
-// stand-in of the same size is opened instead
-func pinCheck(pin []byte, t pinTable, old pinLegacy, wrapped []byte) (pinResult, error) {
-	salt, tags, seals, err := t.decode()
+// the check: one kdf, every tag, then the record and the wrap of one entry,
+// the match or entry 0 when nothing matched
+func pinCheck(pin []byte, t pinTable, old pinLegacy) (pinResult, error) {
+	t, d, err := t.current()
 	if err != nil {
 		return pinResult{}, err
 	}
-	k, err := pinKey(pin, salt, t.LogN)
+	k, err := pinKey(pin, d.salt, t.LogN)
 	if err != nil {
 		return pinResult{}, err
 	}
@@ -185,22 +256,19 @@ func pinCheck(pin []byte, t pinTable, old pinLegacy, wrapped []byte) (pinResult,
 	match, any := -1, 0
 	for i := 0; i < pinEntries; i++ {
 		tag := label(k, "tag", i)
-		eq := subtle.ConstantTimeCompare(tag, tags[i])
+		eq := subtle.ConstantTimeCompare(tag, d.tags[i])
 		match = subtle.ConstantTimeSelect(eq, i, match)
 		any |= eq
 		zero(tag)
 	}
 	at := subtle.ConstantTimeSelect(any, match, 0)
 	mk := label(k, "meta", at)
-	meta, opened := openSealed(mk, seals[at])
+	meta, opened := openSealed(mk, d.seals[at])
 	zero(mk)
-
-	if len(wrapped) == 0 {
-		wrapped = randBytes(chacha20poly1305.NonceSize + 32 + chacha20poly1305.Overhead)
-	}
-	wk := label(k, "wrap", 0)
-	unwrapped, unwrappedOK := openSealed(wk, wrapped)
+	wk := label(k, "wrap", at)
+	key, keyOK := openSealed(wk, d.wraps[at])
 	zero(wk)
+	defer zero(key)
 
 	r := pinResult{Index: -1}
 	r.LegacyApp = legacyMatch(pin, old.AppSalt, old.AppHash)
@@ -209,35 +277,20 @@ func pinCheck(pin []byte, t pinTable, old pinLegacy, wrapped []byte) (pinResult,
 		r.Index = match
 		r.Kind = int(meta[0])
 		r.Container = hex.EncodeToString(meta[1:])
-	}
-	if unwrappedOK {
-		r.Unwrapped = hex.EncodeToString(unwrapped)
-		zero(unwrapped)
+		if keyOK && len(key) == pinKeyLen {
+			r.Unwrapped = hex.EncodeToString(key)
+		}
 	}
 	return r, nil
 }
 
-// sets entry index to open kind/container with pin. refused, with nothing
-// changed, when the pin already opens another entry or matches an old check.
-// wrapPlain, when given, comes back sealed under this pin (the vault's key)
-func pinSetup(pin []byte, t pinTable, old pinLegacy, index, kind int, container, wrapPlain []byte) (pinTable, []byte, error) {
-	if index < 0 || index >= pinEntries || kind < 1 || kind > 255 || len(container) != 16 {
-		return t, nil, errors.New("bad setup")
-	}
-	salt, tags, _, err := t.decode()
-	if err != nil {
-		return t, nil, err
-	}
-	k, err := pinKey(pin, salt, t.LogN)
-	if err != nil {
-		return t, nil, err
-	}
-	defer zero(k)
-
+// whether the pin behind k already opens an entry other than index, or matches
+// an old check
+func pinClashes(k []byte, d pinRaw, index int, pin []byte, old pinLegacy) bool {
 	clash := 0
 	for i := 0; i < pinEntries; i++ {
 		tag := label(k, "tag", i)
-		eq := subtle.ConstantTimeCompare(tag, tags[i])
+		eq := subtle.ConstantTimeCompare(tag, d.tags[i])
 		if i != index {
 			clash |= eq
 		}
@@ -249,36 +302,110 @@ func pinSetup(pin []byte, t pinTable, old pinLegacy, index, kind int, container,
 	if legacyMatch(pin, old.WipeSalt, old.WipeHash) {
 		clash = 1
 	}
-	if clash == 1 {
-		return t, nil, errPinCollision
-	}
-
-	out := pinTable{V: t.V, LogN: t.LogN, Salt: t.Salt, Entries: append([]pinEntry(nil), t.Entries...)}
-	tag := label(k, "tag", index)
-	mk := label(k, "meta", index)
-	meta := append([]byte{byte(kind)}, container...)
-	out.Entries[index] = pinEntry{T: hex.EncodeToString(tag), M: hex.EncodeToString(seal(mk, meta))}
-	zero(tag)
-	zero(mk)
-
-	var wrapped []byte
-	if len(wrapPlain) > 0 {
-		wk := label(k, "wrap", 0)
-		wrapped = seal(wk, wrapPlain)
-		zero(wk)
-	}
-	return out, wrapped, nil
+	return clash == 1
 }
 
-// the entry goes back to random bytes
+// entry index under k: the tag, what it opens, and the key sealed, or random
+// bytes when there is none
+func pinSealEntry(k []byte, index int, meta, key []byte) pinEntry {
+	tag := label(k, "tag", index)
+	mk := label(k, "meta", index)
+	e := pinEntry{T: hex.EncodeToString(tag), M: hex.EncodeToString(seal(mk, meta))}
+	zero(tag)
+	zero(mk)
+	if len(key) > 0 {
+		wk := label(k, "wrap", index)
+		e.W = hex.EncodeToString(seal(wk, key))
+		zero(wk)
+	} else {
+		e.W = hex.EncodeToString(randBytes(pinWrapLen))
+	}
+	return e
+}
+
+// sets entry index to open kind/container with pin, with wrapPlain (a vault's
+// database key) sealed into it when given. refused, with nothing changed, when
+// the pin already opens another entry or matches an old check
+func pinSetup(pin []byte, t pinTable, old pinLegacy, index, kind int, container, wrapPlain []byte) (pinTable, error) {
+	if index < 0 || index >= pinEntries || kind < 1 || kind > 255 || len(container) != 16 ||
+		(len(wrapPlain) != 0 && len(wrapPlain) != pinKeyLen) {
+		return t, errors.New("bad setup")
+	}
+	up, d, err := t.current()
+	if err != nil {
+		return t, err
+	}
+	k, err := pinKey(pin, d.salt, t.LogN)
+	if err != nil {
+		return t, err
+	}
+	defer zero(k)
+	if pinClashes(k, d, index, pin, old) {
+		return t, errPinCollision
+	}
+	out := up.copy()
+	out.Entries[index] = pinSealEntry(k, index, append([]byte{byte(kind)}, container...), wrapPlain)
+	return out, nil
+}
+
+// the pin of entry index changes from oldPin to newPin. what the entry opens
+// and the key it wraps stay, opened and sealed again here, so the key never
+// leaves. a wrong old pin, an entry with no key, or a new pin that clashes
+// changes nothing
+func pinRewrap(oldPin, newPin []byte, t pinTable, old pinLegacy, index int) (pinTable, error) {
+	if index < 0 || index >= pinEntries {
+		return t, errors.New("bad index")
+	}
+	up, d, err := t.current()
+	if err != nil {
+		return t, err
+	}
+	ko, err := pinKey(oldPin, d.salt, t.LogN)
+	if err != nil {
+		return t, err
+	}
+	defer zero(ko)
+	tag := label(ko, "tag", index)
+	eq := subtle.ConstantTimeCompare(tag, d.tags[index])
+	zero(tag)
+	if eq != 1 {
+		return t, errPinWrong
+	}
+	mk := label(ko, "meta", index)
+	meta, metaOK := openSealed(mk, d.seals[index])
+	zero(mk)
+	defer zero(meta)
+	wk := label(ko, "wrap", index)
+	key, keyOK := openSealed(wk, d.wraps[index])
+	zero(wk)
+	defer zero(key)
+	if !metaOK || len(meta) != pinMetaLen || !keyOK || len(key) != pinKeyLen {
+		return t, errors.New("nothing wrapped")
+	}
+
+	kn, err := pinKey(newPin, d.salt, t.LogN)
+	if err != nil {
+		return t, err
+	}
+	defer zero(kn)
+	if pinClashes(kn, d, index, newPin, old) {
+		return t, errPinCollision
+	}
+	out := up.copy()
+	out.Entries[index] = pinSealEntry(kn, index, meta, key)
+	return out, nil
+}
+
+// the entry goes back to random bytes, its wrap too
 func pinClear(t pinTable, index int) (pinTable, error) {
-	if _, _, _, err := t.decode(); err != nil {
+	up, _, err := t.current()
+	if err != nil {
 		return t, err
 	}
 	if index < 0 || index >= pinEntries {
 		return t, errors.New("bad index")
 	}
-	out := pinTable{V: t.V, LogN: t.LogN, Salt: t.Salt, Entries: append([]pinEntry(nil), t.Entries...)}
+	out := up.copy()
 	out.Entries[index] = randomEntry()
 	return out, nil
 }

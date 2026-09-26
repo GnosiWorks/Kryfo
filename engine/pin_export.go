@@ -43,52 +43,98 @@ func HaloPinNewTable(logN C.int) *C.char {
 	return pinJSON(newPinTable(int(logN)))
 }
 
-//export HaloPinCheck
-func HaloPinCheck(cPin, cTable, cLegacy, cWrapped *C.char) *C.char {
-	pin := pinBytes(cPin)
-	defer zero(pin)
+func pinArgs(cTable, cLegacy *C.char) (pinTable, pinLegacy, *C.char) {
 	var t pinTable
 	var old pinLegacy
 	if json.Unmarshal([]byte(C.GoString(cTable)), &t) != nil {
-		return C.CString("error: bad table")
+		return t, old, C.CString("error: bad table")
 	}
 	if s := C.GoString(cLegacy); s != "" && json.Unmarshal([]byte(s), &old) != nil {
-		return C.CString("error: bad legacy")
+		return t, old, C.CString("error: bad legacy")
 	}
-	wrapped, _ := hex.DecodeString(C.GoString(cWrapped))
-	r, err := pinCheck(pin, t, old, wrapped)
+	return t, old, nil
+}
+
+// {"i", "k", "c", "la", "lw", "u"}. u is the key the matched entry wraps, hex,
+// or ""
+//
+//export HaloPinCheck
+func HaloPinCheck(cPin, cTable, cLegacy *C.char) *C.char {
+	pin := pinBytes(cPin)
+	defer zero(pin)
+	t, old, bad := pinArgs(cTable, cLegacy)
+	if bad != nil {
+		return bad
+	}
+	r, err := pinCheck(pin, t, old)
 	if err != nil {
 		return C.CString("error: " + err.Error())
 	}
 	return pinJSON(r)
 }
 
-// {"t": the new table, "w": the wrapped key or ""}, or "error: collision"
-// when the pin already opens another entry
+// {"t": the new table}, or "error: collision" when the pin already opens
+// another entry. wrapPlain is a 32-byte key in hex, sealed into the entry, or
+// "" for none
 //
 //export HaloPinSetup
 func HaloPinSetup(cPin, cTable, cLegacy *C.char, index, kind C.int, cContainer, cWrapPlain *C.char) *C.char {
 	pin := pinBytes(cPin)
 	defer zero(pin)
-	var t pinTable
-	var old pinLegacy
-	if json.Unmarshal([]byte(C.GoString(cTable)), &t) != nil {
-		return C.CString("error: bad table")
-	}
-	if s := C.GoString(cLegacy); s != "" && json.Unmarshal([]byte(s), &old) != nil {
-		return C.CString("error: bad legacy")
+	t, old, bad := pinArgs(cTable, cLegacy)
+	if bad != nil {
+		return bad
 	}
 	container, err := hex.DecodeString(C.GoString(cContainer))
 	if err != nil {
 		return C.CString("error: bad container")
 	}
-	plain, _ := hex.DecodeString(C.GoString(cWrapPlain))
+	plain, err := hex.DecodeString(C.GoString(cWrapPlain))
 	defer zero(plain)
-	out, wrapped, err := pinSetup(pin, t, old, int(index), int(kind), container, plain)
+	if err != nil {
+		return C.CString("error: bad key")
+	}
+	out, err := pinSetup(pin, t, old, int(index), int(kind), container, plain)
 	if err != nil {
 		return C.CString("error: " + err.Error())
 	}
-	return pinJSON(map[string]any{"t": out, "w": hex.EncodeToString(wrapped)})
+	return pinJSON(map[string]any{"t": out})
+}
+
+// a new pin for entry index, keeping what it opens and the key it wraps.
+// {"t": the new table}, or "error: wrong pin" when the old pin does not open
+// that entry, "error: collision" when the new one opens another
+//
+//export HaloPinRewrap
+func HaloPinRewrap(cOld, cNew, cTable, cLegacy *C.char, index C.int) *C.char {
+	oldPin, newPin := pinBytes(cOld), pinBytes(cNew)
+	defer zero(oldPin)
+	defer zero(newPin)
+	t, old, bad := pinArgs(cTable, cLegacy)
+	if bad != nil {
+		return bad
+	}
+	out, err := pinRewrap(oldPin, newPin, t, old, int(index))
+	if err != nil {
+		return C.CString("error: " + err.Error())
+	}
+	return pinJSON(map[string]any{"t": out})
+}
+
+// the table as v2, the same pins opening the same entries. a v2 table comes
+// back as it is
+//
+//export HaloPinUpgrade
+func HaloPinUpgrade(cTable *C.char) *C.char {
+	var t pinTable
+	if json.Unmarshal([]byte(C.GoString(cTable)), &t) != nil {
+		return C.CString("error: bad table")
+	}
+	out, err := t.upgrade()
+	if err != nil {
+		return C.CString("error: " + err.Error())
+	}
+	return pinJSON(out)
 }
 
 //export HaloPinClear
