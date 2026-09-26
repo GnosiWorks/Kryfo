@@ -5,24 +5,29 @@
 #   tool/stickers/fokia/svg/*.svg   the art, 512 x 512, one layered file each
 #   tool/stickers/fokia/anim.txt    the motion
 #   assets/stickers/fokia.kst       the output, committed
+#   build/stickers/png/*.png        each still frame, for the pixel test (--png)
 #
 # usage:
 #   pack_stickers.py              build fokia.kst
 #   pack_stickers.py --list 17    every layer's children: index, tag, colour, first point
 #   pack_stickers.py --report     sizes, halo pieces, bridges, clearances
 #   pack_stickers.py --check      rebuild in memory, compare with the committed file
-#   pack_stickers.py --selftest   arcs, dashes, bbox, contours on known shapes
+#   pack_stickers.py --selftest   arcs, dashes, bbox, contours, coverage on known shapes
 #   pack_stickers.py --only 01,02 build a subset while iterating (never committed)
-#   --blur gauss|box3             how the die-cut blur is made (box3 matches the pngs)
+#   pack_stickers.py --png [DIR]  build in memory and paint each still frame into
+#                                 DIR (build/stickers/png): 512 x 512 rgba, straight
+#                                 alpha, the same bytes every run
+#   --blur gauss|box3             how the die-cut blur is made (box3 is svg's own)
 #
 # run by hand when the art or anim.txt changes, like pack_geo.py. numpy is
-# for the outline blur; the app never runs any of this.
+# for the outline blur and the pngs; the app never runs any of this.
 import hashlib
 import math
 import re
 import struct
 import sys
 import xml.etree.ElementTree as ET
+import zlib
 from pathlib import Path
 
 import numpy as np
@@ -1574,17 +1579,21 @@ def orient(polys):
     return polys
 
 
-def stroke_polys(lines, hw, cap, join):
+def stroke_polys(lines, hw, cap, join, circle=CIRCLE, smooth=None):
+    # smooth: per line, the points inside a curve; they join round, as a
+    # curve's own offset does
     batches = []
-    for pts, closed in lines:
+    for k, (pts, closed) in enumerate(lines):
+        sm = smooth[k] if smooth is not None else np.zeros(len(pts), dtype=bool)
         if len(pts) > 1:
             d = np.hypot(*np.diff(pts, axis=0).T)
-            pts = pts[np.concatenate([[True], d > 1e-6])]
+            keep = np.concatenate([[True], d > 1e-6])
+            pts, sm = pts[keep], sm[keep]
         if closed and len(pts) > 2 and np.hypot(*(pts[0] - pts[-1])) < 1e-6:
-            pts = pts[:-1]
+            pts, sm = pts[:-1], sm[:-1]
         if len(pts) == 1:
             if cap == 1:
-                batches.append((CIRCLE * hw + pts[0])[None])
+                batches.append((circle * hw + pts[0])[None])
             elif cap == 2:
                 batches.append(np.array([[[-hw, -hw], [hw, -hw], [hw, hw], [-hw, hw]]]) + pts[0])
             continue
@@ -1605,11 +1614,11 @@ def stroke_polys(lines, hw, cap, join):
         if closed:
             vi = np.arange(len(pts))
             u1, u2, n1, n2 = np.roll(U, 1, axis=0), U, np.roll(Nn, 1, axis=0), Nn
-            V = pts
+            V, sv = pts, sm
         else:
             vi = np.arange(1, len(pts) - 1)
             u1, u2, n1, n2 = U[:-1], U[1:], Nn[:-1], Nn[1:]
-            V = pts[1:-1]
+            V, sv = pts[1:-1], sm[1:-1]
         if len(vi):
             cr = u1[:, 0] * u2[:, 1] - u1[:, 1] * u2[:, 0]
             dt = (u1 * u2).sum(axis=1)
@@ -1623,21 +1632,17 @@ def stroke_polys(lines, hw, cap, join):
             bl[bl < 1e-12] = 1
             M = V + bis / bl[:, None] * (hw / np.maximum(half, 1e-6))[:, None]
             miter = (1 / np.maximum(half, 1e-6)) <= 4
-            if join == 1:
-                big = ang > 0.25
-                small = ~big & (ang > 1e-3)
-                if big.any():
-                    batches.append(CIRCLE[None] * hw + V[big][:, None, :])
-                sel = small
-                wed = np.stack([V[sel], P1[sel], M[sel], P2[sel]], axis=1)
-            else:
-                sel = ang > 1e-3
-                Mx = np.where(miter[:, None] & (join == 0), M, P2)
-                wed = np.stack([V[sel], P1[sel], Mx[sel], P2[sel]], axis=1)
+            rnd = sv | (join == 1)
+            big = rnd & (ang > 0.25)
+            if big.any():
+                batches.append(circle[None] * hw + V[big][:, None, :])
+            sel = ~big & (ang > 1e-3)
+            Mx = np.where((rnd | (miter & (join == 0)))[:, None], M, P2)
+            wed = np.stack([V[sel], P1[sel], Mx[sel], P2[sel]], axis=1)
             if len(wed):
                 batches.append(orient(wed))
         if cap == 1 and not closed:
-            batches.append(CIRCLE[None] * hw + np.stack([pts[0], pts[-1]])[:, None, :])
+            batches.append(circle[None] * hw + np.stack([pts[0], pts[-1]])[:, None, :])
     return batches
 
 
@@ -2276,6 +2281,285 @@ def build(only=None, blur_how='box3', verbose=False):
     return data, report, sizes
 
 
+# ---- --png: each still frame from the built pack, painted the way
+# sticker_player.dart paints it, for the pixel test
+
+PNG_DIR = HERE.parent / 'build' / 'stickers' / 'png'
+SUB = 16     # sample rows a pixel row; along a row coverage is exact
+TOL = 0.02   # flattening, px
+BOX = 512
+
+
+def read_pack(data):
+    # the palette and every blob, as sticker_pack.dart reads them
+    o = 24
+    o += 1 + data[o]
+    npal = data[o]
+    pal = struct.unpack_from(f'<{npal}I', data, o + 1)
+    o += 1 + 4 * npal
+    (count,) = struct.unpack_from('<H', data, o)
+    blobs = []
+    for i in range(count):
+        num, off, ln = struct.unpack_from('<HII', data, o + 2 + 10 * i)
+        blobs.append((num, data[off:off + ln]))
+    return pal, blobs
+
+
+class Still:
+    # what the still frame needs from a blob: paths, shaders, paints,
+    # hidden nodes and the ops
+    def __init__(self, b):
+        o = 0
+
+        def rd(fmt):
+            nonlocal o
+            v = struct.unpack_from('<' + fmt, b, o)
+            o += struct.calcsize('<' + fmt)
+            return v
+        ne = rd('HHHB')[3]
+        o += ne
+        self.paths = []
+        for _ in range(rd('H')[0]):
+            eo, nv, npt = rd('BHH')
+            verbs = b[o:o + nv]
+            o += nv
+            v = rd(f'{2 * npt}h')
+            pts = [(v[2 * i] / Q, v[2 * i + 1] / Q) for i in range(npt)]
+            subs, k = [], 0
+            for vb in verbs:
+                if vb == 0:
+                    subs.append([pts[k], [], False])
+                    k += 1
+                elif vb == 4:
+                    subs[-1][2] = True
+                else:
+                    subs[-1][1].append(('LQC'[vb - 1],) + tuple(pts[k:k + vb]))
+                    k += vb
+            self.paths.append((subs, eo == 1))
+        self.shaders = []
+        for _ in range(rd('B')[0]):
+            v = rd('B4f6fB')
+            self.shaders.append((v[0], v[1:5], v[5:11], [rd('BBB') for _ in range(v[11])]))
+        self.paints = [rd('BBBHBB') for _ in range(rd('H')[0])]
+        self.hidden = [rd('HhhhHB')[5] & 1 for _ in range(rd('H')[0])]
+        (nops,) = rd('H')
+        self.ops = rd(f'{nops}H')
+        self.jump = {}
+        stack = []
+        i = 0
+        while i < nops:
+            code = self.ops[i] >> 13
+            if code in (OP_SAVE, OP_PUSH, OP_LAYER):
+                stack.append(i)
+            elif code == OP_POP:
+                self.jump[stack.pop()] = i
+            elif code == OP_DRAW:
+                i += 1
+            i += 1
+
+
+def flat_px(subs):
+    # polylines in px, curves cut until each piece is within TOL, and per
+    # line which points are inside a curve
+    lines, smooth = [], []
+    for start, segs, closed in subs:
+        pts = [np.asarray([start], dtype=float)]
+        sm = [False]
+        p0 = start
+        for g in segs:
+            if g[0] == 'L':
+                pts.append(np.asarray([g[1]], dtype=float))
+                sm.append(False)
+            else:
+                c = np.asarray(seg_ctrl(p0, g), dtype=float)
+                dd = np.hypot(*(c[:-2] - 2 * c[1:-1] + c[2:]).T).max()
+                k = 0.25 if g[0] == 'Q' else 0.75
+                n = max(1, math.ceil(math.sqrt(k * dd / TOL)))
+                pts.append(bez_eval(c, np.linspace(0, 1, n + 1)[1:]))
+                sm += [True] * (n - 1) + [False]
+            p0 = g[-1]
+        lines.append((np.concatenate(pts), closed))
+        smooth.append(np.array(sm))
+    return lines, smooth
+
+
+def fill_px(subs):
+    return [p[None] for p, _ in flat_px(subs)[0] if len(p) > 2]
+
+
+def png_cover(batches, evenodd=False):
+    # area coverage on the 512 grid: SUB sample rows a pixel row, each one
+    # exact across. (r0, c0, cov) or None
+    batches = [b for b in batches if len(b)]
+    if not batches:
+        return None
+    lo = np.min([b.reshape(-1, 2).min(axis=0) for b in batches], axis=0)
+    hi = np.max([b.reshape(-1, 2).max(axis=0) for b in batches], axis=0)
+    c0, c1 = max(0, math.floor(lo[0])), min(BOX, math.ceil(hi[0]))
+    r0, r1 = max(0, math.floor(lo[1])), min(BOX, math.ceil(hi[1]))
+    if c1 <= c0 or r1 <= r0:
+        return None
+    x0 = np.concatenate([b[..., 0].ravel() for b in batches])
+    y0 = np.concatenate([b[..., 1].ravel() for b in batches])
+    x1 = np.concatenate([np.roll(b, -1, axis=1)[..., 0].ravel() for b in batches])
+    y1 = np.concatenate([np.roll(b, -1, axis=1)[..., 1].ravel() for b in batches])
+    d = np.sign(y1 - y0).astype(np.int64)
+    k = d != 0
+    x0, y0, x1, y1, d = x0[k], y0[k], x1[k], y1[k], d[k]
+    # sample row k sits at (k + 0.5) / SUB; an edge takes the rows in [ya, yb)
+    ks = np.clip(np.ceil(np.minimum(y0, y1) * SUB - 0.5), r0 * SUB, r1 * SUB).astype(np.int64)
+    ke = np.clip(np.ceil(np.maximum(y0, y1) * SUB - 0.5), r0 * SUB, r1 * SUB).astype(np.int64)
+    cnt = ke - ks
+    if cnt.sum() == 0:
+        return None
+    idx = np.repeat(np.arange(len(cnt)), cnt)
+    rows = ks[idx] + np.arange(cnt.sum()) - np.repeat(np.cumsum(cnt) - cnt, cnt)
+    y = (rows + 0.5) / SUB
+    x = x0[idx] + (y - y0[idx]) * (x1[idx] - x0[idx]) / (y1[idx] - y0[idx])
+    order = np.lexsort((x, rows))
+    rows, x, d = rows[order], x[order], d[idx][order]
+    # closed outlines: every row's winding is back to 0 at its last crossing
+    wind = np.cumsum(d)[:-1]
+    inside = (wind % 2 == 1) if evenodd else (wind != 0)
+    a = np.clip(x[:-1][inside], c0, c1)
+    b = np.clip(x[1:][inside], c0, c1)
+    rows = rows[:-1][inside]
+    W = c1 - c0 + 2
+    base = (rows - r0 * SUB) * W - c0
+    acc = np.zeros((r1 - r0) * SUB * W)
+    # a span [a, b) adds clamp(j + 1 - a, 0, 1) - clamp(j + 1 - b, 0, 1) to
+    # column j: steps of 1 - frac at floor and frac one further, summed across
+    for v, sign in ((a, 1.0), (b, -1.0)):
+        fl = np.floor(v)
+        fr = v - fl
+        at = base + fl.astype(np.int64)
+        acc += np.bincount(at, weights=sign * (1 - fr), minlength=len(acc))
+        acc += np.bincount(at + 1, weights=sign * fr, minlength=len(acc))
+    cov = np.cumsum(acc.reshape(-1, W), axis=1)[:, :c1 - c0]
+    cov = cov.reshape(r1 - r0, SUB, c1 - c0).sum(axis=1) / SUB
+    return r0, c0, np.clip(cov, 0.0, 1.0)
+
+
+def png_circle(hw):
+    n = max(24, math.ceil(math.pi / math.acos(max(-1.0, 1 - 0.01 / max(hw, 1e-6)))))
+    a = np.arange(n) * (2 * math.pi / n)
+    return np.stack([np.cos(a), np.sin(a)], axis=1)
+
+
+def rgb_of(v):
+    return np.array([(v >> 16) & 255, (v >> 8) & 255, v & 255], dtype=float) / 255
+
+
+def png_shade(sh, pal, r0, c0, h, w):
+    # a gradient at pixel centres, premultiplied; stops mix unpremultiplied
+    kind, geo, m, stops = sh
+    yy, xx = np.mgrid[r0:r0 + h, c0:c0 + w] + 0.5
+    a, b, c, d, e, f = m
+    det = a * d - b * c
+    px, py = xx - e, yy - f
+    qx, qy = (d * px - c * py) / det, (a * py - b * px) / det
+    if kind == 0:
+        dx, dy = geo[2] - geo[0], geo[3] - geo[1]
+        t = ((qx - geo[0]) * dx + (qy - geo[1]) * dy) / (dx * dx + dy * dy)
+    else:
+        t = np.hypot(qx - geo[0], qy - geo[1]) / geo[2]
+    offs = np.array([s[0] / 255 for s in stops])
+    cols = np.array([list(rgb_of(pal[s[1]])) + [s[2] / 255] for s in stops])
+    t = np.clip(t, offs[0], offs[-1])
+    j = np.clip(np.searchsorted(offs, t, side='right') - 1, 0, len(offs) - 2)
+    span = offs[j + 1] - offs[j]
+    u = np.where(span > 0, (t - offs[j]) / np.where(span > 0, span, 1), 1.0)[..., None]
+    out = cols[j] + (cols[j + 1] - cols[j]) * u
+    out[..., :3] *= out[..., 3:]
+    return out
+
+
+def paint_still(st, pal):
+    # sticker_player.dart's paintSticker with v null: nodes at rest, the
+    # hidden ones skipped. premultiplied rgba, 0..1
+    img = np.zeros((BOX, BOX, 4))
+    clip = None
+    stack = []
+    ops = st.ops
+    i = 0
+    while i < len(ops):
+        code, arg = ops[i] >> 13, ops[i] & 0x1FFF
+        if code == OP_PUSH and st.hidden[arg & 0xFFF]:
+            i = st.jump[i] + 1
+            continue
+        if code in (OP_SAVE, OP_PUSH):
+            stack.append((clip, None))
+        elif code == OP_LAYER:
+            stack.append((clip, (img, (arg & 0xFF) / 255)))
+            img = np.zeros_like(img)
+        elif code == OP_POP:
+            clip, layer = stack.pop()
+            if layer is not None:
+                under, a = layer
+                under *= 1 - img[..., 3:] * a
+                under += img * a
+                img = under
+        elif code == OP_CLIP:
+            subs, eo = st.paths[arg]
+            m = np.zeros((BOX, BOX))
+            c = png_cover(fill_px(subs), eo)
+            if c is not None:
+                r0, c0, f = c
+                m[r0:r0 + f.shape[0], c0:c0 + f.shape[1]] = f
+            clip = m if clip is None else clip * m
+        elif code == OP_DRAW:
+            i += 1
+            subs, eo = st.paths[arg]
+            style, ci, alpha, w, cap, join = st.paints[ops[i]]
+            if style & 1:
+                hw = w / Q / 2
+                lines, smooth = flat_px(subs)
+                c = png_cover(stroke_polys(lines, hw, cap, join, png_circle(hw), smooth))
+            else:
+                c = png_cover(fill_px(subs), eo)
+            if c is not None:
+                r0, c0, f = c
+                h, w_ = f.shape
+                if clip is not None:
+                    f = f * clip[r0:r0 + h, c0:c0 + w_]
+                if style & 2:
+                    src = png_shade(st.shaders[ci], pal, r0, c0, h, w_) * (alpha / 255)
+                else:
+                    src = np.append(rgb_of(pal[ci]), 1.0) * (alpha / 255)
+                    src = np.broadcast_to(src, (h, w_, 4))
+                win = img[r0:r0 + h, c0:c0 + w_]
+                win *= 1 - (f * src[..., 3])[..., None]
+                win += f[..., None] * src
+        i += 1
+    return img
+
+
+def png_bytes(img):
+    # straight alpha rgba8, one idat, no filters, no timestamps
+    a = np.clip(img[..., 3], 0, 1)
+    a8 = np.rint(a * 255)
+    rgb = img[..., :3] / np.where(a > 0, a, 1)[..., None]
+    rgb8 = np.rint(np.clip(rgb, 0, 1) * 255)
+    rgb8[a8 == 0] = 0
+    px = np.concatenate([rgb8, a8[..., None]], axis=2).astype(np.uint8)
+    h, w = a.shape
+    raw = np.zeros((h, w * 4 + 1), dtype=np.uint8)
+    raw[:, 1:] = px.reshape(h, -1)
+
+    def chunk(t, body):
+        return struct.pack('>I', len(body)) + t + body + struct.pack('>I', zlib.crc32(t + body))
+    return (b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', w, h, 8, 6, 0, 0, 0))
+            + chunk(b'IDAT', zlib.compress(raw.tobytes(), 9)) + chunk(b'IEND', b''))
+
+
+def write_pngs(data, where):
+    pal, blobs = read_pack(data)
+    where.mkdir(parents=True, exist_ok=True)
+    for num, b in blobs:
+        (where / (svg_file(num).stem + '.png')).write_bytes(png_bytes(paint_still(Still(b), pal)))
+    print(f'wrote {len(blobs)} pngs to {where}')
+
+
 # ---- --list and --selftest
 
 def list_sticker(num):
@@ -2327,6 +2611,14 @@ def selftest():
     # the raster: a 10 px square covers 1600 pixels at 4x
     c = cover(fill_batches([[(0, 0), [('L', (10, 0)), ('L', (10, 10)), ('L', (0, 10))], True]]))
     assert c[2].sum() == 1600, c[2].sum()
+    # the png coverage: a square a quarter px off is 100 px2, 0.75 on its edges
+    sq = [[(10.25, 10.25), [('L', (20.25, 10.25)), ('L', (20.25, 20.25)), ('L', (10.25, 20.25))], True]]
+    r0, c0, f = png_cover(fill_px(sq))
+    assert abs(f.sum() - 100) < 1e-9 and abs(f[1, 0] - 0.75) < 1e-9, f.sum()
+    # and a ring, even-odd, within 0.1 percent of its area
+    ring = [ellipse_sub(100, 100, 40, 40, 1.0), ellipse_sub(100, 100, 20, 20, 1.0)]
+    area = png_cover(fill_px(ring), True)[2].sum()
+    assert abs(area / (math.pi * 1200) - 1) < 1e-3, area
     print('selftest ok')
 
 
@@ -2346,6 +2638,11 @@ def main(argv):
         selftest()
         return 0
     data, report, sizes = build(only, how, verbose='--report' in argv)
+    if '--png' in argv:
+        k = argv.index('--png') + 1
+        where = Path(argv[k]) if k < len(argv) and not argv[k].startswith('--') else PNG_DIR
+        write_pngs(data, where)
+        return 0
     if '--check' in argv:
         old = OUT.read_bytes() if OUT.exists() else b''
         if old != data:

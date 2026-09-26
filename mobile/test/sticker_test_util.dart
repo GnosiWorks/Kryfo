@@ -10,16 +10,23 @@ import 'package:kryfo/stickers/sticker_player.dart';
 
 const packFile = 'assets/stickers/fokia.kst';
 const artDir = 'tool/stickers/fokia';
+// rendered by tool/pack_stickers.py --png, not committed
+const pngDir = 'build/stickers/png';
 
 StickerPack loadPack() =>
     StickerPack.parse(ByteData.sublistView(File(packFile).readAsBytesSync()));
 
-/// the reference png of a sticker, by file number
+/// the reference png of a sticker, named after its svg
 File pngFor(int id) {
   final nn = id.toString().padLeft(2, '0');
-  return Directory('$artDir/png').listSync().whereType<File>().firstWhere(
+  final svg = Directory('$artDir/svg').listSync().whereType<File>().firstWhere(
     (f) => f.uri.pathSegments.last.startsWith('fokia-$nn-'),
   );
+  final name = svg.uri.pathSegments.last.replaceFirst(
+    RegExp(r'\.svg$'),
+    '.png',
+  );
+  return File('$pngDir/$name');
 }
 
 /// a frame at [side] px, premultiplied rgba. t null: the still picture;

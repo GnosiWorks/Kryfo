@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // every sticker's still frame, drawn by the app's own painter, against the
-// reference png the art came with. no golden files: the pngs are the truth.
-// the pngs anti-alias more softly than skia, so the share within 24 is taken
-// after a 3x3 box filter on both; the mean and the eroded mask stay raw.
+// png tool/pack_stickers.py --png paints from the svgs. no golden files: the
+// pngs are built, not committed. skia's anti-aliasing is not exact area
+// coverage, so the share within 24 is taken after a 3x3 box filter on both;
+// the mean and the eroded mask stay raw.
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -120,6 +122,12 @@ void main() {
   final pack = loadPack();
 
   testWidgets('every still matches its png', (tester) async {
+    if (!Directory(pngDir).existsSync()) {
+      markTestSkipped(
+        'render the reference pngs first: tool/pack_stickers.py --png',
+      );
+      return;
+    }
     final lines = <String>[];
     final bad = <String>[];
     for (final id in pack.ids) {
@@ -136,7 +144,7 @@ void main() {
         '  eroded: ${d.eroded}'
         '  rim ${d.rimPixels} px at ${d.rimMean.toStringAsFixed(1)}',
       );
-      if (d.mean > 1.5 || d.within24 < 0.993 || d.eroded > 0) {
+      if (d.mean > 1.0 || d.within24 < 0.999 || d.eroded > 0) {
         bad.add(nn);
         await tester.runAsync(
           () => writePng('build/sticker-diff/$nn.png', d.map, 512, 512),
