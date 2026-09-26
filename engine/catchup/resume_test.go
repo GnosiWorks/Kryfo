@@ -9,8 +9,8 @@ import (
 )
 
 // a relay that costs time to page. each answer takes pageCost, and the caller
-// is given a budget per check-in - which is what the engine's 30s cap is. the
-// clock is counted rather than slept so the test is fast and deterministic.
+// is given a budget per check-in, like the engine's 30s cap. the clock is
+// counted rather than slept so the test is fast and deterministic.
 type slowRelay struct {
 	*fakeRelay
 	pageCost int // "seconds" per page
@@ -59,10 +59,9 @@ func checkIn(t *testing.T, r *slowRelay, since nostr.Timestamp, limit, maxPages 
 	}, m)
 }
 
-// the case that made this necessary: a relay holding more backlog than one
-// check-in's window can page. across three check-ins every event must arrive,
-// and no check-in may spend its window re-walking ground an earlier one
-// already covered.
+// a relay holding more backlog than one check-in's window can page. across
+// three check-ins every event must arrive, and no check-in may spend its
+// window re-walking ground an earlier one already covered.
 func TestABacklogBiggerThanOneWindowArrivesOverThreeCheckIns(t *testing.T) {
 	const total = 140
 	// 140 events, 20 to a page, 10 "seconds" a page: about 70 seconds of
@@ -142,7 +141,7 @@ func TestTheMarkStopsTheRelayBeingRewalked(t *testing.T) {
 		t.Fatalf("with a mark, only %d of %d arrived", len(got), total)
 	}
 
-	// and the way it used to be: the mark thrown away each time
+	// and without: the mark thrown away each time
 	without := mkRelay()
 	got2 := map[nostr.ID]bool{}
 	for i := 0; i < 8; i++ {

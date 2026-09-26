@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// "introduced by alice and bob" - the amber chip on a request row that our
-// contacts vouched for. the face is the first voucher's, the names are what
-// we call them locally, the check means we verified that one. pops in a beat
-// after the row so it reads as a second thought, not part of the card.
+// "introduced by alice and bob": the amber chip on a request row that our
+// contacts vouched for. the face is the first voucher's, the names are ours
+// for them, the check means we verified that one.
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import 'kryfo_avatar.dart';

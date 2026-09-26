@@ -12,9 +12,7 @@ Future<T?> showHaloSheet<T>(
   required WidgetBuilder builder,
   // true: the sheet manages its own height and scrolling. false, the
   // default: the content scrolls inside a ceiling of nine tenths of the
-  // screen, and the keyboard pushes it up. sheets used to be capped at
-  // nine sixteenths of the screen with no scroll, which on a short phone
-  // cut the buttons off the shield sheet and the choice sheets.
+  // screen, and the keyboard pushes it up.
   bool scroll = false,
   bool dismissible = true,
 }) {

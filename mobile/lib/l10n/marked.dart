@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/widgets.dart';
 
-// a sentence that carries two styles is still one message. the accented
-// words are marked with asterisks, "Keep kryfo *independent*.", so the
-// translator sets the word order and the accent lands wherever their
-// language puts those words.
+// a sentence with two styles is still one message: the accented words are
+// marked with asterisks, "Keep kryfo *independent*.", so the translator
+// keeps control of the word order.
 
 /// [msg] as spans: the *marked* stretches in [marked], the rest in the
 /// paragraph's own style.
@@ -21,12 +20,10 @@ List<TextSpan> markedSpans(String msg, TextStyle marked) {
 String unmarked(String msg) => msg.replaceAll('*', '');
 
 // a sentence with a live widget in it (a countdown) is one message with a
-// placeholder where the widget goes. the text either side comes back here,
-// in the language's own order.
+// placeholder where the widget goes
 const _slot = '\u{E000}';
 
-/// the text before and after the widget in [msg], which is asked for with
-/// the placeholder the widget stands in for.
+/// the text before and after the widget in [msg]
 (String, String) aroundSlot(String Function(String slot) msg) {
   final s = msg(_slot);
   final i = s.indexOf(_slot);

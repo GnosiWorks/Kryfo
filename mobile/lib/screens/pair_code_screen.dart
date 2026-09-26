@@ -1,10 +1,6 @@
-// six digits, read out loud. for a table, a phone call, a room where holding
-// two handsets together is awkward.
-//
-// one side shows a number, the other types it. both derive the same address
-// from the digits alone and the invite passes through it sealed. the code
-// burns after a few minutes because an address nobody is listening to is not
-// worth leaving behind.
+// six digits read out loud, for when holding two phones together is awkward.
+// both sides derive the same address from the digits alone and the invite
+// passes through it sealed. the code burns after a few minutes.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -154,7 +150,6 @@ class _JoinSideState extends State<_JoinSide> {
     });
 
     // the other side may not have pressed share yet, so give it a few goes
-    // rather than failing on the first empty answer.
     for (var attempt = 0; attempt < 3; attempt++) {
       final res = await engine.pairCodeFetch(code);
       if (!mounted) return;

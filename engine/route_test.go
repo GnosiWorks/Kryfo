@@ -7,9 +7,9 @@ import (
 	"time"
 )
 
-// route_test: the verdict on whether tor carries anything, and when a dead
-// route is rebuilt. no tor here - the decision is a function of what the
-// relay runners report, a status, and a clock.
+// the verdict on whether tor carries anything, and when a dead route is
+// rebuilt. no tor here: the decision is a function of what the relay runners
+// report, a status, and a clock.
 
 func resetRoute(t *testing.T, status string, pct int) {
 	t.Helper()
@@ -47,7 +47,7 @@ func failAll(at time.Time, relays ...string) {
 
 // the flight-mode case: tor says publishing, every relay fails. nothing for
 // the first minute, a rebuild at the minute, and then not again until the gap
-// has passed - and that gap doubles while nothing comes back.
+// has passed, and that gap doubles while nothing comes back.
 func TestDeadRouteIsRebuiltAfterAMinute(t *testing.T) {
 	resetRoute(t, "publishing", 100)
 	routeNoteOK() // it worked once, as it had before the network went
@@ -132,7 +132,7 @@ func TestSlowButMovingBootstrapIsLeftAlone(t *testing.T) {
 	}
 }
 
-// a bootstrap stuck at one percentage is bounced - and the second time it
+// a bootstrap stuck at one percentage is bounced, and the second time it
 // sticks, it is given longer before the next bounce.
 func TestStuckBootstrapIsBouncedWithBackoff(t *testing.T) {
 	resetRoute(t, "starting", 0)
@@ -175,7 +175,7 @@ func TestNoRescueWhilePausedOrReconnecting(t *testing.T) {
 
 // the verdict the ui reads. not ok until a relay has connected, not ok again
 // after a bounce until one connects through the new route, and not ok when
-// every relay is failing - whatever tor says.
+// every relay is failing, whatever tor says.
 func TestRouteOKFollowsRelaysNotTor(t *testing.T) {
 	resetRoute(t, "publishing", 100)
 	if routeOK() {
@@ -201,7 +201,7 @@ func TestRouteOKFollowsRelaysNotTor(t *testing.T) {
 		t.Fatal("ok while every relay has been failing for 30s")
 	}
 	// tor restarting with nothing connected through it since: not ok. (a
-	// relay that does connect corrects the status - see the stale start test.)
+	// relay that does connect corrects the status, see the stale start test.)
 	routeNoteOK()
 	setTestStatus("starting", 40)
 	if routeOK() {
@@ -210,7 +210,7 @@ func TestRouteOKFollowsRelaysNotTor(t *testing.T) {
 }
 
 // a network that flaps five times in a minute gets one bounce once it has
-// settled - not five - and the last change always gets one.
+// settled, not five, and the last change always gets one.
 func TestFlappingNetworkIsBouncedOnceSettled(t *testing.T) {
 	oldQ, oldG, oldB := netQuiet, netGap, netBounce
 	defer func() { netQuiet, netGap, netBounce = oldQ, oldG, oldB }()
@@ -247,9 +247,8 @@ func TestFlappingNetworkIsBouncedOnceSettled(t *testing.T) {
 // tor says starting, a relay connects through it anyway: the status was
 // stale and follows the relay. a connect that finished while tor was off the
 // network for a bounce does not vouch; one after it came back does, even
-// while the reconnect that brought it back is still finishing - which is
-// exactly where the relays reconnect, and where the first version of this
-// skipped the correction and left the verified build at "starting, 0%".
+// while the reconnect that brought it back is still finishing, which is
+// exactly where the relays reconnect.
 func TestARelayConnectingCorrectsAStaleStart(t *testing.T) {
 	status := func() (string, int) {
 		statusMu.RLock()

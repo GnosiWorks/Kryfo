@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// restore_screen.dart - the screen someone reaches on their worst day. pick
-// the backup file, type the passphrase, see exactly what is about to come
-// back, then restore. every failure names its cause. nothing here ever
-// mentions a word list, because there is none: recovery is the encrypted
-// file plus its passphrase.
+// pick the backup file, type the passphrase, see what is about to come back,
+// then restore. every failure names its cause. recovery is the encrypted
+// file plus its passphrase; there is no word list.
 import 'dart:io';
 import '../lock_state.dart';
 
@@ -28,9 +26,8 @@ import '../l10n/dates.dart';
 import '../l10n/numbers.dart';
 
 class RestoreScreen extends StatefulWidget {
-  // when non-null, called after a successful restore instead of the
-  // 'reopen kryfo' notice. used from onboarding to skip the restart and go
-  // straight to the home shell.
+  // called after a restore instead of the 'reopen kryfo' notice, so
+  // onboarding can go straight to the home shell
   final VoidCallback? onRestored;
   const RestoreScreen({super.key, this.onRestored});
   @override
@@ -149,9 +146,8 @@ class _RestoreScreenState extends State<RestoreScreen> {
     final path = _path;
     final s = _summary;
     if ((blob == null && path == null) || s == null) return;
-    // the page someone reads on the worst day. what follows, what does
-    // not, and the one line that has to be plain: the old phone stops
-    // receiving the moment this one sends. not gradually.
+    // what comes back, what does not, and plainly: the old phone stops
+    // receiving the moment this one sends
     final go = await _moveSheet(s);
     if (!go || !mounted) return;
     if (appState.onboardingComplete) {
@@ -163,10 +159,9 @@ class _RestoreScreenState extends State<RestoreScreen> {
       );
       if (!ok) return;
     }
-    // a handle is proved with the key that is about to go. once another
-    // identity takes this phone nobody can release it or point it anywhere
-    // again, and the public page keeps handing out an invite no one holds.
-    // so it goes back first, while the key is still here.
+    // a handle is proved with the key that is about to go, so it is released
+    // first, while the key is still here. left behind, its public page would
+    // hand out an invite no one holds.
     final mine = appState.myHandle;
     final sameIdentity = s.haloId == appState.myId;
     if (mine != null && !sameIdentity) {

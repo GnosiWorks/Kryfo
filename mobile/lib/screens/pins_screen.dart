@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the pins, on one page, each with its outcome spelled out. nothing new
-// behind it: the app lock and the wipe pin were already here, buried in two
-// settings rows nobody could read the meaning of.
+// the app lock and the wipe pin on one page, each with its outcome spelled
+// out
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

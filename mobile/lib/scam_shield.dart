@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// scam shield. runs on the phone, over a stranger's first message and their
-// id, against the contacts we already hold. nothing here does io, so every
-// rule is a plain function and a test can hit it directly. the rules ship in
-// the apk; there is no list to fetch and nothing to report back to.
+// scam shield: a stranger's first message and id, checked on the phone
+// against our contacts. no io, and the rules ship in the apk: no list to
+// fetch, nothing reported back.
 
 import 'l10n/l10n.dart';
 

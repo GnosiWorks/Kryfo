@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// lock_guard.dart - nothing gets past the app lock. what comes from outside
-// while it is up, a notification tap or a link, waits until it lifts. a
-// screen pushed while it is up waits under it. if the lock's own route is
-// popped or removed while locked, a new one goes straight back on top. and
-// what the app has open above its routes or running in the background (a
-// message menu, a recorder, a voice note, the camera) closes as it goes up.
+// nothing gets past the app lock. taps and links wait until it lifts,
+// screens pushed while locked wait under it, a lost lock route goes back on
+// top, and menus, recorders and the camera close as it goes up.
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
@@ -25,9 +22,8 @@ class LockGuard extends NavigatorObserver {
   int _unkeyed = 0;
   final Set<VoidCallback> _closers = {};
 
-  // done now, or once the lock lifts. a key keeps one of a kind: the same
-  // chat tapped twice while locked opens once, and a link that arrives by
-  // two routes at a cold start is handled once
+  // done now, or once the lock lifts. a key keeps one of a kind, so a link
+  // that arrives by two routes at a cold start is handled once
   Future<void> afterUnlock(Future<void> Function() act, {Object? key}) async {
     if (isLocked()) {
       _held.remove(key);

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// supporter badge: local opt-in flag. donating is off-device (crypto/card),
-// this just records "i chose to show a badge" + whether to share it with contacts.
-// nothing here tracks who donated - it's a local choice only.
+// supporter badge: the tier, its signed receipt, and whether to show it to me
+// and to contacts. all local; nothing here tracks who donated.
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'badge_client.dart' show fetchReceipt, ReceiptState;
@@ -74,9 +73,8 @@ Future<void> saveSupporterTier(SupporterTier t) async {
   await prefs.setString(_tierKey, t.name);
 }
 
-// the signed receipt from the bitcoin path. keeping it means the badge stays
-// provable offline for good - the alternative was trusting a bare string in
-// prefs, which proves nothing.
+// the signed receipt from the bitcoin path: the badge stays provable offline,
+// where a bare string in prefs proves nothing
 Future<void> saveBadgeReceipt(String payload, String sig) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setString(_receiptPayloadKey, payload);
@@ -111,11 +109,9 @@ Future<void> saveShareBadge(bool on) async {
   await prefs.setBool(_shareKey, on);
 }
 
-// the bitcoin invoice we last opened and never saw settle. the invoice
-// screen's clock and the service's window are not the same clock, so a
-// payment made at the edge can be honoured after the screen gave up.
-// remembered here, asked about once more the next time the donate screen
-// opens, and forgotten once the service answers either way.
+// the bitcoin invoice we last opened and never saw settle. the screen's clock
+// is not the service's, so a payment at the edge can be honoured after the
+// screen gave up: asked about again when the donate screen next opens.
 const _openInvoiceKey = 'badge_open_invoice';
 
 Future<void> saveOpenInvoice(String id, SupporterTier tier) async {
@@ -128,8 +124,8 @@ Future<void> clearOpenInvoice() async {
   await prefs.remove(_openInvoiceKey);
 }
 
-// ask once about the remembered invoice. returns the tier if it turned out
-// paid (and grants it), null otherwise. leaves the record alone while the
+// ask once about the remembered invoice. returns the tier if it was paid
+// (and grants it), null otherwise. leaves the record alone while the
 // service still says pending or cannot be reached.
 Future<SupporterTier?> settleOpenInvoice() async {
   final prefs = await SharedPreferences.getInstance();

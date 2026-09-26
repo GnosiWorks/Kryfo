@@ -35,8 +35,8 @@ class _OnionLoaderState extends State<OnionLoader>
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: _c,
-    // quantized to ~20fps. full-rate repaints of the sketch pinned a core
-    // on weak phones for the whole tor warmup and android called us dead.
+    // quantized to ~20fps: full-rate repaints pin a core on weak phones for
+    // the whole tor warmup
     builder: (_, _) => RepaintBoundary(
       child: CustomPaint(
         size: Size(widget.size, widget.size * 162 / 120),
@@ -100,8 +100,8 @@ class _OnionPainter extends CustomPainter {
   final Color color;
   _OnionPainter(this.t, this.color);
 
-  // the art never changes. computing arc metrics fresh every frame was the
-  // hidden cpu burner behind the startup freezes - do it once and keep it.
+  // the art never changes, so the arc metrics are computed once, not every
+  // frame
   static final Path _st = _onionStructure();
   static final Path _ly = _onionLayers();
   static final List<PathMetric> _stM = _st.computeMetrics().toList();

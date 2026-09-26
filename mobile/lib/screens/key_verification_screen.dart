@@ -9,11 +9,9 @@ import '../widgets/press_scale.dart';
 import '../main.dart' show db, appState;
 import '../l10n/l10n.dart';
 
-// safety number for a contact: a 60-digit code derived from both X25519
-// public keys, order-independent so both phones show the same number. if it
-// matches on both ends (read aloud or compared in person), the conversation
-// is end-to-end encrypted with no one in the middle. the name can be faked;
-// this number cannot.
+// safety number for a contact: 60 digits from both X25519 public keys,
+// order-independent so both phones show the same number. a match on both
+// ends means no one is in the middle; a name can be faked, this cannot.
 String haloSafetyNumber(String myXpubHex, String peerXpubHex) {
   final a = myXpubHex.toLowerCase().trim();
   final b = peerXpubHex.toLowerCase().trim();
@@ -65,9 +63,9 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
   Future<void> _toggle() async {
     final next = !_verified;
     await db.setVerified(widget.peerHaloId, next);
-    // the new key is already trusted and the session already re-established on
-    // the inbound message (deliver-and-warn). verifying here just clears the
-    // banner - no identity/session teardown, which would break sending.
+    // the new key is already trusted and the session rebuilt on the inbound
+    // message (deliver-and-warn), so verifying only clears the banner. a
+    // session teardown here would break sending.
     if (next && await db.keyChanged(widget.peerHaloId)) {
       await db.clearKeyChanged(widget.peerHaloId);
     }

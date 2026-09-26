@@ -1,13 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //go:build torconf
 
-// why does claiming a handle time out from the phone while the registry
-// answers in 150ms from a laptop?
-//
-// handleBase is "https://relay.kryfo.app" - clearnet, through a tor exit, not
-// the onion. so this drives the exact path the app uses: real embedded tor,
-// the same torNostrClient() the engine builds, the same GET. if it works here
-// the fault is on the phone; if it fails here the fault is in this code.
+// the handle registry over real embedded tor. handleBase is clearnet through
+// a tor exit, not the onion, so this drives the exact path the app uses: the
+// same torNostrClient() the engine builds, the same requests.
 //
 //   go test -tags torconf -run TestRegistryOverTor -timeout 20m -v .
 //
@@ -95,9 +91,8 @@ func TestRegistryOverTor(t *testing.T) {
 // the phone bounces tor's network on every reconnect and every check-in
 // wake. a pooled keep-alive connection through a circuit that died in the
 // bounce is still in the transport's pool afterwards. go retries an
-// idempotent GET on a dead pooled connection; it does NOT retry a POST once
-// anything has been written. that would look exactly like what the samsung
-// does: checks answer, claims time out.
+// idempotent GET on a dead pooled connection; it does not retry a POST once
+// anything has been written. so checks answer and claims time out.
 func TestClaimAfterANetworkBounce(t *testing.T) {
 	mu.Lock()
 	already := myAddr != ""
@@ -176,10 +171,9 @@ func TestClaimAfterANetworkBounce(t *testing.T) {
 		time.Sleep(time.Second)
 	}
 
-	// the pool still holds sockets from before the bounce
-	// with the port pinned the held client should now survive the bounce
-	// outright. if it does not, the pin did not take and the cache resets
-	// are carrying it - still correct, but say so.
+	// the pool still holds sockets from before the bounce. with the port
+	// pinned the held client survives it outright; if not, the cache resets
+	// are carrying it.
 	get("after bounce")
 	post("after bounce")
 	if heldDied {
@@ -194,8 +188,8 @@ func TestClaimAfterANetworkBounce(t *testing.T) {
 			socksPin())
 	}
 
-	// the regression this test exists for: ask the way the app asks, with no
-	// manual reset. reconnectOn must have dropped the stale client itself.
+	// ask the way the app asks, with no manual reset: reconnectOn must have
+	// dropped the stale client itself.
 	c2, err := torNostrClient()
 	if err != nil {
 		t.Fatalf("rebuild after bounce: %v", err)
@@ -218,9 +212,9 @@ func trunc(s string, n int) string {
 }
 
 // every one-shot request in the engine goes through one of two cached
-// clients, so a socks port that moves took all of them down together, not
-// just handle claims. this holds each client across a bounce, which is how
-// the app has them: warm, from before.
+// clients, so a socks port that moves takes all of them down together. this
+// holds each client across a bounce, which is how the app has them: warm,
+// from before.
 //
 //	torNostrClient()  relays, HaloTorGet, HaloTorPost (the badge service),
 //	                  handle check/claim/release, pair codes

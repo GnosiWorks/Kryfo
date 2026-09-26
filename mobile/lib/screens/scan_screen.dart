@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// in-app QR scanner. private - never leaves the app. focus on UX:
-// dark masked viewfinder, animated scan line, success pulse on detect,
-// torch toggle for low-light, and clear feedback when a non-kryfo qr
-// is in frame.
+// in-app qr scanner: nothing leaves the app, and a non-kryfo qr in frame
+// gets a hint
 
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
@@ -20,8 +18,8 @@ class ScanScreen extends StatefulWidget {
 
 class _ScanScreenState extends State<ScanScreen>
     with SingleTickerProviderStateMixin {
-  // zxing-cpp under the hood (FOSS) - the camera controller arrives via
-  // onControllerCreated and is only used for the torch.
+  // zxing-cpp under the hood. the controller arrives via onControllerCreated
+  // and is only used for the torch.
   CameraController? _cam;
   bool _handled = false;
   bool _torchOn = false;
@@ -99,18 +97,16 @@ class _ScanScreenState extends State<ScanScreen>
             showFlashlight: false,
             showGallery: false,
             showToggleCamera: false,
-            // decode almost the whole frame (default crops to 50%, so a QR
-            // that fills the screen spilled outside the box and wouldn't
-            // lock without zooming out). tryHarder/tryInverted read it on
-            // the first pass in poorer light.
+            // decode almost the whole frame: the default 50% crop misses a
+            // qr that fills the screen. tryHarder/tryInverted read it on the
+            // first pass in poorer light.
             cropPercent: 0.9,
             tryHarder: true,
             tryInverted: true,
             scanDelay: const Duration(milliseconds: 500),
           ),
-          // dim mask with a transparent cutout - uses a CustomPaint with
-          // even-odd fill for the hole. saturated/dimmed outside the
-          // viewfinder so the user's eye is drawn to the right area.
+          // dim mask with an even-odd cutout, so the eye goes to the
+          // viewfinder
           IgnorePointer(
             child: CustomPaint(
               size: size,

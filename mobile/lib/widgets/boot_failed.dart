@@ -4,8 +4,8 @@ import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../l10n/l10n.dart';
 
-// shown when boot() throws. sitting on the tor splash instead told the user
-// nothing and pointed them at the network when the fault is usually local.
+// shown when boot() throws. the fault is usually local, so the tor splash
+// would point at the wrong thing.
 class BootFailedScreen extends StatelessWidget {
   final String error;
   final VoidCallback onRetry;

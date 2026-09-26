@@ -201,10 +201,7 @@ func TestFinishingClearsTheDropCount(t *testing.T) {
 }
 
 // a relay carries one subscription per contact, and each catches up on its
-// own. keyed by relay alone they shared one start time, one drop count and
-// one place in the backlog: a cap firing for one found the other's start
-// already cleared and recorded a drop after "0.0s", and one contact's walk
-// could step over part of another contact's backlog as if it were done.
+// own: its own start time, drop count and place in the backlog.
 func TestTwoContactsOnOneRelayKeepTheirOwnCatchup(t *testing.T) {
 	u := "wss://shared.example"
 	a, b := catchupKey(u, "aaaa"), catchupKey(u, "bbbb")

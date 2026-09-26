@@ -1,18 +1,6 @@
-// halo nostr roundtrip probe - sprints 1.6.2 + 1.6.3 + 1.6.4 + 1.6.7
-//
-// what this probe does:
-//   1. simulates two halos (alice, bob) with X25519 keys
-//   2. derives a shared secret via ECDH (same crypto our engine already does)
-//   3. derives ephemeral nostr keys per-conversation via HKDF
-//      → relays see "encrypted blob to pubkey Y" but Y is disposable, can't be linked to identity
-//   4. encrypts a real message with chacha20-poly1305 using the shared secret
-//   5. wraps ciphertext in a nostr event signed with the ephemeral key
-//   6. publishes to 3 public relays in parallel
-//   7. subscribes to the same 3 relays in parallel, dedupes by event id, picks first
-//   8. decrypts, verifies plaintext roundtripped intact
-//
-// not yet here: tor SOCKS routing (sprint 1.6.7) - added in next iteration
-// once we confirm the fiatjaf.com/nostr RelayOptions API for custom dialers.
+// nostr roundtrip probe: two local identities, ECDH, a per-conversation
+// ephemeral key, one message published to three public relays and read back.
+// relays see a disposable pubkey that cannot be linked to either identity.
 
 package main
 
@@ -39,8 +27,6 @@ var relayURLs = []string{
 	"wss://nos.lol",
 	"wss://relay.snort.social",
 }
-
-// ---------- crypto helpers ----------
 
 func genX25519() (priv, pub [32]byte) {
 	if _, err := rand.Read(priv[:]); err != nil {
@@ -115,8 +101,6 @@ func decrypt(key, ct []byte) ([]byte, error) {
 	nonce, body := ct[:aead.NonceSize()], ct[aead.NonceSize():]
 	return aead.Open(nil, nonce, body, nil)
 }
-
-// ---------- nostr fan-out ----------
 
 func publishMulti(ctx context.Context, urls []string, ev nostr.Event) int {
 	var wg sync.WaitGroup
@@ -200,8 +184,6 @@ func subscribeMulti(ctx context.Context, urls []string, pk nostr.PubKey, kind no
 	}
 	return nostr.Event{}, false
 }
-
-// ---------- main ----------
 
 func main() {
 	fmt.Println("=== halo nostr full-stack probe (encrypt + ephemeral keys + fan-out) ===")

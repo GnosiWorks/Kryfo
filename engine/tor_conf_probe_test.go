@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //go:build torconf
 
-// which control command is it that tor stops answering? one at a time, each
-// on its own goroutine with a clock on it.
+// finds the control command tor stops answering: one at a time, each on its
+// own goroutine with a timeout.
 package main
 
 import (
@@ -66,8 +66,7 @@ func TestWhichCommandHangs(t *testing.T) {
 		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)
 	})
 
-	// let it actually try the dead bridge for a while, which is the state
-	// the reconnect keeps landing in
+	// let it try the dead bridge for a while, the state a reconnect lands in
 	t.Log("letting tor fail against the bridge for 20s...")
 	time.Sleep(20 * time.Second)
 

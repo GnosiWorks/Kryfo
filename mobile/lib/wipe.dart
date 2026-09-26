@@ -1,17 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// wipe.dart - nukes everything on this device: db (+ sqlcipher wal/shm),
-// onion key, saved media, caches, sessions, prefs, secure storage. used
-// when the user wants to leave no trace. the next launch starts clean from
-// onboarding.
-//
-// the real erase is android's own clear-data call, made over the platform
-// channel. it is synchronous, takes the keystore-wrapped preferences with
-// it, force-stops the package so the sticky listener service cannot bring
-// the process back, and leaves the app in the stopped state. the dart-side
-// deletes below stay as the fallback for a phone where that call refuses:
-// they were the whole wipe once, and they lost a race - the preference
-// clears are queued to disk with a delay, and exit() ran first, so the pin
-// and the onboarding flag survived every wipe.
+// erases everything on this device: db with its wal/shm, onion key, media,
+// caches, sessions, prefs, secure storage. the next launch starts at
+// onboarding. the real erase is android's clear-data call over the platform
+// channel: it takes the keystore-wrapped prefs and force-stops the package so
+// the listener service cannot bring the process back. the deletes below are
+// the fallback where that call refuses.
 
 import 'dart:io';
 import 'package:flutter/services.dart';
@@ -30,10 +23,8 @@ Future<void> wipeHalo() async {
   haloWiping = true;
   // a beat for anything mid-query to finish before the files vanish
   await Future.delayed(const Duration(milliseconds: 120));
-  // give the handle back before the key that proves it is ours is gone.
-  // best effort and short - a wipe must not wait on a network, least of
-  // all a panic one - but leaving a public page up advertising someone who
-  // just erased themselves is the wrong failure.
+  // give the handle back while the key that proves it is ours still exists.
+  // best effort with a short cap: a wipe must not wait on the network.
   try {
     final h = await const FlutterSecureStorage().read(key: 'my_handle');
     if (h != null && h.isNotEmpty) {
@@ -52,8 +43,8 @@ Future<void> wipeHalo() async {
     ).deleteAll();
     final prefs0 = await SharedPreferences.getInstance();
     await prefs0.clear();
-    // recursively empty every app storage dir. deleting halo.db by name
-    // left the wal/shm sidecars and the media/ folder behind.
+    // empty every app storage dir, so the wal/shm sidecars and media/ go
+    // with halo.db
     final dirs = <Directory>[
       await getApplicationDocumentsDirectory(),
       await getApplicationSupportDirectory(),
@@ -69,8 +60,8 @@ Future<void> wipeHalo() async {
     }
     dlog('wipe: files gone');
   } catch (e) {
-    // never rethrow. a half-finished wipe that leaves the app running is
-    // worse than one that exits - the keys are already gone by here.
+    // never rethrow: the keys are already gone, and a half-wiped app left
+    // running is worse than one that exits
     dlog('wipe error: $e');
   }
   // the call that finishes the job kills this process before it can
@@ -87,8 +78,8 @@ Future<void> wipeHalo() async {
     dlog('wipe native: $e');
   }
   dlog('wipe: native refused ($native), exiting');
-  // fallback: let the queued preference clears reach disk, then exit so
-  // the user reopens fresh
+  // fallback: preference clears reach disk with a delay, so wait for them
+  // before exit
   await Future.delayed(const Duration(milliseconds: 600));
   exit(0);
 }

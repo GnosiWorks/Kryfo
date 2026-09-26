@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// settings_screen.dart - user-facing settings, consolidated from dev.
-// reachable from the "Me" tab. tap on tab opens this, long-press still
-// opens dev for technical use.
+// user-facing settings. the dev screen keeps the technical ones.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -52,9 +50,8 @@ Widget _postureLine(String label, bool on, String onText, String offText) {
           ),
         ),
         const SizedBox(width: 10),
-        // the label wraps and the state keeps its place: in russian at a
-        // big font size the two did not fit one line and the state ran off
-        // the card
+        // the label wraps and the state keeps its place: in a long language
+        // at a big font size the two do not fit one line
         Expanded(
           child: Text(
             label,
@@ -252,10 +249,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (mounted) setState(() {});
                 },
               ),
-              // one row, not two. notifications had a screen of its own until
-              // the wake-up picker that shared it went; what was left was a
-              // single switch on an otherwise blank page. how messages arrive
-              // and what they say when they do belong together.
+              // one row: how messages arrive and what they say when they do
+              // belong together
               HaloRow(
                 icon: Icons.mark_email_unread_outlined,
                 label: l10n.settingsGettingMessages,
@@ -325,9 +320,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           HaloSection(l10n.settingsSecurity),
           HaloGroup(
             children: [
-              // one switch for the whole app, applied at the next start.
-              // the per-chat one went: changing the flag live recreated the
-              // surface and flashed on every toggle.
+              // one switch for the whole app, applied at the next start:
+              // changing the flag live recreates the surface and flashes
               HaloRow(
                 icon: Icons.visibility_off_outlined,
                 label: l10n.settingsBlockScreenshots,

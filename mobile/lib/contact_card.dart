@@ -1,10 +1,5 @@
-// a card you can hand someone. it carries the invite and nothing else - no
-// name you did not choose, no photo, no history. a business card, not a
-// dossier.
-//
-// rendered off-screen and saved as a png so it can go through any channel:
-// signal, email, a printed sheet on a noticeboard. the qr is the same invite
-// the app already builds, so scanning it takes an existing path.
+// a card that carries the invite and nothing else. rendered off-screen to a
+// png so it can go through any channel; the qr is the usual invite.
 import 'dart:io';
 import 'lock_state.dart';
 import 'dart:ui' as ui;
@@ -99,9 +94,8 @@ class ContactCard extends StatelessWidget {
   }
 }
 
-// render the card off-screen and hand the png to the share sheet. it never
-// touches the gallery - the file goes to the cache dir and android cleans it
-// up, so a card does not sit in someone's camera roll forever.
+// the png goes to the cache dir, never the gallery, so it does not sit in
+// the camera roll
 Future<void> shareContactCard({
   required BuildContext context,
   required String haloId,
@@ -119,9 +113,8 @@ Future<void> shareContactCard({
           data: const MediaQueryData(),
           child: Directionality(
             textDirection: TextDirection.ltr,
-            // no material above this tree, and text without one is drawn
-            // with flutter's yellow double underline: the lines under
-            // every word on the shared card
+            // no material above this tree, and text without one gets
+            // flutter's yellow double underline
             child: DefaultTextStyle(
               style: const TextStyle(decoration: TextDecoration.none),
               child: ContactCard(haloId: haloId, uri: uri),

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// group info / settings. shows: name (edit if admin), member list, add
-// member (admin), remove member (admin), leave group (everyone).
+// group info: name and member changes for the admin, leave for everyone
 
 import 'dart:io';
 import 'package:flutter/material.dart';

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// home screen. date header, hero card or empty state, nav tabs.
-// matches 08_complete_spec.html "the everyday" home tile.
+// home screen: date header, the chat list or empty state, and the nav tabs.
 
 import 'saved_screen.dart';
 import 'transport_screen.dart';
@@ -90,11 +89,8 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _sharedSub = ToolsBridge.instance.shared.listen((_) => _takeShared());
     lockState.addListener(_onLock);
-    // a tab that has been opened once stays in the tree behind an Offstage,
-    // which is what makes switching back instant - and what left it painted
-    // in the palette it was built in. switching to the light theme from
-    // settings repainted this screen and not the tools tab behind it, so the
-    // heading there stayed white on cream until the app was restarted.
+    // a tab opened once stays in the tree behind an Offstage, so a theme
+    // switch has to repaint the tabs behind this one too
     themeRevision.addListener(_repaint);
     ToolsBridge.instance.sweep();
     _sweeper = Timer.periodic(
@@ -228,9 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             // whole tab from scratch. HaloColors is a palette
                             // swapped in place, and a const widget handed back
                             // to a rebuild is skipped, so anything const in
-                            // here would otherwise keep the colours it was
-                            // first built with. the tools heading stayed white
-                            // on cream that way until the app was restarted.
+                            // here would keep the colours it was built with.
                             child: KeyedSubtree(
                               key: ValueKey(HaloColors.isLight),
                               child: _Arrive(on: t == _tab, child: _body(t)),
@@ -485,7 +479,7 @@ class GroupSummary {
 
 // ───────── date header ─────────
 
-// the relay route's colour - cool enough never to read as tor's violet
+// the relay route's colour: cool enough never to read as tor's violet
 const kRelayCyan = Color(0xFF4BB8C9);
 
 class _AddScanButton extends StatelessWidget {
@@ -587,7 +581,7 @@ class _HomeHead extends StatelessWidget {
               children: [
                 // one line each, shrunk to fit rather than broken: a long
                 // weekday or month ("Donnerstag", "24. September") beside the
-                // buttons was split in the middle of the word
+                // buttons would split in the middle of the word
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: AlignmentDirectional.centerStart,
@@ -595,8 +589,8 @@ class _HomeHead extends StatelessWidget {
                     l10n.homeDateWeekday(weekday(now)),
                     maxLines: 1,
                     style: HaloType.serif(size: 26, weight: FontWeight.w400),
-                    // display type, capped. at 200% this became one word per
-                    // line and pushed the whole list off screen.
+                    // display type, capped: at 200% it goes one word per line
+                    // and pushes the whole list off screen
                     textScaler: TextScaler.linear(
                       MediaQuery.of(
                         context,
@@ -662,10 +656,9 @@ class _HomeHead extends StatelessWidget {
   }
 }
 
-// android is not letting kryfo put a notification up. nothing arrives
-// while the app is closed and, before this, nothing said so. the android
-// 13 permission dialog does not come back once the answer is final, so
-// the only way out is the page this opens.
+// android is not letting kryfo put a notification up, so nothing arrives
+// while the app is closed. the android 13 permission dialog does not come
+// back once the answer is final, so the only way out is the page this opens.
 class _NotificationsBlockedHint extends StatefulWidget {
   const _NotificationsBlockedHint();
 
@@ -674,16 +667,10 @@ class _NotificationsBlockedHint extends StatefulWidget {
       _NotificationsBlockedHintState();
 }
 
-// this phone has killed kryfo three times in a day while it was supposed
-// to be staying connected. said once, ever, and only after it has happened:
-// no vendor list, no guessing from the model name.
 // tor has been unable to carry traffic for five minutes while kryfo is meant
-// to be connected. a samsung once sat like this for ten and a half hours with
-// nothing on screen; silence is the part being fixed here, so this says it
-// plainly and offers the one useful button.
-//
-// it keeps its own timer because the status poll only wakes listeners when
-// the status changes, and staying off is the absence of a change.
+// to be connected: say so plainly and offer the one useful button. it keeps
+// its own timer because the status poll only wakes listeners when the status
+// changes, and staying off is the absence of a change.
 class _OfflineCard extends StatefulWidget {
   const _OfflineCard();
 
@@ -823,6 +810,9 @@ class _OfflineCardState extends State<_OfflineCard> {
   }
 }
 
+// this phone has killed kryfo three times in a day while it was supposed
+// to be staying connected. said once, ever, and only after it has happened:
+// no vendor list, no guessing from the model name.
 class _KeepsStoppingCard extends StatefulWidget {
   const _KeepsStoppingCard();
 
@@ -1052,8 +1042,6 @@ class _NotificationsBlockedHintState extends State<_NotificationsBlockedHint>
     );
   }
 }
-
-// ───────── empty state ─────────
 
 class _RelayDownHint extends StatelessWidget {
   const _RelayDownHint();
@@ -1378,31 +1366,21 @@ class _OfflineStrip extends StatelessWidget {
       builder: (context, _) {
         final n = appState.queued;
         final p = appState.parkedQueued;
-        // a send in flight while the phone can send is not news: it showed
-        // "waiting" and a retry for every message typed from home. the strip
+        // a send in flight while the phone can send is not news. the strip
         // speaks when the phone cannot send, or when a message waits on
         // someone who has not added you back.
         final cannotSend = !appState.online || !appState.torReady;
-        // "or when a message waits on someone who has not added you back"
-        // is the second half of the rule above, and it was dropped from
-        // this line. without it every branch below that needs a working
-        // phone was unreachable: the parked tails and the retry button
-        // could not render at all, so a message parked on a peer who has
-        // not added you back was invisible everywhere on home.
         if (!cannotSend && p == 0) return const SizedBox.shrink();
 
         final offline = !appState.online;
         final torDown = !offline && !appState.torReady;
-        // tor coming up is what every launch looks like. with an empty
-        // queue there is nothing to explain and the halo already says so,
-        // and the strip said "waiting" over "nothing waiting to send",
-        // which is two opposite things at once. offline is different: that
-        // is worth stating even with nothing queued.
+        // tor coming up is what every launch looks like: with an empty queue
+        // there is nothing to explain. offline is worth stating even with
+        // nothing queued.
         if (torDown && n == 0 && p == 0) return const SizedBox.shrink();
         final tint = offline ? HaloColors.rose : HaloColors.amber;
         final head = offline ? l10n.homeOffline : l10n.homeWaiting;
-        // the old strip said "offline" and stopped, which left people
-        // guessing whether anything was queued or lost.
+        // say whether anything is queued, not only that the phone is offline
         final tail = n == 0
             ? l10n.homeNothingWaitingToSend
             : offline
@@ -1489,6 +1467,8 @@ class _OfflineStrip extends StatelessWidget {
     );
   }
 }
+
+// ───────── empty state ─────────
 
 class _EmptyState extends StatefulWidget {
   final VoidCallback onAdd;
@@ -1849,9 +1829,8 @@ class _GroupRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
             children: [
-              // group avatar: square tile in amberSoft with the first letter
-              // of the group name in italic serif. distinct from contact
-              // avatars (circular) so groups feel different at a glance.
+              // group avatar: a square tile with the first letter of the name
+              // in italic serif, so groups differ from round contact avatars
               Hero(
                 tag: 'group-${g.groupId}',
                 child: Container(
@@ -2305,7 +2284,6 @@ String _relTime(DateTime? t) {
   return dayMonth(t);
 }
 
-// unknown-sender requests. amber, shows a count, only rendered when > 0.
 // the two quiet places, side by side, so the chats start higher up
 class _QuickTiles extends StatelessWidget {
   final VoidCallback onNotes;
@@ -2388,8 +2366,8 @@ class _QuickTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // the whole title, shrunk if it has to be: at a big
-                  // font size in german it read "Notiz an ..."
+                  // the whole title, shrunk if it has to be, never cut off
+                  // at a big font size
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: AlignmentDirectional.centerStart,
@@ -2420,6 +2398,7 @@ class _QuickTile extends StatelessWidget {
   }
 }
 
+// unknown-sender requests. amber, shows a count, only rendered when > 0.
 class _RequestsPin extends StatelessWidget {
   final int count;
   final VoidCallback onTap;

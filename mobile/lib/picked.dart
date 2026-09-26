@@ -1,6 +1,5 @@
-// the pickers leave a copy of whatever was chosen in the app cache. once the
-// bytes are in hand that copy has no reason to stay, so it is zeroed and
-// removed, and the plugin's own folder cleared with it.
+// the pickers leave a copy of what was chosen in the app cache. once the
+// bytes are in hand it is zeroed and removed, with the plugin's own folder.
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';

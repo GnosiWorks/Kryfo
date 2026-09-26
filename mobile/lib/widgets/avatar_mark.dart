@@ -1,12 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// geometric marks for the avatar picker. drawn, not shipped - no image
-// assets, nothing to license, and the whole space exists in about a hundred
-// lines. twelve marks x four rotations x the palette list is over a thousand
-// distinct avatars, which is what the spec asked for without a folder of
-// generated faces in the apk.
-//
-// they are stamps, not portraits: thick strokes, lots of air, the sort of
-// thing that would be pressed into wax.
+// geometric marks for the avatar picker, drawn so there are no image assets
+// to ship or license. stamps, not portraits: thick strokes, lots of air.
 
 import 'dart:math' as math;
 
@@ -28,8 +22,7 @@ class AvatarMarkPainter extends CustomPainter {
   @override
   void paint(Canvas c, Size s) {
     final w = s.width;
-    // one stroke weight for everything, scaled - mixed weights read as an
-    // accident rather than a set.
+    // one stroke weight for everything: mixed weights read as an accident
     final p = Paint()
       ..color = color
       ..style = PaintingStyle.stroke

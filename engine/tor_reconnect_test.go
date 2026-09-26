@@ -6,9 +6,8 @@
 //
 //	go test -tags torconf -run TestReconnect -v .
 //
-// what it is really guarding is that tor is never replaced. the old restart
-// closed tor and started another, and the second one in a process hangs or
-// aborts; here the same *tor.Tor has to still be there at the end.
+// tor must never be replaced: a second tor in one process hangs or aborts,
+// so the same *tor.Tor has to still be there at the end.
 package main
 
 import (
@@ -172,10 +171,8 @@ func TestReconnect(t *testing.T) {
 	if node(t) != first {
 		t.Fatal("tor was replaced somewhere")
 	}
-	// all of the above must have gone over a control socket the engine owns.
-	// on the fallback path there is nothing to close when tor wedges, which
-	// is the whole failure this change removes - so fail loudly if we are
-	// silently on it.
+	// all of the above must have gone over a control socket the engine owns:
+	// on the fallback path there is nothing to close when tor wedges
 	if ctrlDialCount() == 0 {
 		t.Fatal("no control connection of our own was ever dialled - " +
 			"every command went through bine, where a wedge cannot be closed")

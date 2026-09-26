@@ -55,9 +55,9 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet>
     super.dispose();
   }
 
-  // to someone already in kryfo: their chat opens with the link in the
-  // box, and it goes when you press send. said plainly first, because a
-  // room is where nobody knows who anyone is, and this is the exception.
+  // to someone already in kryfo: their chat opens with the link in the box.
+  // said plainly first, since in a room nobody knows who anyone is and this
+  // is the exception.
   Future<void> _toContact(String uri) async {
     final contacts = appState.contacts.where((c) => !c.blocked).toList();
     final nav = Navigator.of(context);

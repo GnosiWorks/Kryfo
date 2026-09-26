@@ -1,20 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-//
-// find someone by their public handle. the registry already serves a small
-// json answer for each claimed handle (the same one the web page is built
-// from), so a lookup is one read: @wren becomes the invite wren published,
-// and the invite goes through the normal add path. nothing about the person
-// looking is sent - the request carries the handle and nothing else.
+// find someone by their public handle: one registry read turns @wren into
+// the invite wren published. the request carries the handle and nothing else.
 import 'dart:convert';
 
 const kHandleRegistry = 'https://relay.kryfo.app';
 
 final _handleRe = RegExp(r'^[a-z0-9_]{3,20}$');
 
-// pull a handle out of whatever someone typed or scanned: "@wren", "wren"
-// is not enough on its own (three words look like that too), but the page
-// link "relay.kryfo.app/@wren" with or without https is. null when the text
-// is something else, so the caller can try it as an invite.
+// "@wren" or the page link "relay.kryfo.app/@wren". a bare "wren" is not
+// enough, three words look like that too. null lets the caller try the
+// text as an invite.
 String? handleFromInput(String raw) {
   var s = raw.trim().toLowerCase();
   if (s.isEmpty) return null;
@@ -47,9 +42,8 @@ String? inviteFromRegistryJson(String body, String handle) {
   }
 }
 
-// resolve a handle to its invite. fetch is whatever reads a url through the
-// engine, so tests can hand in a canned answer. returns the invite, or a
-// short line for the toast prefixed 'error: '.
+// the invite, or a toast line prefixed 'error: '. fetch is passed in so
+// tests can hand in a canned answer.
 Future<String> resolveHandle(
   String handle,
   Future<String> Function(String url) fetch,

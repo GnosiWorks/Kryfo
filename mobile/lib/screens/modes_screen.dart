@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// speed & privacy modes. private (tor) is live and stays the default;
-// balanced (clearnet to our own relay) and fast (direct) are ui-only until
-// the engine can route around tor. balanced exists because mandatory tor is
-// the app's biggest usability cost - see transport tiers in CONTEXT.
+// speed and privacy modes. private, over tor, is the default; balanced
+// exists because mandatory tor is the app's biggest usability cost.
 
 import 'package:flutter/material.dart';
 import '../theme.dart';
@@ -56,15 +54,14 @@ class _ModesScreenState extends State<ModesScreen> {
     return Scaffold(
       backgroundColor: HaloColors.surface,
       body: SafeArea(
-        // fits or scrolls, like every screen that pushes something to the
-        // bottom with a spacer: a plain column runs past the body on a
-        // short phone and whatever sits below the fold cannot be tapped
+        // fits or scrolls: a plain column runs past the body on a short
+        // phone and whatever sits below the fold cannot be tapped
         child: FitColumn(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // the spacer stays a direct child of the column. wrapped by the
-            // stagger it threw a parent-data error, which release paints as
-            // a light box: the "half white" bottom this screen had.
+            // the spacer stays a direct child of the column: wrapped by the
+            // stagger it throws a parent-data error, which release paints as
+            // a light box
             ...staggerAll([
               _BackBar(onBack: () => Navigator.pop(context)),
               const _Head(),
@@ -185,7 +182,7 @@ class _ModeCard extends StatelessWidget {
   final String speed;
   final String hops;
   final bool ipVisible;
-  // some tiers aren't a clean hidden/visible - 'relay only' is its own.
+  // some tiers aren't a clean hidden/visible: 'relay only' is its own
   final String? ipText;
   final bool ipWarn;
   final String? warning;
@@ -399,9 +396,8 @@ class _Footnote extends StatelessWidget {
   }
 }
 
-// the warning. what fast costs, in plain words, and a button
-// the one warning fast mode carries, shown by every way into it: the
-// modes screen and the home's "our relay is quiet" shortcut alike
+// what fast costs, in plain words. shown by every way into it: the modes
+// screen and the home's "our relay is quiet" shortcut alike
 Future<bool> showFastGateSheet(BuildContext context) async {
   final ok = await showHaloSheet<bool>(
     context,

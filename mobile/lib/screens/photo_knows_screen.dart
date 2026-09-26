@@ -241,9 +241,7 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
                     ),
                     const SizedBox(height: 4),
                   ],
-                  // with nothing to remove there is no primary button, and
-                  // the page ended on a small line of text with a lot of
-                  // room above it. the way out becomes the button instead.
+                  // with nothing to remove, the way out is the button
                   if (story != null && !story.canClean)
                     ToolWideButton(
                       label: l10n.commonDone,
@@ -602,8 +600,7 @@ class _Body extends StatelessWidget {
 }
 
 // a file with nothing in it: the picture, a tick landing on it, and what
-// was looked for, each found not there. the page used to be a heading and a
-// button with nothing between them.
+// was looked for, each found not there
 class _NothingFound extends StatelessWidget {
   final String? path;
   final bool video;

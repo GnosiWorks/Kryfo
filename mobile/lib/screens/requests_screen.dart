@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// message requests from people not in your contacts. unknown senders land
-// here first. tap one to open the conversation, read what they sent, then
-// accept / decline / block from inside the chat.
+// message requests from people not in your contacts. accept, decline or
+// block on the card, or tap it to read the conversation first.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -125,10 +124,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
     await _load();
   }
 
-  // the three answers live here, on the list. opening a chat to decline
-  // someone was backwards.
-  // one answer per card at a time: a double tap on accept ran the accept
-  // twice, two acks out and the held messages opened twice
+  // one answer per card at a time: a double tap on accept would send two
+  // acks and open the held messages twice
   final Set<String> _answering = {};
 
   Future<void> _accept(String id) async {
@@ -483,8 +480,7 @@ class _Answer extends StatelessWidget {
   }
 }
 
-// soft amber ring breathing behind the empty inbox - same quiet-waiting
-// feel as the home empty state.
+// soft amber ring breathing behind the empty inbox
 class _BreathingInbox extends StatefulWidget {
   const _BreathingInbox();
 

@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a big photo is a hundred slices and each travels on its own. when one or
-// two never arrive the receiver sat at 99% for good: nothing told the sender
-// which pieces were missing, and the sender had heard 'ok' from a relay for
-// every one. here the receiver works out what it lacks and asks, and the
-// sender sends those slices again and nothing else.
-//
-// only asked of a sender whose slices said it can answer, so an older kryfo
+// a big photo travels as many slices, each on its own, and a relay's 'ok'
+// does not mean it arrived. the receiver works out which slices it lacks and
+// asks; the sender sends those again and nothing else.
+// only asked of a sender whose slices say it can answer, so an older kryfo
 // never gets a frame it would not understand.
 
 const kNeedMaxIndices = 200;

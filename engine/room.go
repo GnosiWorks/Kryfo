@@ -2,11 +2,9 @@
 package main
 
 // burner rooms. a room is joined under a keypair made for that room alone:
-// the other people in it learn a key that works there and nowhere else, and
-// the relay sees addresses that share nothing with the identity above. the
-// wrap, the addresses and the first-contact drop box are the same code as
-// everything else, only the key is the room's, not ours. when the room is
-// gone the key is gone, and with it every address it ever derived.
+// members learn a key that works nowhere else, and the relay sees addresses
+// that share nothing with the identity. when the room is gone the key is
+// gone, and with it every address it ever derived.
 
 /*
 #include <stdlib.h>

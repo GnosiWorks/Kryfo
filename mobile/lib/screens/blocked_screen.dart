@@ -5,8 +5,7 @@ import '../main.dart' show appState;
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 
-// lists contacts you have blocked. unblock restores them to your chats and
-// lets their messages through again. blocking never notifies the other side.
+// blocked contacts. blocking never notifies the other side.
 class BlockedScreen extends StatefulWidget {
   const BlockedScreen({super.key});
 

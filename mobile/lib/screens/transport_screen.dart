@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// what the network is actually doing. built after a night spent guessing at
-// state that was already known internally: the phone had zero relay
-// subscriptions and nothing anywhere said so.
+// what the network is actually doing: state the app knows and otherwise
+// never shows
 import 'dart:async';
 import 'dart:io';
 
@@ -142,8 +141,8 @@ class TransportScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
               _Head(l10n.transportContacts),
-              // zero contacts means zero relay subscriptions, which means
-              // nothing can arrive. that was the whole aug 4 mystery.
+              // zero contacts means zero relay subscriptions, so nothing
+              // can arrive
               _Line(
                 l10n.transportKnown,
                 '$contacts',
@@ -284,8 +283,7 @@ class _AliveState extends State<_Alive> {
   int? _uptimeMs;
   Map<String, dynamic>? _exit;
   Map<String, dynamic> _mem = const {};
-  // the block below was read once when the screen opened and never again,
-  // so a screen left open showed numbers from whenever that was
+  // re-read while the screen is open, or the numbers go stale
   Timer? _tick;
 
   @override
@@ -444,7 +442,7 @@ class _AliveState extends State<_Alive> {
         ),
         // dials climbs when a control socket had to be replaced, timeouts
         // when tor stopped answering one. both flat is a healthy tor; either
-        // one climbing is the wedge that cost ten hours once.
+        // one climbing means the control port is wedging.
         _Line(
           l10n.transportControlPort,
           l10n.transportDialsTimeouts(

@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// kryfo motion library - tor warmup, send pills, typing/cursor/breath utilities.
-// matches the design language: fraunces serif, jetbrains mono, gentle curves,
-// breathing motion. one vocabulary, used throughout.
+// shared motion: the tor warmup graph, send pills, typing, cursor and breath.
 
 import 'dart:async';
 import 'dart:math' as math;
@@ -34,7 +32,7 @@ enum TorStatus { off, starting, bootstrapped, publishing, reachable }
 
 enum PrivacyMode { fast, normal, private }
 
-// shared screen transition - a calm rise-and-fade, one way in across the app.
+// the shared screen transition: a short rise and fade
 Route<T> haloRoute<T>(Widget page) {
   return PageRouteBuilder<T>(
     transitionDuration: const Duration(milliseconds: 280),
@@ -84,8 +82,7 @@ int parseBootstrapPct(String raw) {
 }
 
 // whether the route carries traffic, judged by relay connections rather than
-// by tor's own report. an engine from before the field reads as true, so an
-// old engine behaves as it always did.
+// by tor's own report. an engine without the field reads as true.
 bool parseRouteOK(String raw) {
   final parts = raw.split('|');
   if (parts.length < 4) return true;
@@ -100,10 +97,9 @@ int parseRouteGen(String raw) {
 }
 
 // === TOR WARMUP GRAPH ===
-// 4 onions on a zig-zag wave (SELF/GUARD/MIDDLE/HSDIR), curve fills as
-// we progress, active onion glows with expanding rings, on REACHABLE
-// everything turns green and breathes in sequence. plain-language copy
-// teaches the user what's happening while they wait.
+// 4 onions on a zig-zag wave (SELF/GUARD/MIDDLE/HSDIR). the curve fills as
+// tor progresses, the active onion glows with expanding rings, and on
+// REACHABLE everything turns green and breathes in sequence.
 
 class TorWarmupGraph extends StatefulWidget {
   final TorStatus status;
@@ -420,7 +416,7 @@ class _ZigZagWarmupPainter extends CustomPainter {
     required this.t,
   });
 
-  // viewBox 296 x 100; positions match the html mockup exactly.
+  // viewBox 296 x 100
   static const _vbW = 296.0;
   static const _vbH = 100.0;
   static const _onionPositions = [
@@ -494,12 +490,10 @@ class _ZigZagWarmupPainter extends CustomPainter {
       );
     }
 
-    // onions
     for (int i = 0; i < 4; i++) {
       _drawOnion(canvas, _onionPositions[i], i);
     }
 
-    // labels
     for (int i = 0; i < 4; i++) {
       _drawLabel(canvas, _labels[i], _onionPositions[i].dx);
     }
@@ -542,7 +536,7 @@ class _ZigZagWarmupPainter extends CustomPainter {
 
         final isCore = k == 3;
         if (isCore) {
-          // glow kryfo behind core
+          // glow behind the core
           if (isActive) {
             canvas.drawCircle(
               c,
@@ -699,7 +693,7 @@ class _LockTrailPainter extends CustomPainter {
 
 // === SEND PILL (mode-aware) ===
 // fast = no pill (delivered ✓ shows inline in bubble meta)
-// normal = "1 hop" + 1 rotating onion
+// normal = "1 hop" + a padlock with two dots trailing it
 // private = "3 hops" + 3 rotating onions, staggered
 
 class SendPill extends StatefulWidget {
@@ -756,7 +750,6 @@ class _SendPillState extends State<SendPill>
   }
 
   // the route has a colour of its own, so the mode reads at a glance
-  // without anyone having to parse the words.
   Color get _color {
     if (widget.delivered) return kGreen;
     switch (widget.mode) {
@@ -908,9 +901,8 @@ class _OnionSpinPainter extends CustomPainter {
 }
 
 // === TYPING DOTS ===
-// unused on purpose. kryfo sends NO typing signal over the wire (privacy: the
-// why_kryfo screen promises exactly that). kept only as a local building block
-// if a same-device demo ever needs it. do not wire this to the transport.
+// unused on purpose: kryfo sends no typing signal over the wire, and the why
+// kryfo screen promises that. do not wire this to the transport.
 class TypingDots extends StatefulWidget {
   const TypingDots({super.key});
   @override

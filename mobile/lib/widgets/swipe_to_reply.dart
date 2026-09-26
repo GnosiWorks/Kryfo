@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// swipe right on a bubble to reply. the reply icon peeks from the left and
-// haptics fire when you cross the trigger. one widget for the 1:1 chat and
-// the group chat, so they cannot drift apart again.
+// swipe right on a bubble to reply. one widget for the 1:1 chat and the
+// group chat, so they cannot drift apart.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
@@ -20,9 +19,8 @@ class _SwipeToReplyState extends State<SwipeToReply>
   bool _armed = false;
   static const double _trigger = 56;
   static const double _max = 80;
-  // built in initState, not on first use: a bubble nobody swiped would
-  // otherwise create this inside dispose, and a ticker made that late
-  // throws, which stops the whole route from unmounting.
+  // built in initState, not lazily: made inside dispose for an unswiped
+  // bubble, the ticker throws and the route never unmounts
   late final AnimationController _spring;
   Animation<double> _back = const AlwaysStoppedAnimation(0);
 

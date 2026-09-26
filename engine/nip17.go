@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// nip17 gift-wrap layer. the old transport signed every message of a
-// conversation with one deterministic key - a relay could link the whole
-// thread and tie both sides together. now each message publishes under a
-// fresh ephemeral key with a jittered timestamp, sealed to a per-conversation
-// receive address. addresses share nothing across conversations and only the
-// two peers can derive them, so this hides more than stock nip-17 (which
-// puts your one real pubkey on every wrap).
+// nip17 gift-wrap layer. each message publishes under a fresh ephemeral key
+// with a jittered timestamp, sealed to a per-conversation receive address.
+// addresses share nothing across conversations and only the two peers can
+// derive them, so a relay cannot link a thread or tie both sides together.
+// stock nip-17 puts your one real pubkey on every wrap.
 
 import (
 	"encoding/hex"

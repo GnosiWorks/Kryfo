@@ -7,13 +7,12 @@ import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 
-// chats you have archived. hidden from the main list but still receive
-// normally. they read dimmer here on purpose - resting, not gone. a row
-// wakes to full colour on press, previewing what unarchive brings back.
+// archived chats: hidden from the main list, still receive normally. rows
+// read dimmer on purpose and wake to full colour on press.
 class ArchivedScreen extends StatelessWidget {
   const ArchivedScreen({super.key});
 
-  // spell out the count small, editorial. keeps the top of the screen calm.
+  // the count spelled out keeps the top of the screen calm
   String _countWord(int n) {
     final words = [
       l10n.archivedCount0,
@@ -155,7 +154,7 @@ class ArchivedScreen extends StatelessWidget {
   }
 }
 
-// a single resting row. dim by default, wakes to full colour while pressed.
+// dim by default, full colour while pressed
 class _ArchivedRow extends StatefulWidget {
   final dynamic contact;
   final int number;

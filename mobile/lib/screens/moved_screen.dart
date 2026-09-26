@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// what the old phone shows once its identity has been moved elsewhere.
-// the mark is written by the export that moved it, so this screen is a
-// fact the person set, not a guess made from sessions failing. while it
-// stands the engine is never started: nothing arrives, nothing leaves,
-// and the ratchet the other device now owns is never advanced from here.
+// what the old phone shows once its identity has moved. the mark is
+// written by the export, not guessed from failing sessions. while it stands
+// the engine never starts, so the ratchet the other device now owns is
+// never advanced from here.
 import 'dart:io';
 
 import 'package:flutter/material.dart';

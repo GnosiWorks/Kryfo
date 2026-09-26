@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a column for a whole screen: on a tall phone a spacer still pushes the
-// button to the bottom, on a short one the page scrolls instead of dropping
-// the button under the navigation bar. the onboarding and the pin pads sat
-// in a plain column, and a galaxy a13 with a large display zoom could not
-// reach "keep onion".
+// button to the bottom, on a short one or with a large display zoom the page
+// scrolls instead of dropping the button under the navigation bar.
 import 'package:flutter/material.dart';
 
 class FitColumn extends StatelessWidget {

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// how many introductions one phone may send: 5 per rolling 7 days, counted
-// here and nowhere else. the math takes a clock so it can be tested without
-// waiting a week.
+// introductions one phone may send: 5 per rolling 7 days. the math takes a
+// clock so it can be tested.
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'l10n/l10n.dart';

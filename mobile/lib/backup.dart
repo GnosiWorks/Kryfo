@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// backup.dart - full identity + db + prefs backup, encrypted with a
-// user passphrase. one blob, restorable on any device. uses the engine
-// for scrypt + aes-gcm (HaloEncryptBackup / HaloDecryptBackup).
+// full backup of identity, db, prefs and media, encrypted with a user
+// passphrase by the engine (scrypt and aes-gcm). a v1 backup is one text
+// blob; v2 is the streamed file below.
 
 import 'dart:async';
 import 'dart:convert';
@@ -33,8 +33,8 @@ class BackupError implements Exception {
   String toString() => message;
 }
 
-// the four things that can go wrong opening a backup, each with its own
-// words. a code or a stack trace on someone's worst day helps nobody.
+// the four things that can go wrong opening a backup, each in plain words
+// rather than a code
 enum RestoreFailure { wrongPassphrase, notABackup, newerVersion, damaged }
 
 class RestoreError implements Exception {
@@ -62,8 +62,7 @@ RestoreFailure classifyRestoreError(String engineError) {
   return RestoreFailure.damaged;
 }
 
-// what a backup file holds, read before anything is touched
-// what a backup holds, before anything is touched. bytes and files are
+// what a backup holds, read before anything is touched. bytes and files are
 // zero for a v1 file, which never carried attachments.
 class BackupSummary {
   final DateTime? when;
@@ -182,16 +181,14 @@ Future<void> restoreBackupBlob(String blob, String passphrase) async {
 
   final docsDir = await getApplicationDocumentsDirectory();
 
-  // restore db passphrase first (must be in secure storage before db opens)
+  // db passphrase first: it must be in secure storage before the db opens
   final dbPassphrase = payload['dbPassphrase'] as String;
   await _secureStorage.write(key: _kDbPassphrase, value: dbPassphrase);
 
-  // restore db bytes
   final dbBytes = base64Decode(payload['db'] as String);
   final dbPath = p.join(docsDir.path, 'halo.db');
   await File(dbPath).writeAsBytes(dbBytes, flush: true);
 
-  // restore onion key
   final onionKeyB64 = payload['onionKey'] as String?;
   if (onionKeyB64 != null) {
     final onionBytes = base64Decode(onionKeyB64);
@@ -200,7 +197,6 @@ Future<void> restoreBackupBlob(String blob, String passphrase) async {
     ).writeAsBytes(onionBytes, flush: true);
   }
 
-  // restore prefs
   final prefs = await SharedPreferences.getInstance();
   final prefsMap = payload['prefs'] as Map<String, dynamic>? ?? {};
   for (final entry in prefsMap.entries) {
@@ -219,14 +215,13 @@ Future<void> restoreBackupBlob(String blob, String passphrase) async {
   // a v1 backup carries none of these; what is here is the old identity's
   await _applyIdentitySecure(payload['secure']);
 
-  // restore the onboarding_done flag to default secure storage
   final defaultStorage = const FlutterSecureStorage();
   final onboardingDone = payload['onboardingDone'] as String?;
   if (onboardingDone != null) {
     await defaultStorage.write(key: 'onboarding_done', value: onboardingDone);
   }
 
-  // restore identity in engine (this also rehydrates myId)
+  // restoring the identity in the engine also rehydrates myId
   final edPriv = payload['edPriv'] as String;
   final xPriv = payload['xPriv'] as String;
   engine.restoreIdentity(edPriv, xPriv);
@@ -342,10 +337,9 @@ Future<List<BackupFileEntry>> _filesToCarry(Directory docs) async {
 
 // what belongs to the identity but lives in secure storage, outside the
 // database: the public handle and its line, which first-contact address is
-// the live one, and where each contact takes first contact. left behind,
-// the new phone did not know its own handle, and after a reset of the
-// invite it listened on address 0 while the published invite named another,
-// so a stranger's first message went nowhere and nothing said so.
+// the live one, and where each contact takes first contact. without them a
+// restored phone does not know its own handle and can listen on a different
+// address than its published invite names.
 const kIdentitySecureKeys = [
   'my_handle',
   'my_handle_bio',
@@ -486,10 +480,9 @@ Future<void> createBackupFile(
 }
 
 // what crosses into a worker isolate: plain values and a SendPort, nothing
-// else. the job runs as a top-level function and the closure handed to
-// Isolate.run captures this one object and nothing more. an inline closure
-// dragged its whole enclosing scope along - the ReceivePort, a completer -
-// and Isolate.run refused it, silently from the user's side.
+// else. the job is a top-level function so the closure handed to Isolate.run
+// captures this one object; an inline closure drags in its whole scope (the
+// ReceivePort, a completer) and Isolate.run refuses it.
 class _Job {
   final String passphrase;
   final Uint8List salt;
@@ -558,12 +551,9 @@ Future<Object?> _inspectJob(_Job j) async {
 }
 
 // streams every file into a staging folder under j.root and only then
-// moves them into place. the file is proved whole - end record and all -
-// before a single byte of the phone's own data is touched, so a backup
-// cut short halfway leaves the phone exactly as it was. the earlier order
-// deleted the media and wrote the database first, and a bad file would
-// have left a database the phone could not open with its old identity
-// already gone.
+// moves them into place. the file is proved whole, end record and all,
+// before a single byte of the phone's own data is touched, so a backup cut
+// short halfway leaves the phone exactly as it was.
 Future<Object?> _restoreJob(_Job j) async {
   final lib = _engineLib();
   final key = _backupKey(lib, j.passphrase, j.salt);

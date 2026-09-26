@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// strip a jpeg of everything that is not the picture. exif (with its gps,
-// device model and timestamp), xmp, comments and the maker notes all live
-// in application segments between the start marker and the image data;
-// dropping them leaves the pixels untouched. pure dart, no dependency, so
-// the offline and f-droid builds stay as they are.
+// strip a jpeg of everything that is not the picture. exif (gps, device
+// model, timestamp), xmp, comments and maker notes live in application
+// segments before the image data; dropping them leaves the pixels untouched.
 import 'dart:typed_data';
 
-// segments kept: the picture itself and what decoding needs. app0 (jfif)
-// and the colour profile carry no identifying data and keep colours right,
-// so they stay. app1 (exif, xmp), app3 to app15 and com go. app2 is kept
-// only when it is a colour profile: the same marker carries the
-// multi-picture index phones use to hang a second image off the first.
+// segments kept: the picture and what decoding needs, plus app0 (jfif) and
+// the colour profile. app1 (exif, xmp), app3 to app15 and com go. app2 stays
+// only as a colour profile: the same marker carries the multi-picture index
+// phones use to hang a second image off the first.
 bool _keeps(int marker, Uint8List src, int start, int end) {
   if (marker == 0xE0) return true; // jfif
   if (marker == 0xE2) return _isIcc(src, start, end);
@@ -46,10 +43,8 @@ bool _walk(
       i += 1;
       continue;
     }
-    // start of scan. the picture runs from here to its end marker and not
-    // a byte further: "to the end of the file" took along whatever a phone
-    // had hung after the picture, and a samsung camera hangs a trailer of
-    // its own there, and some hang a whole second image.
+    // start of scan. the picture runs to its end marker and not a byte
+    // further: cameras hang trailers, even a second image, after it
     if (marker == 0xDA) return _scan(src, i, out, keep);
     // standalone markers carry no length
     if (marker == 0xD8 ||
@@ -129,10 +124,9 @@ Uint8List? stripJpegMetadata(Uint8List src) {
   if (src.length < 4 || src[0] != 0xFF || src[1] != 0xD8) return src;
   final out = BytesBuilder(copy: false);
   out.add([0xFF, 0xD8]);
-  // which way up is the one thing in the exif the picture needs: a phone
-  // held upright saves a sideways image and a note to turn it. without the
-  // note every portrait photo arrives on its side. it goes back in alone,
-  // in an exif block built here that holds that one tag and nothing else.
+  // orientation is the one exif tag the picture needs: an upright phone
+  // saves a sideways image and a note to turn it. it goes back in alone, in
+  // an exif block built here.
   var turn = 1;
   final seen = _walk(src, null, (marker, a, b) {
     if (marker == 0xE1 && turn == 1) turn = _orientation(src, a, b);

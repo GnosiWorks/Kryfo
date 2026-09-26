@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// kryfo mobile - phase 1: identity persistence + ECDH + editorial UI
 
 import 'dart:async';
 import 'widgets/boot_failed.dart';
@@ -218,14 +217,13 @@ class HaloEngine {
     return raw.split('\n');
   }
 
-  // polled every second by the watchdog, so a string that was not freed here
-  // was a leak once a second for the life of the app.
+  // polled every second by the watchdog, so the string is freed
   String getStatus() => _take(_getStatus());
 
   // every relay socket dropped and reopened now, since window and all
   String nostrKick() => _nostrKick().toDartString();
 
-  // looked up on first use: an engine from before check-ins does not have it
+  // looked up on first use so older engines still load
   late final CStrFnDart _catchupState = _lib.lookupFunction<CStrFn, CStrFnDart>(
     'HaloCatchupState',
   );
@@ -240,19 +238,14 @@ class HaloEngine {
     }
   }
 
-  // where the last tor reconnect got to. looked up on first use so an engine
-  // from before it still loads.
+  // where the last tor reconnect got to. looked up on first use so older
+  // engines still load.
   late final CStrFnDart _lastReconnect = _lib
       .lookupFunction<CStrFn, CStrFnDart>('HaloLastReconnect');
 
-  // the go side hands this over with C.CString, which mallocs, so the string
-  // is ours to free. it matters here more than elsewhere: the transport
-  // screen reads it on every refresh, and the line it returns used to grow
-  // every time a reconnect gave up.
-  //
-  // the other CStr bindings in this file do not free, which is a leak per
-  // call across all of them. one binding is not the place to fix a house
-  // pattern - noted in kryfo-notes for a pass of its own.
+  // C.CString mallocs on the go side, so the string is ours to free. the
+  // transport screen reads it on every refresh.
+  // todo: most other CStr bindings here do not free either
   String lastReconnect() {
     Pointer<Utf8>? p;
     try {
@@ -326,8 +319,6 @@ class HaloEngine {
     _subscribeOnIsolate(peerXPubHex).ignore();
   }
 
-  // the address a stranger can reach us at. cheap and synchronous - it is a
-  // key derivation, no network.
   // bridge lines in, a summary out. tor only reads its config at startup, so
   // callers restart it after changing this or nothing happens.
   String setBridges(String lines, bool on) {
@@ -346,9 +337,8 @@ class HaloEngine {
 
   void restartTor() => _take(_restartTor());
 
-  // android says the default network changed: tor is bounced once the
-  // network has been quiet for a few seconds. looked up on first use so an
-  // engine from before it still loads.
+  // android reports a new default network: tor is bounced once it has been
+  // quiet a few seconds. looked up on first use so older engines still load.
   late final CStrFnDart _networkChanged = _lib
       .lookupFunction<CStrFn, CStrFnDart>('HaloNetworkChanged');
   void networkChanged() {
@@ -357,8 +347,7 @@ class HaloEngine {
     } catch (_) {}
   }
 
-  // read a C.CString from the go side and free it. C.CString mallocs, so the
-  // string is ours; see lastReconnect for the pattern and why.
+  // read a C.CString from the go side and free it, since C.CString mallocs
   static String _take(Pointer<Utf8> p) {
     if (p == nullptr) return '';
     try {
@@ -368,8 +357,7 @@ class HaloEngine {
     }
   }
 
-  // the registry is a request over tor: off the ui thread, or claiming a
-  // handle froze the screen until it answered and android called it an anr
+  // the registry is a request over tor, so it runs off the ui thread
   Future<String> handleCheck(String h) => _ffiOnIsolate('HaloHandleCheck', [h]);
 
   Future<String> handleClaim(String h, String invite, String bio) =>
@@ -390,7 +378,7 @@ class HaloEngine {
   }
 
   // both moat calls block on a network round trip, so they run off the ui
-  // isolate. the request is plain https on purpose - tor being unreachable is
+  // isolate. the request is plain https on purpose: tor being unreachable is
   // why someone is asking for bridges at all.
   Future<String> moatFetch() => _moatOnIsolate(null, null).timeout(
     const Duration(seconds: 60),
@@ -403,8 +391,7 @@ class HaloEngine {
         onTimeout: () => 'error: timed out sending the answer',
       );
 
-  // everything the transport knows, in one read. no
-  // inference on this side.
+  // everything the transport knows, in one read. no inference on this side.
   Map<String, dynamic> transportState() {
     try {
       return jsonDecode(_txState().toDartString()) as Map<String, dynamic>;
@@ -427,8 +414,7 @@ class HaloEngine {
     null,
   ).timeout(const Duration(seconds: 40), onTimeout: () => 'empty');
 
-  // watch it. unlike every other subscription this needs no contacts, which
-  // is the whole point.
+  // unlike every other subscription this needs no contacts
   void subscribeFirstContactBg(int counter) {
     _fcSubscribeOnIsolate(counter).ignore();
   }
@@ -452,12 +438,8 @@ class HaloEngine {
     }
   }
 
-  // fetch a url's html over tor (for sender-side link previews). slow + can
-  // fail - caller treats anything starting 'error:' as no-preview.
   // POST json over tor (badge invoices). keeps 2xx bodies, unlike torGet.
-  // off the ui thread: the call returns when the onion has answered, which
-  // is a rendezvous and a round trip, and run inline it held every frame
-  // and android's own main thread for as long as that took.
+  // off the ui thread, since it waits on a rendezvous and a round trip.
   Future<String> torPost(String url, String body) => _ffiOnIsolate(
     'HaloTorPost',
     [url, body],
@@ -465,7 +447,7 @@ class HaloEngine {
     what: 'tor',
   );
 
-  // GET over tor that accepts any 2xx - the badge service replies 202 while
+  // GET over tor that accepts any 2xx: the badge service replies 202 while
   // a donation is still unconfirmed. off the ui thread, as above.
   Future<String> torGetJson(String url) => _ffiOnIsolate(
     'HaloTorGetJSON',
@@ -676,7 +658,6 @@ Future<String> _moatOnIsolate(String? challenge, String? answer) {
   });
 }
 
-// publishing and fetching both wait on a relay, so they go off the ui thread.
 // one read through the engine's http route, off the ui thread. used for the
 // handle lookup, which can wait on tor.
 Future<String> _torGetJsonOnIsolate(String url) {
@@ -734,9 +715,9 @@ Future<String> _fcSubscribeOnIsolate(int counter) {
   });
 }
 
-// run a blocking native send on a throwaway background isolate so the ui
-// thread never stalls on a tor dial. opens its own handle to libhalo -
-// same process image, so it shares the running tor - and frees its strings.
+// blocking native calls run on a throwaway isolate so the ui thread never
+// stalls on a tor dial. its own libhalo handle is the same process image, so
+// it shares the running tor.
 Future<String> _nostrInitOnIsolate(String relaysCSV) {
   return Isolate.run(() {
     final lib = Platform.isAndroid
@@ -855,11 +836,6 @@ Future<String> _subscribeOnIsolate(String xPub) {
   });
 }
 
-// tor fetches run on a background isolate. the raw ffi call blocks for the whole
-// tor round-trip (5-8s), so doing it on the main isolate froze the ui while a
-// link preview resolved. re-open the lib inside the isolate, same as sends.
-// over tor or not at all: the sender-side link preview. "error: ..." when
-// tor is not up, never a plain request.
 // the json stored for a shipped preview, or null when there is none or
 // the sender is not someone accepted. only the url and a one-line title
 // survive; anything else the sender put in the map is dropped here
@@ -938,9 +914,7 @@ class HaloDb {
   }
 
   String _randomPassphrase() {
-    // 32 bytes from the platform csprng, hex. the old version derived the
-    // key from the launch timestamp - brute-forceable offline down to the
-    // microsecond the app first opened.
+    // 32 bytes from the platform csprng, hex
     final rnd = Random.secure();
     final bytes = List<int>.generate(32, (_) => rnd.nextInt(256));
     return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
@@ -1109,12 +1083,11 @@ class HaloDb {
               'ALTER TABLE messages ADD COLUMN pinned_at INTEGER',
             );
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 47) {
-          // the reader-side title cache. nothing ever read or wrote it and
-          // there was no way to ask for a title, so it goes.
+          // the reader-side title cache is unused
           try {
             await db.execute('DROP TABLE IF EXISTS link_titles');
           } catch (e) {
@@ -1130,8 +1103,8 @@ class HaloDb {
           await _editsTable(db);
         }
         if (oldV < 44) {
-          // the burn window a queued message was sent with. burn_at is only
-          // set on delivery, so a row the outbox carried lost its timer.
+          // the burn window a queued message was sent with, since burn_at is
+          // only set on delivery
           try {
             await db.execute(
               'ALTER TABLE messages ADD COLUMN burn_secs INTEGER',
@@ -1153,9 +1126,8 @@ class HaloDb {
           } catch (_) {}
         }
         if (oldV < 41) {
-          // the proof-of-work a stranger's first message was sent with. the
-          // outbox used to rebuild the envelope without it, so a retried
-          // opener was dropped on the far side and nobody saw why.
+          // the proof-of-work a stranger's first message was sent with, so
+          // an opener the outbox retries is not dropped on the far side
           try {
             await db.execute(
               'ALTER TABLE messages ADD COLUMN pow_nonce INTEGER',
@@ -1186,10 +1158,9 @@ class HaloDb {
           await _shieldTable(db);
         }
         if (oldV < 38) {
-          // one person can be vouched for by several people we know, and
-          // that count is the whole point. the old single column stays put
-          // (dropping columns on a phone is not worth it) but nothing reads
-          // or writes it any more.
+          // one person can be vouched for by several people we know. the
+          // single vouched_by column stays but is unused: dropping columns on
+          // a phone is not worth it.
           await _vouchTable(db);
           try {
             await db.execute('''
@@ -1220,15 +1191,13 @@ class HaloDb {
           try {
             await db.execute('ALTER TABLE contacts ADD COLUMN avatar INTEGER');
           } catch (_) {
-            // already present - migrations must be safe to re-run
+            // already present: migrations must be safe to re-run
           }
         }
         if (oldV < 35) {
           // the sender can ask that a message not be screenshotted. we
-          // keep the flag so it still holds after a restart.
-          // a phone that already ran a v35 build has this column, and the
-          // ALTER then throws, the database never opens, and the app hangs on
-          // boot with no way back. migrations have to be safe to re-run.
+          // keep the flag so it still holds after a restart. wrapped: a
+          // throw here hangs the app on boot.
           try {
             await db.execute(
               'ALTER TABLE messages ADD COLUMN secure INTEGER NOT NULL DEFAULT 0',
@@ -1238,7 +1207,7 @@ class HaloDb {
           }
         }
         if (oldV < 34) {
-          // partial media used to live in ram only - a restart lost it.
+          // partial media on disk, so a restart does not lose it
           await db.execute('''
             CREATE TABLE IF NOT EXISTS media_chunks (
               media_id TEXT NOT NULL,
@@ -1257,7 +1226,7 @@ class HaloDb {
               'ALTER TABLE messages ADD COLUMN delivered INTEGER NOT NULL DEFAULT 0',
             );
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 32) {
@@ -1266,13 +1235,12 @@ class HaloDb {
               'ALTER TABLE contacts ADD COLUMN supporter_badge TEXT',
             );
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 31) {
-          // group retries used to INSERT the local row again; duplicate
-          // msg_uids blow up every uid-keyed widget key (red screens).
-          // keep the original row per uid, drop the copies.
+          // duplicate msg_uids break every uid-keyed widget key. keep the
+          // original row per uid, drop the copies.
           await db.execute('''
             DELETE FROM messages WHERE msg_uid IS NOT NULL AND id NOT IN (
               SELECT MIN(id) FROM messages WHERE msg_uid IS NOT NULL
@@ -1286,14 +1254,14 @@ class HaloDb {
               'ALTER TABLE contacts ADD COLUMN peer_bundle TEXT',
             );
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 29) {
           try {
             await db.execute('ALTER TABLE groups ADD COLUMN atmosphere TEXT');
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 28) {
@@ -1302,7 +1270,7 @@ class HaloDb {
               'ALTER TABLE groups ADD COLUMN unread INTEGER NOT NULL DEFAULT 0',
             );
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 27) {
@@ -1321,28 +1289,28 @@ class HaloDb {
               'ALTER TABLE contacts ADD COLUMN accepted INTEGER NOT NULL DEFAULT 1',
             );
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 25) {
           try {
             await db.execute('ALTER TABLE groups ADD COLUMN admin_id TEXT');
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 24) {
           try {
             await db.execute('ALTER TABLE groups ADD COLUMN description TEXT');
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 23) {
           try {
             await db.execute('ALTER TABLE messages ADD COLUMN preview TEXT');
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 22) {
@@ -1351,26 +1319,26 @@ class HaloDb {
               'ALTER TABLE messages ADD COLUMN voice_disguised INTEGER NOT NULL DEFAULT 0',
             );
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
           try {
             await db.execute(
               'ALTER TABLE messages ADD COLUMN saved INTEGER NOT NULL DEFAULT 0',
             );
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 21) {
           try {
             await db.execute('ALTER TABLE messages ADD COLUMN file_path TEXT');
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
           try {
             await db.execute('ALTER TABLE messages ADD COLUMN file_name TEXT');
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 20) {
@@ -1379,7 +1347,7 @@ class HaloDb {
               'ALTER TABLE contacts ADD COLUMN key_changed INTEGER NOT NULL DEFAULT 0',
             );
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 19) {
@@ -1388,7 +1356,7 @@ class HaloDb {
               'ALTER TABLE messages ADD COLUMN sent INTEGER NOT NULL DEFAULT 1',
             );
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 2) await _signalTables(db);
@@ -1396,7 +1364,7 @@ class HaloDb {
           try {
             await db.execute('ALTER TABLE messages ADD COLUMN burn_at INTEGER');
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 4) {
@@ -1405,14 +1373,14 @@ class HaloDb {
               'ALTER TABLE contacts ADD COLUMN back_paired INTEGER NOT NULL DEFAULT 0',
             );
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 5) {
           try {
             await db.execute('ALTER TABLE messages ADD COLUMN msg_uid TEXT');
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
           await db.execute(
             'CREATE INDEX IF NOT EXISTS idx_messages_msg_uid ON messages(msg_uid)',
@@ -1431,14 +1399,14 @@ class HaloDb {
           try {
             await db.execute('ALTER TABLE messages ADD COLUMN reply_to TEXT');
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 8) {
           try {
             await db.execute('ALTER TABLE contacts ADD COLUMN nickname TEXT');
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 9) {
@@ -1447,7 +1415,7 @@ class HaloDb {
               'ALTER TABLE messages ADD COLUMN edited INTEGER NOT NULL DEFAULT 0',
             );
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 10) {
@@ -1456,7 +1424,7 @@ class HaloDb {
               'ALTER TABLE contacts ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0',
             );
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 11) {
@@ -1465,7 +1433,7 @@ class HaloDb {
               'ALTER TABLE contacts ADD COLUMN muted INTEGER NOT NULL DEFAULT 0',
             );
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 12) {
@@ -1474,7 +1442,7 @@ class HaloDb {
               'ALTER TABLE contacts ADD COLUMN archived INTEGER NOT NULL DEFAULT 0',
             );
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 13) {
@@ -1483,7 +1451,7 @@ class HaloDb {
               'ALTER TABLE messages ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0',
             );
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 14) {
@@ -1492,7 +1460,7 @@ class HaloDb {
               'ALTER TABLE contacts ADD COLUMN verified INTEGER NOT NULL DEFAULT 0',
             );
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 16) {
@@ -1501,50 +1469,48 @@ class HaloDb {
               'ALTER TABLE contacts ADD COLUMN unread INTEGER NOT NULL DEFAULT 0',
             );
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 17) {
           try {
             await db.execute('ALTER TABLE contacts ADD COLUMN atmosphere TEXT');
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 18) {
           try {
             await db.execute('ALTER TABLE contacts ADD COLUMN note TEXT');
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
           try {
             await db.execute(
               'ALTER TABLE contacts ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0',
             );
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 15) {
           try {
             await db.execute('ALTER TABLE messages ADD COLUMN media_path TEXT');
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
         }
         if (oldV < 7) {
           try {
             await db.execute('ALTER TABLE messages ADD COLUMN group_id TEXT');
           } catch (_) {
-            // already present - a migration must be safe to re-run
+            // already present: a migration must be safe to re-run
           }
           await db.execute(
             'CREATE INDEX IF NOT EXISTS idx_messages_group_id ON messages(group_id)',
           );
-          // the whole table as a fresh install gets it. the later column
-          // migrations run before this block, so a database from before
-          // version 7 would otherwise end up with a groups table missing
-          // every column added since
+          // the whole table as a fresh install gets it: the later column
+          // migrations run before this block
           await db.execute('''
             CREATE TABLE groups (
               group_id TEXT PRIMARY KEY,
@@ -1643,8 +1609,8 @@ class HaloDb {
     return rows.isEmpty ? null : rows.first;
   }
 
-  // upsert a contact stub from group invite info. preserves existing rows
-  // (won't overwrite onion/xpub if we already know this peer).
+  // a contact stub from group invite info. a peer we already know is left
+  // as is.
   Future<void> upsertContactStub(
     String haloId,
     String onion,
@@ -1721,8 +1687,6 @@ class HaloDb {
     return rows.first['xpub'] as String?;
   }
 
-  // backfill the xpub a v2 pair left empty. plain write, no key-change check:
-  // upsertContact would read an empty prior as a change and raise the flag.
   Future<void> setContactBadge(String haloId, String? tier) async {
     final d = await open();
     await d.update(
@@ -1758,7 +1722,7 @@ class HaloDb {
   }
 
   // every vouch for one person, joined to what we know about the voucher.
-  // only vouchers we still hold as accepted contacts count - a deleted or
+  // only vouchers we still hold as accepted contacts count: a deleted or
   // blocked one drops out here rather than lingering as a name.
   Future<List<Map<String, Object?>>> vouchesFor(String haloId) async {
     final db = await open();
@@ -2043,7 +2007,7 @@ class HaloDb {
     return (rows.first['accepted'] as int? ?? 0) == 1;
   }
 
-  // how many messages we already hold from a sender - caps strangers.
+  // how many messages we already hold from a sender: caps strangers
   Future<int> countMessagesFrom(String peerId) async {
     final db = await open();
     final r = await db.rawQuery(
@@ -2053,7 +2017,7 @@ class HaloDb {
     return (r.first['c'] as int?) ?? 0;
   }
 
-  // how many messages we've sent a peer - caps our own request messages.
+  // how many messages we've sent a peer: caps our own request messages
   Future<int> countMessagesTo(String peerId) async {
     final db = await open();
     final r = await db.rawQuery(
@@ -2102,7 +2066,6 @@ class HaloDb {
     return (r.first['c'] as int?) ?? 0;
   }
 
-  // accept a request: the stranger becomes a normal contact.
   Future<void> acceptRequest(String haloId) async {
     final db = await open();
     await db.update(
@@ -2114,7 +2077,7 @@ class HaloDb {
   }
 
   // quietly dismiss a request: drop the stranger's row and pending messages.
-  // not a block - they can reach us again later.
+  // not a block: they can reach us again later.
   Future<void> declineRequest(String haloId) async {
     final d = await open();
     await d.transaction((t) async {
@@ -2132,9 +2095,9 @@ class HaloDb {
       }
       await t.delete('messages', where: 'peer_id = ?', whereArgs: [haloId]);
       await t.delete('held_onion', where: 'peer_id = ?', whereArgs: [haloId]);
-      // park, don't delete - the row carries the xpub the relay subscription
-      // is built from. wiping it left a declined peer with nowhere to land.
-      // they write again -> unparkIfArchived surfaces them as a new request.
+      // park, don't delete: the row carries the xpub the relay subscription
+      // is built from. if they write again, unparkIfArchived surfaces them as
+      // a new request.
       await t.update(
         'contacts',
         {'accepted': 0, 'archived': 1, 'unread': 0},
@@ -2190,7 +2153,7 @@ class HaloDb {
         'contacts',
         {
           'onion': onion,
-          // v2 links pass '' here - never wipe a key we already learned
+          // v2 links pass '' here: never wipe a key we already learned
           if (xpub.isNotEmpty) 'xpub': xpub,
           'last_seen': now,
           'accepted': nextAccepted,
@@ -2256,10 +2219,8 @@ class HaloDb {
     }
   }
 
-  // dedup: skip a message we've already handled. duplicates arrive because
-  // tor times out and the same msg comes via nostr too (plus retries). the
-  // first copy sets up the session; a duplicate crashes on the used-up
-  // prekey, so drop it before any decrypt.
+  // the same message can come via tor and nostr, plus retries. a duplicate
+  // crashes on the used-up prekey, so it is dropped before any decrypt.
   Future<bool> alreadySeen(String hash) async {
     final db = await open();
     final rows = await db.query(
@@ -2282,10 +2243,9 @@ class HaloDb {
     await db.delete('seen_msgs', where: 'ts < ?', whereArgs: [now - 86400000]);
   }
 
-  // like markSeen but stamped a month ahead of the daily prune: buried
-  // undecryptable ciphers must STAY buried - a pruned hash resurrects the
-  // whole bad-mac replay the next day. relays age the events out well
-  // before the month is up.
+  // like markSeen but stamped a month ahead of the daily prune: a pruned
+  // hash of an undecryptable cipher replays the bad mac the next day. relays
+  // age the events out well before the month is up.
   Future<void> markSeenLong(String hash) async {
     final db = await open();
     await db.insert('seen_msgs', {
@@ -2294,12 +2254,8 @@ class HaloDb {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  // load back_paired for a contact. true = peer has confirmed they know us
-  // (via a received message). false = we should still use direct-onion to
-  // give them a chance to back-pair.
-  // assign a msg_uid to an existing row that lacks one (used to enable
-  // reactions on messages that predate the v5 migration). returns the
-  // uid. matches by (peer_id, sent_at) which is unique enough in practice.
+  // a msg_uid for a row from before the v5 migration, so it can take
+  // reactions. (peer_id, sent_at) is unique enough in practice.
   Future<void> assignUidIfMissing(
     String peerId,
     int sentAtMs,
@@ -2339,9 +2295,8 @@ class HaloDb {
 
   // ---- groups ----
 
-  // create a group locally. members is the full set INCLUDING the creator
-  // (caller must include their own kryfo id if they want to appear in member
-  // list). isAdmin = true for groups we created; false for groups we joined.
+  // members is the full set, including the creator. isAdmin is true for
+  // groups we created.
   Future<void> createGroup(
     String groupId,
     String name,
@@ -2433,9 +2388,8 @@ class HaloDb {
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
-  // replace the whole member set for a group with the authoritative list.
-  // used when a create/reconcile control arrives so a re-add or membership
-  // change syncs cleanly instead of leaving stale or missing rows.
+  // the authoritative list from a create or reconcile control replaces the
+  // whole member set
   Future<void> syncGroupMembers(String groupId, List<String> members) async {
     final db = await open();
     final batch = db.batch();
@@ -2587,8 +2541,7 @@ class HaloDb {
     await db.delete('messages', where: 'group_id = ?', whereArgs: [groupId]);
   }
 
-  // load all messages for a group, oldest-first. peer_id on each row is the
-  // SENDER's kryfo id (for our own messages this is our kryfo id).
+  // peer_id on each row is the sender's kryfo id, ours on our own messages
   Future<List<Map<String, Object?>>> loadGroupMessages(String groupId) async {
     final db = await open();
     return db.query(
@@ -2600,8 +2553,6 @@ class HaloDb {
     );
   }
 
-  // group messages newer than a rowid, for the append-fast-path (mirrors
-  // messagesAfter but scoped to a group).
   Future<List<Map<String, Object?>>> groupMessagesPage(
     String groupId, {
     int? beforeRowid,
@@ -2714,9 +2665,8 @@ class HaloDb {
     );
   }
 
-  // kill the files too, not just the rows. otherwise a burned photo is still
-  // sitting on disk. zeros first, then unlink, so a raw read of the flash
-  // finds nothing either.
+  // the files go too, not just the rows. zeros first, then unlink, so a raw
+  // read of the flash finds nothing either.
   Future<void> _scrubMedia(List<Map<String, Object?>> rows) async {
     for (final r in rows) {
       for (final k in const ['media_path', 'file_path']) {
@@ -3013,7 +2963,7 @@ class HaloDb {
   }
 
   // add or replace a reaction. reactor is '' for self, peer's kryfo id
-  // for theirs. one reaction per (msgUid, reactor) - re-reacting replaces.
+  // for theirs. one reaction per (msgUid, reactor): re-reacting replaces.
   Future<void> addReaction(String msgUid, String reactor, String emoji) async {
     final db = await open();
     await db.insert('reactions', {
@@ -3092,11 +3042,8 @@ class HaloDb {
 
   // every outgoing row the wire never accepted, oldest first. the drainer
   // walks this on a timer so a send survives tor warmup, backing out of the
-  // chat, and a cold restart.
-  //
-  // deliberately keyed on `sent`, not `delivered`: a message that went out
-  // but hasn't been acked is not a message that needs sending again, and
-  // retrying on a missing ack loops forever when the ack never comes.
+  // chat, and a cold restart. keyed on `sent`, not `delivered`: retrying on
+  // a missing ack loops forever when the ack never comes.
   Future<List<Map<String, Object?>>> unsentOutbox() async {
     final db = await open();
     return db.query(
@@ -3294,9 +3241,8 @@ class HaloDb {
     return db.query(
       'messages',
       columns: ['*', 'rowid'],
-      // group_id IS NULL keeps group messages out of the 1:1 thread - a group
-      // row carries peer_id = sender AND a group_id, so without this it leaked
-      // into the direct chat with that sender.
+      // group_id IS NULL keeps group messages out of the 1:1 thread: a group
+      // row carries peer_id = sender too
       where: 'peer_id = ? AND group_id IS NULL',
       whereArgs: [peerId],
       orderBy: 'sent_at ASC',
@@ -3324,16 +3270,15 @@ class HaloDb {
     return rows.reversed.toList();
   }
 
-  // only messages newer than a timestamp, oldest-first. used by the chat's
-  // append-on-receive fast path so a live message doesn't reload the world.
+  // only messages after a rowid, oldest first, for the chat's
+  // append-on-receive fast path
   Future<List<Map<String, Object?>>> messagesAfter(
     String peerId,
     int afterRowid,
   ) async {
     final db = await open();
-    // key off rowid (insertion order), not sent_at - a received note can carry
-    // a sent_at older than our local newest (clock skew) and would be missed by
-    // a timestamp filter. rowid always climbs as rows are saved.
+    // rowid, not sent_at: clock skew can give a received note a sent_at older
+    // than our local newest. rowid always climbs.
     return db.query(
       'messages',
       columns: ['*', 'rowid'],
@@ -3343,11 +3288,8 @@ class HaloDb {
     );
   }
 
-  // newest message for a peer (or null) - drives the home-list preview and
-  // ordering without loading the whole conversation.
-  // the newest 1:1 row per peer in one query, for the home list. the loop
-  // that asked per contact cost one query per row on every refresh, and a
-  // refresh now follows every send.
+  // the newest 1:1 row per peer in one query, for the home list, which
+  // refreshes after every send
   Future<Map<String, Map<String, Object?>>> lastMessages() async {
     final db = await open();
     final rows = await db.rawQuery('''
@@ -3389,11 +3331,9 @@ class HaloDb {
 
   Future<Map<String, Object?>?> lastMessageFor(String peerId) async {
     final db = await open();
-    // order by rowid (insertion order), not sent_at - a received note can carry
-    // a sent_at older than our local newest (clock skew between phones) and
-    // would otherwise never surface as the latest. rowid always climbs.
-    // group_id IS NULL: a group message is stored under the sender's peer_id
-    // too, and without this filter it leaked into their 1:1 preview + unread.
+    // rowid, not sent_at: clock skew can give a received note a sent_at older
+    // than our local newest. group_id IS NULL: a group message is stored
+    // under the sender's peer_id too.
     final rows = await db.query(
       'messages',
       where: 'peer_id = ? AND group_id IS NULL',
@@ -3447,8 +3387,8 @@ Future<void> _pinsTable(Database db) async {
   ''');
 }
 
-// an edit made offline used to be one attempt and a log line: shown as
-// edited here, never seen there. it queues like a message now.
+// an edit made offline queues like a message, or it shows as edited here
+// and never arrives there
 Future<void> _editsTable(Database db) async {
   await db.execute('''
     CREATE TABLE IF NOT EXISTS edits_out (
@@ -3507,9 +3447,9 @@ Future<void> _signalTables(Database db) async {
 
 Future<String> makePreKeyBundleB64() async {
   final spk = await signalSession.signedPreKeyStore.loadSignedPreKey(1);
-  // the kept invite prekey, never the lowest one-time key: that one was
-  // gone after the first person used the invite, and a handle's published
-  // invite is static, so everyone after the first was dropped unread
+  // the kept invite prekey, never the lowest one-time key: a handle's
+  // published invite is static, and a one-time key is gone after the first
+  // person uses it
   final pk = await signalSession.preKeyStore.loadPreKey(invitePreKeyId);
   final bundle = {
     'registrationId': signalSession.registrationId,
@@ -3550,8 +3490,8 @@ Future<void> processPeerBundle(String haloId, String bundleB64) async {
   await builder.processPreKeyBundle(preKeyBundle);
 }
 
-// overwrite a byte buffer with zeros - best-effort wipe of key/plaintext
-// material from ram. dart strings cant be wiped (immutable+gc), only lists.
+// best-effort wipe of key or plaintext bytes from ram. dart strings are
+// immutable and cannot be wiped, only lists.
 void _zeroBytes(List<int> b) {
   for (var i = 0; i < b.length; i++) {
     b[i] = 0;
@@ -3559,7 +3499,7 @@ void _zeroBytes(List<int> b) {
 }
 
 // one encryption at a time per peer. the ratchet steps on every call, and
-// two calls reading the same chain state minted the same message number.
+// two calls reading the same chain state mint the same message number.
 // the chat's text path and the media workers both go through here.
 final Map<String, Future<void>> _encryptChain = {};
 Future<String> signalEncryptSerial(String peerId, String plaintext) {
@@ -3625,11 +3565,10 @@ Future<String?> signalDecrypt(
     Uint8List plain;
     if (type == CiphertextMessage.prekeyType) {
       final pkm = PreKeySignalMessage(body);
-      // trial decrypt: if this prekey carries a different identity than the
-      // one on file for this contact, it's not them - it's a wiped peer with
-      // new keys. refuse so the caller falls through to back-pair and it
-      // arrives as a new person, id matching key. targeted decrypts (a real
-      // reply, flagKeyChange) skip this and keep deliver-and-warn for mitm.
+      // trial decrypt: a prekey with a different identity than the one on
+      // file is a wiped peer with new keys, so refuse and let it arrive via
+      // back-pair as a new person. targeted decrypts (flagKeyChange) skip
+      // this and keep deliver-and-warn for mitm.
       if (!flagKeyChange && peerId != '_pending_back_pair_') {
         final known = await signalSession.identityStore.getIdentity(addr);
         if (known != null &&
@@ -3638,9 +3577,8 @@ Future<String?> signalDecrypt(
         }
       }
       if (await signalSession.sessionStore.containsSession(addr)) {
-        // session exists - use it. rebuilding from the prekey record here is
-        // wrong when the slot was refilled with a fresh key (old bundle refs
-        // would bad-mac the rebuilt session).
+        // session exists: use it. rebuilding from the prekey record bad-macs
+        // when the slot was refilled with a fresh key.
         try {
           plain = await cipher.decryptFromSignal(pkm.getWhisperMessage());
         } catch (e) {
@@ -3668,24 +3606,21 @@ Future<String?> signalDecrypt(
     return text;
   } on DuplicateMessageException catch (_) {
     dlog('signalDecrypt: duplicate from $peerId, dropped');
-    // store-and-forward re-delivers messages - a duplicate is expected and
-    // benign. the original already decrypted, so drop this one quietly.
+    // store-and-forward re-delivers, so a duplicate is expected. the
+    // original already decrypted.
     return null;
   } on UntrustedIdentityException catch (_) {
-    // known peer's identity key no longer matches - reinstall or mitm.
-    // only flag when the caller knows this cipher was really for this peer
-    // (targeted decrypt). trial-decrypt callers pass flagKeyChange:false so a
-    // normal no-match against the wrong contact never sets the flag.
+    // known peer's identity key no longer matches: reinstall or mitm. only
+    // flagged on a targeted decrypt, so a trial against the wrong contact
+    // never sets it.
     if (flagKeyChange) {
       await db.setKeyChanged(peerId, true);
       appState.keyChanged();
     }
     return null;
   } on InvalidKeyIdException catch (_) {
-    // one-time prekey already used up. if a session with this peer
-    // exists, an earlier copy set it up (tor+nostr both delivered, or a
-    // retry) so this is a duplicate - drop quietly. no session = can't
-    // read this one.
+    // one-time prekey already used. with a session, an earlier copy set it
+    // up and this is a duplicate; without one it cannot be read.
     final addr = SignalProtocolAddress(peerId, 1);
     if (await signalSession.sessionStore.containsSession(addr)) {
       return null;
@@ -3719,8 +3654,8 @@ Future<(String, bool)> handleHaloUriAdded(String raw) async {
   final room = RoomLink.parse(raw);
   if (room != null) {
     final r = await appState.joinRoom(room);
-    // a join used to end in a toast and a room somewhere in the list
-    // compared with the words themselves, not a prefix of the english
+    // a join opens the room. compared with the words themselves, not a
+    // prefix of the english
     if (r == l10n.appJoined(room.name) ||
         r == l10n.appJoinedButTheCreator(room.name) ||
         r == l10n.appJoinedButYourHello(room.name) ||
@@ -3763,7 +3698,7 @@ Future<(String, bool)> handleHaloUriAdded(String raw) async {
   }
 }
 
-// overwrite with zeros, then unlink. best effort - flash wear levelling can
+// overwrite with zeros, then unlink. best effort: flash wear levelling can
 // keep an old block, but the easy read is gone.
 Future<void> shredFile(String path) async {
   try {
@@ -3911,9 +3846,8 @@ Future<String> buildHaloUriV2(String id, String onion) async {
   return 'kryfo://share?id=$id&onion=$onion&v=2&bundle=$bundle';
 }
 
-// v3 carries a first-contact address alongside the bundle. without it the
-// only way a stranger can introduce themselves is our onion, and when that
-// will not publish a one-way scan silently never works.
+// v3 carries a first-contact address alongside the bundle, so a one-way scan
+// still works when our onion will not publish
 Future<String> buildHaloUriV3(String id, String onion, int fcCounter) async {
   final bundle = await makePreKeyBundleB64();
   final fc = engine.firstContactPk(fcCounter);
@@ -3971,18 +3905,15 @@ void openRoomSoon(String groupId) {
   });
 }
 
-// what a link opened from outside the app came to. it went to the debug
-// log only, so an expired room or a full one looked like nothing happening.
+// what a link opened from outside the app came to, so an expired or full
+// room does not look like nothing happening
 void _sayLinkResult(String result) {
   final ctx = rootNavKey.currentContext;
   if (ctx != null && ctx.mounted) showHaloToast(ctx, result);
 }
 
-// open ChatScreen for a given kryfo id. used by notification taps
-// (both warm - onDidReceiveNotificationResponse - and cold starts
-// via getNotificationAppLaunchDetails), once the app lock is open.
-// reads contact details from the db and pushes the route on the root
-// navigator.
+// a notification tap, warm or cold start, opens the chat once the app lock
+// is open
 Future<void> openChatForHalo(String? haloId) =>
     lockGuard.afterUnlock(() => _openChatFor(haloId), key: 'chat:$haloId');
 
@@ -4008,9 +3939,8 @@ Future<void> _openChatFor(String? haloId) async {
   );
 }
 
-// kryfo id of the peer whose chat is currently on screen. set by
-// ChatScreen.initState, cleared on dispose. used to suppress
-// notifications for the conversation the user is already in.
+// the peer whose chat is on screen, set by ChatScreen. notifications for
+// that chat are suppressed.
 String? currentChatPeer;
 
 final GlobalKey<NavigatorState> rootNavKey = GlobalKey<NavigatorState>();
@@ -4055,8 +3985,6 @@ class AppState extends ChangeNotifier {
   // uids being processed right now, to dedup near-simultaneous arrivals
   // (preview re-send racing a manual retry) before the db write lands.
   final Set<String> _inflightUids = <String>{};
-  // previews that arrived before their message (fetch runs parallel to the
-  // send now, so the frames can race). patched on right after the row saves.
   // group media slices already accepted by at least one member, per msg_uid,
   // so tap-to-retry resumes instead of re-sending the whole file.
   final Map<String, Set<int>> _grpChunkDone = {};
@@ -4069,7 +3997,7 @@ class AppState extends ChangeNotifier {
   final Map<String, int> _outboxTries = <String, int>{};
   // earliest ms a uid may be tried again. every retry builds a fresh gift
   // wrap, so a flat cadence leaves one copy per attempt sitting on every
-  // relay forever - the receiver then decrypts and acks all of them.
+  // relay, and the receiver decrypts and acks all of them.
   final Map<String, int> _outboxNextAt = <String, int>{};
 
   // how many messages are sitting unsent, and for whom. the offline strip
@@ -4196,15 +4124,12 @@ class AppState extends ChangeNotifier {
   // do (one indexed query). skipped entirely while tor can't carry traffic.
   Future<void> drainOutbox() async {
     // count first, wire or no wire: the strip and the rows say what is
-    // waiting whether or not anything can move yet. the old order counted
-    // only once the route was up, so an offline phone said nothing waited.
+    // waiting whether or not anything can move yet
     final rows = await db.unsentOutbox();
     final perPeer = <String, int>{};
     final paired = <String, bool>{};
     var parked = 0;
     for (final r in rows) {
-      // messages rows name the peer as peer_id; the old key never matched,
-      // so no row ever knew it had something waiting
       final to = r['peer_id'] as String?;
       if (to != null) perPeer[to] = (perPeer[to] ?? 0) + 1;
       // a row for someone who has not added us back is waiting on them,
@@ -4225,7 +4150,7 @@ class AppState extends ChangeNotifier {
         ..addAll(perPeer);
       notifyListeners();
     }
-    // torReady already knows the mode - outside onion there is nothing to
+    // torReady already knows the mode: outside onion there is nothing to
     // wait for and a queued message should just go.
     final ready = torReady;
     if (!ready) {
@@ -4262,9 +4187,8 @@ class AppState extends ChangeNotifier {
       final now = DateTime.now().millisecondsSinceEpoch;
       final nextAt = _outboxNextAt[uid];
       if (nextAt != null && now < nextAt) continue;
-      // doubling gap, capped at ten minutes. eight tries now covers about an
-      // hour instead of fifteen tries covering five, and leaves half as many
-      // copies on the relays.
+      // doubling gap, capped at ten minutes: eight tries cover about an hour
+      // and leave few copies on the relays
       var gap = 45000 << tries;
       if (gap > 600000) gap = 600000;
       _outboxNextAt[uid] = now + gap;
@@ -4370,8 +4294,7 @@ class AppState extends ChangeNotifier {
     final peer = r['peer_id'] as String;
     final groupId = r['group_id'] as String?;
     // a photo or file that never finished goes through the shared chunked
-    // sender, which remembers the slices that landed. groups resend from
-    // their own screen still.
+    // sender, which remembers the slices that landed
     final mediaPath = r['media_path'] as String?;
     final filePath = r['file_path'] as String?;
     if (mediaPath != null || filePath != null) {
@@ -4395,9 +4318,8 @@ class AppState extends ChangeNotifier {
       return;
     }
     try {
-      // a stranger's opener rides its nonce again. a row ground before this
-      // column existed has none; grind it now rather than send a retry the
-      // far side will drop.
+      // a stranger's opener rides its nonce again. a row with none is ground
+      // now, or the far side drops the retry.
       var row = r;
       if (groupId == null &&
           redeliveryNeedsPow(r, backPaired: await db.isBackPaired(peer))) {
@@ -4537,10 +4459,8 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // global send-privacy mode: 'private' | 'balanced' | 'fast'. private is
-  // tor and is the default; the other two are pickable in the ui but don't
-  // change routing yet - everything still goes over tor until the transport
-  // work lands. 'normal' is the old name for private, migrated on load.
+  // send-privacy mode: 'private' | 'balanced' | 'fast'. private is tor and
+  // is the default; 'normal' is an old name for it, migrated on load.
   String _sendMode = 'private';
   String get sendMode => _sendMode;
 
@@ -4567,13 +4487,13 @@ class AppState extends ChangeNotifier {
     await s.write(key: 'disguise_on', value: on ? '1' : '0');
   }
 
-  // the handle we claimed, if any. local only - the registry is the source
+  // the handle we claimed, if any. local only: the registry is the source
   // of truth and this is just so the screen knows what to show.
   String? _myHandle;
   String? get myHandle => _myHandle;
 
   // the avatar someone picked, or null for the one their id produces. local
-  // only - it is drawn from a number on every device that has the number, and
+  // only: it is drawn from a number on every device that has the number, and
   // what they picked for themselves is nobody else's business.
   int? _myAvatar;
   int? get myAvatar => _myAvatar;
@@ -4602,9 +4522,8 @@ class AppState extends ChangeNotifier {
 
   // the published invite is static; a phone that claimed under a key since
   // spent republishes with the kept one, once per run, and only once the
-  // onion and the first-contact counter are in hand. fired at boot before
-  // either was loaded, it overwrote the page with an invite nobody could
-  // reach: an empty onion and the counter at zero.
+  // onion and the first-contact counter are loaded, or the page gets an
+  // invite nobody can reach.
   bool _fcLoaded = false;
   bool _repointed = false;
   void _maybeRepoint() {
@@ -4671,8 +4590,7 @@ class AppState extends ChangeNotifier {
         return '$_clearnetRelay,$_publicRelays';
       default:
         // our relay's clearnet name rides along, dialled over tor like the
-        // rest. without it a friend in relay mode published to a relay
-        // nobody in onion mode read, and their messages sat at one tick.
+        // rest, since a friend in relay mode publishes only there
         return 'ws://z4waup3c6j6gknkjba72cqjjuffhgg6gtgqfu3vetzcvgoluvr42srid'
             '.onion,$_clearnetRelay,$_publicRelays';
     }
@@ -4707,8 +4625,8 @@ class AppState extends ChangeNotifier {
 
   static const _platformChannel = MethodChannel('halo/platform');
   // the switch as saved, and as applied at this start. the flag is only
-  // set at boot: changing it live recreated the window's surface, which
-  // flashed on every toggle, so the switch says "after the next start".
+  // set at boot: changing it live recreates the window's surface, which
+  // flashes.
   bool _blockScreenshots = false;
   bool get blockScreenshots => _blockScreenshots;
   bool _blockScreenshotsApplied = false;
@@ -4717,10 +4635,8 @@ class AppState extends ChangeNotifier {
       _blockScreenshots != _blockScreenshotsApplied;
 
   // the heartbeat. listen is the last tick the relay queue was read, drain
-  // the last time something came out of it. both kept in memory and
-  // written once a minute, so after a kill the transport screen can still
-  // say when this phone last listened. that is how a person tells asleep
-  // from killed from listening without adb.
+  // the last time something came out of it. written once a minute, so after
+  // a kill the transport screen can still say when this phone last listened.
   int lastListenAt = 0;
   int lastDrainAt = 0;
   int _beatWritten = 0;
@@ -4808,9 +4724,6 @@ class AppState extends ChangeNotifier {
     await _writeBeat();
   }
 
-  // the periodic job's window: kick every relay socket so a night's dead
-  // connections come back with their since window, then give the drains
-  // up to twenty seconds to pull what arrives. returns how many arrived.
   // ---- how messages arrive ----
 
   DeliveryMode _deliveryMode = DeliveryMode.always;
@@ -4825,9 +4738,8 @@ class AppState extends ChangeNotifier {
   Timer? _sleepTimer;
   int lastCheckAt = 0;
   int lastWakeAt = 0;
-  // how the last check-in ended, for the transport screen. a check-in that
-  // gave up is the thing a person needs to see, and it used to leave no
-  // trace at all: the line just said there had never been one.
+  // how the last check-in ended, for the transport screen, including one
+  // that gave up
   String lastCheckHow = '';
   // "relay.example 4.1s · other.example 30.0s dropped"
   String lastCheckRelays = '';
@@ -4904,16 +4816,11 @@ class AppState extends ChangeNotifier {
     } catch (_) {}
   }
 
-  // the 15-minute job runs in its own isolate and writes these to prefs; this
-  // process never sees that write, so its copy goes stale and stays stale for
-  // as long as the app is up. one screen showed "ok, 10s" for a whole morning
-  // that way, from a run days earlier. the transport screen calls this when it
+  // the 15-minute job runs in its own isolate and writes these to prefs,
+  // which this process never sees. the transport screen calls this when it
   // opens so what is on it came from disk, not from memory.
   Future<void> refreshFromDisk() async {
-    // SharedPreferences keeps an in-memory cache per isolate, filled once.
-    // without this reload the getters hand back exactly what this process
-    // read at startup, so re-reading them "from disk" changed nothing at all
-    // and the screen went on showing a value from an hour earlier.
+    // SharedPreferences keeps an in-memory cache per isolate, filled once
     try {
       await (await SharedPreferences.getInstance()).reload();
     } catch (_) {}
@@ -4922,10 +4829,9 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // who took how long on the last catch-up. relay host and seconds, nothing
-  // else - no counts, no content. this is what identifies a slow relay
-  // without a debug build. kept as data and worded when shown
-  // (catchupLine), so it reads in whatever language the app is in by then.
+  // who took how long on the last catch-up, by relay host, no content. kept
+  // as data and worded when shown (catchupLine), so it reads in whatever
+  // language the app is in by then.
   String _relayCatchupData() {
     try {
       final rs = (engine.transportState()['relays'] as List?) ?? const [];
@@ -5033,8 +4939,8 @@ class AppState extends ChangeNotifier {
   Future<bool> _torWake() async {
     if (!_torHeld) return true;
     // 'ok': tor was asleep and is waking. 'start': there is no tor in this
-    // process yet. either way the start call below does the right thing -
-    // it hands back the address of the tor that is up, or makes one.
+    // process yet. either way the start call below hands back the address
+    // of the tor that is up, or makes one.
     final r = await _torCtlOnIsolate('HaloTorResume');
     if (r.startsWith('error')) {
       dlog('delivery: tor would not wake: $r');
@@ -5081,16 +4987,10 @@ class AppState extends ChangeNotifier {
       } catch (e) {
         dlog('checkin: kick: $e');
       }
-      // wait for the relays to be asked, then for every answer to be in.
-      //
-      // the engine caps each relay at catchupCap (30s) and drops its backfill
-      // past that, so this now ends when they have all either finished or
-      // been given up on. before that cap one slow relay could hold the loop
-      // to its 140s ceiling - measured at 143s on the samsung, every quarter
-      // of an hour, in the mode that exists to save battery.
-      //
-      // the two escapes are for the case the cap cannot help with: no relay
-      // ever getting going, where there is nothing to wait for at all.
+      // wait for the relays to be asked, then for every answer to be in. the
+      // engine caps each relay at catchupCap (30s), so this ends when all
+      // have finished or been given up on. the two escapes are for no relay
+      // ever getting going.
       var quiet = 0;
       var began = false;
       var tail = '';
@@ -5162,7 +5062,7 @@ class AppState extends ChangeNotifier {
 
   Future<int> drainNow() async {
     // the job can knock before a cold boot has read the mode. wait for that,
-    // or the first check-in after a kill is a twenty-second shrug
+    // or the first check-in after a kill does nothing
     for (var i = 0; i < 80 && _docsPath.isEmpty; i++) {
       await Future.delayed(const Duration(milliseconds: 500));
     }
@@ -5248,9 +5148,8 @@ class AppState extends ChangeNotifier {
     );
   }
 
-  // bridges. off by default, because they are slower and most people are not
-  // being filtered - but the people who are cannot use kryfo at all without
-  // them.
+  // bridges are off by default: they are slower and most people are not
+  // being filtered
   bool _bridgesOn = false;
   String _bridgeLines = '';
   bool get bridgesOn => _bridgesOn;
@@ -5282,8 +5181,7 @@ class AppState extends ChangeNotifier {
 
   // which first-contact address our invites currently point at. an invite can
   // end up in a bio or a screenshot, so it has to be retirable without
-  // burning the identity - bumping this does exactly that and leaves every
-  // existing conversation alone.
+  // burning the identity: bumping this leaves every conversation alone.
   int _fcCounter = 0;
   int get fcCounter => _fcCounter;
 
@@ -5328,14 +5226,8 @@ class AppState extends ChangeNotifier {
     );
   }
 
-  // retires every invite handed out so far. contacts, sessions and history
-  // are untouched; only the address strangers use to reach us moves.
-  // the registry holds a copy of the invite, so a reset has to reach it or
-  // the public page keeps handing out an address that no longer answers.
-  // true once the registry has said the handle this phone believes in is
-  // held under another key. it was swallowed with every other failure, and
-  // the screen went on saying "you are @name" over a page that pointed at
-  // someone else's invite, or at nobody's.
+  // true once the registry says the handle this phone believes in is held
+  // under another key
   bool _handleForeign = false;
   bool get handleForeign => _handleForeign;
 
@@ -5362,9 +5254,8 @@ class AppState extends ChangeNotifier {
   Future<void> checkHandle() => _repointHandle();
 
   Future<void> resetInviteAddress() async {
-    // the key first: moving only the relay address left every old link
-    // able to open a session and dial the onion directly, which made the
-    // promise on the button a lie
+    // the key first: moving only the relay address leaves every old link
+    // able to open a session and dial the onion directly
     await signalSession.rotateInvitePreKey();
     _fcCounter++;
     await const FlutterSecureStorage().write(
@@ -5375,10 +5266,6 @@ class AppState extends ChangeNotifier {
     await _repointHandle();
     notifyListeners();
   }
-
-  // people lose accounts because nothing ever asked them to write the words
-  // down. one card on home, dismissible, never shown again once they have a
-  // backup or once they say no.
 
   // some screens are not optional. recovery shows the whole key, so it turns
   // the flag on whatever the user picked in settings, and hands it back on
@@ -5406,12 +5293,8 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // unified incoming routing. handles three payload variants:
-  //   1) group control msg (no chat row, no notif)
-  //   2) reaction       (add/remove on a target uid, no chat row, no notif)
-  //   3) data message   (1:1 or group - save + maybe notify)
-  // called from all three receive paths (back-pair-from-cipher, tor drain,
-  // nostr poll) so the routing rules live in exactly one place.
+  // routing for group controls, reactions and data messages, shared by all
+  // three receive paths (back-pair, tor drain, nostr poll)
   Future<void> _applyIncomingPayload(
     String senderHaloId,
     UnwrappedMessage env, {
@@ -5422,12 +5305,10 @@ class AppState extends ChangeNotifier {
     dlog(
       'INCOMING len=${env.message.length} hasPreview=${env.preview != null} uid=${env.msgUid}',
     );
-    // delivery receipt: the peer stored a message we sent. flip its tick and
-    // stop the outbox chasing it. handled before the stranger gate + dedup so
-    // an ack is never itself treated as a message or counted toward the cap.
-    // it is also not the peer talking to us, so back-paired stays as it was:
-    // that flag lifts the sender-side cap, and a receipt lifting it let a
-    // stranger write past the two the other side will keep.
+    // delivery receipt, handled before the stranger gate and dedup so an ack
+    // is never treated as a message or counted toward the cap. it leaves
+    // back-paired alone: that flag lifts the sender-side cap, and a stranger
+    // could then write past the two the other side will keep.
     if (env.deliveredUid != null) {
       await db.markDelivered(env.deliveredUid!);
       _bumpChatRev(senderHaloId);
@@ -5451,7 +5332,7 @@ class AppState extends ChangeNotifier {
       await _applyGroupControl(senderHaloId, env);
       return;
     }
-    // 1.5) introduction - a friend hands us someone's card
+    // 1.5) introduction: a friend hands us someone's card
     if (env.intro != null) {
       await _applyIntro(senderHaloId, env.intro!);
       return;
@@ -5461,7 +5342,7 @@ class AppState extends ChangeNotifier {
       await _answerNeed(senderHaloId, env.need!);
       return;
     }
-    // shared pin - every member mirrors it. only from someone in the chat
+    // shared pin: every member mirrors it. only from someone in the chat
     // the row lives in: the frame names a uid and nothing else, and it rides
     // in above the stranger gate like an edit does.
     if (env.pin != null) {
@@ -5496,8 +5377,8 @@ class AppState extends ChangeNotifier {
     // 2) reaction
     if (env.reaction != null) {
       final r = env.reaction!;
-      // same hole pins had: the frame names a uid and nothing else, so only
-      // someone in the chat that row lives in gets to react to it
+      // the frame names a uid and nothing else, so only someone in the chat
+      // that row lives in gets to react to it
       final where = await db.chatOf(r.targetUid);
       final ok = pinAllowed(
         rowPeer: where?.$1,
@@ -5519,7 +5400,7 @@ class AppState extends ChangeNotifier {
       }
       return;
     }
-    // 2.5) edit - swap the text of an existing message
+    // 2.5) edit: swap the text of an existing message
     if (env.edit != null) {
       // only the author. these frames ride in above the stranger gate, so
       // anyone who can reach us could rewrite any row by uid otherwise.
@@ -5529,7 +5410,7 @@ class AppState extends ChangeNotifier {
       }
       return;
     }
-    // 2.6) unsend - sender recalled a message; delete our copy
+    // 2.6) unsend: sender recalled a message; delete our copy
     if (env.unsend != null) {
       // a row that exists must be theirs. a half-file with no row yet has
       // nothing to protect, and its sender stopping it is the point.
@@ -5548,11 +5429,11 @@ class AppState extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    // 3) data message - could be 1:1 or group
+    // 3) data message: could be 1:1 or group
     final isGroup = env.groupId != null;
     if (isGroup && !await db.groupExists(env.groupId!)) {
-      // unknown group - drop. prevents random senders from injecting rows
-      // into groups we never joined.
+      // unknown group: drop, so random senders cannot inject rows into
+      // groups we never joined
       dlog('dropping group msg for unknown group ${env.groupId}');
       return;
     }
@@ -5570,8 +5451,8 @@ class AppState extends ChangeNotifier {
       if (adminId != null && senderHaloId == adminId) {
         await db.syncGroupMembers(env.groupId!, env.roster!);
         await _subscribeRoomMembers(env.groupId!);
-        // create contact stubs for self-healed members so we can actually
-        // encrypt to them - ids alone aren't enough, we need their keys.
+        // contact stubs for self-healed members so we can encrypt to them:
+        // ids alone are not enough, we need their keys
         if (env.rosterParticipants != null) {
           for (final p in env.rosterParticipants!) {
             final h = p['h'];
@@ -5591,10 +5472,9 @@ class AppState extends ChangeNotifier {
     if (!isGroup && !await db.isAccepted(senderHaloId)) {
       final vouched = await db.isVouched(senderHaloId);
       // pow: only the back-pair message (true first contact) must carry a
-      // valid nonce - that's the one lane a cold stranger can arrive on. a
-      // whisper through an existing session already paid pow once, and a
-      // deleted peer's client has no idea it needs to grind again. drop
-      // silently - the spammer learns nothing.
+      // valid nonce, the one lane a cold stranger can arrive on. a whisper
+      // through an existing session already paid once. dropped silently so
+      // the spammer learns nothing.
       if (!vouched &&
           fromBackPair &&
           (env.powNonce == null ||
@@ -5605,7 +5485,7 @@ class AppState extends ChangeNotifier {
         return;
       }
       // 2-message cap: a stranger gets 2 into requests, then the chat is locked
-      // until we accept them. drop past the cap - no receipt.
+      // until we accept them. past the cap there is no receipt.
       final have = vouched ? 0 : await db.countMessagesFrom(senderHaloId);
       if (strangerCapHolds(accepted: false, vouched: vouched, have: have)) {
         dlog('stranger lock: holding from $senderHaloId (cap hit)');
@@ -5635,9 +5515,8 @@ class AppState extends ChangeNotifier {
       final progressKey = isGroup ? env.groupId! : senderHaloId;
       final slice = (env.imageB64 ?? env.fileB64) ?? '';
       // a slice of a file already put together: the sender went round
-      // again. buffering it began a second copy that could never finish,
-      // and a banner counting towards nothing for a day. one receipt per
-      // pass, on the first slice, so the sender learns it can stop.
+      // again. buffering it would start a copy that never finishes. one
+      // receipt per pass, on the first slice, so the sender can stop.
       if (await db.messageExists(mid)) {
         if (!isGroup && (env.chunkIndex ?? 0) == 0 && senderHaloId != myId) {
           unawaited(_sendDeliveryReceipt(senderHaloId, mid));
@@ -5645,9 +5524,8 @@ class AppState extends ChangeNotifier {
         unawaited(db.dropMediaWant(mid));
         return;
       }
-      // slices land on disk as they arrive, so closing the app mid-transfer
-      // no longer throws the partial away. the count is over rows, which is
-      // what makes a restart resume instead of start over.
+      // slices land on disk as they arrive and the count is over rows, so a
+      // restart resumes instead of starting over
       final have = await db.putMediaChunk(
         mid,
         env.chunkIndex ?? 0,
@@ -5662,17 +5540,14 @@ class AppState extends ChangeNotifier {
         await db.noteMediaWant(mid, senderHaloId, total, env.canResend);
       }
       if (have < total) {
-        // still waiting on more pieces - surface how far along we are. a
+        // still waiting on more pieces: surface how far along we are. a
         // voice note is seconds of audio; the banner is for the long ones.
         if (!env.voice) incomingMediaUpdate(progressKey, have, total);
         return;
       }
-      // all pieces in. each goes from the database to the file on its
-      // own; the whole base64 was stitched into one string and decoded
-      // in one go before, three copies of the file at once, on the phone
-      // with the least room for it.
-      // a preview thumbnail from an older client: never drawn, never kept.
-      // titles are fetched here only when the reader asks, images never.
+      // all pieces in. each goes from the database to the file on its own,
+      // so the whole file is never in memory at once. a preview thumbnail
+      // from an older client is never drawn, never kept.
       if (!env.pvImg) {
         try {
           final out = fileName != null
@@ -5728,11 +5603,9 @@ class AppState extends ChangeNotifier {
             l10n.appAnAttachmentCouldNot,
           ].where((s) => s.trim().isNotEmpty).join('\n')
         : env.message;
-    // dedup: a message can arrive twice - the original, then the preview re-send
-    // (option A), and sometimes a manual retry too. the db check alone races when
-    // two copies arrive in the same instant (both pass before either saves), so
-    // we also hold an in-memory set of uids currently being processed. first one
-    // in claims the uid; any twin takes the update path instead of inserting.
+    // dedup: the db check alone races when two copies arrive at once, so an
+    // in-memory set of uids in flight backs it. the first in claims the uid;
+    // a twin takes the known path instead of inserting.
     final uid = env.msgUid;
     if (uid != null) {
       final known = _inflightUids.contains(uid) || await db.messageExists(uid);
@@ -5780,12 +5653,10 @@ class AppState extends ChangeNotifier {
       mediaPath: mediaPath,
       filePath: filePath,
       fileName: fileName,
-      // a preview the sender fetched over tor and shipped inside the
-      // message. kept, title and url only, and only from someone accepted:
-      // a stranger's title is text they control and stays plain
-      // a group is one you chose to be in, and the card says whose device
-      // fetched it, so a member's preview is kept whether or not they are
-      // also a contact of yours. a room's frames never reach this path.
+      // a preview the sender fetched over tor, title and url only. kept from
+      // someone accepted or a member of a group you chose to be in; a
+      // stranger's title is text they control and stays plain. a room's
+      // frames never reach this path.
       preview: shippedPreview(env.preview, accepted: isGroup || senderAccepted),
       secure: env.secure,
     );
@@ -5796,17 +5667,12 @@ class AppState extends ChangeNotifier {
     }
     // scam shield: a stranger's opener, once, on this phone only. in a
     // group that is any member you never added.
-    //
-    // this used to be gated on burnOk, which is `isGroup || senderAccepted`,
-    // so in a group it was always false and the shield never ran once. the
-    // group half of the feature - the member mark, the in-group block - has
-    // never executed. the question is only whether we have accepted them.
     if (!senderAccepted && senderHaloId != myId) {
       unawaited(
         _runShield(senderHaloId, env.message, env.senderAvatar, group: isGroup),
       );
     }
-    // saved now, messageExists covers dedup from here - drop the guard
+    // saved now, messageExists covers dedup from here
     if (uid != null) _inflightUids.remove(uid);
     // send a delivery receipt back for 1:1 messages we just stored, so the
     // sender's tick means "on your phone" not "a relay took it". groups skip
@@ -5815,13 +5681,13 @@ class AppState extends ChangeNotifier {
     if (!isGroup && uid != null && senderHaloId != myId) {
       unawaited(_sendDeliveryReceipt(senderHaloId, uid));
     }
-    // notification context - for groups, title = group name and body
+    // notification context: for groups, title = group name and body
     // prefixes the sender. payload uses "group:<id>" so tap-to-open can
     // route to the right screen.
     if (!isGroup && currentChatPeer != senderHaloId) {
       await db.bumpUnread(senderHaloId);
     } else if (!isGroup && currentChatPeer == senderHaloId) {
-      // already reading this chat - clear any stale badge instead of leaving it.
+      // already reading this chat: clear any stale badge
       await db.clearUnread(senderHaloId);
     } else if (isGroup && env.groupId != null) {
       final openGroup = 'group:${env.groupId}';
@@ -5882,13 +5748,6 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // apply a group control message. sender is the kryfo id that sent the
-  // control; env.groupId is the target group; env.groupControl carries the
-  // action and payload.
-  // runs the shield over a stranger's first message and their id, against
-  // the contacts we hold. only the first message counts - later ones from
-  // the same stranger are not re-read - and an existing row (flagged or
-  // dismissed) means the check already happened.
   // group screens reload their marks when this moves
   int _shieldRev = 0;
   int get shieldRev => _shieldRev;
@@ -6012,7 +5871,7 @@ class AppState extends ChangeNotifier {
             adminId: senderHaloId,
           );
         } else {
-          // already in the group - reconcile the member list so a re-add or
+          // already in the group: reconcile the member list so a re-add or
           // membership change syncs instead of leaving a stale count.
           await db.syncGroupMembers(groupId, gc.members!);
           await db.renameGroup(groupId, gc.name!);
@@ -6074,10 +5933,8 @@ class AppState extends ChangeNotifier {
 
   bool onboardingComplete = false;
   // this identity was moved to another device from here. set by the
-  // export that moved it, never inferred: a phone that works out it is
-  // dead by failing is the silent failure this app has spent weeks
-  // removing. while set the engine never starts, so nothing here can
-  // advance a ratchet the other device now owns.
+  // export that moved it, never inferred. while set the engine never
+  // starts, so nothing here can advance a ratchet the other device owns.
   bool movedAway = false;
   // the person chose to keep reading what was here. this session only.
   bool movedReadOnly = false;
@@ -6089,7 +5946,6 @@ class AppState extends ChangeNotifier {
   bool restored = false;
   bool ready = false;
   bool _booting = false;
-  // live tor state; the home kryfo breathes off this.
   // bumped whenever something changes for a peer's thread. open chats
   // compare against this instead of reloading on every notify.
   final Map<String, int> _chatRev = {};
@@ -6126,7 +5982,7 @@ class AppState extends ChangeNotifier {
       final tx = engine.transportState();
       _noteRelayHealth(tx['relays'] as List?);
     } catch (_) {
-      // transport not readable yet - nothing to conclude
+      // transport not readable yet: nothing to conclude
     }
     if (_bootstrapPct != _lastPct) {
       _lastPct = _bootstrapPct;
@@ -6139,24 +5995,17 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // tor can carry traffic. same test the outbox uses, exposed so the
-  // transport screen and the ui agree instead of each deciding for itself.
-  // mirrors torReadyNow() in the engine. outside onion nothing is waiting on
-  // a bootstrap, so "ready" is simply whether we have a network - otherwise
-  // the stale-send reaper never runs in relay mode and failed sends sit
-  // frozen with no way to retry them.
+  // the one test the outbox, the transport screen and the ui share; mirrors
+  // torReadyNow() in the engine. outside onion nothing waits on a bootstrap,
+  // so ready means there is a network, or failed sends in relay mode never
+  // get retried.
   bool get torReady => _sendMode != 'private' || torUsable;
 
   // tor can carry traffic. "reachable" is the end of publishing, not the
-  // start of being usable, so treating only that as connected made the
-  // settings screen say "connecting" while the home pill said "Tor ready"
-  // about the same state. one predicate, used by both.
-  //
-  // and tor's word is not enough on its own. a samsung back from flight mode
-  // had tor saying publishing while every relay connection through it failed
-  // for sixteen minutes, and this said ready the whole time. so usable also
-  // needs the engine's verdict that a relay has actually connected since the
-  // route was last torn down, and that they are not all failing now.
+  // start of being usable. tor's word is not enough on its own: it can say
+  // publishing while every relay connection through it fails, so this also
+  // needs the engine's verdict that a relay has connected since the route
+  // was last torn down, and that they are not all failing now.
   bool get torUsable =>
       _routeOK &&
       (_torStatus == TorStatus.bootstrapped ||
@@ -6166,17 +6015,10 @@ class AppState extends ChangeNotifier {
 
   // how long tor has been unable to carry traffic while kryfo is meant to be
   // connected. null when it is fine, when check-ins are holding tor off on
-  // purpose, or when nothing has started trying yet.
-  //
-  // this exists because a samsung sat offline for ten and a half hours with
-  // nothing on screen to say so. five minutes of this and the home screen
-  // says it out loud.
-  //
-  // note what it is NOT: dropping wifi does not make tor report off - tor
-  // keeps its bootstrap state and says "reachable" with no network at all.
-  // this watches tor's own status, which is what went to "off" and stayed
-  // there in the failure it exists for. plain loss of network already has
-  // its own strip.
+  // purpose, or when nothing has started trying yet. five minutes of this
+  // and the home screen says so. it watches tor's own status; dropping wifi
+  // does not make tor report off, and plain loss of network has its own
+  // strip.
   Duration? get offlineFor => offlineDurationFor(
     mode: _deliveryMode,
     torHeld: _torHeld || haloWiping,
@@ -6203,7 +6045,7 @@ class AppState extends ChangeNotifier {
     if (torReady) return false;
     final t = _torTryingSince;
     if (t == null) return false;
-    // still early - give it room before calling anything wrong
+    // still early: give it room before calling anything wrong
     if (DateTime.now().difference(t).inSeconds < 120) return false;
     // it is climbing, just not quickly. that is a slow network, not a wall.
     final moved = _pctMovedAt;
@@ -6220,8 +6062,6 @@ class AppState extends ChangeNotifier {
     return _torLooksBlocked;
   }
 
-  // bridges are on and tor still cannot connect. bridges are slower and some
-  // of them are simply dead, so the honest suggestion is to try without.
   // our relay is not answering and it is the only one relay mode uses.
   DateTime? _relayDownSince;
   bool _relayHintOff = false;
@@ -6238,16 +6078,11 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // fed by the transport poll. this used to read sub_count and treat more
-  // than zero as "our relay is answering", but that number counts the peers
-  // we have a subscription registered for, not relay connections: it reads
-  // three or four with every relay on earth unreachable. the clock never
-  // started, so the hint below could not appear for anyone with a contact,
-  // and when our relay went down nobody in relay mode had any way to know.
-  //
-  // a relay row's fails counts failures since that relay's last success and
-  // is deleted the moment one lands, so it says what is true now. benched
-  // means it is in backoff. down is: nothing in the list is usable.
+  // fed by the transport poll. not sub_count: that counts peer subscriptions,
+  // not relay connections. a relay row's fails counts failures since that
+  // relay's last success and is deleted the moment one lands, so it says
+  // what is true now. benched means it is in backoff. down is: nothing in
+  // the list is usable.
   void _noteRelayHealth(List? relays) {
     if (_sendMode != 'balanced') {
       _relayDownSince = null;
@@ -6290,9 +6125,6 @@ class AppState extends ChangeNotifier {
   List<ContactPreview> contacts = [];
   int pendingCount = 0;
   final Map<String, String> _xPubToHaloId = {};
-  // bundle-exchange heal state: peers we asked for a fresh bundle, ctl
-  // rate-limit stamps, and per-cipher decrypt-failure strikes so relay
-  // backlog replays get buried instead of bad-mac spamming forever.
   // peers waiting on a bundle swap, and when a bundle control last went to
   // each. both forget anything older than an hour so they cannot grow with
   // every peer ever seen
@@ -6364,7 +6196,7 @@ class AppState extends ChangeNotifier {
       await signalSession.sessionStore.storeSession(realAddr, record);
       await signalSession.sessionStore.deleteSession(tempAddr);
       // persist contact + nostr sub. a stranger who back-paired to us lands
-      // unaccepted - their message waits in requests until we accept.
+      // unaccepted: their message waits in requests until we accept.
       await db.upsertContact(
         h,
         env.senderOnion ?? '',
@@ -6405,20 +6237,17 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // anything that threw in boot left ready false for good, behind a splash
-  // that says "starting Tor" - so a local fault was indistinguishable from a
-  // slow bootstrap, with nothing to read and no way out. hold the error so
-  // the gate can show it.
+  // a boot that throws leaves ready false behind the splash, so the error is
+  // held for the gate to show
   String? bootError;
 
   AppLifecycleListener? _seen;
 
-  // a window is not the same as a person. a samsung relaunches a recently
-  // used app's activity, unseen, two seconds after its data is cleared
-  // ("IpmLaunch"), and booting on that made a fresh identity, an onion key
-  // and a running tor out of a panic wipe. a phone that has been set up boots
-  // at once, as before. one with nothing yet waits until the app is actually
-  // in front of someone. both first-screen widgets come through here.
+  // a window is not the same as a person: samsung relaunches a recently used
+  // app's activity, unseen, right after its data is cleared, and booting then
+  // would make a fresh identity out of a panic wipe. a phone that has been
+  // set up boots at once; one with nothing yet waits until the app is in
+  // front of someone.
   Future<void> bootWhenWanted() async {
     final state = WidgetsBinding.instance.lifecycleState;
     dlog('LAUNCH lifecycle at boot request: $state');
@@ -6445,9 +6274,7 @@ class AppState extends ChangeNotifier {
       dlog('BOOT failed: $e\n$st');
       bootError = e.toString();
       _booting = false;
-      // a boot that threw before the signal step never completed this, and
-      // both deep link handlers wait on it. a tapped kryfo:// link hung
-      // there for the life of the process with nothing on screen.
+      // both deep link handlers wait on this
       if (!_signalReady.isCompleted) _signalReady.complete();
       notifyListeners();
     }
@@ -6470,13 +6297,12 @@ class AppState extends ChangeNotifier {
     dlog('LAUNCH boot');
     final bsw = Stopwatch()..start();
     // both _OnboardingGate and _RootShell call boot() on cold start, before
-    // ready flips. without this guard they raced through generateIdentity +
-    // db open together and froze a fresh-wipe launch solid.
+    // ready flips, and must not race through generateIdentity and db open
     if (ready || _booting) return;
     _booting = true;
     // let the splash paint one frame before any heavy native call. sqlcipher
     // key derivation + the first go ffi hop block the ui thread long enough
-    // that android's anr watchdog fired on weak phones during cold start.
+    // to trip the anr watchdog on weak phones.
     await Future.delayed(const Duration(milliseconds: 16));
     dlog('LAUNCH boot after yield');
     final docsDir = await getApplicationDocumentsDirectory();
@@ -6495,8 +6321,7 @@ class AppState extends ChangeNotifier {
     notifyListeners();
     _appLinks = AppLinks();
     // a link carries a prekey bundle, and taking one needs the signal
-    // store, which boots after the home paints. both handlers wait for it,
-    // or a link tapped with kryfo closed was dropped with nothing shown
+    // store, which boots after the home paints. both handlers wait for it.
     _appLinks.uriLinkStream.listen((uri) async {
       if (uri.scheme != 'kryfo') return;
       await lockGuard.afterUnlock(key: 'link:$uri', () async {
@@ -6558,7 +6383,7 @@ class AppState extends ChangeNotifier {
       return;
     }
     // signal prekey gen is cpu-heavy (~5s on a fresh identity) and nothing
-    // above needs it - defer it so the home paints first. tor + nostr also
+    // above needs it, so it waits until the home paints. tor + nostr also
     // start after this, and both take longer to warm than the prekeys, so
     // the session is ready well before any message can arrive.
     _bootSignal().whenComplete(() {
@@ -6573,9 +6398,7 @@ class AppState extends ChangeNotifier {
     unawaited(db.sweepMediaChunks());
     _deliveryMode = await loadDeliveryMode();
     // in front means resumed, not that a view exists: android hands every
-    // engine an implicit view, window or not, so the old test called each
-    // process the job started a person looking. tor then ran for good in
-    // check-ins, the job only knocked, and no check-in ran all night.
+    // engine an implicit view, window or not
     _inFront =
         _inFront ||
         WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
@@ -6585,14 +6408,10 @@ class AppState extends ChangeNotifier {
     HelperPush.instance.onKnock = () => unawaited(checkIn(why: 'push'));
     HelperPush.instance.listen();
     await _loadDeliveryTimes();
-    // start tor last, after all sync identity + signal work. nothing
-    // above needs it, and starting it earlier stalled the main thread
-    // while tor bootstrapped.
-    //
-    // a process the fifteen-minute job started, with no window, in a mode
-    // that sleeps between checks: tor stays down and the job's own check-in
-    // brings it up for its minute. starting it here as well left it up for
-    // good, which is always-on without the service that keeps it alive.
+    // start tor last: nothing above needs it, and earlier it stalls the main
+    // thread while tor bootstraps. a process the fifteen-minute job started,
+    // with no window, in a mode that sleeps between checks leaves tor down;
+    // the job's own check-in brings it up for its minute.
     if (_deliveryMode != DeliveryMode.always && !_inFront) {
       _torHeld = true;
       await _torCtlOnIsolate('HaloTorStop');
@@ -6608,9 +6427,7 @@ class AppState extends ChangeNotifier {
       });
     }
     // poll bootstrap so the kryfo can breathe while the listener warms up.
-    // this used to cancel itself once tor went green - which meant a tor
-    // death later on had no witness and no comeback. now it runs for the
-    // life of the app and doubles as the watchdog.
+    // it runs for the life of the app and doubles as the watchdog.
     var torKickedAt = DateTime.now();
     Timer.periodic(const Duration(seconds: 1), (t) {
       if (haloWiping) return;
@@ -6636,7 +6453,7 @@ class AppState extends ChangeNotifier {
       final nowReady = torReady;
       if (nowReady && !_outboxWasReady) unawaited(drainOutbox());
       // tor died or never came up in this process. nothing else
-      // restarts it, so we do. throttled - a start takes a while.
+      // restarts it, so we do. throttled: a start takes a while.
       if (st == TorStatus.off &&
           !_torHeld &&
           DateTime.now().difference(torKickedAt).inSeconds > 45) {
@@ -6651,12 +6468,6 @@ class AppState extends ChangeNotifier {
       }
     });
     _initConnectivity();
-    // spares are worth having - one live relay holding every offline message
-    // is how a bad night turns into lost mail. but a relay that never answers
-    // is not a spare, it is a tor circuit burned every ten seconds. damus
-    // returned 503 on fifty-three straight attempts and snort tls-timed-out
-    // on every one, so both are out. the engine benches the rest on its own
-    // if they start behaving the same way.
     // read the saved mode before anything touches the network, tell the
     // engine, and pick the matching relay list. doing this after would start
     // every session on tor regardless of what the person chose.
@@ -6707,13 +6518,9 @@ class AppState extends ChangeNotifier {
     // crypto entirely; only uncached contacts hit the heavy lookup.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.delayed(const Duration(milliseconds: 300));
-      // subscribe off the xpub stored on the contact row - the same key the
-      // send path uses. the old version asked the signal store for it, which
-      // returns null until a session exists, so the side that got *scanned*
-      // never subscribed and could never receive the first message that
-      // would have created the session. deadlock. (the store
-      // does eventually hold the right x25519 key - kryfo derives the signal
-      // identity from it - but not until that first message exists.)
+      // subscribe off the xpub stored on the contact row, the same key the
+      // send path uses. the signal store has none until a session exists, so
+      // the scanned side could never receive the first message.
       // rooms first, on their own: a hang anywhere in the contact loop
       // below must not leave a live room deaf after a restart.
       try {
@@ -6724,8 +6531,8 @@ class AppState extends ChangeNotifier {
       unawaited(sweepCaptures());
       // people we have not accepted yet listen too: someone a friend
       // introduced, and any stranger already sitting in requests. their
-      // second message rides the pair address, and without this it waited
-      // on the relay until we accepted them.
+      // second message rides the pair address, or it waits on the relay
+      // until we accept them.
       final rows = bootSubscribeRows(
         accepted: await db.contacts(),
         vouchedPending: await db.vouchedPending(),
@@ -6739,7 +6546,7 @@ class AppState extends ChangeNotifier {
         final haloId = r['halo_id'] as String?;
         if (haloId == null) continue;
         var xPub = r['xpub'] as String?;
-        // v2 bundle pairing stores an empty xpub on the row - the key only
+        // v2 bundle pairing stores an empty xpub on the row: the key only
         // lands in the signal store, which processPeerBundle fills at pair
         // time. v1 stores it on the row and has no session yet. take
         // whichever exists, then backfill the row so the next boot is cheap.
@@ -6764,13 +6571,10 @@ class AppState extends ChangeNotifier {
     // contacts for in-session direct-onion messages.
     Timer.periodic(const Duration(seconds: 1), (_) async {
       if (haloWiping) return;
-      // reentrancy guard: the ffi drain + decrypt can outrun the 1s tick
-      // while tor is still warming, and stacked calls pinned the main
-      // thread hard enough to anr on weak phones. skip if one's running.
-      // no tor gate here: the bytes are already in the go inbox and
-      // opening them needs nothing from the network. a gate on tor's
-      // state is how a message sat unread in that inbox for twenty
-      // minutes on a phone whose tor was still publishing.
+      // reentrancy guard: the ffi drain + decrypt can outrun the 1s tick,
+      // and stacked calls pin the main thread hard enough to anr on weak
+      // phones. no tor gate here: the bytes are already in the go inbox and
+      // opening them needs nothing from the network.
       if (_draining) return;
       _draining = true;
       try {
@@ -6787,7 +6591,7 @@ class AppState extends ChangeNotifier {
           if (await db.alreadySeen(h)) continue;
           if (cipher.startsWith('{')) {
             // ctl frames only ride the authenticated relay lane. raw json
-            // in the onion inbox is junk - bury it without trial decrypts.
+            // in the onion inbox is junk: bury it without trial decrypts.
             _strikeUndecryptable(h, 'drain');
             continue;
           }
@@ -6808,7 +6612,7 @@ class AppState extends ChangeNotifier {
             }
           }
           if (!handled) {
-            // request contacts sit outside the accepted list - try them before
+            // request contacts sit outside the accepted list: try them before
             // treating this as a brand new stranger.
             for (final r in await db.pendingRequests()) {
               final id = r['halo_id'] as String;
@@ -6829,7 +6633,7 @@ class AppState extends ChangeNotifier {
           if (!handled) {
             // a peer we deleted keeps its session but loses its contact row,
             // so the loops above skip it. their next msg is a plain whisper
-            // back-pair can't rebuild - try any sessioned address that isn't
+            // back-pair can't rebuild: try any sessioned address that isn't
             // a live contact, and re-file it as a fresh request.
             final liveIds = contacts.map((c) => c.haloId).toSet();
             for (final addr
@@ -6914,15 +6718,13 @@ class AppState extends ChangeNotifier {
           }
           if (m.cipher.startsWith('{')) {
             // control frame riding the transport outside signal (bundle
-            // exchange). signal wire is base64 - never starts with '{'.
+            // exchange). signal wire is base64, never starts with '{'.
             await _handleBundleCtl(m.peer, m.cipher, h);
             continue;
           }
           // 'firstcontact' is a lane, not a peer. every stranger's opening
           // message arrives under that one tag, so it can neither name who
-          // sent this nor be remembered as anyone: the first stranger to land
-          // here would otherwise claim the tag and every stranger after them
-          // would be trial-decrypted against that one session.
+          // sent this nor be remembered as anyone.
           final fcLane = m.peer == 'firstcontact';
           var haloId = fcLane ? null : _xPubToHaloId[m.peer];
           // flagKeyChange means "this cipher really is from this peer", which
@@ -6931,7 +6733,7 @@ class AppState extends ChangeNotifier {
           String? wrapped = haloId == null
               ? null
               : await signalDecrypt(haloId, m.cipher, flagKeyChange: true);
-          // fallback: xpub not mapped yet (or it decrypted wrong) - trial
+          // fallback: xpub not mapped yet (or it decrypted wrong). trial
           // against known contacts like the direct path, then remember it.
           if (wrapped == null) {
             for (final c in contacts) {
@@ -6959,7 +6761,7 @@ class AppState extends ChangeNotifier {
           }
           if (wrapped == null) {
             // a peer we deleted keeps its session but loses its contact row.
-            // their next message is a plain whisper, so back-pair can't help -
+            // their next message is a plain whisper, so back-pair can't help:
             // try every sessioned address that isn't a live contact and re-file
             // them as a fresh request.
             final liveIds = contacts.map((c) => c.haloId).toSet();
@@ -6988,7 +6790,7 @@ class AppState extends ChangeNotifier {
           }
           if (wrapped == null) {
             // only a prekey can bootstrap a new session. a whisper nothing
-            // could decrypt is undeliverable - drop it without the noise.
+            // could decrypt is undeliverable: drop it without the noise.
             var landed = false;
             if (_isPreKeyWire(m.cipher)) {
               final paired = await backPairFromCipher(m.cipher);
@@ -7043,9 +6845,7 @@ class AppState extends ChangeNotifier {
       final kinds = (results.map((r) => r.name).toList()..sort()).join(',');
       // back online, or a different kind of network while online (wifi to
       // mobile data): tor's open connections belong to the network that went.
-      // nothing used to tell it - it found out one timeout at a time, and a
-      // phone back from flight mode sat saying ready for sixteen minutes. the
-      // engine waits for the network to settle before it bounces, so a
+      // the engine waits for the network to settle before it bounces, so a
       // flapping one is not bounced on every flap.
       if (on && (!_online || kinds != lastKinds)) engine.networkChanged();
       lastKinds = kinds;
@@ -7083,9 +6883,6 @@ class AppState extends ChangeNotifier {
     return bytes;
   }
 
-  // wipe a conversation end to end: messages, the contact row, and the
-  // signal session. they become a stranger again - a later message from
-  // them back-pairs into requests like anyone else.
   Future<void> deleteConversation(String haloId) async {
     // messages + contact row only. the signal session stays: the peer still
     // holds a live session and their next message is a plain whisper, which
@@ -7093,7 +6890,7 @@ class AppState extends ChangeNotifier {
     // decrypt, find no contact, and land in requests like a new stranger.
     await db.deleteConversation(haloId);
     // keep _xPubToHaloId: the row and subscription both survive so they can
-    // still reach us - they just land in requests instead of a live chat.
+    // still reach us, in requests instead of a live chat.
     await refreshContacts();
     notifyListeners();
   }
@@ -7269,9 +7066,9 @@ class AppState extends ChangeNotifier {
   // tiny ack: tells the original sender their message landed. reuses the
   // gift-wrap transport; carries only the uid, no body, no sender bundle.
   Future<void> _sendDeliveryReceipt(String toHaloId, String uid) async {
-    // a relay replaying its backlog hands us the same message many times over
-    // and each copy used to buy a full fan-out. re-acking still matters (the
-    // first receipt may have died) so this throttles rather than blocks.
+    // a relay replaying its backlog hands us the same message many times
+    // over. re-acking still matters (the first receipt may have died), so
+    // this throttles rather than blocks.
     final now = DateTime.now().millisecondsSinceEpoch;
     final last = _ackedAt[uid];
     if (last != null && now - last < 30000) return;
@@ -7299,11 +7096,9 @@ class AppState extends ChangeNotifier {
     avatar: _myAvatar,
   );
 
-  // pairwise envelope send. wraps libsignal encrypt + transport choice
-  // (direct-onion if peer hasn't back-paired yet, nostr otherwise).
   // wipe a corrupt outbound session and rebuild it from the peer's stored
-  // prekey bundle. returns false if we never kept a bundle (paired by a path
-  // that didn't save one) - caller then surfaces the original failure.
+  // prekey bundle. false if we never kept a bundle: the caller then surfaces
+  // the original failure.
   Future<bool> _healSession(String memberId) async {
     final c = await db.getContact(memberId);
     final bundle = c?['peer_bundle'] as String?;
@@ -7320,8 +7115,8 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // ship our prekey bundle to a peer over the gift-wrap transport - no
-  // signal session needed, which is the point: ours to them is broken.
+  // ship our prekey bundle to a peer over the gift-wrap transport: no
+  // signal session needed, which is the point, since ours to them is broken.
   // want=true asks them to reset their session with us and send theirs back.
   Future<void> _sendBundleCtl(String memberId, {required bool want}) async {
     final key = '$memberId:$want';
@@ -7392,12 +7187,9 @@ class AppState extends ChangeNotifier {
   }
 
   Future<bool> _sendOneEnvelope(String memberId, String wrapped) async {
-    // one honest attempt. the engine calls already carry their own timeouts
-    // (onion 15s, relay 60s), so retrying here just stacks those timeouts -
-    // 3x turned a slow member into a ~4min hang that froze the send pill for
-    // the whole group. a permanent InvalidKeyException can never succeed on
-    // retry either. if this send fails the message is marked failed and the
-    // user gets tap-to-retry, which is the right place for a human decision.
+    // one attempt. the engine calls carry their own timeouts (onion 15s,
+    // relay 60s), so retrying here only stacks them. a failed send is marked
+    // failed and the user gets tap-to-retry.
     try {
       final contact = await db.getContact(memberId);
       if (contact == null) {
@@ -7407,7 +7199,7 @@ class AppState extends ChangeNotifier {
       String cipher;
       // a member with no session AND no stored bundle can't be reached
       // (e.g. a dead identity still in the roster). don't burn a relay
-      // timeout on it every send - skip fast so live members deliver now.
+      // timeout on it every send: skip fast so live members deliver now.
       if (!await signalSession.sessionStore.containsSession(
             SignalProtocolAddress(memberId, 1),
           ) &&
@@ -7424,13 +7216,13 @@ class AppState extends ChangeNotifier {
       try {
         cipher = await signalEncrypt(memberId, wrapped);
       } catch (e) {
-        // a corrupt session (InvalidKeyException / bad state from heavy
-        // reinstall testing) can't encrypt. if we kept the peer's bundle at
-        // pairing, wipe the broken session and rebuild it, then try once more.
+        // a corrupt session (InvalidKeyException or bad state) can't encrypt.
+        // if we kept the peer's bundle at pairing, wipe the broken session and
+        // rebuild it, then try once more.
         final healed = await _healSession(memberId);
         if (!healed) {
           // no stored bundle (paired before v30 kept them). ask the peer
-          // for a fresh one over the gift-wrap transport - the reply heals
+          // for a fresh one over the gift-wrap transport: the reply heals
           // the session and the user's tap-to-retry then goes through.
           _wantHeal(memberId);
           unawaited(_sendBundleCtl(memberId, want: true));
@@ -7452,9 +7244,8 @@ class AppState extends ChangeNotifier {
         return false;
       }
 
-      // not back-paired: RACE onion and relay instead of waiting out the
-      // onion timeout before trying relays. delivery = whichever lands
-      // first, so a slow/dead onion no longer costs the full 15s.
+      // not back-paired: race onion and relay, so a slow or dead onion does
+      // not cost the full 15s
       final done = Completer<bool>();
       var pending = 2;
       void settle(String tag, String r) {
@@ -7574,10 +7365,9 @@ class AppState extends ChangeNotifier {
   }
 
   // the one door every group frame leaves through. a plain group goes to
-  // the member's signal session as always. a room frame is rewritten so
-  // the only identity on it is the room key - no kryfo id, no onion, no
-  // push endpoint, no badge - and sealed with the room key to the member's
-  // room key.
+  // the member's signal session. a room frame is rewritten so the only
+  // identity on it is the room key (no kryfo id, onion, push endpoint or
+  // badge) and sealed with the room key to the member's room key.
   Future<bool> _sendGroupEnvelope(
     String groupId,
     String memberId,
@@ -7598,8 +7388,6 @@ class AppState extends ChangeNotifier {
   // null when it cannot be done, and the send has to be dropped: the frame
   // it could not rewrite still carries the real onion, the kryfo id and the
   // push endpoint, which is the one thing a burner room exists to withhold.
-  // it used to hand that frame back unchanged on an unexpected prefix or a
-  // parse that threw, and the caller sent it.
   String? _roomify(String wrapped, String pub) {
     final prefix = 'halo/1:';
     if (!wrapped.startsWith(prefix)) {
@@ -7908,10 +7696,9 @@ class AppState extends ChangeNotifier {
     final burnAt = (burnSeconds != null && burnSeconds > 0)
         ? DateTime.now().millisecondsSinceEpoch + burnSeconds * 1000
         : null;
-    // save the local row up-front so the chat list shows it immediately.
-    // peer_id = self so we render it as outgoing. a RETRY passes the same
-    // uid - inserting again duplicated the row and blew up every uid-keyed
-    // widget key. one row per uid, ever.
+    // save the local row up front so the chat list shows it at once.
+    // peer_id = self so we render it as outgoing. a retry passes the same
+    // uid, and a second row breaks every uid-keyed widget key.
     if (!await db.messageExists(msgUid)) {
       await db.saveMessage(
         myId,
@@ -7921,8 +7708,8 @@ class AppState extends ChangeNotifier {
         msgUid: msgUid,
         replyTo: replyTo,
         burnAt: burnAt,
-        // born UNSENT: the default sent=1 made a dead send reload as a
-        // ticked message nobody ever received. media already does this.
+        // born unsent, or a dead send reloads as a ticked message nobody
+        // ever received
         sent: 0,
         preview: preview == null ? null : jsonEncode(preview),
       );
@@ -7932,9 +7719,9 @@ class AppState extends ChangeNotifier {
     // member whose list drifted self-heals the moment they receive it.
     final adminId = await db.groupAdminId(groupId);
     final amAdmin = adminId == myId;
-    // ride the member key bundles too, not just ids - a self-healed member the
-    // receiver had no contact for would otherwise throw InvalidKeyException on
-    // encrypt. participants let the receiver upsert a stub and encrypt to them.
+    // ride the member keys too, not just ids: a self-healed member the
+    // receiver has no contact for would otherwise throw InvalidKeyException
+    // on encrypt. participants let the receiver upsert a stub.
     final rosterParts = amAdmin ? await _buildParticipants(members) : null;
     final wrapped = await wrapMessage(
       plain,
@@ -7976,7 +7763,7 @@ class AppState extends ChangeNotifier {
   }) async {
     // one send per media at a time, the same set the 1:1 path holds. the
     // drainer picks up any row older than 45 s, and a video to a group is
-    // still leaving long after that: both then sent the whole file.
+    // still leaving long after that: both would send the whole file.
     if (!mediaInflight.add(msgUid)) return 'busy';
     try {
       return await _sendMediaToGroupInner(
@@ -8005,10 +7792,8 @@ class AppState extends ChangeNotifier {
     int? burnSeconds,
   }) async {
     // 16k chunks. bigger sizes trip nip-44's 65535 plaintext ceiling once
-    // base64'd + double-wrapped (envelope + signal + gift wrap ~= x2.4):
-    // 24k measured at 66-77k on the wire and public relays rejected it
-    // ("event too large"), so delivery only worked through our own
-    // uncapped onion relay. 16k lands ~38-51k, safe on every relay.
+    // base64'd + double-wrapped (envelope + signal + gift wrap ~= x2.4), and
+    // public relays reject the event. 16k lands ~38-51k, safe on every relay.
     // receivers reassemble by index/total, so chunk size is free to change.
     // slices are read from the file as their turn comes, see media_send.
     final int total;
@@ -8065,13 +7850,12 @@ class AppState extends ChangeNotifier {
       return chunkOk;
     }
 
-    // sequential on purpose: parallel waves dropped chunks on the circuit
-    // (receiver got the row but never the full file). the breather is down
-    // from 400ms to 150ms which is all the safe speedup there is dart-side;
-    // the real fix is batched publish in the engine.
+    // sequential on purpose: parallel waves drop chunks on the circuit.
+    // 150ms is the smallest safe breather dart-side.
+    // todo: batched publish in the engine
     final now = DateTime.now().millisecondsSinceEpoch;
     if (now - (_grpChunkDoneAt[msgUid] ?? now) > 240000) {
-      _grpChunkDone.remove(msgUid); // stale - a member may have restarted
+      _grpChunkDone.remove(msgUid); // stale: a member may have restarted
     }
     _grpChunkDoneAt[msgUid] = now;
     final done = _grpChunkDone.putIfAbsent(msgUid, () => <int>{});
@@ -8095,7 +7879,7 @@ class AppState extends ChangeNotifier {
     return 'ok';
   }
 
-  // discord-style shared pin: everyone in the group sees the same pins.
+  // shared pin: everyone in the group sees the same pins
   Future<void> pinInGroup(
     String groupId,
     String targetMsgUid,
@@ -8127,7 +7911,7 @@ class AppState extends ChangeNotifier {
     } else {
       await db.addReaction(targetMsgUid, '', emoji);
     }
-    // show it instantly - don't wait on the tor multicast to update the ui.
+    // show it now, not after the tor multicast
     notifyListeners();
     final wrapped = await wrapMessage(
       '',
@@ -8184,10 +7968,6 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // re-multicast a resolved link preview onto an already-sent group message.
-  // same uid: every receiver takes the known-uid update path and patches the
-  // card onto the bubble it already has.
-
   // build participant info {h,o,x} for each halo_id we have as a contact
   // (or for our own kryfo). used to give group invites enough info that
   // recipients can fan-out to members they don't yet know.
@@ -8212,11 +7992,8 @@ class AppState extends ChangeNotifier {
     return out;
   }
 
-  // create a group locally and announce it to invited members. memberHaloIds
-  // is the set of OTHER members (caller's kryfo id is added automatically).
-  // returns the new group id.
-  // phase-3 cap. small groups on purpose - keeps multicast cheap and dodges
-  // the moderation trap big rooms bring.
+  // small groups on purpose: multicast stays cheap and big rooms bring
+  // moderation trouble
   static const int kGroupMemberCap = 50;
 
   Future<String> createGroupAndAnnounce(
@@ -8408,8 +8185,7 @@ void main() async {
   haloWhenOpen = (act) => lockGuard.afterUnlock(act);
   unawaited(_sweepPlaintextLeftovers());
   // not awaited: this is a platform call, and with no activity attached it
-  // never answers. awaiting it is how main() stopped on its second line in
-  // every process the service brought back.
+  // never answers
   unawaited(
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]),
   );
@@ -8426,11 +8202,9 @@ void main() async {
   // the language, before anything says a word: the first frame, or a
   // notification from a process the job started
   await loadAppLocale();
-  // no window: the process was brought back by the service or the job,
-  // not by a tap. runApp would throw without a view and take the rest of
-  // main with it, which is how a restarted process sat with a "kryfo is
-  // on" notification and nothing listening behind it. boot the engine
-  // here, and put the interface up the moment a window arrives.
+  // the theme pref sits in secure storage, and the first read on a new phone
+  // creates the keystore key, which takes seconds. the splash paints dark
+  // first. started before the window check so a headless start loads it too.
   unawaited(
     appState.loadThemePref().then((_) {
       if (HaloColors.isLight) themeRevision.value++;
@@ -8438,13 +8212,11 @@ void main() async {
   );
   if (PlatformDispatcher.instance.implicitView == null) {
     dlog('LAUNCH headless');
-    // no window and nothing here yet - a panic wipe has just run, say. on a
-    // samsung the system relaunches a recently used app's process two
-    // seconds after its data is cleared ("IpmLaunch"), and booting here made
-    // a fresh identity, an onion key and a running tor out of a wipe, with
-    // nobody holding the phone. so a headless start only boots an engine
-    // that has something to serve; everything else waits for a window, and
-    // the window boots it the usual way.
+    // no window: the service or the job brought the process back, and
+    // runApp would throw without a view. only an engine with something to
+    // serve boots here: samsung relaunches a recently used app's process
+    // right after its data is cleared, and booting then would make a fresh
+    // identity out of a panic wipe. the rest waits for a window.
     unawaited(() async {
       if (await _hasLocalData()) {
         await appState.boot();
@@ -8469,10 +8241,6 @@ void main() async {
   WidgetsBinding.instance.addPostFrameCallback((_) => _openFromNotif());
 }
 
-// the theme pref sits in secure storage, and the first read on a new phone
-// creates the keystore key, which takes seconds. the splash paints first,
-// dark, and the light theme lands the moment the pref is read. it is
-// started before the window question so a headless start loads it too.
 Future<void> _openFromNotif() async {
   try {
     final details = await notifPlugin.getNotificationAppLaunchDetails();
@@ -8506,7 +8274,7 @@ class HaloApp extends StatelessWidget {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         // one place for the two accessibility settings everything else
-        // should obey. clamped rather than uncapped - past 1.6 the chat
+        // should obey. clamped rather than uncapped: past 1.6 the chat
         // bubbles stop being readable, which helps nobody.
         builder: (ctx, child) {
           final mq = MediaQuery.of(ctx);
@@ -8518,15 +8286,12 @@ class HaloApp extends StatelessWidget {
               ),
             ),
             // the lock sits here, above the navigator, so it covers
-            // whatever screen was open. as the home route it only covered
-            // home: pause from settings or a chat and the pin never showed
-            // until you walked back.
+            // whatever screen is open
             child: _LockGate(child: child ?? const SizedBox.shrink()),
           );
         },
         // one scroll feel everywhere: ios-style rubber-band on every
-        // platform, no stretch-glow. the single biggest "premium" tell,
-        // and it was unset so android fell back to the clamp+glow default.
+        // platform, no stretch-glow
         scrollBehavior: const _HaloScrollBehavior(),
         home: _LocaleScope(child: _OnboardingGate(child: RootShell())),
       ),
@@ -8545,7 +8310,7 @@ class _HaloScrollBehavior extends ScrollBehavior {
       const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
   @override
   Widget buildOverscrollIndicator(BuildContext context, Widget child, _) =>
-      child; // no glow - the bounce is the feedback
+      child; // no glow, the bounce is the feedback
 }
 
 class RootShell extends StatefulWidget {
@@ -8560,8 +8325,8 @@ class _RootShellState extends State<RootShell> {
     super.initState();
     appState.addListener(_onChange);
     // boot after the first frame is on screen. loading libhalo.so pulls in the
-    // whole go runtime + embedded tor and blocks briefly; doing it before the
-    // first paint let android's anr watchdog kill a cold start on weak phones.
+    // whole go runtime + embedded tor and blocks briefly, and before the first
+    // paint that can trip the anr watchdog on weak phones.
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => appState.bootWhenWanted(),
     );
@@ -8754,11 +8519,8 @@ Future<void> showAddContact(BuildContext context) async {
           // handles, introductions
           _Pressable(
             onTap: () => Navigator.pop(sheetCtx, 'mine'),
-            // this is the door most people need and it read as an
-            // afterthought under the paste box: a hairline border, a small
-            // icon, plain text. same tokens, more presence - the amber
-            // edge and glow the jump button uses, a bigger mark, a
-            // heavier title.
+            // the door most people need, so it gets the amber edge and glow
+            // the jump button uses
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
               decoration: BoxDecoration(
@@ -8922,9 +8684,8 @@ class _DevScreenState extends State<DevScreen> {
   Future<void> _startListener() async {
     setState(() => _status = l10n.appStartingTor30s);
     final docsDir = await getApplicationDocumentsDirectory();
-    // must run off the ui thread - starting tor blocks on socket i/o long
-    // enough that android anr'd the onboarding page. isolate twin already
-    // used on the main boot path.
+    // off the ui thread: starting tor blocks on socket i/o long enough to
+    // trip an anr
     final addr = await _startListenerOnIsolate(docsDir.path);
     setState(() {
       if (addr.startsWith('error')) {
@@ -9403,8 +9164,8 @@ class _OnboardingGate extends StatefulWidget {
 }
 
 class _OnboardingGateState extends State<_OnboardingGate> {
-  // boot is ~450ms now, the onion was gone before it registered. hold the
-  // splash a beat on cold start so it gets seen. warm reopens skip it.
+  // boot is quick enough that the onion is gone before it registers. hold
+  // the splash a beat on cold start so it gets seen. warm reopens skip it.
   bool _hold = false;
 
   @override
@@ -9521,8 +9282,8 @@ class _LockGate extends StatefulWidget {
 class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
   // the lock is a route on the root navigator: it covers whatever is open,
   // takes the back button, and leaves the screen underneath where it was.
-  // as a sibling in a stack the hidden navigator still answered back
-  // presses, and an open chat still counted as the one being read.
+  // as a sibling in a stack the hidden navigator would still answer back
+  // presses, and an open chat would still count as the one being read.
   Route<void>? _lockRoute;
 
   @override
@@ -9600,8 +9361,8 @@ class _LockGateState extends State<_LockGate> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // paused and hidden mean the user left. inactive also fires for a
     // permission prompt, a screenshot toolbar or a pulled-down shade, and
-    // locking behind those put a pin between someone and the camera they
-    // just allowed.
+    // locking behind those would put a pin between someone and the camera
+    // they just allowed.
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
       lockState.leaving();
@@ -9728,9 +9489,6 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                     ).copyWith(height: 1.5),
                   ),
                   const SizedBox(height: 10),
-                  // this promised fast mode as a future thing long after it
-                  // shipped. a promise about something already in settings
-                  // is worse than saying nothing.
                   Text(
                     l10n.appRelayAndFastModes,
                     style: HaloType.sans(size: 11, color: HaloColors.text2),
@@ -9756,9 +9514,8 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      // nothing to explain outside onion - no bootstrap, no circuit, no
-      // descriptor. a tap that opens a page about tor while you are on the
-      // relay is worse than a tap that does nothing.
+      // nothing to explain outside onion: no bootstrap, no circuit, no
+      // descriptor
       onTap: appState.sendMode == 'private' ? _explain : null,
       behavior: HitTestBehavior.opaque,
       child: AnimatedBuilder(
@@ -9774,8 +9531,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
           final accent = off
               ? HaloColors.text3
               // one route, one colour. onion stays violet whether tor is
-              // merely usable or fully published - going green on the way
-              // made it look like a different state.
+              // merely usable or fully published.
               : appState.sendMode == 'balanced'
               ? const Color(0xFF4BB8C9)
               : appState.sendMode == 'fast'
@@ -9877,10 +9633,9 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
   }
 }
 
-// raw voice recordings a crash, or an older build, left in the cache. they are
-// the voice as spoken, before any disguise, and nothing else would ever delete
-// them. the decrypted open-with copies are cleared on the native side, on
-// every resume.
+// raw voice recordings a crash, or an older build, left in the cache: the
+// voice as spoken, before any disguise. the decrypted open-with copies are
+// cleared on the native side, on every resume.
 Future<void> _sweepPlaintextLeftovers() async {
   try {
     final dir = await getTemporaryDirectory();
@@ -9894,7 +9649,7 @@ Future<void> _sweepPlaintextLeftovers() async {
 }
 
 // the database exists: this phone has been set up at some point. a plain file
-// check on purpose - reading secure storage on a wiped app would create its
+// check on purpose: reading secure storage on a wiped app would create its
 // keystore key and write a prefs file, which is a trace of its own. the
 // native side asks the same question (KryfoState.hasData).
 Future<bool> _hasLocalData() async {
@@ -9902,7 +9657,7 @@ Future<bool> _hasLocalData() async {
     final dir = await getApplicationDocumentsDirectory();
     return File('${dir.path}/halo.db').exists();
   } catch (_) {
-    // cannot tell: behave as before
+    // cannot tell: assume it has been set up
     return true;
   }
 }

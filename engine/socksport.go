@@ -15,22 +15,12 @@ import (
 	"github.com/cretz/bine/tor"
 )
 
-// bine starts tor with "--SocksPort auto", and tor picks a fresh ephemeral
-// port every time it opens that listener. DisableNetwork=1 closes it and
-// DisableNetwork=0 opens a new one somewhere else - so every bounce moves the
-// port. t.Dialer asks the control port for net/listeners/socks once, at build
-// time, and caches the answer, which means every http.Client built before a
-// bounce dials a port that is refusing connections afterwards.
-//
-// that cost a handle claim its whole 30s timeout on a phone whose relays were
-// perfectly healthy, because relays heal through relaysAllDead() and a
-// one-shot request has nothing to heal it.
-//
-// so the port is chosen once here, at process start, and handed to tor
-// explicitly. a listener that reopens on the same port survives a bounce, and
-// a dialer built before one keeps working. the cache resets in reconnectOn,
-// torResume and startListener stay as the second line: if this pin ever fails
-// they are what still makes it recover.
+// bine starts tor with "--SocksPort auto", so every DisableNetwork bounce
+// reopens the socks listener on a new port, while t.Dialer caches the port
+// once at build time. so the port is chosen here at process start and handed
+// to tor, and a dialer built before a bounce keeps working. the cache resets
+// in reconnectOn, torResume and startListener are the fallback if the pin
+// fails.
 
 var pinnedSocks int32
 
@@ -65,12 +55,11 @@ func dropSocksPin(why string) {
 	atomic.StoreInt32(&pinnedSocks, 0)
 }
 
-// where tor's socks listener is, for dialers. bine's Dialer asked tor over
-// the shared control connection every time, and re-enabled the network on
-// the way - the two things that wedged the redmi (see control_events.go).
-// the pin answers without asking tor at all. when tor chose the port itself
-// it is asked once, over the engine's own connection and under its
-// deadline, and remembered until the next client reset.
+// where tor's socks listener is, for dialers. bine's Dialer asks tor over the
+// shared control connection and re-enables the network on the way (see
+// control_events.go). the pin answers without asking tor at all. when tor
+// chose the port itself it is asked once, over the engine's own connection
+// and under its deadline, and remembered until the next client reset.
 var (
 	socksAddrMu     sync.Mutex
 	socksAddrCached string

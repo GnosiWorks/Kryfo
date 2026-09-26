@@ -3,12 +3,8 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
 // every date and time kryfo shows, in the chosen language's own order and
-// words: "23 Sep", "23. Sept.", "23 сент.", "9月23日". skeletons, not
-// patterns, so the order is the language's and not ours. "today", "yesterday"
-// and the relative times ("5m", "just now") stay messages in the arb.
-//
-// english uses british date data: day before month, as the rest of kryfo's
-// english is british (colour, metre).
+// words. skeletons, not patterns, so the order is the language's. "today"
+// and relative times stay messages in the arb. english is british.
 
 String _chosen = 'en_GB';
 bool _ready = false;
@@ -34,9 +30,8 @@ void setDateLocale(String intlLocale) => _chosen = intlLocale;
 String intlLocaleFor(String languageCode, {String? scriptCode}) {
   if (languageCode == 'en') return 'en_GB';
   if (languageCode == 'zh') return scriptCode == 'Hant' ? 'zh_TW' : 'zh';
-  // arabic writes arabic-indic digits (cldr's default for it). intl's plain
-  // "ar" gives them to dates but latin digits to numbers; its egyptian data
-  // gives them to both, with the same month names.
+  // arabic writes arabic-indic digits. intl's plain "ar" gives them only to
+  // dates; its egyptian data gives them to numbers too, same month names.
   if (languageCode == 'ar') return 'ar_EG';
   return languageCode;
 }
@@ -44,10 +39,8 @@ String intlLocaleFor(String languageCode, {String? scriptCode}) {
 /// "23 Sep"
 String dayMonth(DateTime d) => DateFormat.MMMd(_locale).format(d);
 
-/// a date in capitals, for the small labels set in capitals ("23 SEPT").
-/// only dates: messages are stored in the case they are shown. dart's
-/// toUpperCase knows no language, and turkish and azerbaijani keep the dot
-/// on a capital i.
+/// a date for the small capital labels ("23 SEPT"). dart's toUpperCase
+/// knows no language, and turkish and azerbaijani keep the dot on a capital i.
 String dateCaps(String s) {
   final lang = _chosen.split('_').first;
   if (lang == 'tr' || lang == 'az') s = s.replaceAll('i', 'İ');
@@ -70,7 +63,7 @@ String weekday(DateTime d) => DateFormat.EEEE(_locale).format(d);
 /// "Wed"
 String weekdayShort(DateTime d) => DateFormat.E(_locale).format(d);
 
-/// "15:19", 24-hour everywhere, as kryfo has always shown times
+/// "15:19", 24-hour everywhere
 String hourMinute(DateTime d) => DateFormat.Hm(_locale).format(d);
 
 /// "Wednesday 23 September 2026" (with the time: see [longDateTime])

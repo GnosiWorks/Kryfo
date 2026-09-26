@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // one place for a person. the face and the three words, our name for them,
 // how far we trust them, the media we shared, and the things you can do to
-// the chat. nickname, verification, vouches and media used to live on four
-// different sheets.
+// the chat.
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -437,10 +436,9 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 }
 
-// the three facts about a person, as the mockup draws them: a tick, a
-// count, a duration. each card only exists when there is something to
-// say, and a zero is never drawn. the vouch count is your own contacts
-// who vouched, never a global number.
+// the three facts about a person: a tick, a count, a duration. a card only
+// exists when there is something to say, and a zero is never drawn. the
+// vouch count is your own contacts who vouched, never a global number.
 class _Stats extends StatelessWidget {
   final bool verified;
   final int vouches;
@@ -654,9 +652,8 @@ class _MediaRow extends StatelessWidget {
                             height: 56,
                             fit: BoxFit.cover,
                             cacheWidth: 112,
-                            // an empty box here is a black square against the
-                            // card, which reads as a broken app rather than a
-                            // photo whose file is gone. say which it is.
+                            // a black square would read as a broken app, not
+                            // a photo whose file is gone
                             errorBuilder: (_, _, _) =>
                                 const _MissingTile(size: 56),
                           ),
@@ -673,9 +670,7 @@ class _MediaRow extends StatelessWidget {
   }
 }
 
-// a photo whose file has gone. drawn rather than left blank, because an
-// empty square looks like the app failed to load a picture that is still
-// there.
+// a photo whose file has gone, drawn so it does not look like a failed load
 class _MissingTile extends StatelessWidget {
   final double size;
   const _MissingTile({required this.size});

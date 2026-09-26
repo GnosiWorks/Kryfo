@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// backup_screen.dart - creates an encrypted backup blob and hands it
-// to the system share sheet so the user can save it to drive, email
-// it to themselves, etc.
+// makes an encrypted backup file and hands it to the system save dialog, or
+// to the share sheet when that is refused.
 
 import '../lock_state.dart';
 import 'package:flutter/material.dart';
@@ -78,8 +77,7 @@ class _BackupScreenState extends State<BackupScreen> {
       }
       if (_move) {
         // the file is out of our hands: from here this phone is retired,
-        // and the next screen says so. the mark is what tells it, not a
-        // failing session weeks later
+        // and the next screen says so
         await appState.markMoved();
       }
       if (mounted) Navigator.of(context).pop();
@@ -93,12 +91,10 @@ class _BackupScreenState extends State<BackupScreen> {
     }
   }
 
-  // the system's save dialog first, streaming the file into wherever the
-  // person picks - downloads, a drive, a card - and the share sheet when
-  // that is refused. neither reads the file into memory: the save is a
-  // stream copy on the platform side, the share hands over a path. true
-  // when the share sheet took it, since that app reads the file after we
-  // return and the copy has to be left for the boot sweep.
+  // the system save dialog first, the share sheet when that is refused.
+  // neither reads the file into memory. true when the share sheet took it:
+  // that app reads the file after we return, so the copy is left for the
+  // boot sweep.
   Future<bool> _handOver(String path, String name) async {
     if (!mounted) return false;
     var saved = false;
@@ -157,9 +153,8 @@ class _BackupScreenState extends State<BackupScreen> {
         ),
       ),
       body: SafeArea(
-        // the page grew when it learned to move: on a 720px phone a plain
-        // column ran past the body and the button, painted where it always
-        // was, sat outside what could be tapped. fits or scrolls.
+        // fits or scrolls: on a short screen a plain column leaves the
+        // button painted outside what can be tapped
         child: FitColumn(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
           crossAxisAlignment: CrossAxisAlignment.start,

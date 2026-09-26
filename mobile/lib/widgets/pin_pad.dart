@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the pin pad and the four dots, shared by the lock screen and both setup
-// screens so they feel like one thing. round keys that press, dots that
-// land with a small overshoot, a shake when a pin is wrong.
+// screens so they feel like one thing
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';

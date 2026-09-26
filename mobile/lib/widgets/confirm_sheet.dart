@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the three small sheets every screen kept rebuilding by hand: a yes-or-keep
-// question, a one-line input, and a notice with one button. all on the house
-// sheet, so a confirmation on the group page feels like one on settings.
+// the small shared sheets: a yes-or-keep question, a one-line input, a
+// choice and a notice. all on the house sheet, so a confirmation on the
+// group page feels like one on settings.
 import 'package:flutter/material.dart';
 
 import '../theme.dart';

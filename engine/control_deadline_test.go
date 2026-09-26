@@ -16,9 +16,8 @@ import (
 	"github.com/cretz/bine/tor"
 )
 
-// a control port that authenticates and then stops answering, which is what
-// tor did on the samsung: the socket stays open, the command goes out, and
-// no reply ever comes back.
+// a control port that authenticates and then stops answering: the socket
+// stays open, the command goes out, and no reply ever comes back.
 type deadControl struct {
 	ln      net.Listener
 	answer  int32 // 1 = answer commands, 0 = go quiet after auth
@@ -147,8 +146,7 @@ func TestControlPortThatNeverAnswers(t *testing.T) {
 		t.Fatalf("the call after the wedge cleared should work, got %v", err)
 	}
 
-	// 5. and it must not have left a goroutine behind per attempt. this is
-	// the count that climbed one per reconnect before.
+	// 5. and it must not have left a goroutine behind per attempt
 	time.Sleep(200 * time.Millisecond)
 	runtime.GC()
 	after := runtime.NumGoroutine()
@@ -157,8 +155,8 @@ func TestControlPortThatNeverAnswers(t *testing.T) {
 	}
 }
 
-// the outcome slot must never be built out of itself. this is the shape of
-// the bug that put ninety nested "stuck at" in one line on the samsung.
+// the outcome slot must never be built out of itself, or each round nests
+// the last one inside it.
 func TestReconnectOutcomeDoesNotNest(t *testing.T) {
 	reconnectStep = atomic.Value{}
 	reconnectOutcome = atomic.Value{}

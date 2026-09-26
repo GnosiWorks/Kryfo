@@ -6,9 +6,8 @@ import '../theme.dart';
 import 'onion_loader.dart';
 import '../l10n/l10n.dart';
 
-// startup screen while the engine warms up tor. it tells the user plainly that
-// tor - the thing that makes kryfo private - is starting, so the wait reads as
-// purposeful instead of stuck.
+// startup screen while the engine warms up tor. it says plainly that tor is
+// starting, so the wait reads as purposeful, not stuck.
 class TorBootSplash extends StatefulWidget {
   const TorBootSplash({super.key});
 

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// pick a name + members from your contacts and create a group locally.
-// fires the create-and-announce flow on submit.
+// pick a name and members, then create and announce the group
 
 import 'package:flutter/material.dart';
 import '../main.dart' show appState;
@@ -34,7 +33,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
         _selected.toList(),
       );
     } catch (e) {
-      // group full toast - cap hit, let the user trim the list
+      // group is full: let the user trim the list
       if (mounted) {
         setState(() => _creating = false);
         showHaloToast(
@@ -45,8 +44,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
       return;
     }
     if (!mounted) return;
-    // pop the picker, then push the group chat - the user lands inside
-    // the group they just made, the way every other messenger does it.
+    // land inside the new group, like other messengers do
     Navigator.of(context).pop();
     Navigator.of(context).push(haloRoute(GroupChatScreen(groupId: groupId)));
   }

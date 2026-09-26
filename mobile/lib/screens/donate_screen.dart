@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// backing screen. badge hero + tiers + custom amount + crypto addresses + card stub.
-// real wallets in _addrs. payments are off-device; this shows where to send.
-// only bitcoin can earn a badge, and only through the signed receipt the
-// invoice screen checks against our pinned key. the other coins end at the
-// address: nothing to press, nothing to claim.
+// the backing screen: tiers, custom amount, crypto addresses. only bitcoin
+// can earn a badge, through the signed receipt the invoice screen checks
+// against our pinned key. the other coins end at the address.
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../theme.dart';
@@ -33,9 +31,8 @@ class _Coin {
   const _Coin(this.key, this.name, this.sym, this.note, this.tint);
 }
 
-// only bitcoin can unlock a badge: it's the chain we verify ourselves with
-// our own node. checking the others would mean asking a third-party api and
-// leaking the payer's ip - not worth it for a cosmetic badge.
+// only bitcoin unlocks a badge: we verify it with our own node. the others
+// would need a third-party api that sees the payer's ip.
 List<_Coin> get _coins => [
   _Coin(
     'btc',
@@ -67,7 +64,7 @@ List<_Coin> get _coins => [
   ),
 ];
 
-// real backing wallets. verified against wallet screenshots.
+// the real backing wallets
 const _addrs = {
   'btc': 'bc1qdewmhrwkh8elts8ldehfq5qaj68ymexfnzkk7j',
   'xmr':
@@ -143,8 +140,7 @@ class _DonateScreenState extends State<DonateScreen> {
               const SizedBox(height: 22),
               _tiers(),
               const SizedBox(height: 22),
-              // card payments are not set up. the tab that said so came
-              // out; it comes back with a processor behind it.
+              // todo: card payments, once a processor is behind them
               _cryptoPane(),
               const SizedBox(height: 26),
             ],
@@ -403,22 +399,16 @@ class _DonateScreenState extends State<DonateScreen> {
     );
   }
 
-  // bitcoin only: the live invoice flow. the badge is granted when a signed
-  // receipt checks out inside _InvoiceScreen, never on a tap. the static
-  // address fallback lives in there too, for a donor whose tor cannot reach
-  // the service.
-  // the badge service is an onion. off onion mode the engine has no tor to
-  // reach it with, and a plain client would first ask the local resolver
-  // for the onion's name: the one hostname this app must never leak. so no
-  // request at all unless we are on onion.
+  // the badge is granted only when a signed receipt checks out in
+  // _InvoiceScreen, never on a tap. the service is an onion: off onion mode
+  // a plain client would ask the local resolver for its name, the one
+  // hostname this app must never leak. so no request unless on onion.
   bool get _onOnion => appState.sendMode == 'private';
 
   Future<void> _openBitcoinInvoice() async {
     if (!_onOnion) return;
     final tier = _tierFor(_amount);
-    // under twenty there is no tier, so there is no invoice to make: the
-    // old path asked the service for a supporter invoice anyway and then
-    // granted nothing for paying it
+    // under twenty there is no tier, so there is no invoice to make
     if (tier == SupporterTier.none) return;
     final key = tierKey(tier);
     HapticFeedback.mediumImpact();
@@ -651,8 +641,8 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
     if (!mounted || ask != _ask) return;
     _waitTick?.cancel();
     if (inv == null) {
-      // tor or the badge service is unreachable - fall back to the static
-      // address so a donation is still possible (no badge auto-grant then).
+      // tor or the service is unreachable: the static address still takes a
+      // donation, with no badge
       setState(() => _phase = _Phase.unreachable);
       return;
     }
@@ -698,7 +688,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
   Future<void> _check() async {
     final inv = _inv;
     // one ask at a time: over a slow circuit a check can outlast the six
-    // seconds to the next, and they piled up
+    // seconds to the next
     if (inv == null || _checking) return;
     _checking = true;
     final BadgeReceipt r;
@@ -731,7 +721,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
         if (mounted) setState(() => _phase = _Phase.expired);
         break;
       default:
-        break; // pending - keep polling
+        break; // pending: keep polling
     }
   }
 

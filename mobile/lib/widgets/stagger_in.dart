@@ -40,10 +40,9 @@ class _StaggerInState extends State<StaggerIn> {
   }
 }
 
-// wrap a literal list of children so they assemble one after another
-// a spacer or an expanded has to stay a direct child of the column: wrapped
-// it threw a parent-data error, and release paints that as a light box
-// (the "half white" bottom of the modes and backup screens)
+// wrap a literal list of children so they assemble one after another. a
+// spacer or an expanded stays a direct child of the column: wrapped it
+// throws a parent-data error, which release paints as a light box.
 List<Widget> staggerAll(List<Widget> children, {int from = 0}) => [
   for (var i = 0; i < children.length; i++)
     if (children[i] is Spacer || children[i] is Expanded)

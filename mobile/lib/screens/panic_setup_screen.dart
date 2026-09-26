@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// panic_setup_screen.dart - the wipe pin. entered on the lock screen it
-// silently wipes kryfo and exits; to whoever is holding the phone it looks
-// like the app crashed. must differ from the real pin.
+// the wipe pin. entered on the lock screen it silently wipes kryfo and exits,
+// which looks like a crash. must differ from the real pin.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

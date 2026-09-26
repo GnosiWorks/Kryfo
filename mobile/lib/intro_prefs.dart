@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the one switch introductions have: whether we take them at all. on by
-// default - the only party who learns anything is a contact we already
-// accepted.
+// whether we take introductions at all. on by default: the only party who
+// learns anything is a contact we already accepted.
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _acceptKey = 'kryfo.intro.accept';

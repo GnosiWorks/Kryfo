@@ -3,10 +3,8 @@ import 'package:intl/intl.dart';
 
 import 'dates.dart' show intlLocale;
 
-// numbers as the chosen language writes them: its decimal mark (1.5, 1,5),
-// its grouping (1,234, 1.234, 1 234), where the percent sign goes (42%,
-// 42 %, %42) and, for persian and arabic, its digits. the units around them
-// (kb, MB, km, s) are messages.
+// numbers as the chosen language writes them: decimal mark, grouping, percent
+// sign and, for persian and arabic, digits. units are messages.
 
 /// a whole number, grouped: "1,234"
 String whole(num v) => NumberFormat.decimalPattern(intlLocale).format(v);
@@ -17,8 +15,7 @@ String decimal(num v, int digits) => NumberFormat.decimalPatternDigits(
   decimalDigits: digits,
 ).format(v);
 
-/// two digits, for the minutes and seconds after an hour or a minute:
-/// "05"
+/// two digits, for minutes and seconds: "05"
 String twoDigits(int v) => NumberFormat('00', intlLocale).format(v);
 
 /// a share, 0 to 1, as a percentage: "42%"

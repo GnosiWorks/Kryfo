@@ -3,18 +3,8 @@
 import 'delivery_mode.dart';
 
 /// how long tor has been unable to carry traffic while kryfo is meant to be
-/// connected, or null when that question does not apply.
-///
-/// pulled out of AppState so it can be tested without one. the case it exists
-/// for cannot be staged on a phone: it needs tor's control port to wedge, and
-/// dropping wifi does not do it - tor keeps its bootstrap state and goes on
-/// reporting "reachable" with no network at all.
-///
-/// null, meaning "not a question", when:
-///  - check-ins are the mode. tor is off between checks on purpose.
-///  - the app is holding tor off itself, or wiping.
-///  - tor can carry traffic.
-///  - nothing has started trying yet, so there is no clock to read.
+/// connected. null in check-in mode (tor is off between checks on purpose),
+/// while the app holds tor off, when tor is ready, or before any try started.
 Duration? offlineDurationFor({
   required DeliveryMode mode,
   required bool torHeld,

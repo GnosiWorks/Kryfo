@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// kryfo design tokens. mirrors css vars in 08_complete_spec.html.
-// keep flat. one source of truth for color, type, spacing.
+// kryfo design tokens: colour and type, in one place.
 
 import 'dart:async';
 
@@ -137,9 +136,9 @@ class HaloType {
   static const monoFallback = ['Noto Sans Arabic'];
 
   // instrument sans has no vietnamese letters with stacked or hooked accents
-  // (ế, ự, ỹ...). drawn from the phone's font a letter at a time they sat in
-  // the middle of words in another typeface, so in vietnamese the whole sans
-  // is noto sans, which has them all. fraunces and jetbrains mono have them.
+  // (ế, ự, ỹ...), and a fallback letter mid-word shows in another typeface,
+  // so vietnamese uses noto sans throughout. fraunces and jetbrains mono
+  // have them.
   static String get sansFamily => _joinedScript
       ? 'Noto Sans Arabic'
       : l10nLocale.languageCode == 'vi'
@@ -147,9 +146,8 @@ class HaloType {
       : 'Instrument Sans';
 
   // in persian and arabic the arabic-script font leads and ours follow for
-  // the latin words in a sentence. led by fraunces, a persian word with a
-  // zero-width non-joiner in it came out with its letters unjoined after
-  // the non-joiner, on the samsung.
+  // the latin words. led by fraunces, a zero-width non-joiner leaves the
+  // letters after it unjoined.
   static String get serifFamily =>
       _joinedScript ? 'Noto Naskh Arabic' : 'Fraunces';
   static String get monoFamily =>
@@ -247,12 +245,9 @@ ThemeData buildHaloTheme() {
   );
 }
 
-// editorial toast: ink surface, hairline amber edge - reads like part of kryfo
-// rather than a default grey snackbar. clears any in-flight toast first.
-// ids and crypto addresses are the two things worth stealing off a phone,
-// and any app the user pastes into can read the clipboard. so we take them
-// back out after a minute - but only if they're still what we put there,
-// otherwise we'd be wiping something the user copied since.
+// ids and crypto addresses are worth stealing, and any app the user pastes
+// into can read the clipboard, so they come back out after a minute. only
+// if they are still what we put there: the user may have copied since.
 Timer? _clipTimer;
 
 Future<void> copySensitive(String value) async {

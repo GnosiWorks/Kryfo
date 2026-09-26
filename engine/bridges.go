@@ -1,23 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// bridges. in countries that filter tor, a direct connection to a relay is
-// recognisable and gets dropped - so kryfo simply does not work there, which
-// is exactly where it is needed most.
-//
-// the usual fix ships obfs4proxy as a separate executable and lets tor launch
-// it. android will not execute binaries from app storage, so that means
-// shipping a native lib and exec'ing it, which is awkward and hostile to a
-// reproducible build.
-//
-// instead this runs the obfs4 client inside the engine and exposes it as a
-// plain socks5 proxy on localhost. tor supports that natively:
+// bridges. android will not execute an obfs4proxy binary from app storage,
+// so the obfs4 client runs inside the engine as a plain socks5 proxy on
+// localhost. tor supports that natively:
 //
 //	ClientTransportPlugin obfs4 socks5 127.0.0.1:<port>
 //
-// no executable, no exec, nothing extra in the apk. tor hands us the per
-// bridge arguments (cert, iat-mode) in the socks handshake, the same way it
-// would to the real obfs4proxy, and obfs4's own socks5 package parses them.
+// tor hands us the per bridge arguments (cert, iat-mode) in the socks
+// handshake, and obfs4's own socks5 package parses them.
 
 import "C"
 
@@ -117,18 +108,13 @@ func bridgeLines() []string {
 	return append([]string(nil), bridgeList...)
 }
 
-// the extra torrc arguments tor needs to route through us. empty when bridges
-// are off, so the normal path is untouched.
 // every argument tor starts with. the scheduler is here rather than in
 // bridgeTorArgs because that one returns nothing when bridges are off.
 //
-// KIST asks the kernel how many bytes are still unsent on each socket with
-// ioctl(SIOCOUTQNSD). android's selinux policy refuses that to an untrusted
-// app, and tor only disables KIST when the error is EINVAL: EACCES falls
-// back for that one socket and tries again on the next scheduling round,
-// ten milliseconds later, per socket, for the life of the process. nothing
-// burns but every attempt writes a kernel audit line, and the log is worth
-// more than that. vanilla is what tor falls back to anyway.
+// KIST asks the kernel for each socket's unsent bytes with ioctl(SIOCOUTQNSD),
+// which android's selinux refuses to an untrusted app. tor only disables KIST
+// on EINVAL, so on EACCES it retries every ten milliseconds per socket, and
+// each attempt writes a kernel audit line. vanilla is its fallback anyway.
 func torArgs() []string {
 	a := []string{"--Schedulers", "Vanilla"}
 	// an explicit socks port, so a DisableNetwork bounce reopens the same one
@@ -272,8 +258,7 @@ func servePTConn(conn net.Conn, factory base.ClientFactory) {
 	wg.Wait()
 }
 
-// keep the linter honest about the goptlib import - req.Args is a pt.Args and
-// we want the dependency stated rather than implied.
+// req.Args is a pt.Args; keep the goptlib dependency stated, not implied
 var _ = pt.Args{}
 
 // takes newline separated bridge lines and whether to use them. the caller
@@ -307,11 +292,10 @@ func HaloSetBridges(cLines *C.char, on C.int) *C.char {
 			return C.CString(fmt.Sprintf("error: %v", err))
 		}
 	}
-	// turning bridges off no longer closes the listener. tor is told
-	// ClientTransportPlugin once per process and hangs if it is set a second
-	// time (see applyBridgeConf), so the port it points at has to stay the
-	// port it points at. a localhost socket nobody dials costs nothing; the
-	// alternative costs the control connection.
+	// turning bridges off leaves the listener up. tor hangs if
+	// ClientTransportPlugin is set a second time in a process (see
+	// applyBridgeConf), so the port it points at has to stay. a localhost
+	// socket nobody dials costs nothing.
 
 	if len(bad) > 0 {
 		return C.CString(fmt.Sprintf("ok: %d accepted, %d not understood", len(good), len(bad)))
@@ -319,9 +303,6 @@ func HaloSetBridges(cLines *C.char, on C.int) *C.char {
 	return C.CString(fmt.Sprintf("ok: %d bridges", len(good)))
 }
 
-// what the ui needs: whether bridges are on, how many are configured, and
-// whether the local transport is actually up.
-//
 // hand tor the new bridge config and bounce its network so it takes. tor is
 // never restarted for this: see reconnectTor for why it cannot be.
 //

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// lock_state.dart - pin-based app lock with auto-lock on backgrounding.
-// pin hash + salt are stored in flutter_secure_storage (Android Keystore-
-// backed), so brute force on a stolen unlocked device still needs the
-// keystore-protected blob.
+// pin app lock that locks on backgrounding. the pin hash and salt live in
+// keystore-backed secure storage.
 
 import 'dart:async';
 import 'dart:convert';
@@ -40,9 +38,8 @@ class LockState extends ChangeNotifier {
   bool get loaded => _loaded;
   bool _panicEnabled = false;
   bool _locked = true;
-  // wrong pins in a row, and the moment the pad opens again. a four digit
-  // pin at pad speed is ten thousand tries; five misses cost thirty
-  // seconds, then a minute, then two. the wipe pin is never held back.
+  // wrong pins in a row, and when the pad opens again. every five misses
+  // cost thirty seconds, doubling. the wipe pin is never held back.
   int _misses = 0;
   int _until = 0;
   Duration get throttleLeft {
@@ -54,8 +51,7 @@ class LockState extends ChangeNotifier {
   bool _bioSupported = false;
 
   bool get enabled => _enabled;
-  // when lock is off, locked is always false. on startup, if lock is on,
-  // we begin locked and require pin entry.
+  // false whenever the lock is off
   bool get locked => _enabled && _locked;
   bool get biometric => _biometric;
   bool get bioSupported => _bioSupported;
@@ -69,9 +65,8 @@ class LockState extends ChangeNotifier {
       _misses = int.tryParse(await _storage.read(key: _kMisses) ?? '') ?? 0;
       _until = int.tryParse(await _storage.read(key: _kUntil) ?? '') ?? 0;
     } catch (e) {
-      // a keystore that will not answer. fail open, since a pin that can
-      // never verify would lock the person out of their own messages, and
-      // say so in the debug log
+      // a keystore that will not answer. fail open: a pin that can never
+      // verify would lock the person out of their own messages
       dlog('lock: storage read failed: $e');
     }
     try {
@@ -92,7 +87,7 @@ class LockState extends ChangeNotifier {
   }
 
   // false when the pin is the wipe pin: verify tries the normal pin first,
-  // so that would have quietly disarmed the wipe while the page said set
+  // so the wipe would be quietly disarmed
   Future<bool> setupPin(String pin) async {
     if (_panicEnabled) {
       final ph = await _storage.read(key: _kPanicHash);
@@ -106,11 +101,8 @@ class LockState extends ChangeNotifier {
     await _storage.write(key: _kSalt, value: salt);
     await _storage.write(key: _kEnabled, value: 'true');
     _enabled = true;
-    // a pin means the app is not to be read without it, and a notification
-    // with the message in it is the app read without it. so setting one turns
-    // previews off. turning them back on afterwards is the person's call, and
-    // the switch says what it costs. a locked samsung on the two-phone pass
-    // showed sender and full text in its shade, because nothing linked the two.
+    // a notification with the message in it is the app read without the pin,
+    // so setting one turns previews off. turning them back on is their call.
     if (!wasOn) await setHideNotifContent(true);
     _locked = false;
     notifyListeners();
@@ -137,10 +129,9 @@ class LockState extends ChangeNotifier {
         }
       }
     }
-    // then the panic pin, if set, held or not: someone forced to open the
-    // phone must always be able to wipe it. matching it means the user
-    // wants the app wiped right now - caller is responsible for invoking
-    // wipeHalo(). we do NOT change _locked here.
+    // then the panic pin, held or not: someone forced to open the phone
+    // must always be able to wipe it. the caller runs wipeHalo(), _locked
+    // stays as it is.
     if (_panicEnabled) {
       final pSalt = await _storage.read(key: _kPanicSalt);
       final pHash = await _storage.read(key: _kPanicHash);
@@ -161,8 +152,7 @@ class LockState extends ChangeNotifier {
     return PinResult.invalid;
   }
 
-  // setup the panic pin. returns false if it matches the normal pin
-  // (panic pin must be distinct or the feature is useless).
+  // false when it matches the normal pin
   Future<bool> setupPanicPin(String pin) async {
     final normalSalt = await _storage.read(key: _kSalt);
     final normalHash = await _storage.read(key: _kHash);
@@ -231,10 +221,9 @@ class LockState extends ChangeNotifier {
     }
   }
 
-  // set while the app itself sent the user out to a system picker, the
-  // camera or a share sheet. the pause that follows is ours, not a leave,
-  // so it does not lock. cleared the moment that call returns, and by a
-  // deadline in case it never does.
+  // set while the app itself sent the user out to a picker, the camera or a
+  // share sheet: that pause is ours and does not lock. cleared when the call
+  // returns, or by a deadline in case it never does.
   DateTime? _holdUntil;
   int _holdGen = 0;
   bool get holding =>
@@ -271,10 +260,9 @@ class LockState extends ChangeNotifier {
     lock();
   }
 
-  // called on resume. the picker coming back keeps its hold and nothing
-  // locks. anything else - the home key from inside the picker, another
-  // app, a call - left the hold to expire in the background, and this is
-  // the only place that notices.
+  // called on resume. the picker coming back keeps its hold. anything else
+  // (the home key inside the picker, a call) let the hold expire in the
+  // background, and this is the only place that notices.
   void returned() {
     if (!_leftWhileHeld) return;
     _leftWhileHeld = false;
@@ -296,8 +284,7 @@ class LockState extends ChangeNotifier {
   }
 
   String _hashPin(String pin, String salt) {
-    // sha256(salt:pin) - fine for 4-digit pin protected by keystore.
-    // pbkdf2 here is overkill given the storage layer.
+    // sha256(salt:pin): the keystore guards the blob, pbkdf2 adds little
     final bytes = utf8.encode('$salt:$pin');
     return sha256.convert(bytes).toString();
   }
