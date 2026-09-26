@@ -1016,53 +1016,74 @@ class Build:
         return out
 
     def m_blink(self, args, opts, piv, where, waive):
+        # the upper lid comes down and a lower one comes up to meet it a
+        # little under the middle: a shut eye is lid colour with a lash line
+        # across it, in the art's own lid idiom (#E2D6C4, a 6 px line)
         t = float(args[0])
         slow = len(args) > 1 and args[1] == 'slow'
         din, hold, dout = (110, 60, 160) if slow else (70, 40, 110)
         for i, (g, cx, cy, rx, ry, art) in enumerate(self.open_eyes(where)):
             name = f'lid{i}'
             if name in self.st.named:
-                n = self.st.named[name]
-                travel = n.travel
+                up = self.st.named[name]
+                low = self.st.named[f'lowlid{i}']
             else:
+                meet = cy + ry * 0.35
                 if art:
                     line = parse_d(art[1].a['d'], 1.0)
-                    ys = [p[1] for s, segs, _ in line for p in [s] + [q[-1] for q in segs]]
-                    travel = cy + ry - min(ys) - 2
+                    pts = [p for s_, segs, _ in line for p in [s_] + [q[-1] for q in segs]]
+                    if len(pts) != 2:
+                        fail(f'{where}: an art lid line should be one straight line')
+                    (lx0, ly0), (lx1, ly1) = pts
+                    travel = meet - (ly0 + ly1) / 2
                     # the lid's top edge goes up by the travel: outside the
                     # eye at rest, and never inside it when the lid comes down
                     subs = parse_d(art[0].a['d'], 1.0)
-                    top = min(p[1] for s, segs, _ in subs for p in [s] + [q[-1] for q in segs])
-                    pts = []
-                    for s, segs, closed in subs:
-                        pts.append([s] + [q[-1] for q in segs])
-                    if any(q[0] != 'L' for s, segs, _ in subs for q in segs):
+                    if any(q[0] != 'L' for _, segs, _ in subs for q in segs):
                         fail(f'{where}: an art lid should be straight lines')
+                    top = min(p[1] for s_, segs, _ in subs for p in [s_] + [q[-1] for q in segs])
                     d = ''
-                    for ring in pts:
+                    for s_, segs, _ in subs:
+                        ring = [s_] + [q[-1] for q in segs]
                         d += 'M' + ' L'.join(f'{x:g},{(y - travel if abs(y - top) < 1e-6 else y):g}'
                                              for x, y in ring) + 'Z'
                     art[0].a['d'] = d
-                    els = art
-                    n = self.node(name, els, (cx, cy), where)
+                    upper = art
+                    at = g.kids.index(art[0])
                 else:
                     y0 = cy - ry - 3
-                    travel = cy + ry - 2 - y0
-                    x0, x1 = cx - rx - 4, cx + rx + 4
+                    lx0, ly0, lx1, ly1 = cx - rx - 4, y0, cx + rx + 4, y0
+                    travel = meet - y0
                     h = 2 * ry + 12
-                    lid = El('path', {'d': f'M{x0:g},{y0 - h:g} L{x1:g},{y0 - h:g} L{x1:g},{y0:g} L{x0:g},{y0:g}Z',
+                    lid = El('path', {'d': f'M{lx0:g},{y0 - h:g} L{lx1:g},{y0 - h:g} '
+                                           f'L{lx1:g},{y0:g} L{lx0:g},{y0:g}Z',
                                       'fill': '#E2D6C4'}, g, self.svg)
-                    ln = El('path', {'d': f'M{x0:g},{y0:g} L{x1:g},{y0:g}', 'fill': 'none',
+                    ln = El('path', {'d': f'M{lx0:g},{y0:g} L{lx1:g},{y0:g}', 'fill': 'none',
                                      'stroke': '#0D0B09', 'stroke-width': '6'}, g, self.svg)
                     lid.made = ln.made = True
                     g.kids += [lid, ln]
-                    n = self.node(name, [lid, ln], (cx, cy), where)
-                    n.hidden = True
-                n.travel = travel
-                n.internal = True
-            self.keys(n, PROPS['y'], [(t, 0.0, 0), (t + din, travel, EASES['in']),
-                                      (t + din + hold, travel, 0),
-                                      (t + din + hold + dout, 0.0, EASES['out'])], where)
+                    upper = [lid, ln]
+                    at = len(g.kids) - 2
+                # the lower lid: the line's own slope, parked under the eye
+                d0 = cy + ry + 4 - min(ly0, ly1)
+                hl = ry + 12
+                lower = El('path', {'d': f'M{lx0:g},{ly0 + d0:g} L{lx1:g},{ly1 + d0:g} '
+                                         f'L{lx1:g},{max(ly0, ly1) + d0 + hl:g} '
+                                         f'L{lx0:g},{max(ly0, ly1) + d0 + hl:g}Z',
+                                    'fill': '#E2D6C4'}, g, self.svg)
+                lower.made = True
+                g.kids.insert(at, lower)
+                up = self.node(name, upper, (cx, cy), where)
+                up.hidden = not art
+                up.travel = travel
+                low = self.node(f'lowlid{i}', [lower], (cx, cy), where)
+                low.hidden = True
+                low.travel = travel - d0
+                up.internal = low.internal = True
+            for n in (up, low):
+                self.keys(n, PROPS['y'], [(t, 0.0, 0), (t + din, n.travel, EASES['in']),
+                                          (t + din + hold, n.travel, 0),
+                                          (t + din + hold + dout, 0.0, EASES['out'])], where)
 
     def m_look(self, args, opts, piv, where, waive):
         t = float(args[0])
@@ -1990,28 +2011,23 @@ def halo(st, svg, out, nodes, tracks, how, report):
     for m in mine.values():
         covered |= m
     bridges = region & ~covered
+    # each pixel of a bridge goes with the part whose field is strongest
+    # there, so in motion a bridge shears down its middle instead of riding
+    # whole on one side (a blade) or staying behind (a fin)
     extra = {o: np.zeros((N, N), dtype=bool) for o in owners}
     lines = []
+    have = [o for o in owners if F[o] is not None]
+    if bridges.any() and have:
+        stack = np.stack([F[o] for o in have])
+        best = np.argmax(stack, axis=0)
+        for k, o in enumerate(have):
+            extra[o] |= bridges & (best == k)
     for comp, (r0, r1, c0, c1) in components(bridges):
-        # a bridge goes with the part it touches most, moving parts first
-        a0, b0 = max(0, r0 - 2), max(0, c0 - 2)
-        a1, b1 = min(N, r1 + 2), min(N, c1 + 2)
-        win = np.zeros((a1 - a0, b1 - b0), dtype=bool)
-        win[r0 - a0:r1 - a0, c0 - b0:c1 - b0] = comp
-        grown = win.copy()
-        for dy, dx in ((-2, 0), (2, 0), (0, -2), (0, 2), (-1, -1), (1, 1), (-1, 1), (1, -1)):
-            grown |= np.roll(np.roll(win, dy, axis=0), dx, axis=1)
-        best, bscore = None, None
-        for o, m in mine.items():
-            hit = int((grown & m[a0:a1, b0:b1]).sum())
-            if hit:
-                score = (o is not None, hit)
-                if bscore is None or score > bscore:
-                    best, bscore = o, score
-        extra[best][r0:r1, c0:c1] |= comp
         area = comp.sum() / (S * S)
         if area >= 1:
-            lines.append(f'  bridge {area:6.1f} px2 -> {owner_name(best)}')
+            parts = sorted({owner_name(o) for o in have
+                            if (extra[o][r0:r1, c0:c1] & comp).any()})
+            lines.append(f'  bridge {area:6.1f} px2 -> {" + ".join(parts)}')
     ops = []
     pieces = []
     for o in owners:
@@ -2113,22 +2129,29 @@ def components(mask):
 
 # ---- clearances: two moving parts that must not touch
 
-def cloud(out, n):
+def cloud(out, n, ras):
+    # outline points of a node's art, with the stroke's half width; points
+    # a clip hides do not count
     pts, rad = [], []
     for d in out.draws:
         if n not in d['nodes'] or d['hidden']:
             continue
         for p, closed in flatten(d['subs'], step=4.0):
-            q = p / S + O
+            keep = np.ones(len(p), dtype=bool)
+            ij = np.clip(np.floor(p).astype(int), 0, N - 1)
+            for cs, eo in d['clips']:
+                keep &= ras.clip_mask(cs, eo)[ij[:, 1], ij[:, 0]]
+            q = p[keep] / S + O
             pts.append(q)
             rad.append(np.full(len(q), d.get('width', 0) / 2 if d['stroke'] else 0.0))
     return np.concatenate(pts), np.concatenate(rad)
 
 
 def run_clears(st, out, nodes, tracks, report):
+    ras = Raster()
     for a, b, gap, where in st.clears:
-        pa, ra = cloud(out, a)
-        pb, rb = cloud(out, b)
+        pa, ra = cloud(out, a, ras)
+        pb, rb = cloud(out, b, ras)
         worst = math.inf
         at = 0
         rest = None
@@ -2143,10 +2166,11 @@ def run_clears(st, out, nodes, tracks, report):
                 rest = g
             if g < worst:
                 worst, at = g, t
-        report.append(f'  clear {a.name} {b.name}: {worst:.1f} px at {at:.0f} ms, '
+        report.append(f'  clear {owner_name(a)} {owner_name(b)}: {worst:.1f} px at {at:.0f} ms, '
                       f'{rest:.1f} at rest (wants {gap:g})')
         if worst < gap:
-            fail(f'{where}: {a.name} comes within {worst:.1f} px of {b.name} at {at:.0f} ms')
+            fail(f'{where}: {owner_name(a)} comes within {worst:.1f} px of {owner_name(b)} '
+                 f'at {at:.0f} ms')
 
 
 # ---- output

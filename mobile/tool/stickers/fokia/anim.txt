@@ -24,22 +24,28 @@ pivot shoulder_r 344,300
 
 sticker 01 hi loop=2400 emoji=👋 since=1
   # the rest pose is the right end of the wave, where the arcs are: the
-  # flipper swings left and back, so the paw never runs into the arcs
+  # flipper swings left and back, so the paw never runs into the arcs. the
+  # arcs swing with it and pulse, so their outline does not shear off the
+  # paw's
   node arm   flipper_right     @344,300  pivot=shoulder_r
   node paw   flipper_right[3]  @420,176  pivot=420,170
-  node lines props             @458,108  pivot=468,136
-  rot   arm   0:0 260:-8 520:-1 780:-7 1040:0
-  rot   paw   0:0 330:3 590:-1.5 850:2.5 1110:-1.5 1320:0
-  alpha lines 0:1 260:0.25 470:1 780:0.25 990:1
-  x     lines 0:0 260:-2 520:1.5 780:-2 1040:0
+  node swing props             @458,108  pivot=shoulder_r
+  node lines props             @458,108  pivot=474,136
+  rot   arm   0:0 260:-8 520:-1.5 780:-7 1040:0
+  rot   swing 0:0 260:-8 520:-1.5 780:-7 1040:0
+  rot   paw   0:0 330:2 590:-1.5 850:2 1110:-1 1320:0
+  scale lines 0:1 260:0.86 470:1.1 620:1 780:0.86 990:1.1 1140:1
   rot   head  0:0 520:-1.5 1300:0  pivot=neck
   tuft 160
   blink 1750
   clear paw lines 2.5
+  clear paw head 2
 
 sticker 02 lol loop=2000 emoji=😂 since=1
-  # a belly laugh: the whole seal shakes inside its tilted wrapper
+  # a belly laugh: the whole seal shakes inside its tilted wrapper and
+  # bounces along its own axis on every ha
   node body  top[0]       pivot=256,300
+  node belly top[0][0:8]  pivot=root
   node mouth mouth[2:4]   @208,254  pivot=256,256
   node tearl head[13]     @194,182
   node tearr head[14]     @318,182
@@ -47,6 +53,8 @@ sticker 02 lol loop=2000 emoji=😂 since=1
   node footr tail[2:4]    @296,420  pivot=286,436
   node kicks props        @150,500
   shiver body 1.6 250 0 2000
+  sy    belly 0:1 125:0.975 250:1 375:0.975 500:1 625:0.975 750:1 875:0.975 1000:1 1125:0.975 1250:1 1375:0.975 1500:1 1625:0.975 1750:1 1875:0.975 2000:1
+  sx    belly 0:1 125:1.0125 250:1 375:1.0125 500:1 625:1.0125 750:1 875:1.0125 1000:1 1125:1.0125 1250:1 1375:1.0125 1500:1 1625:1.0125 1750:1 1875:1.0125 2000:1
   sy    mouth 0:1 125:1.08 250:1 375:1.08 500:1 625:1.08 750:1 875:1.08 1000:1 1125:1.08 1250:1 1375:1.08 1500:1 1625:1.08 1750:1 1875:1.08 2000:1
   y     tearl 0:0 250:3 500:0 750:3 1000:0 1250:3 1500:0 1750:3 2000:0
   y     tearr 0:0 250:3 500:0 750:3 1000:0 1250:3 1500:0 1750:3 2000:0
@@ -69,9 +77,9 @@ sticker 04 love loop=2400 emoji=❤️ since=1
   scale blushl 0:1 100:1 210:1.1:out 400:1:inout 1300:1 1410:1.1:out 1600:1:inout
   scale blushr 0:1 100:1 210:1.1:out 400:1:inout 1300:1 1410:1.1:out 1600:1:inout
   y     small1 0:0 800:-7 1600:0
-  alpha small1 0:1 800:0.7 1600:1
+  scale small1 0:1 800:1.08 1600:1
   y     small2 0:0 500:0 1300:-6 2100:0
-  alpha small2 0:1 500:1 1300:0.7 2100:1
+  scale small2 0:1 500:1 1300:1.1 2100:1
   sway head 1.5 pivot=neck
 
 sticker 05 sad emoji=😢 since=1
@@ -106,8 +114,8 @@ sticker 19 going-dark loop=2400 emoji=🕳️ since=1
   # the seal is gone below; the flippers wave, drops fall back in, bubbles rise
   node flipl tail[0]     @248,372  pivot=248,374
   node flipr tail[1]     @264,372  pivot=264,374
-  rot  flipl 0:0 260:-8 540:5 800:0 1200:0 1460:-8 1740:5 2000:0
-  rot  flipr 0:0 150:0 410:8 690:-5 950:0 1350:0 1610:8 1890:-5 2150:0
+  rot  flipl 0:0 260:-6 540:4 800:0 1200:0 1460:-6 1740:4 2000:0
+  rot  flipr 0:0 150:0 410:6 690:-4 950:0 1350:0 1610:6 1890:-4 2150:0
   drop props[0] 12 0 500
   drop props[1] 12 300 800
   drop props[2] 12 600 1100
