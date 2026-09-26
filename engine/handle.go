@@ -1,20 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// public handles. @wren instead of three words, for people who want to be
-// findable on purpose - a creator putting one link in a bio, someone who
-// would rather say a name than read out neon-tiger-saturn.
-//
-// this is the one part of kryfo with a central registry, and it is worth
-// being precise about what that costs. the registry holds a handle, the
-// invite it points at, and the identity key that claimed it. the invite is
-// the same blob already printed on the qr code and pasted into chats - it is
-// meant to be public. what the registry does NOT hold is who you talk to,
-// what you said, or who looked you up: the page is static and the server is
-// configured not to log visitors.
-//
-// off by default, and released as easily as claimed. a handle nobody claimed
-// is a handle nobody can be compelled to hand over.
+// public handles: @wren instead of three words, for people who want to be
+// findable on purpose. the one central registry in kryfo. it holds a handle,
+// the invite it points at (already public) and the key that claimed it, not
+// who you talk to or who looked you up. off by default.
 //
 // ownership is proved by signing the handle with the identity key the invite
 // already carries, so nobody can claim a name that points at someone else's
@@ -152,7 +142,7 @@ func handlePost(path string, body []byte) string {
 		return "error: " + err.Error()
 	}
 	req.Header.Set("Content-Type", "application/json")
-	// nothing identifying in the headers - the body already says who we are,
+	// nothing identifying in the headers: the body already says who we are,
 	// and only because it has to.
 	req.Header.Set("User-Agent", "")
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

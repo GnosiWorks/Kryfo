@@ -1,13 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // tor's main loop runs inside this process, and there can be one of it.
-// closing a tor through bine returns after 300ms whether or not that loop
-// has come back, and a second loop started while the first is still
-// unwinding trips an assertion inside tor that aborts the whole app. the
-// restart path has always had that window; check-ins would walk into it
-// every fifteen minutes.
-//
-// this wraps the embedded process so the engine knows when the loop has
-// really ended, and a start waits for that instead of trusting the close.
+// bine's close returns after 300ms whether or not that loop has ended, and a
+// second loop started while the first unwinds trips an assertion in tor that
+// aborts the app. this tracks the real end so a start can wait for it.
 package main
 
 import (
@@ -29,7 +24,7 @@ var torCreator process.Creator = trackedCreator{}
 
 func (trackedCreator) New(ctx context.Context, args ...string) (process.Process, error) {
 	// the inner process gets a context that never ends: its Wait returns
-	// early when the context does, and early is the lie this exists to fix
+	// early when the context does, before the loop has really ended
 	inner, err := libtor.Creator.New(context.Background(), args...)
 	if err != nil {
 		return nil, err

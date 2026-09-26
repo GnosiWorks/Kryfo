@@ -8,16 +8,10 @@ allprojects {
     }
 }
 
-// two pub packages compile native code with cmake, and what they produce
-// depends on where it was built: the linker stamps a gnu build-id derived
-// from its inputs, and the compiler bakes absolute source paths into the
-// objects. f-droid built 0.2.8 on their own machine and it disagreed with
-// ours on lib/armeabi-v7a/libdartjni.so for exactly that reason. our own
-// container check could not catch it: it compares our build against our
-// build, at the same path.
-//
-// dropping the build-id and mapping the package root to "." is what
-// f-droid's reproducible builds page gives for pub libs, naming jni.
+// two pub packages compile native code with cmake, and the output depends on
+// where it was built: the linker stamps a gnu build-id and the compiler bakes
+// in absolute source paths. dropping the build-id and mapping the package
+// root to "." is what f-droid's reproducible builds page gives for pub libs.
 // cFlags and cppFlags are appended by the gradle plugin; CMAKE_C_FLAGS
 // through arguments would replace what it sets.
 val reproNativeSubprojects = setOf("jni", "flutter_zxing")

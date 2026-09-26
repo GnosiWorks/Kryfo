@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// group chat. supports text + reply + reactions + ghost mode. mirrors the
-// 1:1 chat ux as closely as possible so the user never has to relearn
-// gestures.
+// group chat: text, media, replies, reactions and ghost mode, with the same
+// gestures as the 1:1 chat.
 
 import 'dart:async';
 import '../lock_state.dart';
@@ -137,9 +136,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   String? _jumpUid;
   String? _rippleUid;
   // keyed by the uid of the row each divider precedes. index keys reparent
-  // when rows shift (burns), and dayMs keys duplicate when a late-arriving
-  // older message splits a day into two runs - two dividers, one GlobalKey,
-  // framework red screen. the anchor uid is unique per divider and stable.
+  // when rows shift (burns), and dayMs keys repeat when a late older message
+  // splits a day into two runs: two dividers, one GlobalKey. the anchor uid
+  // is unique per divider and stable.
   final Map<String, GlobalKey> _dayKeys = {};
   final Map<String, int> _dayMsOf = {};
   final GlobalKey _listKey = GlobalKey();
@@ -269,7 +268,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         HapticFeedback.lightImpact();
       }
       // repaint when something expired or the countdown changes second, not
-      // every 100ms (that was the jank)
+      // every 100ms
       final sec = now ~/ 1000;
       if (expired != null || sec != _lastBurnSec) {
         _lastBurnSec = sec;
@@ -387,9 +386,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (_pixels < 400) _loadOlder();
   }
 
-  // who is blocked, refreshed with every load. it used to be read from
-  // appState.contacts, which is accepted-only, so anyone blocked while
-  // still a stranger was never filtered at all.
+  // who is blocked, refreshed with every load. appState.contacts is
+  // accepted-only and would miss anyone blocked while still a stranger.
   Set<String> _blocked = {};
 
   List<Map<String, Object?>> _withoutBlocked(List<Map<String, Object?>> rows) {
@@ -579,7 +577,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _roomExpiresAt = g?['expires_at'] as int?;
         _isAdmin = ((g?['is_admin'] as int?) ?? 0) == 1;
         // a reload rebuilds every row; the retry count rides across, or a
-        // failed send never reached its cap and spun forever
+        // failed send never reaches its cap and spins forever
         final carry = {
           for (final m in _messages)
             if (m.msgUid != null) m.msgUid!: (m.autoRetries, m.gaveUp),
@@ -620,12 +618,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               m.poll = PollSpec.parse(r['poll']);
               m.votes = votes[uid] ?? const {};
               m.rowid = (r['rowid'] as int?) ?? 0;
-              // only a STALE sending out-message is dead. a live send (<60s old,
-              // future still running) must keep its pill or a working media send
-              // flips to failed mid-flight - the "had to retry 2-3 times" bug.
-              // also hold off while tor is warming: the send is queued, not dead.
-              // outside onion there is no warmup to wait out, so a stale
-              // send is simply stale.
+              // only a stale sending out-message is dead: a live send (<60s
+              // old) keeps its pill, or a working media send flips to failed
+              // mid-flight. while tor warms up the send is queued, not dead;
+              // outside onion there is no warmup to wait out.
               final torUp =
                   appState.sendMode != 'private' ||
                   appState.torStatus == TorStatus.reachable;
@@ -647,9 +643,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         if (_loaded) _keepLeaving(before);
       });
       // only snap to the tail on first load or when the user is already
-      // reading it. a background reload (reaction, preview, burn) yanking
-      // the view to the bottom is what kept throwing pin jumps and
-      // scrollback to the end of the chat.
+      // reading it, so a background reload (reaction, preview, burn) never
+      // throws a pin jump or scrollback to the end of the chat
       final nearEnd = !_scrollReady || _maxScroll - _pixels < 240;
       final target = !_didJump && widget.jumpToUid != null
           ? _messages.indexWhere((m) => m.msgUid == widget.jumpToUid)
@@ -664,9 +659,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       unawaited(_refreshPinCount());
       await _loadShieldFlags();
     } finally {
-      // a crash mid-load used to leave _loading stuck true, silently
-      // freezing every later refresh: previews only appeared after
-      // re-entering, pins went stale. reset no matter what.
+      // a throw mid-load must not leave _loading stuck true, or every later
+      // refresh freezes
       _loading = false;
       // if changes landed while we were loading, run exactly one catch-up.
       if (_reloadQueued) {
@@ -749,15 +743,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (appState.shieldRev != _seenShieldRev && !_loading) {
       unawaited(_loadShieldFlags());
     }
-    // only react to our own group's traffic. a 1:1 message landing used
-    // to full-reload this screen and churn every photo bubble.
+    // only react to our own group's traffic, or every 1:1 message reloads
+    // this screen and churns every photo bubble
     final rev = appState.chatRevOf('group:${widget.groupId}');
     if (rev == _seenRev) return;
     _seenRev = rev;
-    // a group control or new message landed. guard against the reload storm:
-    // a single multicast fires notifyListeners() once per recipient, and a full
-    // _load() per fire froze the ui. if a load is already running, queue at most
-    // one follow-up instead of stacking N of them.
+    // a single multicast fires notifyListeners() once per recipient, and a
+    // full _load() per fire freezes the ui. if a load is already running,
+    // queue at most one follow-up.
     if (_loading) {
       _reloadQueued = true;
       return;
@@ -808,12 +801,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         )
         .toList();
     if (brandNew.isEmpty) {
-      // no new message rows. this fires for reactions/edits/unsends/burns,
-      // which need a full reload to show - EXCEPT while one of our own sends
-      // is still in flight: a reload there rebuilds _messages with new objects
-      // and orphans the optimistic one, freezing its send pill forever. so
-      // defer the reload until the send settles; the completion handler
-      // re-finds the live object and a later change will reload cleanly.
+      // no new rows: reactions, edits, unsends and burns need a full reload,
+      // except while one of our own sends is in flight. a reload then
+      // orphans the optimistic row and freezes its send pill, so it waits.
       final sendInFlight = _messages.any((m) => m.sending);
       if (!sendInFlight) _load();
       return;
@@ -1124,12 +1114,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     } catch (e) {
       dlog('group send failed: $e');
     } finally {
-      // always release the composer - a throw here used to leave _sending
-      // stuck true, which silently killed every later send.
+      // always release the composer: a throw must not leave _sending stuck
+      // true and kill every later send
       if (mounted) {
         // re-find the live object; the notifyListeners at the end of
-        // sendToGroup can trigger a reload that replaces `optimistic`,
-        // and mutating the orphan left the send pill stuck forever.
+        // sendToGroup can trigger a reload that replaces `optimistic`, and
+        // the orphan's send pill would stay stuck
         final live = _liveMsg(uid) ?? optimistic;
         setState(() {
           _sending = false;
@@ -1142,9 +1132,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
   }
 
-  // re-send a failed group message, reusing its uid/reply/burn so it stays
-  // the same logical message. media rows re-read their saved file and go
-  // back through the chunked multicast.
   Timer? _autoRetryTimer;
   // online, a failed send goes again on its own: half a minute apart, six
   // goes, then it is shown as failed with the tap
@@ -1163,6 +1150,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
   }
 
+  // re-send a failed group message, reusing its uid/reply/burn so it stays
+  // the same logical message. media rows re-read their saved file and go
+  // back through the chunked multicast.
   Future<void> _retryGroup(_GMsg m) async {
     if (m.msgUid == null) return;
     setState(() {
@@ -1564,10 +1554,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
     final dest = File('${mediaDir.path}/f_${uid}_$safe');
     await File(src).copy(dest.path);
-    // a gallery video carries the same things a gallery photo did: where,
-    // on what, and when. the photo path has stripped those for a while;
-    // this is the video equivalent, in place on our own copy. a file that
-    // cannot be walked is not sent, the same as a jpeg that cannot be.
+    // a gallery video carries what a gallery photo does: where, on what,
+    // and when. stripped in place on our own copy; a file that cannot be
+    // walked is not sent, the same as a jpeg that cannot be.
     if (videoNameNeedsStrip(name)) {
       final ok = await stripMp4Metadata(dest.path);
       final left = ok == null ? null : await mp4MetadataCount(dest.path);
@@ -1634,9 +1623,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         .then((r) => _finishGroupMediaSend(m, r));
   }
 
-  // after a send completes, the optimistic object may have been replaced by
-  // a reload (notifyListeners -> _tryAppendNew). always re-find the live one
-  // by uid so we mutate what's actually on screen, never an orphan.
   String? _badgeFor(String id) {
     for (final c in appState.contacts) {
       if (c.haloId == id) return c.supporterBadge;
@@ -1644,6 +1630,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     return null;
   }
 
+  // after a send completes, the optimistic object may have been replaced by
+  // a reload (notifyListeners -> _tryAppendNew). always re-find the live one
+  // by uid so we mutate what's actually on screen, never an orphan.
   _GMsg? _liveMsg(String? uid) {
     if (uid == null) return null;
     for (final m in _messages) {
@@ -1653,8 +1642,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   // stop a photo or file mid-send. the workers end between slices, the row
-  // goes here, and the group is told to drop what it has. the same thing
-  // the one-to-one screen does, which groups never had.
+  // goes here, and the group is told to drop what it has.
   Future<void> _stopGroupSending(_GMsg m) async {
     final uid = m.msgUid;
     if (uid == null) return;
@@ -1788,10 +1776,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     String? quotedText,
     String? quotedAuthor,
   }) async {
-    // drop composer focus BEFORE anything opens: routes capture the focused
-    // node at open and restore it at close, which is what kept yanking the
-    // keyboard up after unsend/edit/forward. captured nothing = restores
-    // nothing, for every action reached from this menu.
+    // drop composer focus before anything opens: a route captures the
+    // focused node at open and restores it at close, which would pull the
+    // keyboard up after unsend, edit or forward
     FocusManager.instance.primaryFocus?.unfocus();
     if (target.msgUid == null) return;
     final renderBox = bubbleCtx.findRenderObject() as RenderBox?;
@@ -1913,7 +1900,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                           dismiss();
                           _forwardGroupMessage(target);
                         },
-                  // a tap opens a file now, so sharing it lives here
+                  // a tap opens a file, so sharing it lives here
                   onShare:
                       (target.filePath == null ||
                           target.fileName == 'voice.wav')
@@ -2005,9 +1992,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       final obj = key.currentContext?.findRenderObject();
       if (obj is! RenderBox) return;
       final dy = obj.localToGlobal(Offset.zero).dy;
-      // same as the one-to-one screen: the floating chip sits at the top of
-      // this list, so a divider counted as passed while it is still on
-      // screen drew the day twice.
+      // the floating chip sits at the top of this list, so a divider only
+      // counts as passed once it is off screen, or the day shows twice
       if (dy + obj.size.height <= top && dy > bestDy) {
         bestDy = dy;
         best = _dayMsOf[anchor];
@@ -2070,8 +2056,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   // after the rough jump, rows above the target keep resizing as images and
-  // previews build in, so one ensureVisible often left us shy or past the
-  // pin. re-align over a few frames until the target stops moving.
+  // previews build in, so one ensureVisible can land shy of or past the pin.
+  // re-align over a few frames until the target stops moving.
   void _settleJump(int attempt) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -2080,9 +2066,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       final ro = ctx == null || !ctx.mounted ? null : ctx.findRenderObject();
       if (ro != null && ro.attached) {
         try {
-          // ensureVisible asserts if the viewport is mid-update (the
-          // viewport.dart red screen). computing the reveal offset and
-          // jumping is the safe equivalent.
+          // ensureVisible asserts if the viewport is mid-update. computing
+          // the reveal offset and jumping is the safe equivalent.
           final vp = RenderAbstractViewport.of(ro);
           final want = vp
               .getOffsetToReveal(ro, 0.3)
@@ -2112,7 +2097,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // the key has just been asked for and lands with the next frame. if
     // the row is already built then, go straight to it: the rough jump is
     // a guess from whatever rows happen to be laid out, and guessing away
-    // from a row that is on screen is how a second tap on a pin wandered.
+    // from a row that is on screen makes a second tap on a pin wander.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scrollReady) return;
       if (_jumpKey.currentContext == null) {
@@ -2159,8 +2144,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   void _scrollToGroupMessage(_GMsg m) {
     var idx = _messages.indexOf(m);
     if (idx < 0 && m.msgUid != null) {
-      // a reload swapped the list objects since this reference was taken -
-      // the identity lookup fails and the tap used to just do nothing.
+      // a reload swapped the list objects since this reference was taken,
+      // so the identity lookup fails: find it by uid
       idx = _messages.indexWhere((x) => x.msgUid == m.msgUid);
     }
     _scrollToIndex(idx);
@@ -2305,8 +2290,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 ),
               )
             else
-              // the sheet scrolls as one now, so the list is laid out in
-              // full and does not scroll on its own
+              // the sheet scrolls as one, so the list is laid out in full
+              // and does not scroll on its own
               ListView(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -3304,7 +3289,7 @@ class _Composer extends StatelessWidget {
 
 // ───────── bubble ─────────
 
-// stable accent per sender so each person reads as their own colour in a group.
+// stable accent per sender so each person reads as their own colour
 Color _authorColor(String id) {
   final palette = [
     HaloColors.green,
@@ -4100,8 +4085,8 @@ class _GroupBubble extends StatelessWidget {
                       ),
                       if (m.reactions.isNotEmpty)
                         PositionedDirectional(
-                          // ig-style: hangs at the bubble's bottom edge on the
-                          // sender's side, same as 1:1. keys off direction.
+                          // hangs at the bubble's bottom edge on the sender's
+                          // side
                           bottom: -13,
                           end: isOut ? 10 : null,
                           start: isOut ? null : 10,
@@ -4247,7 +4232,7 @@ class _GroupBubble extends StatelessWidget {
     final selfEmoji = m.reactions[''];
     return counts.entries.map<Widget>((e) {
       final isSelf = e.key == selfEmoji;
-      // solid ink pill, no border - same as 1:1, reads as a tab under the bubble.
+      // solid ink pill, no border: reads as a tab under the bubble
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
         decoration: BoxDecoration(

@@ -1,18 +1,8 @@
 package main
 
-// what the relay keeps, and for how long.
-//
-// everything goes at 14 days, delivered or not. that is deliberately simpler
-// than it could be: an earlier version also dropped a wrap an hour after it
-// was collected, which meant wrapping the store's query channel to notice
-// deliveries - and when khatru stopped draining early (a filled limit, a
-// client hanging up) that wrapper stopped draining badger, badger never
-// closed its iterator, and subscriptions stalled while publishes carried on
-// looking fine.
-//
-// the relay one person depends on in a country that blocks tor is the wrong
-// place for clever plumbing. time alone is enough to make "we are not an
-// archive" true, and it cannot deadlock.
+// what the relay keeps: every wrap goes at 14 days, delivered or not.
+// dropping on delivery needs a wrapper on the query channel, and that stalls
+// badger when khatru stops draining early. time alone cannot deadlock.
 
 import (
 	"context"

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// lock_screen.dart - pin entry over the entire app when locked.
-// 4-digit pin, the house pad, no system keyboard. wrong pin shakes.
-// when biometric is enabled, auto-fires the system fingerprint prompt
-// on screen entry; "use fingerprint" re-fires it.
+// pin entry over the whole app when locked. with biometrics on, the
+// fingerprint prompt fires on entry; "use fingerprint" fires it again.
 
 import 'dart:async';
 
@@ -126,8 +124,8 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
       setState(() => _pin = '*' * typed.length);
       final result = await lockState.verifyPin(typed);
       if (result == PinResult.panic) {
-        // silent wipe - the screen stays as if processing, then kryfo
-        // exits. to the coercer it looks like the app crashed.
+        // silent wipe: the screen stays as if processing, then kryfo exits,
+        // which looks like a crash
         await wipeHalo();
         return;
       }

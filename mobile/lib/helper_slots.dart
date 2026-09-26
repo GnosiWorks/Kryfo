@@ -1,20 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// how kryfo's addresses are spread over the helper's endpoints.
-//
-// kryfo does not listen on one address, it listens on a pairwise address per
-// contact. handing the relay one endpoint for all of them would let the relay
-// tie those addresses together, which today it cannot. handing it one endpoint
-// per address would let the helper's server count the topics and learn how
-// many people write to you.
-//
-// so: always exactly sixteen endpoints, no matter how many contacts there
-// are. the empty ones are registered too, with a random address that nothing
-// will ever be sent to, so the relay cannot tell a real one from a dummy and
-// the helper's server sees the same sixteen topics on every phone.
-//
-// a slot, once given to an address, is kept. reshuffling would show the relay
-// the old and the new endpoint for the same address, which is the linking
-// this exists to avoid.
+// how the pairwise addresses are spread over the helper's endpoints. one
+// endpoint for all would let the relay link them, one per address would let
+// the helper's server count contacts. so always sixteen, the empty ones on a
+// random address nothing is sent to. a slot, once given, is kept: moving an
+// address would show the relay its old and new endpoint together.
 import 'dart:convert';
 import 'dart:math';
 
@@ -48,11 +37,8 @@ class SlotBook {
   int get used => byAddress.values.toSet().length;
 }
 
-/// the slot for [address], keeping whatever it already had. a new address
-/// takes the lowest empty slot; once all sixteen carry something, it takes
-/// the one carrying the fewest, so the relay sees buckets rather than a list.
-///
-/// returns the book to save and the slot to use.
+/// a new address takes the slot carrying the fewest, lowest first. returns
+/// the book to save and the slot to use.
 (SlotBook, int) slotFor(SlotBook book, String address) {
   final had = book.slotOf(address);
   if (had != null) return (book, had);
@@ -68,13 +54,12 @@ class SlotBook {
   return (SlotBook(next), best);
 }
 
-/// an address that is not one of ours, for a slot with nothing real in it.
-/// the relay stores it and knocks it on the same decoy timer as the rest.
+/// for a slot with nothing real in it. the relay knocks it on the same decoy
+/// timer as the rest.
 String dummyAddress(Random rnd) => [
   for (var i = 0; i < 32; i++)
     rnd.nextInt(256).toRadixString(16).padLeft(2, '0'),
 ].join();
 
-/// the name kryfo gives the distributor for slot [i]. one registration per
-/// slot, so one endpoint comes back per slot.
+/// one registration per slot, so one endpoint comes back per slot
 String slotInstance(int i) => 'kryfo-$i';

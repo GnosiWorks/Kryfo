@@ -4,10 +4,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-// every language has every key, and nothing is left in english by
-// accident. a message may read the same as the english only when all its
-// words are names or units every language writes the same way, or when it
-// is listed here after a look.
+// words every language writes the same way: a message made only of these
+// may read the same as the english
 const _names = {
   'kryfo',
   'tor',

@@ -4,9 +4,8 @@ import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/intro_chip.dart';
 import 'package:kryfo/widgets/kryfo_avatar.dart';
 
-// the vouched request row hangs on this chip: the introducer's face, our
-// name for them, amber never grey, and a green check only when we verified
-// them. pinned here so a restyle cannot quietly turn it grey.
+// the vouched request chip: the introducer's face, amber never grey, and a
+// green check only when we verified them
 
 Widget _wrap(Widget child) => MaterialApp(
   home: Scaffold(

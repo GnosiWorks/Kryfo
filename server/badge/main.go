@@ -1,17 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// halo badge service — turns a paid BTCPay invoice into an ed25519-signed
-// receipt the app can verify forever, offline.
-//
-// design notes (privacy first):
-//   - NO database. the invoice id IS the state, and BTCPay already holds it.
-//     nothing about a donor is stored here - not an address, not a time, not
-//     an ip. (it's behind a tor onion, so there's no ip to log anyway.)
-//   - NO accounts, no email, no PII. a supporter is "someone holding a valid
-//     signature", nothing more.
-//   - the receipt is signed with a key that never leaves this box; the app
-//     pins the PUBLIC key at build time. once signed, the badge keeps working
-//     even if this server disappears forever.
-//   - stdlib only - no go modules to download (matters on a bad connection).
+// badge service: turns a paid btcpay invoice into an ed25519-signed receipt
+// the app verifies offline. no database and no accounts: the invoice id is
+// the state and btcpay holds it, nothing about a donor is stored here.
+// the app pins the public key, so a badge outlives this server.
+// stdlib only, nothing to download on a bad connection.
 package main
 
 import (
@@ -55,13 +47,10 @@ var tiers = map[string]float64{
 	"guardian":  100,
 }
 
-// how many invoices may be made in an hour, by everyone together. behind
-// an onion there is no client to tell from another, so the limit is on the
-// door and not on the caller. it is here because an invoice costs btcpay a
-// fresh address whether or not it is ever paid: a flood of them walks the
-// wallet past its gap limit, and a wallet restored from its seed later
-// stops looking before it reaches the addresses real money went to. a
-// handful of supporters a day is the real traffic; thirty an hour is room.
+// invoices an hour, for everyone together: behind an onion there is no
+// caller to tell apart. each invoice costs btcpay a fresh address, and a
+// flood walks the wallet past its gap limit, so a restore from seed stops
+// looking before the addresses real money went to.
 var perHour = envInt("BADGE_INVOICES_PER_HOUR", 30)
 
 // a token bucket: a burst of ten, refilled evenly across the hour
@@ -207,8 +196,8 @@ func handleInvoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// btcpay's checkout link is not passed on: the app draws its own qr and
-	// never used it, and it names wherever btcpay is hosted
+	// btcpay's checkout link is not passed on: the app draws its own qr, and
+	// the link names wherever btcpay is hosted
 	writeJSON(w, map[string]any{
 		"id":      inv.ID,
 		"tier":    req.Tier,
@@ -224,16 +213,10 @@ func handleInvoice(w http.ResponseWriter, r *http.Request) {
 // against a list of what it must not contain.
 var invoiceID = regexp.MustCompile(`^[A-Za-z0-9]{8,64}$`)
 
-// paid means the money cannot be taken back. btcpay says "Processing" the
-// moment it sees a transaction, before any block holds it, and a receipt
-// was signed on that: pay, take the receipt, replace the transaction with
-// one that pays yourself, and keep a badge that verifies for ever, for
-// nothing. "Processing" was in the list below by mistake; the comment on
-// the default case always said it meant pending, and could never be
-// reached for it. only a settled invoice is signed for. how many
-// confirmations "settled" takes is the store's own setting in btcpay
-// (payment, "consider the invoice settled when"), and it must not be
-// "unconfirmed", or this check means nothing.
+// paid means the money cannot be taken back. "Processing" is a transaction
+// no block holds yet, and a payer could replace it and keep the badge.
+// how many confirmations "settled" takes is the store's setting in btcpay,
+// and it must not be "unconfirmed", or this check means nothing.
 func paid(status string) bool {
 	switch status {
 	case "Settled", "Complete", "Confirmed": // the last two are the old api's names
@@ -242,11 +225,9 @@ func paid(status string) bool {
 	return false
 }
 
-// the tier a settled invoice earns, or "" when it earns none. the tier is
-// read off the invoice and the invoice off btcpay, so anything else that
-// can make invoices in the same store - a pay button, another app - could
-// make a one dollar invoice that says guardian. the amount has to cover the
-// tier it names.
+// the tier a settled invoice earns, or "" when it earns none. anything else
+// that makes invoices in the same store could make a one dollar one that
+// says guardian, so the amount has to cover the tier it names.
 func earned(tier, amount, currency string) string {
 	want, ok := tiers[tier]
 	if !ok || currency != "USD" {

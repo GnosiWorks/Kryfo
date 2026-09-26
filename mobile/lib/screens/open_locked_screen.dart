@@ -45,12 +45,9 @@ class _OpenLockedScreenState extends State<OpenLockedScreen> {
   @override
   void initState() {
     super.initState();
-    // every keystroke has to rebuild, not only the ones that clear an error.
-    // the Open file button decides its handler at build time from whether
-    // this field is empty, so with a rebuild only on error the button was
-    // built once against an empty field, kept a null handler, and stayed
-    // dead however much was typed into it. the sibling lock screen always
-    // rebuilt, which is why locking worked and opening did not.
+    // every keystroke has to rebuild, not only the ones that clear an error:
+    // the Open file button picks its handler at build time from whether this
+    // field is empty.
     _pw.addListener(_typed);
   }
 

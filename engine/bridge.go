@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// halo engine - ffi bridge for flutter
-// phase 1 stage C-prep: identity + tor onion + ECDH + key export/restore for persistence.
+// the engine's ffi bridge for flutter: identity, the tor onion, ecdh, and
+// key export and restore.
 
 package main
 
@@ -190,7 +190,7 @@ func HaloMyXPubkey() *C.char {
 }
 
 // exports private keys so the dart side can persist them encrypted.
-// only call this once after generation; do NOT log or transmit.
+// only call this once after generation; never log or transmit.
 //
 //export HaloMyEdPrivkey
 func HaloMyEdPrivkey() *C.char {
@@ -344,11 +344,9 @@ func startListener(dataDir string) string {
 	savedDataDir = dataDir
 	mu.Unlock()
 
-	// a hard-killed previous process can leave tor's lock behind, which blocks
-	// this start and froze a fast relaunch. tor is single-instance per data dir
-	// and we hold startMu, so removing a stale lock here is safe.
-	// same reasoning as the restart path: a run file left by a process that
-	// was killed rather than closed will fail the next start outright.
+	// a hard-killed previous process can leave tor's lock and run files
+	// behind, which fail this start. tor is single-instance per data dir and
+	// we hold startMu, so removing them here is safe.
 	cleanTorRunFiles(torDataDir)
 
 	setStatus("starting")
@@ -368,9 +366,8 @@ func startListener(dataDir string) string {
 	t, err := start()
 	if err != nil && socksPin() != 0 {
 		// something else took the port between choosing it and tor binding
-		// it. not worth failing a start over - let tor choose, and the cache
-		// resets go back to being the thing that keeps one-shot requests
-		// working across a bounce.
+		// it. not worth failing a start over: let tor choose, and the cache
+		// resets keep one-shot requests working across a bounce.
 		dropSocksPin(err.Error())
 		t, err = start()
 	}
@@ -385,7 +382,7 @@ func startListener(dataDir string) string {
 	ctrlReset()
 	eventReset()
 	nostrResetClient()
-	// stay "starting" - tor.Start returns before any circuit exists. the
+	// stay "starting": tor.Start returns before any circuit exists. the
 	// bootstrap watcher owns the flip at a real 100%.
 	goWatchBootstrap(t)
 
@@ -409,14 +406,12 @@ func startListener(dataDir string) string {
 		}
 	}
 
-	// no status flip here - publishing means nothing while bootstrap is at
+	// no status flip here: publishing means nothing while bootstrap is at
 	// 50%. the watcher sets it when tor is actually there.
 	hsCh, hsSubbed := listenForUploads(t)
-	// tor starts with the network off. bine normally turns it on inside
-	// Listen, but only on the branch we skip with NoWait - so the onion got
-	// created and never published. turn it on ourselves before listening,
-	// over the engine's own connection - bine's is not asked for anything
-	// any more (control_events.go).
+	// tor starts with the network off. bine turns it on inside Listen, but
+	// only on the branch NoWait skips, so turn it on here, over the engine's
+	// own connection (see control_events.go).
 	if eerr := ctrlDo(t, "DisableNetwork 0", func(c *control.Conn) error {
 		return c.SetConf(control.KeyVals("DisableNetwork", "0")...)
 	}); eerr != nil {
@@ -456,7 +451,7 @@ func startListener(dataDir string) string {
 
 // bine writes a fresh torrc and control-port file per run and does not always
 // clean them up. a half-written one left by a dying process is read by the
-// next start as "invalid port format", which killed the restart outright.
+// next start as "invalid port format" and fails it.
 func cleanTorRunFiles(dir string) {
 	os.Remove(dir + "/lock")
 	ents, err := os.ReadDir(dir)
@@ -471,23 +466,18 @@ func cleanTorRunFiles(dir string) {
 	}
 }
 
-// a wedged dialer, a bridge change or a hop back onto onion used to close
-// tor and start another one. that is the one thing this tor cannot do.
-//
-// tor 0.4.9.5, as go-libtor vendors it, survives exactly ONE shutdown per
+// tor 0.4.9.5, as go-libtor vendors it, survives exactly one shutdown per
 // process. the second tor.Close() either hangs inside the control connection
 // or aborts the whole app:
 //
 //	INTERNAL ERROR: Raw assertion failed in Tor 0.4.9.5 at
 //	compat_mutex_pthreads.c:120: Error destroying a mutex.  SIGABRT
 //
-// reproduced twice out of two by tor_cycle_test.go, which does what the old
-// restart did, in a loop. so nothing here closes tor, ever. instead tor is
-// handed the config it needs and told to leave the network and come back:
-// DisableNetwork closes every circuit and connection and stops it building
-// more, which is what tor browser and orbot do to apply a bridge change. the
-// consensus and the guards stay, so coming back takes a quarter of a second
-// instead of a bootstrap.
+// so nothing here closes tor, ever. a wedged dialer, a bridge change or a hop
+// back onto onion hands tor the config it needs and bounces DisableNetwork,
+// which closes every circuit and connection, as tor browser and orbot do to
+// apply a bridge change. the consensus and the guards stay, so coming back
+// takes a quarter of a second instead of a bootstrap.
 //
 // serialized on startMu against a start so the two cannot overlap.
 var torRestarting int32
@@ -495,7 +485,7 @@ var torRestarting int32
 var lastTorRestart int64 // unix seconds of the last one, for the cooldown
 
 // one watcher of each kind at a time. each parks on a control event listener,
-// and one left behind per reconnect is a leak with a whole day to grow in.
+// and one left behind per reconnect is a leak.
 var (
 	bootstrapWatching int32
 	publishWatching   int32
@@ -526,7 +516,7 @@ func goWatchPublished(t *tor.Tor, onionID string) {
 }
 
 // subscribe before the thing that would fire: at a start the first UPLOADED
-// can arrive while Listen is still setting the onion up, and missing it meant
+// can arrive while Listen is still setting the onion up, and missing it means
 // sitting out the full fallback.
 func listenForUploads(t *tor.Tor) (chan control.Event, bool) {
 	hsCh := make(chan control.Event, 16)
@@ -567,8 +557,8 @@ func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionI
 		if !stillPub {
 			return
 		}
-		// no confirmed upload yet - the same listener stays live, loop and
-		// wait for a late descriptor instead of lying reachable.
+		// no confirmed upload yet: the same listener stays live, so wait for
+		// a late descriptor instead of claiming reachable.
 	}
 	statusMu.Lock()
 	if torStatus == "publishing" {
@@ -587,14 +577,9 @@ func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionI
 }
 
 // hands tor the bridge configuration it should be using right now. all three
-// of these are set every time bridges are turned on, including
-// ClientTransportPlugin when its value has not changed.
-//
-// that last part is not redundant. turning bridges off drops tor's
-// registration of the transport, so turning them back on without naming the
-// plugin again leaves tor with bridge lines and no way to reach them: it sits
-// at "connecting" and never dials. caught on the phone on the third switch,
-// on-off-on, which is why the test below does exactly that.
+// are set every time bridges are turned on, ClientTransportPlugin included
+// even when unchanged: turning bridges off drops tor's registration of the
+// transport, and without it tor has bridge lines and no way to reach them.
 func applyBridgeConf(t *tor.Tor) error {
 	if t == nil || t.Control == nil {
 		return fmt.Errorf("no control connection")
@@ -641,11 +626,9 @@ func applyBridgeConf(t *tor.Tor) error {
 // where the last reconnect got to, and how it ended. a bounce that stalls
 // does so inside tor's control port, which says nothing in a release build,
 // so it is written down here and shown on the transport screen.
-// two slots, deliberately. the step says where a reconnect is right now; the
-// outcome says how the last one ended. they were one slot once, and the
-// timeout wrote "stuck at " + the slot back into the slot - so every giving
-// up nested inside the one before it. a samsung was found with ninety of them
-// in a single string. an outcome is never built from an outcome.
+// two slots: the step says where a reconnect is right now, the outcome how
+// the last one ended. an outcome is never built from an outcome, or each
+// timeout nests inside the one before it.
 var (
 	reconnectStep    atomic.Value // string, where a running reconnect is
 	reconnectOutcome atomic.Value // string, how the last one ended
@@ -685,17 +668,16 @@ func HaloLastReconnect() *C.char { return C.CString(lastReconnectOutcome()) }
 func reconnectTor() string {
 	// asleep on purpose: the check-in mode takes tor off the network between
 	// checks, and every watchdog that finds it quiet comes through here. none
-	// of them may bring it back - that is the app's call, not a watchdog's.
+	// of them may bring it back: that is the app's call, not a watchdog's.
 	if torIsPaused() {
 		log.Println("halo: reconnect skipped - tor is asleep on purpose")
 		return "error: tor is asleep"
 	}
 	if !atomic.CompareAndSwapInt32(&torRestarting, 0, 1) {
-		// one that has run for five minutes is not running, it is stuck,
-		// and "one already running" for ever is how the offline card's
-		// button did nothing on the redmi for twenty hours. take the flag
-		// over; the stuck one clears it again when and if it ever returns,
-		// which is harmless.
+		// one that has run for five minutes is stuck, and "one already
+		// running" for ever leaves the offline card's button dead. take the
+		// flag over; the stuck one clears it again if it ever returns, which
+		// is harmless.
 		since := atomic.LoadInt64(&reconnectSince)
 		if since == 0 || time.Since(time.Unix(0, since)) < 5*time.Minute {
 			return "error: one already running"
@@ -706,8 +688,8 @@ func reconnectTor() string {
 	}
 	defer atomic.StoreInt32(&torRestarting, 0)
 
-	// a quiet-but-alive relay should not drive a loop. a bounce is cheap now,
-	// so the floor is a minute rather than the three a full restart needed.
+	// a quiet-but-alive relay should not drive a loop. a bounce is cheap, so
+	// the floor is a minute.
 	now := time.Now().Unix()
 	if prev := atomic.LoadInt64(&lastTorRestart); prev != 0 && now-prev < 60 {
 		log.Printf("halo: reconnect skipped - %ds since the last (floor 60s)", now-prev)
@@ -737,10 +719,9 @@ func reconnectTor() string {
 		return "ok"
 	}
 
-	// no goroutine to abandon any more. every control command inside
-	// reconnectOn carries its own deadline, so this returns whatever tor
-	// does; a wedged control port comes back as an error rather than as a
-	// lock nobody will ever release.
+	// every control command inside reconnectOn carries its own deadline, so
+	// this returns whatever tor does; a wedged control port comes back as an
+	// error rather than as a lock nobody will ever release.
 	started := time.Now()
 	atomic.StoreInt64(&reconnectSince, started.UnixNano())
 	atomic.StoreInt32(&reconnectRunning, 1)
@@ -751,10 +732,10 @@ func reconnectTor() string {
 	return r
 }
 
-// the control work. it does NOT take startMu: holding a lock across a control
-// command is what left the samsung offline for ten hours. the only thing it
-// serializes against is itself, through the torRestarting flag its caller
-// holds, and against other control users through ctrlDo's own bounded lock.
+// the control work. it does not take startMu: a lock held across a control
+// command that never answers blocks every later start. it serializes against
+// itself through the torRestarting flag its caller holds, and against other
+// control users through ctrlDo's own bounded lock.
 func reconnectOn(t *tor.Tor, addr string) string {
 	log.Println("halo: reconnecting tor (config change or wedged dialer)")
 	noteStep("start")
@@ -765,22 +746,17 @@ func reconnectOn(t *tor.Tor, addr string) string {
 	bootstrapPct = 0
 	statusMu.Unlock()
 	setStatus("starting")
-	// dropped in the background on purpose. torNostrClient holds that same
-	// mutex for up to half a minute while it builds a dialer, and with a few
-	// relay runners queued behind each other a reconnect that waited for it
-	// sat there past a minute doing nothing - which is how the first version
-	// of this looked like tor hanging. nothing is lost by being late: tor is
-	// the same process either side of a bounce, so a client built before it
-	// still dials the same socks port. dropping it only shakes off a dialer
+	// dropped in the background: torNostrClient holds that same mutex for up
+	// to half a minute while it builds a dialer, with relay runners queued
+	// behind it. nothing is lost by being late; this only shakes off a dialer
 	// that wedged.
 	go nostrResetClient()
 
-	// the network goes down FIRST, and the config changes while it is down.
+	// the network goes down first, and the config changes while it is down.
 	// changing bridges under a live tor that is part way through a handshake
 	// with an unreachable one makes it stop answering its control port
 	// altogether: SETCONF never returns and everything queued behind it waits
-	// for ever. the test below caught it on the second and third switch. this
-	// is the order tor browser uses for the same change.
+	// for ever. this is the order tor browser uses for the same change.
 	noteStep("network off")
 	if err := ctrlDo(t, "DisableNetwork 1", func(c *control.Conn) error {
 		return c.SetConf(control.KeyVals("DisableNetwork", "1")...)
@@ -810,14 +786,10 @@ func reconnectOn(t *tor.Tor, addr string) string {
 	routeBump()
 	atomic.StoreInt32(&bounceOff, 0)
 	// and again now the network is back, which is the one that matters.
-	// tor closes its socks listener on DisableNetwork=1 and opens a new one
-	// on the way back, so every client built against the old port is dead.
-	// the reset at the top of this function only drops work that was already
-	// in flight: anything rebuilt during the bounce - and six relay runners
-	// are looping through torNostrClient() throughout - caches a client
-	// bound to a port that is about to stop answering, and keeps it for good.
-	// that is why a handle claim timed out on a phone whose relays were fine:
-	// the relays heal through relaysAllDead(), a one-shot request does not.
+	// tor reopens its socks listener on the way back, and anything rebuilt
+	// during the bounce (relay runners loop through torNostrClient()
+	// throughout) holds a client bound to the old port. the relays heal
+	// through relaysAllDead(), a one-shot request does not.
 	nostrResetClient()
 	relayClearBenches()
 	kickRelays()
@@ -834,16 +806,10 @@ var torPaused int32
 
 func torIsPaused() bool { return atomic.LoadInt32(&torPaused) == 1 }
 
-// puts tor to sleep and keeps it there. it does NOT shut tor down.
-//
-// the first version did, and a test that ran real start/stop cycles in one
-// process (tor_cycle_test.go) killed it: tor 0.4.9.5 survives one shutdown
-// per process and aborts the whole app on the second, "Error destroying a
-// mutex", or hangs in it. a day of check-ins is ninety-six of them. so tor
-// stays up and is told to leave the network: DisableNetwork=1 closes every
-// connection and circuit and stops it building more, which is what tor
-// browser and orbot do for the same reason. waking is the same setting
-// turned back, and the consensus it kept makes that quick.
+// puts tor to sleep and keeps it there. it does not shut tor down: tor
+// survives one shutdown per process, and a day of check-ins is ninety-six of
+// them. DisableNetwork=1 closes every connection and circuit instead, and
+// waking is the same setting turned back, quick with the consensus it kept.
 //
 // "ok" when tor went quiet or was not running, "error: ..." when it would
 // not take the setting. on an error tor is left exactly as it was.
@@ -856,10 +822,8 @@ func torStop() string {
 	mu.Lock()
 	t := torNode
 	mu.Unlock()
-	// in the background for the same reason reconnectOn does it: this takes
-	// cachedNostrClientMu, which a dialer being built holds for up to half a
-	// minute. it used to run here with startMu held, which put a start and
-	// every reconnect behind a dialer.
+	// in the background, as in reconnectOn: this takes cachedNostrClientMu,
+	// which a dialer being built holds for up to half a minute.
 	go nostrResetClient()
 	if t == nil || t.Control == nil {
 		setStatus("off")
@@ -906,9 +870,8 @@ func torResume() string {
 	statusMu.Lock()
 	hsdirUploads = 0
 	statusMu.Unlock()
-	// the socks port the sleeping tor had is not the one it has now, and
-	// this path never dropped the cached client at all. every check-in wake
-	// left it pointing at a closed port.
+	// the socks port the sleeping tor had is not the one it has now, so the
+	// cached client goes
 	nostrResetClient()
 	setStatus("starting")
 	goWatchBootstrap(t)
@@ -916,9 +879,7 @@ func torResume() string {
 		goWatchPublished(t, id)
 	}
 	// every relay runner that found tor asleep is parked in a fifteen-minute
-	// sleep that only a kick ends. a check-in sends one; going back to always
-	// on did not, and a phone that said "Tor ready" heard nothing until the
-	// next job came round. the wake is the kick now, whoever asked for it.
+	// sleep that only a kick ends, so the wake kicks, whoever asked for it.
 	relayClearBenches()
 	kickRelays()
 	log.Println("halo: tor is back on the network")
@@ -1147,13 +1108,11 @@ func HaloDecryptBackup(cBlob, cPassphrase *C.char) *C.char {
 }
 
 // the streamed backup. the v1 blob above holds the whole payload in memory
-// several times over, which is fine for a small database and not for a
-// year of photos and voice notes. v2 is written a chunk at a time: one key
-// from the passphrase and a salt, then every record sealed on its own with
-// a nonce made of its index. same scrypt, same aes-256-gcm as v1, so the
-// strength is unchanged. the record layout lives in the dart side; these
-// three do the cryptography and nothing else, on raw buffers so a chunk is
-// not copied through a c string.
+// several times over; v2 is written a chunk at a time: one key from the
+// passphrase and a salt, then every record sealed on its own with a nonce
+// made of its index. same scrypt and aes-256-gcm as v1. the record layout
+// lives on the dart side; these three do the cryptography on raw buffers so
+// a chunk is not copied through a c string.
 
 // derives the backup key. salt is exactly 16 bytes. returns the key as
 // hex, or "error: ...".
@@ -1227,10 +1186,9 @@ func HaloOpenChunk(cKey *C.char, index C.ulonglong, typ C.uchar, in *C.uchar, in
 	return C.int(len(plain))
 }
 
-// watchHSDirUpload subscribes to tor's HS_DESC events and returns as
-// soon as an UPLOADED action is reported for our onion id, or after
-// 60s as a fallback. without this we'd just wait the full 60s
-// heuristic - most networks UPLOAD within 5-15 seconds.
+// watchHSDirUpload reads tor's HS_DESC events and returns true as soon as
+// our descriptor is uploaded, or false after 120s. most networks upload
+// within 5-15 seconds.
 func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID string) bool {
 	if t == nil || t.Control == nil || !subbed {
 		time.Sleep(120 * time.Second)
@@ -1284,7 +1242,7 @@ func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID st
 
 // polls tor for real bootstrap progress. tor.Start only means the process
 // is up; the network comes alive inside Listen, so this is the only true
-// progress signal. self-terminates at 100% or after ~5 min.
+// progress signal. stops at 100% or after about ten minutes.
 func watchBootstrap(t *tor.Tor) {
 	lastPct := -1
 	for i := 0; i < 300; i++ {

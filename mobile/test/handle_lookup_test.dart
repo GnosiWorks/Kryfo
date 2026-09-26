@@ -24,7 +24,7 @@ void main() {
     test('accepts the answer for the handle asked', () {
       expect(inviteFromRegistryJson(good, 'wren'), startsWith('kryfo://'));
     });
-    test('refuses an answer for someone else or a non-invite', () {
+    test('refuses another handle or a non-invite', () {
       expect(inviteFromRegistryJson(good, 'other'), isNull);
       expect(
         inviteFromRegistryJson(

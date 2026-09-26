@@ -1,13 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// message text that knows a kryfo link when it holds one.
-//
-// a room link sent to a contact arrived as two hundred characters of plain
-// text that nothing could be done with: not tapped, and copied only along
-// with the rest of the message, which the paste box then refused. a message
-// that is a room link and nothing else is drawn as an invitation with a
-// button. a link among other words is drawn short and can be tapped.
-// nothing new goes over the wire: it is the same text either way, and an
-// older kryfo shows it as the text it is.
+// message text that knows a kryfo link when it holds one. a message that is
+// only a room link is drawn as an invitation with a button; a link among
+// other words is drawn short and can be tapped. the text on the wire is the
+// same, so an older kryfo shows it as plain text.
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

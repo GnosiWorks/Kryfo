@@ -973,10 +973,9 @@ class LockState extends ChangeNotifier {
     return true;
   }
 
-  // set while the app itself sent the user out to a system picker, the
-  // camera or a share sheet. the pause that follows is ours, not a leave,
-  // so it does not lock. cleared the moment that call returns, and by a
-  // deadline in case it never does.
+  // set while the app itself sent the user out to a picker, the camera or a
+  // share sheet: that pause is ours and does not lock. cleared when the call
+  // returns, or by a deadline in case it never does.
   DateTime? _holdUntil;
   int _holdGen = 0;
   bool get holding =>
@@ -1013,10 +1012,9 @@ class LockState extends ChangeNotifier {
     lock();
   }
 
-  // called on resume. the picker coming back keeps its hold and nothing
-  // locks. anything else - the home key from inside the picker, another
-  // app, a call - left the hold to expire in the background, and this is
-  // the only place that notices.
+  // called on resume. the picker coming back keeps its hold. anything else
+  // (the home key inside the picker, a call) let the hold expire in the
+  // background, and this is the only place that notices.
   void returned() {
     if (!_leftWhileHeld) return;
     _leftWhileHeld = false;

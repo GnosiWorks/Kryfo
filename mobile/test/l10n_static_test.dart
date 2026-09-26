@@ -3,9 +3,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-// a top-level or static final is built once, in whatever language the app
-// had then, and keeps it after the person picks another. a message there has
-// to be a getter.
+// a top-level or static final keeps the language it was built in after a
+// switch, so a message there has to be a getter
 void main() {
   test('no top-level or static final holds a message', () {
     final decl = RegExp(

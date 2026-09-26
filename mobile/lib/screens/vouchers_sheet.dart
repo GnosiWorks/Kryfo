@@ -46,8 +46,7 @@ class _VouchersSheet extends StatelessWidget {
               style: HaloType.serif(size: 20, color: HaloColors.text),
             ),
           ),
-          // inside the sheet's own scroll now, so the list is laid out in
-          // full and the sheet scrolls as one
+          // laid out in full inside the sheet's scroll, so it scrolls as one
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),

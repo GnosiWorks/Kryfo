@@ -13,23 +13,10 @@ import (
 	"github.com/cretz/bine/tor"
 )
 
-// events come over a control connection of their own.
-//
-// bine hands out one connection for everything, and reading an event on it
-// holds its read lock until the next byte arrives - which may be never. any
-// command on that connection then waits behind the read, with no deadline.
-// on 2026-09-22 a redmi sat like that for twenty hours: bine's Dialer asked
-// tor for the socks address over the shared connection (and re-enabled the
-// network on the way, on a tor the app had just put to sleep), those calls
-// parked behind a stale event read, every torNostrClient held the client
-// mutex for the thirty seconds it gave the dialer, and the resume that was
-// to bring tor back waited on that mutex - "running, at network on", for
-// the night, with the reconnect button answering "one already running".
-//
-// so nothing asks bine's connection for anything any more. commands go over
-// the engine's own connection (control_conn.go), dialers are built from a
-// socks address the engine already knows (socksport.go), and events are
-// read here, on a connection whose read lock is nobody else's business.
+// events come over a control connection of their own. reading an event on
+// bine's shared connection holds its read lock until the next byte arrives,
+// which may be never, and every command behind it waits with no deadline.
+// commands use control_conn.go and dialers socksport.go for the same reason.
 
 var (
 	evMu   sync.Mutex
@@ -70,9 +57,8 @@ func eventConn(t *tor.Tor) (*control.Conn, error) {
 
 // reads events for as long as the connection lasts and hands them to the
 // listeners bine keeps per connection. HandleNextEvent returns nil without
-// reading when the next line is a command reply rather than an event - a
-// SETEVENTS acknowledgement, say - so the loop yields a moment then, and
-// the request that is waiting for that reply takes it.
+// reading when the next line is a command reply (a SETEVENTS ack, say), so
+// the loop yields a moment and the request waiting for that reply takes it.
 func pumpEvents(c *control.Conn, gen int) {
 	for {
 		err := c.HandleNextEvent()

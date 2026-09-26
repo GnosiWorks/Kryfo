@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/lock_guard.dart';
 
 void main() {
-  test('a tap waits while locked and happens once the lock lifts', () async {
+  test('a tap waits for the lock to lift', () async {
     var locked = true;
     final g = LockGuard(isLocked: () => locked);
     final done = <String>[];
@@ -29,7 +29,7 @@ void main() {
     expect(done.where((d) => d == 'dup').length, 1);
   });
 
-  test('what is open closes when the lock goes up, and only once', () {
+  test('open menus close once on lock', () {
     final g = LockGuard(isLocked: () => false);
     var menu = 0, player = 0;
     g.closeOnLock(() => menu++);
@@ -41,7 +41,7 @@ void main() {
     expect(player, 0);
   });
 
-  test('what starts after the lock went up closes at once', () async {
+  test('a menu opened while locked closes at once', () async {
     final g = LockGuard(isLocked: () => true);
     var closed = 0;
     final unguard = g.closeOnLock(() => closed++);
@@ -53,7 +53,7 @@ void main() {
     expect(closed, 1);
   });
 
-  test('a system dialog waits for the lock to lift', () async {
+  test('a system dialog waits for unlock', () async {
     var locked = true;
     final g = LockGuard(isLocked: () => locked);
     var opened = false;

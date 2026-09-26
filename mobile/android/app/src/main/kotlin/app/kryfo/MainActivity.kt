@@ -57,14 +57,9 @@ class MainActivity : FlutterFragmentActivity() {
         const val ENGINE_ID = "halo_engine"
     }
 
-    // one engine per process, made by HaloApplication when the process
-    // starts, and every activity attaches to that one. the old rule here
-    // built a fresh engine whenever the cached one was not drawing, which
-    // is every reopen after a recents swipe: each reopen ran a second
-    // main(), a second boot, a second set of relay subscriptions, and the
-    // old engine was never let go. two reopens put the process past 400
-    // mb, which is what xiaomi's killer picks. the detached-renderer crash
-    // that rule worked around has not reproduced on this flutter.
+    // one engine per process, made by HaloApplication, and every activity
+    // attaches to it. a fresh engine per reopen would run main() again with a
+    // second set of relay subscriptions and never let the old one go.
     override fun getCachedEngineId(): String? {
         val cache = FlutterEngineCache.getInstance()
         return if (cache.get(ENGINE_ID) != null) ENGINE_ID else null
@@ -84,11 +79,8 @@ class MainActivity : FlutterFragmentActivity() {
         super.onResume()
         // a file opened with another app is a decrypted copy in cache/open.
         // coming back here is the only sign that app is done with it, and a
-        // resume also follows every start - so this is both "the moment the
-        // player closes" and "on every app start". it used to be cleared only
-        // by the next open, so a video from a timed message that had burned
-        // sat there in plain text until some other file was opened. an app
-        // that still holds it open keeps its descriptor; the name is gone.
+        // resume also follows every start. an app that still holds it open
+        // keeps its descriptor; the name is gone.
         clearOpenCopies()
         // the notification ask is android's own dialog and it would open over
         // the app lock's pin pad: dart asks for it (askNotifications) once
@@ -111,16 +103,9 @@ class MainActivity : FlutterFragmentActivity() {
     private fun schedulePeriodicJob() = JobSetup.schedule(this)
 
     // ask for the notification permission at most once, and never after a
-    // refusal that android has made final.
-    //
-    // this used to run on every onResume with no guard. once someone has
-    // denied twice, android stops showing a dialog and answers instantly
-    // from its own record: the request activity opens, finishes, our
-    // activity resumes, onResume asks again. forty milliseconds a turn,
-    // forever. the window loses focus every turn, so the keyboard cannot
-    // stay up, taps and the back key land on a screen that is already
-    // going, and the phone burns battery until the app is killed. it
-    // needs android 13 or newer and a refusal; nothing else.
+    // refusal that android has made final. android answers a final refusal
+    // at once, so asking on every resume would loop: the request activity
+    // closes, this one resumes and asks again.
     private fun askForNotificationsOnce() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
         if (notifPermAsked) return
@@ -150,11 +135,8 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     // flag_secure on the window is not enough on every phone: flutter draws
-    // into a surfaceview whose own secure bit was latched when the flag went
-    // on, and one ui keeps it after the flag comes off. clearing meant the
-    // whole app stayed unscreenshottable until a restart. so the surface is
-    // told directly, and on the way off it is recreated, which is the one
-    // thing that reliably drops the bit.
+    // into a surfaceview with its own secure bit, so the surface is told
+    // directly.
     private var secureNow = false
     private fun shrinkJpeg(bytes: ByteArray, maxEdge: Int, quality: Int): ByteArray? {
         return try {
@@ -225,10 +207,8 @@ class MainActivity : FlutterFragmentActivity() {
         getSharedPreferences("kryfo_window", MODE_PRIVATE).edit().putBoolean("secure", on).apply()
         val surface = findSurface(window.decorView)
         surface?.setSecure(on)
-        // no surface recreate on the way off any more: it flashed the
-        // window on every toggle. one ui may keep the bit until the next
-        // start, and the switch that drives this says "after the next
-        // start" for that reason.
+        // no surface recreate on the way off, it flashes the window. one ui
+        // may keep the bit until the next start, and the switch says so.
         secureNow = on
     }
 
@@ -280,9 +260,6 @@ class MainActivity : FlutterFragmentActivity() {
                         )
                     }
                     "lastExit" -> result.success(lastExit())
-                    // wall-clock time this phone was switched on. a gap in
-                    // the app's heartbeat that spans it was the phone being
-                    // off, not the app being killed.
                     "helperApps" -> result.success(HelperPush.distributors(this))
                     "helperChosen" -> result.success(HelperPush.distributor(this))
                     "helperRegister" -> {
@@ -297,6 +274,9 @@ class MainActivity : FlutterFragmentActivity() {
                         HelperPush.unregisterAll(this)
                         result.success(true)
                     }
+                    // wall-clock time this phone was switched on. a gap in
+                    // the app's heartbeat that spans it was the phone being
+                    // off, not the app being killed.
                     "bootedAtMs" -> result.success(
                         System.currentTimeMillis() - android.os.SystemClock.elapsedRealtime()
                     )
@@ -357,7 +337,7 @@ class MainActivity : FlutterFragmentActivity() {
                     }
                     "setSecure" -> {
                         val on = call.argument<Boolean>("on") ?: false
-                        // engine outlives the window now, so this can be
+                        // the engine outlives the window, so this can be
                         // called with nothing attached
                         try {
                             setSecureWindow(on)
@@ -365,14 +345,10 @@ class MainActivity : FlutterFragmentActivity() {
                         }
                         result.success(null)
                     }
-                    // the wipe. clearing our own data is what the settings
-                    // "clear storage" button does: every file and preference
-                    // gone in one synchronous call, the process force-stopped
-                    // so the sticky service does not resurrect it, and the
-                    // next launch is onboarding. dart-side deletes plus
-                    // exit() lost a race: the preference clears were still
-                    // queued for disk when the process died, so the pin and
-                    // the onboarding flag came back.
+                    // the wipe: what the settings "clear storage" button does,
+                    // every file and preference gone in one synchronous call
+                    // and the process force-stopped. deletes from dart race
+                    // the preference writes still queued for disk.
                     "wipe" -> {
                         // the sticky listener goes first: if the clear is
                         // refused and dart exits, nothing brings the app back
@@ -382,9 +358,8 @@ class MainActivity : FlutterFragmentActivity() {
                             )
                         } catch (e: Exception) {
                         }
-                        // and the periodic job: it survived the clear and
-                        // started the process again within a minute, which
-                        // made a fresh identity and brought tor up.
+                        // and the periodic job, which survives the clear and
+                        // would start the process with a fresh identity
                         try {
                             applicationContext.getSystemService(JobScheduler::class.java)?.cancelAll()
                         } catch (e: Exception) {
@@ -546,10 +521,8 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     // the system's own save dialog, then a stream copy from the file into
-    // whatever the person chose. the file never goes through memory and never
-    // crosses the channel: a backup can be a year of photos, and the earlier
-    // way - the picker plugin taking the whole file as bytes - was the thing
-    // the streamed backup exists to avoid. false when they backed out.
+    // whatever the person chose. the file never goes through memory or the
+    // channel: a backup can be a year of photos. false when they backed out.
     private var pendingSave: MethodChannel.Result? = null
     private var pendingSavePath: String? = null
 
@@ -632,8 +605,6 @@ class MainActivity : FlutterFragmentActivity() {
         return mfr == "xiaomi" || mfr == "redmi" || mfr == "poco"
     }
 
-    // true when some settings page opened. the miui page first, the app's
-    // own details page when that is missing, false when both fail
     // why our process last stopped, from the system's own record. the
     // reason is what tells a kill from a crash from an update.
     private fun lastExit(): Map<String, Any?>? {
@@ -698,6 +669,8 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
+    // true when some settings page opened. the miui page first, the app's
+    // own details page when that is missing, false when both fail
     private fun openAutostartSettings(): Boolean {
         val miui = Intent().apply {
             setClassName(

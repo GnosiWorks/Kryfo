@@ -4,7 +4,7 @@ import 'package:kryfo/widgets/halo_sheet.dart';
 import 'package:kryfo/widgets/sheet_handle.dart';
 
 void main() {
-  testWidgets('showHaloSheet opens with the house shape and returns a value', (
+  testWidgets('showHaloSheet opens rounded and returns a value', (
     tester,
   ) async {
     String? got;

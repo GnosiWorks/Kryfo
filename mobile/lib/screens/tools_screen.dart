@@ -6,10 +6,8 @@ import '../widgets/stagger_in.dart';
 import '../widgets/stroke_icon.dart';
 import '../l10n/l10n.dart';
 
-// drawn in two passes so the iris can carry its own colour: one amber
-// outline, one violet centre. a single StrokeIcon paints every path the
-// same, and an eye that is all one colour reads as a symbol rather than
-// something looking back.
+// the eye is drawn in two passes so the iris can carry its own colour: a
+// single StrokeIcon paints every path the same
 const _eyeOutline = [
   'M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z',
 ];
@@ -446,10 +444,8 @@ class _ToolRow extends StatelessWidget {
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  // a little depth: the tile lifts towards its own tint at
-                  // the top left and keeps a hairline of it all round, so
-                  // the row reads as a thing to press rather than a flat
-                  // square sitting on the background.
+                  // the tile lifts towards its own tint at the top left, so
+                  // it reads as a thing to press
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,

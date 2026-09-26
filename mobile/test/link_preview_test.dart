@@ -28,13 +28,13 @@ void main() {
     expect(firstUrl('HTTP://x.y/z ok'), 'http://x.y/z');
     expect(firstUrl('no link here'), isNull);
   });
-  test('firstUrl leaves the sentence its punctuation', () {
+  test('firstUrl leaves trailing punctuation out', () {
     expect(firstUrl('see https://x.y/z.'), 'https://x.y/z');
     expect(firstUrl('(https://x.y/p).'), 'https://x.y/p');
     expect(firstUrl('https://x.y/w(1)'), 'https://x.y/w(1)');
     expect(firstUrl('is it https://x.y/q?'), 'https://x.y/q');
   });
-  test('senderPreview ships url, one-line capped title, and who fetched', () {
+  test('senderPreview carries url, capped title and fetcher', () {
     final pv = senderPreview('https://x.y/a', '  The  quiet\nfight  ');
     expect(pv['url'], 'https://x.y/a');
     expect(pv['title'], 'The quiet fight');

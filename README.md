@@ -1,47 +1,44 @@
-# kryfo
+# Kryfo
 
-a private messenger. no phone number, no email, no account. messages go end
-to end encrypted, routed over tor onion services or through nostr relays when
-the other side is offline.
+a private messenger for android. no phone number, no email, no account.
+messages are end to end encrypted and go phone to phone over tor onion
+services, or wait on nostr relays when the other side is offline.
 
-## status: pre-alpha, unaudited
+pre-alpha and not audited yet. THREAT_MODEL.md says what it protects against
+and what it doesn't.
 
-this is early software built by one person. it has not had an independent
-security review. the crypto rests on standard libraries (libsignal, tor,
-sqlcipher, nip-44/59) but the integration is new and unproven. do not rely on
-it for anything where being wrong would hurt you. read THREAT_MODEL.md for a
-straight account of what it does and does not protect against.
+## features
 
-known caveat in the current build: databases created before the random-key
-fix use a weaker key derived from the install time. wipe and re-onboard to
-upgrade.
+- chats and groups with photos, videos, files, voice notes, replies,
+  reactions and pins
+- polls in groups and rooms, and search across all your chats, on the phone
+- disappearing messages and burner rooms that expire with everything in them
+- an identity made of three words, no phone number. optional public handle
+- app lock with a pin, a wipe pin and a decoy pin
+- encrypted backups and moving to a new phone
+- tools that work offline: see what a photo gives away, clean photos and
+  videos, qr codes, file encryption with age
+- tor bridges (obfs4), and a check-ins mode that is easier on the battery
+- 15 languages, including persian and arabic
+- no contact upload, no analytics, no push service
 
-## how it works
+## build
 
-- identity is a key pair. your handle is three words derived from it.
-- direct messages go device to device over tor onion services.
-- when a contact is offline, messages wait on public nostr relays, sealed so
-  the relay learns nothing about who is talking or what is said.
-- contents use the signal double ratchet. storage is encrypted with sqlcipher.
-- no address book upload, no analytics, no push service, nothing phones home.
+see BUILDING.md. short version:
 
-## building
+    cd engine && ./build.sh
+    cd ../mobile && flutter build apk --release --split-per-abi
 
-see BUILDING.md for the full toolchain and steps. in short: build the go
-engine (`cd engine && ./build.sh`), then the flutter app (`cd mobile &&
-flutter build apk --release --target-platform android-arm64`).
+## verify
 
-the go engine (libhalo.so) has a reproducible build so anyone can confirm the
-binary in a release matches this source; see repro/README.md.
+release apks are reproducible. `repro/verify.sh` builds a tagged commit in
+the same container f-droid uses and compares it with the published apk, see
+repro/README.md.
 
-## layout
+the release signing certificate (sha-256):
 
-- `mobile/` flutter app
-- `engine/` go engine: identity, tor, nostr transport, crypto ffi
-- `relay/` optional fast relay (store-and-forward, no auth yet, not for
-  production)
-- `repro/` reproducible engine build
+    10928a61642c5cc471a99869e2ea4e2d4d70026e797dfba48c0f306b5b3473db
 
 ## license
 
-GPL-3.0.
+GPL-3.0

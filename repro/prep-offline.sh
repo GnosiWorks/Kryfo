@@ -1,9 +1,6 @@
 #!/bin/bash
-# one-time prep for the offline build. everything here survives a dying
-# connection: wget -c resumes from the exact byte, the retry loops just keep
-# hammering, and go modules download one at a time so a drop only loses the
-# module in flight. run it, walk away, run it again if it stops - every step
-# skips what's already done.
+# one-time prep for the offline build. every step resumes after a dropped
+# connection and skips what is already done, so run it again if it stops.
 set -e
 cd "$(dirname "$0")"
 mkdir -p dl

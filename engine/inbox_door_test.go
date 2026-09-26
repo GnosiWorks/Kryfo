@@ -30,7 +30,7 @@ func knock(t *testing.T, addr, line string) string {
 	return strings.TrimSpace(reply)
 }
 
-func TestDoor(t *testing.T) {
+func TestInboxDoor(t *testing.T) {
 	mu.Lock()
 	inboxDrained()
 	mu.Unlock()

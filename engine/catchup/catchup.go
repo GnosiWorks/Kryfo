@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a relay hands back stored events newest first and stops at its cap, a
-// hundred on ours. a phone that was connected the whole time never meets
-// that cap. one that was away does: a photo is a hundred wraps on its own,
-// and whatever sat behind the newest hundred was never asked for again, so
-// a file could not complete and an old-stamped text could be buried for
-// good. this walks back from the oldest event the first answer held, a page
-// at a time, until the relay has nothing older inside the window.
+// hundred on ours, and a photo alone is a hundred wraps. this walks back from
+// the oldest event the first answer held, a page at a time, until the relay
+// has nothing older inside the window.
 package catchup
 
 import (
@@ -33,9 +30,6 @@ type Result struct {
 // between Cursor and Top. A relay whose backlog takes longer than one
 // check-in is allowed keeps its Mark, so the next check-in spends its time on
 // ground it has not covered yet.
-//
-// Without this a relay with more backlog than one window re-fetched the same
-// first pages every time and its oldest events never arrived at all.
 type Mark struct {
 	Top    nostr.Timestamp
 	Cursor nostr.Timestamp
@@ -47,10 +41,8 @@ func (m Mark) Started() bool { return m.Top > 0 }
 // done. It returns the Mark to keep for next time; a zero Mark means the
 // window is finished and the anchor may move.
 //
-// It is one downward walk, not two. An earlier version paged the newly
-// arrived gap first and the old tail second, and a gap too big for one
-// window ate every window after it: the tail never moved and the oldest
-// events never came. One cursor, descending, cannot starve itself.
+// It is one downward walk, not two: a new gap paged before the old tail can
+// eat every window, while one descending cursor cannot starve itself.
 func Continue(ctx context.Context, fetch Page, since, oldest nostr.Timestamp,
 	limit, maxPages int, deliver func(nostr.Event) bool, m Mark) (Result, Mark) {
 

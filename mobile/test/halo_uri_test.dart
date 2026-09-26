@@ -1,9 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/main.dart';
 
-// the pairing link is the one string a stranger types or scans by hand, so a
-// round-trip that quietly loses a field costs someone a contact. this replaces
-// the flutter counter template, which tested a widget this app has never had.
+// a pairing link that quietly loses a field costs someone a contact
 
 void main() {
   test('v1 link round-trips', () {
@@ -17,13 +15,13 @@ void main() {
     expect(parsed['v'], '1');
   });
 
-  test('anything that is not a share link is refused', () {
+  test('refuses anything but a share link', () {
     expect(parseHaloUri(''), isNull);
     expect(parseHaloUri('https://example.com'), isNull);
     expect(parseHaloUri('kryfo://other?id=a&onion=b'), isNull);
   });
 
-  test('a link missing a field is refused, not half-read', () {
+  test('refuses a link missing a field', () {
     expect(parseHaloUri('kryfo://share?onion=b&xpub=c'), isNull);
     expect(parseHaloUri('kryfo://share?id=a&xpub=c'), isNull);
     // v1 without xpub, v2 without bundle
@@ -41,7 +39,7 @@ void main() {
     expect(v3['bundle'], 'BUN');
   });
 
-  test('a first-contact key is kept only at full length', () {
+  test('keeps a first-contact key only at full length', () {
     final good = 'f' * 64;
     expect(
       parseHaloUri('kryfo://share?id=a&onion=b&v=3&bundle=B&fc=$good')!['fc'],

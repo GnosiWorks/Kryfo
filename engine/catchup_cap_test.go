@@ -40,7 +40,7 @@ func settlePair(u string, cap time.Duration) (done func(), cancelled *int32) {
 	return settled, &cancels
 }
 
-func TestCatchupCapDropsASlowRelay(t *testing.T) {
+func TestCatchupCapDropsSlowRelay(t *testing.T) {
 	atomic.StoreInt32(&catchupActive, 0)
 	settled, cancels := settlePair("wss://slow.example", 120*time.Millisecond)
 
@@ -71,7 +71,7 @@ func TestCatchupCapDropsASlowRelay(t *testing.T) {
 	}
 }
 
-func TestCatchupCapLeavesAQuickRelayAlone(t *testing.T) {
+func TestCatchupCapLeavesQuickRelay(t *testing.T) {
 	atomic.StoreInt32(&catchupActive, 0)
 	settled, cancels := settlePair("wss://quick.example", 2*time.Second)
 
@@ -127,7 +127,7 @@ func TestCatchupCapWithSeveralRelays(t *testing.T) {
 }
 
 // the cap is the whole point: it has to be well under the job's window.
-func TestCatchupCapIsWellUnderTheJobWindow(t *testing.T) {
+func TestCatchupCapUnderJobWindow(t *testing.T) {
 	if catchupCap > 45*time.Second {
 		t.Fatalf("catchupCap is %s; the job has under three minutes and the "+
 			"check-in waits for every relay in turn", catchupCap)
@@ -135,7 +135,7 @@ func TestCatchupCapIsWellUnderTheJobWindow(t *testing.T) {
 }
 
 // three drops in a row buy one longer window, then it goes back to normal.
-func TestThreeDropsBuyOneLongerWindow(t *testing.T) {
+func TestThreeDropsBuyLongWindow(t *testing.T) {
 	u := "wss://stubborn.example"
 	catchupMu.Lock()
 	delete(catchupDrops, u)
@@ -174,7 +174,7 @@ func TestThreeDropsBuyOneLongerWindow(t *testing.T) {
 
 // a relay that finishes clears its record, so an old bad patch does not earn
 // it a long window later.
-func TestFinishingClearsTheDropCount(t *testing.T) {
+func TestFinishClearsDropCount(t *testing.T) {
 	u := "wss://recovers.example"
 	catchupMu.Lock()
 	delete(catchupDrops, u)
@@ -201,11 +201,8 @@ func TestFinishingClearsTheDropCount(t *testing.T) {
 }
 
 // a relay carries one subscription per contact, and each catches up on its
-// own. keyed by relay alone they shared one start time, one drop count and
-// one place in the backlog: a cap firing for one found the other's start
-// already cleared and recorded a drop after "0.0s", and one contact's walk
-// could step over part of another contact's backlog as if it were done.
-func TestTwoContactsOnOneRelayKeepTheirOwnCatchup(t *testing.T) {
+// own: its own start time, drop count and place in the backlog.
+func TestCatchupIsPerContact(t *testing.T) {
 	u := "wss://shared.example"
 	a, b := catchupKey(u, "aaaa"), catchupKey(u, "bbbb")
 

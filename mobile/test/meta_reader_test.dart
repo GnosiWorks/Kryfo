@@ -23,7 +23,7 @@ void expectAthens(GpsFix? g, String from) {
 void main() {
   group('jpeg', () {
     for (final le in [true, false]) {
-      test('camera exif, ${le ? 'little' : 'big'} endian', () {
+      test('reads camera exif, ${le ? 'little' : 'big'} endian', () {
         final r = read(jpeg(tiff: cameraTiff(le: le)));
         expect(r.kind, MetaKind.jpeg);
         expect(r.status, MetaStatus.found);
@@ -46,7 +46,7 @@ void main() {
       expect(r.gps!.lat, lessThan(0));
     });
 
-    test('xmp, iptc, comment, second image, trailer', () {
+    test('finds xmp, iptc, comment, second image, trailer', () {
       final r = read(
         jpeg(
           xmp: xmpGps,
@@ -66,12 +66,12 @@ void main() {
       expect(r.extra, contains('samsung trailer'));
     });
 
-    test('a motion photo is seen', () {
+    test('spots a motion photo', () {
       final r = read(jpeg(trailer: [0, 0, 0, 24, ...t('ftypmp42'), 1, 2, 3]));
       expect(r.embeddedVideo, true);
     });
 
-    test('found nothing is not the same as could not read', () {
+    test('tells clean apart from unreadable', () {
       final clean = read(jpeg());
       expect(clean.status, MetaStatus.nothing);
       final cut = read(jpeg(eoi: false));
@@ -79,13 +79,13 @@ void main() {
       expect(cut.why, isNotNull);
     });
 
-    test('which way up, alone, is nothing', () {
+    test('orientation alone reads as nothing', () {
       final r = read(jpeg(tiff: orientationOnlyTiff(6)));
       expect(r.status, MetaStatus.nothing);
       expect(r.orientation, 6);
     });
 
-    test('a blanked location says so', () {
+    test('reports a blanked location', () {
       final tiff = cameraTiff();
       final s = String.fromCharCodes(tiff);
       final at = s.indexOf(String.fromCharCodes([37, 0, 0, 0, 1, 0, 0, 0]));
@@ -98,7 +98,7 @@ void main() {
     });
   });
 
-  test('png: exif, xmp, text keys, save time, credentials, trailer', () {
+  test('png: finds exif, xmp, text and trailer', () {
     final r = read(
       png(
         tiff: cameraTiff(),
@@ -119,7 +119,7 @@ void main() {
     expect(read(png()).status, MetaStatus.nothing);
   });
 
-  test('webp: exif and xmp chunks', () {
+  test('webp: finds exif and xmp chunks', () {
     final r = read(webp(tiff: cameraTiff(), xmp: xmpGps));
     expect(r.kind, MetaKind.webp);
     expectAthens(r.gps, 'exif');
@@ -127,7 +127,7 @@ void main() {
     expect(read(webp()).status, MetaStatus.nothing);
   });
 
-  test('accuracy, aperture and shutter are read and still counted', () {
+  test('reads accuracy, aperture and shutter', () {
     final r = read(jpeg(tiff: cameraTiff()));
     expect(r.accuracyM, 5);
     expect(r.fNumber, 2);
@@ -135,7 +135,7 @@ void main() {
     expect(r.otherExifTags >= 3, true);
   });
 
-  test('heif: the exif and xmp items', () {
+  test('heif: finds the exif and xmp items', () {
     final r = read(heif(tiff: cameraTiff(), xmp: xmpGps));
     expect(r.kind, MetaKind.heif);
     expectAthens(r.gps, 'exif');
@@ -144,7 +144,7 @@ void main() {
     expect(read(heif()).status, MetaStatus.nothing);
   });
 
-  test('heif: a motion video, an unknown box, an unknown item, a tail', () {
+  test('heif: flags motion, unknown boxes, items and tails', () {
     final motion = read(heif(after: box('mpvd', t('ftypmp42 moving'))));
     expect(motion.embeddedVideo, true);
     expect(motion.status, MetaStatus.found);
@@ -156,7 +156,7 @@ void main() {
   });
 
   group('mp4', () {
-    test('place, maker and the creation stamp', () {
+    test('reads place, maker and creation stamp', () {
       final r = read(mp4(place: true, maker: true, created: 3840000000));
       expect(r.kind, MetaKind.mp4);
       expect(r.gps!.lat, closeTo(37.9838, 1e-6));
@@ -167,7 +167,7 @@ void main() {
       expect(r.videoTags.length, 2);
     });
 
-    test('quicktime keys', () {
+    test('reads quicktime keys', () {
       final r = read(mp4(keys: true));
       expect(r.gps!.lat, closeTo(-33.8568, 1e-6));
       expect(r.gps!.lon, closeTo(151.2153, 1e-6));
@@ -175,13 +175,13 @@ void main() {
       expect(r.model, 'iPhone 15');
     });
 
-    test('a uuid box counts, a clean file is nothing', () {
+    test('a uuid box counts as found', () {
       expect(read(mp4(uuid: true)).status, MetaStatus.found);
       expect(read(mp4()).status, MetaStatus.nothing);
     });
   });
 
-  test('not a picture or a video is unknown, not unreadable', () {
+  test('other files read as unknown', () {
     final r = read(
       Uint8List.fromList(t('%PDF-1.7 just a document, long enough')),
     );
@@ -218,14 +218,14 @@ void main() {
       });
     });
 
-    test('a portrait jpeg keeps its turn and still reads as nothing', () {
+    test('a portrait jpeg keeps orientation and reads clean', () {
       final out = stripPictureBytes(jpeg(tiff: cameraTiff()))!;
       final r = read(out);
       expect(r.status, MetaStatus.nothing);
       expect(r.orientation, 6);
     });
 
-    test('mp4, through a file', () async {
+    test('mp4 comes out clean through a file', () async {
       final d = await Directory.systemTemp.createTemp('meta');
       final f = File('${d.path}/v.mp4');
       await f.writeAsBytes(
@@ -315,7 +315,7 @@ void main() {
       expect(read(jpeg(tiff: tiff)).status, isNot(MetaStatus.unknown));
     });
 
-    test('a box that claims the whole disk is unreadable, not a read', () {
+    test('a huge box size reads as unreadable', () {
       final b = Uint8List.fromList([
         0,
         0,

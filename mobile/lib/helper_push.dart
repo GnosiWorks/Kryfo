@@ -1,28 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the helper app mode: unifiedpush, spoken directly to the distributor.
-//
-// a helper (ntfy is the usual one) keeps one light connection for every app
-// on the phone and wakes each when something arrives. kryfo's wake-up
-// carries nothing: the helper's server is told an endpoint to knock and
-// never what the knock is about. on a knock kryfo fetches over tor, the
-// same check-in the fifteen-minute job runs.
-//
-// what the helper's server can learn is the timing: that this endpoint was
-// knocked, and when. that is the whole cost of the mode and it is said on
-// the screen. the relay sends decoy knocks so the timing is not the truth.
-//
-// none of this works until the relay can knock. that change is its own diff
-// (~/kryfo-notes/delivery/relay-knock.diff) and its own deploy, so the mode
-// stays out of the picker until then: a dead option in a settings screen is
-// what we just finished removing.
-//
-// kryfo listens on a pairwise address per contact, so the shape of the
-// registration is the whole privacy question. it is sixteen endpoints, always
-// sixteen, whatever the contact count: see helper_slots.dart. the empty ones
-// are registered with a random address nothing is ever sent to, so the helper
-// sees the same sixteen topics on every phone and the relay cannot tell a
-// dummy from a real one. below sixteen contacts no two real addresses share an
-// endpoint, so the relay links nothing.
+// the knock carries nothing; on a knock kryfo checks in over tor. the
+// helper's server learns only the timing, and the relay sends decoy knocks.
+// always sixteen endpoints, see helper_slots.dart. the mode stays out of the
+// picker until the relay can knock.
 import 'dart:async';
 import 'dart:convert';
 
@@ -134,8 +115,7 @@ class HelperPush {
         });
         if (done == true) ok++;
       } on PlatformException {
-        // the rest still go: a distributor that refuses one is not a reason
-        // to leave the other fifteen unregistered
+        // one refusal does not stop the rest
       }
     }
     return ok;

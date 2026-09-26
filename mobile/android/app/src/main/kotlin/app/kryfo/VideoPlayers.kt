@@ -9,10 +9,8 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.view.TextureRegistry
 
 // the in-app video player: android's own MediaPlayer drawing into a flutter
-// texture. no player library - the framework has one, and a library would
-// be one more thing to vendor, build and trust. the file never leaves the
-// app: playing it used to mean handing it to another app, which could keep
-// a copy, index it or put it in its recents.
+// texture, so no player library to vendor and trust. the file never leaves
+// the app, where another app could keep a copy or index it.
 class VideoPlayers(private val textures: TextureRegistry) {
     private class Player(val producer: TextureRegistry.SurfaceProducer, val mp: MediaPlayer) {
         var prepared = false

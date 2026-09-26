@@ -47,7 +47,7 @@ func TestRoundTrip(t *testing.T) {
 	}
 }
 
-func TestOpensWhatAgeItselfWrote(t *testing.T) {
+func TestOpensFilesFromAge(t *testing.T) {
 	r, _ := age.NewScryptRecipient("pw")
 	r.SetWorkFactor(12)
 	var buf bytes.Buffer
@@ -69,7 +69,7 @@ func TestOpensWhatAgeItselfWrote(t *testing.T) {
 	}
 }
 
-func TestAgeItselfOpensOurs(t *testing.T) {
+func TestAgeOpensOurFiles(t *testing.T) {
 	locked := lockBytes(t, []byte("from kryfo"), "pw")
 	id, _ := age.NewScryptIdentity("pw")
 	r, err := age.Decrypt(bytes.NewReader(locked), id)

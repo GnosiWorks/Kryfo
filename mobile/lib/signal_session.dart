@@ -25,7 +25,7 @@ class SignalSession {
   }) async {
     if (_ready) return;
 
-    // clamp priv per RFC 7748 - libsignal expects already-clamped scalar
+    // clamp priv per RFC 7748: libsignal expects an already-clamped scalar
     final clamped = Uint8List.fromList(xPrivBytes);
     clamped[0] &= 0xF8;
     clamped[31] &= 0x7F;
@@ -33,9 +33,7 @@ class SignalSession {
     final pub = Curve.decodePoint(Uint8List.fromList([0x05, ...xPubBytes]), 0);
     final priv = Curve.decodePrivatePoint(clamped);
     // do NOT zero `clamped` here: decodePrivatePoint keeps a reference to this
-    // buffer, and the identity private key must live for the whole session.
-    // wiping it corrupts every signature this identity makes. transient
-    // plaintext buffers are the right place to zeroize, not the identity.
+    // buffer, and wiping it corrupts every signature this identity makes
     identityKeyPair = IdentityKeyPair(IdentityKey(pub), priv);
 
     registrationId = await _loadOrGenRegId(database);
@@ -81,9 +79,8 @@ class SignalSession {
       dlog('signal: generated signed prekey id=${fresh.id} self-verify = $ok');
     }
 
-    // keep prekeys 0-9 topped up. check which ids are actually present and
-    // fill the gaps - counting by length breaks once any prekey is consumed
-    // (a gap at id 0 means an incoming first message can't find its key).
+    // keep prekeys 0-9 topped up by the ids present, not by count: once one
+    // is consumed a count misses the gap, and a first message finds no key
     final pkRows = await database.query('prekeys', columns: ['id']);
     final have = pkRows.map((r) => r['id'] as int).toSet();
     final missing = [
@@ -148,8 +145,8 @@ class SignalSession {
   }
 }
 
-// prekey generation is heavy curve math - a fresh identity took long enough
-// on weak phones that android called the app dead. run it off the ui thread.
+// prekey generation is heavy curve math, slow enough on weak phones for
+// android to call the app dead, so it runs off the ui thread
 Uint8List _genSignedPreKeyTask(Uint8List idPairBytes) {
   final pair = IdentityKeyPair.fromSerialized(idPairBytes);
   return generateSignedPreKey(pair, 1).serialize();

@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-//
-// all nine kinds from the brief, each one built, rendered to a real PNG and
-// written out so a real decoder can read it back. the decoding half is
-// tool/qr_decode_check.sh, which runs zxing over what this writes and
-// compares it to the .expected file beside it.
-//
-// the point is not that our own builder agrees with itself - qr_payload_test
-// already does that - but that a scanner made by somebody else gets back
-// exactly the characters that were typed, escaping included.
+// renders every kind to png for tool/qr_decode_check.sh, which reads them back
+// with zxing: another scanner has to get exactly the characters typed
 
 import 'dart:convert';
 import 'dart:io';
@@ -17,9 +10,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/tools/qr_payload.dart';
 import 'package:kryfo/tools/qr_png.dart';
 
-// a network name and password with every character the WIFI: format uses as
-// punctuation. if escaping is wrong, a decoder sees a different password -
-// or a truncated one - and nobody finds out until a phone will not join.
+// every character the WIFI: format uses as punctuation, so bad escaping
+// shows up as a different password
 const nastySsid = r'net;with,colons:and"quotes\back';
 const nastyPass = r'p;a,s:s"w\ord8';
 
@@ -85,7 +77,7 @@ final cases = <String, ({QrKind kind, Map<String, String> f, WifiLock lock})>{
 };
 
 void main() {
-  test('all nine kinds from the brief exist', () {
+  test('all nine kinds exist', () {
     expect(QrKind.values.length, 9);
     expect(QrKind.values.map((k) => k.name).toSet(), {
       'link',
@@ -100,7 +92,7 @@ void main() {
     });
   });
 
-  test('every kind builds something a scanner can be given', () {
+  test('every kind builds a payload', () {
     for (final e in cases.entries) {
       final b = buildQr(e.value.kind, e.value.f, lock: e.value.lock);
       expect(b.problem, isNull, reason: '${e.key}: ${b.problem}');
@@ -110,7 +102,7 @@ void main() {
   });
 
   test(
-    'the wifi escaping puts a backslash before every reserved character',
+    'wifi escapes every reserved character',
     () {
       final b = buildQr(QrKind.wifi, {
         'ssid': nastySsid,
@@ -127,7 +119,7 @@ void main() {
     },
   );
 
-  testWidgets('render all nine to png for a real decoder', (t) async {
+  testWidgets('renders all nine to png for a decoder', (t) async {
     final dir = Directory('build/qr_check')..createSync(recursive: true);
     for (final f in dir.listSync()) {
       f.deleteSync();

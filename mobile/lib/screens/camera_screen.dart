@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the in-app camera. a photo taken for kryfo never exists outside kryfo:
-// the plugin's temp file is read and shredded, the bytes are stripped of
-// exif before anything else sees them, and only the stripped picture goes
-// on to the chat. nothing lands in the camera roll unless the person asks
-// for a copy. photo and video, front and back, flash. that is all.
+// the in-app camera. a photo taken for kryfo never exists outside kryfo: the
+// plugin's temp file is read and shredded, and only the stripped bytes go on
+// to the chat. nothing lands in the camera roll unless the person asks.
 import 'dart:async';
 import 'dart:io';
 
@@ -220,11 +218,10 @@ class _CameraScreenState extends State<CameraScreen>
       // the plugin wrote a file with everything the sensor knows. it goes
       // now, and only the stripped bytes live on
       await shredFile(x.path);
-      // the shrink first, on the raw bytes: it reads the orientation tag
-      // and turns the pixels upright, then writes a jpeg with no tags at
-      // all. the strip after it is the belt to that brace. same size and
-      // quality as a gallery pick; a sensor jpeg was two to three times
-      // the bytes over tor, and came out sideways once its tag was gone.
+      // the shrink first, on the raw bytes: it turns the pixels upright from
+      // the orientation tag and writes a jpeg with no tags at all. the strip
+      // after it is the belt to that brace. same size and quality as a
+      // gallery pick.
       final small = await _shrink(raw);
       final stripped = stripJpegMetadata(small);
       final clean = stripped;

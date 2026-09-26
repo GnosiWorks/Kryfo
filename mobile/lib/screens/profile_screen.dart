@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// profile screen. telegram-style: big avatar, kryfo id, display name,
-// supporter badge block (only if a tier is set), gear into settings.
-// staggered fade-up reveal, avatar scale-in, badge glow pulse.
+// profile screen: avatar, kryfo id, the supporter badge when a tier is set,
+// and the gear into settings.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
@@ -71,7 +70,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     showHaloToast(context, l10n.profileCopied(what));
   }
 
-  // a child that fades + slides up, delayed by [order] so sections stagger.
+  // a child that fades and slides up, delayed by [order] so sections stagger
   Widget _reveal(int order, Widget child) {
     final start = (order * 0.12).clamp(0.0, 0.8);
     final anim = CurvedAnimation(
@@ -180,8 +179,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // the three words are the name. a separate one
-                          // was stored here and shown to nobody.
+                          // the three words are the name
                           Flexible(
                             child: Text(
                               id,
@@ -544,7 +542,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 }
 
-// tap target that scales down slightly on press for tactile feel.
+// tap target that scales down slightly on press
 class _PressRow extends StatefulWidget {
   final Widget child;
   final VoidCallback onTap;

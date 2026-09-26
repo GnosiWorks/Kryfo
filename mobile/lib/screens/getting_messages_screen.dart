@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// getting_messages_screen.dart - how new messages reach this phone, in
-// words a person who has never heard of tor can choose between.
+// how new messages reach this phone, in words a person who has never heard
+// of tor can choose between.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -27,10 +27,8 @@ class GettingMessagesScreen extends StatefulWidget {
 class _GettingMessagesScreenState extends State<GettingMessagesScreen> {
   Timer? _tick;
   bool _busy = false;
-  // what a notification shows on the lock screen. it had a screen of its own
-  // until the wake-up picker that shared it was removed, and what was left
-  // was one switch on an otherwise blank page. how messages arrive and what
-  // they say when they do are the same question.
+  // what a notification shows on the lock screen: how messages arrive and
+  // what they say when they do are the same question
   bool _hidePreview = true;
 
   @override

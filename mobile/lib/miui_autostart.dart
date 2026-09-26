@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// miui_autostart.dart - onboarding nag for xiaomi devices.
-// miui kills background apps unless autostart is enabled per-app.
-// no way to enable it programmatically, so we explain + open the right
-// settings panel. both asks sit on the house sheet like every other ask.
+// miui kills background apps unless autostart is on for them, and no api
+// turns it on, so we explain and open the settings page.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -34,14 +32,11 @@ Future<bool> openAutostartSettings() async {
   }
 }
 
-// non-xiaomi phones (samsung etc) kill background apps via battery
-// optimization. ask android to exempt us so messages still land when
-// kryfo is closed. miui keeps the autostart flow below.
+// battery optimization kills background apps, so ask android to exempt us
+// and messages still land while kryfo is closed
 Future<void> maybeShowBackgroundPrompt(BuildContext context) async {
   // xiaomi needs both: autostart so the system may bring kryfo back, and
-  // the battery exemption so it is allowed to stay awake once it is back.
-  // this used to stop after the autostart page, and a redmi that had said
-  // yes to autostart slept through a whole night unexempted.
+  // the battery exemption so it may stay awake once it is back
   if (await isMiui()) {
     if (context.mounted) await maybeShowMiuiPrompt(context);
   }
@@ -56,8 +51,7 @@ Future<void> maybeShowBackgroundPrompt(BuildContext context) async {
   await prefs.setBool(_battPrefKey, true);
 }
 
-// force-show the background prompt on demand (settings row). ignores the
-// seen-flag so it can be re-triggered any time, and re-checks grant state.
+// for the settings row: ignores the seen flags and checks the grant again
 Future<void> forceShowBackgroundPrompt(BuildContext context) async {
   if (await isMiui()) {
     if (context.mounted) await _askAutostart(context);

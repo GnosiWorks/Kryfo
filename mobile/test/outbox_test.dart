@@ -4,9 +4,7 @@ import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/outbox.dart';
 
 // a stranger's first message is the one envelope the far side checks for
-// proof-of-work. the outbox used to rebuild it without the nonce, so every
-// retried opener died silently at the gate. this holds the retry against the
-// exact test the receiver runs.
+// proof-of-work, so a retried opener has to keep its nonce
 
 const _sender = SenderInfo(
   haloId: 'thumb-behave-boring',
@@ -37,7 +35,7 @@ void main() {
     expect(verifyPow(env.message, env.powNonce!, powBits), true);
   });
 
-  test('a row with no nonce owes one until the peer has answered', () {
+  test('a row without nonce needs pow until answered', () {
     final row = <String, Object?>{'plaintext': 'x', 'group_id': null};
     expect(redeliveryNeedsPow(row, backPaired: false), true);
     expect(redeliveryNeedsPow(row, backPaired: true), false);
@@ -53,7 +51,7 @@ void main() {
   });
 
   test(
-    'without a nonce the envelope carries none, so the caller must grind',
+    'no row nonce means no envelope nonce',
     () async {
       final env = unwrapMessage(
         await wrapRedelivery({

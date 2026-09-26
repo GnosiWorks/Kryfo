@@ -1,17 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // finding a message's row in a lazy list, and landing on it.
-//
-// a lazy list only has the rows near the viewport, and everything it says
-// about the rest is an estimate made from those. the old jump trusted the
-// estimate: scroll to a guess, correct once, done. the guess moved with
-// where the view happened to be, and rows kept growing after the one
-// correction, so a second tap on the same pin could land somewhere else.
-//
-// here a row says where it is while it exists. a jump to a row that is
-// already built goes straight to it. one that is not built is walked
-// towards, a viewport at a time in the direction the built rows say it
-// lies, and once it exists the landing is corrected every frame until it
-// has held still.
+// a lazy list only has the rows near the viewport and estimates the rest, so
+// a built row says where it is, an unbuilt one is walked towards a viewport
+// at a time, and once it exists the landing is corrected every frame until
+// it holds still.
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 

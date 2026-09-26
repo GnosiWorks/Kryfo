@@ -4,53 +4,38 @@ two parts: the go engine (libhalo.so), then the flutter app that bundles it.
 
 ## toolchain
 
-- flutter 3.41.7 stable (dart 3.11.5)
-- go 1.23.4
+- flutter 3.41.7
+- go 1.25.14
 - android ndk r28c (28.2.13676358)
+- jdk 17
 
-the exact go and ndk versions matter for the reproducible build, see repro/.
+release builds pin all of these in repro/Dockerfile.
 
 ## engine
 
     cd engine
     ./build.sh
 
-finds the ndk from ANDROID_NDK_HOME or $ANDROID_HOME/ndk, builds arm64,
-armeabi-v7a and x86_64, writes them into the app's jniLibs. fully offline:
-deps are vendored and the tor/openssl objects cache in engine/.gocache, so
-only the first build pays the native compile.
+builds arm64-v8a, armeabi-v7a and x86_64 into the app's jniLibs. it finds the
+ndk from ANDROID_NDK_HOME or $ANDROID_HOME/ndk. deps are vendored, so it runs
+offline.
 
-**never run `go mod vendor` in engine/.** three headers in engine/vendor are
-patched by hand for 32-bit phones and that command silently removes the
-patches; the build still succeeds and tor never connects on armeabi-v7a.
-the list and the reason are in engine/VENDOR_PATCHES.md. after editing any
-of those headers build with `HALO_FULL=1 ./build.sh`: go's cache does not
-notice them.
-
-## gradle, offline
-
-builds run with `--offline` and everything they need sits in the gradle
-cache. a fresh machine, or a plugin bump that wants a newer android gradle
-plugin (flutter_secure_storage 10.3 wants 8.13.2), needs one online run first:
-
-    cd mobile/android && ./gradlew :app:lintDebug
-
-after that the offline builds work again. release lint is on and warnings
-fail the build; `android/app/lint.xml` lists the checks we chose to ignore
-and why.
+don't run `go mod vendor` in engine/. three vendored headers are patched for
+32-bit phones (engine/VENDOR_PATCHES.md) and it drops the patches. after
+touching them, build with `HALO_FULL=1 ./build.sh`, go's cache doesn't see
+them.
 
 ## app
 
     cd mobile
     flutter pub get --offline
-    flutter build apk --release --target-platform android-arm64
+    flutter build apk --release --split-per-abi
 
-arm64 only, matching the engine. debug build for a connected device:
+gradle runs offline. a fresh machine needs one online run first:
 
-    cd mobile/android
-    ./gradlew --offline assembleDebug -Ptarget-platform=android-arm64
+    cd mobile/android && ./gradlew :app:lintDebug
 
 ## signing
 
-release signing uses a keystore that is not in this repo (key.properties and
-*.jks are gitignored). debug builds sign with the standard debug key.
+release signing needs key.properties and a keystore, neither is in the repo.
+debug builds use the debug key.

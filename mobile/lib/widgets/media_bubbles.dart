@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// media widgets shared with the group chat. these started life inside
-// chat_screen and got promoted so groups can render voice/file/photo
-// without dragging that whole file in. chat_screen still has its own
-// copies for now - dedup later, after groups settle.
+// media widgets shared with the group chat: voice, file and photo.
+// todo: chat_screen still has its own file card, fold it in here.
 
 import 'dart:async';
 import 'dart:io';
@@ -49,11 +47,9 @@ IconData _fileGlyph(String name) {
   return Icons.insert_drive_file_outlined;
 }
 
-// a picture sent through the file picker arrives as a file and was drawn as
-// a row with a paperclip, so a photo looked like a document. if the name
-// says it is an image, show it as one; the name underneath keeps what the
-// file card was for. a name that lies is caught by the decode: errorBuilder
-// falls all the way back to the plain card.
+// a picture sent through the file picker arrives as a file. if the name says
+// it is an image, show it as one with the name underneath. a name that lies
+// is caught by the decode: errorBuilder falls back to the plain card.
 const _imageExts = {
   '.jpg',
   '.jpeg',
@@ -225,21 +221,16 @@ class VoiceBubbleState extends State<VoiceBubble> {
   @override
   void initState() {
     super.initState();
-    // don't call _load() here - it allocates a native media handle per bubble,
-    // and a chat with several voice notes exhausts android's codec pool so the
-    // later ones fail to play. just check the file exists (cheap); the real
-    // load happens lazily on first tap in _toggle.
+    // no _load() here: it takes a native media handle per bubble, and a chat
+    // with several voice notes exhausts android's codec pool. the real load
+    // waits for the first tap in _toggle.
     _checkExists();
     _player.playerStateStream.listen((st) {
       if (!mounted) return;
       setState(() => _playing = st.playing);
-      // android takes the codec back when it wants it, and something else
-      // playing audio can stop us too. the bubble used to go on believing
-      // it was loaded for the life of the widget, so the next tap called
-      // play() on a player with no source: the note appeared to pause on
-      // its own and then started again from the beginning. losing the
-      // source means it has to be loaded again, and _toggle puts the
-      // position back.
+      // android takes the codec back when it wants it, and other audio can
+      // stop us too. a lost source has to be loaded again, and _toggle puts
+      // the position back.
       if (st.processingState == ProcessingState.idle) {
         _ready = false;
       }
@@ -254,19 +245,15 @@ class VoiceBubbleState extends State<VoiceBubble> {
         }
       }
     });
-    // only rebuild on position ticks while actually playing. idle bubbles
-    // streaming setState every tick was a real scroll cost.
+    // rebuild on position ticks only while playing: idle bubbles rebuilding
+    // every tick cost scroll frames
     _player.positionStream.listen((p) {
       if (mounted && _playing) setState(() => _pos = p);
     });
   }
 
-  // flag missing files, and read just the clip length with a throwaway player
-  // so the bubble can show the real duration. the probe is disposed right after
-  // so we don't hold a codec handle per bubble (holding them all was the
-  // exhaustion that stopped later notes playing).
-  // duration read once per file, ever. opening a chat with many voice notes used
-  // to spin up + tear down a player per bubble and froze weak phones.
+  // flag missing files, and read the clip length once per file with a
+  // throwaway player, disposed right after so no bubble holds a codec handle
   static final Map<String, Duration> _durCache = {};
 
   Future<void> _checkExists() async {
@@ -297,16 +284,13 @@ class VoiceBubbleState extends State<VoiceBubble> {
   }
 
   Future<void> _load() async {
-    // old notes can point at a file that got wiped/moved between installs.
-    // flag it so the bubble shows 'audio unavailable' instead of a dead shell.
+    // an old note can point at a file that is gone: show 'audio unavailable'
     if (!await File(widget.path).exists()) {
       if (mounted) setState(() => _missing = true);
       return;
     }
-    // setFilePath can fail if the player's native resources got recycled (it
-    // happens after a bubble's been alive a while) or the file isn't flushed
-    // yet on a just-recorded note. retry a couple times before giving up so the
-    // bubble doesn't render as a dead half-shell.
+    // setFilePath can fail when the player's native resources were recycled
+    // or a just-recorded note is not flushed yet, so it gets a few tries
     for (var attempt = 0; attempt < 3; attempt++) {
       try {
         _dur = await _player.setFilePath(widget.path) ?? Duration.zero;
@@ -503,8 +487,8 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
       return;
     }
     // the permission prompt eats the long-press: by the time the user grants,
-    // the finger is gone and nothing would ever stop the recording. bail out
-    // and let them hold again.
+    // the finger is gone and nothing would stop the recording. they hold
+    // again.
     if (!_live) {
       _busy = false;
       return;

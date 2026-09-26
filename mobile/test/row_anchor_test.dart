@@ -65,7 +65,7 @@ double _centreOf(WidgetTester t, String id) => t.getCenter(find.text(id)).dy;
 
 void main() {
   for (final reversed in [true, false]) {
-    testWidgets('lands on a far row, twice, in the same place '
+    testWidgets('lands on a far row repeatably '
         '(reversed: $reversed)', (t) async {
       const n = 600;
       final c = ScrollController();
@@ -89,7 +89,7 @@ void main() {
     });
   }
 
-  testWidgets('a row that is not in the list ends the jump', (t) async {
+  testWidgets('a missing row ends the jump', (t) async {
     final c = ScrollController();
     final a = RowAnchors();
     await t.pumpWidget(_Host(c, a, true, 50));

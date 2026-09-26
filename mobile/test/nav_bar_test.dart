@@ -33,7 +33,7 @@ Widget host({
 );
 
 void main() {
-  testWidgets('four tabs, tools second, equal widths', (t) async {
+  testWidgets('four equal tabs with tools second', (t) async {
     await t.pumpWidget(host(active: HaloTab.chats));
     final xs = [
       for (final l in ['Chats', 'Tools', 'Support', 'Me'])
@@ -44,7 +44,7 @@ void main() {
     }
   });
 
-  testWidgets('a tap picks, a long press on me opens dev and nowhere else', (
+  testWidgets('tap picks, long press on me opens dev', (
     t,
   ) async {
     final picked = <HaloTab>[];
@@ -65,7 +65,7 @@ void main() {
     expect(dev, 1);
   });
 
-  testWidgets('talkback: one button a tab, the open one says selected', (
+  testWidgets('one button per tab, open one selected', (
     t,
   ) async {
     final h = t.ensureSemantics();
@@ -103,7 +103,7 @@ void main() {
     expect(t.getSize(box).width, lessThanOrEqualTo((320 - 12) / 4));
   });
 
-  testWidgets('the pill pops in, and lands inside 300 ms', (t) async {
+  testWidgets('the pill settles within 300 ms', (t) async {
     await t.pumpWidget(host(active: HaloTab.chats));
     await t.pumpWidget(host(active: HaloTab.tools));
     await t.pump(const Duration(milliseconds: 140));

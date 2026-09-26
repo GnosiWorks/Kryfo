@@ -1,13 +1,9 @@
 package main
 
-// halo dm relay. stores nip-17 gift wraps (kind 1059) and per-conversation
-// relay lists (kind 10050), nothing else.
-//
-// writes are open: senders wrap with throwaway keys and cannot auth as the
-// recipient, that is the whole point of the gift wrap.
-// reads on 1059 are nip-42 gated: you only get wraps for an address you
-// proved you own. stops bulk scraping of the wrap firehose.
-// 10050 reads stay open, they exist to be discovered.
+// dm relay: stores nip-17 gift wraps (kind 1059) and relay lists (kind 10050).
+// writes are open, senders use throwaway keys and cannot auth as the recipient.
+// 1059 reads are nip-42 gated to the authed address, so wraps cannot be
+// scraped in bulk. 10050 reads stay open, they exist to be discovered.
 
 import (
 	"crypto/tls"
@@ -33,9 +29,6 @@ var (
 
 const (
 	maxContentBytes = 128 * 1024
-	// we sweep at 14 days, so a longer expiration would be a promise we do
-	// not keep. the extra day absorbs clock skew - a phone an hour fast
-	// should not have its mail refused.
 	// we sweep at 14 days; the extra day absorbs clock skew so a phone an
 	// hour fast does not have its mail refused.
 	maxExpiry       = wrapTTL + 24*time.Hour
@@ -136,7 +129,7 @@ func main() {
 	relay.RejectEvent = append(relay.RejectEvent, rejectEvent)
 	relay.RejectFilter = append(relay.RejectFilter, rejectFilter)
 
-	// a wrap that has been collected, or that nobody came for, does not stay
+	// wraps go after 14 days, collected or not
 	startSweeper(&db)
 
 	relay.Router().HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte("ok")) })

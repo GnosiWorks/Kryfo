@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the v2 backup file, written and read a record at a time.
-//
-// v1 was one json blob with the database base64'd inside it, encrypted in
-// one go. every step held the whole thing in memory, several times over,
-// and it could never carry a year of photos on a four-gigabyte phone. v2
-// is a plain sequence of sealed records, streamed to and from disk, so
-// memory stays flat whatever the size:
+// the v2 backup file, streamed a sealed record at a time so memory stays
+// flat whatever the size:
 //
 //   "KRYFOBK2"          8 bytes, the magic
 //   salt                16 bytes, for the passphrase key
@@ -14,13 +9,10 @@
 //     len               4 bytes big-endian, the sealed length
 //     sealed            len bytes
 //
-// the manifest is record 0: the identity, the secrets, the prefs and the
-// list of files with their sizes, in order. each file follows as
-// ceil(size / chunk) chunk records. the end record is empty and is what
-// says the file is whole; a truncated file has no end. how a record is
-// sealed is the cipher's business and lives in the engine; here the index
-// and the type are handed over so a record moved elsewhere in the file, or
-// given another meaning, fails to open.
+// record 0 is the manifest (identity, secrets, prefs, files with sizes).
+// each file follows as ceil(size / chunk) chunks. the empty end record says
+// the file is whole. index and type go to the cipher so a moved or
+// retyped record fails to open.
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -32,8 +24,7 @@ const recManifest = 1;
 const recChunk = 2;
 const recEnd = 3;
 
-/// seals and opens one record. index and type are the caller's, and a
-/// record must only open at the index and type it was sealed with.
+/// a record must only open at the index and type it was sealed with
 abstract class ChunkCipher {
   Uint8List seal(int index, int type, Uint8List plain);
 
@@ -82,10 +73,8 @@ Uint8List _be32(int v) => Uint8List.fromList([
   v & 255,
 ]);
 
-/// writes a whole backup. [manifest] must carry 'files' as a list of
-/// BackupFileEntry json; 'chunk' is filled in when absent. the files are
-/// read from [root]/name in that order. [onProgress] is told bytes written
-/// of bytes total, for a bar.
+/// [manifest] must carry 'files' as BackupFileEntry json, read from
+/// [root]/name in that order. 'chunk' is filled in when absent.
 Future<void> writeBackup({
   required String outPath,
   required Uint8List salt,
@@ -127,8 +116,8 @@ Future<void> writeBackup({
         while (left > 0) {
           final n = left < chunk ? left : chunk;
           final got = await raf.readInto(buf, 0, n);
-          // the file shrank under us and the manifest promised more. the
-          // reader trusts sizes, so this is a broken backup, not a short one
+          // the file shrank under us. the reader trusts sizes, so this is a
+          // broken backup, not a short one
           if (got < n) throw BackupDamaged('${f.name} shorter than listed');
           await put(recChunk, Uint8List.sublistView(buf, 0, n));
           left -= n;
@@ -225,11 +214,9 @@ Future<Map<String, dynamic>> readBackupManifest(
   }
 }
 
-/// streams the files out. [want] decides which names are written and
-/// where; a null destination skips that file without opening its records,
-/// so a peek at one file is cheap. the end record is required: without it
-/// the backup is treated as cut short, whatever was already written.
-/// [onProgress] is told bytes handled of bytes total.
+/// [want] maps a name to its destination; null skips the file without
+/// opening its records. without the end record the backup counts as cut
+/// short, whatever was already written.
 Future<void> extractBackup(
   String path,
   ChunkCipher cipher, {

@@ -1,23 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// strip an mp4 of everything that is not the picture. mov and 3gp are the
-// same box format and are covered by the same walk; mkv is not and is left
-// alone. the location, the make and model, the encoder and the creation
-// date all live in boxes beside the video, never inside it:
-//
-//   udta   user data. ©xyz (location), loci (3gp location), ©mak ©mod
-//          ©swr ©day and whatever else the camera felt like adding
-//   meta   the itunes-style key list some phones write instead
-//   uuid   xmp, when present
-//   mvhd, tkhd, mdhd   creation and modification stamps at fixed offsets
-//
-// nothing is ever deleted. deleting shifts every byte after it, and the
-// chunk offset tables point at absolute positions in the file, so one
-// removed box makes the video unplayable. instead a box is renamed to
-// 'free', the spec's no-op, and its payload zeroed in place; a stamp is
-// zeroed where it sits. sizes do not change, offsets do not move. the walk
-// seeks and writes through the file, so a long clip never goes through
-// memory. pure dart, no dependency, so the offline and f-droid builds stay
-// as they are.
+// strip an mp4 (and mov, 3gp: same box format) of everything that is not
+// the picture. location, make, model, encoder and dates live in boxes beside
+// the video: udta, meta, uuid (xmp), and the stamps in mvhd, tkhd, mdhd.
+// nothing is deleted, since the chunk offset tables point at absolute
+// positions: a box is renamed 'free' and zeroed in place, a stamp is zeroed
+// where it sits. the walk seeks and writes, so a long clip never sits in
+// memory.
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -28,8 +16,7 @@ const _stamped = {'mvhd', 'tkhd', 'mdhd'};
 // containers worth looking inside. udta is not here: it is neutered whole
 const _containers = {'moov', 'trak', 'mdia', 'minf', 'stbl', 'edts', 'dinf'};
 
-/// the containers this walk understands. mkv is a different format and is
-/// left alone rather than pretended at.
+/// the containers this walk understands. mkv is a different format.
 bool videoNameNeedsStrip(String name) {
   final n = name.toLowerCase();
   return n.endsWith('.mp4') ||
@@ -42,11 +29,9 @@ bool videoNameNeedsStrip(String name) {
 const _free = [0x66, 0x72, 0x65, 0x65]; // 'free'
 final _zeros = Uint8List(64 * 1024);
 
-/// strips [path] in place. true when the file was walked end to end and
-/// every identifying box neutered. null when a size field points past the
-/// file or under its own header, which is a file we cannot vouch for: a
-/// caller drops a null rather than passing on what it could not read. a
-/// file that is not an mp4 at all comes back null for the same reason.
+/// strips [path] in place. true when every identifying box was neutered,
+/// null when it is not an mp4 or a size field cannot be trusted: a caller
+/// drops a null rather than pass on what it could not read.
 Future<bool?> stripMp4Metadata(String path) async {
   final raf = await File(path).open(mode: FileMode.append);
   try {

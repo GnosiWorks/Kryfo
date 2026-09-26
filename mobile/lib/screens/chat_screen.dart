@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// chat screen. message bubbles, composer, live receive over tor.
-// matches 08_complete_spec.html "the everyday" chat tile.
+// chat screen: bubbles, composer, live receive over tor.
 
 import '../lock_state.dart';
 import 'dart:typed_data';
@@ -94,10 +93,7 @@ import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
 import '../lock_guard.dart' show lockGuard, onScreen;
 
-// persists last-seen cipher per peer across ChatScreen instances
-// chunk indices already accepted by the peer, per media msg_uid. lets a
-// retry resume instead of re-uploading the whole file over tor.
-// unsent drafts kept per peer so text survives leaving a chat.
+// unsent drafts per peer, so text survives leaving a chat
 final Map<String, String> _draftPerPeer = {};
 // newest message ms seen when the chat was last left, per peer.
 final Map<String, int> _lastReadPerPeer = {};
@@ -141,9 +137,8 @@ class _Msg {
   final bool secure;
   bool sending;
   bool failed = false;
-  // online, a failed row retries itself and still reads as pending. these
-  // count the goes; past the cap it is shown as failed and the tap is the
-  // only way on.
+  // online, a failed row retries itself and reads as pending. past the cap
+  // it shows as failed and the tap is the only way on.
   int autoRetries = 0;
   bool gaveUp = false;
   // stored at an address they do not read yet: not sent, not failed. the
@@ -276,15 +271,12 @@ Widget _fileCard(_Msg msg, bool isOut) {
 }
 
 void _openFullImage(BuildContext context, String path, {bool secure = false}) {
-  // drop the composer's focus first, else popping the viewer restores it and
-  // the keyboard springs up over the chat.
+  // drop the composer's focus first, else popping the viewer brings the
+  // keyboard back up over the chat
   FocusManager.instance.primaryFocus?.unfocus();
-  // the flag is per-window, so it can only be on while this screen is up.
-  // that is exactly the granularity we want: the photo is protected, the
-  // conversation around it is not.
-  // a screen that already forced the flag (a room, a marked chat) keeps
-  // it: the flag is one bool, and dropping it here left the room open to
-  // screenshots for the rest of the session
+  // the flag is per window, so the photo is protected and the chat around
+  // it is not. a screen that already forced it (a room, a marked chat)
+  // keeps it: the flag is one bool
   final wasForced = appState.secureForced;
   if (secure && !wasForced) appState.forceSecure(true);
   Navigator.of(context)
@@ -374,8 +366,7 @@ bool _cannotSend() => !appState.online || !appState.torReady;
 
 // a failed send only reads as failed when the phone cannot send, or when
 // it has retried itself to the cap. online, the row keeps going on its own
-// and shows as pending - the tap-to-retry pill was appearing on every slow
-// photo and reading as a real failure.
+// and shows as pending.
 bool _sendLooksFailed(_Msg m) => m.failed && (m.gaveUp || _cannotSend());
 
 String _friendlyStatus(String raw) {
@@ -398,9 +389,6 @@ String _fmtFull(DateTime d) {
 
 String _fmtTime(DateTime d) => hourMinute(d);
 
-// remaining time on a burning message, formatted compactly:
-// 4m 23s / 38s / 1h 02m. clamps at 0.
-// human-friendly label for a burn duration in seconds.
 String _humanBurn(int seconds) {
   if (seconds < 60) return l10n.chatS(whole(seconds));
   if (seconds < 3600) return l10n.chatM(whole(seconds ~/ 60));
@@ -421,8 +409,7 @@ String _fmtBurn(int burnAtMs) {
   return l10n.chatS2(whole(s));
 }
 
-// last-used ghost settings, remembered for the session
-// isolate entrypoint for compute() - grinds first-contact pow.
+// isolate entrypoint for compute(): grinds first-contact pow
 int _grindPowTask(String seed) => grindPow(seed, powBits);
 
 int _lastBurnSeconds = 300;
@@ -435,8 +422,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool _unreadResolved = false;
   bool _ghost = _lastGhost; // restored from last use this session.
   // marks the next message so the other phone blocks screenshots of it. off
-  // by default: most messages do not need it and the cost is that neither
-  // side can screenshot the chat.
+  // by default, since then neither side can screenshot the chat.
   bool _secureNext = false;
   bool _disguise = false;
   int _burnSeconds = _lastBurnSeconds; // restored from last use this session.
@@ -543,10 +529,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool _suppressSticky = true;
   final List<_Msg> _messages = [];
 
-  // every path that touches the list ends here. the day dividers key off
-  // "is this message a different day from the one before it", so an
-  // out-of-order list emits two dividers for one day - and both grab the
-  // same GlobalKey, which takes the whole chat out of the widget tree.
+  // every path that touches the list ends here. an out-of-order list gives
+  // one day two dividers, and their shared GlobalKey takes the whole chat
+  // out of the widget tree.
   void _normaliseMessages() {
     _messages.sort((a, b) => a.when.compareTo(b.when));
     final seen = <String>{};
@@ -618,21 +603,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // every message against the same pre-session state, or they all come out as
   // prekey messages fighting over one one-time key and only the first lands.
   Future<void> _encryptGate = Future.value();
-  // seed from the qr/contact key so the relay path works on the first send,
-  // even on the scanned side before any session exists. the session lookup in
-  // initState only refreshes it; it must not be the sole source.
+  // seeded from the qr/contact key so the first send works before any
+  // session exists. the session lookup in initState only refreshes it.
   late String? _peerXPub = widget.peerXPub.isEmpty ? null : widget.peerXPub;
   bool _backPaired = false;
-  // the message we're currently replying to, or null. set by tapping
-  // 'reply' on the long-press picker, cleared after send or by the X
-  // in the composer's quote bar.
+  // the message being replied to. cleared after send or by the X in the
+  // quote bar.
   _Msg? _replyTo;
 
-  // search-in-chat. _searching swaps the header for the search bar.
-  // _query is the live trimmed term; _matches holds indices into
-  // _messages that contain it; _matchPos is which hit is "current".
-  // _matchKeys gives each matched bubble a GlobalKey so we can scroll
-  // it into view.
+  // search in chat. _matches are indices into _messages, _matchPos the
+  // current hit, _matchKeys let a hit be scrolled into view.
   bool _searching = false;
   final _searchCtrl = TextEditingController();
   String _query = '';
@@ -801,9 +781,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _burnTick = Timer.periodic(const Duration(milliseconds: 100), (_) {
       if (!mounted) return;
       final now = DateTime.now().millisecondsSinceEpoch;
-      // one pass, and no list unless something actually burnt. most chats
-      // carry no ghosts at all, and this runs ten times a second for as long
-      // as the chat is open.
+      // one pass, and no list unless something burnt: this runs ten times
+      // a second while the chat is open
       List<_Msg>? expired;
       var anyGhost = false;
       for (final m in _messages) {
@@ -853,8 +832,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void _onAppStateChanged() {
     if (!mounted) return;
     _retryFailedOnReconnect();
-    // only touch the message list when this thread actually changed -
-    // reloading on every app notify was a lag spike in long chats.
+    // only touch the message list when this thread changed: reloading on
+    // every app notify is a lag spike in long chats
     final rev = appState.chatRevOf(widget.peerHaloId);
     if (rev != _lastRev) {
       _lastRev = rev;
@@ -909,8 +888,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
-  // lock state loads once on open, so a reply landing while the sender sits
-  // in the locked chat never flipped it. re-check whenever something arrives.
+  // a reply can land while the sender sits in the locked chat, so re-check
+  // whenever something arrives
   void _refreshRequestState() {
     if (_accepted && _peerEngaged && _recvCount > 0) return;
     session.isAccepted(widget.peerHaloId).then((v) {
@@ -924,10 +903,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
   }
 
-  // when tor comes back (down -> reachable), re-fire anything that failed while
-  // offline. only touches messages already marked failed - never the ones still
-  // 'sending' (those have a live future). fires once per reconnect via the
-  // _wasReachable edge, so a stream of status ticks won't spam resends.
   void _retryAny(_Msg m) {
     if (m.mediaPath != null) {
       _retryImage(m);
@@ -957,10 +932,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
+  // when tor comes back, re-fire what failed while offline, never rows still
+  // sending. the _wasReachable edge makes it once per reconnect.
   void _retryFailedOnReconnect() {
     final reachable = _torReadyToSend();
     if (reachable && !_wasReachable) {
-      // clear any stale send error - we're reconnected and about to resend.
+      // clear any stale send error, we're about to resend
       if (_status.isNotEmpty) setState(() => _status = '');
       for (final m in _messages) {
         if (m.direction == 'out' && m.failed && m.msgUid != null) {
@@ -977,21 +954,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _wasReachable = reachable;
   }
 
-  // fast path for a live message landing while you're in the chat. pulls only
-  // rows newer than the newest we hold and tacks them on, so the list doesn't
-  // rebuild from scratch (that full reload was eating the bubble-in animation
-  // and felt laggy). falls back to a full reload if anything looks off - an
-  // edit, a delete, a reaction, or a row we already have.
-  // a delivery receipt flipped `delivered` in the db for a message already on
-  // screen. _tryAppendNew won't catch it (no new row), so re-read the flag for
-  // any out-message not yet marked delivered and update the bubble in place.
-  //
-  // the send state is re-read too. a file that took minutes to upload was
-  // finished by the screen that started it; leave the chat and come back
-  // and this screen's copy of the row still said sending, so the receipt
-  // landed on a bubble that hid its time and tick for as long as it lived.
-  // the database is the one that knows: sent or delivered there, it is not
-  // sending here.
+  // a receipt flips `delivered` in the db for a bubble already on screen,
+  // which _tryAppendNew won't catch, so re-read it in place. the send state
+  // too: a long upload may have been finished by an earlier screen, and the
+  // database is the one that knows.
   Future<void> _refreshDelivered() async {
     final pending = _messages
         .where(
@@ -1021,6 +987,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (changed && mounted) setState(() {});
   }
 
+  // fast path for a live message: append rows newer than the newest we hold,
+  // so a full rebuild does not eat the bubble-in animation
   Future<void> _tryAppendNew() async {
     if (!_loaded || _searching) {
       _loadMessages();
@@ -1032,9 +1000,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final rows = await session.messagesAfter(widget.peerHaloId, lastRowid);
     if (!mounted) return;
     final have = _messages.map((m) => m.msgUid).toSet();
-    // any new row we don't already hold? if not, fall back to a full reload -
-    // covers edits/reactions/deletes and clock-skew (a received msg whose
-    // sent_at is older than our local newest, e.g. voice notes).
+    // no new row we don't already hold means a full reload: covers edits,
+    // reactions, deletes and clock skew (a received msg older than our newest)
     final brandNew = rows
         .where(
           (r) =>
@@ -1086,10 +1053,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       _normaliseMessages();
     });
     _applySecureContent();
-    // a message landing while we're actually reading this chat left the home
-    // badge lit - clear it. but this runs on every appState notify, and a
-    // backed-out chat is still in the tree for a while, so it would wipe a dot
-    // nobody had seen. only the open chat gets to clear.
+    // clear the home badge for what we are reading. a backed-out chat stays
+    // in the tree for a while, so only the open chat gets to clear.
     if (fresh.any((m) => m.direction != 'out') &&
         currentChatPeer == widget.peerHaloId) {
       unawaited(session.clearUnread(widget.peerHaloId));
@@ -1185,9 +1150,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _scrollToCurrentMatch();
   }
 
-  // rough-jump to the match's approximate position (so it gets built),
-  // then ensureVisible to center it precisely. avoids a scroll-to-index
-  // package dependency while still landing reliably for normal chats.
+  // rough jump so the match gets built, then ensureVisible to centre it.
+  // saves a scroll-to-index dependency.
   void _scrollToCurrentMatch() {
     if (_matches.isEmpty || !_scrollCtrl.hasClients) return;
     final idx = _matches[_matchPos];
@@ -1215,17 +1179,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
   }
 
-  // floating reaction picker - WhatsApp-style pill above the long-pressed
-  // bubble. uses an OverlayEntry so it can sit outside the chat list and
-  // avoid clipping. tap outside to dismiss.
+  // the reaction pill above the long-pressed bubble, in an OverlayEntry so
+  // the list does not clip it
   Future<void> _showEmojiPickerAt(
     BuildContext bubbleContext,
     _Msg target,
   ) async {
     HapticFeedback.selectionClick();
-    // legacy messages (predating v5 migration) get a local uid assigned
-    // on first reaction. peers won't know this uid so the reaction stays
-    // local-only, but the UX works.
+    // a row without a uid gets a local one. the peer doesn't know it, so the
+    // reaction stays local.
     if (target.msgUid == null) {
       final uid = _newMsgUid();
       target.msgUid = uid;
@@ -1262,8 +1224,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       reactTop = bubbleBottom + 10;
       menuTop = reactTop + pickerH + 8;
     }
-    // pin the bar to the message's side so reply + edit never
-    // run off the right edge. 12px margin from screen edge.
+    // pin the bar to the message's side so it never runs off the edge
     final alignRight = target.direction == 'out';
 
     if (mounted) setState(() => _liftedUid = target.msgUid);
@@ -1435,7 +1396,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         ),
                       ),
                     ),
-                    // a tap opens a file now, so sharing it lives here
+                    // a tap opens a file, so sharing it lives here
                     if (target.filePath != null &&
                         target.fileName != 'voice.wav') ...[
                       const SizedBox(height: 6),
@@ -1713,7 +1674,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _setPinned(String uid, bool on) async {
-    // for both of us: the other side mirrors it, as a group always has
+    // for both of us: the other side mirrors it
     await appState.pinInChat(widget.peerHaloId, uid, on);
     if (!mounted) return;
     setState(() {
@@ -1829,7 +1790,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     await Future.delayed(kLeaveGone);
     await session.deleteMessage(m.msgUid!);
     if (mounted) setState(() => _messages.remove(m));
-    // the home row was still previewing the message just unsent
+    // the home row still previews the message just unsent
     unawaited(appState.refreshContacts());
     await _sendUnsendFrame(m.msgUid!);
   }
@@ -1859,8 +1820,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   // every jump to a message lands through here: a pin, a quoted reply, a
-  // saved message opened from outside. see row_anchor.dart for why the old
-  // guess-and-correct-once missed on the second tap.
+  // saved message opened from outside. see row_anchor.dart.
   final RowAnchors _anchors = RowAnchors();
 
   void _scrollToMessage(_Msg m) => _landOn(_rowKey(m));
@@ -2033,7 +1993,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         m.reactions[''] = emoji;
       }
     });
-    // persist locally
     if (remove) {
       await session.removeReaction(m.msgUid!, '');
     } else {
@@ -2169,27 +2128,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
       _unreadResolved = true;
     }
-    // any reloaded 'sending' out-message is dead - its send future doesn't
-    // survive a reload, so it can never resolve. flip to failed so you get
-    // tap-to-retry instead of a permanent '3 hops' zombie. runs every load,
-    // not just first, so old stuck messages always become retryable. live
-    // sends from THIS session aren't in `loaded` yet, so they're untouched.
+    // a reloaded 'sending' row has no send future left to resolve it, so it
+    // becomes failed (or parked) and retryable
     final staleCutoff = DateTime.now().subtract(const Duration(seconds: 60));
-    // while tor is still warming, a pending send isn't dead - it's queued,
-    // and the reconnect retry fires it the moment tor lands. calling it
-    // failed here killed the send pill mid-warmup.
-    // 'reachable' was the wrong bar though: a phone whose onion will not
-    // publish sits at 'publishing' for good, so this never ran and the
-    // pill stayed a zombie. carrying traffic is what matters here.
+    // while tor warms up a pending send is queued, not dead: the reconnect
+    // retry fires it. torReady rather than reachable, since an onion that
+    // will not publish never reaches 'reachable'.
     final torUp = appState.torReady;
     final backPaired = await session.isBackPaired(widget.peerHaloId);
     for (final m in loaded) {
-      // under a minute old the send future may still be running in the
-      // background - marking it failed here caused dup resends.
-      // a file still going out is not stale, however old its row: the row
-      // is saved before the first slice leaves, and a video over tor takes
-      // minutes. marked failed here, the retry tick sent the whole file a
-      // second time the moment the first pass ended.
+      // under a minute old the send future may still be running. a file
+      // still going out is never stale: its row is saved before the first
+      // slice leaves, and a failed mark would make the retry send it twice.
       if (m.msgUid != null && mediaInflight.contains(m.msgUid)) continue;
       if (torUp &&
           m.direction == 'out' &&
@@ -2204,7 +2154,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
     }
     // a reload rebuilds every row; the retry count rides across, or a
-    // failed send never reached its cap
+    // failed send never reaches its cap
     final carry = {
       for (final m in _messages)
         if (m.msgUid != null) m.msgUid!: (m.autoRetries, m.gaveUp),
@@ -2262,13 +2212,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _landOn(_rowKey(_messages[idx]));
   }
 
-  // hasClients is not enough: the controller attaches before the list has
-  // been laid out, and a jump then reads a null minScrollExtent - which takes
-  // the whole chat screen down with it.
-  // .position asserts exactly one attached scroll view, and during a route
-  // transition two can be attached at once - the assert then throws mid
-  // layout, which paints nothing and looks like a dead conversation.
-  // .positions is the safe plural form.
+  // hasClients is not enough: the controller attaches before layout, and a
+  // jump then reads a null minScrollExtent. .position asserts one attached
+  // view, and a route transition can attach two, so .positions it is.
   bool get _scrollReady =>
       _scrollCtrl.positions.length == 1 &&
       _scrollCtrl.positions.first.hasContentDimensions;
@@ -2279,9 +2225,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   void _scrollToEnd({bool instant = false}) {
     if (_jumpActive) return;
-    // reversed list: the newest message lives at offset 0, so "scroll to end"
-    // is just jump/animate to 0. no post-layout settling needed - the list is
-    // naturally pinned to the bottom.
+    // reversed list: the newest message lives at offset 0
     if (!_scrollCtrl.hasClients) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _scrollReady) _scrollCtrl.jumpTo(0);
@@ -2300,17 +2244,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
-  // the global receiver in main.dart owns the engine inbox and routes every
-  // incoming message through _applyIncomingPayload (which handles reactions,
-  // previews, unsends and empty-body control frames correctly). this used to
-  // drain the same inbox in parallel and save control frames as blank stub
-  // bubbles - a race. now it just pulls any new/changed rows from the db.
+  // the receiver in main.dart owns the engine inbox and routes every message
+  // through _applyIncomingPayload. this only pulls new rows from the db.
   Future<void> _checkInbox() async {
     if (!_loaded || _searching) return;
-    // cheap tick: pull only rows strictly newer than our newest by rowid and
-    // append them. never full-reload here - that rebuilds the whole list every
-    // second and makes everything blink + snaps the scroll. edits/reactions/
-    // previews come through their own refresh paths.
+    // cheap tick: only rows newer than our newest. never a full reload here,
+    // once a second that blinks the list and snaps the scroll.
     final lastRowid = _messages.isEmpty
         ? 0
         : _messages.map((m) => m.rowid).reduce((a, b) => a > b ? a : b);
@@ -2325,7 +2264,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         )
         .toList();
     if (brandNew.isEmpty) return;
-    // genuinely new rows arrived - let the existing append path build them.
+    // new rows: the append path builds them
     await _tryAppendNew();
   }
 
@@ -2377,14 +2316,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       });
       return;
     }
-    // fire-and-forget. optimistic ✓ now; failure marks tap-to-retry
-    // stays in 'sending' until the transport replies below.
-    // before the peer back-pairs with us, force direct-onion so their
-    // drain triggers the back-pair flow. nostr would dead-end because
-    // they aren't subscribed to our xpub yet. once we receive anything
-    // from them, _backPaired flips and we can use nostr.
-    // try direct tor first if peer hasn't back-paired and we have their onion.
-    // on tor failure / timeout, fall back to nostr store-and-forward.
+    // before the peer back-pairs, direct onion first so their drain runs the
+    // back-pair flow: they don't follow our xpub on nostr yet. on failure,
+    // fall back to nostr store-and-forward.
     final sendFuture = Future<String>(() async {
       var torWait = 0;
       while (!_torReadyToSend() && torWait < 300000) {
@@ -2398,9 +2332,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         if (tor == 'ok') return 'ok';
         dlog('chat send: tor direct failed ($tor), trying nostr');
       }
-      // peer xpub may be null on a fresh back-pair / reconnect (it's loaded
-      // once at open). re-fetch from the session before giving up, so the relay
-      // route is available instead of dead-ending on 'no transport'.
+      // the xpub may be null on a fresh back-pair or reconnect. re-fetch it
+      // from the session before giving up on the relay route.
       var xpub = _peerXPub;
       xpub ??= widget.peerXPub.isEmpty ? null : widget.peerXPub;
       xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
@@ -2545,10 +2478,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
-  // resend a failed image: re-read the saved file, re-encrypt, and push it
-  // back through the same tor-first-then-nostr path the first send used.
-  // flash a one-shot amber ring on a bubble when a reaction lands on it.
-  // _rippleUid clears after the animation so it only fires once.
+  // a one-shot amber ring on a bubble when a reaction lands on it
   void _flashReaction(_Msg msg) {
     HapticFeedback.selectionClick();
     if (msg.msgUid == null) return;
@@ -2560,8 +2490,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   // a retry has nothing to do for a file that went, or is going. a reload
-  // can paint a row failed from a stale read; sending on that word alone
-  // put the same file on the wire twice.
+  // can paint a row failed from a stale read, and sending on that alone
+  // puts the same file on the wire twice.
   Future<bool> _alreadyGoing(_Msg msg) async {
     final uid = msg.msgUid;
     if (uid == null) return false;
@@ -2586,6 +2516,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     return false;
   }
 
+  // resend a failed image from the saved file
   Future<void> _retryImage(_Msg msg) async {
     final path = msg.mediaPath;
     if (path == null) return;
@@ -2610,7 +2541,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     ).then((result) => _finishMediaSend(msg, result));
   }
 
-  // resend failed voice / file the same way - re-read from disk, chunk, go.
+  // a failed voice note or file, the same way
   Future<void> _retryMedia(_Msg msg) async {
     final path = msg.filePath;
     if (path == null || msg.fileName == null) return;
@@ -2636,7 +2567,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     ).then((result) => _finishMediaSend(msg, result));
   }
 
-  // bottom sheet: camera or gallery, instead of jumping straight to gallery.
   void _showAttachSheet() {
     HapticFeedback.selectionClick();
     showHaloSheet<void>(
@@ -2760,9 +2690,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (!await src.exists()) return;
     if (_requestPending) setState(() => _sentCount++);
     var bytes = await src.readAsBytes();
-    // the recorder's own file is the voice as spoken, before any disguise.
-    // the copy kept with the message is below; this one has done its job and
-    // used to stay in the cache for good, which quietly undid the disguise.
+    // the recorder's own file is the voice before any disguise, so it goes
+    // now. the copy kept with the message is below.
     src.delete().ignore();
     if (_disguise) bytes = disguiseWav(bytes);
     final msgUid = _newMsgUid();
@@ -2811,12 +2740,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     ).then((result) => _finishMediaSend(msg, result));
   }
 
-  // rough wire time for a payload. each 16k slice is its own encrypted
-  // message with a full tor round trip, call it ~1.1s a slice, and base64
-  // inflates the bytes by a third on the way out.
+  // rough wire time: 16k slices, base64 adds a third, five in flight at
+  // about two seconds a round over tor
   String _wireEstimate(int bytes) {
-    // five slices in flight, about two seconds a round over tor. the old
-    // figure was one slice at a time.
     final slices = ((bytes * 4 / 3) / (16 * 1024)).ceil();
     final secs = ((slices / 5).ceil() * 2.2).round();
     if (secs < 20) return l10n.chatAFewSeconds;
@@ -2920,12 +2846,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     return ok == true;
   }
 
-  // the picker hands back a path to its own copy, and the file is copied
-  // from there straight into the media folder: no byte array crosses the
-  // plugin channel and nothing holds the whole file in memory. with
-  // withData the plugin read the file into a java array, sent it over the
-  // channel and dart kept a third copy; on a 32-bit phone the bytes came
-  // back null and a picked file silently went nowhere.
+  // the picker hands back a path to its own copy, copied from there into the
+  // media folder, so no byte array crosses the plugin channel. withData
+  // keeps three copies in memory and gives null bytes on 32-bit phones.
   Future<void> _pickAndSendFile() async {
     final FilePickerResult? res;
     try {
@@ -2985,18 +2908,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       return;
     }
     if (!await _confirmBigSend(size)) return;
-    // after the confirm, not before: two cancelled sends used to spend both
-    // slots a stranger gets and lock the composer for nothing
+    // after the confirm, so a cancelled send does not spend one of the two
+    // slots a stranger gets
     if (_requestPending) setState(() => _sentCount++);
     final msgUid = _newMsgUid();
     final mediaDir = await session.container.mediaDir();
     final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
     final dest = File('${mediaDir.path}/f_${msgUid}_$safe');
     await File(src).copy(dest.path);
-    // a gallery video carries the same things a gallery photo did: where,
-    // on what, and when. the photo path has stripped those for a while;
-    // this is the video equivalent, in place on our own copy. a file that
-    // cannot be walked is not sent, the same as a jpeg that cannot be.
+    // a gallery video carries where, on what and when, like a photo. it is
+    // stripped in place on our own copy, and one that cannot be walked is
+    // not sent.
     if (videoNameNeedsStrip(name)) {
       final ok = await stripMp4Metadata(dest.path);
       final left = ok == null ? null : await mp4MetadataCount(dest.path);
@@ -3059,11 +2981,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     ).then((result) => _finishMediaSend(msg, result));
   }
 
-  // voice + files went out as one giant envelope - a 5s wav is ~200kb of b64,
-  // over every public relay's event cap, so they bounced. this is the same
-  // 16kb slicing + per-chunk retries + xpub re-fetch the image path uses.
-  // fileName == null means image lane (imageB64), else file lane (fileB64).
-  // the shared sender does the work; this hands it what the screen knows
+  // a 5s wav is ~200kb of base64, over every public relay's event cap, so
+  // all media goes in 16kb slices. fileName null means the image lane. the
+  // shared sender does the work; this hands it what the screen knows.
   Future<String> _sendChunkedMedia({
     required String path,
     required String msgUid,
@@ -3152,11 +3072,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final data = path == null ? null : await File(path).readAsBytes();
     await shredPicked(res);
     if (data == null) return;
-    // a gif must NOT be re-encoded (that kills the animation), so it skips the
-    // image-quality resize path and sends raw bytes. big gifs choke tor on one
-    // un-chunked envelope, so cap at ~4mb until chunked transfer lands.
-    // chunked transfer splits big media across envelopes, so gifs can be larger
-    // now. still cap to keep send time + memory sane over tor on weak phones.
+    // a gif must not be re-encoded, that kills the animation, so it skips the
+    // resize path. capped to keep send time and memory sane over tor.
     if (data.length > 8 * 1024 * 1024) {
       if (mounted) showHaloToast(context, l10n.chatGifTooBig8);
       return;
@@ -3175,8 +3092,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _sendOneImage(Uint8List bytes, String caption) async {
-    // two of anything before they accept, photos included: the third sat
-    // at a single tick while the far side held it
+    // two of anything before they accept, photos included: the far side
+    // holds a third
     if (_requestLocked) return;
     if (_requestPending) setState(() => _sentCount++);
     final msgUid = _newMsgUid();
@@ -3227,10 +3144,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
-  // a video from the gallery. its own tile rather than a mixed picker: on
-  // android 12 and older the mixed one is the system file browser opened
-  // on downloads, which looks like the wrong app. the video-only picker is
-  // the same thing on every version. the clip goes the file way, which
+  // its own tile rather than a mixed picker: on android 12 and older the
+  // mixed one is the system file browser. the clip goes the file way, which
   // strips it and copies it out of the picker's cache.
   Future<void> _pickAndSendVideo() async {
     final x = await lockState.hold(
@@ -3272,16 +3187,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   bool _torReadyToSend() {
     // outside onion nothing is routed through tor, so there is nothing to
-    // wait for. waiting anyway is how a working relay looked like a broken
-    // app somewhere tor is blocked.
+    // wait for, and the relay still works where tor is blocked
     if (appState.sendMode != 'private') return appState.online;
     final s = appState.torStatus;
     return s == TorStatus.bootstrapped ||
         s == TorStatus.publishing ||
         s == TorStatus.reachable;
   }
-
-  // pull the first http(s) url out of a message, or null.
 
   // the sender side: a preview fetched over tor by this phone, waiting to
   // ride inside the next message. null when nothing is attached
@@ -3330,9 +3242,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _send() async {
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || _sending) return;
-    // hard stop: a stranger gets 2 messages into the request, then the chat is
-    // locked until they accept. the input bar already swaps to a locked state,
-    // this guards the send itself so nothing slips past the cap.
+    // a stranger gets 2 messages, then the chat locks until they accept. the
+    // input bar shows it; this guards the send itself.
     if (_requestLocked) return;
     final msgUid = _newMsgUid();
     final replyToUid = _replyTo?.msgUid;
@@ -3377,8 +3288,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         preview: preview == null ? null : jsonEncode(preview),
       );
     } catch (e) {
-      // a throw here used to leave _sending true, which disabled the
-      // composer and the auto retry until the chat was reopened
+      // a throw must not leave _sending true: that disables the composer
+      // and the auto retry until the chat is reopened
       dlog('send: save failed: $e');
       if (!mounted) return;
       setState(() {
@@ -3460,18 +3371,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       });
       return;
     }
-    // fire-and-forget. optimistic ✓ now; failure marks tap-to-retry
+    // fire and forget: a failure marks the row for retry
     setState(() {
       _sending = false;
       _status = '';
       if (_requestPending) _sentCount++;
     });
-    // before the peer back-pairs with us, force direct-onion so their
-    // drain triggers the back-pair flow. nostr would dead-end because
-    // they aren't subscribed to our xpub yet. once we receive anything
-    // from them, _backPaired flips and we can use nostr.
-    // try direct tor first if peer hasn't back-paired and we have their onion.
-    // on tor failure / timeout, fall back to nostr store-and-forward.
+    // before the peer back-pairs, direct onion first so their drain runs the
+    // back-pair flow: they don't follow our xpub on nostr yet. on failure,
+    // fall back to nostr store-and-forward.
     final sendFuture = Future<String>(() async {
       var torWait = 0;
       while (!_torReadyToSend() && torWait < 300000) {
@@ -3485,9 +3393,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         if (tor == 'ok') return 'ok';
         dlog('chat send: tor direct failed ($tor), trying nostr');
       }
-      // peer xpub may be null on a fresh back-pair / reconnect (it's loaded
-      // once at open). re-fetch from the session before giving up, so the relay
-      // route is available instead of dead-ending on 'no transport'.
+      // the xpub may be null on a fresh back-pair or reconnect. re-fetch it
+      // from the session before giving up on the relay route.
       var xpub = _peerXPub;
       xpub ??= widget.peerXPub.isEmpty ? null : widget.peerXPub;
       xpub ??= await signalSession.peerXPubHex(widget.peerHaloId);
@@ -3590,10 +3497,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // mirror groups: when we leave the app, this chat is no longer the
-    // one being read, so incoming messages must bump the unread dot
-    // instead of being silently marked read. dispose() alone missed
-    // this because leaving to home doesn't dispose the chat.
+    // out of the app this chat is not being read, so incoming messages must
+    // light the unread dot. leaving to home does not dispose the chat.
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden ||
         state == AppLifecycleState.inactive) {
@@ -3642,10 +3547,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     super.deactivate();
   }
 
-  // any message in this conversation the sender marked. one is enough:
-
-  // android's flag is per-window, not per-view.
-
   static String _rowKey(_Msg m) => m.msgUid ?? 'r${m.rowid}';
 
   // where a row went when the list under it changed, so its state follows
@@ -3659,8 +3560,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Widget _buildRow(BuildContext c, int i, bool searchActive) {
     final ix = _messages.length - 1 - i;
     final m = _messages[ix];
-    // a leaked empty control message (an old reaction/preview frame that fell
-    // through) renders as a blank stub bubble. skip anything with no content.
+    // an empty control message that leaked through would be a blank bubble
     if (m.text.isEmpty &&
         m.mediaPath == null &&
         m.filePath == null &&
@@ -3786,8 +3686,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
-  // the whole-conversation lock is gone. protection now lives in the viewer,
-  // so a marked photo is covered and the chat around it stays usable.
+  // nothing to do: protection lives in the viewer, so a marked photo is
+  // covered and the chat around it stays usable
   void _applySecureContent() {}
 
   @override
@@ -3855,8 +3755,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             mainAxisSize: MainAxisSize.min,
             children: staggerAll([
               const SheetHandle(),
-              // the person themselves: name, verification, vouches, media,
-              // all on one page now
+              // the person themselves: name, verification, vouches, media
               InkWell(
                 onTap: () => Navigator.pop(ctx, 'contact'),
                 child: Padding(
@@ -4522,8 +4421,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 ),
               )
             else
-              // the sheet scrolls as one now, so the list is laid out in
-              // full and does not scroll on its own
+              // the sheet scrolls as one, so the list is laid out in full
+              // and does not scroll on its own
               ListView(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -4580,8 +4479,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void _onScroll() {
     if (!_scrollCtrl.hasClients) return;
     final pos = _scrollCtrl.position;
-    // reversed list: bottom is offset 0, so 'scrolled up from bottom' is
-    // simply pixels past a threshold.
+    // reversed list: bottom is offset 0
     final show = pos.pixels > 240;
     if (!show) _seenCount = _messages.length;
     if (show != _showScrollDown && mounted) {
@@ -4607,9 +4505,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void _updateSticky() {
     if (_suppressSticky || !_scrollCtrl.hasClients) return;
     if (_scrollCtrl.position.maxScrollExtent <= 0) return;
-    // throttle: this does a layout query per day-divider, and the raw scroll
-    // stream fires many times a frame. cap it to ~10x a second so a fast flick
-    // doesn't drown in geometry work (that was the scroll lag).
+    // about ten times a second: this queries layout per day divider, and the
+    // raw scroll stream fires many times a frame
     final now = DateTime.now();
     if (now.difference(_lastSticky).inMilliseconds < 100) return;
     _lastSticky = now;
@@ -4623,9 +4520,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (obj is! RenderBox) return;
       final dy = obj.localToGlobal(Offset.zero).dy;
       // the floating chip sits at the top of this same list, so a divider
-      // counted as passed while it is still on screen drew the day twice,
-      // a few pixels apart. it has only passed once its bottom edge is
-      // above the top of the list.
+      // has only passed once its bottom edge is above the top, or the day
+      // shows twice
       if (dy + obj.size.height <= top && dy > bestDy) {
         bestDy = dy;
         best = _dayMsOf[anchor];
@@ -4773,15 +4669,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               // the whole conversation. draw a stub and
                               // carry on.
                               try {
-                                // keyed by the message, at the top,
-                                // where the list looks. the key was the
-                                // row object, one level down: a reload
-                                // makes new objects and in a reversed
-                                // list every arrival moves every index,
-                                // so each receipt rebuilt every row from
-                                // nothing and a voice note lost its
-                                // player a second after it started. the
-                                // same id is the anchor a jump lands on.
+                                // keyed by the message at the top, where
+                                // the list looks: in a reversed list every
+                                // arrival moves every index, and a voice
+                                // note must keep its player. the same id
+                                // is the anchor a jump lands on.
                                 final id = _rowKey(
                                   _messages[_messages.length - 1 - i],
                                 );
@@ -4964,10 +4856,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 ),
               ),
             const PowNote(),
-            // tor still warming: say so where the eye already is. messages
-            // typed now are queued and go out the moment the route is up.
-            // not on a phone whose identity has moved: tor is off there on
-            // purpose, and "queued and delivers itself" would be a lie
+            // tor still warming: messages typed now are queued. not on a
+            // phone whose identity has moved, where tor is off on purpose.
             if (appState.sendMode == 'private' &&
                 !_torReadyToSend() &&
                 !appState.movedAway)
@@ -5298,9 +5188,8 @@ class _IntroBanner extends StatelessWidget {
   }
 }
 
-// the "introduce to..." row in the contact sheet. greyed with a reason while
-// the contact is still a request - you cannot vouch for someone you have not
-// accepted yourself.
+// greyed with a reason while the contact is still a request: you cannot
+// vouch for someone you have not accepted yourself
 class _IntroduceRow extends StatelessWidget {
   final bool enabled;
   final VoidCallback onTap;
@@ -5508,7 +5397,7 @@ class _ChatHead extends StatelessWidget {
             onPressed: onBack,
           ),
           GestureDetector(
-            onTap: onBlock, // avatar -> contact actions + verify
+            onTap: onBlock, // avatar opens the contact page
             behavior: HitTestBehavior.opaque,
             // the same face flies in from the list row
             child: Hero(
@@ -5600,8 +5489,8 @@ class _ChatHead extends StatelessWidget {
                           color: HaloColors.amber,
                         ),
                         const SizedBox(width: 4),
-                        // a longer language at a big font size ran this line
-                        // past the header's buttons; it ends in … instead
+                        // a longer language at a big font size would run
+                        // past the header's buttons, so it ends in …
                         Flexible(
                           child: Text(
                             appState.sendMode == 'balanced'
@@ -5669,9 +5558,7 @@ class _ChatHead extends StatelessWidget {
   }
 }
 
-// search bar that replaces the chat header when search is active. slides
-// + fades in. magnifier glyph, italic-serif hint, mono match counter, and
-// up/down chevrons to jump between hits. matches the search_mockup spec.
+// replaces the chat header while searching
 class SearchHead extends StatefulWidget {
   final TextEditingController controller;
   final int matchCount;
@@ -5919,7 +5806,7 @@ class _NavBtn extends StatelessWidget {
 
 class _Bubble extends StatelessWidget {
   // uids whose entrance animation already played, so a list rebuild doesn't
-  // replay it (that was the periodic + on-open blink).
+  // replay it
   static final Set<String> _entered = {};
   final _Msg msg;
   final void Function(_Msg)? onRetry;
@@ -5928,9 +5815,8 @@ class _Bubble extends StatelessWidget {
   final String? quotedText;
   final String? quotedAuthor;
   final VoidCallback? onQuoteTap;
-  // search context: the live query (empty when not searching), whether
-  // this bubble is the current hit (gets a soft amber kryfo), and whether
-  // it should dim (search active but this isn't a match).
+  // search: the live query (empty when not searching), whether this bubble
+  // is the current hit, and whether it dims as a non-match
   final String query;
   final bool isCurrentMatch;
   final bool dimmed;
@@ -6027,14 +5913,9 @@ class _Bubble extends StatelessWidget {
     final failedShown = _sendLooksFailed(msg);
     final parked = msg.parked && !msg.sending && !msg.failed;
     final pending = msg.sending || (msg.failed && !failedShown);
-    // a media send finishing means every slice was accepted somewhere, not
-    // that any of it arrived: on the relay lane a relay taking the bytes is
-    // not the peer reading them, which is the same overstatement parked was
-    // introduced to stop for text. a text message gets its receipt in
-    // seconds so a bare tick is a blink; a photo or a voice note can sit
-    // ticked and unread for good. three voice notes in one conversation
-    // minutes apart showed it: only the short one was ever acknowledged.
-    // so media says nothing until the receipt lands, then says Delivered.
+    // a finished media send means every slice was accepted somewhere, not
+    // that it arrived: a relay taking the bytes is not the peer reading
+    // them. so media says nothing until the receipt lands, then Delivered.
     final isMedia = msg.mediaPath != null || msg.filePath != null;
     final ackOk = !isMedia || msg.delivered;
     final showMeta = isOut && !pending && !failedShown && !parked && ackOk;
@@ -6052,8 +5933,7 @@ class _Bubble extends StatelessWidget {
         isOut &&
         !msg.failed &&
         DateTime.now().difference(msg.when).inMilliseconds < 900;
-    // a message's entrance should play once. fresh was never cleared, so every
-    // rebuild replayed it (the blink). gate on a seen-set keyed by uid.
+    // an entrance plays once, gated on a seen-set keyed by uid
     final entranceKey = msg.msgUid ?? '';
     final alreadyPlayed = _Bubble._entered.contains(entranceKey);
     final justArrived = !isOut && !msg.failed && msg.fresh && !alreadyPlayed;
@@ -6065,9 +5945,8 @@ class _Bubble extends StatelessWidget {
         _Bubble._entered.remove(_Bubble._entered.first);
       }
     }
-    // clear fresh after the entrance plays so a later rebuild can't replay it
-    // (that was the residual blink). belt-and-suspenders alongside _entered,
-    // and it also covers messages whose uid was null when they arrived.
+    // clear fresh after the entrance plays so a later rebuild can't replay
+    // it. this also covers messages that arrived without a uid.
     if (msg.fresh && willAnimate) {
       Future.delayed(const Duration(milliseconds: 650), () {
         msg.fresh = false;
@@ -6317,10 +6196,8 @@ class _Bubble extends StatelessWidget {
                                           ),
                                           // the bubble sizes itself with
                                           // IntrinsicWidth, and an Image
-                                          // answers that with its own width -
-                                          // infinity, until the file decodes.
-                                          // pin one so the answer holds either
-                                          // way.
+                                          // answers infinity until the file
+                                          // decodes, so pin a width
                                           child: RememberedHeight(
                                             id: msg.mediaPath!,
                                             child: SizedBox(
@@ -6588,10 +6465,8 @@ class _Bubble extends StatelessWidget {
                     ),
                     if (msg.reactions.isNotEmpty)
                       PositionedDirectional(
-                        // ig-style: hangs below the bubble, on the sender's
-                        // side. your own reactions tuck bottom-right, everyone
-                        // else's bottom-left. works the same in groups since
-                        // it keys off direction, not a two-person assumption.
+                        // hangs below the bubble on the sender's side. keyed
+                        // off direction, so groups work the same.
                         bottom: -13,
                         end: isOut ? 10 : null,
                         start: isOut ? null : 10,
@@ -6679,8 +6554,7 @@ class _Bubble extends StatelessWidget {
     );
   }
 
-  // group reactions by emoji: each chip shows the emoji + count if >1.
-  // emoji used by the local user gets the amberSoft fill.
+  // one chip per emoji, with a count when more than one
   List<Widget> _buildReactionChips(_Msg m) {
     final counts = <String, int>{};
     for (final emoji in m.reactions.values) {
@@ -6689,17 +6563,14 @@ class _Bubble extends StatelessWidget {
     return counts.entries.map<Widget>((e) {
       final emoji = e.key;
       final count = e.value;
-      // ig-style single pill that sits half over the bubble corner. dark
-      // translucent fill, thin ring, soft shadow, emoji + count.
       return _ReactionPop(
         key: ValueKey(emoji),
         popKey: '${m.msgUid}:$emoji',
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
           decoration: BoxDecoration(
-            // ig-style: emoji on a pill the colour of the chat background, so it
-            // reads as a little tab cut below the bubble, not a smudge on top.
-            // solid ink (not translucent), no border, no shadow.
+            // the colour of the chat background, so it reads as a tab cut
+            // below the bubble, not a smudge on top
             color: HaloColors.ink,
             borderRadius: BorderRadius.circular(11),
           ),
@@ -6733,9 +6604,8 @@ class _ReactionPop extends StatefulWidget {
   final String popKey;
   const _ReactionPop({super.key, required this.child, required this.popKey});
 
-  // emojis that have already played their pop. on a chat rebuild we don't want
-  // every existing reaction to spring in again (that read as a blink). a chip
-  // animates the first time it's seen, then renders settled forever after.
+  // chips that already played their pop, so a rebuild does not spring every
+  // reaction in again
   static final Set<String> _popped = {};
 
   @override
@@ -6753,7 +6623,7 @@ class _ReactionPopState extends State<_ReactionPop>
   void initState() {
     super.initState();
     if (_ReactionPop._popped.contains(widget.popKey)) {
-      _c.value = 1.0; // already animated before - render settled, no blink.
+      _c.value = 1.0; // already played: render settled
     } else {
       _ReactionPop._popped.add(widget.popKey);
       _c.forward();
@@ -6796,7 +6666,7 @@ class _ReactionPopState extends State<_ReactionPop>
   }
 }
 
-// big tappable emoji button used in the bottom-sheet reaction picker.
+// an emoji button in the reaction pill
 class _EmojiTap extends StatefulWidget {
   final String emoji;
   final bool selected;
@@ -6844,9 +6714,8 @@ class _EmojiTapState extends State<_EmojiTap> {
   }
 }
 
-// thin bar shown above the composer when the user is in the middle of
-// composing a reply. shows a snippet of the target message + an X to
-// cancel. tap the bar itself to keep editing.
+// above the composer while writing a reply: a snippet of the target and an
+// X to cancel
 class _ReplyQuoteBar extends StatelessWidget {
   final _Msg target;
   final VoidCallback onCancel;
@@ -6916,9 +6785,7 @@ class _ReplyQuoteBar extends StatelessWidget {
   }
 }
 
-// floating reaction bar shown above the long-pressed bubble. soft shadow,
-// rounded pill, scale + fade entrance. matches kryfo's surface3 + line
-// design language.
+// the reaction pill above the long-pressed bubble
 class _EmojiPickerBubble extends StatefulWidget {
   final List<String> emojis;
   final String? selected;
@@ -7030,8 +6897,7 @@ class _EmojiPickerBubbleState extends State<_EmojiPickerBubble>
   }
 }
 
-// icon-based tappable button used in the reaction picker for "reply" etc.
-// shares the visual language of _EmojiTap but renders an icon.
+// an icon button in the reaction pill, drawn like _EmojiTap
 class _ActionTap extends StatefulWidget {
   final IconData icon;
   final VoidCallback onTap;
@@ -7160,7 +7026,7 @@ Uint8List disguiseWav(Uint8List wav) {
   );
   // ratio < 1 keeps more samples = lower, slower-sounding voice once
   // played at the original rate. 0.76 is a clear drop that still reads as
-  // speech; it was 0.80, and went five percent lower.
+  // speech.
   const ratio = 0.76;
   final outLen = (body.length / ratio).floor();
   final out = Int16List(outLen);
@@ -7213,8 +7079,8 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
   bool _live = false;
   String? _path;
   double _bottomInset = 0;
-  // the keyboard's height at the moment the hold began: the overlay is in
-  // the root overlay, which never sees the keyboard, and drew under it
+  // the keyboard's height when the hold began: the bar is in the root
+  // overlay, which never sees the keyboard
   double _keyboardInset = 0;
 
   @override
@@ -7229,10 +7095,8 @@ class _HoldToTalkMicState extends State<_HoldToTalkMic> {
   Future<void> _start() async {
     if (_busy) return;
     _busy = true;
-    // _busy used to be cleared only on the paths this function expected. if
-    // anything below threw, it stayed set, and every later hold returned on
-    // the first line with no overlay, no toast, nothing - the mic was dead
-    // until the chat was reopened. found on the redmi on 2026-09-21.
+    // _busy is cleared in finally: a throw that left it set would kill the
+    // mic until the chat is reopened
     try {
       if (!await _rec.hasPermission()) {
         if (mounted) showHaloToast(context, l10n.chatMicPermissionNeeded);
@@ -7631,9 +7495,8 @@ class _Composer extends StatelessWidget {
                   ),
                 ),
               ),
-              // shield hidden until it can be verified end to end on a
-              // device. the flag, the wire and the viewer are all still
-              // wired - only the way to turn it on is gone.
+              // the shield toggle stays hidden until it is verified end to
+              // end. the flag, the wire and the viewer are all in place.
               const SizedBox(width: 10),
               // the camera that keeps its photos inside kryfo
               PressScale(
@@ -7801,8 +7664,6 @@ class _Composer extends StatelessWidget {
   }
 }
 
-// full-screen preview shown after picking a photo: the image plus a caption
-// field. pops the caption on send, or null on back (cancel).
 class MediaGalleryScreen extends StatelessWidget {
   final List<String> paths;
   // which of them the sender marked. a protected photo must stay protected
@@ -7872,9 +7733,7 @@ class MediaGalleryScreen extends StatelessWidget {
                     fit: BoxFit.cover,
                     cacheWidth: 360,
                     filterQuality: FilterQuality.low,
-                    // no handler at all drew a black square for a photo whose
-                    // file is gone, with nothing to say whether it was the
-                    // picture or the app that failed.
+                    // a photo whose file is gone says so, not a black square
                     errorBuilder: (_, _, _) => Container(
                       color: HaloColors.surface2,
                       alignment: Alignment.center,
@@ -7892,6 +7751,8 @@ class MediaGalleryScreen extends StatelessWidget {
   }
 }
 
+// the picked photo and a caption field. pops the caption on send, null on
+// back.
 class _ImageCaptionScreen extends StatefulWidget {
   final Uint8List bytes;
   const _ImageCaptionScreen({required this.bytes});
@@ -8084,11 +7945,7 @@ Widget _bubbleEntrance({
       : _arriveEntrance(active: true, child: child);
 }
 
-// a message burning away: the bubble dissolves bottom-up along a rising
-// edge while sparks peel off the burn line. one tween drives both.
-
-// map the saved mode string to the pill's enum. private = full tor (3 hops),
-// the real route for every message today.
+// the saved mode string as the pill's enum. private is full tor, 3 hops.
 PrivacyMode _pmFrom(String m) => m == 'fast'
     ? PrivacyMode.fast
     : m == 'balanced'

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a list row that slides to its new place instead of jumping there. keyed
-// rows keep their state across a reorder, so this widget can remember where
-// it was drawn last and glide from there. positions are read inside the
-// scroll content, not on screen, so scrolling never counts as a move.
+// a list row that glides to its new place instead of jumping. keyed rows keep
+// their state across a reorder, so it remembers where it was drawn. positions
+// are read inside the scroll content so scrolling never counts as a move.
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 

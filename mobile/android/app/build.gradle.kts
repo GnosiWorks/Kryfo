@@ -61,10 +61,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "app.kryfo"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -83,11 +80,9 @@ android {
     }
     buildTypes {
         release {
-            // HALO_UNSIGNED=1 leaves the apk unsigned, so the reproducible
-            // container build never needs the keystore; repro/release.sh
-            // signs the result outside with apksigner. otherwise: the real
-            // key when key.properties exists, and the debug key so
-            // day-to-day builds still install without the keystore.
+            // HALO_UNSIGNED=1 leaves the apk unsigned for the repro container,
+            // repro/release.sh signs it outside. otherwise the real key when
+            // key.properties exists, else the debug key.
             signingConfig = when {
                 System.getenv("HALO_UNSIGNED") == "1" -> null
                 keystorePropertiesFile.exists() -> signingConfigs.getByName("release")
@@ -107,9 +102,8 @@ dependencies {
     implementation("androidx.exifinterface:exifinterface:1.4.2")
 }
 
-// libhalo.so is gitignored, so a tree that has never run engine/build.sh
-// still assembles a valid apk - one that dies on launch with "dlopen failed"
-// and never reaches a screen. fail here, where we can say what to run.
+// libhalo.so is gitignored, and an apk without it dies on launch with
+// "dlopen failed". fail here, where we can say what to run.
 tasks.named("preBuild") {
     doFirst {
         val missing = listOf("arm64-v8a", "armeabi-v7a", "x86_64").filter {

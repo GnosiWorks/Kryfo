@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// one place to ask what the transport is doing. the state was always there,
-// scattered across three files, and nothing could read all of it at once - so
-// each part inferred the rest and got it wrong. the runner did not know the
-// relay list was empty. the benching did not know tor was still warming up.
-// the send did not know the peer had no subscription. every one of those
-// failed silently, which is the expensive kind.
+// one place to ask what the transport is doing, so no part has to guess the
+// rest of the state.
 
 import "C"
 
@@ -79,7 +75,7 @@ func relaysAllDead() bool {
 	txMu.RLock()
 	defer txMu.RUnlock()
 	if lastRelayOK.IsZero() {
-		// nothing has ever connected this session - fall back to how long
+		// nothing has ever connected this session; fall back to how long
 		// tor has been up, so a genuinely fresh start is not called dead.
 		return !lastBoot.IsZero() && time.Since(lastBoot) > 3*time.Minute
 	}
@@ -133,11 +129,10 @@ func bootstrapMovingRecently() bool {
 	return !lastBoot.IsZero() && time.Since(lastBoot) < 45*time.Second
 }
 
-// tor can carry traffic. the single test - callers used to each keep their
-// own copy of this and they drifted.
+// tor can carry traffic. the one test every caller shares.
 func torReadyNow() bool {
 	// outside private mode nothing is waiting on tor, so "ready" is about
-	// whether we can send at all - and we can.
+	// whether we can send at all, and we can.
 	if !modeNeedsTor() {
 		return true
 	}

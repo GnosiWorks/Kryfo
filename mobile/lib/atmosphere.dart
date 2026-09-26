@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the atmosphere behind a conversation. yours, on this phone, never sent:
-// the other person sees their own. a gradient wash or a quiet pattern as
-// before, or a mood: a base tint, a bubble tint, how dim the room sits,
-// and for some a very slow drift that stops the moment the app is away.
-// every one keeps message text at full contrast; a mood that would not is
-// not in this list.
+// the atmosphere behind a conversation. local only, never sent. every one
+// keeps message text at full contrast.
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -82,17 +78,10 @@ String atmoLabel(Atmo a) => switch (a) {
 
 enum AtmoDrift { none, rain, snow, glow }
 
-// a mood is a handful of values, not an asset. base is the room's tint,
-// wash how strongly it lies over the surface, bubble how far the incoming
-// bubble leans toward it, dim how much ink lies over everything.
-//
-// these tints live here and not in the palette on purpose. the palette is
-// what the interface is made of: every surface, line and word in the app
-// comes from it, and it is the list a reviewer checks. a mood is scenery.
-// it is laid over the palette at low alpha, chosen per chat, and never
-// something text sits on at full strength. keeping the six here says what
-// they are: a closed set of atmospheres, not six new colours for buttons
-// or text to borrow. add a mood by adding a line, not a token.
+// base is the room's tint, wash how strongly it lies over the surface,
+// bubble how far the incoming bubble leans toward it, dim the ink on top.
+// kept out of the palette on purpose: scenery at low alpha, not colours
+// for text or buttons to borrow.
 class AtmoMood {
   final Color base;
   final double wash;
@@ -212,9 +201,7 @@ class PatternPainter extends CustomPainter {
       old.atmo != atmo || old.scale != scale;
 }
 
-// the slow element of a mood. phase runs 0..1 over about a minute and the
-// painter only redraws eight times a second, so an hour of staring costs
-// almost nothing and nothing moves fast enough to catch the eye
+// the slow element of a mood. phase runs 0..1 over about a minute
 class _DriftPainter extends CustomPainter {
   final AtmoMood mood;
   final ValueListenable<double> phase;
@@ -309,8 +296,7 @@ class AtmosphereWash extends StatefulWidget {
 class _AtmosphereWashState extends State<AtmosphereWash>
     with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   final _phase = ValueNotifier<double>(0);
-  // a ticker on the frame clock: the timer at eight steps a second read as
-  // stutter on the snow. one full drift still takes a minute.
+  // on the frame clock, since a coarse timer stutters on the snow
   Ticker? _tick;
   Duration _last = Duration.zero;
 

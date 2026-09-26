@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a soft amber ring that breathes outward behind whatever sits in it. the
-// app quietly waiting, used by the empty places so they match.
+// a soft amber ring breathing behind its child, shared by the empty states so
+// they match
 import 'package:flutter/material.dart';
 
 import '../theme.dart';

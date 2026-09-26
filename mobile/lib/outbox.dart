@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the envelope a queued 1:1 text goes out in when the outbox retries it.
-// pure, so a test can hold it against the receiver's gate: a stranger's
-// first message has to carry the same proof-of-work on the retry as on the
-// send, or the far side drops the retry without a word.
+// the envelope a queued 1:1 text goes out in on retry. pure, so a test can
+// hold it against the receiver's gate: a stranger's first message needs its
+// proof of work on the retry too, or the far side drops it without a word.
 import 'dart:convert';
 
 import 'message_envelope.dart';
@@ -22,8 +21,7 @@ Future<String> wrapRedelivery(
 }) {
   final nonce = (row['pow_nonce'] as num?)?.toInt();
   final groupId = row['group_id'] as String?;
-  // the preview the sender attached rides the retry too, or a message that
-  // needed a second attempt arrived with its card silently gone
+  // the link preview rides the retry too, or the card is lost
   Map<String, String>? preview;
   final pvRaw = row['preview'];
   if (pvRaw is String && pvRaw.isNotEmpty) {
@@ -42,8 +40,7 @@ Future<String> wrapRedelivery(
     preview: preview,
     groupId: groupId == null || groupId.isEmpty ? null : groupId,
     supporterBadge: badge,
-    // the timer rides the retry too, or a disappearing message the outbox
-    // carried stayed forever on both phones
+    // the timer rides the retry too, or a disappearing message stays forever
     burnSeconds: (row['burn_secs'] as num?)?.toInt(),
     powNonce: nonce,
     powBitsUsed: nonce == null ? null : powBits,

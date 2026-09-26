@@ -2,12 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-// the photo bubble sizes itself with IntrinsicWidth, which asks the media
-// subtree for a width without laying it out. a LayoutBuilder in there throws,
-// and an Image with `width: double.infinity` answers infinity until the file
-// decodes. either way the bubble never gets a usable size and paints black.
-//
-// this pins the shape that survives that pass, built the way _Bubble builds it.
+// the photo bubble sizes itself with IntrinsicWidth, so the media subtree has
+// to answer the intrinsic pass: no LayoutBuilder, no infinite image width.
+// built the way _Bubble builds it.
 
 // 1x1 png, enough to construct a real Image without touching the disk
 final _png = base64Decode(
@@ -56,9 +53,8 @@ Widget _bubble({required Widget media}) {
 }
 
 void main() {
-  testWidgets('photo bubble has a width before the image decodes', (t) async {
-    // the width has to be right while _image is still null, not only once
-    // the file comes back.
+  testWidgets('photo bubble has a width before decoding', (t) async {
+    // the width has to be right while _image is still null
     final expected = t.view.physicalSize.width / t.view.devicePixelRatio * 0.78;
 
     await t.pumpWidget(
@@ -114,10 +110,9 @@ void main() {
     expect(t.takeException(), isNotNull);
   });
 
-  testWidgets('a LayoutBuilder never even runs in here', (t) async {
+  testWidgets('a LayoutBuilder never runs inside', (t) async {
     // LayoutBuilder refuses intrinsics, so the pass throws before the builder
-    // runs - a probe put in here can never print, which reads as "the bubble
-    // was never built". don't put one back.
+    // runs and a debug print in here never shows
     var built = false;
 
     await t.pumpWidget(

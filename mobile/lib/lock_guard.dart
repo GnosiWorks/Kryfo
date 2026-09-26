@@ -24,9 +24,8 @@ class LockGuard {
   final List<Completer<void>> _anyWaiting = [];
   final Set<VoidCallback> _closers = {};
 
-  // done now, or once the lock lifts. a key keeps one of a kind: the same
-  // chat tapped twice while locked opens once, and a link that arrives by
-  // two routes at a cold start is handled once
+  // done now, or once the lock lifts. a key keeps one of a kind, so a link
+  // that arrives by two routes at a cold start is handled once
   Future<void> afterUnlock(Future<void> Function() act, {Object? key}) async {
     if (isLocked()) {
       _held.remove(key);

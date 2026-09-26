@@ -8,9 +8,9 @@ set -e
 OUT=/build/out
 mkdir -p "$OUT/arm64-v8a" "$OUT/armeabi-v7a" "$OUT/x86_64"
 
-# -buildid= clears go's random build id. -w -s drop debug tables (also a
-# repro win - dwarf carries paths). the ndk linker gets --build-id=none so
-# lld doesn't stamp a random note. trimpath comes from GOFLAGS in the image.
+# -buildid= clears go's random build id, -w -s drop the debug tables that
+# carry paths, and --build-id=none stops lld stamping a random note.
+# trimpath comes from GOFLAGS in the image.
 LDFLAGS="-buildid= -w -s"
 export CGO_LDFLAGS="-Wl,--build-id=none"
 # no git stamp, same as engine/build.sh: the mounted tree has no .git and

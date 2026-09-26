@@ -2,20 +2,11 @@
 package main
 
 // the handle registry and the public page it serves.
-//
-// what this holds, and nothing else: a handle, the invite it points at, a
-// short bio someone chose to write, and the identity key that claimed it.
-// the invite is already public - it is the qr code. the bio is written to be
-// read.
-//
-// what it deliberately does not hold: any record of who looked anyone up.
-// no access log, no analytics, no cookie, no referrer. a visitor arrives,
-// gets html, and leaves nothing behind. that is not a policy, it is the
-// absence of the code that would do it.
-//
-// ownership is an ed25519 signature over the handle, made with the identity
-// key inside the invite. so a handle cannot be pointed at someone else's
-// invite, and only whoever claimed it can release it.
+// it holds a handle, its invite, a short bio and the identity key that
+// claimed it. nothing about who looked anyone up: no access log, no
+// analytics, no cookie, no referrer.
+// ownership is an ed25519 signature over the handle with the identity key in
+// the invite, so only whoever claimed a handle can repoint or release it.
 
 import (
 	"context"
@@ -136,21 +127,12 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 	_ = json.NewEncoder(w).Encode(v)
 }
 
-// the invite is rendered into an href on the public page, so its scheme
-// matters as much as its characters. html.EscapeString stops a value breaking
-// out of the attribute; it does nothing about "javascript:alert(1)", which
-// would render as a working link and run on this origin when someone presses
-// "message on kryfo".
-//
-// so only the shape the app actually builds is accepted:
+// the invite goes into an href on the public page, and html escaping does
+// nothing about a "javascript:" url, so only the shapes the app builds pass:
 //
 //	kryfo://share?id=..&onion=..&xpub=..            v1
 //	kryfo://share?id=..&onion=..&v=2&bundle=..      v2
 //	kryfo://share?id=..&onion=..&v=3&bundle=..&fc=..  v3
-//
-// anything else is a 400. run `handle -check-invites <file>` over the live
-// store before deploying this, or a stricter rule than reality locks someone
-// out of their own page.
 func inviteOK(s string) bool {
 	if s == "" || len(s) > 8000 {
 		return false
@@ -180,17 +162,14 @@ func refuse(w http.ResponseWriter, msg string) {
 	writeJSON(w, http.StatusOK, map[string]any{"ok": false, "error": msg})
 }
 
-// the three faces the page is set in, served from here. they came from
-// google's font host before, which put every visitor's address in front of
-// google on a page whose whole promise is that nobody is told who looked.
-// the same files the app ships, under the open font license beside them.
+// the page's fonts, served from here so no visitor's address reaches a font
+// host. the same files the app ships, under the open font license beside them.
 //
 //go:embed fonts/*.ttf
 var fontFS embed.FS
 
-// a pre-deploy gate. the invite rule below is new, and a rule stricter than
-// the store locks people out of their own pages, so read the live file and
-// say so before swapping the binary:
+// a pre-deploy gate: an invite rule stricter than the store locks people out
+// of their own pages, so run this over the live file before a new binary:
 //
 //	handle -check-invites /opt/kryfo-handles/handles.json
 //
@@ -378,7 +357,6 @@ func routes(st *store, lim *limiter) http.Handler {
 		writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 	})
 
-	// nip-05 shaped, so other nostr clients can resolve a kryfo handle too
 	mux.HandleFunc("/handle/font/", func(w http.ResponseWriter, r *http.Request) {
 		name := strings.TrimPrefix(r.URL.Path, "/handle/font/")
 		b, err := fontFS.ReadFile("fonts/" + filepath.Base(name))
@@ -391,6 +369,7 @@ func routes(st *store, lim *limiter) http.Handler {
 		_, _ = w.Write(b)
 	})
 
+	// nip-05 shaped, so other nostr clients can resolve a kryfo handle too
 	mux.HandleFunc("/.well-known/kryfo.json", func(w http.ResponseWriter, r *http.Request) {
 		h := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("name")))
 		e, ok := st.get(h)
@@ -466,9 +445,9 @@ func page(handle, bio, invite, fp string) string {
 </div></div>`
 }
 
-// no script-src at all, so nothing on this page can execute - not an inline
-// block, not a src, and not a javascript: url in an href. the fonts and the
-// one inline <style> below are the only things allowed, and both are ours.
+// no script-src at all, so nothing on this page can execute, not even a
+// javascript: url in an href. the fonts and the one inline <style> below are
+// the only things allowed, and both are ours.
 const csp = "default-src 'none'; style-src 'self' 'unsafe-inline'; " +
 	"font-src 'self'; base-uri 'none'; form-action 'none'; " +
 	"frame-ancestors 'none'"

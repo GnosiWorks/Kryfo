@@ -3,7 +3,7 @@ import 'package:kryfo/media_resend.dart';
 import 'package:kryfo/message_envelope.dart';
 
 void main() {
-  test('what is missing, lowest first, capped', () {
+  test('lists missing slices lowest first, capped', () {
     expect(missingSlices({0, 1, 3, 5}, 6), [2, 4]);
     expect(missingSlices({}, 3), [0, 1, 2]);
     expect(missingSlices({0, 1, 2}, 3), isEmpty);
@@ -32,14 +32,14 @@ void main() {
       total: total,
     );
 
-    test('not while slices are still arriving', () {
+    test('waits while slices are still arriving', () {
       expect(ask(last: 100 * min - 30 * 1000), false);
       expect(ask(last: 97 * min), true);
     });
-    test('never of a sender that did not say it can answer', () {
+    test('never asks a sender that cannot resend', () {
       expect(ask(can: false), false);
     });
-    test('not for a whole file, an empty one or a single slice', () {
+    test('skips whole, empty and single-slice files', () {
       expect(ask(have: 100), false);
       expect(ask(have: 0), false);
       expect(ask(have: 0, total: 1), false);
@@ -53,8 +53,8 @@ void main() {
     });
   });
 
-  group('the frame, as it comes from the other side', () {
-    test('round trip, sorted, without repeats', () {
+  group('the need frame', () {
+    test('round trips sorted without repeats', () {
       final f = NeedFrame.fromJson({
         'u': 'abc',
         'i': [5, 2, 2, 9],
@@ -63,7 +63,7 @@ void main() {
       expect(f.indices, [2, 5, 9]);
       expect(NeedFrame.fromJson(f.toJson())!.indices, [2, 5, 9]);
     });
-    test('anything odd is nothing', () {
+    test('rejects malformed frames', () {
       expect(NeedFrame.fromJson(null), null);
       expect(NeedFrame.fromJson('x'), null);
       expect(
@@ -137,16 +137,16 @@ void main() {
       rounds: rounds,
     );
 
-    test('only the person it was sent to may ask', () {
+    test('only the recipient may ask', () {
       expect(ok(), true);
       expect(ok(from: 'mallory'), false);
       expect(ok(peer: null), false);
     });
-    test('never for something received, or for a group row', () {
+    test('never for received or group rows', () {
       expect(ok(dir: 'in'), false);
       expect(ok(group: 'g1'), false);
     });
-    test('throttled and bounded', () {
+    test('answers are throttled and bounded', () {
       expect(ok(last: 10 * 60 * 1000 - 5000), false);
       expect(ok(last: 8 * 60 * 1000), true);
       expect(ok(rounds: kResendMaxRounds), false);
@@ -157,7 +157,7 @@ void main() {
   });
 
   group('on the wire', () {
-    test('a request and the flag on a slice survive the envelope', () async {
+    test('request and resend flag survive the envelope', () async {
       final ask = unwrapMessage(
         await wrapMessage('', need: const NeedFrame('m1', [4, 7])),
       );
@@ -178,7 +178,7 @@ void main() {
       expect(slice.canResend, true);
       expect(slice.need, null);
     });
-    test('an older sender says nothing and is never asked', () async {
+    test('an older sender is never asked', () async {
       final slice = unwrapMessage(
         await wrapMessage(
           '',

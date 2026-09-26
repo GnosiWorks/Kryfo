@@ -1,24 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// halo nostr layer - store-and-forward messaging via public relays.
-// phase 1.6 sprint 5+6: integration into engine.
-//
-// architecture:
-//   - dart encrypts plaintext with libsignal -> ciphertext (base64)
-//   - dart calls HaloNostrSend(peerXPubHex, b64Ciphertext)
-//   - engine derives ephemeral nostr keypair from ECDH(myXPriv, peerXPub) + conversation id
-//   - engine wraps ciphertext in nostr event signed by ephemeral key
-//   - engine publishes to all configured relays in parallel
-//
-// receive:
-//   - dart calls HaloNostrSubscribe(peerXPubHex) when contact is added
-//   - engine derives the same ephemeral pubkey and subscribes for events authored by it
-//   - on event arrival, engine appends "peerXPubHex|content" to nostrInbox queue
-//   - dart polls HaloNostrPoll() and routes to libsignal.decrypt(peer, ciphertext)
-//
-// privacy mitigations:
-//   - relays only ever see disposable per-conversation pubkeys, not identity
-//   - libsignal ciphertext is opaque to relays (and to us)
-//   - tor wiring deferred to next sprint (sprint 1.6.7)
+// the nostr layer: store-and-forward messaging through public relays. dart
+// hands over libsignal ciphertext, the engine wraps it per conversation and
+// publishes to every relay, and what arrives is queued for dart to poll.
+// relays only ever see per-conversation keys, never an identity.
 
 package main
 
@@ -89,9 +73,8 @@ func kickChan() chan struct{} {
 	return kickCh
 }
 
-// sleep that a kick ends early. true when it was kicked. the runner's
-// backoffs used to be plain sleeps, so a socket already waiting out a
-// failed dial missed the job's kick entirely
+// sleep that a kick ends early. true when it was kicked. a runner waiting
+// out a failed dial still hears the job's kick this way.
 func sleepOrKick(d time.Duration) bool {
 	select {
 	case <-time.After(d):
@@ -102,7 +85,7 @@ func sleepOrKick(d time.Duration) bool {
 }
 
 // a req that cannot match anything. the relay answers eose and nothing
-// else, which is the cheapest proof that this circuit still carries data -
+// else, which is the cheapest proof that this circuit still carries data,
 // and unlike cycling the subscription it does not refetch a single stored
 // event. the library dispatches a fake eose after 7s when a relay stays
 // silent, which would make every probe pass, so that is disabled here:
@@ -152,18 +135,13 @@ func HaloCatchupState() *C.char {
 }
 
 // how long one relay may spend catching up before the check-in stops waiting
-// for it.
+// for it. paging back is up to catchupMaxPages requests at up to 45s each, so
+// one slow relay could otherwise hold tor awake for the whole window.
 //
-// a check-in used to end only when every relay had finished, and paging back
-// is catchupMaxPages (200) requests at up to 45s each, so a single slow relay
-// could hold tor awake for the whole 140s window - measured at 143s on the
-// samsung, every quarter of an hour, in the mode whose entire point is to use
-// less battery.
-//
-// past this the relay's BACKFILL is cancelled and it stops counting as active.
-// its live subscription stays up; only the catching-up is given up on, and the
-// next connect asks again from the same anchor, so nothing is lost - it
-// arrives later instead of holding the phone awake now.
+// past this the relay's backfill is cancelled and it stops counting as active.
+// its live subscription stays up, and the next connect asks again from the
+// same anchor, so nothing is lost: it arrives later instead of holding the
+// phone awake now.
 const catchupCap = 30 * time.Second
 
 // a relay dropped three check-ins running gets one longer window. a backlog
@@ -174,15 +152,14 @@ const catchupLongCap = 90 * time.Second
 const catchupDropsBeforeLong = 3
 
 // what one subscription's last catch-up cost. seconds and a flag, no content
-// and no counts - enough to see who holds a check-in up without a debug build.
+// and no counts: enough to see who holds a check-in up without a debug build.
 type catchupRun struct {
 	Ms      int  `json:"ms"`
 	Dropped bool `json:"dropped"`
 	Long    bool `json:"long"`
 	// what the walk covered, for the transport screen: pages fetched past
 	// the first window, events seen, and how long the connect before it
-	// took. this is how "30.0s dropped" on our own relay gets an explanation
-	// without a debug build.
+	// took, so a slow catch-up can be explained without a debug build.
 	Pages     int `json:"pages"`
 	Events    int `json:"events"`
 	ConnectMs int `json:"connect_ms"`
@@ -192,12 +169,9 @@ type catchupRun struct {
 }
 
 // catch-up is recorded per subscription, never per relay: a relay carries one
-// subscription per contact, six on a phone with six contacts, each walking
-// its own backlog. keyed by relay alone they shared a start time, a drop
-// count and a place in the backlog - a cap firing for one found another's
-// start already gone and recorded "dropped after 0.0s", and one contact's
-// walk could step over part of another's backlog as if it had been fetched.
-// the key is the relay url and the subscription's address.
+// subscription per contact, each walking its own backlog with its own start
+// time, drop count and place. the key is the relay url and the
+// subscription's address.
 func catchupKey(u, rcvPk string) string { return u + " " + rcvPk }
 
 func relayOfKey(k string) string {
@@ -263,8 +237,8 @@ func noteCatchupPages(key string, pages, events int) {
 // window; anything older is from a round before.
 const catchupRound = 5 * time.Minute
 
-// the slowest subscription on a relay in its latest round - a dropped one
-// ranks above any that finished - and how many there were, and how many of
+// the slowest subscription on a relay in its latest round (a dropped one
+// ranks above any that finished), and how many there were, and how many of
 // them were dropped. this is what the transport line shows for the relay.
 // catchupMu must be held.
 func slowestCatchupLocked(u string) (slow catchupRun, ok bool, subs, dropped int) {
@@ -404,9 +378,8 @@ func relayPage(ctx context.Context, r *nostr.Relay, rcvPk string, since, until n
 
 // relay health. a relay that will not answer still costs a full tor circuit
 // on every attempt, and with one subscribe goroutine per relay per contact
-// that adds up fast - damus sat on 503 for fifty-three straight tries inside
-// one ninety-second window. count consecutive failures, bench the relay for
-// a doubling stretch, forget the whole history on the first success.
+// that adds up fast. count consecutive failures, bench the relay for a
+// doubling stretch, forget the whole history on the first success.
 var (
 	relayHealthMu sync.Mutex
 	relayFails    = map[string]int{}
@@ -494,10 +467,8 @@ func relayOK(u string) {
 
 // how long to wait before the next attempt, never shorter than the caller's
 // own cadence. our own relay backs off too, but to a much lower ceiling:
-// "heal it hard" has to stop short of "hammer it forever". with the relay
-// answering 502 for a day, exempting it entirely meant every subscription
-// redialled it every three seconds, around the clock, on whatever
-// connection the phone had. that was a real bill for a real person.
+// exempt, every subscription would redial a failing relay every few seconds,
+// around the clock, on whatever connection the phone has.
 func relayRetryAfter(u string, base time.Duration, own bool) time.Duration {
 	relayHealthMu.Lock()
 	n := relayFails[u]
@@ -511,8 +482,6 @@ func relayRetryAfter(u string, base time.Duration, own bool) time.Duration {
 	}
 	return base
 }
-
-// ---------- key derivation (mirrors probe) ----------
 
 func nostrConversationID(a, b [32]byte) []byte {
 	first, second := a[:], b[:]
@@ -532,17 +501,14 @@ func nostrHkdf(secret, salt, info []byte, length int) []byte {
 	return out
 }
 
-// ---------- relay pool ----------
-// torNostrClient builds an http.Client whose dials route through the engine's
-// running tor SOCKS proxy. returns error if tor isn't ready.
+// the client torNostrClient hands out, dialling through tor's socks proxy
 var (
 	cachedNostrClient   *http.Client
 	cachedNostrClientMu sync.Mutex
 )
 
 // called from shutdown and from every bounce. the cached client pins the
-// socks address it was built on; without this every publish after a
-// restart-in-process talked to a dead port.
+// socks address it was built on, and a bounce can move it.
 func nostrResetClient() {
 	cachedNostrClientMu.Lock()
 	cachedNostrClient = nil
@@ -559,9 +525,7 @@ func nostrResetClient() {
 // how long a relay's websocket may take to open. the relay library gives
 // seven seconds when the context has no deadline of its own, and an onion
 // relay takes longer than that whenever tor has to find it again: the
-// descriptor, an introduction and a rendezvous, six hops, then tls. after
-// every sleep and wake it failed every attempt ("connection took too long"),
-// was benched, and was the relay that ran out the catch-up cap. only the
+// descriptor, an introduction and a rendezvous, six hops, then tls. only the
 // handshake is bounded by this; the connection lives on the relay's own
 // context.
 func relayDialCtx(parent context.Context, u string) (context.Context, context.CancelFunc) {
@@ -575,10 +539,7 @@ func relayDialCtx(parent context.Context, u string) (context.Context, context.Ca
 // nothing in here talks to tor: the socks address is pinned or remembered,
 // and bine builds a plain socks5 dialer from it. so the mutex is held for
 // microseconds, and a resume or a reconnect that resets the client never
-// waits on a relay runner. the first version let bine ask tor for the
-// address over its shared control connection and held this mutex for the
-// thirty seconds that could take, with fifteen runners queued behind it -
-// which is how a resume sat on this lock for a night (control_events.go).
+// waits on a relay runner (see control_events.go).
 func torNostrClient() (*http.Client, error) {
 	cachedNostrClientMu.Lock()
 	defer cachedNostrClientMu.Unlock()
@@ -619,7 +580,7 @@ func nostrPublishMulti(ctx context.Context, ev nostr.Event) (ok int) {
 	all := append([]string(nil), nostrRelays...)
 	nostrMu.Unlock()
 
-	// index 0 is our own relay and is never benched - it carries the traffic
+	// index 0 is our own relay and is never benched: it carries the traffic
 	// and the tor watchdog already covers it going away.
 	urls := make([]string, 0, len(all))
 	for i, u := range all {
@@ -631,11 +592,9 @@ func nostrPublishMulti(ctx context.Context, ev nostr.Event) (ok int) {
 		urls = all
 	}
 
-	// publishes run on a context detached from the caller's: HaloNostrSend
-	// does `defer cancel()`, so once we return the request ctx dies. we
-	// want the SLOWER relays to keep landing for redundancy after we've
-	// already returned on the first success - hence background + our own
-	// timeout, not a child of ctx.
+	// publishes run on a context detached from the caller's, which dies once
+	// we return on the first success. the slower relays keep landing for
+	// redundancy.
 	bg, bgCancel := detachedPublishCtx()
 	if len(urls) == 0 {
 		bgCancel()
@@ -682,9 +641,8 @@ func nostrPublishMulti(ctx context.Context, ev nostr.Event) (ok int) {
 		}(url)
 	}
 
-	// return the instant ONE relay accepts - delivery no longer waits on the
-	// second-fastest (usually a flaky public relay). the rest keep going on
-	// bg for redundancy. if the caller's ctx dies first, we still leave the
+	// return the instant one relay accepts; the rest keep going on bg for
+	// redundancy. if the caller's ctx dies first, we still leave the
 	// background publishes running and report what landed so far.
 	accepted := 0
 	for i := 0; i < len(urls); i++ {
@@ -733,9 +691,8 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 	seen := map[string]bool{}
 	var seenMu sync.Mutex
 
-	// restarts used to refetch the whole 12h window and shove every old
-	// wrap back through decrypt. remember ids + high-water timestamp on
-	// disk so a relaunch picks up where it left off.
+	// remember ids and the high-water timestamp on disk so a relaunch picks
+	// up where it left off rather than refetch the whole window.
 	seenPath := ""
 	lastPath := ""
 	var lastSaved int64
@@ -748,7 +705,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 		lastPath = savedDataDir + "/nostr_last_" + tag
 		if b, err := os.ReadFile(seenPath); err == nil {
 			lines := strings.Split(string(b), "\n")
-			// keep the file from growing forever - old ids age out of the
+			// keep the file from growing forever; old ids age out of the
 			// relay window anyway
 			if len(lines) > 4000 {
 				lines = lines[len(lines)-2000:]
@@ -777,10 +734,8 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 		f.WriteString(id + "\n")
 		f.Close()
 	}
-	// every relay runner snapshots the anchor when it starts and nothing
-	// hands it back. so the one relay that sees a new event moves its own
-	// copy and the other four stay pinned to whatever the window was at
-	// launch, refetching it for the life of the process. read it back.
+	// runners share the anchor and read it back, or a relay that never sees
+	// a new event stays pinned to the launch window for the whole process.
 	loadLast := func() int64 {
 		seenMu.Lock()
 		defer seenMu.Unlock()
@@ -845,7 +800,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 	}
 
 	for i, url := range urls {
-		// first relay is our own - it carries the traffic, heal it hard
+		// first relay is our own: it carries the traffic, heal it hard
 		own := i == 0
 		go func(u string) {
 			// this subscription's catch-up record, apart from every other
@@ -859,10 +814,8 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 			// the last moment this runner knew its subscription was alive: a
 			// successful subscribe, an event, a probe answered. the gap from
 			// there decides how much the next subscribe asks for. wall clock
-			// on purpose: the monotonic clock go prefers stops while the phone
-			// is asleep, and a night asleep is exactly the gap this has to
-			// see. measured from when the loss was noticed, a kick after that
-			// night looked like a two-second gap and asked for twenty events.
+			// on purpose: go's monotonic clock stops while the phone is
+			// asleep, and a night asleep is exactly the gap this has to see.
 			var lastAlive time.Time
 			markAlive := func() { lastAlive = time.Now().Round(0) }
 			if own {
@@ -922,12 +875,9 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 				// connection that dropped half way asks for the same window
 				// again and not for the little that came after.
 				last = nostr.Timestamp(loadLast())
-				// a hundred was chosen when a wrap was a line of text. a wrap
-				// is now as likely to be a 16k base64 slice of a video, and
-				// asking for a hundred of those on a reconnect that happened
-				// seconds ago re-downloads a file nobody sent. how long we
-				// were away is the only thing that says how much we can have
-				// missed: a cold start, or a gap long enough to have missed a
+				// a wrap can be a 16k base64 slice of a video, so a reconnect
+				// seconds after the last one asks for twenty, not a hundred. a
+				// cold start, or a gap long enough to have missed a
 				// conversation, still asks for the lot.
 				limit := 100
 				if !lastAlive.IsZero() &&
@@ -939,8 +889,7 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 					Tags:  nostr.TagMap{"p": []string{rcvPk}},
 					Limit: limit,
 				}
-				// after the first connect only ask for what we missed - refetching
-				// 100 old events over tor on every reconnect was pure waste.
+				// after the first connect only ask for what we missed
 				if last > 0 {
 					// wraps carry timestamps jittered up to ~10h into the past,
 					// so pull the window back or a late-stamped fresh wrap gets
@@ -961,15 +910,14 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 					sleepOrKick(relayRetryAfter(u, retry, own))
 					continue
 				}
-				// our own relay's successes clear its count too now that its
-				// failures are counted
+				// our own relay's successes clear its failure count too
 				relayOK(u)
 				markAlive()
 				log.Printf("nostr: listening on %s for addr %s...", u, rcvPk[:12])
-				// a dead tor circuit leaves the websocket open but mute - no
-				// error, no channel close, this select just goes deaf forever
-				// while messages slide past. quiet too long = assume dead and
-				// reconnect; the since window refetches whatever we missed.
+				// a dead tor circuit leaves the websocket open but mute: no
+				// error, no channel close. quiet too long gets a probe, and a
+				// reconnect if nothing answers; the since window refetches
+				// whatever we missed.
 				idle := time.NewTimer(deaf)
 				// stored events come newest first and stop at the relay's cap.
 				// until the relay says that was all, count them and remember
@@ -1077,15 +1025,11 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 						}(oldest)
 					case <-idle.C:
 						// quiet is what a conversation looks like nearly all of the
-						// time, so treating it as a dead circuit was treating the
-						// normal case as a fault. every cycle re-ran the since
-						// window - 47 an hour on our own relay, 15 on each of the
-						// others - and after a media send that window is a hundred
-						// base64 chunks. one user paid for 3.5gb of the same wraps
-						// in a day that way. ask a question nothing can answer
-						// instead: a req matching no event costs a frame and an
-						// eose, and a real eose proves the circuit still carries
-						// data.
+						// time, and cycling the sub re-runs the since window, which
+						// after a media send is a hundred base64 chunks. ask a
+						// question nothing can answer instead: a req matching no
+						// event costs a frame and an eose, and a real eose proves
+						// the circuit still carries data.
 						if relayResponds(ctx, r) {
 							markAlive()
 							idle.Reset(deaf)
@@ -1098,12 +1042,11 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 						// the job knocks every fifteen minutes so sockets that
 						// died while the phone was asleep come back inside its
 						// short window. a socket that is still answering does
-						// not need reviving, and dropping it cost a full since
-						// window on every contact and every relay: 6.6mb a
-						// kick, measured, four times an hour, for nothing that
-						// ever reached the screen. ask before tearing down.
+						// not need reviving, and dropping it costs a full since
+						// window on every contact and every relay, so ask
+						// before tearing down.
 						//
-						// a runner with no live subscription never gets here -
+						// a runner with no live subscription never gets here:
 						// it is asleep in sleepOrKick and still reconnects at
 						// once, which is the case the kick exists for.
 						if relayResponds(ctx, r) {
@@ -1143,8 +1086,6 @@ func nostrSubscribeRunnerFn(ctx context.Context, tag string, rcvPk string, unwra
 		}(url)
 	}
 }
-
-// ---------- FFI exports ----------
 
 //export HaloNostrInit
 func HaloNostrInit(cRelaysCSV *C.char) *C.char {
@@ -1207,7 +1148,7 @@ func HaloNostrSend(cPeerXPubHex, cMsg *C.char) *C.char {
 		return C.CString("error: no relays accepted")
 	}
 	// log the drop-box we published to. if a peer isn't receiving, compare this
-	// against the "at addr" in their subscribe line - a mismatch means the two
+	// against the "at addr" in their subscribe line: a mismatch means the two
 	// sides derived different addresses and nothing will ever arrive.
 	_, dst, derr := nip17DeriveRole(peerArr, nip17RcvInfo, hex.EncodeToString(peerArr[:]))
 	if derr == nil {
@@ -1403,7 +1344,7 @@ func HaloTorGet(cUrl *C.char) *C.char {
 	if resp.StatusCode != 200 {
 		return C.CString(fmt.Sprintf("error: status %d", resp.StatusCode))
 	}
-	// cap at 256kb - the og tags live in <head>, no need for the whole page.
+	// cap at 256kb: the og tags live in <head>, no need for the whole page.
 	limited := io.LimitReader(resp.Body, 256*1024)
 	body, err := io.ReadAll(limited)
 	if err != nil {
@@ -1413,7 +1354,7 @@ func HaloTorGet(cUrl *C.char) *C.char {
 }
 
 // a client that only ever dials through tor, whatever the send mode. the
-// shared client above goes direct in relay and fast modes, which is right
+// shared client above goes direct in balanced and fast modes, which is right
 // for relays and wrong for a link preview: a preview that cannot go over
 // tor does not go. built once, no redirects past two, and never a plain
 // fallback.
@@ -1531,7 +1472,7 @@ func HaloTorPost(cUrl *C.char, cBody *C.char) *C.char {
 	return C.CString(string(out))
 }
 
-// GET over tor that keeps the body for ANY 2xx - the badge service answers
+// GET over tor that keeps the body for any 2xx: the badge service answers
 // 202 while a payment is still pending, which HaloTorGet would reject.
 //
 //export HaloTorGetJSON
@@ -1595,7 +1536,7 @@ func HaloTorGetB64(cUrl *C.char) *C.char {
 	if resp.StatusCode != 200 {
 		return C.CString(fmt.Sprintf("error: status %d", resp.StatusCode))
 	}
-	// cap at 1mb - preview thumbnails, not full-res.
+	// cap at 1mb: preview thumbnails, not full-res.
 	limited := io.LimitReader(resp.Body, 1024*1024)
 	body, err := io.ReadAll(limited)
 	if err != nil {

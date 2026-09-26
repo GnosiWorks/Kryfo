@@ -9,11 +9,9 @@ import '../widgets/press_scale.dart';
 import '../main.dart' show session, appState;
 import '../l10n/l10n.dart';
 
-// safety number for a contact: a 60-digit code derived from both X25519
-// public keys, order-independent so both phones show the same number. if it
-// matches on both ends (read aloud or compared in person), the conversation
-// is end-to-end encrypted with no one in the middle. the name can be faked;
-// this number cannot.
+// safety number for a contact: 60 digits from both X25519 public keys,
+// order-independent so both phones show the same number. a match on both
+// ends means no one is in the middle; a name can be faked, this cannot.
 String haloSafetyNumber(String myXpubHex, String peerXpubHex) {
   final a = myXpubHex.toLowerCase().trim();
   final b = peerXpubHex.toLowerCase().trim();

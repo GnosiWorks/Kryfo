@@ -51,7 +51,7 @@ class PinHeaderButton extends StatelessWidget {
                 ),
               ),
             ),
-            // the count is in the tooltip; read out on its own it was "1"
+            // the count is in the tooltip; read out alone it is just "1"
             if (on)
               PositionedDirectional(
                 end: -2,
@@ -267,7 +267,7 @@ class _PinCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // the amber rule the old bar wore, kept as the mark of a pin
+            // the amber rule marks a pin
             Container(width: 3, color: HaloColors.amber),
             Expanded(
               child: Padding(

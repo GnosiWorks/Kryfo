@@ -11,25 +11,15 @@ import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.plugin.common.MethodChannel
 import java.security.SecureRandom
 
-// the helper app mode, which is unifiedpush spoken by hand.
-//
-// the protocol between an app and a distributor (ntfy is one) is a handful
-// of broadcasts, and that is all this file is. the connector library was
-// looked at and left out: from 3.0 it pulls in google's tink for web push
-// decryption, and a knock from our relay carries nothing to decrypt. no
-// library, no dependency, nothing of google's.
-//
-// one registration per address kryfo listens on, each with its own token,
-// so each gets its own endpoint from the distributor. the relay is told one
-// endpoint per address and cannot use the endpoint to tie a person's
-// addresses together.
-//
-// a push is a knock and nothing more. whatever bytes arrive are dropped
-// unread: the only thing a knock does is start a check-in, the same one the
-// fifteen-minute job runs, over tor, and only if it carries a token this
+// the helper app mode: unifiedpush spoken by hand, a handful of broadcasts
+// to a distributor such as ntfy. no connector library, from 3.0 it pulls in
+// google's tink for web push decryption and a knock has nothing to decrypt.
+// one registration per address, each with its own token, so the relay gets
+// one endpoint per address and cannot tie a person's addresses together.
+// a push is only a knock: its bytes are dropped unread and it starts the
+// same check-in the fifteen-minute job runs, and only with a token this
 // phone made. anyone can send this receiver a broadcast, so that check and
-// the rate limit in dart are what stand between a hostile app and the
-// battery.
+// the rate limit in dart guard the battery.
 object HelperPush {
     const val ACTION_REGISTER = "org.unifiedpush.android.distributor.REGISTER"
     const val ACTION_UNREGISTER = "org.unifiedpush.android.distributor.UNREGISTER"

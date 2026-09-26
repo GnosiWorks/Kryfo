@@ -18,19 +18,12 @@ import (
 
 // tor's control port answers in about a millisecond when it is well, and
 // never when it is not. bine gives no way to bound that: control.Conn hides
-// the socket it was built on, and every call parks in ReadResponse until an
-// answer arrives.
-//
-// on 2026-09-19 a samsung was found with a reconnect parked inside
-// SetConf(DisableNetwork 1) for ten and a half hours. it held startMu, so no
-// later reconnect could even begin, tor stayed off, and nothing said so on
-// screen. the 45s escape hatch above it let the caller go and left the lock
-// held for ever, which is worse than blocking.
+// its socket, and every call parks in ReadResponse until an answer arrives.
 //
 // so the engine dials the control port itself and keeps the net.Conn. a
 // deadline on that socket turns a wedge into an error the caller can act on,
-// and a socket that timed out is closed - which unparks whatever is reading
-// it - and replaced on the next call. tor itself is never closed: 0.4.9.5
+// and a socket that timed out is closed, which unparks whatever is reading
+// it, and replaced on the next call. tor itself is never closed: 0.4.9.5
 // survives exactly one shutdown per process and aborts on the second.
 
 var (
@@ -46,11 +39,9 @@ var (
 	ctrlDials    int64
 )
 
-// how long any one control command may take. tor answers in about a
-// millisecond; ten seconds is far past anything healthy and still short
-// enough that a watchdog is not left hanging.
-// a var, not a const, only so the test that wedges a control port does not
-// have to wait ten seconds a time.
+// how long any one control command may take: far past anything healthy and
+// still short enough that a watchdog is not left hanging. a var so the test
+// that wedges a control port need not wait ten seconds a time.
 var ctrlDeadline = 10 * time.Second
 
 func ctrlTimeoutCount() int64 { return atomic.LoadInt64(&ctrlTimeouts) }
@@ -120,7 +111,7 @@ func ctrlDo(t *tor.Tor, what string, f func(*control.Conn) error) error {
 	if ctrlConn == nil {
 		if err := ctrlOpen(t); err != nil {
 			// no connection of our own: fall back to bine's, but never
-			// block on it - the caller gets its deadline either way.
+			// block on it. the caller gets its deadline either way.
 			return ctrlFallback(t, what, f)
 		}
 	}
@@ -150,7 +141,7 @@ func ctrlDo(t *tor.Tor, what string, f func(*control.Conn) error) error {
 	return err
 }
 
-// used only when we could not get a connection of our own - an embedded
+// used only when we could not get a connection of our own, as an embedded
 // control connection has no port to dial. bine's Conn cannot be given a
 // deadline, so the call goes on its own goroutine and the caller leaves
 // without it. that goroutine may stay parked; it holds nothing but itself.

@@ -10,7 +10,7 @@ void main() {
       expect(escapeWifi('CAFE1234'), '"CAFE1234"');
       expect(escapeWifi('cafe-1234'), 'cafe-1234');
     });
-    test('a full code', () {
+    test('builds a full wifi code', () {
       final q = buildQr(QrKind.wifi, {
         'ssid': 'Home;net',
         'password': r'p:ss\word"1',
@@ -18,7 +18,7 @@ void main() {
       expect(q.data, r'WIFI:T:WPA;S:Home\;net;P:p\:ss\\word\"1;;');
       expect(q.caption, 'SCAN TO JOIN · HOME;NET');
     });
-    test('wpa3, open, and a short password', () {
+    test('handles wpa3, open and short passwords', () {
       expect(
         buildQr(QrKind.wifi, {
           'ssid': 'n',
@@ -44,7 +44,7 @@ void main() {
   });
 
   group('contact', () {
-    test('vcard fields are escaped and lines end in crlf', () {
+    test('escapes vcard fields, ends lines in crlf', () {
       expect(
         escapeVcard('Smith; John, Jr\\\nline'),
         r'Smith\; John\, Jr\\\nline',
@@ -60,16 +60,16 @@ void main() {
         'TEL;TYPE=CELL:+4402079460000\r\nEMAIL:ada@example.org\r\nEND:VCARD',
       );
     });
-    test('a line break typed into a name cannot start a new field', () {
+    test('a newline in a name adds no field', () {
       final q = buildQr(QrKind.contact, {'name': 'A\nTEL:666'});
       expect(q.data!.contains('\nTEL:666'), false);
     });
-    test('nothing typed is nothing drawn', () {
+    test('an empty contact builds nothing', () {
       expect(buildQr(QrKind.contact, {}).data, null);
     });
   });
 
-  test('link: as typed, a bare domain gets https, no redirect added', () {
+  test('link: a bare domain gets https', () {
     expect(
       buildQr(QrKind.link, {'link': 'https://kryfo.app/a?b=c'}).data,
       'https://kryfo.app/a?b=c',
@@ -83,7 +83,7 @@ void main() {
     );
   });
 
-  test('email, phone, sms', () {
+  test('builds email, phone and sms codes', () {
     expect(
       buildQr(QrKind.email, {
         'to': 'a@b.org',
@@ -103,7 +103,7 @@ void main() {
     expect(buildQr(QrKind.sms, {'number': '6900'}).data, 'SMSTO:6900');
   });
 
-  test('location: range checked, comma decimals taken', () {
+  test('location: checks range, takes comma decimals', () {
     expect(
       buildQr(QrKind.geo, {'lat': '52.52000', 'lon': '13,405'}).data,
       'geo:52.52,13.405',
@@ -115,7 +115,7 @@ void main() {
     );
   });
 
-  test('bitcoin: address shape and amount', () {
+  test('bitcoin: checks address and amount', () {
     const a = 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq';
     expect(buildQr(QrKind.btc, {'address': a}).data, 'bitcoin:$a');
     expect(
@@ -136,7 +136,7 @@ void main() {
       expect(g.dense, false);
       expect(g.at(0, 0), true);
     });
-    test('long text is flagged dense, too long is null', () {
+    test('flags long text dense, too long is null', () {
       expect(gridFor('x' * 700)!.dense, true);
       expect(gridFor('x' * 3000), null);
     });

@@ -1,22 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// first-contact addresses. every other address on the wire comes from
-// ECDH(myPriv, peerPub), which means both sides need each other's key before
-// either can compute anything. that is fine once you are paired and useless
-// before it: a phone with no contacts subscribes to nothing, so a one-way qr
-// scan only ever worked because the direct onion carried the introduction.
-// when the onion will not publish, nothing arrives and nothing says why.
+// first-contact addresses. every other address comes from ECDH(myPriv,
+// peerPub), so a stranger has nowhere to send an introduction. this one comes
+// from our own private key alone: a stranger gets the public half out of our
+// invite, and nobody else can read what lands there.
 //
-// this address comes from our own private key alone. we can always derive it,
-// a stranger gets the public half out of our invite, and nobody else can read
-// what lands there.
-//
-// the counter is not decoration. an invite can end up in a bio, a screenshot
-// or a forum post, and without a counter the address it points at would be
-// permanent - unrotatable for the life of the identity, and a stable thing for
-// a relay to count. bumping it retires old invites and leaves the identity and
-// every existing conversation untouched.
+// an invite can end up in a bio or a screenshot, and a fixed address would be
+// a stable thing for a relay to count. bumping the counter retires old
+// invites and leaves the identity and every conversation untouched.
 
 import (
 	"encoding/hex"
@@ -85,10 +77,10 @@ func nip17WrapFirstContactAs(me xid, peer [32]byte, fcPk, msg string) (nostr2.Ev
 }
 
 // unwrap something that landed on our first-contact address. we cannot check
-// who sent it - not knowing them yet is what makes it first contact - so the
-// caller must treat the result as untrusted and put it through the same pow
-// and request gates as any other stranger. returns the payload and the seal's
-// pubkey so the caller can tie later messages to the same sender.
+// who sent it, so the caller must treat the result as untrusted and put it
+// through the same pow and request gates as any other stranger. returns the
+// payload and the seal's pubkey so the caller can tie later messages to the
+// same sender.
 func nip17UnwrapFirstContact(counter int, gw nostr2.Event) (content, sealPk string, err error) {
 	fcSk, _, err := nip17FirstContactKeys(counter)
 	if err != nil {

@@ -9780,7 +9780,7 @@ abstract class AppLocalizations {
   /// widgets/motion.dart
   ///
   /// In en, this message translates to:
-  /// **'telling the network you\'re online — without revealing where.'**
+  /// **'telling the network you\'re online, without revealing where.'**
   String get motionTellingTheNetworkYou;
 
   /// widgets/motion.dart

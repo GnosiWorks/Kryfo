@@ -62,9 +62,8 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
     );
     if (matches) return true;
     // key changed. deliver-and-warn: trust the new key so the message still
-    // arrives and the session re-establishes, but flag the contact so the chat
-    // shows a security-code-changed banner. reinstall or mitm looks the same
-    // here - surface it, let the user decide, never silently drop.
+    // arrives, but flag the contact so the chat shows a banner. a reinstall
+    // and a mitm look the same here, so the user decides.
     await _db.update(
       'contacts',
       {'key_changed': 1, 'verified': 0},
@@ -87,9 +86,8 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
     return IdentityKey(Curve.decodePoint(bytes, 0));
   }
 
-  // drop a peer's stored identity so a genuinely-changed key can be
-  // re-trusted. only called after the user accepts the new safety number.
-  // next isTrustedIdentity sees no row -> trust-first-use -> new session ok.
+  // drop a peer's stored identity so a changed key is trusted on first use
+  // again. only called after the user accepts the new safety number.
   Future<void> removePeerIdentity(SignalProtocolAddress address) async {
     await _db.delete(
       'peer_identities',
@@ -107,10 +105,9 @@ class HaloIdentityKeyStore implements IdentityKeyStore {
   }
 }
 
-// the one prekey an invite carries. an invite is shared - a handle, a link,
-// a qr on a screen - so the "one-time" key it names has to survive being
-// used: libsignal removes a prekey after the first opener built on it, and
-// every later person who used that same invite was buried at the door.
+// the one prekey an invite carries. an invite is shared (a handle, a link, a
+// qr), so this "one-time" key must survive use: libsignal removes a prekey
+// after the first session built on it, and everyone after would fail.
 const invitePreKeyId = 999999;
 
 class HaloPreKeyStore implements PreKeyStore {
@@ -171,9 +168,8 @@ class HaloSessionStore implements SessionStore {
     return SessionRecord.fromSerialized(rows.first['record'] as Uint8List);
   }
 
-  // every address we hold a session with, contact or not. lets the drain
-  // loop try a peer we deleted (session kept) whose next whisper needs
-  // decrypting before it can be re-filed as a request.
+  // every address we hold a session with, contact or not, so the drain loop
+  // can decrypt a deleted peer's next message and file it as a request
   Future<List<String>> allSessionAddresses() async {
     final rows = await _db.query('sessions', columns: ['address']);
     return rows.map((r) => r['address'] as String).toSet().toList();

@@ -5,12 +5,8 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.embedding.engine.dart.DartExecutor
 
-// one flutter engine for the life of the process, not the life of a screen.
-//
-// with the engine owned by the activity, leaving the app froze the dart
-// isolate and the nostr poll loop stopped, so nothing arrived until you
-// opened halo again. owning it here means tor and the poll timer keep
-// running in the background, which is the whole point of a messenger.
+// one flutter engine for the life of the process, not the life of a screen,
+// so tor and the poll timer keep running while the app is in the background.
 class HaloApplication : Application() {
     companion object {
         const val ENGINE_ID = "halo_engine"

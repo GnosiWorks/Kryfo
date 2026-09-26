@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the atmosphere picker, shared by chats and groups. moods, gradients and
-// patterns, stored on this phone in the encrypted db, gone on wipe. nothing
-// here is ever sent: the other person sees their own. each tap previews
-// live behind the sheet; keep it to stay, back out to put the old one back.
+// the atmosphere picker for chats and groups. kept in the encrypted db and
+// never sent: the other person sees their own. taps preview live behind the
+// sheet; backing out puts the old one back.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
