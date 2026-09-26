@@ -1165,13 +1165,17 @@ class Build:
                   where, waive)
 
     def m_drop(self, args, opts, piv, where, waive):
+        # falls, shrinking away over the last third, then pops back in at
+        # the top. a fade would leave a ghost of its white outline
         n = self.target(args[0], piv, where)
         dy, t0, t1 = float(args[1]), float(args[2]), float(args[3])
-        fade = t0 + 0.7 * (t1 - t0)
-        back = float(opts.get('back', 200))
+        shrink = t0 + 0.65 * (t1 - t0)
+        back = float(opts.get('back', 260))
         self.keys(n, 1, [(t0, 0.0, 0), (t1, dy, EASES['in']), (t1 + 1, 0.0, EASES['hold'])], where, waive)
-        self.keys(n, 5, [(t0, 1.0, 0), (fade, 1.0, 0), (t1, 0.0, EASES['in']),
-                         (t1 + 1, 0.0, 0), (t1 + 1 + back, 1.0, EASES['sine'])], where, waive)
+        for p in (3, 4):
+            self.keys(n, p, [(t0, 1.0, 0), (shrink, 1.0, 0), (t1, 0.2, EASES['in']),
+                             (t1 + 1, 0.0, EASES['hold']), (t1 + 1 + back, 1.0, EASES['back'])],
+                      where, True)
 
     def m_squeeze(self, args, opts, piv, where, waive):
         t = float(args[0])
