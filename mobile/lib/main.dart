@@ -62,6 +62,7 @@ import 'message_envelope.dart';
 import 'polls.dart';
 import 'search.dart';
 import 'search_bench.dart';
+import 'session.dart';
 import 'stickers/sticker_pack.dart' show StickerPack;
 import 'stickers/sticker_wire.dart' show StickerWire, stickerText;
 import 'widgets/motion.dart';
@@ -958,6 +959,18 @@ Future<String> torGetB64OnIsolate(String url) {
 class HaloDb {
   HaloDb([this.container = HaloContainer.everyday]);
 
+  // a wrapped container, under the key its pin entry unwrapped. storage is
+  // never read or written for it, and the key goes on close
+  HaloDb.withKey(this.container, String keyHex) : _given = "x'$keyHex'" {
+    if (!container.wrapped) {
+      throw ArgumentError('${container.dbFile} has a key of its own');
+    }
+    // anything else would be taken as a passphrase and open another file
+    if (!RegExp(r'^[0-9a-fA-F]{64}$').hasMatch(keyHex)) {
+      throw ArgumentError('a raw key is 64 hex characters');
+    }
+  }
+
   // whose database this is: its file, and where its key sits
   final HaloContainer container;
 
@@ -966,13 +979,18 @@ class HaloDb {
   );
 
   Database? _db;
+  String? _given;
 
   // 32 bytes from the platform csprng
   Future<String> _passphrase() async {
-    var pw = await _storage.read(key: container.keyName);
+    final given = _given;
+    if (given != null) return given;
+    final name = container.keyName;
+    if (name == null) throw StateError('${container.dbFile} has no key here');
+    var pw = await _storage.read(key: name);
     if (pw != null) return pw;
     pw = container.newKey();
-    await _storage.write(key: container.keyName, value: pw);
+    await _storage.write(key: name, value: pw);
     return pw;
   }
 
@@ -989,6 +1007,7 @@ class HaloDb {
   Future<void> close() async {
     final d = _db;
     _db = null;
+    _given = null;
     await d?.close();
   }
 
@@ -4413,12 +4432,12 @@ class _Shown {
 // the everyday container's database. what arrives lands here whichever
 // session is open; screens never touch it, they ask the session
 final live = HaloDb();
-HaloDb _session = live;
-// the database the screens read and write: the everyday one, or the
-// decoy's while a decoy session is open
-HaloDb get session => _session;
+Session _session = Session(live);
+// what the screens read and write: the everyday database, or the decoy's
+// while a decoy session is open
+Session get session => _session;
 // a quiet session sends nothing: what is typed in it stays queued
-bool get sessionQuiet => _session.container.quiet;
+bool get sessionQuiet => _session.primary.container.quiet;
 
 // opens a room on the root navigator, a beat later: whoever asked for the
 // join is a sheet or a screen about to close itself, and a room pushed
@@ -6845,13 +6864,13 @@ class AppState extends ChangeNotifier {
     final want = decoy ? _decoyDb : live;
     if (want == null) return;
     lockState.inDecoy = decoy;
-    if (identical(_session, want)) return;
+    if (identical(_session.primary, want)) return;
     // no reads here: what home shows of the other session was read ahead,
     // and swapping it in costs the same whichever way it goes
     final leaving = _Shown(contacts, pendingCount, groups, _quietAvatar);
     final coming = _otherShown;
     _otherShown = leaving;
-    _session = want;
+    _session = Session(want);
     _quiet = decoy ? _decoyId : null;
     if (coming != null) {
       contacts = coming.contacts;
@@ -7923,7 +7942,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> refreshContacts() async {
-    final (list, pending) = await _contactsOf(session);
+    final (list, pending) = await _contactsOf(session.primary);
     contacts = list;
     pendingCount = pending;
     notifyListeners();
@@ -7996,7 +8015,7 @@ class AppState extends ChangeNotifier {
   // ---- groups ----
 
   Future<void> refreshGroups() async {
-    groups = await _groupsOf(session);
+    groups = await _groupsOf(session.primary);
     notifyListeners();
   }
 
@@ -8578,7 +8597,7 @@ class AppState extends ChangeNotifier {
     await d.deleteGroup(groupId);
     // the line in the list is only for a room of the session on screen: an
     // everyday room ending while the decoy is open says nothing there
-    if (expired && identical(d, session)) {
+    if (expired && identical(d, session.primary)) {
       expiredRoomName = g['name'] as String?;
       Timer(const Duration(seconds: 6), () {
         expiredRoomName = null;
@@ -8590,7 +8609,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> leaveRoom(String groupId) async {
-    if (sessionQuiet) return _destroyRoom(groupId, on: session);
+    if (sessionQuiet) return _destroyRoom(groupId, on: session.primary);
     try {
       await _sendControlToGroup(groupId, const GroupControl(type: 'leave'));
     } catch (e) {
@@ -8932,7 +8951,7 @@ class AppState extends ChangeNotifier {
   // kryfo id: a vote, or the final count a close carries, would otherwise
   // put the real id in front of the room.
   Future<String> meIn(String groupId) async =>
-      (await _roomOf(groupId, session))?.pub ?? sessionId;
+      (await _roomOf(groupId, session.primary))?.pub ?? sessionId;
 
   // a vote goes out like a reaction: shown here at once, then to every
   // member. choosing nothing takes the vote back.
@@ -9274,7 +9293,9 @@ class AppState extends ChangeNotifier {
   // anyone can leave. tells the remaining members so they can drop us from
   // their copies. caller deletes the group locally.
   Future<void> leaveGroupAndAnnounce(String groupId) async {
-    if (await _roomOf(groupId, session) != null) return leaveRoom(groupId);
+    if (await _roomOf(groupId, session.primary) != null) {
+      return leaveRoom(groupId);
+    }
     final gc = GroupControl(type: 'leave');
     // a quiet session keeps it on this phone: nothing leaves
     if (!sessionQuiet) await _sendControlToGroup(groupId, gc);

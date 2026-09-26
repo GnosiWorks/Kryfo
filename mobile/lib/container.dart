@@ -16,6 +16,9 @@ enum Binding {
   // the identity inside is never brought online. nothing typed in it
   // leaves the phone
   quiet,
+  // more chats of the identity it extends, under a key only its pin
+  // unwraps. no identity and no settings of its own
+  extending,
 }
 
 class HaloContainer {
@@ -27,23 +30,34 @@ class HaloContainer {
     required this.suffix,
     required this.prefix,
     required this.rawKey,
-  });
+    this.extendsId,
+    this.wrapped = false,
+  }) : assert((keyName == null) == wrapped),
+       assert((extendsId != null) == (binding == Binding.extending));
 
   // the id sealed into a pin table entry: sixteen bytes, hex
   final String id;
   final Binding binding;
   // the database file, in the documents folder
   final String dbFile;
-  // where its database key sits in secure storage
-  final String keyName;
+  // where its database key sits in secure storage. none when wrapped
+  final String? keyName;
   // after the media and wallpapers folder names, '' for the everyday one
   final String suffix;
   // settings prefix, '' for the everyday one
   final String prefix;
   // a raw 32-byte key, so sqlcipher skips its key derivation
   final bool rawKey;
+  // the container whose identity and settings this one uses
+  final String? extendsId;
+  // its key is kept only inside its pin entry, so storage never says it
+  // exists: it is opened with the key the pin check hands back
+  final bool wrapped;
 
-  bool get quiet => binding == Binding.quiet;
+  HaloContainer? get extended => extendsId == null ? null : byId(extendsId!);
+
+  // a vault of the decoy is as quiet as the decoy
+  bool get quiet => binding == Binding.quiet || (extended?.quiet ?? false);
 
   // where a setting of this container is kept. a setting of one identity
   // gets the prefix; one of the phone is shared by every identity. a key on
@@ -74,7 +88,33 @@ class HaloContainer {
     rawKey: true,
   );
 
-  static const all = [everyday, decoy];
+  // a vault has the prefix of the container it extends: its settings are
+  // that identity's
+  static const vault = HaloContainer._(
+    id: '00000000000000000000000000000003',
+    binding: Binding.extending,
+    dbFile: 'halo_v.db',
+    keyName: null,
+    suffix: '_v',
+    prefix: '',
+    rawKey: true,
+    extendsId: '00000000000000000000000000000001',
+    wrapped: true,
+  );
+
+  static const decoyVault = HaloContainer._(
+    id: '00000000000000000000000000000004',
+    binding: Binding.extending,
+    dbFile: 'halo_dv.db',
+    keyName: null,
+    suffix: '_dv',
+    prefix: 'd.',
+    rawKey: true,
+    extendsId: '00000000000000000000000000000002',
+    wrapped: true,
+  );
+
+  static const all = [everyday, decoy, vault, decoyVault];
 
   static HaloContainer? byId(String id) {
     for (final c in all) {
@@ -109,7 +149,8 @@ class HaloContainer {
   }
 
   // everything of this container on disk: the database and its sidecars,
-  // its folders and its key. never the everyday one
+  // its folders and its key. never the everyday one. a wrapped one has no
+  // key in storage and shares its settings, so only its files go
   Future<void> wipeFiles() async {
     if (this == everyday) return;
     final path = await dbPath();
@@ -126,7 +167,8 @@ class HaloContainer {
         if (await d.exists()) await d.delete(recursive: true);
       } catch (_) {}
     }
-    await _registry.delete(key: keyName);
+    if (wrapped) return;
+    await _registry.delete(key: keyName!);
     // and its settings, wherever each kind is kept
     final prefs = await SharedPreferences.getInstance();
     for (final k in containerKeys) {
@@ -151,16 +193,20 @@ Future<Set<String>> listedContainers() async {
 }
 
 Future<void> listContainer(HaloContainer c, bool on) async {
+  // a list entry would say a vault exists
+  if (c.wrapped) throw ArgumentError('${c.dbFile} is never listed');
   final now = await listedContainers();
   on ? now.add(c.id) : now.remove(c.id);
   await _registry.write(key: _kListed, value: now.join(','));
 }
 
 // a container on disk that no list names was being made or taken away
-// when the app stopped: it goes
+// when the app stopped: it goes. a wrapped one is never listed, so the
+// sweep leaves it alone
 Future<void> sweepContainers(Set<String> listed) async {
   for (final c in HaloContainer.all) {
-    if (c == HaloContainer.everyday || listed.contains(c.id)) continue;
+    if (c == HaloContainer.everyday || c.wrapped) continue;
+    if (listed.contains(c.id)) continue;
     if (await File(await c.dbPath()).exists()) await c.wipeFiles();
   }
 }

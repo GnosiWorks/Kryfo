@@ -504,19 +504,19 @@ Future<void> _createQuietBackup(
 }) async {
   final c = session.container;
   final docs = await getApplicationDocumentsDirectory();
-  final raw = await session.open();
-  final saved = await session.loadIdentity();
+  final raw = await session.primary.open();
+  final saved = await session.primary.loadIdentity();
   final onion = await raw.query(
     'signal_meta',
     where: 'k = ?',
     whereArgs: ['onion_key'],
     limit: 1,
   );
-  final dbKey = await _secureStorage.read(key: c.keyName);
+  final dbKey = await _secureStorage.read(key: c.keyName!);
   if (saved == null || onion.isEmpty || dbKey == null) {
     throw BackupError('identity not loaded');
   }
-  await session.checkpoint();
+  await session.primary.checkpoint();
   final stage = Directory(
     p.join((await getApplicationSupportDirectory()).path, 'backup_stage'),
   );
@@ -728,7 +728,7 @@ Future<void> _landInDecoy(
   Map<String, dynamic> manifest,
 ) async {
   final c = HaloContainer.decoy;
-  await session.close();
+  await session.primary.close();
   final dbPath = await c.dbPath();
   for (final f in [dbPath, '$dbPath-wal', '$dbPath-shm', '$dbPath-journal']) {
     try {
@@ -759,7 +759,7 @@ Future<void> _landInDecoy(
     await src.rename(dest);
   }
   await _secureStorage.write(
-    key: c.keyName,
+    key: c.keyName!,
     value: manifest['dbPassphrase'] as String,
   );
   try {
