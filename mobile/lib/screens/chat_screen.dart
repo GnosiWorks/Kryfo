@@ -2788,7 +2788,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     src.delete().ignore();
     if (_disguise) bytes = disguiseWav(bytes);
     final msgUid = _newMsgUid();
-    final mediaDir = await session.container.mediaDir();
+    final mediaDir = await session.mediaDirOf(widget.peerHaloId);
     final dest = File('${mediaDir.path}/vn_$msgUid.wav');
     await dest.writeAsBytes(bytes);
     final filePath = dest.path;
@@ -3005,7 +3005,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // slots a stranger gets
     if (_requestPending) setState(() => _sentCount++);
     final msgUid = _newMsgUid();
-    final mediaDir = await session.container.mediaDir();
+    final mediaDir = await session.mediaDirOf(widget.peerHaloId);
     final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
     final dest = File('${mediaDir.path}/f_${msgUid}_$safe');
     await File(src).copy(dest.path);
@@ -3190,7 +3190,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (_requestLocked) return;
     if (_requestPending) setState(() => _sentCount++);
     final msgUid = _newMsgUid();
-    final mediaDir = await session.container.mediaDir();
+    final mediaDir = await session.mediaDirOf(widget.peerHaloId);
     final mediaFile = File('${mediaDir.path}/$msgUid.jpg');
     await mediaFile.writeAsBytes(bytes);
     final mediaPath = mediaFile.path;
@@ -4309,7 +4309,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     try {
       await shredFile(x.path);
     } catch (_) {}
-    final folder = await session.container.folder('wallpapers');
+    final folder = await session.folderOf(widget.peerHaloId, 'wallpapers');
     final file = File('${folder.path}/${widget.peerHaloId}.jpg');
     await file.writeAsBytes(bytes, flush: true);
     await session.setAtmosphere(widget.peerHaloId, 'image:${file.path}');

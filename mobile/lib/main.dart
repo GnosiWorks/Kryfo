@@ -1959,6 +1959,21 @@ class HaloDb {
     );
   }
 
+  // every person held, true for a contact and false for a key only, and
+  // every group: what a session reads to know whose a chat is
+  Future<({Map<String, bool> people, Set<String> groups})> heldChats() async {
+    final db = await open();
+    final people = await db.query('contacts', columns: ['halo_id', 'accepted']);
+    final groups = await db.query('groups', columns: ['group_id']);
+    return (
+      people: {
+        for (final r in people)
+          r['halo_id'] as String: (r['accepted'] as int? ?? 0) == 1,
+      },
+      groups: {for (final r in groups) r['group_id'] as String},
+    );
+  }
+
   Future<void> deleteConversation(String haloId) async {
     final d = await open();
     await d.transaction((t) async {
@@ -6708,12 +6723,12 @@ class AppState extends ChangeNotifier {
   // unlock only swaps them in and every outcome shows at the same moment
   _Shown? _otherShown;
 
-  Future<_Shown> _shownOf(HaloDb d) async {
-    final (list, pending) = await _contactsOf(d);
+  Future<_Shown> _shownOf(Session s) async {
+    final (list, pending) = await _contactsOf(s);
     final a = await const FlutterSecureStorage().read(
-      key: d.container.key('my_avatar'),
+      key: s.container.key('my_avatar'),
     );
-    return _Shown(list, pending, await _groupsOf(d), int.tryParse(a ?? ''));
+    return _Shown(list, pending, await _groupsOf(s), int.tryParse(a ?? ''));
   }
 
   Future<void> _openContainers() async {
@@ -6726,7 +6741,7 @@ class AppState extends ChangeNotifier {
         if (q != null) {
           _decoyDb = d;
           _decoyId = q;
-          _otherShown = await _shownOf(d);
+          _otherShown = await _shownOf(Session(d));
         } else {
           await d.close();
         }
@@ -6827,7 +6842,7 @@ class AppState extends ChangeNotifier {
       }
       _decoyDb = d;
       _decoyId = id;
-      _otherShown = await _shownOf(d);
+      _otherShown = await _shownOf(Session(d));
       decoyReady = true;
       notifyListeners();
       return true;
@@ -7942,15 +7957,15 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> refreshContacts() async {
-    final (list, pending) = await _contactsOf(session.primary);
+    final (list, pending) = await _contactsOf(session);
     contacts = list;
     pendingCount = pending;
     notifyListeners();
   }
 
-  Future<(List<ContactPreview>, int)> _contactsOf(HaloDb d) async {
-    final rows = await d.contacts();
-    final lasts = await d.lastMessages();
+  Future<(List<ContactPreview>, int)> _contactsOf(Session s) async {
+    final rows = await s.contacts();
+    final lasts = await s.lastMessages();
     final list = <ContactPreview>[];
     for (final r in rows) {
       final haloId = r['halo_id'] as String;
@@ -8009,22 +8024,22 @@ class AppState extends ChangeNotifier {
       if (a.pinned != b.pinned) return a.pinned ? -1 : 1;
       return (b.when ?? DateTime(0)).compareTo(a.when ?? DateTime(0));
     });
-    return (list, await d.pendingRequestCount());
+    return (list, await s.pendingRequestCount());
   }
 
   // ---- groups ----
 
   Future<void> refreshGroups() async {
-    groups = await _groupsOf(session.primary);
+    groups = await _groupsOf(session);
     notifyListeners();
   }
 
-  Future<List<GroupPreview>> _groupsOf(HaloDb d) async {
-    final rows = await d.loadGroups();
+  Future<List<GroupPreview>> _groupsOf(Session s) async {
+    final rows = await s.loadGroups();
     final list = <GroupPreview>[];
     for (final r in rows) {
       final gid = r['group_id'] as String;
-      final members = await d.getGroupMembers(gid);
+      final members = await s.getGroupMembers(gid);
       list.add(
         GroupPreview(
           groupId: gid,

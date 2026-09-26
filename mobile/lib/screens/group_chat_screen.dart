@@ -1532,7 +1532,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   Future<void> _sendGroupImage(Uint8List bytes, String caption) async {
     final uid = newMsgUid();
-    final mediaDir = await session.container.mediaDir();
+    final mediaDir = await session.mediaDirOf(widget.groupId);
     final f = File('${mediaDir.path}/$uid.jpg');
     await f.writeAsBytes(bytes);
     final burn = _ghost ? _burnSeconds : null;
@@ -1579,7 +1579,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     var bytes = await src.readAsBytes();
     if (_disguise) bytes = disguiseWav(bytes);
     final uid = newMsgUid();
-    final mediaDir = await session.container.mediaDir();
+    final mediaDir = await session.mediaDirOf(widget.groupId);
     final dest = File('${mediaDir.path}/vn_$uid.wav');
     await dest.writeAsBytes(bytes);
     final burn = _ghost ? _burnSeconds : null;
@@ -1683,7 +1683,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       return;
     }
     final uid = newMsgUid();
-    final mediaDir = await session.container.mediaDir();
+    final mediaDir = await session.mediaDirOf(widget.groupId);
     final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
     final dest = File('${mediaDir.path}/f_${uid}_$safe');
     await File(src).copy(dest.path);
