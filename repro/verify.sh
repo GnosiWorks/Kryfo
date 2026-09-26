@@ -7,12 +7,12 @@
 #      apksigcopier compare, which is the check f-droid itself runs.
 #   2. does that same source produce the same bytes somewhere else?
 #
-# the second one is the one we learned the hard way. our own container
-# agreeing with our own build at one path says our pipeline is
-# deterministic, which is not the question anyone is asking. f-droid built
-# 0.2.8 on their machine and disagreed with ours on libdartjni.so, and
-# nothing here could see it, because both sides of the comparison were the
-# same build at the same path.
+# the second one is what f-droid's rebuild depends on. our container
+# agreeing with our own build at one path only says the pipeline is
+# deterministic. f-droid builds on their own machine, and a file that
+# changes with the build path (a native library that keeps a gnu
+# build-id, say) makes their rebuild disagree with the published apk even
+# when both sides here match.
 #
 # only the signature is left out: the container builds unsigned and the
 # published apk is signed, so the v1 files exist on one side only, and the
@@ -93,14 +93,11 @@ compare() {
   local a b
   a=$(entries "$built"); b=$(entries "$shipped")
   if [ "$a" = "$b" ]; then
-    # the entries agree. now the comparison f-droid actually makes, with the
-    # tool they make it with: apksigcopier copies the shipped apk's signature
-    # onto the container build and the result has to be the shipped apk,
-    # byte for byte. entry hashes matched on 0.2.8 and 0.2.10 and both were
-    # refused, because apksigner had re-padded the zip around the entries.
-    # not a raw cmp of the two with the signature cut out: apksig page-aligns
-    # the start of the signing block with zeros, their build does not have
-    # them, their tool puts them back, and a cmp is wrong about it forever.
+    # the entries agree. now the comparison f-droid makes, with their tool:
+    # apksigcopier copies the shipped apk's signature onto the container
+    # build and the result has to be the shipped apk, byte for byte. not a
+    # raw cmp with the signature cut out: apksig pads the start of the
+    # signing block with zeros that their build lacks and their tool adds.
     local sh bu out
     sh=$(realpath "$shipped"); bu=$(realpath "$built")
     docker image inspect "$IMAGE" >/dev/null 2>&1 || docker build -q -t "$IMAGE" . >/dev/null
@@ -204,10 +201,8 @@ build_at() {
     mounts+=(-v "$HOME/.pub-cache:/home/vagrant/.pub-cache")
   fi
   echo "== building at $srcpath"
-  # cgo opens a lot of files at once building tor and openssl. the daemon
-  # hands a container 1024 by default, which is under what that needs: the
-  # engine build then dies with "too many open files", sometimes, which is
-  # worse than always.
+  # cgo opens more files at once building tor and openssl than the 1024 a
+  # container gets by default
   docker run --rm --ulimit nofile=65536:65536 -u "$(id -u):$(id -g)" \
     -e "HALO_SRC=$srcpath" -w "$srcpath" "${mounts[@]}" "$IMAGE"
 }

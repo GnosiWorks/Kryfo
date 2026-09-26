@@ -1,15 +1,12 @@
 #!/bin/bash
-# runs inside the image. the source tree is mounted at the f-droid path;
-# the engine is built from scratch, then the apks, and the three apks are
-# left in /out for verify.sh to diff against what was published.
-#
-# nothing here is special: it is engine/build.sh and flutter build, the
-# same two commands RELEASING.md gives, run where f-droid runs them.
+# runs inside the image: builds the engine from scratch, then the apks, and
+# leaves the three apks in /out for verify.sh to diff against the release.
+# the same two commands RELEASING.md gives, run where f-droid runs them.
 set -e
 
-# where verify.sh mounted the checkout. it builds twice, at f-droid's path
-# and at another one, because a file that changes with the path is a file
-# f-droid's rebuild will disagree with us about.
+# where verify.sh mounted the checkout. it builds at f-droid's path and at
+# another one, since a file that changes with the path breaks f-droid's
+# rebuild.
 SRC=${HALO_SRC:-/home/vagrant/build/app.kryfo}
 OUT=/out
 
@@ -27,8 +24,7 @@ echo
 
 echo "== engine (all three archs, every object rebuilt)"
 cd "$SRC/engine"
-# raise to whatever the hard limit allows. asking for a fixed number that
-# is above it fails, and the failure was being swallowed.
+# raise to the hard limit, a fixed number above it fails quietly
 ulimit -n "$(ulimit -Hn)" 2>/dev/null || true
 echo "open files: $(ulimit -n)"
 HALO_FULL=1 bash build.sh
