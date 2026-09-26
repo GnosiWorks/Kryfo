@@ -129,7 +129,9 @@ void main() {
   group('fokia remix', () {
     _pixelTests(remixFiles);
     test('the picker offers every sticker', () {
-      expect(loadPack(remixFiles).offered, [for (var i = 30; i <= 47; i++) i]);
+      final pack = loadPack(remixFiles);
+      expect(pack.playable, [for (var i = 30; i <= 47; i++) i]);
+      expect(pack.offered, pack.playable);
     });
   });
 }

@@ -118,9 +118,7 @@ void main() {
     expect(now, const [StickerRef('fokia', 1), StickerRef('fokia', 2)]);
   });
 
-  testWidgets('a tab per pack, fokia first, and the remix stills on offer', (
-    t,
-  ) async {
+  testWidgets('a tab per pack, fokia first, and the remix on offer', (t) async {
     final h = _Harness(t, lib);
     await h.pump();
     await h.open();
@@ -146,7 +144,7 @@ void main() {
     await t.tap(remix.first);
     await h.frames(25);
     expect(pill().left - before.left, closeTo(44, 0.5));
-    // the grid went down to the remix stickers: stills, since none moves yet
+    // the grid went down to the remix stickers, all of them moving
     expect(h.cell('🎻'), findsOneWidget);
     await t.tap(h.cell('🎻'));
     await h.frames(20);
