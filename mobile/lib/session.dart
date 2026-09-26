@@ -47,6 +47,10 @@ class Session {
   // a chat only this session shows
   bool isHidden(String chatId) => identical(_ofChat(chatId), vault);
 
+  // the people whose chats the vault holds: receiving tries them too, and
+  // never files them as everyday requests
+  Set<String> get hiddenPeople => vault == null ? const {} : _people;
+
   // where a chat's photos, voice notes, files and wallpaper go: beside the
   // rows that point at them
   Future<Directory> folderOf(String chatId, String name) =>

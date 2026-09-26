@@ -141,6 +141,24 @@ void main() {
     expect(bad, isEmpty);
   });
 
+  // the hidden chats' list, their key and what came sealed are read and
+  // written in one place, so nothing else can say a vault exists
+  test('only the router names its tables', () {
+    final tables = RegExp(r'\b(?:hidden_chats|vault_meta|vault_inbox)\b');
+    final bad = <String>[];
+    for (final f in _libFiles()) {
+      if (f.path == 'lib/router.dart') continue;
+      final m = tables.firstMatch(_code(f.readAsStringSync()));
+      if (m != null) bad.add('${f.path}: ${m.group(0)}');
+    }
+    expect(bad, isEmpty);
+    // and the reading itself still works
+    expect(
+      tables.allMatches(_code(File('lib/router.dart').readAsStringSync())),
+      hasLength(greaterThanOrEqualTo(3)),
+    );
+  });
+
   // a database is opened, folded, closed and read for its identity only by
   // start-up and backup; everything else asks the session
   test('only main.dart and backup.dart reach under the session', () {
