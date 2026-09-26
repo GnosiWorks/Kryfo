@@ -38,9 +38,11 @@
    MATCH and SAME on all three, and every release since is checked the same
    way before it is tagged.
 
-   **the first tag after f-droid merges is v0.3.0**, and it has to match
-   `versionName` in mobile/pubspec.yaml exactly (`version: 0.3.0+15`, so
-   versionCodes 151/152/153). f-droid's update check finds the tag, then
+   **the first tag after f-droid merges is v0.3.2, on `a3619621`**
+   (verified MATCH + SAME on all three abis, 2026-09-25; it carries the
+   0.3.1 and 0.3.2 security fixes, so 0.3.0 and 0.3.1 are never tagged). it
+   has to match `versionName` in mobile/pubspec.yaml exactly
+   (`version: 0.3.2+18`, so versionCodes 181/182/183). f-droid's update check finds the tag, then
    reads versionName and versionCode out of pubspec.yaml at that tag
    (`UpdateCheckData`), so a tag that says one thing while pubspec says
    another publishes under pubspec's number and not the tag's. no suffix,
@@ -50,19 +52,19 @@
    the control-port wedge that left a phone offline for ten and a half hours
    (see `~/kryfo-notes/CONTROL-PORT-2026-09-19.md`). 0.2.12 was verified
    MATCH + SAME on `d6f3ab12` but is folded into 0.3.0, which adds the tor
-   and openssl security updates and the delivery fixes on top. the tag goes
-   on the 0.3.0 commit that comes back MATCH + SAME on all three abis, and
-   only once f-droid has merged.
+   and openssl security updates and the delivery fixes on top, and 0.3.0 is
+   in turn folded into 0.3.2. the tag goes on `a3619621`, and only once
+   f-droid has merged.
 
    **go is 1.25.14 from 0.3.0 on** (`engine/go.mod`, `repro/Dockerfile`).
    the recipe copy in `fdroiddata/app.kryfo.yml` pins `go@go1.25.0` and
    `git -C $$go$$ checkout -f go1.25.0`, which is right for the v0.2.10
    builds it describes and must stay so for them. but `AutoUpdateMode`
-   copies the last build block to make the next one, so a v0.3.0 entry would
+   copies the last build block to make the next one, so a v0.3.2 entry would
    inherit go 1.25.0 - and with `go 1.25.14` in go.mod, go 1.25.0 tries to
    download the newer toolchain, which fails on the offline buildserver.
    that failure is the good outcome: the alternative would be an engine built
-   with a different go, and no MATCH. so the v0.3.0 build block needs
+   with a different go, and no MATCH. so the v0.3.2 build block needs
    `go@go1.25.14` and `checkout -f go1.25.14` in both places, in the merge
    request that adds it (or a follow-up to fdroiddata before the tag). the
    same goes for every later go bump: go.mod, both dockerfiles,

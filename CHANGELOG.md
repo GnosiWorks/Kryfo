@@ -26,6 +26,11 @@ All notable user-facing changes to kryfo will land here. Format loosely follows 
 - adding someone by a handle nobody has, and the errors from claiming a handle, were shown in english whatever the language.
 - a few buttons were written in lowercase.
 
+## [0.3.2] - 2026-09-25
+
+### Security
+- a security fix. update when you can.
+
 ## [0.3.1] - 2026-09-25
 
 ### Security
