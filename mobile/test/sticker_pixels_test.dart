@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // every sticker's still frame, drawn by the app's own painter, against the
 // reference png the art came with. no golden files: the pngs are the truth.
-//
-// the pngs' renderer anti-aliases more softly than skia, so a pixel on a
-// hard black edge can be 60/255 off with the geometry exactly right. the
-// share within 24 is therefore taken after a 3x3 box filter on both images;
-// the mean and the eroded mask use the raw pixels.
+// the pngs anti-alias more softly than skia, so the share within 24 is taken
+// after a 3x3 box filter on both; the mean and the eroded mask stay raw.
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -164,7 +161,7 @@ void main() {
     }
   });
 
-  test('the five are the ones with motion', () {
+  test('the picker offers the five that move', () {
     expect(pack.playable, [1, 2, 4, 17, 19]);
     expect(kStickerBox, 512);
   });

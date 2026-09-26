@@ -53,6 +53,7 @@ class StickerView extends StatefulWidget {
     required this.sticker,
     required this.size,
     this.delay = 0,
+    this.start = 0,
     this.fps = 60,
     this.budget,
     this.order = 0,
@@ -64,6 +65,9 @@ class StickerView extends StatefulWidget {
   final double size;
   // ms at rest before the first loop, so two copies do not move in step
   final int delay;
+  // ms already played when it first draws: a copy taking over from another
+  // goes on from the same frame
+  final double start;
   // at most this many new frames a second: a 120 hz phone does not double
   // the work of a subtle loop
   final int fps;
@@ -96,6 +100,15 @@ class _StickerViewState extends State<StickerView>
   RenderSticker? _box;
 
   bool get _wants => widget.play && widget.sticker.animated && !_reduce;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.start > 0 && widget.play && widget.sticker.animated) {
+      _carry = Duration(microseconds: (widget.start * 1000).round());
+      _clock.value = loopTime(widget.sticker, widget.start, widget.delay);
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -302,6 +315,19 @@ class RenderSticker extends RenderBox {
 
   @override
   bool hitTestSelf(Offset position) => true;
+
+  // a quote strip sizes itself by its children's intrinsics
+  @override
+  double computeMinIntrinsicWidth(double height) => _extent;
+
+  @override
+  double computeMaxIntrinsicWidth(double height) => _extent;
+
+  @override
+  double computeMinIntrinsicHeight(double width) => _extent;
+
+  @override
+  double computeMaxIntrinsicHeight(double width) => _extent;
 
   @override
   void performLayout() {

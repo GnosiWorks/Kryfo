@@ -61,7 +61,13 @@ import '../main.dart'
         torStrictGetOnIsolate,
         TorHalo;
 import '../widgets/press_scale.dart';
-import '../stickers/sticker_sheet.dart' show StickerButton, showStickerSheet;
+import '../stickers/sticker_bubble.dart';
+import '../stickers/sticker_flight.dart';
+import '../stickers/sticker_pack.dart' show Sticker, StickerPack;
+import '../stickers/sticker_sheet.dart'
+    show StickerButton, StickerPick, showStickerSheet;
+import '../stickers/sticker_view.dart' show StickerBudget;
+import '../stickers/sticker_wire.dart' show StickerWire;
 import '../widgets/stagger_in.dart';
 import '../widgets/motion.dart';
 import '../widgets/burn_fade.dart';
@@ -160,10 +166,13 @@ class _Msg {
   bool fresh = false;
   int rowid = 0; // db insertion order, for append tracking
   Map<String, String>? preview; // link preview card, decoded from stored json
+  // a sticker: drawn from our pack; text is its emoji
+  final StickerWire? sticker;
   _Msg(
     this.direction,
     this.text,
     this.when, {
+    this.sticker,
     this.burnAt,
     this.burnSecs,
     this.msgUid,
@@ -459,6 +468,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           r['direction'] as String,
           r['plaintext'] as String,
           DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+          sticker: StickerWire.parse(r['sticker']),
           burnAt: r['burn_at'] as int?,
           msgUid: uid,
           replyTo: r['reply_to'] as String?,
@@ -598,6 +608,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool _reloadPending = false;
   Timer? _pollTimer;
   bool _sending = false;
+  // stickers being sealed. the composer does not wait for them, a retry does
+  int _stickerSends = 0;
+  // at most six stickers play at once in the whole chat
+  final _stickers = StickerBudget(6);
+  // stickers flying in from the sheet, by message uid. a bubble stays
+  // hidden until its flight is down
+  final Map<String, StickerLanding> _landings = {};
+  final List<VoidCallback> _flights = [];
   // serialize signal encryption across sends. a fast burst must not encrypt
   // every message against the same pre-session state, or they all come out as
   // prekey messages fighting over one one-time key and only the first lands.
@@ -669,6 +687,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     _applySecureContent();
     WidgetsBinding.instance.addObserver(this);
+    // read once, before the first sticker row asks for it
+    StickerPack.load().ignore();
     _reconcileSending();
     appState.loadGhostPref().then((p) {
       if (mounted) {
@@ -917,7 +937,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // goes, then it is shown as failed. the reconnect retry below covers the
   // offline case; this covers a route that was simply slow or flaky.
   void _autoRetryTick() {
-    if (!mounted || _sending || _cannotSend()) return;
+    if (!mounted || _sending || _stickerSends > 0 || _cannotSend()) return;
     for (final m in _messages) {
       if (m.direction != 'out' || !m.failed || m.gaveUp || m.msgUid == null) {
         continue;
@@ -1019,6 +1039,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         r['direction'] as String,
         r['plaintext'] as String,
         DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+        sticker: StickerWire.parse(r['sticker']),
         burnAt: r['burn_at'] as int?,
         msgUid: uid,
         replyTo: r['reply_to'] as String?,
@@ -1122,7 +1143,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (query.isNotEmpty) {
       final lower = query.toLowerCase();
       for (var i = 0; i < _messages.length; i++) {
-        if (_messages[i].text.toLowerCase().contains(lower)) {
+        // a sticker has no words; its emoji is not what was said
+        if (_messages[i].sticker == null &&
+            _messages[i].text.toLowerCase().contains(lower)) {
           matches.add(i);
         }
       }
@@ -1362,39 +1385,42 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(999),
-                        onTap: () {
-                          dismiss();
-                          HapticFeedback.selectionClick();
-                          _forwardMessage(target);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: HaloColors.surface3,
-                            border: Border.all(
-                              color: HaloColors.line,
-                              width: 0.5,
+                    // a sticker is not forwarded, copied or edited
+                    if (target.sticker == null) ...[
+                      const SizedBox(height: 8),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(999),
+                          onTap: () {
+                            dismiss();
+                            HapticFeedback.selectionClick();
+                            _forwardMessage(target);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
                             ),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            l10n.chatForward,
-                            style: HaloType.sans(
-                              size: 13,
-                              color: HaloColors.text,
+                            decoration: BoxDecoration(
+                              color: HaloColors.surface3,
+                              border: Border.all(
+                                color: HaloColors.line,
+                                width: 0.5,
+                              ),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              l10n.chatForward,
+                              style: HaloType.sans(
+                                size: 13,
+                                color: HaloColors.text,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
                     // a tap opens a file, so sharing it lives here
                     if (target.filePath != null &&
                         target.fileName != 'voice.wav') ...[
@@ -1436,7 +1462,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         ),
                       ),
                     ],
-                    if (target.text.isNotEmpty) ...[
+                    if (target.text.isNotEmpty && target.sticker == null) ...[
                       const SizedBox(height: 6),
                       Material(
                         color: Colors.transparent,
@@ -1566,7 +1592,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       // words can be edited; a photo, a file or a voice note
                       // is what it is
                       if (target.mediaPath == null &&
-                          target.filePath == null) ...[
+                          target.filePath == null &&
+                          target.sticker == null) ...[
                         const SizedBox(height: 6),
                         Material(
                           color: Colors.transparent,
@@ -1652,6 +1679,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           text: (r['plaintext'] as String?) ?? '',
           imagePath: r['media_path'] as String?,
           fileName: r['file_name'] as String?,
+          sticker: StickerWire.parse(r['sticker']),
         ),
     ];
   }
@@ -2063,6 +2091,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           r['direction'] as String,
           r['plaintext'] as String,
           DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+          sticker: StickerWire.parse(r['sticker']),
           burnAt: r['burn_at'] as int?,
           msgUid: uid,
           replyTo: r['reply_to'] as String?,
@@ -2268,7 +2297,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _retry(_Msg msg) async {
-    if (_sending) return;
+    if (_sending || _stickerSends > 0) return;
     // a quiet session sends nothing: it goes on waiting
     if (sessionQuiet) {
       setState(() {
@@ -2305,6 +2334,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           onion: appState.sessionOnion,
           xPub: appState.sessionXPub,
         ),
+        // or a retried sticker arrives as its emoji
+        sticker: msg.sticker?.value,
       );
       cipher = await signalEncrypt(widget.peerHaloId, wrapped);
     } catch (e) {
@@ -2566,8 +2597,68 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     ).then((result) => _finishMediaSend(msg, result));
   }
 
-  void _showStickers() =>
-      showStickerSheet(context, container: session.container);
+  Future<void> _showStickers() async {
+    final pick = await showStickerSheet(context, container: session.container);
+    // the sheet hands focus back to the composer; the keyboard stays down
+    FocusManager.instance.primaryFocus?.unfocus();
+    if (pick == null || !mounted) return;
+    StickerPack pack;
+    try {
+      pack = StickerPack.ready ?? await StickerPack.load();
+    } catch (e) {
+      dlog('sticker pack: $e');
+      return;
+    }
+    final s = pack.name == pick.ref.pack ? pack.sticker(pick.ref.id) : null;
+    if (s == null || !mounted) return;
+    await _sendBody(
+      s.emoji,
+      sticker: StickerWire.of(pack, s),
+      onRow: (m) => _fly(m, s, pick),
+    );
+  }
+
+  // the sticker flies from its cell to the new row. under reduced motion
+  // there is no flight and the bubble fades in
+  void _fly(_Msg m, Sticker s, StickerPick pick) {
+    final uid = m.msgUid;
+    if (uid == null || pick.from.isEmpty) return;
+    if (MediaQuery.disableAnimationsOf(context)) return;
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final landing = _landings[uid] = StickerLanding();
+    VoidCallback? unguard;
+    late final VoidCallback land;
+    land = flySticker(
+      context,
+      sticker: s,
+      from: pick.from,
+      at: pick.at,
+      landing: landing,
+      fallback: () => _landingGuess(rtl) ?? pick.from,
+      onGone: () {
+        unguard?.call();
+        _flights.remove(land);
+      },
+    );
+    _flights.add(land);
+    // the lock takes it down with everything else it covers
+    unguard = lockGuard.closeOnLock(land);
+  }
+
+  // where a new sticker row lands before it has a layout: the bottom end of
+  // the list
+  Rect? _landingGuess(bool rtl) {
+    final box = _listKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.attached || !box.hasSize) return null;
+    final r = box.localToGlobal(Offset.zero) & box.size;
+    const side = kStickerBubble, pad = 16.0;
+    return Rect.fromLTWH(
+      rtl ? r.left + pad : r.right - pad - side,
+      r.bottom - 12 - side,
+      side,
+      side,
+    );
+  }
 
   void _showAttachSheet() {
     HapticFeedback.selectionClick();
@@ -3244,13 +3335,25 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _send() async {
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || _sending) return;
+    await _sendBody(text);
+  }
+
+  // the one way out for words: a sticker rides it with its emoji as the
+  // words, so it gets the same save, proof of work, seal, route, ticks and
+  // retry. [onRow] sees the row before it is on screen.
+  Future<void> _sendBody(
+    String text, {
+    StickerWire? sticker,
+    void Function(_Msg)? onRow,
+  }) async {
     // a stranger gets 2 messages, then the chat locks until they accept. the
     // input bar shows it; this guards the send itself.
     if (_requestLocked) return;
+    final typed = sticker == null;
     final msgUid = _newMsgUid();
     final replyToUid = _replyTo?.msgUid;
     // a pending preview only belongs to a message that still holds its link
-    final url = firstUrl(text);
+    final url = typed ? firstUrl(text) : null;
     final preview = url != null && _pendingPreview?['url'] == url
         ? _pendingPreview
         : null;
@@ -3258,6 +3361,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       'out',
       text,
       DateTime.now(),
+      sticker: sticker,
       sending: true,
       msgUid: msgUid,
       replyTo: replyToUid,
@@ -3265,17 +3369,28 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       burnAt: null,
     );
     msg.preview = preview;
+    onRow?.call(msg);
+    // a sticker leaves the composer as it is: what was typed stays typed
+    void sealing(bool on) {
+      if (typed) {
+        _sending = on;
+      } else {
+        _stickerSends += on ? 1 : -1;
+      }
+    }
+
     setState(() {
       _messages.add(msg);
       _normaliseMessages();
-      _sending = true;
+      sealing(true);
       _status = '';
       _replyTo = null;
-      _pendingPreview = null;
+      if (typed) _pendingPreview = null;
     });
-    _msgCtrl.clear();
+    if (typed) _msgCtrl.clear();
     _scrollToEnd();
-    HapticFeedback.lightImpact();
+    // the sheet already fired it for a sticker
+    if (typed) HapticFeedback.lightImpact();
 
     try {
       await session.saveMessage(
@@ -3288,6 +3403,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         replyTo: replyToUid,
         sent: 0,
         preview: preview == null ? null : jsonEncode(preview),
+        sticker: sticker?.value,
       );
     } catch (e) {
       // a throw must not leave _sending true: that disables the composer
@@ -3297,7 +3413,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       setState(() {
         msg.sending = false;
         msg.failed = true;
-        _sending = false;
+        sealing(false);
       });
       return;
     }
@@ -3310,7 +3426,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       setState(() {
         msg.sending = false;
         msg.parked = true;
-        _sending = false;
+        sealing(false);
       });
       return;
     }
@@ -3350,6 +3466,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           onion: appState.sessionOnion,
           xPub: appState.sessionXPub,
         ),
+        sticker: sticker?.value,
       );
       final prev = _encryptGate;
       final gate = Completer<void>();
@@ -3365,14 +3482,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       setState(() {
         msg.sending = false;
         msg.failed = true;
-        _sending = false;
+        sealing(false);
         _status = l10n.chatNoSignalSessionRe;
       });
       return;
     }
     // fire and forget: a failure marks the row for retry
     setState(() {
-      _sending = false;
+      sealing(false);
       _status = '';
       if (_requestPending) _sentCount++;
     });
@@ -3557,8 +3674,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Widget _buildRow(BuildContext c, int i, bool searchActive) {
     final ix = _messages.length - 1 - i;
     final m = _messages[ix];
-    // an empty control message that leaked through would be a blank bubble
+    // an empty control message that leaked through would be a blank bubble.
+    // a sticker this version does not have may have no text at all
     if (m.text.isEmpty &&
+        m.sticker == null &&
         m.mediaPath == null &&
         m.filePath == null &&
         m.preview == null) {
@@ -3566,6 +3685,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
     String? quoted;
     String? quotedAuthor;
+    StickerWire? quotedSticker;
     if (m.replyTo != null) {
       final original = _byUid[m.replyTo];
       if (original == null) {
@@ -3574,7 +3694,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         quotedAuthor = original.direction == 'out'
             ? l10n.chatYou2
             : l10n.chatThem;
-        if (original.text.isNotEmpty) {
+        if (original.sticker != null) {
+          quoted = l10n.stickerLabel;
+          quotedSticker = original.sticker;
+        } else if (original.text.isNotEmpty) {
           quoted = original.text;
         } else if (original.mediaPath != null) {
           quoted = l10n.chatQuotedPhoto;
@@ -3636,6 +3759,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   child: _Bubble(
                     key: isMatch ? _matchKeys[i] : null,
                     msg: m,
+                    stickers: _stickers,
+                    stickerOrder: i,
+                    landing: m.msgUid == null ? null : _landings[m.msgUid],
+                    quotedSticker: quotedSticker,
                     linkTitle: m.preview?['title'],
                     linkBySender: m.preview?['by'] == 'sender',
                     firstInGroup: firstInGroup,
@@ -3689,6 +3816,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    for (final land in List.of(_flights)) {
+      land();
+    }
     _pollTimer?.cancel();
     _autoRetryTimer?.cancel();
     _burnTick?.cancel();
@@ -5826,9 +5956,19 @@ class _Bubble extends StatelessWidget {
   // a link in the text: the title the sender shipped, if any
   final String? linkTitle;
   final bool linkBySender;
+  // a sticker row: the chat's budget, its place in it, and its flight
+  final StickerBudget? stickers;
+  final int stickerOrder;
+  final StickerLanding? landing;
+  // the quoted message is a sticker
+  final StickerWire? quotedSticker;
   const _Bubble({
     super.key,
     required this.msg,
+    this.stickers,
+    this.stickerOrder = 0,
+    this.landing,
+    this.quotedSticker,
     this.onRetry,
     this.onLongPress,
     this.secure = false,
@@ -5949,6 +6089,20 @@ class _Bubble extends StatelessWidget {
       Future.delayed(const Duration(milliseconds: 650), () {
         msg.fresh = false;
       });
+    }
+    if (msg.sticker case final st?) {
+      return _stickerRow(
+        context,
+        st,
+        isOut: isOut,
+        failedShown: failedShown,
+        parked: parked,
+        pending: pending,
+        showMeta: showMeta,
+        isExpiring: isExpiring,
+        // the flight or the pop is its entrance, not the bubble lift
+        arriving: isOut ? justSent && landing == null : justArrived,
+      );
     }
     return AnimatedOpacity(
       duration: Duration(milliseconds: isExpiring ? 440 : 250),
@@ -6092,22 +6246,20 @@ class _Bubble extends StatelessWidget {
                                                     ),
                                                   if (quotedAuthor != null)
                                                     const SizedBox(height: 2),
-                                                  Text(
-                                                    quotedText!,
-                                                    maxLines: 1,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    style: HaloType.sans(
-                                                      size: 12.5,
-                                                      color: isOut
-                                                          ? HaloColors.onAmber
-                                                                .withValues(
-                                                                  alpha: 0.85,
-                                                                )
-                                                          : HaloColors.text2,
-                                                      height: 1.25,
+                                                  if (quotedSticker
+                                                      case final qs?)
+                                                    StickerLine(
+                                                      qs,
+                                                      style: _quoteStyle(isOut),
+                                                    )
+                                                  else
+                                                    Text(
+                                                      quotedText!,
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      style: _quoteStyle(isOut),
                                                     ),
-                                                  ),
                                                 ],
                                               ),
                                             ),
@@ -6552,6 +6704,147 @@ class _Bubble extends StatelessWidget {
     );
   }
 
+  TextStyle _quoteStyle(bool isOut) => HaloType.sans(
+    size: 12.5,
+    color: isOut
+        ? HaloColors.onAmber.withValues(alpha: 0.85)
+        : HaloColors.text2,
+    height: 1.25,
+  );
+
+  // a sticker has no bubble: it stands alone, its time in a pill, and keeps
+  // the row's gestures, burn, reactions and send states
+  Widget _stickerRow(
+    BuildContext context,
+    StickerWire st, {
+    required bool isOut,
+    required bool failedShown,
+    required bool parked,
+    required bool pending,
+    required bool showMeta,
+    required bool isExpiring,
+    required bool arriving,
+  }) {
+    final quoted = quotedText;
+    final burn = msg.burnAt;
+    final retry = (failedShown || parked) && onRetry != null
+        ? () => onRetry!(msg)
+        : null;
+    return AnimatedOpacity(
+      duration: Duration(milliseconds: isExpiring ? 440 : 250),
+      curve: Curves.easeOut,
+      opacity: dimmed ? 0.28 : 1.0,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onLongPress: onLongPress == null ? null : () => onLongPress!(context),
+        child: Padding(
+          padding: EdgeInsets.only(
+            top: firstInGroup ? 4 : 1,
+            bottom: msg.reactions.isNotEmpty ? 16 : (lastInGroup ? 4 : 1),
+          ),
+          child: Column(
+            crossAxisAlignment: isOut
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  BurnFade(
+                    active: isExpiring || msg.removing,
+                    child: StickerBubble(
+                      wire: st,
+                      emoji: msg.text,
+                      isOut: isOut,
+                      seed: msg.msgUid ?? '',
+                      budget: stickers,
+                      order: stickerOrder,
+                      arriving: arriving,
+                      landing: landing,
+                      onTap: retry,
+                      quote: quoted == null
+                          ? null
+                          : StickerQuoteCard(
+                              author: quotedAuthor,
+                              text: quoted,
+                              sticker: quotedSticker,
+                              onTap: onQuoteTap,
+                            ),
+                      // while it is sending the pill under it says so
+                      stamp: pending
+                          ? null
+                          : StickerStamp(
+                              time: _fmtTime(msg.when),
+                              sent: showMeta,
+                              delivered: showMeta && msg.delivered
+                                  ? l10n.chatDelivered
+                                  : null,
+                              burn: burn == null ? null : _fmtBurn(burn),
+                              alert: failedShown
+                                  ? l10n.chatFailedTapToRetry
+                                  : parked
+                                  ? l10n.chatWaitingForThemToComeOnline
+                                  : null,
+                              alertColor: failedShown ? HaloColors.rose : null,
+                            ),
+                    ),
+                  ),
+                  if (msg.reactions.isNotEmpty)
+                    PositionedDirectional(
+                      bottom: -13,
+                      end: isOut ? 10 : null,
+                      start: isOut ? null : 10,
+                      child: Wrap(
+                        spacing: 3,
+                        children: _buildReactionChips(msg),
+                      ),
+                    ),
+                  if (ripple)
+                    PositionedDirectional(
+                      end: isOut ? 0 : null,
+                      start: isOut ? null : 0,
+                      bottom: 0,
+                      width: kStickerBubble,
+                      height: kStickerBubble,
+                      child: IgnorePointer(
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0.0, end: 1.0),
+                          duration: const Duration(milliseconds: 820),
+                          curve: Curves.easeOut,
+                          builder: (context, t, child) => Opacity(
+                            opacity: (1 - t) * 0.92,
+                            child: Transform.scale(
+                              scale: 1 + t * 0.16,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(28),
+                                  border: Border.all(
+                                    color: HaloColors.amber,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              if (isOut && pending) ...[
+                const SizedBox(height: 4),
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(end: 4),
+                  child: SendPill(mode: _pmFrom(appState.sendMode)),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   // one chip per emoji, with a count when more than one
   List<Widget> _buildReactionChips(_Msg m) {
     final counts = <String, int>{};
@@ -6755,16 +7048,26 @@ class _ReplyQuoteBar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  target.text,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: HaloType.sans(
-                    size: 13,
-                    color: HaloColors.text2,
-                    height: 1.3,
+                if (target.sticker case final st?)
+                  StickerLine(
+                    st,
+                    style: HaloType.sans(
+                      size: 13,
+                      color: HaloColors.text2,
+                      height: 1.3,
+                    ),
+                  )
+                else
+                  Text(
+                    target.text,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: HaloType.sans(
+                      size: 13,
+                      color: HaloColors.text2,
+                      height: 1.3,
+                    ),
                   ),
-                ),
               ],
             ),
           ),

@@ -6,6 +6,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../stickers/sticker_bubble.dart' show StickerLine;
+import '../stickers/sticker_wire.dart';
 import '../theme.dart';
 import 'decode_px.dart';
 import 'halo_sheet.dart';
@@ -97,6 +99,8 @@ class PinEntry {
   final String text;
   final String? imagePath;
   final String? fileName;
+  // a sticker: named, not shown as its emoji
+  final StickerWire? sticker;
   const PinEntry({
     required this.uid,
     required this.author,
@@ -106,10 +110,12 @@ class PinEntry {
     this.face,
     this.imagePath,
     this.fileName,
+    this.sticker,
   });
 
   /// what stands in for the words when there are none
   String get preview {
+    if (sticker != null) return l10n.stickerLabel;
     if (text.trim().isNotEmpty) return text.trim();
     if (imagePath != null) return l10n.pinsPhoto;
     if (fileName == 'voice.wav') return l10n.pinsVoiceMessage;
@@ -256,6 +262,12 @@ class _PinCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final img = e.imagePath;
+    final sticker = e.sticker;
+    final words = HaloType.sans(
+      size: 13.5,
+      color: HaloColors.text,
+      height: 1.4,
+    );
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -310,16 +322,17 @@ class _PinCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: Text(
-                            e.preview,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: HaloType.sans(
-                              size: 13.5,
-                              color: HaloColors.text,
-                              height: 1.4,
-                            ),
-                          ),
+                          child: sticker != null
+                              ? Align(
+                                  alignment: AlignmentDirectional.centerStart,
+                                  child: StickerLine(sticker, style: words),
+                                )
+                              : Text(
+                                  e.preview,
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: words,
+                                ),
                         ),
                         if (img != null) ...[
                           const SizedBox(width: 10),

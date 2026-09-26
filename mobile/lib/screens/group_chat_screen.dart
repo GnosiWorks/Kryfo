@@ -34,7 +34,13 @@ import 'chat_screen.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import '../stickers/sticker_sheet.dart' show StickerButton, showStickerSheet;
+import '../stickers/sticker_bubble.dart';
+import '../stickers/sticker_flight.dart';
+import '../stickers/sticker_pack.dart' show Sticker, StickerPack;
+import '../stickers/sticker_sheet.dart'
+    show StickerButton, StickerPick, showStickerSheet;
+import '../stickers/sticker_view.dart' show StickerBudget;
+import '../stickers/sticker_wire.dart' show StickerWire;
 import '../main.dart'
     show
         appState,
@@ -127,6 +133,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   bool get _isRoom => _roomExpiresAt != null;
   bool _isAdmin = false;
   bool _sending = false;
+  // at most six stickers play at once in the whole chat
+  final _stickers = StickerBudget(6);
+  // stickers flying in from the sheet, by message uid. a bubble stays
+  // hidden until its flight is down
+  final Map<String, StickerLanding> _landings = {};
+  final List<VoidCallback> _flights = [];
   _GMsg? _replyTo;
   // takes the open message menu away, if there is one
   VoidCallback? _menuClose;
@@ -194,6 +206,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
     claimChat('group:${widget.groupId}');
     WidgetsBinding.instance.addObserver(this);
+    // read once, before the first sticker row asks for it
+    StickerPack.load().ignore();
     lockState.addListener(_lockLifted);
     // a room is never in the app switcher and never screenshotted. the flag
     // is set the moment we know it is a room and cleared on the way out.
@@ -450,6 +464,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           direction: dir,
           text: r['plaintext'] as String,
           when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+          sticker: StickerWire.parse(r['sticker']),
           burnAt: r['burn_at'] as int?,
           msgUid: uid,
           replyTo: r['reply_to'] as String?,
@@ -602,6 +617,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 direction: dir,
                 text: r['plaintext'] as String,
                 when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+                sticker: StickerWire.parse(r['sticker']),
                 burnAt: r['burn_at'] as int?,
                 msgUid: uid,
                 replyTo: r['reply_to'] as String?,
@@ -836,6 +852,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         direction: dir,
         text: r['plaintext'] as String,
         when: DateTime.fromMillisecondsSinceEpoch(r['sent_at'] as int),
+        sticker: StickerWire.parse(r['sticker']),
         burnAt: r['burn_at'] as int?,
         msgUid: uid,
         replyTo: r['reply_to'] as String?,
@@ -892,6 +909,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             prev.direction != 'in');
     String? quoted;
     String? quotedAuthor;
+    StickerWire? quotedSticker;
     if (m.replyTo != null) {
       final orig = _messages.firstWhere(
         (x) => x.msgUid == m.replyTo,
@@ -903,7 +921,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             ? l10n.groupChatYou
             : orig.senderName;
       }
-      if (orig.poll != null) {
+      if (orig.sticker != null) {
+        quoted = l10n.stickerLabel;
+        quotedSticker = orig.sticker;
+      } else if (orig.poll != null) {
         quoted = l10n.pollPreview(orig.text);
       } else if (orig.text.isNotEmpty) {
         quoted = orig.text;
@@ -920,6 +941,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
     final animateIn = m.fresh;
     m.fresh = false;
+    final landing = m.msgUid == null ? null : _landings[m.msgUid];
     final showDate = i == 0 || (prev != null && !_sameDay(prev.when, m.when));
     return Column(
       key: ValueKey(m.msgUid ?? 'r${m.rowid}'),
@@ -930,7 +952,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           key: (m.msgUid != null && m.msgUid == _jumpUid) ? _jumpKey : null,
           child: _groupBubbleEntrance(
             isOut: m.direction == 'out',
-            active: animateIn,
+            // a sticker pops or flies in on its own
+            active: animateIn && m.sticker == null,
             child: SwipeToReply(
               onReply: () => setState(() => _replyTo = m),
               // the lifted copy in the overlay is the one that animates;
@@ -942,6 +965,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 child: _GroupBubble(
                   m: m,
                   showSender: showSender,
+                  stickers: _stickers,
+                  stickerOrder: _messages.length - 1 - i,
+                  landing: landing,
+                  arriving: animateIn && landing == null,
+                  quotedSticker: quotedSticker,
                   me: _me,
                   nameOf: _nameOf,
                   onVote: m.poll == null || m.msgUid == null
@@ -965,6 +993,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     showSender: showSender,
                     quotedText: quoted,
                     quotedAuthor: quotedAuthor,
+                    quotedSticker: quotedSticker,
                   ),
                   onRetry: m.looksFailed
                       ? () {
@@ -1224,8 +1253,111 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     _sendGroupVoice(path, ms);
   }
 
-  void _showStickers() =>
-      showStickerSheet(context, container: session.container);
+  Future<void> _showStickers() async {
+    final pick = await showStickerSheet(context, container: session.container);
+    // the sheet hands focus back to the composer; the keyboard stays down
+    FocusManager.instance.primaryFocus?.unfocus();
+    if (pick == null || !mounted) return;
+    StickerPack pack;
+    try {
+      pack = StickerPack.ready ?? await StickerPack.load();
+    } catch (e) {
+      dlog('sticker pack: $e');
+      return;
+    }
+    final s = pack.name == pick.ref.pack ? pack.sticker(pick.ref.id) : null;
+    if (s == null || !mounted) return;
+    await _sendSticker(s, StickerWire.of(pack, s), pick);
+  }
+
+  // a sticker goes out like a typed message, its emoji as the words: the
+  // same row, reply, burn timer, ticks and retry
+  Future<void> _sendSticker(Sticker s, StickerWire w, StickerPick pick) async {
+    final uid = newMsgUid();
+    final replyToUid = _replyTo?.msgUid;
+    final burnSeconds = _ghost ? _burnSeconds : null;
+    final optimistic = _GMsg(
+      sender: appState.sessionId,
+      direction: 'out',
+      text: s.emoji,
+      when: DateTime.now(),
+      sticker: w,
+      msgUid: uid,
+      replyTo: replyToUid,
+      sending: true,
+      burnSecs: burnSeconds,
+      burnAt: burnSeconds == null
+          ? null
+          : DateTime.now().millisecondsSinceEpoch + burnSeconds * 1000,
+    )..fresh = true;
+    _fly(uid, s, pick);
+    setState(() {
+      _messages.add(optimistic);
+      _normaliseMessages();
+      _replyTo = null;
+    });
+    _scrollToEnd();
+    var ok = false;
+    try {
+      ok = await appState.sendToGroup(
+        widget.groupId,
+        s.emoji,
+        msgUid: uid,
+        replyTo: replyToUid,
+        burnSeconds: burnSeconds,
+        sticker: w.value,
+      );
+    } catch (e) {
+      dlog('group sticker send failed: $e');
+    }
+    if (!mounted) return;
+    final live = _liveMsg(uid) ?? optimistic;
+    setState(() {
+      live.sending = false;
+      live.failed = !ok;
+    });
+    if (!_messages.any((x) => x.sending)) _tryAppendNew();
+  }
+
+  // the sticker flies from its cell to the new row. under reduced motion
+  // there is no flight and the bubble fades in
+  void _fly(String uid, Sticker s, StickerPick pick) {
+    if (pick.from.isEmpty || MediaQuery.disableAnimationsOf(context)) return;
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final landing = _landings[uid] = StickerLanding();
+    VoidCallback? unguard;
+    late final VoidCallback land;
+    land = flySticker(
+      context,
+      sticker: s,
+      from: pick.from,
+      at: pick.at,
+      landing: landing,
+      fallback: () => _landingGuess(rtl) ?? pick.from,
+      onGone: () {
+        unguard?.call();
+        _flights.remove(land);
+      },
+    );
+    _flights.add(land);
+    // the lock takes it down with everything else it covers
+    unguard = lockGuard.closeOnLock(land);
+  }
+
+  // where a new sticker row lands before it has a layout: the bottom end of
+  // the list
+  Rect? _landingGuess(bool rtl) {
+    final box = _listKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.attached || !box.hasSize) return null;
+    final r = box.localToGlobal(Offset.zero) & box.size;
+    const side = kStickerBubble, pad = 14.0;
+    return Rect.fromLTWH(
+      rtl ? r.left + pad : r.right - pad - side,
+      r.bottom - 12 - side,
+      side,
+      side,
+    );
+  }
 
   void _showAttachSheet() {
     FocusManager.instance.primaryFocus?.unfocus();
@@ -1776,6 +1908,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     bool showSender = false,
     String? quotedText,
     String? quotedAuthor,
+    StickerWire? quotedSticker,
   }) async {
     // drop composer focus before anything opens: a route captures the
     // focused node at open and restores it at close, which would pull the
@@ -1847,6 +1980,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       senderBadge: _badgeFor(target.sender),
                       quotedText: quotedText,
                       quotedAuthor: quotedAuthor,
+                      quotedSticker: quotedSticker,
                     ),
                   ),
                   builder: (_, t, child) => Transform.scale(
@@ -1880,7 +2014,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     dismiss();
                     setState(() => _replyTo = target);
                   },
-                  onCopy: target.text.isEmpty
+                  // a sticker is not copied, forwarded or edited
+                  onCopy: target.text.isEmpty || target.sticker != null
                       ? null
                       : () {
                           dismiss();
@@ -1895,7 +2030,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     dismiss();
                     _toggleSavedGroup(target);
                   },
-                  onForward: target.text.isEmpty
+                  onForward: target.text.isEmpty || target.sticker != null
                       ? null
                       : () {
                           dismiss();
@@ -1914,7 +2049,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                             ),
                           );
                         },
-                  onEdit: (isOut && target.text.isNotEmpty)
+                  onEdit:
+                      (isOut &&
+                          target.text.isNotEmpty &&
+                          target.sticker == null)
                       ? () {
                           dismiss();
                           _editGroupMessage(target);
@@ -2035,7 +2173,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (query.isNotEmpty) {
       final lower = query.toLowerCase();
       for (var i = 0; i < _messages.length; i++) {
-        if (_messages[i].text.toLowerCase().contains(lower)) {
+        // a sticker has no words; its emoji is not what was said
+        if (_messages[i].sticker == null &&
+            _messages[i].text.toLowerCase().contains(lower)) {
           matches.add(i);
         }
       }
@@ -2179,6 +2319,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             text: (r['plaintext'] as String?) ?? '',
             imagePath: r['media_path'] as String?,
             fileName: r['file_name'] as String?,
+            sticker: StickerWire.parse(r['sticker']),
           );
         }(),
     ];
@@ -2564,6 +2705,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   @override
   void dispose() {
+    for (final land in List.of(_flights)) {
+      land();
+    }
     _leaveRoomScreen();
     // persist the draft one more time on the way out.
     final draft = _msgCtrl.text;
@@ -2872,12 +3016,15 @@ class _GMsg {
   // a poll: its answers on the row, the votes this phone holds for it
   PollSpec? poll;
   Map<String, PollVote> votes = const {};
+  // a sticker: drawn from our pack; text is its emoji
+  final StickerWire? sticker;
   _GMsg({
     required this.sender,
     String? senderName,
     required this.direction,
     required this.text,
     required this.when,
+    this.sticker,
     this.burnAt,
     this.burnSecs,
     this.msgUid,
@@ -3049,12 +3196,18 @@ class _ReplyQuoteBar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  target.text,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: HaloType.sans(size: 12.5, color: HaloColors.text2),
-                ),
+                if (target.sticker case final st?)
+                  StickerLine(
+                    st,
+                    style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+                  )
+                else
+                  Text(
+                    target.text,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+                  ),
               ],
             ),
           ),
@@ -3506,9 +3659,21 @@ class _GroupBubble extends StatelessWidget {
   final void Function(List<int>)? onVote;
   final VoidCallback? onClosePoll;
   final String Function(String id)? nameOf;
+  // a sticker row: the chat's budget, its place in it, its entrance
+  final StickerBudget? stickers;
+  final int stickerOrder;
+  final StickerLanding? landing;
+  final bool arriving;
+  // the quoted message is a sticker
+  final StickerWire? quotedSticker;
   const _GroupBubble({
     required this.m,
     required this.showSender,
+    this.stickers,
+    this.stickerOrder = 0,
+    this.landing,
+    this.arriving = false,
+    this.quotedSticker,
     this.me = '',
     this.onVote,
     this.onClosePoll,
@@ -3655,6 +3820,14 @@ class _GroupBubble extends StatelessWidget {
                         active: m.removing,
                         child: Builder(
                           builder: (ctx) {
+                            if (m.sticker case final st?) {
+                              return GestureDetector(
+                                onLongPress: onLongPress == null
+                                    ? null
+                                    : () => onLongPress!(ctx),
+                                child: _sticker(st),
+                              );
+                            }
                             // a poll is its own card, on either side
                             if (m.poll != null) {
                               return GestureDetector(
@@ -3760,22 +3933,20 @@ class _GroupBubble extends StatelessWidget {
                                                   ),
                                                 if (quotedAuthor != null)
                                                   const SizedBox(height: 2),
-                                                Text(
-                                                  quotedText!,
-                                                  maxLines: 2,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: HaloType.sans(
-                                                    size: 12.5,
-                                                    color: isOut
-                                                        ? HaloColors.onAmber
-                                                              .withValues(
-                                                                alpha: 0.8,
-                                                              )
-                                                        : HaloColors.text2,
-                                                    height: 1.3,
+                                                if (quotedSticker
+                                                    case final qs?)
+                                                  StickerLine(
+                                                    qs,
+                                                    style: _quoteStyle(isOut),
+                                                  )
+                                                else
+                                                  Text(
+                                                    quotedText!,
+                                                    maxLines: 2,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: _quoteStyle(isOut),
                                                   ),
-                                                ),
                                               ],
                                             ),
                                           ),
@@ -4176,6 +4347,45 @@ class _GroupBubble extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  TextStyle _quoteStyle(bool isOut) => HaloType.sans(
+    size: 12.5,
+    color: isOut ? HaloColors.onAmber.withValues(alpha: 0.8) : HaloColors.text2,
+    height: 1.3,
+  );
+
+  // no bubble: the sticker alone, its time in a pill
+  Widget _sticker(StickerWire st) {
+    final isOut = m.direction == 'out';
+    final quoted = quotedText;
+    final burn = m.burnAt;
+    return StickerBubble(
+      wire: st,
+      emoji: m.text,
+      isOut: isOut,
+      seed: m.msgUid ?? '',
+      budget: stickers,
+      order: stickerOrder,
+      arriving: arriving,
+      landing: landing,
+      onTap: onRetry,
+      quote: quoted == null
+          ? null
+          : StickerQuoteCard(
+              author: quotedAuthor,
+              text: quoted,
+              sticker: quotedSticker,
+              onTap: onReplyTap,
+            ),
+      stamp: StickerStamp(
+        time: _fmtTime(m.when),
+        sent: isOut && !m.pending && !m.looksFailed,
+        burn: burn == null ? null : _remaining(burn),
+        alert: m.looksFailed ? l10n.groupChatTapToRetry : null,
+        alertColor: HaloColors.rose,
       ),
     );
   }

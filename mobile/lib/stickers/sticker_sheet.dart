@@ -7,7 +7,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 
 import '../container.dart';
@@ -16,6 +15,7 @@ import '../l10n/l10n.dart';
 import '../theme.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/menu_backdrop.dart';
+import '../widgets/motion.dart' show houseSpring;
 import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/stroke_icon.dart';
@@ -36,14 +36,6 @@ const stickerGlyph = [
 // a clock: the recent tab
 final _clockGlyph = [svgCircle(12, 12, 8), 'M12 8v4l2.6 2.2'];
 
-// the house spring: settles in about 235 ms. done within half a percent,
-// not the default thousandth of a unit a second, which took 600 ms more
-const _spring = SpringDescription(mass: 1, stiffness: 520, damping: 34);
-const _done = Tolerance(distance: 0.005, velocity: 0.05);
-
-SpringSimulation _springTo(double from, double to, double velocity) =>
-    SpringSimulation(_spring, from, to, velocity, tolerance: _done);
-
 const _holdFor = Duration(milliseconds: 320);
 const _gridSlots = 6;
 const _gap = 6.0;
@@ -61,6 +53,8 @@ class StickerButton extends StatelessWidget {
       label: l10n.stickerOpen,
       onTap: onTap,
       scale: 0.86,
+      // the sheet clicks as it opens
+      haptic: false,
       child: SizedBox(
         width: 36,
         height: 36,
@@ -72,15 +66,26 @@ class StickerButton extends StatelessWidget {
   }
 }
 
-/// opens the picker. the sticker picked comes back; sending it is the
-/// caller's (stage 2), the recents are already updated.
-Future<StickerRef?> showStickerSheet(
+/// what the picker hands back: the sticker, and where it was drawn when it
+/// was picked, so it can fly from there to its bubble
+class StickerPick {
+  const StickerPick(this.ref, {this.from = Rect.zero, this.at = -1});
+  final StickerRef ref;
+  // global rect of the drawn sticker; empty when it could not be found
+  final Rect from;
+  // ms into its loop at that moment; -1 when it showed its still
+  final double at;
+}
+
+/// opens the picker. the pick comes back with the recents already updated;
+/// sending it is the caller's.
+Future<StickerPick?> showStickerSheet(
   BuildContext context, {
   required HaloContainer container,
 }) {
   HapticFeedback.selectionClick();
   FocusScope.of(context).unfocus();
-  return showHaloSheet<StickerRef>(
+  return showHaloSheet<StickerPick>(
     context,
     scroll: true,
     builder: (_) => StickerSheet(recents: StickerRecents(container)),
@@ -217,7 +222,7 @@ class StickerSheetState extends State<StickerSheet>
       _pill.value = i.toDouble();
     } else {
       _pill
-          .animateWith(_springTo(_pill.value, i.toDouble(), _pill.velocity))
+          .animateWith(houseSpring(_pill.value, i.toDouble(), _pill.velocity))
           .whenCompleteOrCancel(() {
             if (mounted && _tab == i) _pill.value = i.toDouble();
           });
@@ -257,8 +262,20 @@ class StickerSheetState extends State<StickerSheet>
 
   // ---- picking
 
-  Future<void> _pick(StickerRef ref) async {
+  // a cell tap names its cell; send in the preview names none
+  void _pick(StickerRef ref, {String? cell}) {
     HapticFeedback.lightImpact();
+    final drawn = _drawn(
+      cell == null ? _previewKey.currentContext : _keys[cell]?.currentContext,
+      ref.id,
+    );
+    final pick = StickerPick(
+      ref,
+      from: drawn == null
+          ? Rect.zero
+          : drawn.localToGlobal(Offset.zero) & drawn.size,
+      at: drawn?.time ?? -1.0,
+    );
     _closePreviewNow();
     unawaited(
       widget.recents.add(ref).catchError((Object e) {
@@ -266,7 +283,26 @@ class StickerSheetState extends State<StickerSheet>
         return <StickerRef>[];
       }),
     );
-    if (mounted) Navigator.of(context).pop(ref);
+    if (mounted) Navigator.of(context).pop(pick);
+  }
+
+  // the sticker as drawn under [c], found in its render tree
+  RenderSticker? _drawn(BuildContext? c, int id) {
+    RenderSticker? found;
+    void visit(RenderObject o) {
+      if (found != null) return;
+      if (o is RenderSticker && o.sticker.id == id) {
+        found = o;
+        return;
+      }
+      o.visitChildren(visit);
+    }
+
+    final root = c?.findRenderObject();
+    if (root != null) visit(root);
+    final box = found;
+    if (box == null || !box.attached || !box.hasSize) return null;
+    return box;
   }
 
   Future<void> _removeRecent(StickerRef ref) async {
@@ -595,7 +631,7 @@ class StickerSheetState extends State<StickerSheet>
       order: order,
       budget: _budget,
       label: l10n.stickerA11y(s.emoji),
-      onTap: () => _pick(shown.ref),
+      onTap: () => _pick(shown.ref, cell: key),
       onHold: () => _openPreview(shown, held: true),
       onHoldForReader: () => _openPreview(shown, held: false),
       onSlide: _slide,
@@ -788,7 +824,7 @@ class _StickerPreviewState extends State<_StickerPreview>
         _dim.value = 0;
         _dim.animateTo(1, duration: const Duration(milliseconds: 150));
       } else {
-        _grow.animateWith(_springTo(0, 1, 0)).whenCompleteOrCancel(() {
+        _grow.animateWith(houseSpring(0, 1)).whenCompleteOrCancel(() {
           if (mounted && !_closing) _grow.value = 1;
         });
       }
@@ -828,7 +864,7 @@ class _StickerPreviewState extends State<_StickerPreview>
       await _dim.animateTo(0, duration: const Duration(milliseconds: 150));
     } else {
       unawaited(_dim.animateTo(0, duration: const Duration(milliseconds: 220)));
-      await _grow.animateWith(_springTo(_grow.value, 0, _grow.velocity));
+      await _grow.animateWith(houseSpring(_grow.value, 0, _grow.velocity));
     }
     widget.onGone();
   }

@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import '../widgets/burn_fade.dart';
 import '../widgets/press_scale.dart';
 import '../main.dart' hide live;
+import '../stickers/sticker_bubble.dart' show StickerLine;
+import '../stickers/sticker_wire.dart' show StickerWire;
 import '../theme.dart';
 import 'chat_screen.dart';
 import '../widgets/motion.dart' show haloRoute;
@@ -79,6 +81,7 @@ class _SavedScreenState extends State<SavedScreen> {
   }
 
   String _preview(Map<String, Object?> r) {
+    if (r['sticker'] != null) return l10n.stickerLabel;
     final fn = r['file_name'] as String?;
     if (fn == 'voice.wav') return l10n.savedVoiceNote;
     if (fn != null) return fn;
@@ -196,6 +199,7 @@ class _SavedScreenState extends State<SavedScreen> {
     final accent = _authorColor(peer);
     final isVoice = _isVoice(r);
     final isPhoto = _isPhoto(r);
+    final sticker = StickerWire.parse(r['sticker']);
     return PressScale(
       onTap: () => _open(peer, uid),
       child: Container(
@@ -249,7 +253,12 @@ class _SavedScreenState extends State<SavedScreen> {
               ],
             ),
             const SizedBox(height: 10),
-            if (isVoice)
+            if (sticker != null)
+              StickerLine(
+                sticker,
+                style: HaloType.sans(size: 14, color: HaloColors.text),
+              )
+            else if (isVoice)
               _mediaRow(Icons.graphic_eq, l10n.savedVoiceNote)
             else if (isPhoto)
               _photoRow()

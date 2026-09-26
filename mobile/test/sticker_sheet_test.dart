@@ -20,7 +20,7 @@ class _Harness {
   final WidgetTester t;
   final StickerPack pack;
   late BuildContext home;
-  StickerRef? picked;
+  StickerPick? picked;
   bool closed = false;
 
   Future<void> pump({bool reduce = false}) async {
@@ -46,7 +46,7 @@ class _Harness {
   Future<void> open() async {
     closed = false;
     picked = null;
-    showHaloSheet<StickerRef>(
+    showHaloSheet<StickerPick>(
       home,
       scroll: true,
       builder: (_) => StickerSheet(
@@ -97,10 +97,16 @@ void main() {
     final h = _Harness(t, pack);
     await h.pump();
     await h.open();
+    final cell = t.getRect(h.cell('😂'));
     await t.tap(h.cell('😂'));
     await h.frames(20);
     expect(h.closed, true);
-    expect(h.picked, const StickerRef('fokia', 2));
+    expect(h.picked?.ref, const StickerRef('fokia', 2));
+    // where it was drawn, for the flight to its bubble
+    final from = h.picked!.from;
+    expect(from.isEmpty, false);
+    expect(cell.contains(from.center), true);
+    expect(from.width, lessThan(cell.width));
 
     await h.open();
     expect(find.bySemanticsLabel('Recent'), findsWidgets);
@@ -163,9 +169,13 @@ void main() {
     // a pack sticker, not a recent one: nothing to remove
     expect(find.text('Remove from recent'), findsNothing);
 
+    final shown = t.getRect(big);
     await t.tap(find.text('Send'));
     await h.frames(20);
-    expect(h.picked, const StickerRef('fokia', 4));
+    expect(h.picked?.ref, const StickerRef('fokia', 4));
+    // it flies from the big one, not from its cell
+    expect(h.picked!.from.center.dx, closeTo(shown.center.dx, 1));
+    expect(h.picked!.from.width, closeTo(shown.width, 1));
     expect(big, findsNothing);
   });
 
@@ -209,9 +219,7 @@ void main() {
     expect(h.picked, isNull);
   });
 
-  testWidgets('with reduced motion it all still works, without the pops', (
-    t,
-  ) async {
+  testWidgets('reduced motion: it all works, without the pops', (t) async {
     final h = _Harness(t, pack);
     await h.pump(reduce: true);
     await h.open();
@@ -228,7 +236,7 @@ void main() {
     await h.frames(15);
     await t.tap(find.text('Send'));
     await h.frames(20);
-    expect(h.picked, const StickerRef('fokia', 1));
+    expect(h.picked?.ref, const StickerRef('fokia', 1));
   });
 
   test('recents: newest first, no twice, at most twenty', () async {

@@ -46,7 +46,7 @@ void main() {
     expect(over, isEmpty);
   });
 
-  test('the pack was built from the art and anim.txt as they are', () {
+  test('the pack matches the art and anim.txt', () {
     final svgs =
         Directory('$artDir/svg')
             .listSync()

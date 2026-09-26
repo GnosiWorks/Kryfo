@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// shared motion: the tor warmup graph, send pills, typing, cursor and breath.
+// shared motion: the house spring, the tor warmup graph, send pills, typing,
+// cursor and breath.
 
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 import '../l10n/l10n.dart';
 import '../theme.dart' show HaloType, track, slant;
 import '../l10n/marked.dart';
@@ -27,6 +29,20 @@ const kViolet = Color(0xFFA78BFA);
 // amber's "still working on it".
 const kCyan = Color(0xFF4BB8C9);
 const kGreenSoft = Color(0x2434D399);
+
+// the house spring: settles in about 235 ms with a hint of overshoot
+const kHouseSpring = SpringDescription(mass: 1, stiffness: 520, damping: 34);
+
+/// the house spring from [from] to [to]. done within half a percent: the
+/// default tolerance adds 600 ms of creep nobody can see
+SpringSimulation houseSpring(double from, double to, [double velocity = 0]) =>
+    SpringSimulation(
+      kHouseSpring,
+      from,
+      to,
+      velocity,
+      tolerance: const Tolerance(distance: 0.005, velocity: 0.05),
+    );
 
 enum TorStatus { off, starting, bootstrapped, publishing, reachable }
 
