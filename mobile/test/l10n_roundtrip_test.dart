@@ -2474,7 +2474,6 @@ void main() {
     expect(l.seenHidden, "Hidden");
     expect(l.seenNever, "Never");
     expect(l.seenOnDevice, "On device");
-    expect(l.seenTiming, "Timing");
     expect(l.seenYours, "Yours");
     expect(l.seenUnaudited, "Unaudited");
     expect(l.seenWhoYouTalkTo, "Who you talk to");
@@ -2520,11 +2519,6 @@ void main() {
     expect(
       l.seenAPreviewIsFetched,
       "A preview is fetched by the sender, over tor, and travels inside the encrypted message. The receiving phone makes no request. The website learns that someone using tor asked for a page, and nothing else. No image is ever loaded, and a stranger's link stays plain text.",
-    );
-    expect(l.seenThatADeviceFetched, "That a device fetched mail");
-    expect(
-      l.seenARelayCanTell,
-      "A relay can tell that some address was checked, and when. It cannot tell whose, or from where.",
     );
     expect(l.seenASeizedUnlockedPhone, "A seized unlocked phone");
     expect(

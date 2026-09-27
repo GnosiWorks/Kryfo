@@ -4803,9 +4803,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get seenOnDevice => 'In locale';
 
   @override
-  String get seenTiming => 'Orari';
-
-  @override
   String get seenYours => 'Tocca a te';
 
   @override
@@ -4878,14 +4875,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get seenAPreviewIsFetched =>
       'L\'anteprima la scarica chi invia, via tor, e viaggia dentro il messaggio cifrato. Il telefono che riceve non fa nessuna richiesta. Il sito viene a sapere che qualcuno che usa tor ha chiesto una pagina, e nient\'altro. Non viene mai caricata nessuna immagine, e il link di uno sconosciuto resta testo semplice.';
-
-  @override
-  String get seenThatADeviceFetched =>
-      'Che un dispositivo ha ritirato la posta';
-
-  @override
-  String get seenARelayCanTell =>
-      'Un relay può capire che un certo indirizzo è stato controllato, e quando. Non può capire di chi, né da dove.';
 
   @override
   String get seenASeizedUnlockedPhone => 'Un telefono sequestrato e sbloccato';

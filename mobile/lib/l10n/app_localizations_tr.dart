@@ -4779,9 +4779,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get seenOnDevice => 'Cihazda';
 
   @override
-  String get seenTiming => 'Zamanlama';
-
-  @override
   String get seenYours => 'Senin';
 
   @override
@@ -4854,13 +4851,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get seenAPreviewIsFetched =>
       'Önizlemeyi gönderen, tor üzerinden alır ve önizleme şifreli mesajın içinde gider. Alan telefon hiçbir istek yapmaz. Web sitesi yalnızca tor kullanan birinin bir sayfa istediğini öğrenir, başka hiçbir şey öğrenmez. Hiçbir resim asla yüklenmez ve bir yabancının bağlantısı düz metin olarak kalır.';
-
-  @override
-  String get seenThatADeviceFetched => 'Bir cihazın postasını aldığı';
-
-  @override
-  String get seenARelayCanTell =>
-      'Aktarıcı bir adrese bakıldığını ve ne zaman bakıldığını anlayabilir. Kimin olduğunu ya da nereden bakıldığını anlayamaz.';
 
   @override
   String get seenASeizedUnlockedPhone => 'El konulmuş, kilidi açık telefon';

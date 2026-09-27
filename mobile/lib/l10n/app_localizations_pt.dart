@@ -4791,9 +4791,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get seenOnDevice => 'No aparelho';
 
   @override
-  String get seenTiming => 'Horários';
-
-  @override
   String get seenYours => 'Seu';
 
   @override
@@ -4866,13 +4863,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get seenAPreviewIsFetched =>
       'A prévia é buscada por quem envia, pelo tor, e viaja dentro da mensagem criptografada. O celular que recebe não faz nenhuma solicitação. O site fica sabendo que alguém usando tor pediu uma página, e mais nada. Nenhuma imagem é carregada, nunca, e o link de um desconhecido continua como texto simples.';
-
-  @override
-  String get seenThatADeviceFetched => 'Que um aparelho buscou mensagens';
-
-  @override
-  String get seenARelayCanTell =>
-      'Um retransmissor consegue saber que algum endereço foi consultado, e quando. Não consegue saber de quem, nem de onde.';
 
   @override
   String get seenASeizedUnlockedPhone => 'Um celular desbloqueado apreendido';

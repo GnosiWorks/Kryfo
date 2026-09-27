@@ -4564,9 +4564,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get seenOnDevice => '在设备上';
 
   @override
-  String get seenTiming => '时间信息';
-
-  @override
   String get seenYours => '你的';
 
   @override
@@ -4638,12 +4635,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get seenAPreviewIsFetched =>
       '预览由发送方经由 tor 获取，并放在加密消息里一起传送。接收方的手机不会发出任何请求。网站只知道有个用 tor 的人请求了一个页面，别的都不知道。永远不会加载任何图片，陌生人发来的链接只显示为纯文本。';
-
-  @override
-  String get seenThatADeviceFetched => '某台设备取过信';
-
-  @override
-  String get seenARelayCanTell => '中继能知道某个地址被查过，以及查的时间。它无法知道是谁的，也无法知道是从哪里查的。';
 
   @override
   String get seenASeizedUnlockedPhone => '被夺走的已解锁手机';
@@ -11466,9 +11457,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get seenOnDevice => '在裝置上';
 
   @override
-  String get seenTiming => '時間點';
-
-  @override
   String get seenYours => '你的';
 
   @override
@@ -11540,12 +11528,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get seenAPreviewIsFetched =>
       '預覽由傳送者經由 tor 擷取，並包在加密訊息中傳送。接收的手機不會發出任何請求。網站只會知道有個使用 tor 的人要求了一個頁面，除此之外一無所知。永遠不會載入任何圖片，陌生人傳來的連結也只會顯示為純文字。';
-
-  @override
-  String get seenThatADeviceFetched => '有某台裝置收過信';
-
-  @override
-  String get seenARelayCanTell => '中繼能知道某個位址被查看過，以及在什麼時候。它無法知道是誰的，也無法知道從哪裡。';
 
   @override
   String get seenASeizedUnlockedPhone => '被扣押的已解鎖手機';

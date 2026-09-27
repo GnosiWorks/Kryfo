@@ -4837,9 +4837,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get seenOnDevice => 'На пристрої';
 
   @override
-  String get seenTiming => 'Час';
-
-  @override
   String get seenYours => 'Твій ризик';
 
   @override
@@ -4912,13 +4909,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get seenAPreviewIsFetched =>
       'Прев’ю завантажує відправник, через tor, і воно їде всередині зашифрованого повідомлення. Телефон отримувача не робить жодного запиту. Сайт дізнається лише, що хтось через tor запросив сторінку, і більше нічого. Жодне зображення ніколи не завантажується, а посилання від незнайомця лишається звичайним текстом.';
-
-  @override
-  String get seenThatADeviceFetched => 'Що пристрій забирав пошту';
-
-  @override
-  String get seenARelayCanTell =>
-      'Ретранслятор може знати, що якусь адресу перевіряли, і коли. Але не може знати, чию і звідки.';
 
   @override
   String get seenASeizedUnlockedPhone => 'Вилучений розблокований телефон';

@@ -4758,9 +4758,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get seenOnDevice => 'Di perangkat';
 
   @override
-  String get seenTiming => 'Waktu';
-
-  @override
   String get seenYours => 'Milikmu';
 
   @override
@@ -4833,14 +4830,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get seenAPreviewIsFetched =>
       'Pratinjau diambil oleh pengirim, lewat tor, dan ikut di dalam pesan terenkripsi. Ponsel penerima tidak membuat permintaan apa pun. Situsnya hanya tahu bahwa seseorang yang memakai tor meminta sebuah halaman, tidak lebih. Tidak ada gambar yang pernah dimuat, dan tautan dari orang asing tetap berupa teks biasa.';
-
-  @override
-  String get seenThatADeviceFetched =>
-      'Bahwa ada perangkat yang mengambil pesan';
-
-  @override
-  String get seenARelayCanTell =>
-      'Relay bisa tahu bahwa suatu alamat dicek, dan kapan. Relay tidak bisa tahu milik siapa, atau dari mana.';
 
   @override
   String get seenASeizedUnlockedPhone => 'Ponsel tak terkunci yang disita';

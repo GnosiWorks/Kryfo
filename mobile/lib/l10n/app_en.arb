@@ -5978,10 +5978,6 @@
   "@seenOnDevice": {
     "description": "screens/seen_screen.dart"
   },
-  "seenTiming": "Timing",
-  "@seenTiming": {
-    "description": "screens/seen_screen.dart"
-  },
   "seenYours": "Yours",
   "@seenYours": {
     "description": "screens/seen_screen.dart"
@@ -6068,14 +6064,6 @@
   },
   "seenAPreviewIsFetched": "A preview is fetched by the sender, over tor, and travels inside the encrypted message. The receiving phone makes no request. The website learns that someone using tor asked for a page, and nothing else. No image is ever loaded, and a stranger's link stays plain text.",
   "@seenAPreviewIsFetched": {
-    "description": "screens/seen_screen.dart"
-  },
-  "seenThatADeviceFetched": "That a device fetched mail",
-  "@seenThatADeviceFetched": {
-    "description": "screens/seen_screen.dart"
-  },
-  "seenARelayCanTell": "A relay can tell that some address was checked, and when. It cannot tell whose, or from where.",
-  "@seenARelayCanTell": {
     "description": "screens/seen_screen.dart"
   },
   "seenASeizedUnlockedPhone": "A seized unlocked phone",

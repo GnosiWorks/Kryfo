@@ -7674,12 +7674,6 @@ abstract class AppLocalizations {
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Timing'**
-  String get seenTiming;
-
-  /// screens/seen_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Yours'**
   String get seenYours;
 
@@ -7808,18 +7802,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A preview is fetched by the sender, over tor, and travels inside the encrypted message. The receiving phone makes no request. The website learns that someone using tor asked for a page, and nothing else. No image is ever loaded, and a stranger\'s link stays plain text.'**
   String get seenAPreviewIsFetched;
-
-  /// screens/seen_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'That a device fetched mail'**
-  String get seenThatADeviceFetched;
-
-  /// screens/seen_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'A relay can tell that some address was checked, and when. It cannot tell whose, or from where.'**
-  String get seenARelayCanTell;
 
   /// screens/seen_screen.dart
   ///

@@ -4768,9 +4768,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get seenOnDevice => 'روی گوشی';
 
   @override
-  String get seenTiming => 'زمان‌بندی';
-
-  @override
   String get seenYours => 'مال شما';
 
   @override
@@ -4843,13 +4840,6 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get seenAPreviewIsFetched =>
       'پیش‌نمایش را فرستنده، از راه tor، می‌گیرد و درون پیام رمزگذاری‌شده سفر می‌کند. گوشی گیرنده هیچ درخواستی نمی‌فرستد. وب‌سایت فقط می‌فهمد کسی با tor صفحه‌ای خواسته، نه چیز دیگری. هیچ تصویری هرگز بارگذاری نمی‌شود، و پیوند یک غریبه متن ساده می‌ماند.';
-
-  @override
-  String get seenThatADeviceFetched => 'اینکه دستگاهی نامه گرفته';
-
-  @override
-  String get seenARelayCanTell =>
-      'رله می‌تواند بفهمد که نشانی‌ای بررسی شده، و چه وقت. نمی‌تواند بفهمد مال چه کسی، یا از کجا.';
 
   @override
   String get seenASeizedUnlockedPhone => 'گوشی توقیف‌شده با قفل باز';

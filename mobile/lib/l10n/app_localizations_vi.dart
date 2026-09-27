@@ -4752,9 +4752,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get seenOnDevice => 'Trên máy';
 
   @override
-  String get seenTiming => 'Thời điểm';
-
-  @override
   String get seenYours => 'Của bạn';
 
   @override
@@ -4827,13 +4824,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get seenAPreviewIsFetched =>
       'Bản xem trước do người gửi tải về, qua tor, và đi bên trong tin nhắn được mã hóa. Điện thoại nhận không gửi yêu cầu nào. Trang web chỉ biết có ai đó dùng tor đã yêu cầu một trang, ngoài ra không biết gì. Không bao giờ có hình ảnh nào được tải, và liên kết từ người lạ vẫn chỉ là văn bản thường.';
-
-  @override
-  String get seenThatADeviceFetched => 'Việc một thiết bị đã lấy thư';
-
-  @override
-  String get seenARelayCanTell =>
-      'Relay có thể biết một địa chỉ nào đó đã được kiểm tra, và vào lúc nào. Relay không thể biết đó là của ai, hay từ đâu.';
 
   @override
   String get seenASeizedUnlockedPhone => 'Điện thoại bị thu giữ lúc mở khóa';

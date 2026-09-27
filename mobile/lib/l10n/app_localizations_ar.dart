@@ -4833,9 +4833,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get seenOnDevice => 'على الجهاز';
 
   @override
-  String get seenTiming => 'التوقيت';
-
-  @override
   String get seenYours => 'مسؤوليتك';
 
   @override
@@ -4908,13 +4905,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get seenAPreviewIsFetched =>
       'يجلب المُرسِل المعاينة عبر tor، وتنتقل داخل الرسالة المشفّرة. الهاتف المستقبِل لا يرسل أي طلب. يعرف الموقع أن شخصًا يستخدم tor طلب صفحة، ولا شيء آخر. لا تُحمَّل أي صورة أبدًا، ويبقى رابط الغريب نصًا عاديًا.';
-
-  @override
-  String get seenThatADeviceFetched => 'أن جهازًا ما جلب بريده';
-
-  @override
-  String get seenARelayCanTell =>
-      'يستطيع المُرحِّل معرفة أن عنوانًا ما قد فُحص، ومتى. ولا يستطيع معرفة لمن، أو من أين.';
 
   @override
   String get seenASeizedUnlockedPhone => 'هاتف مُصادَر غير مقفل';

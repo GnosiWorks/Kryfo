@@ -4799,9 +4799,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get seenOnDevice => 'En el teléfono';
 
   @override
-  String get seenTiming => 'El momento';
-
-  @override
   String get seenYours => 'Tuyo';
 
   @override
@@ -4874,13 +4871,6 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get seenAPreviewIsFetched =>
       'La vista previa la obtiene quien envía, por tor, y viaja dentro del mensaje cifrado. El teléfono que recibe no hace ninguna petición. La web solo sabe que alguien que usa tor pidió una página, nada más. Nunca se carga ninguna imagen, y el enlace de un desconocido se queda como texto plano.';
-
-  @override
-  String get seenThatADeviceFetched => 'Que un dispositivo recogió correo';
-
-  @override
-  String get seenARelayCanTell =>
-      'Un repetidor puede saber que se consultó alguna dirección, y cuándo. No puede saber de quién ni desde dónde.';
 
   @override
   String get seenASeizedUnlockedPhone => 'Un teléfono incautado y desbloqueado';

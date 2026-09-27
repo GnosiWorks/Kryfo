@@ -4805,9 +4805,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get seenOnDevice => 'Sur l’appareil';
 
   @override
-  String get seenTiming => 'Moments';
-
-  @override
   String get seenYours => 'À vous';
 
   @override
@@ -4880,13 +4877,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get seenAPreviewIsFetched =>
       'Un aperçu est récupéré par l’expéditeur, par tor, et voyage dans le message chiffré. Le téléphone qui reçoit ne fait aucune requête. Le site apprend que quelqu’un utilisant tor a demandé une page, et rien d’autre. Aucune image n’est jamais chargée, et le lien d’un inconnu reste du texte brut.';
-
-  @override
-  String get seenThatADeviceFetched => 'Qu’un appareil a relevé son courrier';
-
-  @override
-  String get seenARelayCanTell =>
-      'Un relais peut savoir qu’une adresse a été consultée, et quand. Il ne peut pas savoir à qui elle est, ni d’où.';
 
   @override
   String get seenASeizedUnlockedPhone => 'Un téléphone saisi déverrouillé';

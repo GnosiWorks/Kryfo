@@ -91,7 +91,6 @@ class _Row {
 _Cell get _hidden => _Cell(l10n.seenHidden, _Tone.good);
 _Cell get _never => _Cell(l10n.seenNever, _Tone.good);
 _Cell get _onDevice => _Cell(l10n.seenOnDevice, _Tone.good);
-_Cell get _timing => _Cell(l10n.seenTiming, _Tone.warn);
 _Cell get _yours => _Cell(l10n.seenYours, _Tone.bad);
 _Cell get _unaudited => _Cell(l10n.seenUnaudited, _Tone.bad);
 
@@ -136,11 +135,6 @@ List<_Row> get _rows => [
     _Cell(l10n.seenOverTor, _Tone.good),
     _Cell(l10n.seenOverTor, _Tone.good),
   ], l10n.seenAPreviewIsFetched),
-  _Row(l10n.seenThatADeviceFetched, [
-    _timing,
-    _timing,
-    _timing,
-  ], l10n.seenARelayCanTell),
   _Row(l10n.seenASeizedUnlockedPhone, [
     _yours,
     _yours,

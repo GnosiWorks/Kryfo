@@ -4813,9 +4813,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get seenOnDevice => 'Auf dem Gerät';
 
   @override
-  String get seenTiming => 'Zeitpunkt';
-
-  @override
   String get seenYours => 'Deins';
 
   @override
@@ -4888,13 +4885,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get seenAPreviewIsFetched =>
       'Eine Vorschau wird vom Absender über tor abgerufen und reist in der verschlüsselten Nachricht mit. Das empfangende Handy stellt keine Anfrage. Die Website erfährt, dass jemand über tor eine Seite abgerufen hat, und sonst nichts. Es wird nie ein Bild geladen, und der Link von Fremden bleibt reiner Text.';
-
-  @override
-  String get seenThatADeviceFetched => 'Dass ein Gerät Post abgeholt hat';
-
-  @override
-  String get seenARelayCanTell =>
-      'Ein Relais kann erkennen, dass eine Adresse abgefragt wurde, und wann. Es kann nicht erkennen, wessen, oder von wo.';
 
   @override
   String get seenASeizedUnlockedPhone => 'Entsperrtes Handy, beschlagnahmt';
