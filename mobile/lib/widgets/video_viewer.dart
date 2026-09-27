@@ -16,9 +16,13 @@ import '../open_file.dart';
 import '../theme.dart';
 import '../l10n/l10n.dart';
 import 'video_bubble.dart' show openReceivedFile;
-import '../lock_guard.dart' show lockGuard;
+import '../lock_guard.dart' show LockGuard, lockGuard;
 
 const _channel = MethodChannel('kryfo/video');
+
+// the lock nothing plays under. tests stand in for it
+@visibleForTesting
+LockGuard videoGuard = lockGuard;
 
 /// the bubble and the player share this, so the frame flies between them
 Object videoHeroTag(String path) => 'video:$path';
@@ -93,9 +97,9 @@ class _VideoViewerState extends State<_VideoViewer>
   double? _scrub;
   double _drag = 0;
   bool _pastClose = false;
-  late final AnimationController _settle = AnimationController.unbounded(
-    vsync: this,
-  )..addListener(() => setState(() => _drag = _settle.value));
+  // made up front: made lazily, a player closed without a pull would make
+  // it in dispose, off a tree that is going away
+  late final AnimationController _settle;
   Timer? _poll;
   Timer? _hide;
 
@@ -105,6 +109,8 @@ class _VideoViewerState extends State<_VideoViewer>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _settle = AnimationController.unbounded(vsync: this)
+      ..addListener(() => setState(() => _drag = _settle.value));
     final info = videoInfoNow(widget.path);
     if (info != null) {
       _aspect = info.aspect;
@@ -169,7 +175,7 @@ class _VideoViewerState extends State<_VideoViewer>
 
   Future<void> _play() async {
     final id = _id;
-    if (id == null || lockGuard.isLocked()) return;
+    if (id == null || videoGuard.isLocked()) return;
     await _channel.invokeMethod('play', {'id': id});
     if (!mounted) return;
     setState(() {
@@ -177,7 +183,7 @@ class _VideoViewerState extends State<_VideoViewer>
       _playing = true;
       _done = false;
     });
-    _unguard ??= lockGuard.closeOnLock(() {
+    _unguard ??= videoGuard.closeOnLock(() {
       _unguard = null;
       if (mounted && _playing) _pause();
     });
@@ -185,9 +191,17 @@ class _VideoViewerState extends State<_VideoViewer>
     _hideSoon();
   }
 
+  // asks the player where it is only while it plays: a paused or finished
+  // video, or one behind the app, costs nothing
+  void _stopPoll() {
+    _poll?.cancel();
+    _poll = null;
+  }
+
   Future<void> _pause() async {
     final id = _id;
     if (id == null) return;
+    _stopPoll();
     await _channel.invokeMethod('pause', {'id': id});
     if (!mounted) return;
     setState(() {
@@ -210,6 +224,7 @@ class _VideoViewerState extends State<_VideoViewer>
     });
     if (!mounted || m == null || _scrub != null) return;
     final done = m['done'] == true;
+    if (done) _stopPoll();
     setState(() {
       _pos = Duration(milliseconds: (m['ms'] as num?)?.toInt() ?? 0);
       _playing = m['playing'] == true;

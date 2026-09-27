@@ -10455,6 +10455,12 @@ abstract class AppLocalizations {
   /// **'patterns'**
   String get wallpaperPatterns;
 
+  /// screens/wallpaper_sheet.dart
+  ///
+  /// In en, this message translates to:
+  /// **'moods'**
+  String get wallpaperMoods;
+
   /// widgets/confirm_sheet.dart
   ///
   /// In en, this message translates to:

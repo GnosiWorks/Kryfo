@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../main.dart' hide live;
 import '../theme.dart';
+import '../widgets/ease_size.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 
@@ -160,48 +161,79 @@ Color _tint(_Tone t) => switch (t) {
   _Tone.bad => HaloColors.rose,
 };
 
+// the column of the route in use, a soft amber band down the table, so
+// the other routes' words keep their full colour beside it
+Widget _band(
+  int active, {
+  double above = 0,
+  double below = 0,
+  BorderRadius? radius,
+}) => PositionedDirectional(
+  top: -above,
+  bottom: -below,
+  end: (2 - active) * _cellW,
+  width: _cellW,
+  child: DecoratedBox(
+    decoration: BoxDecoration(
+      color: HaloColors.amber.withValues(alpha: 0.07),
+      borderRadius: radius,
+    ),
+  ),
+);
+
 class _Header extends StatelessWidget {
   final int active;
   const _Header({required this.active});
   @override
   Widget build(BuildContext context) {
     final names = [l10n.seenOnion, l10n.seenRelay, l10n.seenFast];
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Row(
-        children: [
-          const Expanded(child: SizedBox()),
-          for (var i = 0; i < 3; i++)
-            SizedBox(
-              width: _cellW,
-              child: Column(
-                children: [
-                  Text(
-                    names[i],
-                    textAlign: TextAlign.center,
-                    style: HaloType.mono(
-                      size: 10,
-                      letter: 0.1,
-                      weight: FontWeight.w600,
-                      color: i == active ? HaloColors.amber : HaloColors.text3,
-                    ),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        _band(
+          active,
+          radius: const BorderRadius.vertical(top: Radius.circular(8)),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 6, bottom: 6),
+          child: Row(
+            children: [
+              const Expanded(child: SizedBox()),
+              for (var i = 0; i < 3; i++)
+                SizedBox(
+                  width: _cellW,
+                  child: Column(
+                    children: [
+                      Text(
+                        names[i],
+                        textAlign: TextAlign.center,
+                        style: HaloType.mono(
+                          size: 10,
+                          letter: 0.1,
+                          weight: FontWeight.w600,
+                          color: i == active
+                              ? HaloColors.amber
+                              : HaloColors.text3,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      // the route you are on, marked
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 220),
+                        width: i == active ? 18 : 0,
+                        height: 2,
+                        decoration: BoxDecoration(
+                          color: HaloColors.amber,
+                          borderRadius: BorderRadius.circular(1),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  // the route you are on, marked
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    width: i == active ? 18 : 0,
-                    height: 2,
-                    decoration: BoxDecoration(
-                      color: HaloColors.amber,
-                      borderRadius: BorderRadius.circular(1),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -231,38 +263,46 @@ class _RowTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            Stack(
+              clipBehavior: Clip.none,
               children: [
-                Expanded(
-                  child: Text(
-                    row.what,
-                    style: HaloType.sans(size: 13.5, color: HaloColors.text),
-                  ),
-                ),
-                for (var i = 0; i < 3; i++)
-                  SizedBox(
-                    width: _cellW,
-                    child: Opacity(
-                      opacity: i == active ? 1 : 0.6,
+                // runs through the row's own padding, so the band is whole;
+                // an open row's why is left clear of it
+                _band(active, above: 11, below: open ? 0 : 11),
+                Row(
+                  children: [
+                    Expanded(
                       child: Text(
-                        row.cells[i].word,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        style: HaloType.mono(
-                          size: 9.5,
-                          weight: FontWeight.w600,
-                          letter: 0.04,
-                          color: _tint(row.cells[i].tone),
+                        row.what,
+                        style: HaloType.sans(
+                          size: 13.5,
+                          color: HaloColors.text,
                         ),
                       ),
                     ),
-                  ),
+                    for (var i = 0; i < 3; i++)
+                      SizedBox(
+                        width: _cellW,
+                        child: Text(
+                          row.cells[i].word,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          style: HaloType.mono(
+                            size: 9.5,
+                            weight: i == active
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            letter: 0.04,
+                            color: _tint(row.cells[i].tone),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ],
             ),
-            AnimatedSize(
+            EaseSize(
               duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              alignment: AlignmentDirectional.topStart,
               child: open
                   ? Padding(
                       padding: const EdgeInsetsDirectional.only(top: 8, end: 8),

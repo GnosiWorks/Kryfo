@@ -607,3 +607,49 @@ class GrowSwap extends StatelessWidget {
     );
   }
 }
+
+// a message's words with each hit of an in-chat search marked like a
+// highlighter: amber on its own tint in their bubble, amber on ink in ours,
+// where amber text alone would vanish. the same in both chats
+List<TextSpan> searchLit(String text, String query, {required bool onAmber}) {
+  final q = query.toLowerCase();
+  if (q.isEmpty) return [TextSpan(text: text)];
+  final lower = text.toLowerCase();
+  final lit = TextStyle(
+    color: HaloColors.amber,
+    backgroundColor: onAmber
+        ? HaloColors.onAmber
+        : HaloColors.amber.withValues(alpha: 0.22),
+    fontWeight: FontWeight.w600,
+  );
+  final spans = <TextSpan>[];
+  var start = 0;
+  while (true) {
+    final hit = lower.indexOf(q, start);
+    // a hit that lowercasing moved off the text's own length is left plain
+    if (hit < 0 || hit + q.length > text.length) {
+      spans.add(TextSpan(text: text.substring(start)));
+      break;
+    }
+    if (hit > start) spans.add(TextSpan(text: text.substring(start, hit)));
+    spans.add(TextSpan(text: text.substring(hit, hit + q.length), style: lit));
+    start = hit + q.length;
+  }
+  return spans;
+}
+
+// the ring and glow around the bubble that holds the current hit of an
+// in-chat search
+BoxBorder? searchRing(bool current) =>
+    current ? Border.all(color: HaloColors.amber, width: 1) : null;
+
+List<BoxShadow>? searchGlow(bool current) => current
+    ? [
+        BoxShadow(
+          color: HaloColors.amber.withValues(alpha: 0.28),
+          blurRadius: 22,
+          spreadRadius: -4,
+          offset: const Offset(0, 6),
+        ),
+      ]
+    : null;

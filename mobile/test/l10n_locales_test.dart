@@ -2865,6 +2865,7 @@ final _calls = <_Call>[
   ('settingsAbout', [], (l) => l.settingsAbout),
   ('wallpaperGradients', [], (l) => l.wallpaperGradients),
   ('wallpaperPatterns', [], (l) => l.wallpaperPatterns),
+  ('wallpaperMoods', [], (l) => l.wallpaperMoods),
   ('confirmSheetKeep', [], (l) => l.confirmSheetKeep),
   ('confirmSheetSave', [], (l) => l.confirmSheetSave),
   ('confirmSheetCancel', [], (l) => l.confirmSheetCancel),

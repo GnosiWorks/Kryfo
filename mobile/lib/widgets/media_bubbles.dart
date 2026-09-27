@@ -16,7 +16,9 @@ import '../theme.dart';
 import 'decode_px.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
-import 'halo_bar.dart';
+import 'motion.dart' show kHouseCurve;
+import 'photo_viewer.dart';
+import 'voice_parts.dart';
 import 'written_field.dart';
 import '../bidi_safe.dart';
 import '../lock_guard.dart' show lockGuard;
@@ -165,36 +167,12 @@ Widget _plainFileCard(String? filePath, String? fileName, bool isOut) {
   );
 }
 
-void openFullImage(BuildContext context, String path) {
-  // drop composer focus first, else popping the viewer restores it and the
-  // keyboard springs up over the chat.
-  FocusManager.instance.primaryFocus?.unfocus();
-  Navigator.of(context).push(
-    MaterialPageRoute(
-      fullscreenDialog: true,
-      builder: (ctx) => GestureDetector(
-        onTap: () => Navigator.of(ctx).pop(),
-        child: Scaffold(
-          backgroundColor: Colors.black,
-          body: SafeArea(
-            child: Center(
-              child: InteractiveViewer(
-                minScale: 1,
-                maxScale: 4,
-                // twice the screen: enough for the zoom, a fraction of
-                // the file
-                child: Image.file(
-                  File(path),
-                  cacheWidth: screenPx(ctx, times: 2),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    ),
-  );
-}
+void openFullImage(
+  BuildContext context,
+  String path, {
+  Object? tag,
+  double radius = 0,
+}) => openPhoto(context, path, tag: tag, radius: radius);
 
 class VoiceBubble extends StatefulWidget {
   final String path;
@@ -217,6 +195,8 @@ class VoiceBubbleState extends State<VoiceBubble> {
   bool _playing = false;
   Duration _dur = Duration.zero;
   Duration _pos = Duration.zero;
+  // the note's wave, once read from its samples
+  late List<double>? _peaks = voicePeaksNow(widget.path);
 
   @override
   void initState() {
@@ -260,6 +240,11 @@ class VoiceBubbleState extends State<VoiceBubble> {
     if (!await File(widget.path).exists()) {
       if (mounted) setState(() => _missing = true);
       return;
+    }
+    if (_peaks == null) {
+      voicePeaks(widget.path).then((p) {
+        if (mounted && p != null) setState(() => _peaks = p);
+      }, onError: (_) {});
     }
     final cached = _durCache[widget.path];
     if (cached != null) {
@@ -347,10 +332,13 @@ class VoiceBubbleState extends State<VoiceBubble> {
 
   @override
   Widget build(BuildContext context) {
-    final fg = widget.isOut ? HaloColors.onAmber : HaloColors.amber;
-    final track = widget.isOut
+    final out = widget.isOut;
+    final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final fg = out ? HaloColors.onAmber : HaloColors.amber;
+    final sub = out ? HaloColors.onAmber : HaloColors.text2;
+    final rest = out
         ? HaloColors.onAmber.withValues(alpha: 0.3)
-        : HaloColors.text3.withValues(alpha: 0.4);
+        : HaloColors.text3.withValues(alpha: 0.45);
     final progress = (_dur.inMilliseconds == 0)
         ? 0.0
         : (_pos.inMilliseconds / _dur.inMilliseconds).clamp(0.0, 1.0);
@@ -359,52 +347,75 @@ class VoiceBubbleState extends State<VoiceBubble> {
       onTap: _missing ? null : _toggle,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
-        width: 168,
+        width: 184,
         child: _missing
             ? Row(
                 children: [
-                  Icon(
-                    Icons.music_off_rounded,
-                    size: 20,
-                    color: fg.withValues(alpha: 0.5),
-                  ),
+                  Icon(Icons.music_off_rounded, size: 20, color: sub),
                   const SizedBox(width: 8),
-                  Text(
-                    l10n.mediaBubblesAudioUnavailable,
-                    style: HaloType.mono(
-                      size: 11,
-                      color: fg.withValues(alpha: 0.55),
+                  Flexible(
+                    child: Text(
+                      l10n.mediaBubblesAudioUnavailable,
+                      style: HaloType.mono(size: 11, color: sub),
                     ),
                   ),
                 ],
               )
             : Row(
                 children: [
-                  Icon(
-                    _playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                    size: 26,
-                    color: fg,
+                  // a round play mark, the glyph turning over between play
+                  // and pause
+                  Container(
+                    width: 34,
+                    height: 34,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: out ? HaloColors.onAmber : HaloColors.amber,
+                    ),
+                    child: AnimatedSwitcher(
+                      duration: Duration(milliseconds: still ? 120 : 220),
+                      switchInCurve: kHouseCurve,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: (c, a) => FadeTransition(
+                        opacity: a,
+                        child: still
+                            ? c
+                            : ScaleTransition(
+                                scale: Tween(begin: 0.4, end: 1.0).animate(a),
+                                child: c,
+                              ),
+                      ),
+                      child: Icon(
+                        _playing
+                            ? Icons.pause_rounded
+                            : Icons.play_arrow_rounded,
+                        key: ValueKey(_playing),
+                        size: 22,
+                        color: out ? HaloColors.amber : HaloColors.onAmber,
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        HaloBar(
-                          value: progress,
-                          height: 3,
-                          color: fg,
-                          track: track,
+                        VoiceWave(
+                          peaks: _peaks,
+                          progress: progress,
+                          played: fg,
+                          rest: rest,
                         ),
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 4),
                         Row(
                           children: [
                             Text(
                               _fmt(shown),
                               style: HaloType.mono(
                                 size: 10,
-                                color: widget.isOut
+                                color: out
                                     ? HaloColors.onAmber
                                     : HaloColors.text3,
                               ),
@@ -414,18 +425,22 @@ class VoiceBubbleState extends State<VoiceBubble> {
                               Icon(
                                 Icons.theater_comedy_outlined,
                                 size: 11,
-                                color: widget.isOut
+                                color: out
                                     ? HaloColors.onAmber
                                     : HaloColors.amber,
                               ),
                               const SizedBox(width: 3),
-                              Text(
-                                l10n.mediaBubblesHidden,
-                                style: HaloType.mono(
-                                  size: 9,
-                                  color: widget.isOut
-                                      ? HaloColors.onAmber
-                                      : HaloColors.amber,
+                              Flexible(
+                                child: Text(
+                                  l10n.mediaBubblesHidden,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: HaloType.mono(
+                                    size: 9,
+                                    color: out
+                                        ? HaloColors.onAmber
+                                        : HaloColors.amber,
+                                  ),
                                 ),
                               ),
                             ],
@@ -461,11 +476,15 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
   Timer? _ticker;
   int _ms = 0;
   bool _willCancel = false;
+  // how far the finger went toward the start side
   double _dragDx = 0;
   bool _busy = false;
   bool _live = false;
   String? _path;
   double _bottomInset = 0;
+  // the mic's level while it records, newest last
+  final List<double> _levels = [];
+  StreamSubscription<Amplitude>? _level;
 
   VoidCallback? _unguard;
 
@@ -473,6 +492,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
   void dispose() {
     _unguard?.call();
     _ticker?.cancel();
+    _level?.cancel();
     _overlay?.remove();
     _rec.dispose();
     super.dispose();
@@ -507,6 +527,13 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     _ms = 0;
     _willCancel = false;
     _dragDx = 0;
+    _levels.clear();
+    _level = _rec.onAmplitudeChanged(const Duration(milliseconds: 100)).listen((
+      a,
+    ) {
+      _levels.add(micLevel(a.current));
+      if (_levels.length > 40) _levels.removeAt(0);
+    }, onError: (_) {});
     HapticFeedback.mediumImpact();
     _ticker = Timer.periodic(const Duration(milliseconds: 100), (_) {
       _ms += 100;
@@ -525,6 +552,8 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     _unguard = null;
     _ticker?.cancel();
     _ticker = null;
+    _level?.cancel();
+    _level = null;
     _overlay?.remove();
     _overlay = null;
     final path = await _rec.stop();
@@ -558,134 +587,22 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
   }
 
   Widget _bar() {
-    final cancel = _willCancel;
-    // fade the slide hint out as the finger approaches the cancel threshold.
-    final slideProgress = (_dragDx / -90).clamp(0.0, 1.0);
     return Positioned(
       left: 0,
       right: 0,
       bottom: 0,
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: 0.0, end: 1.0),
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOutCubic,
-        builder: (_, t, child) => Opacity(
-          opacity: t,
-          child: Transform.translate(
-            offset: Offset(0, (1 - t) * 44),
-            child: child,
-          ),
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: Container(
-            padding: EdgeInsets.fromLTRB(18, 16, 18, 16 + _bottomInset),
-            decoration: BoxDecoration(
-              color: HaloColors.surface,
-              border: Border(
-                top: BorderSide(
-                  color: cancel ? HaloColors.rose : HaloColors.line,
-                  width: 0.8,
-                ),
-              ),
-            ),
-            child: Row(
-              children: [
-                // pulsing record dot
-                TweenAnimationBuilder<double>(
-                  key: const ValueKey('rec-dot'),
-                  tween: Tween(begin: 0.4, end: 1.0),
-                  duration: const Duration(milliseconds: 650),
-                  curve: Curves.easeInOut,
-                  builder: (_, v, _) => Opacity(
-                    opacity: cancel ? 1.0 : v,
-                    child: Container(
-                      width: 11,
-                      height: 11,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: HaloColors.rose,
-                      ),
-                    ),
-                  ),
-                  onEnd: () => _overlay?.markNeedsBuild(),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  _time,
-                  style: HaloType.mono(size: 14, color: HaloColors.text),
-                ),
-                Expanded(
-                  child: cancel
-                      ? Center(
-                          child: Text(
-                            l10n.mediaBubblesReleaseToCancel,
-                            style: HaloType.mono(
-                              size: 12,
-                              color: HaloColors.rose,
-                            ),
-                          ),
-                        )
-                      : Transform.translate(
-                          offset: Offset(_dragDx * 0.5, 0),
-                          child: Opacity(
-                            opacity: (1 - slideProgress * 0.7),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: widget.disguise
-                                  ? [
-                                      Icon(
-                                        Icons.theater_comedy_outlined,
-                                        size: 14,
-                                        color: HaloColors.amber,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        l10n.mediaBubblesVoiceHiddenSlideTo,
-                                        style: HaloType.mono(
-                                          size: 11,
-                                          color: HaloColors.amber,
-                                        ),
-                                      ),
-                                    ]
-                                  : [
-                                      Icon(
-                                        Icons.chevron_left,
-                                        size: 16,
-                                        color: HaloColors.text3,
-                                      ),
-                                      Text(
-                                        l10n.mediaBubblesSlideToCancel,
-                                        style: HaloType.mono(
-                                          size: 11,
-                                          color: HaloColors.text3,
-                                        ),
-                                      ),
-                                    ],
-                            ),
-                          ),
-                        ),
-                ),
-                Semantics(
-                  label: l10n.commonClose,
-                  button: true,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: _abort,
-                    child: Padding(
-                      padding: const EdgeInsetsDirectional.only(start: 8),
-                      child: Icon(
-                        Icons.close_rounded,
-                        size: 20,
-                        color: HaloColors.text2,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+      child: VoiceRecordBar(
+        time: _time,
+        cancel: _willCancel,
+        drag: -_dragDx,
+        disguise: widget.disguise,
+        levels: List.of(_levels),
+        releaseLabel: l10n.mediaBubblesReleaseToCancel,
+        slideLabel: l10n.mediaBubblesSlideToCancel,
+        hiddenLabel: l10n.mediaBubblesVoiceHiddenSlideTo,
+        closeLabel: l10n.commonClose,
+        onClose: _abort,
+        bottom: _bottomInset,
       ),
     );
   }
@@ -699,8 +616,12 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
         _start();
       },
       onLongPressMoveUpdate: (d) {
-        _dragDx = d.offsetFromOrigin.dx.clamp(-160.0, 0.0);
-        final wc = d.offsetFromOrigin.dx < -90;
+        // toward the start side cancels: left, or right in a right-to-left
+        // language, where the mic sits on the left
+        final rtl = Directionality.of(context) == TextDirection.rtl;
+        final along = d.offsetFromOrigin.dx * (rtl ? -1 : 1);
+        _dragDx = along.clamp(-160.0, 0.0);
+        final wc = along < -VoiceRecordBar.cancelAt;
         if (wc != _willCancel) {
           _willCancel = wc;
           if (wc) HapticFeedback.mediumImpact();

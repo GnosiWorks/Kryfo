@@ -84,6 +84,8 @@ import '../l10n/dates.dart';
 import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
 import '../widgets/video_viewer.dart';
+import '../widgets/photo_viewer.dart' show photoHeroTag;
+import '../widgets/voice_parts.dart' show DisguiseToggle;
 import '../polls.dart';
 import '../widgets/attach_grid.dart';
 import '../widgets/new_poll_sheet.dart';
@@ -182,6 +184,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   bool _searching = false;
   final _searchCtrl = TextEditingController();
   List<int> _matches = [];
+  // what was looked for, and the same hits as _matches for a row's test
+  String _query = '';
+  Set<int> _matchSet = {};
   int _matchPos = 0;
   Atmo _atmosphere = Atmo.none;
   static const _pageSize = 60;
@@ -906,6 +911,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         quotedAuthor = null;
       }
     }
+    // an in-chat search marks its hits and dims the rest, as the 1:1 does
+    final searchActive = _searching && _query.isNotEmpty;
+    final isMatch = searchActive && _matchSet.contains(i);
+    final isCurrent =
+        searchActive && _matches.isNotEmpty && _matches[_matchPos] == i;
     final animateIn = m.fresh;
     m.fresh = false;
     final landing = m.msgUid == null ? null : _landings[m.msgUid];
@@ -972,6 +982,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         }
                       : null,
                   ripple: m.msgUid != null && m.msgUid == _rippleUid,
+                  query: searchActive ? _query : '',
+                  isCurrentMatch: isCurrent,
+                  dimmed: searchActive && !isMatch,
                   onReplyTap: m.replyTo == null
                       ? null
                       : () {
@@ -2133,6 +2146,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       _searching = false;
       _searchCtrl.clear();
       _matches = [];
+      _query = '';
+      _matchSet = {};
       _matchPos = 0;
     });
   }
@@ -2151,7 +2166,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       }
     }
     setState(() {
+      _query = query;
       _matches = matches;
+      _matchSet = matches.toSet();
       _matchPos = matches.isEmpty ? 0 : matches.length - 1;
     });
     if (matches.isNotEmpty) _scrollToIndex(matches[_matchPos]);
@@ -3017,6 +3034,9 @@ class _Header extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
+    final room =
+        expiresAt != null ||
+        appState.groups.any((g) => g.groupId == groupId && g.expiresAt != null);
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(4, 6, 8, 6),
       child: Row(
@@ -3034,16 +3054,21 @@ class _Header extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                 child: Row(
                   children: [
+                    // a room's tile is violet, as on the chat list it
+                    // flies from: known from that list before the load
                     Hero(
                       tag: 'group-$groupId',
                       child: Container(
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: HaloColors.amberSoft,
+                          color: room
+                              ? HaloColors.violet.withValues(alpha: 0.14)
+                              : HaloColors.amberSoft,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: HaloColors.amber.withValues(alpha: 0.35),
+                            color: (room ? HaloColors.violet : HaloColors.amber)
+                                .withValues(alpha: 0.35),
                             width: 0.6,
                           ),
                         ),
@@ -3055,7 +3080,7 @@ class _Header extends StatelessWidget {
                           style: HaloType.serif(
                             size: 18,
                             italic: true,
-                            color: HaloColors.amber,
+                            color: room ? HaloColors.violet : HaloColors.amber,
                           ),
                         ),
                       ),
@@ -3340,27 +3365,10 @@ class _Composer extends StatelessWidget {
                     return Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Semantics(
+                        DisguiseToggle(
+                          on: disguise,
                           label: l10n.groupChatDisguiseVoice,
-                          button: true,
-                          child: GestureDetector(
-                            onTap: onToggleDisguise,
-                            behavior: HitTestBehavior.opaque,
-                            child: Padding(
-                              padding: const EdgeInsetsDirectional.only(
-                                end: 12,
-                              ),
-                              child: Icon(
-                                disguise
-                                    ? Icons.record_voice_over
-                                    : Icons.voice_over_off,
-                                size: 20,
-                                color: disguise
-                                    ? HaloColors.amber
-                                    : HaloColors.text3,
-                              ),
-                            ),
-                          ),
+                          onTap: onToggleDisguise,
                         ),
                         HoldToTalkMic(
                           disguise: disguise,
@@ -3549,6 +3557,11 @@ class _GroupBubble extends StatelessWidget {
   final void Function(BuildContext)? onLongPress;
   final VoidCallback? onRetry;
   final bool ripple;
+  // an in-chat search: the words to mark, this is the hit in view, or it is
+  // not a hit at all and steps back
+  final String query;
+  final bool isCurrentMatch;
+  final bool dimmed;
   final VoidCallback? onReplyTap;
   final String? linkTitle;
   final bool linkBySender;
@@ -3584,13 +3597,24 @@ class _GroupBubble extends StatelessWidget {
     this.onLongPress,
     this.onRetry,
     this.ripple = false,
+    this.query = '',
+    this.isCurrentMatch = false,
+    this.dimmed = false,
     this.onReplyTap,
     this.linkTitle,
     this.linkBySender = false,
   });
 
+  // a search steps what is not a hit back, as in the 1:1 chat
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AnimatedOpacity(
+    duration: const Duration(milliseconds: 250),
+    curve: Curves.easeOut,
+    opacity: dimmed ? 0.4 : 1.0,
+    child: _bubble(context),
+  );
+
+  Widget _bubble(BuildContext context) {
     final isOut = m.direction == 'out';
     // a video with no caption sits on the chat like a photo: no bubble around
     // it, its time in its corner
@@ -3600,6 +3624,7 @@ class _GroupBubble extends StatelessWidget {
         m.fileName != 'voice.wav' &&
         nameSaysVideo(m.fileName);
     final frameless = m.mediaPath != null || isVideo;
+    final onAmberText = isOut && m.mediaPath == null;
     return LeaveFold(
       leaving: m.removing,
       child: Padding(
@@ -3764,6 +3789,8 @@ class _GroupBubble extends StatelessWidget {
                                     ),
                                     bottomEnd: Radius.circular(isOut ? 4 : 14),
                                   ),
+                                  border: searchRing(isCurrentMatch),
+                                  boxShadow: searchGlow(isCurrentMatch),
                                 ),
                                 clipBehavior: frameless
                                     ? Clip.antiAlias
@@ -3913,6 +3940,11 @@ class _GroupBubble extends StatelessWidget {
                                                 : () => openFullImage(
                                                     context,
                                                     m.mediaPath!,
+                                                    tag: photoHeroTag(
+                                                      m.mediaPath!,
+                                                      'chat',
+                                                    ),
+                                                    radius: 10,
                                                   ),
                                             child: ClipRRect(
                                               borderRadius:
@@ -3927,19 +3959,25 @@ class _GroupBubble extends StatelessWidget {
                                                         ),
                                                     child: RememberedHeight(
                                                       id: m.mediaPath!,
-                                                      child: Image.file(
-                                                        File(m.mediaPath!),
-                                                        cacheWidth: decodePx(
-                                                          context,
-                                                          240,
+                                                      child: Hero(
+                                                        tag: photoHeroTag(
+                                                          m.mediaPath!,
+                                                          'chat',
                                                         ),
-                                                        gaplessPlayback: true,
-                                                        filterQuality:
-                                                            FilterQuality
-                                                                .medium,
-                                                        fit: BoxFit.cover,
-                                                        errorBuilder: (_, _, _) =>
-                                                            const SizedBox.shrink(),
+                                                        child: Image.file(
+                                                          File(m.mediaPath!),
+                                                          cacheWidth: decodePx(
+                                                            context,
+                                                            240,
+                                                          ),
+                                                          gaplessPlayback: true,
+                                                          filterQuality:
+                                                              FilterQuality
+                                                                  .medium,
+                                                          fit: BoxFit.cover,
+                                                          errorBuilder: (_, _, _) =>
+                                                              const SizedBox.shrink(),
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
@@ -3974,9 +4012,24 @@ class _GroupBubble extends StatelessWidget {
                                                   0,
                                                 )
                                               : EdgeInsets.zero,
-                                          // a kryfo link is drawn as one;
+                                          // a search marks its hits; else
+                                          // a kryfo link is drawn as one,
                                           // otherwise @three-words in amber
-                                          child: m.text.contains('kryfo://')
+                                          child: query.isNotEmpty
+                                              ? Text.rich(
+                                                  TextSpan(
+                                                    style: _bodyStyle(isOut),
+                                                    children: searchLit(
+                                                      m.text,
+                                                      query,
+                                                      onAmber: onAmberText,
+                                                    ),
+                                                  ),
+                                                  textDirection: writtenDir(
+                                                    m.text,
+                                                  ),
+                                                )
+                                              : m.text.contains('kryfo://')
                                               ? KryfoLinkText(
                                                   text: m.text,
                                                   style: HaloType.sans(
@@ -4296,6 +4349,16 @@ class _GroupBubble extends StatelessWidget {
       ),
     );
   }
+
+  // the words of a bubble: weightier on a photo's caption, dark on ours
+  TextStyle _bodyStyle(bool isOut) => HaloType.sans(
+    size: 14,
+    weight: m.mediaPath != null ? FontWeight.w600 : FontWeight.w400,
+    color: (isOut && m.mediaPath == null)
+        ? HaloColors.onAmber
+        : HaloColors.text,
+    height: 1.35,
+  );
 
   TextStyle _quoteStyle(bool isOut) => HaloType.sans(
     size: 12.5,

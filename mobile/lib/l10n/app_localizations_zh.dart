@@ -6258,6 +6258,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get wallpaperPatterns => '图案';
 
   @override
+  String get wallpaperMoods => '心情';
+
+  @override
   String get confirmSheetKeep => '保留';
 
   @override
@@ -13155,6 +13158,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get wallpaperPatterns => '圖案';
+
+  @override
+  String get wallpaperMoods => '心情';
 
   @override
   String get confirmSheetKeep => '保留';

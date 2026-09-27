@@ -21,6 +21,9 @@ import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/hidden_mark.dart';
+import '../lock_guard.dart' show lockGuard;
+import '../widgets/burn_fade.dart' show FadeFold;
+import '../widgets/row_motion.dart';
 import '../widgets/confirm_sheet.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
@@ -39,6 +42,10 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   // room fields, null for a plain group
   String? _roomPub;
   bool get _isRoom => _roomPub != null;
+  // known before the load, so the tile lands violet out of the room's header
+  late final bool _roomAtOpen = appState.groups.any(
+    (g) => g.groupId == widget.groupId && g.expiresAt != null,
+  );
   List<String> _members = [];
   bool _loading = true;
 
@@ -370,7 +377,9 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                 ),
             ],
           ),
-          _MembersCard(
+          MembersCard(
+            // under the lock nothing is being watched
+            quiet: lockGuard.isLocked(),
             members: _members,
             isMe: (m) => m == myId || (_isRoom && m == _roomPub),
             canRemove: _isAdmin,
@@ -403,24 +412,26 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   }
 
   // the group's face: its first letter on an amber tile, square where a
-  // person's is round
-  Widget _tile(String name) => Container(
-    width: 72,
-    height: 72,
-    decoration: BoxDecoration(
-      color: HaloColors.amberSoft,
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(
-        color: HaloColors.amber.withValues(alpha: 0.45),
-        width: 0.8,
+  // person's is round. a room's is violet, as on the chat list
+  Widget _tile(String name) {
+    final tint = _isRoom || _roomAtOpen ? HaloColors.violet : HaloColors.amber;
+    return Container(
+      width: 72,
+      height: 72,
+      decoration: BoxDecoration(
+        color: tint == HaloColors.amber
+            ? HaloColors.amberSoft
+            : tint.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: tint.withValues(alpha: 0.45), width: 0.8),
       ),
-    ),
-    alignment: Alignment.center,
-    child: Text(
-      name.isEmpty ? '·' : name.characters.first.toUpperCase(),
-      style: HaloType.serif(size: 36, italic: true, color: HaloColors.amber),
-    ),
-  );
+      alignment: Alignment.center,
+      child: Text(
+        name.isEmpty ? '·' : name.characters.first.toUpperCase(),
+        style: HaloType.serif(size: 36, italic: true, color: tint),
+      ),
+    );
+  }
 }
 
 // a small tinted pill at the end of a section heading
@@ -473,21 +484,58 @@ class _Pill extends StatelessWidget {
 }
 
 // everyone in the group, on one card: a face, the three words, and for the
-// admin a way to take someone out
-class _MembersCard extends StatelessWidget {
+// admin a way to take someone out. someone added grows in, someone who
+// went folds away where they were
+class MembersCard extends StatefulWidget {
   final List<String> members;
   final bool Function(String id) isMe;
   final bool canRemove;
   final void Function(String id) onRemove;
-  const _MembersCard({
+  // take a change as it is, with no motion
+  final bool quiet;
+  const MembersCard({
+    super.key,
     required this.members,
     required this.isMe,
     required this.canRemove,
     required this.onRemove,
+    this.quiet = false,
   });
 
   @override
+  State<MembersCard> createState() => _MembersCardState();
+}
+
+class _MembersCardState extends State<MembersCard> {
+  late final RowSet<String> _rows = RowSet(
+    keyOf: (m) => m,
+    onGone: () {
+      if (mounted) setState(() {});
+    },
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _rows.start(widget.members);
+  }
+
+  @override
+  void didUpdateWidget(MembersCard old) {
+    super.didUpdateWidget(old);
+    _rows.update(widget.members, quiet: widget.quiet);
+  }
+
+  @override
+  void dispose() {
+    _rows.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final rows = _rows.rows;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _rows.built());
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -497,20 +545,37 @@ class _MembersCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          for (var i = 0; i < members.length; i++) ...[
-            if (i > 0)
-              Padding(
-                padding: const EdgeInsetsDirectional.only(start: 60),
-                child: Container(height: 0.5, color: HaloColors.line),
+          for (var i = 0; i < rows.length; i++)
+            IgnorePointer(
+              key: ValueKey(rows[i]),
+              ignoring: _rows.leaving(rows[i]),
+              child: FadeFold(
+                leaving: _rows.leaving(rows[i]),
+                child: GrowIn(
+                  active: _rows.fresh(rows[i]),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (i > 0)
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(start: 60),
+                          child: Container(height: 0.5, color: HaloColors.line),
+                        ),
+                      _member(rows[i]),
+                    ],
+                  ),
+                ),
               ),
-            _member(members[i]),
-          ],
+            ),
         ],
       ),
     );
   }
 
   Widget _member(String m) {
+    final isMe = widget.isMe;
+    final canRemove = widget.canRemove;
+    final onRemove = widget.onRemove;
     final me = isMe(m);
     final room = looksLikeRoomKey(m);
     return Padding(

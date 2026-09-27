@@ -9,7 +9,9 @@ import '../l10n/numbers.dart';
 import '../polls.dart';
 import '../theme.dart';
 import 'halo_sheet.dart';
+import 'ease_size.dart';
 import 'halo_switch.dart';
+import 'motion.dart' show kHouseCurve, kHouseTime;
 import 'poll_card.dart' show pollGlyph;
 import 'press_scale.dart';
 import 'sheet_handle.dart';
@@ -33,6 +35,10 @@ class _Field {
   final focus = FocusNode();
   // a new field grows in once; after that it just sits there
   bool grown = false;
+  // taken out: it folds away where it was, then goes
+  bool leaving = false;
+  // its place among the answers when last drawn, for its hint while it folds
+  int at = 0;
   void dispose() {
     ctrl.dispose();
     focus.dispose();
@@ -53,12 +59,20 @@ class _NewPollSheetState extends State<_NewPollSheet> {
     }
   }
 
+  // the answers that stay, without the ones folding away
+  List<_Field> get _live => [
+    for (final f in _fields)
+      if (!f.leaving) f,
+  ];
+
   void _watch(_Field f) {
     f.ctrl.addListener(() {
+      final live = _live;
       // the last answer got text: the next empty one comes in under it
-      if (f == _fields.last &&
+      if (!f.leaving &&
+          f == live.last &&
           f.ctrl.text.trim().isNotEmpty &&
-          _fields.length < kPollMaxOptions) {
+          live.length < kPollMaxOptions) {
         final n = _Field();
         _watch(n);
         setState(() => _fields.add(n));
@@ -70,10 +84,17 @@ class _NewPollSheetState extends State<_NewPollSheet> {
 
   void _remove(_Field f) {
     HapticFeedback.selectionClick();
-    final i = _fields.indexOf(f);
+    final live = _live;
+    final i = live.indexOf(f);
+    setState(() => f.leaving = true);
+    if (i > 0) live[i - 1].focus.requestFocus();
+  }
+
+  // folded away: now it goes
+  void _gone(_Field f) {
+    if (!mounted) return;
     setState(() => _fields.remove(f));
     WidgetsBinding.instance.addPostFrameCallback((_) => f.dispose());
-    if (i > 0 && i - 1 < _fields.length) _fields[i - 1].focus.requestFocus();
   }
 
   @override
@@ -86,7 +107,7 @@ class _NewPollSheetState extends State<_NewPollSheet> {
   }
 
   ({String question, List<String> options})? get _tidy =>
-      tidyDraft(_question.text, [for (final f in _fields) f.ctrl.text]);
+      tidyDraft(_question.text, [for (final f in _live) f.ctrl.text]);
 
   void _send() {
     final t = _tidy;
@@ -117,9 +138,13 @@ class _NewPollSheetState extends State<_NewPollSheet> {
   Widget build(BuildContext context) {
     final still = MediaQuery.of(context).disableAnimations;
     final ready = _tidy != null;
+    final live = _live;
+    for (final (i, f) in live.indexed) {
+      f.at = i;
+    }
     // the last field is the empty one waiting; it may go only when there
     // are more than two above it
-    final removable = _fields.length > kPollMinOptions;
+    final removable = live.length > kPollMinOptions;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
@@ -169,7 +194,7 @@ class _NewPollSheetState extends State<_NewPollSheet> {
                   maxLength: kPollMaxQuestion,
                   textCapitalization: TextCapitalization.sentences,
                   textInputAction: TextInputAction.next,
-                  onSubmitted: (_) => _fields.first.focus.requestFocus(),
+                  onSubmitted: (_) => live.first.focus.requestFocus(),
                   style: HaloType.serif(
                     size: 17,
                     color: HaloColors.text,
@@ -197,11 +222,13 @@ class _NewPollSheetState extends State<_NewPollSheet> {
               ),
             ),
             const SizedBox(height: 8),
-            for (final (i, f) in _fields.indexed)
+            for (final f in _fields)
               _Grow(
                 key: ObjectKey(f),
                 grown: f.grown || still,
                 onGrown: () => f.grown = true,
+                leaving: f.leaving,
+                onGone: () => _gone(f),
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: _box(
@@ -221,12 +248,12 @@ class _NewPollSheetState extends State<_NewPollSheet> {
                                 maxLength: kPollMaxOption,
                                 textCapitalization:
                                     TextCapitalization.sentences,
-                                textInputAction: i == _fields.length - 1
+                                textInputAction: f.at == live.length - 1
                                     ? TextInputAction.done
                                     : TextInputAction.next,
                                 onSubmitted: (_) {
-                                  if (i + 1 < _fields.length) {
-                                    _fields[i + 1].focus.requestFocus();
+                                  if (f.at + 1 < live.length) {
+                                    live[f.at + 1].focus.requestFocus();
                                   }
                                 },
                                 style: HaloType.sans(
@@ -237,10 +264,10 @@ class _NewPollSheetState extends State<_NewPollSheet> {
                                   border: InputBorder.none,
                                   counterText: '',
                                   hintText:
-                                      i == _fields.length - 1 &&
-                                          i >= kPollMinOptions
+                                      f.at == live.length - 1 &&
+                                          f.at >= kPollMinOptions
                                       ? l10n.pollAddOption
-                                      : l10n.pollOptionHint(whole(i + 1)),
+                                      : l10n.pollOptionHint(whole(f.at + 1)),
                                   hintStyle: HaloType.sans(
                                     size: 15,
                                     color: HaloColors.text2,
@@ -250,10 +277,15 @@ class _NewPollSheetState extends State<_NewPollSheet> {
                             ),
                           ),
                         ),
-                        if (removable &&
-                            (f != _fields.last ||
-                                _fields.length == kPollMaxOptions))
-                          PressScale(
+                        // the way to take it out pops in once a third
+                        // answer is there
+                        _PopIn(
+                          shown:
+                              !f.leaving &&
+                              removable &&
+                              (f != live.last ||
+                                  live.length == kPollMaxOptions),
+                          child: PressScale(
                             onTap: () => _remove(f),
                             haptic: false,
                             label: MaterialLocalizations.of(
@@ -269,14 +301,15 @@ class _NewPollSheetState extends State<_NewPollSheet> {
                               ),
                             ),
                           ),
+                        ),
                       ],
                     ),
                   ),
                 ),
               ),
-            AnimatedSize(
-              duration: Duration(milliseconds: still ? 0 : 200),
-              child: _fields.length == kPollMaxOptions
+            EaseSize(
+              duration: const Duration(milliseconds: 200),
+              child: live.length == kPollMaxOptions
                   ? Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Text(
@@ -359,15 +392,20 @@ class _NewPollSheetState extends State<_NewPollSheet> {
   }
 }
 
-// a new answer field grows in from nothing, once
+// a new answer field grows in from nothing, once, and one taken out folds
+// back into nothing before it goes. with less movement both are at once
 class _Grow extends StatefulWidget {
   final bool grown;
   final VoidCallback onGrown;
+  final bool leaving;
+  final VoidCallback onGone;
   final Widget child;
   const _Grow({
     super.key,
     required this.grown,
     required this.onGrown,
+    required this.leaving,
+    required this.onGone,
     required this.child,
   });
   @override
@@ -378,15 +416,33 @@ class _GrowState extends State<_Grow> with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 240),
+    reverseDuration: const Duration(milliseconds: 200),
     value: widget.grown ? 1 : 0,
   );
-  late final _a = CurvedAnimation(parent: _c, curve: Curves.easeOutCubic);
+  late final _a = CurvedAnimation(
+    parent: _c,
+    curve: Curves.easeOutCubic,
+    reverseCurve: Curves.easeInCubic,
+  );
 
   @override
   void initState() {
     super.initState();
     if (!widget.grown) {
       _c.forward().whenComplete(widget.onGrown);
+    }
+  }
+
+  @override
+  void didUpdateWidget(_Grow old) {
+    super.didUpdateWidget(old);
+    if (widget.leaving && !old.leaving) {
+      if (MediaQuery.of(context).disableAnimations) {
+        _c.value = 0;
+        WidgetsBinding.instance.addPostFrameCallback((_) => widget.onGone());
+      } else {
+        _c.reverse().whenComplete(widget.onGone);
+      }
     }
   }
 
@@ -399,10 +455,42 @@ class _GrowState extends State<_Grow> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return SizeTransition(
-      sizeFactor: _a,
-      axisAlignment: -1,
-      child: FadeTransition(opacity: _a, child: widget.child),
+    return IgnorePointer(
+      ignoring: widget.leaving,
+      child: SizeTransition(
+        sizeFactor: _a,
+        axisAlignment: -1,
+        child: FadeTransition(opacity: _a, child: widget.child),
+      ),
+    );
+  }
+}
+
+// a small control that pops in on the house spring and shrinks away;
+// with less movement it only fades
+class _PopIn extends StatelessWidget {
+  final bool shown;
+  final Widget child;
+  const _PopIn({required this.shown, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final still = MediaQuery.of(context).disableAnimations;
+    return IgnorePointer(
+      ignoring: !shown,
+      child: ExcludeSemantics(
+        excluding: !shown,
+        child: AnimatedOpacity(
+          opacity: shown ? 1 : 0,
+          duration: const Duration(milliseconds: 160),
+          child: AnimatedScale(
+            scale: shown || still ? 1 : 0.5,
+            duration: still ? Duration.zero : kHouseTime,
+            curve: shown ? kHouseCurve : Curves.easeInCubic,
+            child: child,
+          ),
+        ),
+      ),
     );
   }
 }

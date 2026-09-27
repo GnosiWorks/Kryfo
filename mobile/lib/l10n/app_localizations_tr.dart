@@ -6535,6 +6535,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get wallpaperPatterns => 'desenler';
 
   @override
+  String get wallpaperMoods => 'ruh halleri';
+
+  @override
   String get confirmSheetKeep => 'Kalsın';
 
   @override

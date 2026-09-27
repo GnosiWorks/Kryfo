@@ -6626,6 +6626,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get wallpaperPatterns => 'узоры';
 
   @override
+  String get wallpaperMoods => 'настроения';
+
+  @override
   String get confirmSheetKeep => 'Оставить';
 
   @override

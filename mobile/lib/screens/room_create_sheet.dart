@@ -10,6 +10,8 @@ import '../widgets/notice_banner.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/halo_switch.dart';
+import '../widgets/ease_size.dart';
+import '../widgets/press_scale.dart';
 import '../l10n/l10n.dart';
 
 // returns the new room's group id, or null if the sheet was dismissed
@@ -178,10 +180,8 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
                   ),
                 ],
               ),
-              AnimatedSize(
+              EaseSize(
                 duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOutCubic,
-                alignment: Alignment.topCenter,
                 child: _capOn
                     ? Padding(
                         padding: const EdgeInsets.only(top: 6),
@@ -235,27 +235,37 @@ class _Chip extends StatelessWidget {
   const _Chip({required this.label, required this.on, required this.onTap});
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return Semantics(
+      button: true,
+      selected: on,
+      label: label,
+      excludeSemantics: true,
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: on
-              ? HaloColors.violet.withValues(alpha: 0.16)
-              : HaloColors.surface,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: on ? HaloColors.violet : HaloColors.line,
-            width: on ? 1 : 0.5,
+      child: PressScale(
+        scale: 0.94,
+        // the sheet clicks for the pick itself
+        haptic: false,
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: on
+                ? HaloColors.violet.withValues(alpha: 0.16)
+                : HaloColors.surface,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: on ? HaloColors.violet : HaloColors.line,
+              width: on ? 1 : 0.5,
+            ),
           ),
-        ),
-        child: Text(
-          label,
-          style: HaloType.mono(
-            size: 12,
-            color: on ? HaloColors.violet : HaloColors.text2,
+          child: Text(
+            label,
+            style: HaloType.mono(
+              size: 12,
+              color: on ? HaloColors.violet : HaloColors.text2,
+            ),
           ),
         ),
       ),
@@ -263,7 +273,8 @@ class _Chip extends StatelessWidget {
   }
 }
 
-class _GoButton extends StatefulWidget {
+// the violet button. its words fade over to creating while the room is made
+class _GoButton extends StatelessWidget {
   final String label;
   final bool enabled;
   final VoidCallback onTap;
@@ -273,35 +284,31 @@ class _GoButton extends StatefulWidget {
     required this.onTap,
   });
   @override
-  State<_GoButton> createState() => _GoButtonState();
-}
-
-class _GoButtonState extends State<_GoButton> {
-  bool _down = false;
-  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: widget.enabled ? (_) => setState(() => _down = true) : null,
-      onTapUp: widget.enabled ? (_) => setState(() => _down = false) : null,
-      onTapCancel: widget.enabled ? () => setState(() => _down = false) : null,
-      onTap: widget.enabled ? widget.onTap : null,
-      child: AnimatedScale(
-        scale: _down ? 0.97 : 1,
-        duration: const Duration(milliseconds: 110),
-        child: AnimatedContainer(
+    return PressScale(
+      scale: 0.97,
+      // the create itself gives the impact
+      haptic: false,
+      label: label,
+      onTap: enabled ? onTap : null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        height: 48,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: enabled ? HaloColors.violet : HaloColors.surface3,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 180),
-          height: 48,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: widget.enabled ? HaloColors.violet : HaloColors.surface3,
-            borderRadius: BorderRadius.circular(14),
-          ),
           child: Text(
-            widget.label,
+            label,
+            key: ValueKey(label),
+            semanticsLabel: '',
             style: HaloType.sans(
               size: 15,
               weight: FontWeight.w600,
-              color: widget.enabled ? HaloColors.ink : HaloColors.text3,
+              color: enabled ? HaloColors.ink : HaloColors.text2,
             ),
           ),
         ),

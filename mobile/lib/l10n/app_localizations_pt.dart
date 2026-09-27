@@ -6558,6 +6558,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get wallpaperPatterns => 'padrões';
 
   @override
+  String get wallpaperMoods => 'climas';
+
+  @override
   String get confirmSheetKeep => 'Manter';
 
   @override

@@ -6522,6 +6522,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get wallpaperPatterns => 'طرح‌ها';
 
   @override
+  String get wallpaperMoods => 'حس‌وحال‌ها';
+
+  @override
   String get confirmSheetKeep => 'نگه داشتن';
 
   @override
